@@ -3,26 +3,26 @@
 ///	Copyright 2002-2007, All Rights Reserved 
 ///
 ///	$RCSfile: Version.c,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:09 $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:10:04 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/Version.c,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/Version.c,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 #if 0
 $RCSfile: Version.c,v $
-$Author: lking $
-$Date: 2011/07/30 17:30:09 $
-$Source: /Nomis_NS8100/ns7100_Port/source/Version.c,v $
-$Revision: 1.1 $
+$Author: jgetz $
+$Date: 2012/04/26 01:10:04 $
+$Source: /Nomis_NS8100/ns7100_Port/src/Version.c,v $
+$Revision: 1.2 $
 #endif
 
 // =====================================================
 // These global strings are automatically updated by CVS
 // ** DO NOT MODIFY **
-const char applicationVersion[] = "$Revision: 1.1 $";
-const char applicationDate[] = "$Date: 2011/07/30 17:30:09 $";
+const char applicationVersion[] = "$Revision: 1.2 $";
+const char applicationDate[] = "$Date: 2012/04/26 01:10:04 $";
 // =====================================================
 
 /*======================================================

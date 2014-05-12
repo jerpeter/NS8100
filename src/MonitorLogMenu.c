@@ -4,11 +4,11 @@
 *
 *  $RCSfile: MonitorLogMenu.c,v $
 *
-*  $Author: lking $
-*  $Date: 2011/07/30 17:30:07 $
-*  $Source: /Nomis_NS8100/ns7100_Port/source/MonitorLogMenu.c,v $
+*  $Author: jgetz $
+*  $Date: 2012/04/26 01:09:54 $
+*  $Source: /Nomis_NS8100/ns7100_Port/src/MonitorLogMenu.c,v $
 *
-*  $Revision: 1.1 $
+*  $Revision: 1.2 $
 *******************************************************************************/
 
 /*******************************************************************************

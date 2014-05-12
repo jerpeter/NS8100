@@ -3,11 +3,11 @@
 ///	Copyright 2002-2007, All Rights Reserved
 ///
 ///	$RCSfile: UserSelectMenus.c,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:09 $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:10:03 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/UserSelectMenus.c,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/UserSelectMenus.c,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------

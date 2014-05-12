@@ -3,11 +3,11 @@
 ///	Copyright 2002-2007, All Rights Reserved
 ///
 ///	$RCSfile: EventProcessing.c,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:06 $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:09:47 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/EventProcessing.c,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/EventProcessing.c,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------

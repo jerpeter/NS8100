@@ -13,8 +13,8 @@
 // REVISION:                                                                  //
 //                                                                            //
 //   $Author: jgetz $                                                         //
-//   $Date: 2010/04/28 21:13:17 $                                             //
-//   $Revision: 1.3 $                                                         //
+//   $Date: 2012/04/26 01:10:07 $                                             //
+//   $Revision: 1.2 $                                                         //
 //                                                                            //
 // HISTORY:                                                                   //
 //                                                                            //
@@ -53,6 +53,7 @@ void SRAM_Test_5M(void);
 void SRAM_Test_6M(void);
 void SRAM_Test_7M(void);
 void SRAM_Test_2M_by_32(void);
+void SRAM_Test_1M_by_32(void);
 
 static const unsigned char SRAM_Info_Text[] =
 {
@@ -88,6 +89,7 @@ const unsigned char SRAM_Test_Menu_Text[] =
 "  11) Test SRAM @ 6M by 16.\n\r"
 "  12) Test SRAM @ 7M by 16.\n\r"
 "  13) Test SRAM @ 2M by 32.\n\r"
+"  14) Test SRAM @ 1M by 32.\n\r"
 "\0"
 };
 
@@ -106,7 +108,8 @@ static void (*SRAM_Test_Menu_Functions[])(void) =
    SRAM_Test_5M,
    SRAM_Test_6M,
    SRAM_Test_7M,
-   SRAM_Test_2M_by_32
+   SRAM_Test_2M_by_32,
+   SRAM_Test_1M_by_32
 };
 
 #endif //SRAM_TEST_MENU_H_

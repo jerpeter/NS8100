@@ -13,8 +13,8 @@
 // REVISION:                                                                  //
 //                                                                            //
 //   $Author: jgetz $                                                               //
-//   $Date: 2010/04/28 21:13:17 $                                                                 //
-//   $Revision: 1.3 $                                                             //
+//   $Date: 2012/04/26 01:10:07 $                                                                 //
+//   $Revision: 1.2 $                                                             //
 //                                                                            //
 // HISTORY:                                                                   //
 //                                                                            //
@@ -448,30 +448,1253 @@ void SRAM_Test_2M(void)
     print_dbg("\rTesting SRAM..............PASSED!\n\r");
 }
 
+#define TEST_32_BAADFOOD	0xBAADF00D
+#define TEST_32_VALUE	0x87654321
 void SRAM_Test_2M_by_32(void)
 {
-	volatile unsigned long int i = 0;
-	volatile unsigned long int *sramAddr = (volatile unsigned long int*)0xD0200000;
-    print_dbg("\n\rSRAM Test above 2M... \n");
-    for (i = 0; i < 0x40000 ; i++) { *sramAddr++ = (unsigned long int)i; if((i % 0x200) == 0) print_dbg_char('+'); }
-	sramAddr = (volatile unsigned long int*)0xD0200000;
-    for (i = 0; i < 0x40000 ; i++) 
+	unsigned long int i = 0, j = 0, breakCount = 0;
+	unsigned long int *sramAddr = (unsigned long int*)0xD0200000;
+	static unsigned long int static_test_BAADFOOD = 0xBAADF11D;
+	static unsigned long int static_test_value = 0x98765432;
+	unsigned long int test_BAADFOOD = 0xBAADF22D;
+	unsigned long int test_value = 0x09876543;
+	unsigned long int test32;
+	unsigned long int *test32ptr = (unsigned long int*)0xD0200000;
+	unsigned long int *test32ptr0 = (unsigned long int*)0xD0200000;
+	unsigned long int *test32ptr1 = (unsigned long int*)0xD0200004;
+	unsigned long int *test32ptr2 = (unsigned long int*)0xD0200008;
+	unsigned long int *test32ptr3 = (unsigned long int*)0xD020000C;
+	unsigned long int *test32ptr4 = (unsigned long int*)0xD0200010;
+	unsigned long int *test32ptr5 = (unsigned long int*)0xD0200014;
+	unsigned long int *test32ptr6 = (unsigned long int*)0xD0200018;
+	unsigned long int *test32ptr7 = (unsigned long int*)0xD020001C;
+	unsigned long int *test32ptr8 = (unsigned long int*)0xD0200020;
+	unsigned long int *test32ptr9 = (unsigned long int*)0xD0200024;
+	
+    //-------------------------------------------------------------
+	print_dbg("\n\r32-bit Storage element tests... \n");
+	print_dbg("Define Baadfood (0xBAADF00D): ");
+	print_dbg_hex(TEST_32_BAADFOOD);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Define 32 Value (0x87654321): ");
+	print_dbg_hex(TEST_32_VALUE);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Static Baadfood (0xBAADF11D): ");
+	print_dbg_hex(static_test_BAADFOOD);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Static 32 Value (0x98765432): ");
+	print_dbg_hex(static_test_value);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Dynamic Baadfood (0xBAADF22D): ");
+	print_dbg_hex(test_BAADFOOD);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Dynamic 32 Value (0x09876543): ");
+	print_dbg_hex(test_value);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Value (0x1248ABCD): ");
+	test32 = 0x1248ABCD;
+	print_dbg_hex(test32);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Value (0x80804040): ");
+	*test32ptr = 0x80804040;
+	print_dbg_hex(*test32ptr);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Location Inc x1: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	for (i = 0; i < 10; i++)
+	{
+		print_dbg_hex((unsigned long int)test32ptr);
+		test32ptr++;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Location Inc x2: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	for (i = 0; i < 10; i++)
+	{
+		print_dbg_hex((unsigned long int)test32ptr);
+		test32ptr += 2;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Location Inc x4: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	for (i = 0; i < 10; i++)
+	{
+		print_dbg_hex((unsigned long int)test32ptr);
+		test32ptr += 4;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Stack 32 Ptr Inc w/ Self    : ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	*test32ptr = 0x80804040;
+	for (i = 0; i < 10; i++)
+	{
+		print_dbg_hex(*test32ptr);
+		test32ptr++;
+		*test32ptr = *(test32ptr - 1) + 1;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+	print_dbg("Reprint values              : ");
+	print_dbg_hex(*((unsigned long int*)0xD0200000)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200004)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200008)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD020000C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200010)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200014)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200018)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD020001C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200020)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200024)); print_dbg(" ");
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Stack 32 Ptr Inc w/ Value   : ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	for (i = 0; i < 10; i++)
+	{
+		*test32ptr = 0x10100000 + i;
+		print_dbg_hex(*test32ptr);
+		test32ptr++;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+	print_dbg("Reprint values              : ");
+	print_dbg_hex(*((unsigned long int*)0xD0200000)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200004)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200008)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD020000C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200010)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200014)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200018)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD020001C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200020)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200024)); print_dbg(" ");
+	print_dbg("\n");
+
+#if 0
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Value Inc Ptr 2: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	for (i = 0; i < 10; i++)
+	{
+		*test32ptr = 0x20200000 + i;
+		print_dbg_hex(*test32ptr);
+		test32ptr += 2;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Value Inc Ptr 4: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	for (i = 0; i < 10; i++)
+	{
+		*test32ptr = 0x40400000 + i;
+		print_dbg_hex(*test32ptr);
+		test32ptr += 4;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+#endif
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Stack 32 Ptr Inc w/ Self+Var: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	*test32ptr = 0xA0A00000;
+	for (i = 0; i < 10; i++)
+	{
+		print_dbg_hex(*test32ptr);
+		test32ptr++;
+		*test32ptr = *(test32ptr - 1) + i;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+	print_dbg("Reprint values              : ");
+	print_dbg_hex(*((unsigned long int*)0xD0200000)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200004)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200008)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD020000C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200010)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200014)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200018)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD020001C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200020)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200024)); print_dbg(" ");
+	print_dbg("\n");
+
+#if 0
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Value Inc Ptr 2: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	*test32ptr = 0x20200000;
+	for (i = 0; i < 10; i++)
+	{
+		*test32ptr = *test32ptr + i;
+		print_dbg_hex(*test32ptr);
+		test32ptr += 2;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Value Inc Ptr 4: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	*test32ptr = 0x40400000;
+	for (i = 0; i < 10; i++)
+	{
+		*test32ptr = *test32ptr + i;
+		print_dbg_hex(*test32ptr);
+		test32ptr += 4;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+#endif
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Preassigned Raw Values      : ");
+	*((unsigned long int*)0xD0200000) = 0x5050001;
+	*((unsigned long int*)0xD0200004) = 0x5050002;
+	*((unsigned long int*)0xD0200008) = 0x5050003;
+	*((unsigned long int*)0xD020000C) = 0x5050004;
+	*((unsigned long int*)0xD0200010) = 0x5050005;
+	*((unsigned long int*)0xD0200014) = 0x5050006;
+	*((unsigned long int*)0xD0200018) = 0x5050007;
+	*((unsigned long int*)0xD020001C) = 0x5050008;
+	*((unsigned long int*)0xD0200020) = 0x5050009;
+	*((unsigned long int*)0xD0200024) = 0x505000A;
+	print_dbg_hex(*((unsigned long int*)0xD0200000));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200004));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200008));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD020000C));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200010));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200014));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200018));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD020001C));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200020));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200024));
+	print_dbg(" ");
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Test Ptr Value Individual   : ");
+	*test32ptr0 = 0x80804040;
+	*test32ptr1 = 0x80804041;
+	*test32ptr2 = 0x80804042;
+	*test32ptr3 = 0x80804043;
+	*test32ptr4 = 0x80804044;
+	*test32ptr5 = 0x80804045;
+	*test32ptr6 = 0x80804046;
+	*test32ptr7 = 0x80804047;
+	*test32ptr8 = 0x80804048;
+	*test32ptr9 = 0x80804049;
+	print_dbg_hex(*test32ptr0);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr1);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr2);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr3);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr4);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr5);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr6);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr7);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr8);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr9);
+	print_dbg(" ");
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Preassigned Raw Values W/Slf: ");
+	*((unsigned long int*)0xD0200000) = 0x5050001;
+	*((unsigned long int*)0xD0200004) = *((unsigned long int*)0xD0200000) + 1;
+	*((unsigned long int*)0xD0200008) = *((unsigned long int*)0xD0200004) + 1;
+	*((unsigned long int*)0xD020000C) = *((unsigned long int*)0xD0200008) + 1;
+	*((unsigned long int*)0xD0200010) = *((unsigned long int*)0xD020000C) + 1;
+	*((unsigned long int*)0xD0200014) = *((unsigned long int*)0xD0200010) + 1;
+	*((unsigned long int*)0xD0200018) = *((unsigned long int*)0xD0200014) + 1;
+	*((unsigned long int*)0xD020001C) = *((unsigned long int*)0xD0200018) + 1;
+	*((unsigned long int*)0xD0200020) = *((unsigned long int*)0xD020001C) + 1;
+	*((unsigned long int*)0xD0200024) = *((unsigned long int*)0xD0200020) + 1;
+	print_dbg_hex(*((unsigned long int*)0xD0200000));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200004));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200008));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD020000C));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200010));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200014));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200018));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD020001C));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200020));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0200024));
+	print_dbg(" ");
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Test Ptr Value Indiv W/Self : ");
+	*test32ptr0 = 0x80804040;
+	*test32ptr1 = *test32ptr0 + 1;
+	*test32ptr2 = *test32ptr1 + 1;
+	*test32ptr3 = *test32ptr2 + 1;
+	*test32ptr4 = *test32ptr3 + 1;
+	*test32ptr5 = *test32ptr4 + 1;
+	*test32ptr6 = *test32ptr5 + 1;
+	*test32ptr7 = *test32ptr6 + 1;
+	*test32ptr8 = *test32ptr7 + 1;
+	*test32ptr9 = *test32ptr8 + 1;
+	print_dbg_hex(*test32ptr0);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr1);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr2);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr3);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr4);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr5);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr6);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr7);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr8);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr9);
+	print_dbg(" ");
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Memory Test @ 0xD0200000 20K: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	breakCount = 0;
+	for (i = 0; i < 0x20000; i++)
+	{
+		*test32ptr++ = i;
+	}
+
+	test32ptr = (unsigned long int*)0xD0200000;
+	for (i = 0; i < 0x20000; i++)
+	{
+		if (*test32ptr != i)
+		{
+			print_dbg("\nData mismatch! Addr: ");
+			print_dbg_hex((unsigned long int)test32ptr);
+			print_dbg(" Data: ");
+			print_dbg_hex(*test32ptr);
+			print_dbg(" i: ");
+			print_dbg_hex(i);
+			
+			breakCount++;
+		}
+		else
+		{
+			if (i % 0x100 == 0)
+				print_dbg(".");
+		}
+
+		if (breakCount > 100)
+			break;
+
+		test32ptr++;
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Memory Test @ 0xD0200000 20K: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	breakCount = 0;
+	for (i = 0; i < 0x20000; i++)
+	{
+		*test32ptr++ = i;
+	}
+
+	test32ptr = (unsigned long int*)0xD0200000;
+	for (i = 0; i < 0x20000; i++)
+	{
+		if (*test32ptr != i)
+		{
+			print_dbg("\nData mismatch! Addr: ");
+			print_dbg_hex((unsigned long int)test32ptr);
+			print_dbg(" Data: ");
+			print_dbg_hex(*test32ptr);
+			print_dbg(" i: ");
+			print_dbg_hex(i);
+			
+			breakCount++;
+		}
+		else
+		{
+			if (i % 0x100 == 0)
+				print_dbg(".");
+		}
+
+		if (breakCount > 25)
+			break;
+
+		test32ptr++;
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Memory Test @ 0xD0220000 20K: ");
+	test32ptr = (unsigned long int*)0xD0220000;
+	breakCount = 0;
+	for (i = 0; i < 0x20000; i++)
+	{
+		*test32ptr++ = i;
+	}
+
+	test32ptr = (unsigned long int*)0xD0220000;
+	for (i = 0; i < 0x20000; i++)
+	{
+		if (*test32ptr != i)
+		{
+			print_dbg("\nData mismatch! Addr: ");
+			print_dbg_hex((unsigned long int)test32ptr);
+			print_dbg(" Data: ");
+			print_dbg_hex(*test32ptr);
+			print_dbg(" i: ");
+			print_dbg_hex(i);
+			
+			breakCount++;
+		}
+		else
+		{
+			if (i % 0x100 == 0)
+				print_dbg(".");
+		}
+
+		if (breakCount > 25)
+			break;
+
+		test32ptr++;
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Memory Test @ 0xD0200000 30K: ");
+	test32ptr = (unsigned long int*)0xD0200000;
+	breakCount = 0;
+	for (i = 0; i < 0x30000; i++)
+	{
+		*test32ptr++ = i;
+	}
+
+	test32ptr = (unsigned long int*)0xD0200000;
+	for (i = 0; i < 0x30000; i++)
+	{
+		if (*test32ptr != i)
+		{
+			print_dbg("\nData mismatch! Addr: ");
+			print_dbg_hex((unsigned long int)test32ptr);
+			print_dbg(" Data: ");
+			print_dbg_hex(*test32ptr);
+			print_dbg(" i: ");
+			print_dbg_hex(i);
+			
+			breakCount++;
+		}
+		else
+		{
+			if (i % 0x100 == 0)
+				print_dbg(".");
+		}
+
+		if (breakCount > 25)
+			break;
+
+		test32ptr++;
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Mem Test @ D0200000 Loop 20K: ");
+	for (j = 0; j < 50; j++)
+	{
+		test32ptr = (unsigned long int*)0xD0200000;
+		breakCount = 0;
+		for (i = 0; i < 0x20000; i++)
+		{
+			*test32ptr++ = i;
+		}
+
+		test32ptr = (unsigned long int*)0xD0200000;
+		for (i = 0; i < 0x20000; i++)
+		{
+			if (*test32ptr != i)
+			{
+				print_dbg("\nData mismatch! Addr: ");
+				print_dbg_hex((unsigned long int)test32ptr);
+				print_dbg(" Data: ");
+				print_dbg_hex(*test32ptr);
+				print_dbg(" i: ");
+				print_dbg_hex(i);
+			
+				breakCount++;
+			}
+
+			if (breakCount > 10)
+				break;
+
+			test32ptr++;
+		}
+
+		print_dbg(".");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Memory Test @ Loop Inc 0x100: ");
+	for (j = 0; j < 50; j++)
+	{
+		test32ptr = (unsigned long int*)0xD0200000;
+		breakCount = 0;
+		for (i = 0; i < (0x20000 + j * 0x100); i++)
+		{
+			*test32ptr++ = i;
+		}
+
+		test32ptr = (unsigned long int*)0xD0200000;
+		for (i = 0; i < (0x20000 + j * 0x100); i++)
+		{
+			if (*test32ptr != i)
+			{
+				print_dbg("\nData mismatch! Addr: ");
+				print_dbg_hex((unsigned long int)test32ptr);
+				print_dbg(" Data: ");
+				print_dbg_hex(*test32ptr);
+				print_dbg(" i: ");
+				print_dbg_hex(i);
+			
+				breakCount++;
+			}
+
+			if (breakCount > 10)
+				break;
+
+			test32ptr++;
+		}
+
+		if (breakCount > 10)
+		{
+			print_dbg("\nLoop Count for mismatch is: ");
+			print_dbg_hex((0x20000 + j * 0x100));
+			break;
+		}			
+		print_dbg(".");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+    print_dbg("\n\rSRAM Test above 2M (40K)... \n");
+    for (i = 0; i < 0x40000; i++)
 	{ 
-		if (*sramAddr != (unsigned long int)i)
+		*sramAddr++ = i;
+		if ((i % 0x200) == 0)
+		print_dbg_char('+');
+	}
+	
+	sramAddr = (unsigned long int*)0xD0200000;
+    for (i = 0; i < 0x40000; i++) 
+	{ 
+		if (*sramAddr != i)
 		{ 
 			print_dbg("\r\nTesting SRAM... FAILED! "); 
-			print_dbg_ulong(i); print_dbg_char(':'); print_dbg_ulong(*sramAddr); print_dbg("\r\n"); 
-			print_dbg("\r\nx16: "); 
-			print_dbg_ulong(i); 
-			print_dbg_char(':'); 
-			print_dbg_ulong(*((unsigned short int*)sramAddr)); 
-			print_dbg_char(':'); 
-			print_dbg_ulong(*((unsigned short int*)sramAddr + 1)); 
+			print_dbg_hex(i); print_dbg_char(':'); print_dbg_hex(*sramAddr); print_dbg("\r\n"); 
 			print_dbg("\r\n"); 
 			return;
 		}
+
 		sramAddr++;
-		if((i % 0x200) == 0) print_dbg_char('?'); }
+
+		if((i % 0x200) == 0) print_dbg_char('?');
+	}
+
+    print_dbg("\rTesting SRAM..............PASSED!\n\r");
+}
+
+void SRAM_Test_1M_by_32(void)
+{
+	unsigned long int i = 0, j = 0, breakCount = 0;
+	unsigned long int *sramAddr = (unsigned long int*)0xD0100000;
+	static unsigned long int static_test_BAADFOOD = 0xBAADF11D;
+	static unsigned long int static_test_value = 0x98765432;
+	unsigned long int test_BAADFOOD = 0xBAADF22D;
+	unsigned long int test_value = 0x09876543;
+	unsigned long int test32;
+	unsigned long int *test32ptr = (unsigned long int*)0xD0100000;
+	unsigned long int *test32ptr0 = (unsigned long int*)0xD0100000;
+	unsigned long int *test32ptr1 = (unsigned long int*)0xD0100004;
+	unsigned long int *test32ptr2 = (unsigned long int*)0xD0100008;
+	unsigned long int *test32ptr3 = (unsigned long int*)0xD010000C;
+	unsigned long int *test32ptr4 = (unsigned long int*)0xD0100010;
+	unsigned long int *test32ptr5 = (unsigned long int*)0xD0100014;
+	unsigned long int *test32ptr6 = (unsigned long int*)0xD0100018;
+	unsigned long int *test32ptr7 = (unsigned long int*)0xD010001C;
+	unsigned long int *test32ptr8 = (unsigned long int*)0xD0100020;
+	unsigned long int *test32ptr9 = (unsigned long int*)0xD0100024;
+	
+    //-------------------------------------------------------------
+	print_dbg("\n\r32-bit Storage element tests... \n");
+	print_dbg("Define Baadfood (0xBAADF00D): ");
+	print_dbg_hex(TEST_32_BAADFOOD);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Define 32 Value (0x87654321): ");
+	print_dbg_hex(TEST_32_VALUE);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Static Baadfood (0xBAADF11D): ");
+	print_dbg_hex(static_test_BAADFOOD);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Static 32 Value (0x98765432): ");
+	print_dbg_hex(static_test_value);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Dynamic Baadfood (0xBAADF22D): ");
+	print_dbg_hex(test_BAADFOOD);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Dynamic 32 Value (0x09876543): ");
+	print_dbg_hex(test_value);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Value (0x1248ABCD): ");
+	test32 = 0x1248ABCD;
+	print_dbg_hex(test32);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Value (0x80804040): ");
+	*test32ptr = 0x80804040;
+	print_dbg_hex(*test32ptr);
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Location Inc x1: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	for (i = 0; i < 10; i++)
+	{
+		print_dbg_hex((unsigned long int)test32ptr);
+		test32ptr++;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Location Inc x2: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	for (i = 0; i < 10; i++)
+	{
+		print_dbg_hex((unsigned long int)test32ptr);
+		test32ptr += 2;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Location Inc x4: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	for (i = 0; i < 10; i++)
+	{
+		print_dbg_hex((unsigned long int)test32ptr);
+		test32ptr += 4;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Stack 32 Ptr Inc w/ Self    : ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	*test32ptr = 0x80804040;
+	for (i = 0; i < 10; i++)
+	{
+		print_dbg_hex(*test32ptr);
+		test32ptr++;
+		*test32ptr = *(test32ptr - 1) + 1;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+	print_dbg("Reprint values              : ");
+	print_dbg_hex(*((unsigned long int*)0xD0100000)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100004)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100008)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD010000C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100010)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100014)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100018)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD010001C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100020)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100024)); print_dbg(" ");
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Stack 32 Ptr Inc w/ Value   : ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	for (i = 0; i < 10; i++)
+	{
+		*test32ptr = 0x10100000 + i;
+		print_dbg_hex(*test32ptr);
+		test32ptr++;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+	print_dbg("Reprint values              : ");
+	print_dbg_hex(*((unsigned long int*)0xD0100000)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100004)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100008)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD010000C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100010)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100014)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100018)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD010001C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100020)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100024)); print_dbg(" ");
+	print_dbg("\n");
+
+#if 0
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Value Inc Ptr 2: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	for (i = 0; i < 10; i++)
+	{
+		*test32ptr = 0x20200000 + i;
+		print_dbg_hex(*test32ptr);
+		test32ptr += 2;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Value Inc Ptr 4: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	for (i = 0; i < 10; i++)
+	{
+		*test32ptr = 0x40400000 + i;
+		print_dbg_hex(*test32ptr);
+		test32ptr += 4;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+#endif
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Stack 32 Ptr Inc w/ Self+Var: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	*test32ptr = 0xA0A00000;
+	for (i = 0; i < 10; i++)
+	{
+		print_dbg_hex(*test32ptr);
+		test32ptr++;
+		*test32ptr = *(test32ptr - 1) + i;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+	print_dbg("Reprint values              : ");
+	print_dbg_hex(*((unsigned long int*)0xD0100000)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100004)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100008)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD010000C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100010)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100014)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100018)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD010001C)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100020)); print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100024)); print_dbg(" ");
+	print_dbg("\n");
+
+#if 0
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Value Inc Ptr 2: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	*test32ptr = 0x20200000;
+	for (i = 0; i < 10; i++)
+	{
+		*test32ptr = *test32ptr + i;
+		print_dbg_hex(*test32ptr);
+		test32ptr += 2;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Stack 32 Ptr Value Inc Ptr 4: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	*test32ptr = 0x40400000;
+	for (i = 0; i < 10; i++)
+	{
+		*test32ptr = *test32ptr + i;
+		print_dbg_hex(*test32ptr);
+		test32ptr += 4;
+		print_dbg(" ");
+	}
+	print_dbg("\n");
+#endif
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Preassigned Raw Values      : ");
+	*((unsigned long int*)0xD0100000) = 0x5050001;
+	*((unsigned long int*)0xD0100004) = 0x5050002;
+	*((unsigned long int*)0xD0100008) = 0x5050003;
+	*((unsigned long int*)0xD010000C) = 0x5050004;
+	*((unsigned long int*)0xD0100010) = 0x5050005;
+	*((unsigned long int*)0xD0100014) = 0x5050006;
+	*((unsigned long int*)0xD0100018) = 0x5050007;
+	*((unsigned long int*)0xD010001C) = 0x5050008;
+	*((unsigned long int*)0xD0100020) = 0x5050009;
+	*((unsigned long int*)0xD0100024) = 0x505000A;
+	print_dbg_hex(*((unsigned long int*)0xD0100000));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100004));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100008));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD010000C));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100010));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100014));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100018));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD010001C));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100020));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100024));
+	print_dbg(" ");
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Test Ptr Value Individual   : ");
+	*test32ptr0 = 0x80804040;
+	*test32ptr1 = 0x80804041;
+	*test32ptr2 = 0x80804042;
+	*test32ptr3 = 0x80804043;
+	*test32ptr4 = 0x80804044;
+	*test32ptr5 = 0x80804045;
+	*test32ptr6 = 0x80804046;
+	*test32ptr7 = 0x80804047;
+	*test32ptr8 = 0x80804048;
+	*test32ptr9 = 0x80804049;
+	print_dbg_hex(*test32ptr0);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr1);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr2);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr3);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr4);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr5);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr6);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr7);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr8);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr9);
+	print_dbg(" ");
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Preassigned Raw Values W/Slf: ");
+	*((unsigned long int*)0xD0100000) = 0x5050001;
+	*((unsigned long int*)0xD0100004) = *((unsigned long int*)0xD0100000) + 1;
+	*((unsigned long int*)0xD0100008) = *((unsigned long int*)0xD0100004) + 1;
+	*((unsigned long int*)0xD010000C) = *((unsigned long int*)0xD0100008) + 1;
+	*((unsigned long int*)0xD0100010) = *((unsigned long int*)0xD010000C) + 1;
+	*((unsigned long int*)0xD0100014) = *((unsigned long int*)0xD0100010) + 1;
+	*((unsigned long int*)0xD0100018) = *((unsigned long int*)0xD0100014) + 1;
+	*((unsigned long int*)0xD010001C) = *((unsigned long int*)0xD0100018) + 1;
+	*((unsigned long int*)0xD0100020) = *((unsigned long int*)0xD010001C) + 1;
+	*((unsigned long int*)0xD0100024) = *((unsigned long int*)0xD0100020) + 1;
+	print_dbg_hex(*((unsigned long int*)0xD0100000));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100004));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100008));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD010000C));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100010));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100014));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100018));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD010001C));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100020));
+	print_dbg(" ");
+	print_dbg_hex(*((unsigned long int*)0xD0100024));
+	print_dbg(" ");
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("Test Ptr Value Indiv W/Self : ");
+	*test32ptr0 = 0x80804040;
+	*test32ptr1 = *test32ptr0 + 1;
+	*test32ptr2 = *test32ptr1 + 1;
+	*test32ptr3 = *test32ptr2 + 1;
+	*test32ptr4 = *test32ptr3 + 1;
+	*test32ptr5 = *test32ptr4 + 1;
+	*test32ptr6 = *test32ptr5 + 1;
+	*test32ptr7 = *test32ptr6 + 1;
+	*test32ptr8 = *test32ptr7 + 1;
+	*test32ptr9 = *test32ptr8 + 1;
+	print_dbg_hex(*test32ptr0);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr1);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr2);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr3);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr4);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr5);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr6);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr7);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr8);
+	print_dbg(" ");
+	print_dbg_hex(*test32ptr9);
+	print_dbg(" ");
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Memory Test @ 0xD0100000 20K: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	breakCount = 0;
+	for (i = 0; i < 0x20000; i++)
+	{
+		*test32ptr++ = i;
+	}
+
+	test32ptr = (unsigned long int*)0xD0100000;
+	for (i = 0; i < 0x20000; i++)
+	{
+		if (*test32ptr != i)
+		{
+			print_dbg("\nData mismatch! Addr: ");
+			print_dbg_hex((unsigned long int)test32ptr);
+			print_dbg(" Data: ");
+			print_dbg_hex(*test32ptr);
+			print_dbg(" i: ");
+			print_dbg_hex(i);
+			
+			breakCount++;
+		}
+		else
+		{
+			if (i % 0x100 == 0)
+				print_dbg(".");
+		}
+
+		if (breakCount > 100)
+			break;
+
+		test32ptr++;
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Memory Test @ 0xD0100000 20K: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	breakCount = 0;
+	for (i = 0; i < 0x20000; i++)
+	{
+		*test32ptr++ = i;
+	}
+
+	test32ptr = (unsigned long int*)0xD0100000;
+	for (i = 0; i < 0x20000; i++)
+	{
+		if (*test32ptr != i)
+		{
+			print_dbg("\nData mismatch! Addr: ");
+			print_dbg_hex((unsigned long int)test32ptr);
+			print_dbg(" Data: ");
+			print_dbg_hex(*test32ptr);
+			print_dbg(" i: ");
+			print_dbg_hex(i);
+			
+			breakCount++;
+		}
+		else
+		{
+			if (i % 0x100 == 0)
+				print_dbg(".");
+		}
+
+		if (breakCount > 25)
+			break;
+
+		test32ptr++;
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Memory Test @ 0xD0120000 20K: ");
+	test32ptr = (unsigned long int*)0xD0120000;
+	breakCount = 0;
+	for (i = 0; i < 0x20000; i++)
+	{
+		*test32ptr++ = i;
+	}
+
+	test32ptr = (unsigned long int*)0xD0120000;
+	for (i = 0; i < 0x20000; i++)
+	{
+		if (*test32ptr != i)
+		{
+			print_dbg("\nData mismatch! Addr: ");
+			print_dbg_hex((unsigned long int)test32ptr);
+			print_dbg(" Data: ");
+			print_dbg_hex(*test32ptr);
+			print_dbg(" i: ");
+			print_dbg_hex(i);
+			
+			breakCount++;
+		}
+		else
+		{
+			if (i % 0x100 == 0)
+				print_dbg(".");
+		}
+
+		if (breakCount > 25)
+			break;
+
+		test32ptr++;
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Memory Test @ 0xD0100000 30K: ");
+	test32ptr = (unsigned long int*)0xD0100000;
+	breakCount = 0;
+	for (i = 0; i < 0x30000; i++)
+	{
+		*test32ptr++ = i;
+	}
+
+	test32ptr = (unsigned long int*)0xD0100000;
+	for (i = 0; i < 0x30000; i++)
+	{
+		if (*test32ptr != i)
+		{
+			print_dbg("\nData mismatch! Addr: ");
+			print_dbg_hex((unsigned long int)test32ptr);
+			print_dbg(" Data: ");
+			print_dbg_hex(*test32ptr);
+			print_dbg(" i: ");
+			print_dbg_hex(i);
+			
+			breakCount++;
+		}
+		else
+		{
+			if (i % 0x100 == 0)
+				print_dbg(".");
+		}
+
+		if (breakCount > 25)
+			break;
+
+		test32ptr++;
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Mem Test @ D0100000 Loop 20K: ");
+	for (j = 0; j < 50; j++)
+	{
+		test32ptr = (unsigned long int*)0xD0100000;
+		breakCount = 0;
+		for (i = 0; i < 0x20000; i++)
+		{
+			*test32ptr++ = i;
+		}
+
+		test32ptr = (unsigned long int*)0xD0100000;
+		for (i = 0; i < 0x20000; i++)
+		{
+			if (*test32ptr != i)
+			{
+				print_dbg("\nData mismatch! Addr: ");
+				print_dbg_hex((unsigned long int)test32ptr);
+				print_dbg(" Data: ");
+				print_dbg_hex(*test32ptr);
+				print_dbg(" i: ");
+				print_dbg_hex(i);
+			
+				breakCount++;
+			}
+
+			if (breakCount > 10)
+				break;
+
+			test32ptr++;
+		}
+
+		print_dbg(".");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+	print_dbg("\n");
+	print_dbg("Memory Test @ Loop Inc 0x100: ");
+	for (j = 0; j < 50; j++)
+	{
+		test32ptr = (unsigned long int*)0xD0100000;
+		breakCount = 0;
+		for (i = 0; i < (0x20000 + j * 0x100); i++)
+		{
+			*test32ptr++ = i;
+		}
+
+		test32ptr = (unsigned long int*)0xD0100000;
+		for (i = 0; i < (0x20000 + j * 0x100); i++)
+		{
+			if (*test32ptr != i)
+			{
+				print_dbg("\nData mismatch! Addr: ");
+				print_dbg_hex((unsigned long int)test32ptr);
+				print_dbg(" Data: ");
+				print_dbg_hex(*test32ptr);
+				print_dbg(" i: ");
+				print_dbg_hex(i);
+			
+				breakCount++;
+			}
+
+			if (breakCount > 10)
+				break;
+
+			test32ptr++;
+		}
+
+		if (breakCount > 10)
+		{
+			print_dbg("\nLoop Count for mismatch is: ");
+			print_dbg_hex((0x20000 + j * 0x100));
+			break;
+		}			
+		print_dbg(".");
+	}
+	print_dbg("\n");
+
+    //-------------------------------------------------------------
+    print_dbg("\n\rSRAM Test above 2M (40K)... \n");
+    for (i = 0; i < 0x40000; i++)
+	{ 
+		*sramAddr++ = i;
+		if ((i % 0x200) == 0)
+		print_dbg_char('+');
+	}
+	
+	sramAddr = (unsigned long int*)0xD0100000;
+    for (i = 0; i < 0x40000; i++) 
+	{ 
+		if (*sramAddr != i)
+		{ 
+			print_dbg("\r\nTesting SRAM... FAILED! "); 
+			print_dbg_hex(i); print_dbg_char(':'); print_dbg_hex(*sramAddr); print_dbg("\r\n"); 
+			print_dbg("\r\n"); 
+			return;
+		}
+
+		sramAddr++;
+
+		if((i % 0x200) == 0) print_dbg_char('?');
+	}
+
     print_dbg("\rTesting SRAM..............PASSED!\n\r");
 }
 

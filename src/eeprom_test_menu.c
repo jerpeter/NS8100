@@ -13,8 +13,8 @@
 // REVISION:                                                                  //
 //                                                                            //
 //   $Author: jgetz $                                                               //
-//   $Date: 2009/11/09 19:26:50 $                                                                 //
-//   $Revision: 1.4 $                                                             //
+//   $Date: 2012/04/26 01:10:04 $                                                                 //
+//   $Revision: 1.3 $                                                             //
 //                                                                            //
 // HISTORY:                                                                   //
 //                                                                            //
@@ -34,6 +34,7 @@
 #include "usart.h"
 #include "gpio.h"
 #include "spi.h"
+#include "Rec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -75,6 +76,8 @@ const unsigned char EEPROM_Test_Menu_Text[] =
 "   4) Erase EEPROM.\n\r"
 "   5) Write Data.\n\r"
 "   6) Read Data.\n\r"
+"   7) Read Help Record.\n\r"
+"   8) Overwrite Help Record.\n\r"
 "\0"
 };
 
@@ -86,7 +89,9 @@ static void (*EEPROM_Test_Menu_Functions[])(void) =
    EEPROM_Blank_Check,
    EEPROM_Erase,
    EEPROM_Write,
-   EEPROM_Read
+   EEPROM_Read,
+   EEPROM_Test_Read,
+   EEPROM_Test_Write
 };
 
 const unsigned char EEPROM_Config_Menu_Text[] =
@@ -171,12 +176,12 @@ static void eeprom_resources_init(void)
 }
 #endif
 
-static void eeprom_write_command(int command)
+void eeprom_write_command(int command)
 {
    spi_write(EEPROM_SPI,command);
 }
 
-static void eeprom_write_data(unsigned short register_address, int length, unsigned short *data)
+void eeprom_write_data(unsigned short register_address, int length, unsigned short *data)
 {
    spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
    eeprom_write_command(EEPROM_WRITE_ENABLE);
@@ -192,9 +197,11 @@ static void eeprom_write_data(unsigned short register_address, int length, unsig
       spi_write(EEPROM_SPI, *data++);
    }
    spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+
+	soft_usecWait(1 * SOFT_MSECS);
 }
 
-static void eeprom_read_data(unsigned short register_address, int length, unsigned short *data)
+void eeprom_read_data(unsigned short register_address, int length, unsigned short *data)
 {
    spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
    eeprom_write_command(EEPROM_READ_DATA);
@@ -208,6 +215,8 @@ static void eeprom_read_data(unsigned short register_address, int length, unsign
       data++;
    }
    spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+
+	soft_usecWait(1 * SOFT_MSECS);
 }
 
 void EEPROM_Test_Menu(void)
@@ -307,8 +316,76 @@ void EEPROM_Write(void)
 	   data[count] = count;
    }
    eeprom_write_data(0, 32, &data[0]);
+   
+#if 0
+   eeprom_write_data(0, 1, &data[0]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(1, 1, &data[1]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(2, 1, &data[2]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(3, 1, &data[3]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(4, 1, &data[4]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(5, 1, &data[5]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(6, 1, &data[6]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(7, 1, &data[7]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(8, 1, &data[8]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(9, 1, &data[9]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(10, 1, &data[10]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(11, 1, &data[11]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(12, 1, &data[12]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(13, 1, &data[13]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(14, 1, &data[14]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(15, 1, &data[15]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(16, 1, &data[16]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(17, 1, &data[17]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(18, 1, &data[18]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(19, 1, &data[19]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(20, 1, &data[20]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(21, 1, &data[21]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(22, 1, &data[22]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(23, 1, &data[23]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(24, 1, &data[24]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(25, 1, &data[25]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(26, 1, &data[26]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(27, 1, &data[27]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(28, 1, &data[28]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(29, 1, &data[29]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(30, 1, &data[30]);
+	soft_usecWait(10 * SOFT_MSECS);
+   eeprom_write_data(31, 1, &data[31]);
+	soft_usecWait(10 * SOFT_MSECS);
+#endif
    print_dbg("Device location 0 - 32 written with count pattern.\n\r");
 }
+
 void EEPROM_Read(void)
 {
    int count;
@@ -331,6 +408,40 @@ void EEPROM_Read(void)
    print_dbg("\n\r");
 }
 
+#if 1 // REMOVE
+void EEPROM_Test_Read(void)
+{
+	unsigned short int i = 0;
+	unsigned char tempData; 
+	
+	print_dbg("\n\rHelp Record:\r\n");
+
+	for (i=0; i<88; i++)
+	{
+		// Dest, Addr, Size
+		GetParameterMemory(&tempData, 7500 + i, 1);
+		print_dbg_char_hex(tempData);
+		print_dbg(" ");
+	}
+
+	print_dbg("\n");
+}
+
+void EEPROM_Test_Write(void)
+{
+	unsigned short int i = 0;
+	unsigned char tempData;
+	
+	for (i=0; i<88; i++)
+	{
+		tempData = 0x80 + i;
+		// Sr, Addr, Size
+		SaveParameterMemory(&tempData, 7500 + i, 1);
+		
+		soft_usecWait(5 * SOFT_MSECS);
+	}
+}
+#endif
 
 void EEPROM_Config_Exit(void)
 {

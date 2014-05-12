@@ -3,11 +3,11 @@
 ///	Copyright 2002-2007, All Rights Reserved 
 ///
 ///	$RCSfile: Record.c,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:08 $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:09:57 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/Record.c,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/Record.c,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
@@ -24,6 +24,8 @@
 #include "RealTimeClock.h"
 #include "Display.h"
 #include "Msgs430.h"
+#include "spi.h"
+#include "eeprom_test_menu.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -56,7 +58,7 @@ uint8 print_millibars = OFF;
 ****************************************/
 void saveRecData(void* src_ptr, uint32 num, uint8 type)
 {        
-#if 0 // fix_ns8100
+#if 1 // fix_ns8100
 	//uint16* mem_loc;
 	uint16 loc;
 	uint16 rec_size;
@@ -146,7 +148,7 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 ****************************************/
 void getRecData(void* dst_ptr, uint32 num, uint8 type)
 { 
-#if 0 // fix_ns8100
+#if 1 // fix_ns8100
 	//uint16* mem_loc = (uint16*)FLASH_BASE_ADDR;
 	//uint16* mem_loc = (uint16*)0x00;
 	uint16 loc;
@@ -576,19 +578,81 @@ void validateModemSetupParameters(void)
 // Fcuntion:	
 // Purpose:		
 //-----------------------------------------------------------------------------
-void GetParameterMemory(uint8* dest, uint16 address, uint16 size)
+void GetParameterMemory(uint8* dataDest, uint16 startAddr, uint16 dataLength)
 {
-	uint16 i = 0;
+	uint16 tempData;
 	
-	//debugPrint(RAW, "\nGPM -> ");
+	//debugRaw("\nGPM: Addr: %x -> ", startAddr);
 
-	for (i=0; i<size; i++)
+	spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+
+	// Write Command
+	spi_write(EEPROM_SPI, EEPROM_READ_DATA);
+	spi_write(EEPROM_SPI, (startAddr >> 8) & 0xFF);
+	spi_write(EEPROM_SPI, startAddr & 0xFF);
+
+	while(dataLength--)
 	{
-		*dest = ReadParameterMemory(address);
-		//debugPrint(RAW, "%x ", *dest);
-		
-		address++;
-		dest++;
+		spi_write(EEPROM_SPI, 0xFF);
+		spi_read(EEPROM_SPI, &tempData);
+
+		//debugRaw("%02x ", (uint8)(tempData));
+
+		// Store the byte data into the data array and inc the pointer			
+		*dataDest++ = (uint8)tempData;
+	}
+	   
+	spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+}
+
+//-----------------------------------------------------------------------------
+// Fcuntion:	
+// Purpose:		
+//-----------------------------------------------------------------------------
+#define EEPROM_PAGE_SIZE	4
+void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
+{
+	uint16 tempData;
+	uint16 pageSize;
+	
+	while(dataLength)
+	{
+		debugRaw("\nSPM: Addr: %x Len: %d -> ", startAddr, dataLength);
+
+		// Activate write enable
+		spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+		spi_write(EEPROM_SPI, EEPROM_WRITE_ENABLE); // Write Command
+		spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+
+		// Write data
+		spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+		spi_write(EEPROM_SPI, EEPROM_WRITE_DATA); // Write Command
+		spi_write(EEPROM_SPI, (startAddr >> 8) & 0xFF);
+		spi_write(EEPROM_SPI, startAddr & 0xFF);
+
+		// Check if current data length is less than 32 and can be finished in a page
+		if(dataLength <= EEPROM_PAGE_SIZE)
+		{
+			pageSize = dataLength;
+			dataLength = 0;
+		}
+		else // While loop will run again
+		{
+			pageSize = EEPROM_PAGE_SIZE;
+			dataLength -= EEPROM_PAGE_SIZE;	
+			startAddr += EEPROM_PAGE_SIZE;
+		}			
+			
+		while(pageSize--)
+		{
+			debugRaw("%02x ", *dataSrc);
+
+			tempData = *dataSrc++;
+			spi_write(EEPROM_SPI, tempData);
+		}
+
+		spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+		soft_usecWait(5 * SOFT_MSECS);
 	}
 }
 
@@ -596,33 +660,46 @@ void GetParameterMemory(uint8* dest, uint16 address, uint16 size)
 // Fcuntion:	
 // Purpose:		
 //-----------------------------------------------------------------------------
-void SaveParameterMemory(uint8* src, uint16 address, uint16 size)
+void EraseParameterMemory(uint16 startAddr, uint16 dataLength)
 {
-	uint16 i = 0;
-	
-	//debugPrint(RAW, "\nSPM -> ");
+	uint16 tempData = 0x00FF;
+	uint16 pageSize;
 
-	for (i=0; i<size; i++)
+	while(dataLength)
 	{
-		//debugPrint(RAW, "%x ", *src);
-		WriteParameterMemory(address, *src);
-		address++;
-		src++;
-	}
-}
+		// Activate write enable
+		spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+		spi_write(EEPROM_SPI, EEPROM_WRITE_ENABLE); // Write Command
+		spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
 
-//-----------------------------------------------------------------------------
-// Fcuntion:	
-// Purpose:		
-//-----------------------------------------------------------------------------
-void EraseParameterMemory(uint16 address, uint16 size)
-{
-	uint16 i = 0;
-	
-	for (i=0; i<size; i++)
-	{
-		WriteParameterMemory(address, 0xFF);
-		address++;
+		// Write data
+		spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+		spi_write(EEPROM_SPI, EEPROM_WRITE_DATA); // Write Command
+		spi_write(EEPROM_SPI, (startAddr >> 8) & 0xFF);
+		spi_write(EEPROM_SPI, startAddr & 0xFF);
+
+		// Check if current data length is less than 32 and can be finished in a page
+		if(dataLength <= 32)
+		{
+			pageSize = dataLength;
+			dataLength = 0;
+		}
+		else // While loop will run again
+		{
+			pageSize = 32;
+			dataLength -= 32;	
+			startAddr += 32;
+		}			
+			
+		while(pageSize--)
+		{
+			spi_write(EEPROM_SPI, tempData);
+			
+			soft_usecWait(1 * SOFT_MSECS);
+		}
+
+		spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+		soft_usecWait(5 * SOFT_MSECS);
 	}
 }
 

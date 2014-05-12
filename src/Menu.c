@@ -3,11 +3,11 @@
 ///	Copyright 2002-2007, All Rights Reserved
 ///
 ///	$RCSfile: Menu.c,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:07 $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:09:51 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/Menu.c,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/Menu.c,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------

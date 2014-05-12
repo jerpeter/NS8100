@@ -3,11 +3,11 @@
 ///	Copyright 2002-2007, All Rights Reserved 
 ///
 ///	$RCSfile: Ispi.h,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:07 $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:09:50 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/Ispi.h,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/Ispi.h,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 #ifndef _ISPI_H_

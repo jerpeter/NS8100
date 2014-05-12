@@ -4,11 +4,11 @@
 *
 *  $RCSfile: RegRW.s,v $
 *
-*  $Author: lking $
-*  $Date: 2011/07/30 17:30:08 $
-*  $Source: /Nomis_NS8100/ns7100_Port/source/RegRW.s,v $
+*  $Author: jgetz $
+*  $Date: 2012/04/26 01:09:58 $
+*  $Source: /Nomis_NS8100/ns7100_Port/src/RegRW.s,v $
 *
-*  $Revision: 1.1 $
+*  $Revision: 1.2 $
 *******************************************************************************/
 
 #if 0

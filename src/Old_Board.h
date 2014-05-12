@@ -2,12 +2,12 @@
 ///	Nomis Seismograph, Inc.
 ///	Copyright 2002-2007, All Rights Reserved
 ///
-///	$RCSfile: Board.h,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:06 $
+///	$RCSfile: Old_Board.h,v $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:09:55 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/Board.h,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/Old_Board.h,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 #ifndef _BOARD_H_

@@ -2,12 +2,12 @@
 ///	Nomis Seismograph, Inc.
 ///	Copyright 2002-2007, All Rights Reserved
 ///
-///	$RCSfile: Rtc.c,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:08 $
+///	$RCSfile: RealTimeClock.c,v $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:09:57 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/Rtc.c,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/RealTimeClock.c,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------

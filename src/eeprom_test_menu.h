@@ -13,8 +13,8 @@
 // REVISION:                                                                  //
 //                                                                            //
 //   $Author: jgetz $                                                               //
-//   $Date: 2009/11/09 19:26:50 $                                                                 //
-//   $Revision: 1.4 $                                                             //
+//   $Date: 2012/04/26 01:10:04 $                                                                 //
+//   $Revision: 1.3 $                                                             //
 //                                                                            //
 // HISTORY:                                                                   //
 //                                                                            //
@@ -27,7 +27,7 @@
 #define EEPROM_SPI                  (&AVR32_SPI1)
 #define EEPROM_SPI_NPCS             0
 #define EEPROM_SPI_BITS             8
-#define EEPROM_SPI_MASTER_SPEED     2100000 // Speed should be safe up to 2.1 MHz, needs to be tested
+#define EEPROM_SPI_MASTER_SPEED     500000 //2100000 // Speed should be safe up to 2.1 MHz, needs to be tested
 #define EEPROM_SPI_SCK_PIN          AVR32_SPI1_SCK_0_0_PIN
 #define EEPROM_SPI_SCK_FUNCTION     AVR32_SPI1_SCK_0_0_FUNCTION
 #define EEPROM_SPI_MISO_PIN         AVR32_SPI1_MISO_0_0_PIN
@@ -64,6 +64,8 @@ void EEPROM_Blank_Check(void);
 void EEPROM_Erase(void);
 void EEPROM_Write(void);
 void EEPROM_Read(void);
+void EEPROM_Test_Read(void);
+void EEPROM_Test_Write(void);
 
 void EEPROM_Config_Exit(void);
 void EEPROM_Config_View_Data(void);

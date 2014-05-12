@@ -3,11 +3,11 @@
 ///	Copyright 2002-2007, All Rights Reserved 
 ///
 ///	$RCSfile: Font_Six_by_Eight_table.h,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:06 $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:09:48 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/Font_Six_by_Eight_table.h,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/Font_Six_by_Eight_table.h,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 const uint8 font_table_68[128][10] = {

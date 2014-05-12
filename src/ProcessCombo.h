@@ -3,11 +3,11 @@
 ///	Copyright 2002-2007, All Rights Reserved 
 ///
 ///	$RCSfile: ProcessCombo.h,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:08 $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:09:56 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/ProcessCombo.h,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/ProcessCombo.h,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 #ifndef _PROCESS_COMBO_H_

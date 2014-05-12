@@ -3,11 +3,11 @@
 ///	Copyright 2002-2007, All Rights Reserved 
 ///
 ///	$RCSfile: InitDataBuffers.h,v $
-///	$Author: lking $
-///	$Date: 2011/07/30 17:30:06 $
+///	$Author: jgetz $
+///	$Date: 2012/04/26 01:09:50 $
 ///
-///	$Source: /Nomis_NS8100/ns7100_Port/source/InitDataBuffers.h,v $
-///	$Revision: 1.1 $
+///	$Source: /Nomis_NS8100/ns7100_Port/src/InitDataBuffers.h,v $
+///	$Revision: 1.2 $
 ///----------------------------------------------------------------------------
 
 #ifndef _DATABUFFS_H_

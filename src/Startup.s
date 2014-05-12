@@ -4,11 +4,11 @@
 *
 *  $RCSfile: Startup.s,v $
 *
-*  $Author: lking $
-*  $Date: 2011/07/30 17:30:08 $
-*  $Source: /Nomis_NS8100/ns7100_Port/source/Startup.s,v $
+*  $Author: jgetz $
+*  $Date: 2012/04/26 01:10:00 $
+*  $Source: /Nomis_NS8100/ns7100_Port/src/Startup.s,v $
 *
-*  $Revision: 1.1 $
+*  $Revision: 1.2 $
 *******************************************************************************/
 
 #if 0
