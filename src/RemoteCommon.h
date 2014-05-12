@@ -1,0 +1,528 @@
+///----------------------------------------------------------------------------
+///	Nomis Seismograph, Inc.
+///	Copyright 2002-2007, All Rights Reserved
+///
+///	$RCSfile: RemoteCommon.h,v $
+///	$Author: lking $
+///	$Date: 2011/07/30 17:30:08 $
+///
+///	$Source: /Nomis_NS8100/ns7100_Port/source/RemoteCommon.h,v $
+///	$Revision: 1.1 $
+///----------------------------------------------------------------------------
+
+#ifndef _REMOTE_COMMON_H_
+#define _REMOTE_COMMON_H_
+
+///----------------------------------------------------------------------------
+///	Includes
+///----------------------------------------------------------------------------
+#include "Common.h"
+#include "Summary.h"
+#include "Rec.h"
+
+///----------------------------------------------------------------------------
+///	Defines
+///----------------------------------------------------------------------------
+
+#define ATZ_CMD_STRING			"ATZ"
+#define INIT_CMD_STRING			"AT"
+#define INIT_CMD_STRING1		"ATS0=3S109=2&C1&K4\\X1"
+#define ATA_CMD_STRING			"ATA"
+#define ATH_CMD_STRING			"ATH"
+#define CMDMODE_CMD_STRING		"+++"
+
+#define OK_CMD_STRING			"OK\0"
+#define CONNECT_CMD_STRING		"CONNECT\0"
+#define RING_CMD_STRING			"RING"
+#define SUPER_STATUS_STRING		"NOMIS SUPERGRAPH\0"
+#define MINI_STATUS_STRING		"NOMIS MINIGRAPH\0"
+#define UNL_USER_RESP_STRING	"UNLx01\0"
+#define UNL_ADMIN_RESP_STRING	"UNLx02\0"
+#define UNL_PROG_RESP_STRING	"UNLx03\0"
+#define DAI_ERR_RESP_STRING		"DAIx0101\0"
+
+
+#define CMD_MSG_NO_ERR				0x00
+#define CMD_MSG_FULLBUFFER_ERR		0x01
+#define CMD_MSG_MSGPOOL_ERR 		0x02
+#define CMD_MSG_OVERFLOW_ERR		0x04
+#define CMD_MSG_DEFAULT_4 			0x08
+#define CMD_MSG_DEFAULT_5 			0x10
+#define CMD_MSG_DEFAULT_6 			0x20
+#define CMD_MSG_DEFAULT_7			0x40
+#define CMD_MSG_READY_TO_PROCESS	0x80
+#define CMD_MSG_ANY					0xFF
+
+#define CMD_BUFFER_SIZE 			1024	// was 2048, Originally, 256
+
+#define XMIT_SIZE_MONITORING		128		// 128
+#define XMIT_SIZE_NOT_MONITORING	1024
+
+#define CMD_MSG_POOL_SIZE 		3 //5
+
+#define UNLOCK_CODE_SIZE 		4
+#define UNLOCK_FLAG_LOC			7
+#define UNLOCK_STR_SIZE 		10
+#define UNLOCK_CODE_DEFAULT		"0000\0"
+#define UNLOCK_CODE_ADMIN		"3728\0"
+#define UNLOCK_CODE_PROG		"ALGS\0"
+
+#define CHAR_UPPER_CASE(DATA)						\
+			if ((DATA >= 'a') && (DATA <= 'z'))		\
+				DATA = (uint8)(DATA - 32);
+
+#if 0 // fix_ns8100
+#ifndef CRLF
+	#define CRLF 0x0D0A
+#endif
+#endif
+
+// This is the length of the message header
+#define MESSAGE_HEADER_LENGTH	38
+#define MESSAGE_FOOTER_LENGTH	4
+
+#define HDR_CMD_LEN 			4
+#define HDR_TYPE_LEN 			2
+#define HDR_DATALENGTH_LEN 		8
+#define HDR_UNITMODEL_LEN		8
+#define HDR_SERIALNUMBER_LEN 	8
+#define HDR_COMPRESSCRC_LEN 	2
+#define HDR_SOFTWAREVERSION_LEN 2
+#define HDR_DATAVERSION_LEN 	2
+#define HDR_SPARE_LEN			2
+
+#define DATA_FIELD_LEN			6
+
+#define DQM_XFER_SIZE			10
+
+#define VML_DATA_LOG_ENTRIES	4
+
+#define START_DLOAD_FLAG	0xAABBBBAA		// Do not change - flags are used in the supergraphics app
+#define END_DLOAD_FLAG		0xCCDDDDCC		// Do not change - flags are used in the supergraphics app
+
+
+#define MESSAGE_HEADER_SIMPLE_LENGTH	HDR_CMD_LEN + HDR_TYPE_LEN + HDR_DATALENGTH_LEN + HDR_SPARE_LEN
+#define MESSAGE_SIMPLE_TOTAL_LENGTH		MESSAGE_HEADER_SIMPLE_LENGTH + MESSAGE_FOOTER_LENGTH
+
+enum {
+	MSGTYPE_REQUEST 			= 0,
+	MSGTYPE_RESPONSE			= 1,
+	MSGTYPE_ERROR_MSGLENGTH		= 2,
+	MSGTYPE_ERROR_NO_EVENT		= 3,
+	MSGTYPE_ERROR_INVALID_DATA	= 4
+};
+
+
+enum {
+	COMPRESS_NOP			= 0,	// Starting value
+	COMPRESS_NONE			= 1,	// Initial Release
+	COMPRESS_MINILZO 		= 2,	// MINILZO Compression
+	COMPRESS_NOMIS_v1		= 3,	// NOMIS v01 Compression
+	COMPRESS_MININOMIS_v1	= 4		// BOth MINILZO and NOMIS v01
+};
+
+enum {
+	CRC_NOP			= 0,	// Starting value
+	CRC_NONE		= 1,	// Initial Release
+	CRC_16BIT 		= 2,	//
+	CRC_32BIT		= 3,	//
+	CHECKSUM_8BIT	= 4,	//
+	CHECKSUM_16BIT	= 5,	//
+	CHECKSUM_32BIT	= 6		//
+};
+
+
+enum {
+	CFG_ERR_NONE = 1,
+	CFG_ERR_MSG_LENGTH = 2,
+	CFG_ERR_MONITORING_STATE,
+	CFG_ERR_SENSITIVITY = 7,		// 7
+	CFG_ERR_SCALING,				// 8
+	CFG_ERR_TRIGGER_MODE,			// 9
+	CFG_ERR_DIST_TO_SRC,			// 10
+	CFG_ERR_WEIGHT_DELAY,			// 11
+	CFG_ERR_SAMPLE_RATE,			// 12
+	CFG_ERR_SEISMIC_TRIG_LVL,		// 13
+	CFG_ERR_SOUND_TRIG_LVL,			// 14
+	CFG_ERR_RECORD_TIME,			// 15
+	CFG_ERR_BAR_INTERVAL,			// 16
+	CFG_ERR_SUM_INTERVAL,			// 17
+	CFG_ERR_AUTO_MON_MODE,			// 18
+	CFG_ERR_AUTO_CAL_MODE,			// 19
+	CFG_ERR_AUTO_PRINT,				// 20
+	CFG_ERR_LANGUAGE_MODE,			// 21
+	CFG_ERR_VECTOR_SUM,				// 22
+	CFG_ERR_UNITS_OF_MEASURE,		// 23
+	CFG_ERR_FREQ_PLOT_MODE,			// 24
+	CFG_ERR_FREQ_PLOT_TYPE,			// 25
+	CFG_ERR_ALARM_ONE_MODE,			// 26
+	CFG_ERR_ALARM_ONE_SEISMIC_LVL,	// 27
+	CFG_ERR_ALARM_ONE_SOUND_LVL,	// 28
+	CFG_ERR_ALARM_ONE_TIME,			// 29
+	CFG_ERR_ALARM_TWO_MODE,			// 30
+	CFG_ERR_ALARM_TWO_SEISMIC_LVL,	// 31
+	CFG_ERR_ALARM_TWO_SOUND_LVL,	// 32
+	CFG_ERR_ALARM_TWO_TIME,			// 33
+	CFG_ERR_TIMER_MODE,				// 34
+	CFG_ERR_TIMER_MODE_FREQ,		// 35
+	CFG_ERR_TIMER_ACTIVE_MIN, 		// 36
+	CFG_ERR_START_TIME,				// 37
+	CFG_ERR_STOP_TIME,				// 38
+	CFG_ERR_SYSTEM_TIME,			// 39
+	CFG_ERR_SYSTEM_DATE,			// 40
+	CFG_ERR_BAR_PRINT_CHANNEL,		// 41
+	CFG_ERR_FLASH_WRAPPING,			// 42
+	CFG_ERR_BAD_CRC,				// 43
+	CFG_ERR_MODEM_CONFIG,			// 44
+	CFG_ERR_END						// 45
+};
+
+enum {
+	NOP_CMD = 0,
+	ATZ_CMD,
+	INIT_CMD,
+	CONNECTED,
+	WAIT_FOR_CONNECT_CMD,
+
+/*
+	ATA_CMD,
+	SYSTEM_ONLINE_CMD,
+	ATZ2_CMD,
+
+	WAIT_FOR_ATZ_OK_CMD,
+	WAIT_FOR_INIT_OK_CMD,
+	WAIT_FOR_ATA_OK_CMD,
+	WAIT_FOR_RING_CMD,
+*/
+
+	NOP_XFER_STATE,
+	HEADER_XFER_STATE,
+	SUMMARY_TABLE_SEARCH_STATE,
+	EVENTREC_XFER_STATE,
+	DATA_XFER_STATE,
+	FOOTER_XFER_STATE,
+
+	DEMx_CMD,
+	DSMx_CMD,
+	DQMx_CMD,
+	VMLx_CMD,
+	END_OF_COMMAND_STATE_LIST
+};
+
+// Auto Dialout States
+enum {
+	AUTO_DIAL_IDLE = 0,
+	AUTO_DIAL_INIT,
+	AUTO_DIAL_CONNECTING,
+	AUTO_DIAL_CONNECTED,
+	AUTO_DIAL_RESPONSE,
+	AUTO_DIAL_WAIT,
+	AUTO_DIAL_RETRY,
+	AUTO_DIAL_SLEEP,
+	AUTO_DIAL_ACTIVE,
+	AUTO_DIAL_FINISH
+};
+
+#define	FIELD_LEN_02			4
+#define	FIELD_LEN_04			4
+#define	FIELD_LEN_06			6
+#define	FIELD_LEN_08			8
+
+
+typedef struct
+{
+	uint8 modemAvailable;		// Flag to indicate modem is available.
+	uint8 connectionState;		// State flahg to indicate which modem command to handle.
+	uint8 craftPortRcvFlag;		// Flag to indicate that incomming data is not modem commands.
+
+	uint8 xferState;			// Flag for xmitting data to the craft.
+	uint8 xferMutex;			// Flag to stop other message command from executing.
+	uint8 xferPrintState;		// Turn printing off when xfering data, Store the previous state.
+	uint8 ringIndicator;		//
+
+	uint8 systemIsLockedFlag;
+	uint8 numberOfRings;
+	uint8 firstConnection;
+
+	uint8 testingFlag;			// Modem is being tested/debugged, set to print to the PC
+	uint8 testingPrintFlag;		// Modem is being tested/debugged set debug to true.
+
+} MODEM_STATUS_STRUCT;
+
+// Command processing structure
+typedef struct
+{
+	uint8 cmd[HDR_CMD_LEN + 1];
+	uint8 type[HDR_TYPE_LEN + 1];
+	uint8 dataLength[HDR_DATALENGTH_LEN + 1];
+	uint8 unitModel[HDR_UNITMODEL_LEN + 1];
+	uint8 unitSn[HDR_SERIALNUMBER_LEN + 1];
+	uint8 compressCrcFlags[HDR_COMPRESSCRC_LEN + 1];
+	uint8 softwareVersion[HDR_SOFTWAREVERSION_LEN + 1];
+	uint8 dataVersion[HDR_DATAVERSION_LEN + 1];
+	uint8 spare[HDR_SPARE_LEN + 1];
+} COMMAND_MESSAGE_HEADER;
+
+// Command processing structure
+typedef struct
+{
+	uint16	size;			// Size of msg with data and CRLF.
+	uint8	status;			// Status of buffer.
+
+	uint8	* readPtr;		// Start of data in msg.
+	uint8 	* writePtr;		// Element in array to be written.
+	uint8	msg[CMD_BUFFER_SIZE];
+	uint16 	overRunCheck;
+} CMD_BUFFER_STRUCT;
+
+#pragma pack(1)
+typedef struct
+{
+	uint32				structureFlag;
+	DATE_TIME_STRUCT	downloadDate;
+	EVT_RECORD			event;
+	uint32				endFlag;
+} EVENT_RECORD_DOWNLOAD_STRUCT;
+#pragma pack()
+
+typedef struct
+{
+	uint8 	xferStateFlag;
+	uint8 	msgHdr[MESSAGE_HEADER_LENGTH+1];
+	EVENT_RECORD_DOWNLOAD_STRUCT	dloadEventRec;
+
+	uint8* startDloadPtr;
+	uint8* dloadPtr;
+	uint8* endDloadPtr;
+
+	uint8* startDataPtr;
+	uint8* dataPtr;
+	uint8* endDataPtr;
+	uint8   errorStatus;
+	uint8 	xmitBuffer[ CMD_BUFFER_SIZE ];
+	uint32 	xmitSize;
+} DEMx_XFER_STRUCT;
+
+typedef struct
+{
+	uint8 xferStateFlag;
+	uint8 msgHdr[MESSAGE_HEADER_LENGTH+1];
+	uint8 numOfRecStr[DATA_FIELD_LEN+1];
+	EVENT_RECORD_DOWNLOAD_STRUCT	dloadEventRec;
+
+	uint32	tableIndex;
+	uint32	tableIndexInUse;
+	uint32	tableIndexStart;
+	uint32	tableIndexEnd;
+
+	uint8* startDloadPtr;
+	uint8* dloadPtr;
+	uint8* endDloadPtr;
+
+} DSMx_XFER_STRUCT;
+
+#pragma pack(1)
+typedef struct
+{
+	uint8 	dqmxFlag;			// CC
+	uint8	mode;				// mode of the event
+	uint16	eventNumber;		// event number
+	uint8	serialNumber[SERIAL_NUMBER_STRING_SIZE];
+	DATE_TIME_STRUCT	eventTime;
+	uint8	endFlag;			// EE
+} DQMx_DATA_STRUCT;
+#pragma pack()
+
+typedef struct
+{
+	uint8 	xferStateFlag;
+	uint8 	dqmHdr[MESSAGE_HEADER_SIMPLE_LENGTH+10];
+	uint16	ramTableIndex;
+	uint16	numOfRecs;
+	DQMx_DATA_STRUCT dqmData[DQM_XFER_SIZE];
+} DQMx_XFER_STRUCT;
+
+typedef struct
+{
+	uint8 	xferStateFlag;
+	uint8 	vmlHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
+	uint16	lastDlUniqueEntryId;
+	uint16	startMonitorLogTableIndex;
+	uint16	tempMonitorLogTableIndex;
+	MONITOR_LOG_ENTRY_STRUCT vmlData[VML_DATA_LOG_ENTRIES];
+} VMLx_XFER_STRUCT;
+
+// Command processing structure
+
+typedef struct
+{
+	uint8 	cmdChar1;
+	uint8 	cmdChar2;
+	uint8 	cmdChar3;
+	void 	(* cmdFunction)(CMD_BUFFER_STRUCT *);
+
+} COMMAND_MESSAGE_STRUCT;
+
+
+
+////////////////////////////////////////////////////////////
+// structs for transfering configuration data remotely
+#pragma pack(1)
+typedef struct
+{
+	uint8	auto_monitor_mode;
+	uint8	auto_cal_mode;
+	uint8	unused[2];
+} AUTO_CAL_MON_CFG;
+#pragma pack()
+
+
+#pragma pack(1)
+typedef struct
+{
+	uint8 auto_print;
+	uint8 lang_mode;
+	uint8 vector_sum;
+	uint8 units_of_measure;
+	uint8 freq_plot_mode;
+	uint8 freq_plot_type;
+	uint8	unused[2];
+} PRINTER_OUTPUT_CFG;
+#pragma pack()
+
+
+#pragma pack(1)
+typedef struct
+{
+	uint8 alarm_one_mode;
+	uint8 alarm_two_mode;
+	uint32 alarm_one_seismic_lvl;
+	uint32 alarm_one_seismic_min_lvl;
+	uint32 alarm_one_air_lvl;
+	uint32 alarm_one_air_min_lvl;
+	uint32 alarm_two_seismic_lvl;
+	uint32 alarm_two_seismic_min_lvl;
+	uint32 alarm_two_air_lvl;
+	uint32 alarm_two_air_min_lvl;
+	uint32 alarm_one_time;
+	uint32 alarm_two_time;
+	uint8	unused[2];
+} ALARM_CFG;
+#pragma pack()
+
+
+#pragma pack(1)
+typedef struct
+{
+	uint8 	timer_mode;
+	uint8 	timer_mode_freq;
+	uint16 	timer_mode_active_minutes;
+	DATE_TIME_STRUCT  timer_start;
+	DATE_TIME_STRUCT  timer_stop;
+} TIMER_CFG;
+#pragma pack()
+
+
+#pragma pack(1)
+typedef struct
+{
+	uint8				mode;
+	uint8				monitorStatus;
+	uint16				sgVersion;
+	DATE_TIME_STRUCT	currentTime;
+	PARAMETERS_STRUCT	eventCfg;
+	AUTO_CAL_MON_CFG	autoCfg;
+	PRINTER_OUTPUT_CFG	printerCfg;
+	ALARM_CFG			alarmCfg;
+	TIMER_CFG			timerCfg;
+	uint8				flashWrapping;
+	uint8				unused[6];
+} SYSTEM_CFG;
+#pragma pack()
+
+
+
+
+
+// enum list for command index.
+enum CMD_MESSAGE_INDEX {
+	AAA = 0,	// Dummy function call.
+	MRC,		// Modem reset.
+
+#if 0
+	MVS,		// Modem view settings.
+	MPO,		// Toggle modem on/off.
+	MMO,		// Toggle modem mode transmit/receive.
+	MNO,		// Toggle modem phone number A/B/C.
+	MTO,		// Toggle modem log on/off.
+	MSD,		// Modem set default initialization string.
+	MSR,		// Modem set receive initialization string.
+	MST,		// Modem set transmit initialization string.
+	MSA,		// Modem set phone number A.
+	MSB,		// Modem set phone number B.
+	MSC,		// Modem set phone number C.
+	MVI,		// Modem view last call in detail.
+	MVO,		// Modem view last call out detail.
+	VTI,		// View time.
+	STI,		// Set time.
+	VDA,		// View date.
+	SDA,		// Set date.
+#endif
+
+	// Immediate commands
+	UNL,		// Unlock unit.
+	RST,		// Reset the unit.
+	DDP,		// Disable Debug Printing Toggle.
+	DAI,		// Disable Debug Printing Toggle.
+
+#if 0
+	ZRO,		// Zero sensors.
+	TTO,		// Toggle test mode on/off.
+	CAL,		// Calibrate sensors with cal pulse.
+	VOL,		// View on/off log.
+	VCL,		// View command log.
+	VSL,		// View summary log.
+	VEL,		// View event log.
+	ESM,		// Erase summary memory.
+	EEM,		// Erase event memory.
+	ECM,		// Erase configuration memory.
+	TRG,		// Trigger an event.
+#endif
+
+	VML,		// View Monitor Log
+	DQM,		// Download Quick summary memory.
+	DSM,		// Download summary memory.
+	DEM,		// Download event memory.
+	EEM,		// Erase event memory.
+	DCM,		// Download configuration memory.
+	UCM,		// Upload configuration memory.
+	DMM,		// Download modem configuration memory.
+	UMM,		// Upload modem configuration memory.
+	GMN,		// Go start Monitoring waveform/bargraph/combo.
+	HLT,		// Halt Monitoring waveform/bargraph/combo.
+	GAD,		// Get Auto-Dialout/Download information
+	GFS,		// Get flash stats
+	ZZZ,
+	TOTAL_COMMAND_MESSAGES
+};
+
+///----------------------------------------------------------------------------
+///	Prototypes
+///----------------------------------------------------------------------------
+uint8 parseIncommingMsgHeader(CMD_BUFFER_STRUCT*, COMMAND_MESSAGE_HEADER*);
+uint8 parseIncommingMsgCmd(CMD_BUFFER_STRUCT*, COMMAND_MESSAGE_HEADER*);
+
+void buildOutgoingHeaderBuffer(COMMAND_MESSAGE_HEADER*, uint8*);
+void buildOutgoingSimpleHeaderBuffer(uint8*, uint8*, uint8*, uint32, uint8, uint8);
+void sendErrorMsg(uint8*, uint8*);
+uint16 getInt16Field(uint8*);
+void buildIntDataField(char*, uint32, uint8);
+uint32 dataLengthStrToUint32(uint8*);
+void writeCompressedData(uint8 compressedData);
+void initAutoDialout(void);
+void checkAutoDialoutStatus(void);
+void startAutoDialoutProcess(void);
+void autoDialoutStateMachine(void);
+
+#endif // _REMOTE_COMMON_H_
+

@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# AvrStudio Solution File, Format Version 11.00
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "ns7100_Port", "ns7100_Port.cproj", "{FBEC2338-E508-4ABC-B209-67205B3FBC0C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Flash|AVR = Flash|AVR
+		RAM|AVR = RAM|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FBEC2338-E508-4ABC-B209-67205B3FBC0C}.Flash|AVR.ActiveCfg = Flash|AVR
+		{FBEC2338-E508-4ABC-B209-67205B3FBC0C}.Flash|AVR.Build.0 = Flash|AVR
+		{FBEC2338-E508-4ABC-B209-67205B3FBC0C}.RAM|AVR.ActiveCfg = RAM|AVR
+		{FBEC2338-E508-4ABC-B209-67205B3FBC0C}.RAM|AVR.Build.0 = RAM|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
