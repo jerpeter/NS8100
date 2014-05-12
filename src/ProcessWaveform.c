@@ -78,7 +78,6 @@ void ProcessWaveformData(void)
 					if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
 					{
 						// Store the exact time we received the trigger data sample
-						// fix_ns8100
 						//g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
 
 						// Change global wave state flag

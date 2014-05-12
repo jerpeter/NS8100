@@ -140,10 +140,6 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 				break;   
 
 				case BARGRAPH_MODE: 
-					// fix_ns8100 - Look into the assignment, why does it exist since it should already be set?
-					// For bargraph mode these have to be set.
-					g_triggerRecord.op_mode = BARGRAPH_MODE;
-					
 					// Set the default display mode to be the summary interval results
 					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
 					
@@ -455,6 +451,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	char buff[50];
+	char srBuff[6];
 	uint8 dotBuff[TOTAL_DOTS];
 	uint8 length = 0, i = 0;
 	static uint8 dotState = 0;
@@ -491,30 +488,35 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	if (++dotState >= TOTAL_DOTS)
 		dotState = 0;
 
+	if (g_triggerRecord.trec.sample_rate == 512)
+		sprintf((char*)srBuff, ".5K");
+	else
+		sprintf((char*)srBuff, "%dK", (int)(g_triggerRecord.trec.sample_rate / 1024));
+
 	if (g_monitorOperationMode == WAVEFORM_MODE)
 	{
 		if (g_busyProcessingEvent == YES)
 		{
-			length = (uint8)sprintf((char*)buff, "%s%s (W)", getLangText(PROCESSING_TEXT), dotBuff);
+			length = (uint8)sprintf((char*)buff, "%s%s(W-%s)", getLangText(PROCESSING_TEXT), dotBuff, srBuff);
 		}
 		else
 		{
-			length = (uint8)sprintf((char*)buff, "%s%s (W)", getLangText(MONITORING_TEXT), dotBuff);
+			length = (uint8)sprintf((char*)buff, "%s%s(W-%s)", getLangText(MONITORING_TEXT), dotBuff, srBuff);
 		}
 	}
 	else if (g_monitorOperationMode == BARGRAPH_MODE)
 	{
-		length = (uint8)sprintf((char*)buff, "%s%s (B)", getLangText(MONITORING_TEXT), dotBuff);
+		length = (uint8)sprintf((char*)buff, "%s%s(B-%s)", getLangText(MONITORING_TEXT), dotBuff, srBuff);
 	}
 	else if (g_monitorOperationMode == COMBO_MODE)
 	{
 		if (g_busyProcessingEvent == YES)
 		{
-			length = (uint8)sprintf((char*)buff, "%s%s (C)", getLangText(PROCESSING_TEXT), dotBuff);
+			length = (uint8)sprintf((char*)buff, "%s%s(C-%s)", getLangText(PROCESSING_TEXT), dotBuff, srBuff);
 		}
 		else
 		{
-			length = (uint8)sprintf((char*)buff, "%s%s (C)", getLangText(MONITORING_TEXT), dotBuff);
+			length = (uint8)sprintf((char*)buff, "%s%s(C-%s)", getLangText(MONITORING_TEXT), dotBuff, srBuff);
 		}
 
 	}
@@ -591,11 +593,13 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
+#if 0 // Not needed
 		//-----------------------------------------------------------------------
 		// Skip Line
 		//-----------------------------------------------------------------------
 		wndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+#endif
 
 #if 1 // Show hidden RTVA Values
 		if (g_showRVTA == YES)
@@ -604,15 +608,23 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			// Show RTVA
 			//-----------------------------------------------------------------------
 			byteSet(&buff[0], 0, sizeof(buff));	
-			length = (uint8)sprintf(buff," R%03x V%03x T%3x A%03x", 
+			length = (uint8)sprintf(buff,"R    V    T    A"); 
+
+			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+
+			wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+
+			byteSet(&buff[0], 0, sizeof(buff));	
+			length = (uint8)sprintf(buff," %04x %04x %04x %04x", 
 				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r),
 				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v),
 				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t),
 				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a));
 
-			wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-			wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
 #endif
 	}

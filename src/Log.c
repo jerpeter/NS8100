@@ -181,12 +181,12 @@ void closeMonitorLogEntry()
 {
 	char spareBuffer[40];
 
-	//debugPrint(RAW, "Closing entry at Monitor Log table index: %d, total recorded: %d\n", __monitorLogTblIndex, __monitorLogTbl[__monitorLogTblIndex].eventsRecorded);
+	//debug("Closing entry at Monitor Log table index: %d, total recorded: %d\n", __monitorLogTblIndex, __monitorLogTbl[__monitorLogTblIndex].eventsRecorded);
 
 	if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
 	{
 		// Set the elements to close the current log entry
-		//debugPrint(RAW, "Writing stop time to Monitor Log entry at: 0x%x\n", &(__monitorLogTbl[__monitorLogTblIndex].stopTime));
+		//debug("Writing stop time to Monitor Log entry at: 0x%x\n", &(__monitorLogTbl[__monitorLogTblIndex].stopTime));
 		__monitorLogTbl[__monitorLogTblIndex].stopTime = getCurrentTime();
 		__monitorLogTbl[__monitorLogTblIndex].stopTime.valid = TRUE;
 		__monitorLogTbl[__monitorLogTblIndex].status = COMPLETED_LOG_ENTRY;
@@ -195,7 +195,7 @@ void closeMonitorLogEntry()
 
 		byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
 		convertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
-		//debugPrint(RAW, "\tStop Time: %s\n", (char*)&spareBuffer[0]);
+		//debug("\tStop Time: %s\n", (char*)&spareBuffer[0]);
 	}
 }
 
@@ -436,6 +436,8 @@ void appendMonitorLogEntryFile(void)
 		{
 			debugWarn("Warning: Monitor Log File size does not comprise all whole entries!\r\n");
 		}
+
+		debug("Writing Monitor log entry to log file...\n");
 
 		fl_fwrite((uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT), 1, monitorLogFile);
 

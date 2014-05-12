@@ -98,6 +98,8 @@ void deleteEventFileRecord(uint16 eventNumber);
 void deleteEventFileRecords(void);
 void reInitSdCardAndFat32(void);
 inline void adjustSampleForBitAccuracy(void);
+void powerDownSDCard(void);
+void powerUpSDCardAndInitFat32(void);
 
 void cacheResultsEventInfo(EVT_RECORD* eventRecordToCache);
 

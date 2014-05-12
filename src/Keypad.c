@@ -351,9 +351,11 @@ BOOLEAN keypad(void)
 				}
 				else
 				{
-					g_triggerRecord.trec.sample_rate += 1024;
-
-					debug("New sample rate: %d\n", g_triggerRecord.trec.sample_rate);
+					__monitorLogTblKey = 0;
+					initMonitorLog();
+					
+					//g_triggerRecord.trec.sample_rate += 1024;
+					//debug("New sample rate: %d\n", g_triggerRecord.trec.sample_rate);
 				}
 				
 				p_msg->cmd = 0;

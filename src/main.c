@@ -185,21 +185,6 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM);
 void Setup_8100_Usart_RS232_ISR(void);
 
 //=============================================================================
-//
-//=============================================================================
-#if 1 // fix_ns8100
-void soft_delay(volatile unsigned long int counter)
-{
-	unsigned long int countdown = (counter << 2) + counter;
-	
-	for(; countdown > 0;)
-	{
-		countdown--;
-	}
-}
-#endif
-
-//=============================================================================
 // SPI_0_Init
 //=============================================================================
 void SPI_0_Init(void)
@@ -434,7 +419,7 @@ void _init_startup(void)
 	// Chip Select Initialization
 	avr32_chip_select_init(FOSC0);
 	
-	soft_delay(1000);
+	soft_usecWait(1000);
 }
 
 //=================================================================================================
@@ -863,7 +848,7 @@ void InitSystemHardware_NS8100(void)
 
 	//-------------------------------------------------------------------------
 	//Display_Craft_Logo();
-	//soft_delay(3 * SOFT_SECS);
+	//soft_usecWait(3 * SOFT_SECS);
 }
 
 //=================================================================================================
@@ -925,7 +910,7 @@ void InitSoftwareSettings_NS8100(void)
 	setupMnDef();
 
 	// Check for Timer mode activation
-#if 0
+#if 0 // fix_ns8100
     debug("Init Timer Mode Check...\n");
 	if (timerModeActiveCheck() == TRUE)
 	{

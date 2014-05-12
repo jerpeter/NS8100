@@ -51,7 +51,6 @@ extern uint16 g_quarterSecBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
 extern uint16* g_startOfQuarterSecBuff;
 extern uint16* g_tailOfQuarterSecBuff;
 extern uint16* g_endOfQuarterSecBuff;
-//extern uint16* g_readQuarterSecBuff;
 extern uint16 g_maxEventBuffers;
 extern uint16 g_nextEventNumberToUse;
 extern FL_FILE* g_currentEventFileHandle;

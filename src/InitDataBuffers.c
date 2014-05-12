@@ -190,31 +190,31 @@ uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 
 	samplePtr = dataPtr;
 
-	if (*samplePtr >= POS_VALID_PEAK)
+	if (*samplePtr >= (g_bitAccuracyMidpoint + FREQ_VALID_PEAK))
 	{
-		while ((*samplePtr >= POS_CROSSOVER_BACKWARD) && (samplePtr > (startAddrPtr + 4)))
+		while ((*samplePtr >= (g_bitAccuracyMidpoint + FREQ_CROSSOVER_BACKWARD)) && (samplePtr > (startAddrPtr + 4)))
 		{
 			samplePtr -= 4;
 			dataCount++;
 		}
     
 		samplePtr = dataPtr;
-		while ((*samplePtr >= POS_CROSSOVER_FORWARD) && (samplePtr < (endAddrPtr - 4)))
+		while ((*samplePtr >= (g_bitAccuracyMidpoint + FREQ_CROSSOVER_FORWARD)) && (samplePtr < (endAddrPtr - 4)))
 		{
 			samplePtr += 4;
 			dataCount++;
 		}
 	}
-	else if (*samplePtr <= NEG_VALID_PEAK)
+	else if (*samplePtr <= (g_bitAccuracyMidpoint - FREQ_VALID_PEAK))
 	{
-		while ((*samplePtr <= NEG_CROSSOVER_BACKWARD) && (samplePtr > (startAddrPtr + 4)))
+		while ((*samplePtr <= (g_bitAccuracyMidpoint - FREQ_CROSSOVER_BACKWARD)) && (samplePtr > (startAddrPtr + 4)))
 		{
 			samplePtr -= 4;
 			dataCount++;
 		}
     
 		samplePtr = dataPtr;
-		while ((*samplePtr <= NEG_CROSSOVER_FORWARD) && (samplePtr < (endAddrPtr - 4)))
+		while ((*samplePtr <= (g_bitAccuracyMidpoint - FREQ_CROSSOVER_FORWARD)) && (samplePtr < (endAddrPtr - 4)))
 		{
 			samplePtr += 4;
 			dataCount++;

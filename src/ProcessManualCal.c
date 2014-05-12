@@ -180,6 +180,8 @@ void MoveManuelCalToFlash(void)
 		
 		for (i = (uint16)g_samplesInCal; i != 0; i--)
 		{
+			if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+
 			//=========================================================
 			// First channel - A
 			sample = *(g_currentEventSamplePtr + 0);
@@ -240,8 +242,8 @@ void MoveManuelCalToFlash(void)
 				sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + 3);
 			}
 
-			// Store entire sample
 #if 0 // ns7100
+			// Store entire sample
 			storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 #endif
 			

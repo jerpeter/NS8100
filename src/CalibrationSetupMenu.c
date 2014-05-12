@@ -258,15 +258,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
-#if 0 // ns7100
-		// If IDLE, wait for IDLE state to finish
-		while (ISPI_GetISPI_State() == ISPI_IDLE){ /*spinBar();*/ }
-
-		// If not IDLE, wait for 430 data processing to finish before moving on
-		while (ISPI_GetISPI_State() != ISPI_IDLE){ /*spinBar();*/ }
-#else // fix_ns8100
-
-#endif
+		// Necessary?
 	}
 
 	memcpy(&s_calPreTrigData[0], &g_startOfQuarterSecBuff[0], (256 * 4 * 2));
@@ -443,15 +435,14 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 ****************************************/
 void mnStartCal(void)
 {
-	// fix_ns8100
-	// Setup AD Channel config
-	SetupADChannelConfig(CAL_PULSE_FIXED_SAMPLE_RATE);
-	GetChannelOffsets();
-
 	// Setup Analog controls
 	SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1);
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
+
+	// Setup AD Channel config
+	SetupADChannelConfig(CAL_PULSE_FIXED_SAMPLE_RATE);
+	GetChannelOffsets(CAL_PULSE_FIXED_SAMPLE_RATE);
 
 	// Setup ISR to clock the data sampling
 	Setup_8100_TC_Clock_ISR(CAL_PULSE_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
@@ -466,20 +457,5 @@ void mnStartCal(void)
 ****************************************/
 void mnStopCal(void)
 {
-#if 0 // ns7100
-	if (g_sampleProcessing == ACTIVE_STATE)
-	{
-		// If IDLE, wait for IDLE state to finish
-		while (ISPI_GetISPI_State() == ISPI_IDLE){ /*spinBar()*/;}
-
-		// If not IDLE, wait for 430 data processing to finish before moving on
-		while (ISPI_GetISPI_State() != ISPI_IDLE){ /*spinBar()*/;}
-	}
-
-	while (ISPI_SendMsg(STOP_TRIGGER_CMD)){;}
-
-	g_sampleProcessing = IDLE_STATE;
-#else // fix_ns8100
 	Stop_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
-#endif
 }

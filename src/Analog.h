@@ -108,7 +108,7 @@ void SetAcousticGainSelect(uint8 acousticGain);
 void SetCalSignalEnable(uint8 enable);
 void SetCalSignal(uint8 data);
 void GenerateCalSignal(void);
-void GetChannelOffsets(void);
+void GetChannelOffsets(uint32 sampleRate);
 void GatherSampleData(void);
 void adSetCalSignalLow(void);
 void adSetCalSignalHigh(void);

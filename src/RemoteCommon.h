@@ -71,11 +71,9 @@
 			if ((DATA >= 'a') && (DATA <= 'z'))		\
 				DATA = (uint8)(DATA - 32);
 
-#if 0 // fix_ns8100
-#ifndef CRLF
-	#define CRLF 0x0D0A
-#endif
-#endif
+//#ifndef CRLF
+//	#define CRLF 0x0D0A
+//#endif
 
 // This is the length of the message header
 #define MESSAGE_HEADER_LENGTH	38

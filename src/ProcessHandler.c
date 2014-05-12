@@ -242,7 +242,7 @@ void startDataCollection(uint32 sampleRate)
 	
 	// Get current A/D offsets for normalization
 	debug("Getting channel offsets...\n");
-	GetChannelOffsets();
+	GetChannelOffsets(sampleRate);
 
 	debug("Setup TC clocks...\n");
 	// Setup ISR to clock the data sampling
@@ -299,7 +299,7 @@ void stopMonitoring(uint8 mode, uint8 operation)
 		{
 			while (getSystemEventState(TRIGGER_EVENT))
 			{
-				debug("Trigger Event Finish\n");
+				debug("Handle Waveform Trigger Event Completion\n");
 				MoveWaveformEventToFlash();
 			}
 		}
@@ -308,7 +308,7 @@ void stopMonitoring(uint8 mode, uint8 operation)
 		{
 			while (getSystemEventState(TRIGGER_EVENT))
 			{
-				debug("Trigger Event Finish\n");
+				debug("Handle Combo - Waveform Trigger Event Completion\n");
 				MoveComboWaveformEventToFile();
 			}
 		}
@@ -316,12 +316,14 @@ void stopMonitoring(uint8 mode, uint8 operation)
 		if (mode == BARGRAPH_MODE)
 		{
 			// Handle the end of a Bargraph event
+			debug("Handle End of Bargraph event\n");
 			EndBargraph();
 		}
 		
 		if (mode == COMBO_MODE)
 		{
 			// Handle the end of a Combo Bargraph event
+			debug("Handle End of Combo - Bargraph event\n");
 			EndCombo();
 		}
 		
@@ -612,17 +614,6 @@ void bargraphForcedCalibration(void)
 
 	// Just make absolutely sure we are done with the Cal pulse
 	while ((volatile uint32)g_manualCalSampleCount != 0) { /* spin */ }
-#if 0 // fix_ns8100
-	{
-		// After 350ms, the Cal pulse should have decremented the Manual Cal Sample count
-		if ((volatile uint32)g_manualCalSampleCount == manualCalProgressCheck)
-			break; // There's a problem, break out and hope for the best, but that won't happen
-		
-		// Cache the current value and try again
-		manualCalProgressCheck = g_manualCalSampleCount;
-		soft_usecWait(5 * SOFT_MSECS);
-	}
-#endif
 
 	// Stop data transfer
 	stopDataClock();

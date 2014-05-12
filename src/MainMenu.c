@@ -139,7 +139,7 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 				case (ENTER_KEY):
 					switch (mn_layout_ptr->curr_ln)
 					{
-						case (3):
+						case (DEFAULT_ROW_3): // Waveform
 							if (g_factorySetupRecord.invalid)
 							{
 								debugWarn("Factory setup record not found.\n");
@@ -154,7 +154,8 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							}
 							break; 
-						case (4):
+
+						case (DEFAULT_ROW_4): // Bargraph
 							if (g_factorySetupRecord.invalid)
 							{
 								debugWarn("Factory setup record not found.\n");
@@ -169,7 +170,8 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							}
 							break;
-						case (5): 
+
+						case (DEFAULT_ROW_5): // Combo
 							if (g_factorySetupRecord.invalid)
 							{
 								debugWarn("Factory setup record not found.\n");
@@ -184,7 +186,8 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							}
 							break;
-						case (6): 
+
+						case (DEFAULT_ROW_6): // Load Saved Record
 							clearSoftTimer(MENU_UPDATE_TIMER_NUM);
 							g_activeMenu = LOAD_REC_MENU;
 							ACTIVATE_MENU_MSG(); (*menufunc_ptrs[g_activeMenu]) (mn_msg);
@@ -201,10 +204,18 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					mainMnScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (MINUS_KEY): 
+#if 0 // Test
+					powerDownSDCard();
+#else
 					adjustLcdContrast(DARKER);
+#endif
 					break;
 				case (PLUS_KEY): 
+#if 0 // Test
+					powerUpSDCardAndInitFat32();
+#else
 					adjustLcdContrast(LIGHTER); 
+#endif
 					break;
 				case (ESC_KEY):
 					// Reset the current line to tbe the top line	

@@ -1275,9 +1275,7 @@ void displaySensorType(void)
 			case SENSOR_10_IN	: sensorType = X2_10_IPS_TEXT; break;
 			case SENSOR_5_IN	: sensorType = X4_5_IPS_TEXT; break;
 			case SENSOR_2_5_IN	: sensorType = X8_2_5_IPS_TEXT; break;
-#if 0 // fix_ns8100
 			case SENSOR_ACC		: sensorType = ACC_793L_TEXT; break;
-#endif
 		}
 
 		sprintf((char*)message, "%s: %s", getLangText(SENSOR_GAIN_TYPE_TEXT), getLangText(sensorType));

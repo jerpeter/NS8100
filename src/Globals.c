@@ -77,7 +77,6 @@ uint16 g_quarterSecBuff[(16384 * 4)];
 uint16* g_startOfQuarterSecBuff;
 uint16* g_tailOfQuarterSecBuff;
 uint16* g_endOfQuarterSecBuff;
-//uint16* g_readQuarterSecBuff;
 uint16 g_maxEventBuffers;
 uint16 g_nextEventNumberToUse;
 FL_FILE* g_currentEventFileHandle;

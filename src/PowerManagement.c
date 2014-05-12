@@ -55,7 +55,9 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			//debug("Power Off: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
+#if 0 // Skip re-init since it was fond to be causing a lockup
 				init_mcp23018(IO_ADDRESS_KPD);
+#endif				
 				state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 				state |= 0x40;
 				write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
@@ -71,18 +73,26 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			//debug("Power Shutdown Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				init_mcp23018(IO_ADDRESS_KPD);
+#if 0 // Re-init causing lockup. No longer needed
+				//init_mcp23018(IO_ADDRESS_KPD);
+				//debug("MCP23018 re-init complete\n");
+#endif
 				state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 				state |= 0x80;
 				write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
+				//debug("MCP23018 write complete\n");
 				s_powerManagement.reg |= POWER_SHUTDOWN_ENABLE_BIT;
 			} 
 			else
 			{
-				init_mcp23018(IO_ADDRESS_KPD);
+#if 0 // Re-init causing lockup. No longer needed
+				//init_mcp23018(IO_ADDRESS_KPD);
+				//debug("MCP23018 re-init complete\n");
+#endif
 				state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 				state &= ~0x80;
 				write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
+				//debug("MCP23018 write complete\n");
 				s_powerManagement.reg &= ~(POWER_SHUTDOWN_ENABLE_BIT);
 			}
 			break;

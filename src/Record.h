@@ -191,8 +191,8 @@ typedef struct
 
 typedef struct
 {
-	int32 sensor_type;
-	int32 sensitivity;
+	uint32 sensor_type;
+	uint32 sensitivity;
 } SENSOR_INFO_STRUCT;
 
 typedef struct

@@ -85,7 +85,6 @@ void LcdWrite(uint8 mode, uint8 data, uint8 segment)
 #if	1
 #include "lcd.h"
 extern uint16 lcd_port_image;
-extern void soft_delay(volatile unsigned long int);
 
     volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
 	uint8 lcd_register, display_half;
@@ -134,19 +133,19 @@ extern void soft_delay(volatile unsigned long int);
     lcd_port_image |= LCD_ENABLE;
     *lcd = lcd_port_image;
 
-    soft_delay(10);
+    soft_usecWait(10);
 
     //Set E low
     lcd_port_image &= ~LCD_ENABLE;
     *lcd = lcd_port_image;
 
-    soft_delay(10);
+    soft_usecWait(10);
 
     //Set write, CS1, CS2 and address high
     lcd_port_image |= (LCD_READ_WRITE | LCD_CS1 | LCD_CS2 | LCD_RS);
     *lcd = lcd_port_image;
 
-    soft_delay(10);
+    soft_usecWait(10);
 #endif
 
 #if 0 

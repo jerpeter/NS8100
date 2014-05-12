@@ -165,7 +165,7 @@ typedef struct
 	uint32				barIntervalsCaptured;	// Number of bar interval samples save in flash.
 	uint16				summariesCaptured;		// Number bar summaries captured and saved in flsah.
 
-	uint8				unused[UNUSED_CALCULATED_SIZE];	// Space for expansion, currently 50
+	uint8				unused[UNUSED_CALCULATED_SIZE];	// Space for expansion
 	uint32				calcStructEndFlag;
 } CALCULATED_DATA_STRUCT;
 #pragma pack()

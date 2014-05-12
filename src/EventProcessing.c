@@ -1144,7 +1144,6 @@ BOOLEAN validEventFile(uint16 eventNumber)
 
 //*****************************************************************************
 // FUNCTION
-//  void getEventFileHandle(uint16 eventNumer)
 //*****************************************************************************
 #include "sd_mmc_test_menu.h"
 #define SD_MMC_SPI_NPCS	2
@@ -1180,6 +1179,56 @@ void reInitSdCardAndFat32(void)
 	{
 		debugErr("\n\nSD Card not detected!\n");
 	}
+}
+
+//*****************************************************************************
+// FUNCTION
+//*****************************************************************************
+void powerDownSDCard(void)
+{
+	debugRaw("\n Powering down SD Card... ");
+
+	// Power off the SD card
+	gpio_clr_gpio_pin(AVR32_PIN_PB15);
+
+	// Wait for power to propagate
+	soft_usecWait(10 * SOFT_MSECS);
+
+	debugRaw("done.\n");
+}
+
+//*****************************************************************************
+// FUNCTION
+//*****************************************************************************
+void powerUpSDCardAndInitFat32(void)
+{
+	debugRaw("\nPowering up SD Card and ReInit Fat32... \n");
+
+	// Power on the SD Card
+	gpio_set_gpio_pin(AVR32_PIN_PB15);
+
+	// Wait for power to propagate
+	soft_usecWait(10 * SOFT_MSECS);
+
+	// Check if SD Detect pin 
+	if (gpio_get_pin_value(AVR32_PIN_PA02) == ON)
+	{
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		sd_mmc_spi_internal_init();
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+
+		FAT32_InitDrive();
+		if (FAT32_InitFAT() == FALSE)
+		{
+			debugErr("FAT32 Initialization failed!\n\r");
+		}
+	}
+	else
+	{
+		debugErr("\n\nSD Card not detected!\n");
+	}
+
+	debugRaw("done.\n");
 }
 
 //*****************************************************************************

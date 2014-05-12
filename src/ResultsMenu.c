@@ -350,6 +350,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	float tempPeakDisp = 0;
 	float tempFreq = 0;
 	char buff[50];
+	char srBuff[6];
 	char displayFormat[10];
 	DATE_TIME_STRUCT time;
 	uint16 bitAccuracyScale;
@@ -423,24 +424,29 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		for (; i < (TOTAL_DOTS-1); i++)		dotBuff[i] = ' ';
 		if (++dotState >= TOTAL_DOTS)		dotState = 0;
 
+		if (g_triggerRecord.trec.sample_rate == 512)
+			sprintf((char*)srBuff, ".5K");
+		else
+			sprintf((char*)srBuff, "%dK", (int)(g_triggerRecord.trec.sample_rate / 1024));
+
 		if (g_monitorOperationMode == WAVEFORM_MODE)
 		{
 			if (g_busyProcessingEvent == YES)
 			{
-				length = (uint8)sprintf((char*)buff, "%s%s (W)", getLangText(PROCESSING_TEXT), dotBuff);
+				length = (uint8)sprintf((char*)buff, "%s%s(W-%s)", getLangText(PROCESSING_TEXT), dotBuff, srBuff);
 			}
 			else
 			{
-				length = (uint8)sprintf((char*)buff, "%s%s (W)", getLangText(MONITORING_TEXT), dotBuff);
+				length = (uint8)sprintf((char*)buff, "%s%s(W-%s)", getLangText(MONITORING_TEXT), dotBuff, srBuff);
 			}
 		}
 		else if (g_monitorOperationMode == BARGRAPH_MODE)
 		{
-			length = (uint8)sprintf((char*)buff, "%s%s (B)", getLangText(MONITORING_TEXT), dotBuff);
+			length = (uint8)sprintf((char*)buff, "%s%s(B-%s)", getLangText(MONITORING_TEXT), dotBuff, srBuff);
 		}
 		else if (g_monitorOperationMode == COMBO_MODE)
 		{
-			length = (uint8)sprintf((char*)buff, "%s%s (C)", getLangText(MONITORING_TEXT), dotBuff);
+			length = (uint8)sprintf((char*)buff, "%s%s(C-%s)", getLangText(MONITORING_TEXT), dotBuff, srBuff);
 		}
 	}
 	else

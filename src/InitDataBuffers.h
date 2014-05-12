@@ -22,7 +22,7 @@
 ///	Defines
 ///----------------------------------------------------------------------------
 #define MIN_SAMPLE_RATE				512
-#define MAX_SAMPLE_RATE				8192
+#define MAX_SAMPLE_RATE				8192 // fix_ns8100
 #define MAX_NUM_OF_CHANNELS			4
 #define CHANNEL_DATA_IN_BYTES		2
 #define MAX_CAL_SAMPLES				100
@@ -67,6 +67,7 @@ typedef enum
 } EMBEDDED_CMDS;
 #endif
 
+#if 0 // ns7100
 typedef enum
 {
 	POS_VALID_PEAK 			= 0x0804,
@@ -76,6 +77,14 @@ typedef enum
 	NEG_CROSSOVER_BACKWARD 	= 0x07FE,
 	NEG_CROSSOVER_FORWARD 	= 0x07FF
 } CROSSOVER_LEVELS;
+#else // ns8100
+typedef enum
+{
+	FREQ_VALID_PEAK 			= 4,
+	FREQ_CROSSOVER_BACKWARD 	= 2,
+	FREQ_CROSSOVER_FORWARD 		= 1
+} CROSSOVER_LEVELS;
+#endif
 
 typedef enum
 {
@@ -133,8 +142,8 @@ enum
 
 #define ACCURACY_16_BIT_MIDPOINT 0x8000
 #define ACCURACY_14_BIT_MIDPOINT 0x2000
-#define ACCURACY_12_BIT_MIDPOINT 0x0800
-#define ACCURACY_10_BIT_MIDPOINT 0x0200
+#define ACCURACY_12_BIT_MIDPOINT 0x800
+#define ACCURACY_10_BIT_MIDPOINT 0x200
 
 ///----------------------------------------------------------------------------
 ///	Prototypes

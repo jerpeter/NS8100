@@ -30,6 +30,7 @@
 #include "lcd.h"
 #include "M23018.h"
 #include "gpio.h"
+#include "Common.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -1361,8 +1362,6 @@ void InitDisplay( void )
 //     uint8 lcd_data - Data to write to the display.                       //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-extern void soft_delay(volatile unsigned long int);
-
 void Write_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half )
 {
 //    static unsigned short temp = 0;
@@ -1402,19 +1401,19 @@ void Write_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half )
     lcd_port_image |= LCD_ENABLE;
     *lcd = lcd_port_image;
 
-    soft_delay(100);
+    soft_usecWait(100);
 
     //Set E low
     lcd_port_image &= ~LCD_ENABLE;
     *lcd = lcd_port_image;
 
-    soft_delay(100);
+    soft_usecWait(100);
 
     //Set write, CS1, CS2 and address high
     lcd_port_image |= (LCD_READ_WRITE | LCD_CS1 | LCD_CS2 | LCD_RS);
     *lcd = lcd_port_image;
 
-    soft_delay(100);
+    soft_usecWait(100);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

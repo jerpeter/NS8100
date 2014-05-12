@@ -66,46 +66,68 @@
 ///----------------------------------------------------------------------------
 void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 {
-	uint16 trash;
+	uint16 temperature;
+	uint16 channelConfigReadback;
 #if 1
-	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-    spi_write(&AVR32_SPI0, 0x0000);
-    spi_read(&AVR32_SPI0, &(dataPtr->r));
-    spi_write(&AVR32_SPI0, 0x0000);
-    spi_read(&AVR32_SPI0, &trash);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_AND_TEMP)
+	{
+		// Chan 0
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		if(channelConfigReadback != 0xe0d0) { /* Error */ }
 
-    // Chan 1
-    spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-    spi_write(&AVR32_SPI0, 0x0000);
-    spi_read(&AVR32_SPI0, &(dataPtr->t));
-    spi_write(&AVR32_SPI0, 0x0000);
-    spi_read(&AVR32_SPI0, &trash);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		// Chan 1
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->t));
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		if(channelConfigReadback != 0xe2d0) { /* Error */ }
 
-    // Chan 2
-    spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-    spi_write(&AVR32_SPI0, 0x0000);
-    spi_read(&AVR32_SPI0, &(dataPtr->v));
-    spi_write(&AVR32_SPI0, 0x0000);
-    spi_read(&AVR32_SPI0, &trash);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		// Chan 2
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		if(channelConfigReadback != 0xe4d0) { /* Error */ }
 
-    // Chan 3
-    spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-    spi_write(&AVR32_SPI0, 0x0000);
-    spi_read(&AVR32_SPI0, &(dataPtr->a));
-    spi_write(&AVR32_SPI0, 0x0000);
-    spi_read(&AVR32_SPI0, &trash);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		// Chan 3
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->a));
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		if(channelConfigReadback != 0xe6d0) { /* Error */ }
 
-    // Temp
-    spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-    spi_write(&AVR32_SPI0, 0x0000);
-    spi_read(&AVR32_SPI0, &trash);
-    spi_write(&AVR32_SPI0, 0x0000);
-    spi_read(&AVR32_SPI0, &trash);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		// Temp
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &temperature);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		if(channelConfigReadback != 0xb6d0) { /* Error */ }
+	}
+	else // FOUR_AD_CHANNELS_NO_READBACK_NO_TEMP
+	{
+		// Chan 0
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+
+		// Chan 1
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->t));
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+
+		// Chan 2
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+
+		// Chan 3
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->a));
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	}	
 #endif
 
 #if 0
@@ -433,13 +455,17 @@ void GenerateCalSignal(void)
 ///	Function:	GetChannelOffsets
 ///	Purpose:
 ///----------------------------------------------------------------------------
-void GetChannelOffsets(void)
+void GetChannelOffsets(uint32 sampleRate)
 {
 	SAMPLE_DATA_STRUCT tempData;
 	uint32 rTotal = 0;
 	uint32 vTotal = 0;
 	uint32 tTotal = 0;
 	uint32 aTotal = 0;
+	uint32 rCount = 1;
+	uint32 vCount = 1;
+	uint32 tCount = 1;
+	uint32 aCount = 1;
 	uint32 i = 0;
 	uint32 timeDelay = (977 / (g_triggerRecord.trec.sample_rate / 512) / 2);
 	uint8 powerAnalogDown = NO;
@@ -459,7 +485,7 @@ void GetChannelOffsets(void)
 
 	debug("Get Channel Offset: Read and pitch... (Address boundary: %s)\n", ((uint32)(&tempData) % 4 == 0) ? "YES" : "NO");
 	// Read and pitch samples
-	for (i = 0; i < g_triggerRecord.trec.sample_rate; i++)
+	for (i = 0; i < (g_triggerRecord.trec.sample_rate * 2); i++)
 	{
 		ReadAnalogData(&tempData);
 
@@ -469,7 +495,7 @@ void GetChannelOffsets(void)
 		soft_usecWait(timeDelay);
 	}
 
-	debug("Get Channel Offset: Read and sum...\n");
+	debug("Get Channel Offset: 1st Pass Read and sum...\n");
 	// Read and sum samples
 	for (i = 0; i < g_triggerRecord.trec.sample_rate; i++)
 	{
@@ -492,16 +518,75 @@ void GetChannelOffsets(void)
 	tTotal /= g_triggerRecord.trec.sample_rate;
 	aTotal /= g_triggerRecord.trec.sample_rate;
 
-	debug("A/D Channel offset average: 0x%x, 0x%x, 0x%x, 0x%x\n", rTotal, vTotal, tTotal, aTotal);
+	// Set the channel offsets
+	g_channelOffset.r_offset = (int16)(rTotal - ACCURACY_16_BIT_MIDPOINT);
+	g_channelOffset.v_offset = (int16)(vTotal - ACCURACY_16_BIT_MIDPOINT);
+	g_channelOffset.t_offset = (int16)(tTotal - ACCURACY_16_BIT_MIDPOINT);
+	g_channelOffset.a_offset = (int16)(aTotal - ACCURACY_16_BIT_MIDPOINT);
+
+	debug("A/D Channel First Pass channel average: 0x%x, 0x%x, 0x%x, 0x%x\n", rTotal, vTotal, tTotal, aTotal);
+	debug("A/D Channel First Pass channel offsets: %d, %d, %d, %d\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
+
+	// Seed total to ensure count is non-zero (count initialized to 1 for this reason)
+	rTotal = ACCURACY_16_BIT_MIDPOINT;
+	vTotal = ACCURACY_16_BIT_MIDPOINT;
+	tTotal = ACCURACY_16_BIT_MIDPOINT;
+	aTotal = ACCURACY_16_BIT_MIDPOINT;
+
+	debug("Get Channel Offset: 2nd Pass Read and sum...\n");
+	// Read and sum samples
+	for (i = 0; i < g_triggerRecord.trec.sample_rate; i++)
+	{
+		ReadAnalogData(&tempData);
+
+		//debug("Offset sum data: 0x%x, 0x%x, 0x%x, 0x%x\n", tempData.r, tempData.v, tempData.t, tempData.a);
+
+		if (((tempData.r - g_channelOffset.r_offset) > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_MIN_VALUE)) && 
+			(((tempData.r - g_channelOffset.r_offset) < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_MIN_VALUE))))
+		{
+			rTotal += tempData.r;
+			rCount++;
+		}
+
+		if (((tempData.v - g_channelOffset.v_offset) > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_MIN_VALUE)) && 
+			(((tempData.v - g_channelOffset.v_offset) < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_MIN_VALUE))))
+		{
+			vTotal += tempData.v;
+			vCount++;
+		}
+
+		if (((tempData.t - g_channelOffset.t_offset) > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_MIN_VALUE)) && 
+			(((tempData.t - g_channelOffset.t_offset) < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_MIN_VALUE))))
+		{
+			tTotal += tempData.t;
+			tCount++;
+		}
+
+		if (((tempData.a - g_channelOffset.a_offset) > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_MIN_VALUE)) && 
+			(((tempData.a - g_channelOffset.a_offset) < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_MIN_VALUE))))
+		{
+			aTotal += tempData.a;
+			aCount++;
+		}
+
+		// Delay equivalent to the time in between gathering samples for the current sample rate
+		soft_usecWait(timeDelay);
+	}
+
+	// Average out the summations
+	rTotal /= rCount;
+	vTotal /= vCount;
+	tTotal /= tCount;
+	aTotal /= aCount;
 
 	// Set the channel offsets
-	g_channelOffset.r_offset = (int16)(rTotal - g_bitAccuracyMidpoint);
-	g_channelOffset.v_offset = (int16)(vTotal - g_bitAccuracyMidpoint);
-	g_channelOffset.t_offset = (int16)(tTotal - g_bitAccuracyMidpoint);
-	g_channelOffset.a_offset = (int16)(aTotal - g_bitAccuracyMidpoint);
+	g_channelOffset.r_offset = (int16)(rTotal - ACCURACY_16_BIT_MIDPOINT);
+	g_channelOffset.v_offset = (int16)(vTotal - ACCURACY_16_BIT_MIDPOINT);
+	g_channelOffset.t_offset = (int16)(tTotal - ACCURACY_16_BIT_MIDPOINT);
+	g_channelOffset.a_offset = (int16)(aTotal - ACCURACY_16_BIT_MIDPOINT);
 
-	debug("A/D Channel offsets (%d-bit, Midpoint:0x%x): %d, %d, %d, %d\n",
-		g_triggerRecord.trec.bitAccuracy, g_bitAccuracyMidpoint, g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
+	debug("A/D Channel Second Pass channel average: 0x%x, 0x%x, 0x%x, 0x%x\n", rTotal, vTotal, tTotal, aTotal);
+	debug("A/D Channel Second Pass channel offsets: %d, %d, %d, %d\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 
 	// If we had to power on the A/D, then power it off
 	if (powerAnalogDown == YES)
@@ -541,40 +626,40 @@ void GatherSampleData(void)
 		// Check if not recording an event and not handling a cal pulse
 		if ((recording == NO) && (calPulse == NO))
 		{
-			if (*(g_tailOfQuarterSecBuff + 1) > g_bitAccuracyMidpoint)
+			if (*(g_tailOfQuarterSecBuff + 1) > ACCURACY_16_BIT_MIDPOINT)
 			{
-				if ((*(g_tailOfQuarterSecBuff + 1) - g_bitAccuracyMidpoint) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((*(g_tailOfQuarterSecBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 1)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 1)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 
-			if (*(g_tailOfQuarterSecBuff + 2) > g_bitAccuracyMidpoint)
+			if (*(g_tailOfQuarterSecBuff + 2) > ACCURACY_16_BIT_MIDPOINT)
 			{
-				if ((*(g_tailOfQuarterSecBuff + 2) - g_bitAccuracyMidpoint) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((*(g_tailOfQuarterSecBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 2)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 2)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 
-			if (*(g_tailOfQuarterSecBuff + 3) > g_bitAccuracyMidpoint)
+			if (*(g_tailOfQuarterSecBuff + 3) > ACCURACY_16_BIT_MIDPOINT)
 			{
-				if ((*(g_tailOfQuarterSecBuff + 3) - g_bitAccuracyMidpoint) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((*(g_tailOfQuarterSecBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 3)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 3)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 
-			if (*(g_tailOfQuarterSecBuff + 0) > g_bitAccuracyMidpoint)
+			if (*(g_tailOfQuarterSecBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 			{
-				if ((*(g_tailOfQuarterSecBuff + 0) - g_bitAccuracyMidpoint) > g_airTriggerCount) trigFound = YES;
+				if ((*(g_tailOfQuarterSecBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_airTriggerCount) trigFound = YES;
 			}
 			else
 			{
-				if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 0)) > g_airTriggerCount) trigFound = YES;
+				if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 0)) > g_airTriggerCount) trigFound = YES;
 			}
 
 			if ((trigFound == YES) && (recording == NO) && (calPulse == NO))
@@ -593,88 +678,88 @@ void GatherSampleData(void)
 			// Check if seismic is enabled for Alarm 1
 			if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC))
 			{
-				if (*(g_tailOfQuarterSecBuff + 1) > g_bitAccuracyMidpoint)
+				if (*(g_tailOfQuarterSecBuff + 1) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfQuarterSecBuff + 1) - g_bitAccuracyMidpoint) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 				else
 				{
-					if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 1)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 1)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 
-				if (*(g_tailOfQuarterSecBuff + 2) > g_bitAccuracyMidpoint)
+				if (*(g_tailOfQuarterSecBuff + 2) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfQuarterSecBuff + 2) - g_bitAccuracyMidpoint) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 				else
 				{
-					if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 2)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 2)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 
-				if (*(g_tailOfQuarterSecBuff + 3) > g_bitAccuracyMidpoint)
+				if (*(g_tailOfQuarterSecBuff + 3) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfQuarterSecBuff + 3) - g_bitAccuracyMidpoint) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 				else
 				{
-					if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 3)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 3)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 			}
 
 			// Check if air is enabled for Alarm 1
 			if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_AIR))
 			{
-				if (*(g_tailOfQuarterSecBuff + 0) > g_bitAccuracyMidpoint)
+				if (*(g_tailOfQuarterSecBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfQuarterSecBuff + 0) - g_bitAccuracyMidpoint) > g_alarm1AirTriggerCount) alarm1Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_alarm1AirTriggerCount) alarm1Found = YES;
 				}
 				else
 				{
-					if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 0)) > g_alarm1AirTriggerCount) alarm1Found = YES;
+					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 0)) > g_alarm1AirTriggerCount) alarm1Found = YES;
 				}
 			}
 
 			// Check if seismic is enabled for Alarm 2
 			if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC))
 			{
-				if (*(g_tailOfQuarterSecBuff + 1) > g_bitAccuracyMidpoint)
+				if (*(g_tailOfQuarterSecBuff + 1) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfQuarterSecBuff + 1) - g_bitAccuracyMidpoint) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 				else
 				{
-					if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 1)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 1)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 
-				if (*(g_tailOfQuarterSecBuff + 2) > g_bitAccuracyMidpoint)
+				if (*(g_tailOfQuarterSecBuff + 2) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfQuarterSecBuff + 2) - g_bitAccuracyMidpoint) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 				else
 				{
-					if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 2)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 2)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 
-				if (*(g_tailOfQuarterSecBuff + 3) > g_bitAccuracyMidpoint)
+				if (*(g_tailOfQuarterSecBuff + 3) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfQuarterSecBuff + 3) - g_bitAccuracyMidpoint) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 				else
 				{
-					if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 3)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 3)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 			}
 
 			// Check if air is enabled for Alarm 2
 			if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC))
 			{
-				if (*(g_tailOfQuarterSecBuff + 0) > g_bitAccuracyMidpoint)
+				if (*(g_tailOfQuarterSecBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfQuarterSecBuff + 0) - g_bitAccuracyMidpoint) > g_alarm2AirTriggerCount) alarm2Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_alarm2AirTriggerCount) alarm2Found = YES;
 				}
 				else
 				{
-					if ((g_bitAccuracyMidpoint - *(g_tailOfQuarterSecBuff + 0)) > g_alarm2AirTriggerCount) alarm2Found = YES;
+					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfQuarterSecBuff + 0)) > g_alarm2AirTriggerCount) alarm2Found = YES;
 				}
 			}
 

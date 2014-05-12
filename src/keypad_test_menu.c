@@ -342,8 +342,6 @@ void Keypad_Toggle_LED_Red(void)
 	   state |= 0x10;
 	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
 
-		//soft_delay(250 * SOFT_MSECS);
-	
 	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 	   state &= ~0x10;
 	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
@@ -363,8 +361,6 @@ void Keypad_Toggle_LED_Green(void)
 	   state |= 0x20;
 	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
 
-		//soft_delay(250 * SOFT_MSECS);
-	
 	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 	   state &= ~0x20;
 	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
@@ -384,8 +380,6 @@ void Keypad_Toggle_P_Off(void)
 	   state |= 0x40;
 	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
 
-		//soft_delay(250 * SOFT_MSECS);
-	
 	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 	   state &= ~0x40;
 	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
@@ -405,8 +399,6 @@ void Keypad_Toggle_P_Off_En(void)
 	   state |= 0x80;
 	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
 
-		//soft_delay(250 * SOFT_MSECS);
-	
 	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 	   state &= ~0x80;
 	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);

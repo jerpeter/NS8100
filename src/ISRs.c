@@ -776,17 +776,17 @@ static inline void fillQuarterSecBuffer_ISR_Inline(void)
 // ============================================================================
 static inline void normalizeSampleData_ISR_Inline(void)
 {
-	if (s_R_channelReading < g_bitAccuracyMidpoint) { s_R_channelReading = g_bitAccuracyMidpoint - s_R_channelReading; }
-	else { s_R_channelReading -= g_bitAccuracyMidpoint; }
+	if (s_R_channelReading < ACCURACY_16_BIT_MIDPOINT) { s_R_channelReading = ACCURACY_16_BIT_MIDPOINT - s_R_channelReading; }
+	else { s_R_channelReading -= ACCURACY_16_BIT_MIDPOINT; }
 
-	if (s_V_channelReading < g_bitAccuracyMidpoint) { s_V_channelReading = g_bitAccuracyMidpoint - s_V_channelReading; }
-	else { s_V_channelReading -= g_bitAccuracyMidpoint; }
+	if (s_V_channelReading < ACCURACY_16_BIT_MIDPOINT) { s_V_channelReading = ACCURACY_16_BIT_MIDPOINT - s_V_channelReading; }
+	else { s_V_channelReading -= ACCURACY_16_BIT_MIDPOINT; }
 
-	if (s_T_channelReading < g_bitAccuracyMidpoint) { s_T_channelReading = g_bitAccuracyMidpoint - s_T_channelReading; }
-	else { s_T_channelReading -= g_bitAccuracyMidpoint; }
+	if (s_T_channelReading < ACCURACY_16_BIT_MIDPOINT) { s_T_channelReading = ACCURACY_16_BIT_MIDPOINT - s_T_channelReading; }
+	else { s_T_channelReading -= ACCURACY_16_BIT_MIDPOINT; }
 
-	if (s_A_channelReading < g_bitAccuracyMidpoint) { s_A_channelReading = g_bitAccuracyMidpoint - s_A_channelReading; }
-	else { s_A_channelReading -= g_bitAccuracyMidpoint; }
+	if (s_A_channelReading < ACCURACY_16_BIT_MIDPOINT) { s_A_channelReading = ACCURACY_16_BIT_MIDPOINT - s_A_channelReading; }
+	else { s_A_channelReading -= ACCURACY_16_BIT_MIDPOINT; }
 }
 	
 // ============================================================================
@@ -877,9 +877,9 @@ void processAndMoveWaveformData(void)
 		//___Check for triggers
 		if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 		{
-			if (*((SAMPLE_DATA_STRUCT*)g_readQuarterSecBuff)->v > (g_triggerRecord.trec.seismicTriggerLevel)) { s_seismicTriggerSample = YES; }
-			else if (s_V_channelReading > (g_triggerRecord.trec.seismicTriggerLevel)) { s_seismicTriggerSample = YES; }
-			else if (s_T_channelReading > (g_triggerRecord.trec.seismicTriggerLevel)) { s_seismicTriggerSample = YES; }
+			if (s_R_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
+			else if (s_V_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
+			else if (s_T_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
 					
 			if (s_seismicTriggerSample == YES) { s_consecSeismicTriggerCount++; s_seismicTriggerSample = NO; }
 			else {s_consecSeismicTriggerCount = 0; }
@@ -1227,9 +1227,9 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		//___Check for triggers
 		if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 		{
-			if (s_R_channelReading > (g_triggerRecord.trec.seismicTriggerLevel)) { s_seismicTriggerSample = YES; }
-			else if (s_V_channelReading > (g_triggerRecord.trec.seismicTriggerLevel)) { s_seismicTriggerSample = YES; }
-			else if (s_T_channelReading > (g_triggerRecord.trec.seismicTriggerLevel)) { s_seismicTriggerSample = YES; }
+			if (s_R_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
+			else if (s_V_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
+			else if (s_T_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
 					
 			if (s_seismicTriggerSample == YES) { s_consecSeismicTriggerCount++; s_seismicTriggerSample = NO; }
 			else {s_consecSeismicTriggerCount = 0; }
