@@ -363,7 +363,8 @@ void ProcessComboSampleData(void)
 
 						// Advance the pointers
 						gEventBufferBodyPtr += 4;
-						tailOfPreTrigBuff += 4;
+						// Now handled outside of routine
+						//tailOfPreTrigBuff += 4;
 
 						// Check if the number of Active channels is less than or equal to 4 (one seismic sensor)
 						if (gp_SensorInfo->numOfChannels <= 4)
@@ -403,7 +404,8 @@ void ProcessComboSampleData(void)
 
 							// Advance the pointers
 							gEventBufferCalPtr += 4;
-							tailOfPreTrigBuff += 4;
+							// Now handled outside of routine
+							//tailOfPreTrigBuff += 4;
 
 							break;
 
@@ -421,7 +423,8 @@ void ProcessComboSampleData(void)
 							// Advance the pointers
 							dgEventBufferCalPtr += 4;
 							gEventBufferCalPtr += 4;
-							tailOfPreTrigBuff += 4;
+							// Now handled outside of routine
+							//tailOfPreTrigBuff += 4;
 							break;
 
 						// Received a Cal pulse which was delayed twice (use/copy the cal for all three events)
@@ -442,14 +445,16 @@ void ProcessComboSampleData(void)
 							ddgEventBufferCalPtr += 4;
 							dgEventBufferCalPtr += 4;
 							gEventBufferCalPtr += 4;
-							tailOfPreTrigBuff += 4;
+							// Now handled outside of routine
+							//tailOfPreTrigBuff += 4;
 							break;
 					}
 					break;
 
 				default:
 					// Advance the PreTrigger buffer the number of active channels
-					tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;
+					// Now handled outside of this routine
+					//tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;
 					break;
 			}
 		}
@@ -469,7 +474,8 @@ void ProcessComboSampleData(void)
 
 					// Advance the pointers
 					gEventBufferCalPtr += 4;
-					tailOfPreTrigBuff += 4;
+					// Now handled outside of routine
+					//tailOfPreTrigBuff += 4;
 
 					if (processingCal == 0)
 					{
@@ -496,7 +502,8 @@ void ProcessComboSampleData(void)
 					// Advance the pointers
 					dgEventBufferCalPtr += 4;
 					gEventBufferCalPtr += 4;
-					tailOfPreTrigBuff += 4;
+					// Now handled outside of routine
+					//tailOfPreTrigBuff += 4;
 
 					if (processingCal == 0)
 					{
@@ -524,7 +531,8 @@ void ProcessComboSampleData(void)
 					ddgEventBufferCalPtr += 4;
 					dgEventBufferCalPtr += 4;
 					gEventBufferCalPtr += 4;
-					tailOfPreTrigBuff += 4;
+					// Now handled outside of routine
+					//tailOfPreTrigBuff += 4;
 
 					if (processingCal == 0)
 					{
@@ -569,7 +577,8 @@ void ProcessComboSampleData(void)
 
 			// Advance the pointers
 			gEventBufferBodyPtr += 4;
-			tailOfPreTrigBuff += 4;
+			// Now handled outside of routine
+			//tailOfPreTrigBuff += 4;
 		}
 		else // Normal samples in the triggered event
 		{
@@ -581,7 +590,8 @@ void ProcessComboSampleData(void)
 
 			// Advance the pointers
 			gEventBufferBodyPtr += 4;
-			tailOfPreTrigBuff += 4;
+			// Now handled outside of routine
+			//tailOfPreTrigBuff += 4;
 		}
 
 		// Check if the number of Active channels is less than or equal to 4 (one seismic sensor)

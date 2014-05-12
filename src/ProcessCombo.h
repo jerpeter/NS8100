@@ -51,6 +51,7 @@ enum // Set unique values to the following types (actual value doesn't matter)
 ///	Prototypes
 ///----------------------------------------------------------------------------
 void StartNewCombo(void);
+void ProcessComboData(void);
 uint8 CalculateComboData(void);
 void ProcessComboSampleData(void) ;
 void ProcessComboBargraphData(void); 

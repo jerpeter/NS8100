@@ -103,7 +103,7 @@ extern uint16* gp_bg430DataEnd;
 void ProcessWaveformData(void)
 {
 	//SUMMARY_DATA* sumEntry;
-	uint16 commandNibble;
+	static uint16 commandNibble;
 
 	// Store the command nibble for the first channel of data
 	commandNibble = (uint16)(*(tailOfPreTrigBuff) & EMBEDDED_CMD);

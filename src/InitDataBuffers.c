@@ -61,7 +61,7 @@ extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
 ///----------------------------------------------------------------------------
 MSGS430_UNION msgs430;
 //uint16 preTrigBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
-uint16 preTrigBuff[16];
+uint16 preTrigBuff[1024];
 uint16* startOfPreTrigBuff;
 uint16* tailOfPreTrigBuff;
 uint16* endOfPreTrigBuff;
@@ -97,7 +97,7 @@ uint32 processingCal = 0;
 uint16 eventsNotCompressed = 0; 
 uint8 g_doneTakingEvents = NO;
 //uint16  eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
-uint16  eventDataBuffer[16];
+uint16  eventDataBuffer[8192];
 uint16* gp_bg430DataStart;
 uint16* gp_bg430DataWrite;
 uint16* gp_bg430DataRead;

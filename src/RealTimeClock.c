@@ -412,5 +412,7 @@ void SetAlarmFrequency(uint8 mode)
 ****************************************/
 void SetPeriodicInterruptFrequency(uint8 frequency)
 {
+#if 0 //fix_ns8100
 	RTC_RATES.bit.periodicIntRate = frequency;
+#endif
 }

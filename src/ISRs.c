@@ -22,6 +22,7 @@
 #include "Menu.h"
 #include "InitDataBuffers.h"
 #include "ProcessBargraph.h"
+#include "ProcessCombo.h"
 #include "SysEvents.h"
 #include "Uart.h"
 #include "Old_Board.h"
@@ -81,6 +82,7 @@ extern int rtc_init(volatile avr32_rtc_t *rtc, unsigned char osc_type, unsigned 
 extern void rtc_set_top_value(volatile avr32_rtc_t *rtc, unsigned long top);
 extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
 extern void rtc_enable(volatile avr32_rtc_t *rtc);
+extern uint16 manualCalSampleCount;
 
 ///----------------------------------------------------------------------------
 ///	Globals
@@ -925,58 +927,264 @@ void soft_timer_tick_irq(void)
 // ============================================================================
 // tc_irq
 // ============================================================================
-volatile uint32 testCounterDataClock = 0;
-volatile uint32 r_chan_read, v_chan_read, t_chan_read, a_chan_read;
 __attribute__((__interrupt__))
 void tc_irq(void)
 {
-	uint16 temp, temp1;
-	// Increment the ms seconds counter
-	testCounterDataClock++;
+	static uint16 r_chan_read, v_chan_read, t_chan_read, a_chan_read;
+	static uint16 temp_chan_read, configReadBack;
+	static uint8 trigFound = NO, alarm1Found = NO, alarm2Found = NO;
+	static uint32 sampleCount = 0;
+	static uint32 calSampleCount = 0;
+	static uint8 recording = NO;
+	static uint8 calPulse = NO;
+
+	// Sample Output with return config words
+	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp:  dbe (b6d0)
 
 	// Data time!
     // Chan 0
 	spi_selectChip(AD_SPI, AD_SPI_NPCS);
     spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &temp);
+    spi_read(AD_SPI, &r_chan_read);
     spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &temp1);
+    spi_read(AD_SPI, &configReadBack);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-    debugRaw("R: %x %x", temp, temp1 >> 2);
+	if(configReadBack != 0xe0d0) debugErr("AD Channel Sync Error!\n");
+    //debugRaw("R: %4x (%4x)", r_chan_read, configReadBack);
 
     // Chan 1
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
     spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &temp);
+    spi_read(AD_SPI, &v_chan_read);
     spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &temp1);
+    spi_read(AD_SPI, &configReadBack);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-    debugRaw(" | V: %x %x", temp, temp1 >> 2);
+	if(configReadBack != 0xe2d0) debugErr("AD Channel Sync Error!\n");
+    //debugRaw(" | V: %4x (%4x)", v_chan_read, configReadBack);
 
     // Chan 2
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
     spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &temp);
+    spi_read(AD_SPI, &t_chan_read);
     spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &temp1);
+    spi_read(AD_SPI, &configReadBack);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-    debugRaw(" | T: %x %x", temp, temp1 >> 2);
+	if(configReadBack != 0xe4d0) debugErr("AD Channel Sync Error!\n");
+    //debugRaw(" | T: %4x (%4x)", t_chan_read, configReadBack);
 
     // Chan 3
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
     spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &temp);
+    spi_read(AD_SPI, &a_chan_read);
     spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &temp1);
+    spi_read(AD_SPI, &configReadBack);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-    debugRaw(" | A: %x %x\n", temp, temp1 >> 2);
+	if(configReadBack != 0xe6d0) debugErr("AD Channel Sync Error!\n");
+    //debugRaw(" | A: %4x (%4x)", a_chan_read, configReadBack);
+
+    // Temp
+    spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &temp_chan_read);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &configReadBack);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+	if(configReadBack != 0xb6d0) debugErr("AD Channel Sync Error!\n");
+    //debugRaw(" | Temp: %4x (%4x)\n", temp_chan_read, configReadBack);
 	// End Data Time!
 
+#if 1
+	// Store Data in Pretrigger
+	// Check for Triggers and Alarms
+	
+	r_chan_read >>= 4;
+	v_chan_read >>= 4;
+	t_chan_read >>= 4;
+	a_chan_read >>= 4;
+	
+	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->r = r_chan_read;
+	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->v = v_chan_read;
+	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->t = t_chan_read;
+	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->a = a_chan_read;
+
+	// Normalize
+	if(r_chan_read > 0x800) r_chan_read = r_chan_read - 0x800; 
+	else r_chan_read = 0x800 - r_chan_read;
+
+	if(v_chan_read > 0x800) v_chan_read = v_chan_read - 0x800; 
+	else v_chan_read = 0x800 - v_chan_read;
+
+	if(t_chan_read > 0x800) t_chan_read = t_chan_read - 0x800; 
+	else t_chan_read = 0x800 - t_chan_read;
+
+	if(a_chan_read > 0x800) a_chan_read = a_chan_read - 0x800; 
+	else a_chan_read = 0x800 - a_chan_read;
+	
+	// Check if handling a manual calibration
+	if (manual_cal_flag == FALSE)
+	{
+		// Check if not recording an event and not handling a cal pulse
+		if ((recording == NO) && (calPulse == NO))
+		{
+			if (r_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
+			if (v_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
+			if (t_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
+			if (a_chan_read > trig_rec.trec.soundTriggerLevel) trigFound = YES;
+
+			if ((trigFound == YES) && (recording == NO) && (calPulse == NO))
+			{
+				// Add command nibble to signal a tigger
+				*(tailOfPreTrigBuff + 0) |= TRIG_ONE;
+				*(tailOfPreTrigBuff + 1) |= TRIG_ONE;
+				*(tailOfPreTrigBuff + 2) |= TRIG_ONE;
+				*(tailOfPreTrigBuff + 3) |= TRIG_ONE;
+
+				recording = YES;
+				sampleCount = trig_rec.trec.record_time * trig_rec.trec.sample_rate;
+			}
+		}
+		// Else check if we are still recording
+		else if ((recording == YES) && (sampleCount))
+		{
+			sampleCount--;
+
+			// Check if seismic is enabled for Alarm 1
+			if ((help_rec.alarm_one_mode == ALARM_MODE_BOTH) || (help_rec.alarm_one_mode == ALARM_MODE_SEISMIC))
+			{
+				if (r_chan_read > help_rec.alarm_one_seismic_lvl) alarm1Found = YES;
+				if (v_chan_read > help_rec.alarm_one_seismic_lvl) alarm1Found = YES;
+				if (t_chan_read > help_rec.alarm_one_seismic_lvl) alarm1Found = YES;
+			}
+
+			// Check if air is enabled for Alarm 1
+			if ((help_rec.alarm_one_mode == ALARM_MODE_BOTH) || (help_rec.alarm_one_mode == ALARM_MODE_AIR))
+			{
+				if (a_chan_read > help_rec.alarm_one_air_lvl) alarm1Found = YES;
+			}
+
+			// Check if seismic is enabled for Alarm 2
+			if ((help_rec.alarm_two_mode == ALARM_MODE_BOTH) || (help_rec.alarm_two_mode == ALARM_MODE_SEISMIC))
+			{
+				if (r_chan_read > help_rec.alarm_two_seismic_lvl) alarm2Found = YES;
+				if (v_chan_read > help_rec.alarm_two_seismic_lvl) alarm2Found = YES;
+				if (t_chan_read > help_rec.alarm_two_seismic_lvl) alarm2Found = YES;
+			}
+
+			// Check if air is enabled for Alarm 2
+			if ((help_rec.alarm_two_mode == ALARM_MODE_BOTH) || (help_rec.alarm_two_mode == ALARM_MODE_SEISMIC))
+			{
+				if (a_chan_read > help_rec.alarm_two_air_lvl) alarm2Found = YES;
+			}
+
+			// Check if Alarm 2 condition was met (Alarm 2 overrides Alarm 1)
+			if (alarm2Found == YES)
+			{
+				// Add command nibble to signal a tigger
+				*(tailOfPreTrigBuff + 0) |= TRIG_THREE;
+				*(tailOfPreTrigBuff + 1) |= TRIG_THREE;
+				*(tailOfPreTrigBuff + 2) |= TRIG_THREE;
+				*(tailOfPreTrigBuff + 3) |= TRIG_THREE;
+			}
+			// Else check if Alarm 1 condition was met
+			else if (alarm1Found == YES)
+			{
+				// Add command nibble to signal a tigger
+				*(tailOfPreTrigBuff + 0) |= TRIG_TWO;
+				*(tailOfPreTrigBuff + 1) |= TRIG_TWO;
+				*(tailOfPreTrigBuff + 2) |= TRIG_TWO;
+				*(tailOfPreTrigBuff + 3) |= TRIG_TWO;
+			}
+		}
+		// Else check if we are still recording but handling the last sample
+		else if ((recording == YES) && (sampleCount == 0))
+		{
+			recording = NO;
+			calPulse = YES;
+			calSampleCount = 100 * (trig_rec.trec.sample_rate / 1024);
+
+			// Start Cal
+			*(tailOfPreTrigBuff + 0) |= CAL_START;
+			*(tailOfPreTrigBuff + 1) |= CAL_START;
+			*(tailOfPreTrigBuff + 2) |= CAL_START;
+			*(tailOfPreTrigBuff + 3) |= CAL_START;
+
+			SetCalSignalEnable(ON);
+		}
+		// Else check if a cal pulse is enabled
+		else if ((calPulse == YES) && (calSampleCount))
+		{
+			if (calSampleCount == (100 * (trig_rec.trec.sample_rate / 1024)))
+			{
+				SetCalSignalEnable(ON);
+				SetCalSignal(ON);
+			}
+
+			if (calSampleCount == (91 * (trig_rec.trec.sample_rate / 1024)))
+				SetCalSignal(OFF);
+
+			if (calSampleCount == (73 * (trig_rec.trec.sample_rate / 1024)))
+				SetCalSignal(ON);
+
+			if (calSampleCount == (64 * (trig_rec.trec.sample_rate / 1024)))
+				SetCalSignalEnable(OFF);
+
+			calSampleCount--;
+		}
+		else if ((calPulse == YES) && (calSampleCount == 0))
+		{
+			calPulse = NO;
+		}
+	}
+	else //manual_cal_flag == TRUE
+	{
+		if (manualCalSampleCount == 0)
+		{
+			// Start Cal
+			*(tailOfPreTrigBuff + 0) |= CAL_START;
+			*(tailOfPreTrigBuff + 1) |= CAL_START;
+			*(tailOfPreTrigBuff + 2) |= CAL_START;
+			*(tailOfPreTrigBuff + 3) |= CAL_START;
+		}
+
+		if (manualCalSampleCount == 99)
+		{
+			// Stop Cal
+			*(tailOfPreTrigBuff + 0) |= CAL_END;
+			*(tailOfPreTrigBuff + 1) |= CAL_END;
+			*(tailOfPreTrigBuff + 2) |= CAL_END;
+			*(tailOfPreTrigBuff + 3) |= CAL_END;
+		}
+
+		manualCalSampleCount++;
+	}
+
+	if (manual_cal_flag)
+	{
+		ProcessManuelCalPulse();
+	}
+	else if (trig_rec.op_mode == WAVEFORM_MODE)
+	{
+		ProcessWaveformData();
+	}
+	else if (trig_rec.op_mode == BARGRAPH_MODE)
+	{
+		ProcessBargraphData();
+	}
+	else if (trig_rec.op_mode == COMBO_MODE)
+	{
+		ProcessComboData();
+	}
+#endif
 
 	// clear the interrupt flag
 	AVR32_TC.channel[TC_CHANNEL].sr;
 
 #if 0
+	static volatile uint32 testCounterDataClock = 0;
+
+	// Increment the ms seconds counter
+	testCounterDataClock++;
+
 	// specify that an interrupt has been raised
 	if(testCounterDataClock % 1000 == 0)
 	{

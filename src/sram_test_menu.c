@@ -435,5 +435,111 @@ void SRAM_Test(void)
     }
 }
 
+void SRAM_Test_2M(void)
+{
+	volatile unsigned long int i = 0;
+	volatile unsigned short int *sramAddr = (volatile unsigned short int*)0xD0200000;
+    print_dbg("\n\rSRAM Test above 2M... \n");
+    for (i = 0; i < 0x80000 ; i++) { *sramAddr++ = (unsigned short int)i; if((i % 0x400) == 0) print_dbg_char('+'); }
+	sramAddr = (volatile unsigned short int*)0xD0200000;
+    for (i = 0; i < 0x80000 ; i++) { if (*sramAddr++ != (unsigned short int)i) 
+	{ print_dbg("\r\nTesting SRAM... FAILED! "); print_dbg_ulong(i); print_dbg_char(':'); print_dbg_ulong(*--sramAddr); print_dbg("\r\n"); return; }
+		if((i % 0x400) == 0) print_dbg_char('?'); }
+    print_dbg("\rTesting SRAM..............PASSED!\n\r");
+}
+
+void SRAM_Test_2M_by_32(void)
+{
+	volatile unsigned long int i = 0;
+	volatile unsigned long int *sramAddr = (volatile unsigned long int*)0xD0200000;
+    print_dbg("\n\rSRAM Test above 2M... \n");
+    for (i = 0; i < 0x40000 ; i++) { *sramAddr++ = (unsigned long int)i; if((i % 0x200) == 0) print_dbg_char('+'); }
+	sramAddr = (volatile unsigned long int*)0xD0200000;
+    for (i = 0; i < 0x40000 ; i++) 
+	{ 
+		if (*sramAddr != (unsigned long int)i)
+		{ 
+			print_dbg("\r\nTesting SRAM... FAILED! "); 
+			print_dbg_ulong(i); print_dbg_char(':'); print_dbg_ulong(*sramAddr); print_dbg("\r\n"); 
+			print_dbg("\r\nx16: "); 
+			print_dbg_ulong(i); 
+			print_dbg_char(':'); 
+			print_dbg_ulong(*((unsigned short int*)sramAddr)); 
+			print_dbg_char(':'); 
+			print_dbg_ulong(*((unsigned short int*)sramAddr + 1)); 
+			print_dbg("\r\n"); 
+			return;
+		}
+		sramAddr++;
+		if((i % 0x200) == 0) print_dbg_char('?'); }
+    print_dbg("\rTesting SRAM..............PASSED!\n\r");
+}
+
+void SRAM_Test_3M(void)
+{
+	volatile unsigned long int i = 0;
+	volatile unsigned short int *sramAddr = (volatile unsigned short int*)0xD0300000;
+    print_dbg("\n\rSRAM Test above 3M... \n");
+    for (i = 0; i < 0x80000 ; i++) { *sramAddr++ = (unsigned short int)i; if((i % 0x400) == 0) print_dbg_char('+'); }
+	sramAddr = (volatile unsigned short int*)0xD0300000;
+    for (i = 0; i < 0x80000 ; i++) { if (*sramAddr++ != (unsigned short int)i) 
+	{ print_dbg("\r\nTesting SRAM... FAILED! "); print_dbg_ulong(i); print_dbg_char(':'); print_dbg_ulong(*--sramAddr); print_dbg("\r\n"); return; }
+		if((i % 0x400) == 0) print_dbg_char('?'); }
+    print_dbg("\rTesting SRAM..............PASSED!\n\r");
+}
+
+void SRAM_Test_4M(void)
+{
+	volatile unsigned long int i = 0;
+	volatile unsigned short int *sramAddr = (volatile unsigned short int*)0xD0400000;
+    print_dbg("\n\rSRAM Test above 4M... \n");
+    for (i = 0; i < 0x80000 ; i++) { *sramAddr++ = (unsigned short int)i; if((i % 0x400) == 0) print_dbg_char('+'); }
+	sramAddr = (volatile unsigned short int*)0xD0400000;
+    for (i = 0; i < 0x80000 ; i++) { if (*sramAddr++ != (unsigned short int)i) 
+	{ print_dbg("\r\nTesting SRAM... FAILED! "); print_dbg_ulong(i); print_dbg_char(':'); print_dbg_ulong(*--sramAddr); print_dbg("\r\n"); return; }
+		if((i % 0x400) == 0) print_dbg_char('?'); }
+    print_dbg("\rTesting SRAM..............PASSED!\n\r");
+}
+
+void SRAM_Test_5M(void)
+{
+	volatile unsigned long int i = 0;
+	volatile unsigned short int *sramAddr = (volatile unsigned short int*)0xD0500000;
+    print_dbg("\n\rSRAM Test above 5M... \n");
+    for (i = 0; i < 0x80000 ; i++) { *sramAddr++ = (unsigned short int)i; if((i % 0x400) == 0) print_dbg_char('+'); }
+	sramAddr = (volatile unsigned short int*)0xD0500000;
+    for (i = 0; i < 0x80000 ; i++) { if (*sramAddr++ != (unsigned short int)i) 
+	{ print_dbg("\r\nTesting SRAM... FAILED! "); print_dbg_ulong(i); print_dbg_char(':'); print_dbg_ulong(*--sramAddr); print_dbg("\r\n"); return; }
+		if((i % 0x400) == 0) print_dbg_char('?'); }
+    print_dbg("\rTesting SRAM..............PASSED!\n\r");
+}
+
+void SRAM_Test_6M(void)
+{
+	volatile unsigned long int i = 0;
+	volatile unsigned short int *sramAddr = (volatile unsigned short int*)0xD0600000;
+    print_dbg("\n\rSRAM Test above 6M... \n");
+    for (i = 0; i < 0x80000 ; i++) { *sramAddr++ = (unsigned short int)i; if((i % 0x400) == 0) print_dbg_char('+'); }
+	sramAddr = (volatile unsigned short int*)0xD0600000;
+    for (i = 0; i < 0x80000 ; i++) { if (*sramAddr++ != (unsigned short int)i) 
+	{ print_dbg("\r\nTesting SRAM... FAILED! "); print_dbg_ulong(i); print_dbg_char(':'); print_dbg_ulong(*--sramAddr); print_dbg("\r\n"); return; }
+		if((i % 0x400) == 0) print_dbg_char('?'); }
+    print_dbg("\rTesting SRAM..............PASSED!\n\r");
+}
+
+void SRAM_Test_7M(void)
+{
+	volatile unsigned long int i = 0;
+	volatile unsigned short int *sramAddr = (volatile unsigned short int*)0xD0700000;
+    print_dbg("\n\rSRAM Test above 7M... \n");
+    for (i = 0; i < 0x80000 ; i++) { *sramAddr++ = (unsigned short int)i; if((i % 0x400) == 0) print_dbg_char('+'); }
+	sramAddr = (volatile unsigned short int*)0xD0700000;
+    for (i = 0; i < 0x80000 ; i++) { if (*sramAddr++ != (unsigned short int)i) 
+	{ print_dbg("\r\nTesting SRAM... FAILED! "); print_dbg_ulong(i); print_dbg_char(':'); print_dbg_ulong(*--sramAddr); print_dbg("\r\n"); return; }
+		if((i % 0x400) == 0) print_dbg_char('?'); }
+    print_dbg("\rTesting SRAM..............PASSED!\n\r");
+}
+
+
 
 

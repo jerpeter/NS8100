@@ -630,7 +630,7 @@ void InitSystemHardware_NS8100(void)
 	}
 	
 	//-------------------------------------------------------------------------
-	Display_Craft_Logo();
+	//Display_Craft_Logo();
 	soft_delay(3 * SOFT_SECS);
 
 }
@@ -769,18 +769,19 @@ int main(void)
 	// Have to recall Keypad init otherwise interrupt hangs
 	InitKeypad();
 
-#if 0
-	AD_Init();
-	Setup_Data_Clock_ISR(0);
-	Start_Data_Clock();
-#endif
-
 	debug("Unit Type: %s\n", SUPERGRAPH_UNIT ? "Supergraph" : "Minigraph");
 	debug("--- System Init complete ---\n");
 
 	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;
 	Menu_Functions = (unsigned long *)Main_Menu_Functions;
 	Menu_String = (unsigned char *)&Main_Menu_Text;
+
+#if 0
+	AD_Init();
+	Setup_Data_Clock_ISR(0);
+	Start_Data_Clock();
+	debugRaw("\n\n");
+#endif
 
  	// ==============
 	// Executive loop
@@ -794,7 +795,7 @@ int main(void)
 		//debugRaw("k");
 		//testKeypad();
 
-#if 0
+#if 1
 		// Handle system events
 	    SystemEventManager();
 
