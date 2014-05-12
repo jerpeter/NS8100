@@ -309,9 +309,9 @@ void SystemEventManager(void)
 	}
 
 #if 0 // Test (Throw away at some point)
-	if (getSystemEventState(WAVE_DATA_EVENT))
+	if (getSystemEventState())
 	{
-		clearSystemEventFlag(WAVE_DATA_EVENT);
+		clearSystemEventFlag();
 
 extern void processAndMoveWaveformData_ISR_Inline(void);
 		processAndMoveWaveformData_ISR_Inline();		
@@ -338,6 +338,11 @@ extern void processAndMoveWaveformData_ISR_Inline(void);
 
 		// Assign soft timer to turn the Alarm 2 signal off
 		assignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarm_two_time * 2), alarmTwoOutputTimerCallback);
+	}
+
+	if (getSystemEventState(UPDATE_OFFSET_EVENT))
+	{
+		UpdateChannelOffsetsForTempChange();
 	}
 
 	if (getSystemEventState(AUTO_DIALOUT_EVENT))

@@ -241,7 +241,7 @@ void SPI_1_Init(void)
 		{AD_CTL_SPI_NPCS_PIN, AD_CTL_SPI_NPCS_FUNCTION},			// AD Chip Select NPCS.
 		{EEPROM_SPI_NPCS_PIN, EEPROM_SPI_NPCS_FUNCTION},			// EEprom Chip Select NPCS.
 		{RTC_SPI_NPCS_PIN, RTC_SPI_NPCS_FUNCTION},					// RTC Chip Select NPCS.
-		{SDMMC_SPI_NPCS_PIN, SDMMC_SPI_NPCS_FUNCTION},				// SCMMC Chip Select NPCS.
+		{SDMMC_SPI_NPCS_PIN, SDMMC_SPI_NPCS_FUNCTION},				// SDMMC Chip Select NPCS.
 	};
 
 	// Generic SPI options
@@ -425,7 +425,6 @@ void _init_startup(void)
 //=================================================================================================
 void InitKeypad(void)
 {
-#if 1
 	static const gpio_map_t EIC_GPIO_MAP =
 	{
 		{AVR32_EIC_EXTINT_5_PIN, AVR32_EIC_EXTINT_5_FUNCTION}
@@ -440,7 +439,6 @@ void InitKeypad(void)
 
 	// Enable External Interrupt for MCP23018
 	gpio_enable_module(EIC_GPIO_MAP, sizeof(EIC_GPIO_MAP) / sizeof(EIC_GPIO_MAP[0]));
-#endif
 
 	// TWI options.
 	twi_options_t opt;
@@ -450,10 +448,8 @@ void InitKeypad(void)
 	opt.speed = TWI_SPEED;
 	opt.chip = IO_ADDRESS_KPD;
 
-#if 1
 	// TWI gpio pins configuration
 	gpio_enable_module(TWI_GPIO_MAP, sizeof(TWI_GPIO_MAP) / sizeof(TWI_GPIO_MAP[0]));
-#endif
 
 	// initialize TWI driver with options
 	if (twi_master_init(&AVR32_TWI, &opt) != TWI_SUCCESS)
@@ -462,11 +458,7 @@ void InitKeypad(void)
 	}
 
 	soft_usecWait(25 * SOFT_MSECS);
-	//soft_usecWait(250 * SOFT_MSECS);
-	//soft_usecWait(1 * SOFT_SECS);
-
 	init_mcp23018(IO_ADDRESS_KPD);
-
 	soft_usecWait(25 * SOFT_MSECS);
 }
 
@@ -776,20 +768,6 @@ void InitSystemHardware_NS8100(void)
 	rtc_enable(&AVR32_RTC);
 
 	//-------------------------------------------------------------------------
-	// Init Keypad
-	InitKeypad();
-	
-	// Primer read
-	uint8 keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-	if (keyScan)
-	{
-		debugWarn("Keypad key being pressed, likely a bug. Key: %x", keyScan);
-	}
-
-	// Turn on the red keypad LED while loading
-	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
-
-	//-------------------------------------------------------------------------
 	// Enable Processor A/D
 	adc_configure(&AVR32_ADC);
 
@@ -845,6 +823,20 @@ void InitSystemHardware_NS8100(void)
     usb_task_init();
     device_mass_storage_task_init();
 #endif
+
+	//-------------------------------------------------------------------------
+	// Init Keypad
+	InitKeypad();
+	
+	// Primer read
+	uint8 keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	if (keyScan)
+	{
+		debugWarn("Keypad key being pressed, likely a bug. Key: %x", keyScan);
+	}
+
+	// Turn on the red keypad LED while loading
+	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
 
 	//-------------------------------------------------------------------------
 	//Display_Craft_Logo();
@@ -910,7 +902,7 @@ void InitSoftwareSettings_NS8100(void)
 	setupMnDef();
 
 #if 1 // fix_ns8100
-	// Have to recall Keypad init otherwise interrupt hangs
+	// Have to recall Keypad init otherwise interrupt hangs (Following code needs keypad access)
 	InitKeypad();
 #endif
 
@@ -1042,7 +1034,22 @@ int main(void)
 	}
 #endif
 
-#if 0 // Test
+#if 0 // Test (Effective CS Low for SDMMC)
+	while (1)
+	{
+		debug("SPI1 SDMMC CS Active (0)\n");
+		spi_selectChip(&AVR32_SPI1, 2);
+		spi_write(&AVR32_SPI1, 0x0000);
+		soft_usecWait(5 * SOFT_SECS);
+
+
+		debug("SPI1 SDMMC CS Inactive (1)\n");
+		spi_unselectChip(&AVR32_SPI1, 2);
+		soft_usecWait(5 * SOFT_SECS);
+	}		
+#endif
+
+#if 0 // Test (Ineffective CS Low for SDMMC)
 	gpio_enable_gpio_pin(AVR32_PIN_PA14);
 	gpio_enable_gpio_pin(AVR32_PIN_PA18);
 	gpio_enable_gpio_pin(AVR32_PIN_PA19);
@@ -1080,7 +1087,7 @@ unsigned int i;
 
 #endif
 
-#if 0 // Test
+#if 0 // Test (Timer mode)
 	EnableRtcAlarm(0, 0, 0, 0);
 
 	static RTC_MEM_MAP_STRUCT rtcMap;
@@ -1121,7 +1128,7 @@ unsigned int i;
 	{
 		g_execCycles++;
 
-#if 0 // Test
+#if 0 // Test (Timer mode)
 		if (counter)
 		{
 			counter--;
@@ -1154,6 +1161,18 @@ unsigned int i;
 			}
 		}
 		
+#endif
+
+#if 0 // Test (Temp)
+		static uint16 s_tempReading = 0;
+		
+		// 0x49 to 0x4c
+		if (abs((int)(g_currentTempReading - s_tempReading)) > 4)
+		{
+			debug("Temp update on change, Old: 0x%x, New: 0x%x\n", s_tempReading, g_currentTempReading);
+			
+			s_tempReading = g_currentTempReading;
+		}
 #endif
 
 		// Debug Test routines

@@ -10,7 +10,7 @@
 #define IO_ADDRESS_BASE       0x20        // IO's TWI address
 #define IO_ADDRESS_KPD        0x27        // IO's TWI address
 #define IO_ADDR_LGT           1           // Address length of the IO chip
-#define TWI_SPEED             400000       // Speed of TWI
+#define TWI_SPEED             400000      // Speed of TWI
 
 #define IODIRA     0x00
 #define IODIRB     0x01

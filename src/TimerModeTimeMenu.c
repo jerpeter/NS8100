@@ -294,22 +294,34 @@ void dsplyTimerModeTimeMn(REC_MN_STRUCT *rec_ptr,
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
 
-	// Display the time text
+	// Display the start time text
 	sprintf((char*)sbuff, "%s: ", getLangText(START_TIME_TEXT));
 	wndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((5 * SIX_COL_SIZE)/2));
 
-	// Display the hour
+	// Display the start hour
+#if 0 // Test
+	// Check if timer mode hourly is selected in which case show a star for all hours
+	if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
+	{
+		sprintf((char*)sbuff, " *");
+	}
+	else // Every other mode
+	{
+		sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[TMT_START_HOUR].numrec.tindex);
+	}
+#else // Normal
 	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[TMT_START_HOUR].numrec.tindex);
+#endif
 	wndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_START_HOUR) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	wndMpWrtString((uint8*)(":"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
-	// Display the min
+	// Display the start min
 	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[TMT_START_MIN].numrec.tindex);
 	wndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_START_MIN) ? CURSOR_LN : REG_LN);
 
@@ -319,22 +331,34 @@ void dsplyTimerModeTimeMn(REC_MN_STRUCT *rec_ptr,
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
 
-	// Display the time text
+	// Display the stop time text
 	sprintf((char*)sbuff, "%s: ", getLangText(STOP_TIME_TEXT));
 	wndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((5 * SIX_COL_SIZE)/2));
 
-	// Display the hour
+	// Display the stop hour
+#if 0 // Test
+	// Check if timer mode hourly is selected in which case show a star for all hours
+	if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
+	{
+		sprintf((char*)sbuff, " *");
+	}
+	else // Every other mode
+	{
+		sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[TMT_STOP_HOUR].numrec.tindex);
+	}
+#else // Normal
 	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[TMT_STOP_HOUR].numrec.tindex);
+#endif
 	wndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_STOP_HOUR) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	wndMpWrtString((uint8*)(":"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
-	// Display the min
+	// Display the stop min
 	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[TMT_STOP_MIN].numrec.tindex);
 	wndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_STOP_MIN) ? CURSOR_LN : REG_LN);
 }

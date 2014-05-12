@@ -248,6 +248,8 @@ extern uint8 g_spi1AccessLock;
 extern EVT_RECORD g_resultsEventCache[50];
 extern uint16 g_resultsCacheIndex;
 extern uint32 g_cyclicEventDelay;
+extern uint16 g_storedTempReading;
+extern uint16 g_currentTempReading;
 extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 
 // Test

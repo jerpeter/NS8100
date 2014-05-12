@@ -53,6 +53,8 @@
 #define CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD 2 // Treating event + event as 1 consecutive, event + event + event as 2 consecutive
 #define PENDING	2 // Anything above 1
 
+#define AD_TEMP_COUNT_FOR_ADJUSTMENT	4
+
 enum {
 	DEFAULT_CAL_BUFFER_INDEX = 0,
 	ONCE_DELAYED_CAL_BUFFER_INDEX = 1,
@@ -109,6 +111,7 @@ void SetCalSignalEnable(uint8 enable);
 void SetCalSignal(uint8 data);
 void GenerateCalSignal(void);
 void GetChannelOffsets(uint32 sampleRate);
+void UpdateChannelOffsetsForTempChange(void);
 void GatherSampleData(void);
 void adSetCalSignalLow(void);
 void adSetCalSignalHigh(void);

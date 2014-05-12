@@ -70,7 +70,7 @@ void timerModeDateMnProc(INPUT_MSG_STRUCT, REC_MN_STRUCT*, WND_LAYOUT_STRUCT*, M
 void dsplyTimerModeDateMn(REC_MN_STRUCT*, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 void loadTimerModeDateMnDefRec(REC_MN_STRUCT*, DATE_TIME_STRUCT*);
 void timerModeDateDvScroll(char dir_key, REC_MN_STRUCT*);
-void tmKeepDateTime(void);
+void timerModeActiveMinutes(void);
 void timerModeDateScroll(char, MN_LAYOUT_STRUCT*);
 uint8 validateTimerModeSettings(void);
 
@@ -431,15 +431,32 @@ void loadTimerModeDateMnDefRec(REC_MN_STRUCT *rec_ptr, DATE_TIME_STRUCT *time_pt
 }
 
 /****************************************
-*	Function:	tmKeepDateTime
+*	Function:	timerModeActiveMinutes
 *	Purpose:
 ****************************************/
-void tmKeepDateTime(void)
+void timerModeActiveMinutes(void)
 {
-	// Find the Time mode active time period in ticks
+	// Find the Time mode active time period in minutes
 
+	// First check for specialty case hourly
+	if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
+	{
+		// Check if the stop min is greater than the start min
+		if (g_helpRecord.tm_stop_time.min > g_helpRecord.tm_start_time.min)
+		{
+			g_helpRecord.timer_mode_active_minutes = (g_helpRecord.tm_stop_time.min - g_helpRecord.tm_start_time.min);
+		}
+		else // The timer mode hourly active period will cross the hour boundary
+		{
+			g_helpRecord.timer_mode_active_minutes = (60 + g_helpRecord.tm_stop_time.min - g_helpRecord.tm_start_time.min);
+		}
+		
+		// In order to restart up every hour, the active minutes needs to be less than 60, 1 min for shutdown + 1 min for being off
+		if (g_helpRecord.timer_mode_active_minutes > 58)
+			g_helpRecord.timer_mode_active_minutes = 58;
+	}
 	// Check if the stop time (in minutes resolution) is greater than the start time, thus running the same day
-	if (((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min) >
+	else if (((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min) >
 		((g_helpRecord.tm_start_time.hour * 60) + g_helpRecord.tm_start_time.min))
 	{
 		// Set active minutes as the difference in the stop and start times
@@ -541,6 +558,7 @@ void processTimerModeSettings(uint8 mode)
 {
 	//uint8 dayOfWeek = 0;
 	uint8 startDay = 0;
+	uint8 startHour = 0;
 	char stringBuff[75];
 	uint16 minutesLeft = 0;
 	DATE_TIME_STRUCT currentTime = getCurrentTime();
@@ -564,7 +582,8 @@ void processTimerModeSettings(uint8 mode)
 	}
 	else // status == PASSED || status == IN_PROGRESS
 	{
-		tmKeepDateTime();
+		// Calculate timer mode active run time in minutes
+		timerModeActiveMinutes();
 
 #if 0 // ns7100
 		RTC_FLAGS.reg = RTC_FLAGS.reg;
@@ -572,13 +591,10 @@ void processTimerModeSettings(uint8 mode)
 		// fix_ns8100
 #endif
 
-		//dayOfWeek = getDayOfWeek(g_helpRecord.tm_start_date.year, g_helpRecord.tm_start_date.month,
-		//						g_helpRecord.tm_start_date.day);
-
 		startDay = g_helpRecord.tm_start_date.day;
 
-		// Check if in progress
-		if(status == IN_PROGRESS)
+		// Check if in progress, requiring extra logic to determine alarm settings
+		if (status == IN_PROGRESS)
 		{
 			// Check if the stop time is greater than the start time
 			if((g_helpRecord.tm_stop_time.hour > g_helpRecord.tm_start_time.hour) ||
@@ -588,7 +604,7 @@ void processTimerModeSettings(uint8 mode)
 				// Advance the start day
 				startDay++;
 
-				// Check if the start day is beond the total days in the current month
+				// Check if the start day is beyond the total days in the current month
 				if (startDay > g_monthTable[(uint8)(g_helpRecord.tm_start_date.month)].days)
 				{
 					// Set the start day to the first day of next month
@@ -597,7 +613,55 @@ void processTimerModeSettings(uint8 mode)
 			}
 		}
 
-		EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
+		// Check for specialty case hourly mode and in progress, requiring extra logic to determine alarm settings
+		if ((g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY) && (status == IN_PROGRESS))
+		{
+			// Check if another hour time slot to run again today
+			if (currentTime.hour != g_helpRecord.tm_stop_time.hour)
+			{
+				// Start day remains the same
+				startDay = g_helpRecord.tm_start_date.day;
+
+				// Check if current hour time slot has not started
+				if (currentTime.min < g_helpRecord.tm_start_time.min)
+				{
+					// Set alarm for the same hour
+					startHour = currentTime.hour;
+				}
+				else
+				{
+					// Set alarm for the next hour
+					startHour = currentTime.hour + 1;
+					
+					// Account for end of day boundary
+					if (startHour > 23)
+					{
+						startHour = 0;
+
+						// Advance the start day
+						startDay++;
+
+						// Check if the start day is beyond the total days in the current month
+						if (startDay > g_monthTable[(uint8)(g_helpRecord.tm_start_date.month)].days)
+						{
+							// Set the start day to the first day of next month
+							startDay = 1;
+						}
+					}					
+				}
+				
+				EnableRtcAlarm(startDay, startHour, g_helpRecord.tm_start_time.min, 0);
+			}
+			else // This is the last hour time slot to run today, set alarm for next day
+			{
+				// startDay calculated correctly in above previous status == IN_PROGRESS logic
+				EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
+			}
+		}
+		else // All other timer modes
+		{
+			EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
+		}
 
 		if (status == PASSED)
 		{
@@ -652,8 +716,23 @@ void processTimerModeSettings(uint8 mode)
 				messageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
 			}
 
+			// Check if specialty mode hourly
+			if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
+			{
+				if (currentTime.min	< g_helpRecord.tm_stop_time.min)
+				{
+					minutesLeft = (g_helpRecord.tm_stop_time.min - currentTime.min);
+				}
+				else
+				{
+					minutesLeft = (60 + g_helpRecord.tm_stop_time.min - currentTime.min);
+				}
+				
+				if (minutesLeft > 58)
+					minutesLeft = 58;
+			}
 			// Check if the current time is greater than the stop time, indicating that midnight boundary was crossed
-			if(((currentTime.hour * 60) + currentTime.min) > ((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min))
+			else if(((currentTime.hour * 60) + currentTime.min) > ((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min))
 			{
 				// Calculate the time left before powering off to be 24 + the stop time minus the current time
 				minutesLeft = (uint16)(((24 * 60) + (g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min) -

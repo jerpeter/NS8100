@@ -67,7 +67,7 @@ extern uint8 craft_g_input_buffer[];
 ///----------------------------------------------------------------------------
 // Flags and variables to statically defined to prevent creating and clearing stack variables every ISR data process call
 static uint16 s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading;
-static uint16 s_temperatureReading, s_channelConfigReadBack;
+static uint16 s_channelConfigReadBack;
 static uint16* s_pretrigPtr;
 static uint16* s_samplePtr;
 static uint16* s_calPtr[3] = {NULL, NULL, NULL};
@@ -286,8 +286,10 @@ void eic_keypad_irq(void)
 	}
 #endif
 
+#if 0 // Not necessary to clear the keypad interrupt just the processor interrupt so the ISR isn't called again
 	read_mcp23018(IO_ADDRESS_KPD, INTFB);
 	read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+#endif
 
 	// clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int5 = 1;
@@ -1518,7 +1520,7 @@ static inline void moveWaveformData_ISR_Inline(void)
 	if ( >= )  = ;
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
-	raiseSystemEventFlag(WAVE_DATA_EVENT);
+	raiseSystemEventFlag();
 }
 #endif
 
@@ -1538,6 +1540,27 @@ static inline void moveBargraphData_ISR_Inline(void)
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
 	raiseSystemEventFlag(BARGRAPH_EVENT);
+}
+
+// ============================================================================
+// checkForTemperatureDrift_ISR_Inline
+// ============================================================================
+static inline void checkForTemperatureDrift_ISR_Inline(void)
+{
+	if ((g_storedTempReading > g_currentTempReading) && ((g_storedTempReading - g_currentTempReading) > AD_TEMP_COUNT_FOR_ADJUSTMENT))
+	{
+		// Updated stored temp reading for future comparison
+		g_storedTempReading = g_currentTempReading;
+
+		raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
+	}
+	else if ((g_currentTempReading - g_storedTempReading) > AD_TEMP_COUNT_FOR_ADJUSTMENT)
+	{
+		// Updated stored temp reading for future comparison
+		g_storedTempReading = g_currentTempReading;
+
+		raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
+	}
 }
 
 // ============================================================================
@@ -1618,7 +1641,7 @@ static inline void getChannelDataWithReadbackCheck_ISR_Inline(void)
 
     // Temperature
     spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_temperatureReading);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &g_currentTempReading);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
@@ -1661,10 +1684,10 @@ static inline void handleChannelSyncError_ISR_Inline(void)
 {
 	debugErr("AD Channel Sync Error!\n");
 		
-	// Attempt channel recovery
+	// Attempt channel recovery (with a channel read to get the config read back value)
 	spi_selectChip(AD_SPI, AD_SPI_NPCS);
-	spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_temperatureReading);
-	spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
+	spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack); // Data insignificant
+	spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack); // Config read back
 	spi_unselectChip(AD_SPI, AD_SPI_NPCS);
 		
 	switch (s_channelConfigReadBack)
@@ -1685,8 +1708,8 @@ static inline void handleChannelSyncError_ISR_Inline(void)
 	{
 		// Dummy reads to realign channel processing
 		spi_selectChip(AD_SPI, AD_SPI_NPCS); 
-		spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_temperatureReading);
-		spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
+		spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack); // Data insignificant
+		spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack); // Config read back
 		spi_unselectChip(AD_SPI, AD_SPI_NPCS);
 	}
 }
@@ -1717,6 +1740,13 @@ void tc_sample_irq(void)
 			DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
 			DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
 			return;
+		}
+
+		//___________________________________________________________________________________________
+		//___Check for temperature drift
+		if (g_triggerRecord.trec.adjustForTempDrift == YES)
+		{
+			checkForTemperatureDrift_ISR_Inline();
 		}
 	}		
 	//___________________________________________________________________________________________
@@ -1764,7 +1794,6 @@ void tc_sample_irq(void)
 		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 		{
 			processAndMoveWaveformData_ISR_Inline();
-			//raiseSystemEventFlag(WAVE_DATA_EVENT);
 		}
 
 		//___________________________________________________________________________________________

@@ -2423,15 +2423,16 @@ void timerModeMenuHandler(uint8 keyPressed, void* data)
 // Timer Mode Freq Menu
 //=============================================================================
 //*****************************************************************************
-#define TIMER_MODE_FREQ_MENU_ENTRIES 7
+#define TIMER_MODE_FREQ_MENU_ENTRIES 8
 USER_MENU_STRUCT timerModeFreqMenu[TIMER_MODE_FREQ_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, TIMER_FREQUENCY_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, TIMER_MODE_FREQ_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, ONE_TIME_TEXT,			NO_TAG, {TIMER_MODE_ONE_TIME}},
-{ITEM_2, 0, DAILY_EVERY_DAY_TEXT,	NO_TAG, {TIMER_MODE_DAILY}},
-{ITEM_3, 0, DAILY_WEEKDAYS_TEXT,	NO_TAG, {TIMER_MODE_WEEKDAYS}},
-{ITEM_4, 0, WEEKLY_TEXT,			NO_TAG, {TIMER_MODE_WEEKLY}},
-{ITEM_5, 0, MONTHLY_TEXT,			NO_TAG, {TIMER_MODE_MONTHLY}},
+{ITEM_2, 0, HOURLY_TEXT,			NO_TAG, {TIMER_MODE_HOURLY}},
+{ITEM_3, 0, DAILY_EVERY_DAY_TEXT,	NO_TAG, {TIMER_MODE_DAILY}},
+{ITEM_4, 0, DAILY_WEEKDAYS_TEXT,	NO_TAG, {TIMER_MODE_WEEKDAYS}},
+{ITEM_5, 0, WEEKLY_TEXT,			NO_TAG, {TIMER_MODE_WEEKLY}},
+{ITEM_6, 0, MONTHLY_TEXT,			NO_TAG, {TIMER_MODE_MONTHLY}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&timerModeFreqMenuHandler}}
 };
 
@@ -2449,6 +2450,12 @@ void timerModeFreqMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
+		if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
+		{
+			overlayMessage("TIMER MODE", "FOR HOURLY MODE THE HOURS AND MINUTES FIELDS ARE INDEPENDENT", MB_OK);
+			overlayMessage("TIMER MODE HOURLY", "HOURS = ACTIVE HOURS, MINS = ACTIVE MIN RANGE EACH HOUR", MB_OK);
+		}
+		
 		g_activeMenu = TIMER_MODE_TIME_MENU;
 		ACTIVATE_MENU_MSG();
 	}

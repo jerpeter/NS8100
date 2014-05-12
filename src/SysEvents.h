@@ -39,11 +39,7 @@ typedef struct
 // System Events
 #define TRIGGER_EVENT		0x0001
 #define BARGRAPH_EVENT		0x0002
-#if 1 // Normal
-#define UNUSED_EVENT		0x0004
-#else // Test
-#define WAVE_DATA_EVENT		0x0004
-#endif
+#define UPDATE_OFFSET_EVENT	0x0004
 #define POWER_OFF_EVENT		0x0008
 #define KEYPAD_EVENT		0x0010
 #define CYCLIC_EVENT		0x0020
@@ -68,9 +64,10 @@ typedef struct
 #define ANY_MENU_EVENT		0xFFFF
 
 // System Event Macros
-#define raiseSystemEventFlag(x) (g_systemEventFlags.wrd |= x)
-#define clearSystemEventFlag(x) (g_systemEventFlags.wrd &= ~x)
+#define raiseSystemEventFlag(x)	(g_systemEventFlags.wrd |= x)
+#define clearSystemEventFlag(x)	(g_systemEventFlags.wrd &= ~x)
 #define getSystemEventState(x)	(g_systemEventFlags.wrd & x)
+#define anySystemEventExcept(x)	(g_systemEventFlags.wrd & ~x)
 
 // Timer Event Macros
 #define raiseTimerEventFlag(x)	(g_timerEventFlags.wrd |= x)

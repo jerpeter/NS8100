@@ -184,9 +184,25 @@ void processTimerMode(void)
 		debug("Timer mode: Powering unit off...\n");
 		PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
 	}
-	// Check if the Timer mode activated on end date
-	else if ((currTime.year == g_helpRecord.tm_stop_date.year) && (currTime.month == g_helpRecord.tm_stop_date.month) &&
-		(currTime.day == g_helpRecord.tm_stop_date.day))
+	// Check if the Timer mode activated on end date (and not hourly mode)
+	else if ((g_helpRecord.timer_mode_freq != TIMER_MODE_HOURLY) && (currTime.year == g_helpRecord.tm_stop_date.year) && 
+			(currTime.month == g_helpRecord.tm_stop_date.month) && (currTime.day == g_helpRecord.tm_stop_date.day))
+	{
+		// Disable alarm output generation
+		debug("Timer Mode: Activated on end date...\n");
+		debug("Timer Mode: Disabling...\n");
+		g_helpRecord.timer_mode = DISABLED;
+
+		// Save help record
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+
+	    // Deactivate alarm interrupts
+	    DisableRtcAlarm();
+	}
+	// Check if the Timer mode activated on end date and end hour (hourly mode)
+	else if ((g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY) && (currTime.year == g_helpRecord.tm_stop_date.year) && 
+			(currTime.month == g_helpRecord.tm_stop_date.month) && (currTime.day == g_helpRecord.tm_stop_date.day) &&
+			(currTime.hour == g_helpRecord.tm_stop_time.hour))
 	{
 		// Disable alarm output generation
 		debug("Timer Mode: Activated on end date...\n");
@@ -277,13 +293,16 @@ void resetTimeOfDayAlarm(void)
 {
 	DATE_TIME_STRUCT currTime = getRtcTime();
 	uint8 startDay = 0;
+	uint8 startHour = 0;
 	uint8 month;
 
 	// RTC Weekday's: Sunday = 1, Monday = 2, Tuesday = 3, Wednesday = 4, Thursday = 5, Friday = 6, Saturday = 7
 
+	//___________________________________________________________________________________________
+	//___TIMER_MODE_DAILY
 	if (g_helpRecord.timer_mode_freq == TIMER_MODE_DAILY)
 	{
-#if 0 // Normal
+#if 1 // Normal
 		// Get the current day and add one
 		startDay = (uint8)(currTime.day + 1);
 
@@ -323,6 +342,60 @@ void resetTimeOfDayAlarm(void)
 
 		EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
 	}
+	//___________________________________________________________________________________________
+	//___TIMER_MODE_HOURLY
+	else if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
+	{
+		startDay = currTime.day;
+		
+		// Check if another hour time slot to run again today
+		if (currTime.hour != g_helpRecord.tm_stop_time.hour)
+		{
+			// Set alarm for the next hour
+			startHour = currTime.hour + 1;
+					
+			// Account for end of day boundary
+			if (startHour > 23)
+			{
+				startHour = 0;
+
+				// Get the current day and add one
+				startDay = (uint8)(currTime.day + 1);
+
+				// Check if the start day is beyond the total days in the current month
+				if (startDay > g_monthTable[currTime.month].days)
+				{
+					// Set the start day to the first of next month
+					startDay = 1;
+				}
+			}
+		}
+		else // Last hour time slot to run today, set alarm for next hour grouping
+		{
+			startHour = g_helpRecord.tm_start_time.hour;
+
+			// Check if the setup time did not cross the midnight boundary (else the startDay remains today)
+			if (g_helpRecord.tm_start_time.hour < g_helpRecord.tm_stop_time.hour)
+			{
+				// Set to the following day
+				startDay++;
+
+				// Check if the start day is beyond the total days in the current month
+				if (startDay > g_monthTable[currTime.month].days)
+				{
+					// Set the start day to the first of next month
+					startDay = 1;
+				}
+			} 
+		}
+
+		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
+				startHour, g_helpRecord.tm_start_time.min, startDay);
+
+		EnableRtcAlarm(startDay, startHour, g_helpRecord.tm_start_time.min, 0);
+	}
+	//___________________________________________________________________________________________
+	//___TIMER_MODE_WEEKDAYS
 	else if (g_helpRecord.timer_mode_freq == TIMER_MODE_WEEKDAYS)
 	{
 		// Get the current day
@@ -356,6 +429,8 @@ void resetTimeOfDayAlarm(void)
 
 		EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
 	}
+	//___________________________________________________________________________________________
+	//___TIMER_MODE_WEEKLY
 	else if (g_helpRecord.timer_mode_freq == TIMER_MODE_WEEKLY)
 	{
 		// Set the start day to the current day + 7 days
@@ -373,6 +448,8 @@ void resetTimeOfDayAlarm(void)
 
 		EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
 	}
+	//___________________________________________________________________________________________
+	//___TIMER_MODE_MONTHLY
 	else if (g_helpRecord.timer_mode_freq == TIMER_MODE_MONTHLY)
 	{
 		// Check if advancing a month is still within the same year

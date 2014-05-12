@@ -416,9 +416,9 @@ void waitForEventProcessingToFinish(void)
 		while (g_doneTakingEvents == PENDING)
 		{
 #if 0 // Test (Throw away at some point)
-			if (getSystemEventState(WAVE_DATA_EVENT))
+			if (getSystemEventState())
 			{
-				clearSystemEventFlag(WAVE_DATA_EVENT);
+				clearSystemEventFlag();
 
 extern void processAndMoveWaveformData_ISR_Inline(void);
 				processAndMoveWaveformData_ISR_Inline();		

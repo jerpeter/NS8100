@@ -297,6 +297,8 @@ uint8 g_tcSampleTimerActive = NO;
 uint8 g_tcTypematicTimerActive = NO;
 char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
 uint16 g_testTrigger = NO;
+uint16 g_storedTempReading;
+uint16 g_currentTempReading;
 char g_languageTable[8192];
 uint8 g_spareBuffer[8192];
 uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
