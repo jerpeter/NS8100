@@ -218,10 +218,10 @@ void spinBar(void);
 
 // Conversion routines
 uint16 swapInt(uint16);
-float hexToDB(uint16, uint8);
-float hexToMillBars(uint16, uint8);
-float hexToPsi(uint16, uint8);
-uint16 dbToHex(float);
+float hexToDB(uint16, uint8, uint16);
+float hexToMillBars(uint16, uint8, uint16);
+float hexToPsi(uint16, uint8, uint16);
+uint16 dbToHex(uint16);
 
 // PIT timers
 void startPitTimer(PIT_TIMER timer);

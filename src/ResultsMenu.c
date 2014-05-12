@@ -352,6 +352,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	char buff[50];
 	char displayFormat[10];
 	DATE_TIME_STRUCT time;
+	uint16 bitAccuracyScale;
 	uint8 calResults = PASSED;
 
 	EVT_RECORD* eventRecord = &resultsEventRecord;
@@ -367,7 +368,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			getResultsEventInfoFromCache(g_resultsRamSummaryPtr->fileEventNum);
 
-			// Old
+			// Old and too slow - Throw away at some point
 			//getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
 		}		
 
@@ -383,10 +384,30 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
+    //-------------------------------------------------------------
+	// Event specific scaling factors
+    //-------------------------------------------------------------
+	
+	// Set the gain factor that was used to record the event
 	if ((eventRecord->summary.parameters.channel[0].options & 0x01) == GAIN_SELECT_x2)
 		gainFactor = 2;
 	else
 		gainFactor = 4;
+
+	// Set the scale based on the stored bit accuracy the event was recorded with
+	switch (eventRecord->summary.parameters.bitAccuracy)
+	{
+		case ACCURACY_10_BIT: { bitAccuracyScale = ACCURACY_10_BIT_MIDPOINT; } break;
+		case ACCURACY_12_BIT: {	bitAccuracyScale = ACCURACY_12_BIT_MIDPOINT; } break;
+		case ACCURACY_14_BIT: { bitAccuracyScale = ACCURACY_14_BIT_MIDPOINT; } break;
+		default: // ACCURACY_16_BIT
+			bitAccuracyScale = ACCURACY_16_BIT_MIDPOINT;
+			break;
+	}
+
+	// Calculate the divider used for converting stored A/D peak counts to units of measure
+	div = (float)(bitAccuracyScale * SENSOR_ACCURACY_100X_SHIFT * gainFactor) /
+			(float)(eventRecord->summary.parameters.seismicSensorType);
 
 	//-----------------------------------------------------------------------
 	// PRINT MONITORING
@@ -569,9 +590,6 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     //-------------------------------------------------------------
     // R DATA
     // Using the Sensor times 100 definition.
-	div = (float)(ADC_RESOLUTION * SENSOR_ACCURACY_DEFAULT * gainFactor) /
-			(float)(eventRecord->summary.parameters.seismicSensorType);
-
     normalize_max_peak = (float)eventRecord->summary.calculated.r.peak / (float)div;
 
 	if (eventRecord->summary.mode == MANUAL_CAL_MODE)
@@ -817,13 +835,11 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		if (g_printMillibars == OFF)
 		{
-		    sprintf(buff,"%0.1f dB",
-		    	hexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED) );
+		    sprintf(buff,"%0.1f dB", hexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}
 		else
 		{
-		    sprintf(buff,"%0.3f mb",
-		    	hexToMillBars(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED) );
+		    sprintf(buff,"%0.3f mb", hexToMillBars(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}
 
 	    adjust = (uint8)strlen(buff);

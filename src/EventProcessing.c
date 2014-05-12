@@ -657,7 +657,7 @@ void initEventRecord(uint8 op_mode)
 		if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
 		{
 			eventRec->summary.parameters.seismicTriggerLevel = (uint32)g_triggerRecord.trec.seismicTriggerLevel;
-			eventRec->summary.parameters.airTriggerLevel = (uint32)g_triggerRecord.trec.soundTriggerLevel;
+			eventRec->summary.parameters.airTriggerLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 			eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
 		}	
 		else // (op_mode == MANUAL_CAL_MODE)
@@ -1326,6 +1326,19 @@ uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr)
 	debug("Number of Event Summaries in RAM: %d\n", s_numOfFlashSummarys);
 
 	return (success);
+}
+
+/*******************************************************************************
+*	Function:	adjustSampleForBitAccuracy
+*	Purpose:
+*******************************************************************************/
+inline void adjustSampleForBitAccuracy(void)
+{
+	// Shift the sample data to adjust for the lower accuracy
+	*(g_currentEventSamplePtr) >>= g_bitShiftForAccuracy;
+	*(g_currentEventSamplePtr + 1) >>= g_bitShiftForAccuracy;
+	*(g_currentEventSamplePtr + 2) >>= g_bitShiftForAccuracy;
+	*(g_currentEventSamplePtr + 3) >>= g_bitShiftForAccuracy;
 }
 
 /*****************************************************************************

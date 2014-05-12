@@ -90,7 +90,7 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	// Waveform specific - Intitial conditions.
 	cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
-	cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.soundTriggerLevel;
+	cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
 	cfg.eventCfg.recordTime = g_triggerRecord.trec.record_time;
 
 	// static non changing.
@@ -422,9 +422,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_VALUE) &&
 			(cfg.eventCfg.airTriggerLevel <= AIR_TRIGGER_MAX_VALUE)))
 		{
-			g_triggerRecord.trec.soundTriggerLevel = cfg.eventCfg.airTriggerLevel;
-			g_helpRecord.alarm_one_air_min_lvl = g_triggerRecord.trec.soundTriggerLevel;
-			g_helpRecord.alarm_two_air_min_lvl = g_triggerRecord.trec.soundTriggerLevel;
+			g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
+			g_helpRecord.alarm_one_air_min_lvl = g_triggerRecord.trec.airTriggerLevel;
+			g_helpRecord.alarm_two_air_min_lvl = g_triggerRecord.trec.airTriggerLevel;
 		}
 		else
 		{
@@ -679,7 +679,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			{
 				// Alarm One Air trigger level check.
 				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_one_air_lvl) 	||
-					((cfg.alarmCfg.alarm_one_air_lvl >= g_triggerRecord.trec.soundTriggerLevel) &&
+					((cfg.alarmCfg.alarm_one_air_lvl >= g_triggerRecord.trec.airTriggerLevel) &&
 					  (cfg.alarmCfg.alarm_one_air_lvl <= AIR_TRIGGER_MAX_VALUE)))
 				{
 					g_helpRecord.alarm_one_air_lvl = cfg.alarmCfg.alarm_one_air_lvl;
@@ -761,7 +761,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			{
 				// Alarm Two Air trigger level check.
 				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_two_air_lvl) 	||
-					((cfg.alarmCfg.alarm_two_air_lvl >= g_triggerRecord.trec.soundTriggerLevel) &&
+					((cfg.alarmCfg.alarm_two_air_lvl >= g_triggerRecord.trec.airTriggerLevel) &&
 					  (cfg.alarmCfg.alarm_two_air_lvl <= AIR_TRIGGER_MAX_VALUE)))
 				{
 					g_helpRecord.alarm_two_air_lvl = cfg.alarmCfg.alarm_two_air_lvl;

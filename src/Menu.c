@@ -246,25 +246,19 @@ void setupMnDef(void)
 ****************************************/
 void initSensorParameters(uint16 sensor_type, uint8 sensitivity)
 {
-	uint16 sensorTestVal = (uint16)MAX_NORMALIZED_SENSOR;
 	uint8 gainFactor = (uint8)((sensitivity == LOW) ? 2 : 4);
 
 	// Sensor type information
 	g_sensorInfoPtr->numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;		// The number of channels from a sensor.
 	g_sensorInfoPtr->unitsFlag = g_helpRecord.units_of_measure;			// 0 = SAE; 1 = Metric
 
-	g_sensorInfoPtr->sensorAccuracy = SENSOR_ACCURACY_DEFAULT;		// 100, sensor values are X 100 for accuaracy.
+	g_sensorInfoPtr->sensorAccuracy = SENSOR_ACCURACY_100X_SHIFT;		// 100, sensor values are X 100 for accuaracy.
 	g_sensorInfoPtr->ADCResolution = ADC_RESOLUTION;				// Raw data Input Range, unless ADC is changed
 
 	// Get the shift value
 	g_sensorInfoPtr->shiftVal = 1;
-	while( (sensorTestVal != sensor_type) && (sensorTestVal >= (uint16)MIN_NORMALIZED_SENSOR) )
-	{
-		sensorTestVal = (uint16)(sensorTestVal >> 1);
-		g_sensorInfoPtr->shiftVal <<= 1;
-	}
 
-	g_sensorInfoPtr->sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_DEFAULT);
+	g_sensorInfoPtr->sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
 
 	if((IMPERIAL_TYPE == g_helpRecord.units_of_measure) || (sensor_type == SENSOR_ACC))
 	{

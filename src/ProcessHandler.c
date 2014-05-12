@@ -52,7 +52,7 @@
 ///	Prototypes
 ///----------------------------------------------------------------------------
 uint16 seisTriggerConvert(float);
-uint16 airTriggerConvert(uint32);
+uint16 airTriggerConvert(uint16 airTriggerLevel);
 void startDataCollection(uint32 sampleRate);
 
 /****************************************
@@ -72,7 +72,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		}
 	}
 
-	// Display a message to be patient while the software setups up the 430
+	// Display a message to be patient while the software disables the power off key and setups up parameters
 	overlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
 
 	if (getPowerControlState(POWER_SHUTDOWN_ENABLE) == OFF)
@@ -112,21 +112,26 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 
 		if ((g_helpRecord.alarm_one_mode == ALARM_MODE_AIR) || (g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH))
 		{
-			if (g_helpRecord.alarm_one_air_lvl < (uint32)trig_mn.soundTriggerLevel)
+			if (g_helpRecord.alarm_one_air_lvl < (uint32)trig_mn.airTriggerLevel)
 			{
-				g_helpRecord.alarm_one_air_lvl = (uint32)trig_mn.soundTriggerLevel;
+				g_helpRecord.alarm_one_air_lvl = (uint32)trig_mn.airTriggerLevel;
 			}
 		}
 
 		if ((g_helpRecord.alarm_two_mode == ALARM_MODE_AIR) || (g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH))
 		{
-			if (g_helpRecord.alarm_two_air_lvl < (uint32)trig_mn.soundTriggerLevel)
+			if (g_helpRecord.alarm_two_air_lvl < (uint32)trig_mn.airTriggerLevel)
 			{
-				g_helpRecord.alarm_two_air_lvl = (uint32)trig_mn.soundTriggerLevel;
+				g_helpRecord.alarm_two_air_lvl = (uint32)trig_mn.airTriggerLevel;
 			}
 		}
 	}
 
+	// Convert Air trigger from stored DB (log) to a linear count for A/D comparison
+	g_airTriggerCount = airTriggerConvert(trig_mn.airTriggerLevel);
+	g_alarm1AirTriggerCount = airTriggerConvert(g_helpRecord.alarm_one_air_lvl);
+	g_alarm2AirTriggerCount = airTriggerConvert(g_helpRecord.alarm_two_air_lvl);
+	
 	//-------------------------
 	// Debug Information
 	//-------------------------
@@ -135,7 +140,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	{
 		debug("--- Waveform Mode Settings ---\n");
 		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
-		debug("\tSeismic Trigger Count: 0x%x, Air Trigger Level: 0x%x db\n", trig_mn.seismicTriggerLevel, trig_mn.soundTriggerLevel);
+		debug("\tSeismic Trigger Count: 0x%x, Air Trigger Level: 0x%x db\n", trig_mn.seismicTriggerLevel, trig_mn.airTriggerLevel);
 	}
 	else if (op_mode == BARGRAPH_MODE)
 	{
@@ -146,7 +151,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	{
 		debug("--- Combo Mode Settings ---\n");
 		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
-		debug("\tSeismic Trigger Count: 0x%x, Air Trigger Level: 0x%x db\n", trig_mn.seismicTriggerLevel, trig_mn.soundTriggerLevel);
+		debug("\tSeismic Trigger Count: 0x%x, Air Trigger Level: 0x%x db\n", trig_mn.seismicTriggerLevel, trig_mn.airTriggerLevel);
 		debug("\tBar Interval: %d secs, Summary Interval: %d mins\n", g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));
 	}
 	else if (op_mode == MANUAL_TRIGGER_MODE)
@@ -220,7 +225,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 #if 1
 extern void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel);
 extern void Start_Data_Clock(TC_CHANNEL_NUM channel);
-extern void SetupADChannelConfig(void);
+extern void SetupADChannelConfig(uint32 sampleRate);
 #endif
 /****************************************
 *	Function:	 startDataCollection
@@ -233,7 +238,7 @@ void startDataCollection(uint32 sampleRate)
 	powerControl(ANALOG_SLEEP_ENABLE, OFF);		
 
 	// Setup the A/D Channel configuration
-	SetupADChannelConfig();
+	SetupADChannelConfig(sampleRate);
 	
 	// Get current A/D offsets for normalization
 	debug("Getting channel offsets...\n");
@@ -408,6 +413,7 @@ extern void processAndMoveWaveformData_ISR_Inline(void);
 	}
 }
 
+#if 0 // Unused?
 /****************************************
 *	Function:	 seisTriggerConvert
 *	Purpose:
@@ -416,7 +422,7 @@ uint16 seisTriggerConvert(float seismicTriggerLevel)
 {
     uint16 seisTriggerVal;
     uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
-    float convertToHex = (float)(g_factorySetupRecord.sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_DEFAULT);
+    float convertToHex = (float)(g_factorySetupRecord.sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
     
     convertToHex = (float)ADC_RESOLUTION / (float)convertToHex;
   
@@ -435,22 +441,22 @@ uint16 seisTriggerConvert(float seismicTriggerLevel)
 
 	return (swapInt(seisTriggerVal));
 }
+#endif
 
 /****************************************
 *	Function:	 airTriggerConvert
 *	Purpose:
 ****************************************/
-uint16 airTriggerConvert(uint32 airTriggerLevel)
+uint16 airTriggerConvert(uint16 airTriggerDbToConvert)
 {
-	// Check if the air trigger level is set for no trigger
-	if ((airTriggerLevel != NO_TRIGGER_CHAR) && (airTriggerLevel != MANUAL_TRIGGER_CHAR))
+	// Check if the air trigger level is not no trigger and not manual trigger
+	if ((airTriggerDbToConvert != NO_TRIGGER_CHAR) && (airTriggerDbToConvert != MANUAL_TRIGGER_CHAR))
 	{
-		// Convert the float db to an offset from 0 to 2048
-		airTriggerLevel = dbToHex((float)airTriggerLevel);
+		// Convert the float db to an offset from 0 to 2048 and upscale to 16-bit
+		airTriggerDbToConvert = (dbToHex(airTriggerDbToConvert) * 16);
 	}
 
-	// Swap the air trigger level so that the 430 can read the word value
-	return (swapInt((uint16)airTriggerLevel));
+	return (airTriggerDbToConvert);
 }
 
 /****************************************

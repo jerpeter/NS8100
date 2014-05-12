@@ -1115,13 +1115,13 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				{
 					// Init the float increment value adjusted by the units conversion
 					g_userMenuCacheData.floatIncrement = ((float)(g_factorySetupRecord.sensor_type * unitTypes[USER_MENU_ALT_TYPE(g_userMenuCachePtr)].conversion) / 
-														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400) * ADC_RESOLUTION));
+														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400) * g_bitAccuracyMidpoint));
 				}
 				else
 				{
 					// Init the float increment value
 					g_userMenuCacheData.floatIncrement = ((float)(g_factorySetupRecord.sensor_type) / 
-														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400) * ADC_RESOLUTION));
+														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400) * g_bitAccuracyMidpoint));
 				}
 
 				// Set the min, max and data count values adjusted by the float incrememnt
@@ -1136,20 +1136,6 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				{
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.3f-%.3f%s,N)",
 						g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, g_userMenuCacheData.unitText);
-					sprintf(g_userMenuCachePtr[INTEGER_RANGE+1].text, "(+/- %.3f%s)",
-						g_userMenuCacheData.floatIncrement, g_userMenuCacheData.unitText);
-
-					if (g_userMenuCacheData.numLongData == NO_TRIGGER_CHAR)
-						sprintf(g_userMenuCachePtr[tempRow].text, "N");
-					else
-						sprintf(g_userMenuCachePtr[tempRow].text, "%.3f", g_userMenuCacheData.floatData);
-				}
-				else if (((g_factorySetupRecord.sensor_type == SENSOR_10_IN) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
-						((g_factorySetupRecord.sensor_type == SENSOR_ACC) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
-						((g_factorySetupRecord.sensor_type == SENSOR_5_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
-				{
-					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.4f-%.3f%s,N)",
-						g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, g_userMenuCacheData.unitText);
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE+1].text, "(+/- %.4f%s)",
 						g_userMenuCacheData.floatIncrement, g_userMenuCacheData.unitText);
 
@@ -1158,10 +1144,11 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 					else
 						sprintf(g_userMenuCachePtr[tempRow].text, "%.4f", g_userMenuCacheData.floatData);
 				}
-				else if (((g_factorySetupRecord.sensor_type == SENSOR_5_IN) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
-						((g_factorySetupRecord.sensor_type == SENSOR_2_5_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
+				else if (((g_factorySetupRecord.sensor_type == SENSOR_10_IN) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
+						((g_factorySetupRecord.sensor_type == SENSOR_ACC) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
+						((g_factorySetupRecord.sensor_type == SENSOR_5_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
 				{
-					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.5f-%.3f%s,N)",
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.4f-%.3f%s,N)",
 						g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, g_userMenuCacheData.unitText);
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE+1].text, "(+/- %.5f%s)",
 						g_userMenuCacheData.floatIncrement, g_userMenuCacheData.unitText);
@@ -1171,6 +1158,19 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 					else
 						sprintf(g_userMenuCachePtr[tempRow].text, "%.5f", g_userMenuCacheData.floatData);
 				}
+				else if (((g_factorySetupRecord.sensor_type == SENSOR_5_IN) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
+						((g_factorySetupRecord.sensor_type == SENSOR_2_5_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
+				{
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.5f-%.3f%s,N)",
+						g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, g_userMenuCacheData.unitText);
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE+1].text, "(+/- %.6f%s)",
+						g_userMenuCacheData.floatIncrement, g_userMenuCacheData.unitText);
+
+					if (g_userMenuCacheData.numLongData == NO_TRIGGER_CHAR)
+						sprintf(g_userMenuCachePtr[tempRow].text, "N");
+					else
+						sprintf(g_userMenuCachePtr[tempRow].text, "%.6f", g_userMenuCacheData.floatData);
+				}
 				else // ((g_factorySetupRecord.sensor_type == SENSOR_2_5_IN) && (g_triggerRecord.srec.sensitivity == HIGH))
 				{
 					if (g_helpRecord.units_of_measure == IMPERIAL)
@@ -1179,13 +1179,13 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 					else
 						sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%0.6f-%.3f%s,N)",
 							g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, g_userMenuCacheData.unitText);
-					sprintf(g_userMenuCachePtr[INTEGER_RANGE+1].text, "(+/- %.6f%s)",
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE+1].text, "(+/- %.7f%s)",
 						g_userMenuCacheData.floatIncrement, g_userMenuCacheData.unitText);
 
 					if (g_userMenuCacheData.numLongData == NO_TRIGGER_CHAR)
 						sprintf(g_userMenuCachePtr[tempRow].text, "N");
 					else
-						sprintf(g_userMenuCachePtr[tempRow].text, "%.6f", g_userMenuCacheData.floatData);
+						sprintf(g_userMenuCachePtr[tempRow].text, "%.7f", g_userMenuCacheData.floatData);
 				}
 			}
 			else //(USER_MENU_TYPE(g_userMenuCachePtr) != INTEGER_SPECIAL_TYPE, INTEGER_COUNT_TYPE

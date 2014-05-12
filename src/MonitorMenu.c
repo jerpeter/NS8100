@@ -59,8 +59,6 @@
 void monitorMn(INPUT_MSG_STRUCT);
 void monitorMnDsply(WND_LAYOUT_STRUCT *);
 void monitorMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
-uint16 seisTriggerConvert(float);
-uint16 airTriggerConvert(uint32);
 
 /****************************************
 *	Function:	monitorMn
@@ -189,7 +187,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 				case MANUAL_TRIGGER_MODE:
 					byteCpy((uint8*)&temp_g_triggerRecord, &g_triggerRecord, sizeof(REC_EVENT_MN_STRUCT));
 					temp_g_triggerRecord.trec.seismicTriggerLevel = MANUAL_TRIGGER_CHAR;
-					temp_g_triggerRecord.trec.soundTriggerLevel = MANUAL_TRIGGER_CHAR;
+					temp_g_triggerRecord.trec.airTriggerLevel = MANUAL_TRIGGER_CHAR;
 
 					startMonitoring(temp_g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
 				break;
@@ -606,11 +604,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			// Show RTVA
 			//-----------------------------------------------------------------------
 			byteSet(&buff[0], 0, sizeof(buff));	
-			length = (uint8)sprintf(buff," r%3x v%3x t%3x a%3x", 
-				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r) & 0x0FFF),
-				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v) & 0x0FFF),
-				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t) & 0x0FFF),
-				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a) & 0x0FFF));
+			length = (uint8)sprintf(buff," R%03x V%03x T%3x A%03x", 
+				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r),
+				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v),
+				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t),
+				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a));
 
 			wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
@@ -662,6 +660,9 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
+		div = (float)(g_bitAccuracyMidpoint * g_sensorInfoPtr->sensorAccuracy * gainFactor) / 
+				(float)(g_factorySetupRecord.sensor_type);
+
 		if (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL)
 		{
 			//-----------------------------------------------------------------------
@@ -680,9 +681,6 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			//-----------------------------------------------------------------------
 			byteSet(&buff[0], 0, sizeof(buff));
 			byteSet(&displayFormat[0], 0, sizeof(displayFormat));
-
-			div = (float)(g_sensorInfoPtr->ADCResolution * g_sensorInfoPtr->sensorAccuracy * gainFactor) / 
-					(float)(g_factorySetupRecord.sensor_type);
 
 			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
@@ -988,7 +986,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
-					sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), hexToDB(g_aImpulsePeak, DATA_NORMALIZED));
+					sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), hexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 				}
 				else // (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS) || (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 				{
@@ -1002,7 +1000,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED));
+							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 						}
 						else if (g_triggerRecord.op_mode == COMBO_MODE)
 						{
@@ -1012,7 +1010,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_comboSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED));
+							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 						}
 					}
 					else // g_displayBargraphResultsMode == JOB_PEAK_RESULTS
@@ -1023,7 +1021,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 									((float)((g_aJobFreq * 2) - 1)));
 						}
 
-						sprintf(buff, "AIR %4.1f dB ", hexToDB(g_aJobPeak, DATA_NORMALIZED));
+						sprintf(buff, "AIR %4.1f dB ", hexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 					}
 
 					if (tempA > 100)

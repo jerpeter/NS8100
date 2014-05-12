@@ -404,11 +404,11 @@ uint16 swapInt(uint16 Scr)
 ///				.0000002 = 1/5000000 = 1/DB_CONVERSION_VALUE
 ///				log(100) = 2 : 100 = 10**2 : 100 = 10 ** log(100)
 ///----------------------------------------------------------------------------
-float hexToDB(uint16 data, uint8 dataNormalizedFlag)
+float hexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
 	float tempValue;
 
-	tempValue =  hexToMillBars(data, dataNormalizedFlag) * (float)DB_CONVERSION_VALUE;
+	tempValue =  hexToMillBars(data, dataNormalizedFlag, bitAccuracyMidpoint) * (float)DB_CONVERSION_VALUE;
 
 	if (tempValue > 0)
 	{
@@ -423,23 +423,27 @@ float hexToDB(uint16 data, uint8 dataNormalizedFlag)
 ///	Purpose:	ABS((hexValue - 2048) * 25 / 10000), Where (hexValue - 2048)
 ///				is for the full spread between 0 - 4096
 ///----------------------------------------------------------------------------
-float hexToMillBars(uint16 data, uint8 dataNormalizedFlag)
+float hexToMillBars(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
 	float millibars;
 
 	if (dataNormalizedFlag == DATA_NOT_NORMALIZED)
 	{
-		if (data >= g_sampleDataMidpoint)
+		if (data >= bitAccuracyMidpoint)
 		{
-			data = (uint16)(data - g_sampleDataMidpoint);
+			data = (uint16)(data - bitAccuracyMidpoint);
 		}
 		else
 		{
-			data = (uint16)(g_sampleDataMidpoint - data);
+			data = (uint16)(bitAccuracyMidpoint - data);
 		}
 	}
 
 	millibars = (float)((float)(data * 25)/(float)10000.0);
+	
+#if 1 // ns8100 - Scale appropriate to bit accuracy based on the original calc for 12-bit
+	millibars *= (bitAccuracyMidpoint / ACCURACY_12_BIT_MIDPOINT);
+#endif
 
 	return (millibars);
 }
@@ -448,11 +452,11 @@ float hexToMillBars(uint16 data, uint8 dataNormalizedFlag)
 ///	Function:	hexToPsi
 ///	Purpose:	psi = mb * 14.70/1013.25, 1 atmosphere = 14.7 psi = 1013.25 mb
 ///----------------------------------------------------------------------------
-float hexToPsi(uint16 data, uint8 dataNormalizedFlag)
+float hexToPsi(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
 	float psi;
 
-	psi =  hexToMillBars(data, dataNormalizedFlag);
+	psi =  hexToMillBars(data, dataNormalizedFlag, bitAccuracyMidpoint);
 
 	psi = (float)((psi * (float)14.7)/(float)1013.25);
 
@@ -463,7 +467,7 @@ float hexToPsi(uint16 data, uint8 dataNormalizedFlag)
 ///	Function:	dbToHex
 ///	Purpose:	Convert the db value to a raw hex number between 0 and 2048
 ///----------------------------------------------------------------------------
-uint16 dbToHex(float db)
+uint16 dbToHex(uint16 db)
 {
 	// This is the inverse log of base 10.
 	double dbValue = (double)pow((double)10, ((double)db/(double)20.0));
@@ -473,10 +477,6 @@ uint16 dbToHex(float db)
 
 	// Do the conversion. millibar conversion 400 = 10000/25
 	dbValue = (double)dbValue * (double)400.0;
-
-#if 1 // ns8100 - Convert to 16-bit
-	dbValue *= 16;	
-#endif
 
 	return (ceil(dbValue));
 }

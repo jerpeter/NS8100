@@ -79,10 +79,15 @@ void InitDataBuffs(uint8 op_mode)
 	// Setup the pending event record information that is available at this time
 	initEventRecord(op_mode);
 
-	if (g_triggerRecord.trec.bitAccuracy == ACCURACY_10_BIT) { g_sampleDataMidpoint = 0x0200; }
-	else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_12_BIT) { g_sampleDataMidpoint = 0x0800; }
-	else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_14_BIT) { g_sampleDataMidpoint = 0x2000; }
-	else { g_sampleDataMidpoint = 0x8000; } // Default to 16-bit accuracy
+	// Setup Bit Accuracy globals
+	if (g_triggerRecord.trec.bitAccuracy == ACCURACY_10_BIT) 
+		{ g_bitAccuracyMidpoint = ACCURACY_10_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_10_BIT; }
+	else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_12_BIT) 
+		{ g_bitAccuracyMidpoint = ACCURACY_12_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_12_BIT; }
+	else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_14_BIT) 
+		{ g_bitAccuracyMidpoint = ACCURACY_14_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_14_BIT; }
+	else // Default to 16-bit accuracy
+		{ g_bitAccuracyMidpoint = ACCURACY_16_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_16_BIT; } 
 
 	// Setup buffers based on mode
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))
@@ -239,10 +244,10 @@ uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 //*****************************************************************************
 uint16 FixDataToZero(uint16 data_)
 {
-   if (data_ > g_sampleDataMidpoint)
-     data_ = (uint16)(data_ - g_sampleDataMidpoint);
+   if (data_ > g_bitAccuracyMidpoint)
+     data_ = (uint16)(data_ - g_bitAccuracyMidpoint);
    else
-     data_ = (uint16)(g_sampleDataMidpoint - data_);
+     data_ = (uint16)(g_bitAccuracyMidpoint - data_);
      
    return (data_);  
 }

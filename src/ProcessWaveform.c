@@ -367,11 +367,11 @@ void ProcessWaveformData(void)
 //*****************************************************************************
 void MoveWaveformEventToFlash(void)
 {
-	static FLASH_MOV_STATE flashMovState = FLASH_IDLE;
+	static FLASH_MOV_STATE waveformProcessingState = FLASH_IDLE;
 	static SUMMARY_DATA* sumEntry;
 	static SUMMARY_DATA* ramSummaryEntry;
 	static int32 sampGrpsLeft;
-	static uint32 vectorSumTotal;
+	static uint32 vectorSumMax;
 
 	uint16 normalizedData;
 	uint32 i;
@@ -385,7 +385,7 @@ void MoveWaveformEventToFlash(void)
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
-		switch (flashMovState)
+		switch (waveformProcessingState)
 		{
 			case FLASH_IDLE:
 				if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
@@ -406,52 +406,53 @@ void MoveWaveformEventToFlash(void)
 				sumEntry->waveShapeData.v.freq = 0;
 				sumEntry->waveShapeData.t.freq = 0;
 
-				flashMovState = FLASH_PRE;
+				waveformProcessingState = FLASH_PRE;
 				break;
 
 			case FLASH_PRE:
 				for (i = g_samplesInPretrig; i != 0; i--)
 				{
-					// fix_ns8100 - adjust pointer past pre
-					// Store entire sample
-					//storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+					
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
-				flashMovState = FLASH_BODY_INT;
+				waveformProcessingState = FLASH_BODY_INT;
 				break;
 
 			case FLASH_BODY_INT:
 				sampGrpsLeft = (g_samplesInBody - 1);
 
+				if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+
 				// A channel
 				sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
 				sumEntry->waveShapeData.a.peak = FixDataToZero(sample);
-				sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + 0);
+				sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
 
 				// R channel
 				sample = *(g_currentEventSamplePtr + R_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.r.peak = FixDataToZero(sample);
 				vectorSum = (uint32)(tempPeak * tempPeak);
-				sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + 1);
+				sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
 
 				// V channel
 				sample = *(g_currentEventSamplePtr + V_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.v.peak = FixDataToZero(sample);
 				vectorSum += (uint32)(tempPeak * tempPeak);
-				sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + 2);
+				sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
 
 				// T channel
 				sample = *(g_currentEventSamplePtr + T_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.t.peak = FixDataToZero(sample);
 				vectorSum += (uint32)(tempPeak * tempPeak);
-				sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + 3);
+				sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
 
-				vectorSumTotal = (uint32)vectorSum;
+				vectorSumMax = (uint32)vectorSum;
 
 				g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
-				flashMovState = FLASH_BODY;
+				waveformProcessingState = FLASH_BODY;
 				break;
 
 			case FLASH_BODY:
@@ -459,13 +460,15 @@ void MoveWaveformEventToFlash(void)
 				{
 					sampGrpsLeft--;
 
+					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+
 					// A channel
 					sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
 					normalizedData = FixDataToZero(sample);
 					if (normalizedData > sumEntry->waveShapeData.a.peak)
 					{
 						sumEntry->waveShapeData.a.peak = normalizedData;
-						sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + 0);
+						sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
 					}
 
 					// R channel
@@ -474,7 +477,7 @@ void MoveWaveformEventToFlash(void)
 					if (normalizedData > sumEntry->waveShapeData.r.peak)
 					{
 						sumEntry->waveShapeData.r.peak = normalizedData;
-						sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + 1);
+						sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
 					}
 					vectorSum = (uint32)(normalizedData * normalizedData);
 
@@ -484,7 +487,7 @@ void MoveWaveformEventToFlash(void)
 					if (normalizedData > sumEntry->waveShapeData.v.peak)
 					{
 						sumEntry->waveShapeData.v.peak = normalizedData;
-						sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + 2);
+						sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
 					}
 					vectorSum += (normalizedData * normalizedData);
 
@@ -494,14 +497,14 @@ void MoveWaveformEventToFlash(void)
 					if (normalizedData > sumEntry->waveShapeData.t.peak)
 					{
 						sumEntry->waveShapeData.t.peak = normalizedData;
-						sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + 3);
+						sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
 					}
 					vectorSum += (normalizedData * normalizedData);
 
 					// Vector Sum
-					if (vectorSum > vectorSumTotal)
+					if (vectorSum > vectorSumMax)
 					{
-						vectorSumTotal = (uint32)vectorSum;
+						vectorSumMax = (uint32)vectorSum;
 					}
 
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
@@ -509,13 +512,24 @@ void MoveWaveformEventToFlash(void)
 
 				if (sampGrpsLeft == 0)
 				{
-					g_pendingEventRecord.summary.calculated.vectorSumPeak = vectorSumTotal;
+					g_pendingEventRecord.summary.calculated.vectorSumPeak = vectorSumMax;
 
-					flashMovState = FLASH_CAL;
+					waveformProcessingState = FLASH_CAL;
 				}
 				break;
 
 			case FLASH_CAL:
+				for (i = g_samplesInCal; i != 0; i--)
+				{
+					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+					
+					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
+				}
+
+				waveformProcessingState = FLASH_STORE;
+				break;
+				
+			case FLASH_STORE:
 				if (g_spi1AccessLock == AVAILABLE)
 				{
 					g_spi1AccessLock = EVENT_LOCK;
@@ -588,7 +602,7 @@ void MoveWaveformEventToFlash(void)
 					raiseMenuEventFlag(RESULTS_MENU_EVENT);
 
 					//debug("DataBuffs: Changing flash move state: %s\n", "FLASH_IDLE");
-					flashMovState = FLASH_IDLE;
+					waveformProcessingState = FLASH_IDLE;
 					g_freeEventBuffers++;
 
 					if (getPowerControlState(LCD_POWER_ENABLE) == OFF)

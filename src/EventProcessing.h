@@ -97,6 +97,7 @@ FL_FILE* getEventFileHandle(uint16 eventNumber, EVENT_FILE_OPTION option);
 void deleteEventFileRecord(uint16 eventNumber);
 void deleteEventFileRecords(void);
 void reInitSdCardAndFat32(void);
+inline void adjustSampleForBitAccuracy(void);
 
 void cacheResultsEventInfo(EVT_RECORD* eventRecordToCache);
 

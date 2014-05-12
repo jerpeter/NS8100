@@ -278,6 +278,8 @@ uint8 CalculateBargraphData(void)
 		}
 
 		aTemp = *g_bargraphDataReadPtr++;
+		aTemp >>= g_bitShiftForAccuracy;
+		
 		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 
 		// We have caught up to the end of the write with out it being completed.
@@ -289,6 +291,8 @@ uint8 CalculateBargraphData(void)
 		}
 
 		rTemp = *g_bargraphDataReadPtr++;
+		rTemp >>= g_bitShiftForAccuracy;
+		
 		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
@@ -298,6 +302,8 @@ uint8 CalculateBargraphData(void)
 		}
 
 		vTemp = *g_bargraphDataReadPtr++;
+		vTemp >>= g_bitShiftForAccuracy;
+		
 		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
@@ -307,6 +313,8 @@ uint8 CalculateBargraphData(void)
 		}
 
 		tTemp = *g_bargraphDataReadPtr++;
+		tTemp >>= g_bitShiftForAccuracy;
+		
 		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 
 		// If here we got data;
@@ -564,10 +572,10 @@ uint8 CalculateBargraphData(void)
 		// A channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.a.sign ^ (aTemp & g_sampleDataMidpoint))
+		if (g_bargraphFreqCalcBuffer.a.sign ^ (aTemp & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.a.sign = (uint16)(aTemp & g_sampleDataMidpoint);
+			g_bargraphFreqCalcBuffer.a.sign = (uint16)(aTemp & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_bargraphFreqCalcBuffer.a.updateFlag == TRUE)
@@ -625,10 +633,10 @@ uint8 CalculateBargraphData(void)
 		// R channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.r.sign ^ (rTemp & g_sampleDataMidpoint))
+		if (g_bargraphFreqCalcBuffer.r.sign ^ (rTemp & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.r.sign = (uint16)(rTemp & g_sampleDataMidpoint);
+			g_bargraphFreqCalcBuffer.r.sign = (uint16)(rTemp & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_bargraphFreqCalcBuffer.r.updateFlag == TRUE)
@@ -686,10 +694,10 @@ uint8 CalculateBargraphData(void)
 		// V channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.v.sign ^ (vTemp & g_sampleDataMidpoint))
+		if (g_bargraphFreqCalcBuffer.v.sign ^ (vTemp & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.v.sign = (uint16)(vTemp & g_sampleDataMidpoint);
+			g_bargraphFreqCalcBuffer.v.sign = (uint16)(vTemp & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_bargraphFreqCalcBuffer.v.updateFlag == TRUE)
@@ -747,10 +755,10 @@ uint8 CalculateBargraphData(void)
 		// T channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.t.sign ^ (tTemp & g_sampleDataMidpoint))
+		if (g_bargraphFreqCalcBuffer.t.sign ^ (tTemp & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.t.sign = (uint16)(tTemp & g_sampleDataMidpoint);
+			g_bargraphFreqCalcBuffer.t.sign = (uint16)(tTemp & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_bargraphFreqCalcBuffer.t.updateFlag == TRUE)

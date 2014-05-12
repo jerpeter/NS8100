@@ -776,17 +776,17 @@ static inline void fillQuarterSecBuffer_ISR_Inline(void)
 // ============================================================================
 static inline void normalizeSampleData_ISR_Inline(void)
 {
-	if (s_R_channelReading < g_sampleDataMidpoint) { s_R_channelReading = g_sampleDataMidpoint - s_R_channelReading; }
-	else { s_R_channelReading -= g_sampleDataMidpoint; }
+	if (s_R_channelReading < g_bitAccuracyMidpoint) { s_R_channelReading = g_bitAccuracyMidpoint - s_R_channelReading; }
+	else { s_R_channelReading -= g_bitAccuracyMidpoint; }
 
-	if (s_V_channelReading < g_sampleDataMidpoint) { s_V_channelReading = g_sampleDataMidpoint - s_V_channelReading; }
-	else { s_V_channelReading -= g_sampleDataMidpoint; }
+	if (s_V_channelReading < g_bitAccuracyMidpoint) { s_V_channelReading = g_bitAccuracyMidpoint - s_V_channelReading; }
+	else { s_V_channelReading -= g_bitAccuracyMidpoint; }
 
-	if (s_T_channelReading < g_sampleDataMidpoint) { s_T_channelReading = g_sampleDataMidpoint - s_T_channelReading; }
-	else { s_T_channelReading -= g_sampleDataMidpoint; }
+	if (s_T_channelReading < g_bitAccuracyMidpoint) { s_T_channelReading = g_bitAccuracyMidpoint - s_T_channelReading; }
+	else { s_T_channelReading -= g_bitAccuracyMidpoint; }
 
-	if (s_A_channelReading < g_sampleDataMidpoint) { s_A_channelReading = g_sampleDataMidpoint - s_A_channelReading; }
-	else { s_A_channelReading -= g_sampleDataMidpoint; }
+	if (s_A_channelReading < g_bitAccuracyMidpoint) { s_A_channelReading = g_bitAccuracyMidpoint - s_A_channelReading; }
+	else { s_A_channelReading -= g_bitAccuracyMidpoint; }
 }
 	
 // ============================================================================
@@ -809,7 +809,7 @@ static inline void checkAlarms_ISR_Inline(void)
 
 		// Check if air is enabled for Alarm 1
 		if (g_helpRecord.alarm_one_mode & ALARM_MODE_AIR)
-			if (s_A_channelReading > (g_helpRecord.alarm_one_air_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
+			if (s_A_channelReading > g_alarm1AirTriggerCount) { raiseSystemEventFlag(WARNING1_EVENT); }
 	}
 						
 	if (g_helpRecord.alarm_two_mode != ALARM_MODE_OFF)
@@ -824,7 +824,7 @@ static inline void checkAlarms_ISR_Inline(void)
 
 		// Check if air is enabled for Alarm 2
 		if (g_helpRecord.alarm_two_mode & ALARM_MODE_AIR)
-			if (s_A_channelReading > (g_helpRecord.alarm_two_air_lvl)) { raiseSystemEventFlag(WARNING2_EVENT); }
+			if (s_A_channelReading > g_alarm2AirTriggerCount) { raiseSystemEventFlag(WARNING2_EVENT); }
 	}				
 }
 
@@ -885,9 +885,9 @@ void processAndMoveWaveformData(void)
 			else {s_consecSeismicTriggerCount = 0; }
 		}
 
-		if (g_triggerRecord.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
+		if (g_airTriggerCount != NO_TRIGGER_CHAR)
 		{
-			if (s_A_channelReading > (g_triggerRecord.trec.soundTriggerLevel)) { s_airTriggerSample = YES; }
+			if (s_A_channelReading > g_airTriggerCount) { s_airTriggerSample = YES; }
 						
 			if (s_airTriggerSample == YES) { s_consecAirTriggerCount++; s_airTriggerSample = NO; }
 			else { s_consecAirTriggerCount = 0; }
@@ -1235,9 +1235,9 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			else {s_consecSeismicTriggerCount = 0; }
 		}
 
-		if (g_triggerRecord.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
+		if (g_airTriggerCount != NO_TRIGGER_CHAR)
 		{
-			if (s_A_channelReading > (g_triggerRecord.trec.soundTriggerLevel)) { s_airTriggerSample = YES; }
+			if (s_A_channelReading > g_airTriggerCount) { s_airTriggerSample = YES; }
 						
 			if (s_airTriggerSample == YES) { s_consecAirTriggerCount++; s_airTriggerSample = NO; }
 			else { s_consecAirTriggerCount = 0; }
@@ -1702,22 +1702,30 @@ void tc_sample_irq(void)
 	g_sampleCount++;
 
 	//___________________________________________________________________________________________
-	//___AD raw data read all channels
-	getChannelDataWithReadbackCheck_ISR_Inline();
-	//getChannelDataWithoutReadbackCheck_ISR_Inline();
-
-	//___________________________________________________________________________________________
-	//___Check for channel sync error
-	if (s_channelSyncError == YES)
+	//___AD raw data read all 4 channels with config readback and temp
+	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_AND_TEMP)
 	{
-		handleChannelSyncError_ISR_Inline();
+		getChannelDataWithReadbackCheck_ISR_Inline();
+		
+		//___________________________________________________________________________________________
+		//___Check for channel sync error
+		if (s_channelSyncError == YES)
+		{
+			handleChannelSyncError_ISR_Inline();
 
-		// clear the interrupt flags and bail
-		DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
-		DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
-		return;
-	}
-	
+			// clear the interrupt flags and bail
+			DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+			DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+			return;
+		}
+	}		
+	//___________________________________________________________________________________________
+	//___AD raw data read all 4 channels without config readback and no temp
+	else
+	{
+		getChannelDataWithoutReadbackCheck_ISR_Inline();
+	}		
+
 	//___________________________________________________________________________________________
 	//___AD data read successfully, Normal operation
 	applyOffsetAndCacheSampleData_ISR_Inline();
@@ -1750,16 +1758,6 @@ void tc_sample_irq(void)
 	
 		// Alarm checking section
 		checkAlarms_ISR_Inline();
-
-#if 0 // Test
-	g_doneTakingEvents = YES;
-
-	// clear the interrupt flag
-	DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
-	DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
-
-	return;
-#endif
 
 		//___________________________________________________________________________________________
 		//___Process and move the sample data for triggers in waveform or combo mode

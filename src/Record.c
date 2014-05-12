@@ -397,7 +397,7 @@ void loadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 	rec_ptr->trec.weight_per_delay = 0;
 	rec_ptr->trec.record_time = 0;
 	rec_ptr->trec.seismicTriggerLevel = NO_TRIGGER_CHAR;
-	rec_ptr->trec.soundTriggerLevel = NO_TRIGGER_CHAR;
+	rec_ptr->trec.airTriggerLevel = NO_TRIGGER_CHAR;
 	rec_ptr->bgrec.barInterval = SIXTY_SEC_PRD;
 	rec_ptr->bgrec.summaryInterval = ONE_HOUR_INTVL;
 	rec_ptr->berec.barScale = BAR_SCALE_FULL;

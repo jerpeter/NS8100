@@ -622,6 +622,8 @@ uint8 CalculateComboData(void)
 		}
 
 		aTemp = *g_bargraphDataReadPtr++;
+		aTemp >>= g_bitShiftForAccuracy;
+		
 		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 
 		// We have caught up to the end of the write with out it being completed.
@@ -633,6 +635,8 @@ uint8 CalculateComboData(void)
 		}
 
 		rTemp = *g_bargraphDataReadPtr++;
+		rTemp >>= g_bitShiftForAccuracy;
+		
 		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
@@ -642,6 +646,8 @@ uint8 CalculateComboData(void)
 		}
 
 		vTemp = *g_bargraphDataReadPtr++;
+		vTemp >>= g_bitShiftForAccuracy;
+
 		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
@@ -651,6 +657,8 @@ uint8 CalculateComboData(void)
 		}
 
 		tTemp = *g_bargraphDataReadPtr++;
+		tTemp >>= g_bitShiftForAccuracy;
+
 		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 
 		// If here we got data;
@@ -908,10 +916,10 @@ uint8 CalculateComboData(void)
 		// A channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_comboFreqCalcBuffer.a.sign ^ (aTemp & g_sampleDataMidpoint))
+		if (g_comboFreqCalcBuffer.a.sign ^ (aTemp & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_comboFreqCalcBuffer.a.sign = (uint16)(aTemp & g_sampleDataMidpoint);
+			g_comboFreqCalcBuffer.a.sign = (uint16)(aTemp & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_comboFreqCalcBuffer.a.updateFlag == TRUE)
@@ -969,10 +977,10 @@ uint8 CalculateComboData(void)
 		// R channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_comboFreqCalcBuffer.r.sign ^ (rTemp & g_sampleDataMidpoint))
+		if (g_comboFreqCalcBuffer.r.sign ^ (rTemp & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_comboFreqCalcBuffer.r.sign = (uint16)(rTemp & g_sampleDataMidpoint);
+			g_comboFreqCalcBuffer.r.sign = (uint16)(rTemp & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_comboFreqCalcBuffer.r.updateFlag == TRUE)
@@ -1030,10 +1038,10 @@ uint8 CalculateComboData(void)
 		// V channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_comboFreqCalcBuffer.v.sign ^ (vTemp & g_sampleDataMidpoint))
+		if (g_comboFreqCalcBuffer.v.sign ^ (vTemp & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_comboFreqCalcBuffer.v.sign = (uint16)(vTemp & g_sampleDataMidpoint);
+			g_comboFreqCalcBuffer.v.sign = (uint16)(vTemp & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_comboFreqCalcBuffer.v.updateFlag == TRUE)
@@ -1091,10 +1099,10 @@ uint8 CalculateComboData(void)
 		// T channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_comboFreqCalcBuffer.t.sign ^ (tTemp & g_sampleDataMidpoint))
+		if (g_comboFreqCalcBuffer.t.sign ^ (tTemp & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_comboFreqCalcBuffer.t.sign = (uint16)(tTemp & g_sampleDataMidpoint);
+			g_comboFreqCalcBuffer.t.sign = (uint16)(tTemp & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_comboFreqCalcBuffer.t.updateFlag == TRUE)
@@ -1390,11 +1398,11 @@ BOOLEAN checkSpaceForComboBarSummaryInterval(void)
 //*****************************************************************************
 void MoveComboWaveformEventToFile(void)
 {
-	static FLASH_MOV_STATE flashMovState = FLASH_IDLE;
+	static FLASH_MOV_STATE waveformProcessingState = FLASH_IDLE;
 	static SUMMARY_DATA* sumEntry;
 	static SUMMARY_DATA* ramSummaryEntry;
 	static int32 sampGrpsLeft;
-	static uint32 vectorSumTotal;
+	static uint32 vectorSumMax;
 
 	uint16 normalizedData;
 	uint32 i;
@@ -1408,7 +1416,7 @@ void MoveComboWaveformEventToFile(void)
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
-		switch (flashMovState)
+		switch (waveformProcessingState)
 		{
 			case FLASH_IDLE:
 				if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
@@ -1429,52 +1437,53 @@ void MoveComboWaveformEventToFile(void)
 				sumEntry->waveShapeData.v.freq = 0;
 				sumEntry->waveShapeData.t.freq = 0;
 
-				flashMovState = FLASH_PRE;
+				waveformProcessingState = FLASH_PRE;
 				break;
 
 			case FLASH_PRE:
 				for (i = g_samplesInPretrig; i != 0; i--)
 				{
-					// fix_ns8100 - adjust pointer past pre
-					// Store entire sample
-					//storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
-				flashMovState = FLASH_BODY_INT;
+				waveformProcessingState = FLASH_BODY_INT;
 				break;
 
 			case FLASH_BODY_INT:
 				sampGrpsLeft = (g_samplesInBody - 1);
 
+				if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+
 				// A channel
 				sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
 				sumEntry->waveShapeData.a.peak = FixDataToZero(sample);
-				sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + 0);
+				sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
 
 				// R channel
 				sample = *(g_currentEventSamplePtr + R_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.r.peak = FixDataToZero(sample);
 				vectorSum = (uint32)(tempPeak * tempPeak);
-				sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + 1);
+				sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
 
 				// V channel
 				sample = *(g_currentEventSamplePtr + V_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.v.peak = FixDataToZero(sample);
 				vectorSum += (uint32)(tempPeak * tempPeak);
-				sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + 2);
+				sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
 
 				// T channel
 				sample = *(g_currentEventSamplePtr + T_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.t.peak = FixDataToZero(sample);
 				vectorSum += (uint32)(tempPeak * tempPeak);
-				sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + 3);
+				sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
 
-				vectorSumTotal = (uint32)vectorSum;
+				vectorSumMax = (uint32)vectorSum;
 
 				g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
-				flashMovState = FLASH_BODY;
+				waveformProcessingState = FLASH_BODY;
 				break;
 
 			case FLASH_BODY:
@@ -1482,13 +1491,15 @@ void MoveComboWaveformEventToFile(void)
 				{
 					sampGrpsLeft--;
 
+					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+
 					// A channel
 					sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
 					normalizedData = FixDataToZero(sample);
 					if (normalizedData > sumEntry->waveShapeData.a.peak)
 					{
 						sumEntry->waveShapeData.a.peak = normalizedData;
-						sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + 0);
+						sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
 					}
 
 					// R channel
@@ -1497,7 +1508,7 @@ void MoveComboWaveformEventToFile(void)
 					if (normalizedData > sumEntry->waveShapeData.r.peak)
 					{
 						sumEntry->waveShapeData.r.peak = normalizedData;
-						sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + 1);
+						sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
 					}
 					vectorSum = (uint32)(normalizedData * normalizedData);
 
@@ -1507,7 +1518,7 @@ void MoveComboWaveformEventToFile(void)
 					if (normalizedData > sumEntry->waveShapeData.v.peak)
 					{
 						sumEntry->waveShapeData.v.peak = normalizedData;
-						sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + 2);
+						sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
 					}
 					vectorSum += (normalizedData * normalizedData);
 
@@ -1517,14 +1528,14 @@ void MoveComboWaveformEventToFile(void)
 					if (normalizedData > sumEntry->waveShapeData.t.peak)
 					{
 						sumEntry->waveShapeData.t.peak = normalizedData;
-						sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + 3);
+						sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
 					}
 					vectorSum += (normalizedData * normalizedData);
 
 					// Vector Sum
-					if (vectorSum > vectorSumTotal)
+					if (vectorSum > vectorSumMax)
 					{
-						vectorSumTotal = (uint32)vectorSum;
+						vectorSumMax = (uint32)vectorSum;
 					}
 
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
@@ -1532,13 +1543,24 @@ void MoveComboWaveformEventToFile(void)
 
 				if (sampGrpsLeft == 0)
 				{
-					g_pendingEventRecord.summary.calculated.vectorSumPeak = vectorSumTotal;
+					g_pendingEventRecord.summary.calculated.vectorSumPeak = vectorSumMax;
 
-					flashMovState = FLASH_CAL;
+					waveformProcessingState = FLASH_CAL;
 				}
 				break;
 
 			case FLASH_CAL:
+				for (i = g_samplesInCal; i != 0; i--)
+				{
+					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+					
+					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
+				}
+
+				waveformProcessingState = FLASH_STORE;
+				break;
+				
+			case FLASH_STORE:
 				if (g_spi1AccessLock == AVAILABLE)
 				{
 					g_spi1AccessLock = EVENT_LOCK;
@@ -1612,7 +1634,7 @@ void MoveComboWaveformEventToFile(void)
 #endif
 
 					//debug("DataBuffs: Changing flash move state: %s\n", "FLASH_IDLE");
-					flashMovState = FLASH_IDLE;
+					waveformProcessingState = FLASH_IDLE;
 					g_freeEventBuffers++;
 
 					if (getPowerControlState(LCD_POWER_ENABLE) == OFF)

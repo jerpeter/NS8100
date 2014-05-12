@@ -48,7 +48,7 @@ extern USER_MENU_STRUCT helpMenu[];
 extern void Setup_8100_TC_Clock_ISR(uint32, TC_CHANNEL_NUM);
 extern void Start_Data_Clock(TC_CHANNEL_NUM);
 extern void Stop_Data_Clock(TC_CHANNEL_NUM);
-extern void SetupADChannelConfig(void);
+extern void SetupADChannelConfig(uint32 sampleRate);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -445,7 +445,7 @@ void mnStartCal(void)
 {
 	// fix_ns8100
 	// Setup AD Channel config
-	SetupADChannelConfig();
+	SetupADChannelConfig(CAL_PULSE_FIXED_SAMPLE_RATE);
 	GetChannelOffsets();
 
 	// Setup Analog controls

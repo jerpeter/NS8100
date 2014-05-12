@@ -74,6 +74,11 @@ enum {
 	ANALOG_CUTOFF_FREQ_4	// Filters ~14000 HZ and above 
 };
 
+enum {
+	FOUR_AD_CHANNELS_WITH_READBACK_AND_TEMP,
+	FOUR_AD_CHANNELS_NO_READBACK_NO_TEMP
+};
+
 typedef union
 {
 	struct

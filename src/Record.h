@@ -48,12 +48,10 @@ enum {
 
 // Sensor information
 #define NUMBER_OF_CHANNELS_DEFAULT 	4
-#define SENSOR_ACCURACY_DEFAULT 	100
+#define SENSOR_ACCURACY_100X_SHIFT 	100
 #define NUMBER_OF_SENSOR_TYPES 		8
 
-#define ADC_RESOLUTION				32768	//2048
-#define MAX_NORMALIZED_SENSOR		65536	//4096
-#define MIN_NORMALIZED_SENSOR		512		//512
+#define ADC_RESOLUTION				0x8000	// +/- 0x800 (2048)
 
 #define SENSOR_20_IN	4096	// 65536 // 4096
 #define SENSOR_10_IN	2048	// 32768 // 2048
@@ -167,7 +165,7 @@ typedef struct
 	uint8 oper[TRIGGER_EVENT_STRING_SIZE];
 	uint16 unused4;
 	uint32 seismicTriggerLevel;
-	uint32 soundTriggerLevel;
+	uint32 airTriggerLevel;
 	uint32 record_time;
 	uint32 record_time_max;
 	uint32 sample_rate;
