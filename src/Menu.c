@@ -252,7 +252,7 @@ void setupMnDef(void)
 ****************************************/
 void initSensorParameters(uint16 sensor_type, uint8 sensitivity)
 {
-	uint8 gainFactor = (uint8)((sensitivity == LOW) ? 2 : 4);
+	uint8 gainFactor = (uint8)((sensitivity == LOW) ? 4 : 8);
 
 	// Sensor type information
 	g_sensorInfoPtr->numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;		// The number of channels from a sensor.

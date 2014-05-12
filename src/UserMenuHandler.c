@@ -1174,13 +1174,13 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				{
 					// Init the float increment value adjusted by the units conversion
 					g_userMenuCacheData.floatIncrement = ((float)(g_factorySetupRecord.sensor_type * unitTypes[USER_MENU_ALT_TYPE(g_userMenuCachePtr)].conversion) / 
-														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400) * g_bitAccuracyMidpoint));
+														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 400 : 800) * g_bitAccuracyMidpoint));
 				}
 				else
 				{
 					// Init the float increment value
 					g_userMenuCacheData.floatIncrement = ((float)(g_factorySetupRecord.sensor_type) / 
-														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400) * g_bitAccuracyMidpoint));
+														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 400 : 800) * g_bitAccuracyMidpoint));
 				}
 
 				// Set the min, max and data count values adjusted by the float increment

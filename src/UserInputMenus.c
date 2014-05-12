@@ -1065,23 +1065,23 @@ void operatorMenuHandler(uint8 keyPressed, void* data)
 		if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
 		{
 			sprintf((char*)&g_menuTags[LOW_SENSITIVITY_MAX_TAG].text, " (%.0fmg)", 
-					(float)g_factorySetupRecord.sensor_type / (float)200);
-			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.0fmg)", 
 					(float)g_factorySetupRecord.sensor_type / (float)400);
+			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.0fmg)", 
+					(float)g_factorySetupRecord.sensor_type / (float)800);
 		}
 		else if (g_helpRecord.units_of_measure == IMPERIAL)
 		{
 			sprintf((char*)&g_menuTags[LOW_SENSITIVITY_MAX_TAG].text, " (%.2fin)", 
-					(float)g_factorySetupRecord.sensor_type / (float)200);
-			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.2fin)", 
 					(float)g_factorySetupRecord.sensor_type / (float)400);
+			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.2fin)", 
+					(float)g_factorySetupRecord.sensor_type / (float)800);
 		}
 		else // g_helpRecord.units_of_measure == METRIC
 		{
 			sprintf((char*)&g_menuTags[LOW_SENSITIVITY_MAX_TAG].text, " (%.2fmm)", 
-					(float)g_factorySetupRecord.sensor_type * (float)25.4 / (float)200);
-			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.2fmm)", 
 					(float)g_factorySetupRecord.sensor_type * (float)25.4 / (float)400);
+			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.2fmm)", 
+					(float)g_factorySetupRecord.sensor_type * (float)25.4 / (float)800);
 		}
 
 		SETUP_USER_MENU_MSG(&sensitivityMenu, g_triggerRecord.srec.sensitivity);

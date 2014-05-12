@@ -461,7 +461,7 @@ extern void processAndMoveWaveformData_ISR_Inline(void);
 uint16 seisTriggerConvert(float seismicTriggerLevel)
 {
     uint16 seisTriggerVal;
-    uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
+    uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 4 : 8);
     float convertToHex = (float)(g_factorySetupRecord.sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
     
     convertToHex = (float)ADC_RESOLUTION / (float)convertToHex;
@@ -573,7 +573,7 @@ void handleManualCalibration(void)
 					g_manualCalSampleCount = 0;
 
 					// Make sure to reset the gain after the Cal pulse (which is generated at low sensitivity)
-					if (g_triggerRecord.srec.sensitivity == SEISMIC_GAIN_HIGH)
+					if (g_triggerRecord.srec.sensitivity == HIGH)
 					{
 						SetSeismicGainSelect(SEISMIC_GAIN_HIGH);
 					}

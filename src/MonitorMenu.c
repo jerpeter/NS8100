@@ -501,7 +501,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 #endif
 	float rFreq = 0, vFreq = 0, tFreq = 0, tempFreq;
 	uint8 arrowChar;
-	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
+	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 4 : 8);
 
 	DATE_TIME_STRUCT time;
 

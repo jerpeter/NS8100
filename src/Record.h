@@ -48,11 +48,19 @@ enum {
 
 #define ADC_RESOLUTION				0x8000	// +/- 0x800 (2048)
 
+#if 0 // Must Stay the same
 #define SENSOR_20_IN	2048	//4096	// 65536 // 4096
 #define SENSOR_10_IN	1024	//2048	// 32768 // 2048
 #define SENSOR_5_IN		512		//1024	// 16384 // 1024
 #define SENSOR_2_5_IN	256		//512		// 8192 // 512
 #define SENSOR_ACC		25600	//51200	// 819200 // 51200
+#else // Correct
+#define SENSOR_20_IN	4096
+#define SENSOR_10_IN	2048
+#define SENSOR_5_IN		1024
+#define SENSOR_2_5_IN	512
+#define SENSOR_ACC		51200
+#endif
 
 #define INCH_PER_CM			 		2.54
 #define LBS_PER_KG			 		2.2

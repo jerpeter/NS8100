@@ -830,7 +830,7 @@ void barChannelMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
-	uint16 gainFactor = (uint16)((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400);
+	uint16 gainFactor = (uint16)((g_triggerRecord.srec.sensitivity == LOW) ? 400 : 800);
 
 	if (keyPressed == ENTER_KEY)
 	{
@@ -2622,6 +2622,9 @@ void sensorTypeMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{
 		g_factorySetupRecord.sensor_type = (uint16)sensorTypeMenu[newItemIndex].data;
+
+		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { debug("Factory Setup: New Seismic sensor type: Accelerometer\n"); }
+		else { debug("Factory Setup: New Seismic sensor type: %3.1f in\n", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
 
 		if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
 		{
