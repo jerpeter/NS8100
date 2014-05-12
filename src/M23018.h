@@ -7,10 +7,15 @@
 #ifndef M23018_H_
 #define M23018_H_
 
-#define IO_ADDRESS_BASE       0x20        // IO's TWI address
-#define IO_ADDRESS_KPD        0x27        // IO's TWI address
-#define IO_ADDR_LGT           1           // Address length of the IO chip
-#define TWI_SPEED             400000      // Speed of TWI
+#define IO_ADDRESS_BASE		0x20        // IO's TWI address
+#define IO_ADDRESS_KPD		0x27        // IO's TWI address
+#define IO_ADDR_LGT			1           // Address length of the IO chip
+#if 0 // Normal
+#define TWI_SPEED			400000      // Speed of TWI (400 KHz)
+#else // Test
+//#define TWI_SPEED			100000		// 100 Khz - Doesn't seem to work
+#define TWI_SPEED			3400000		// 3.4 Mhz
+#endif
 
 #define IODIRA     0x00
 #define IODIRB     0x01

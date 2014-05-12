@@ -90,7 +90,6 @@ BOOLEAN keypad(uint8 keySource);
 void keypressEventMgr(void);
 uint8 getShiftChar(uint8 inputChar);
 uint8 handleCtrlKeyCombination(uint8 inputChar);
-void initKeypad(void);
 uint8 getKeypadKey(uint8 mode);
 uint8 scanKeypad(void);
 

@@ -34,20 +34,21 @@ static twi_package_t s_twiPacket;
 ///----------------------------------------------------------------------------
 void write_mcp23018(unsigned char chip, unsigned char address, unsigned char data)
 {
-	  //Set output latch a with 00
-	  s_twiData[0] = data;
-	  // TWI chip address to communicate with
-	  s_twiPacket.chip = chip;
-	  // TWI address/commands to issue to the other chip (node)
-	  s_twiPacket.addr = address;
-	  // Length of the TWI data address segment (1-3 bytes)
-	  s_twiPacket.addr_length = IO_ADDR_LGT;
-	  // Where to find the data to be written
-	  s_twiPacket.buffer = (void*) s_twiData;
-	  // How many bytes do we want to write
-	  s_twiPacket.length = 1;
-	  // perform a write access
-	  if(twi_master_write(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
+	//Set output latch a with 00
+	s_twiData[0] = data;
+	// TWI chip address to communicate with
+	s_twiPacket.chip = chip;
+	// TWI address/commands to issue to the other chip (node)
+	s_twiPacket.addr = address;
+	// Length of the TWI data address segment (1-3 bytes)
+	s_twiPacket.addr_length = IO_ADDR_LGT;
+	// Where to find the data to be written
+	s_twiPacket.buffer = (void*) s_twiData;
+	// How many bytes do we want to write
+	s_twiPacket.length = 1;
+	// perform a write access
+
+	if (twi_master_write(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
 	{
 		debugErr("TWI: Failure to write (single byte) to MCP23018\n");
 	}
@@ -61,10 +62,11 @@ void write_mcp23018_bytes(unsigned char chip, unsigned char address,  unsigned c
     unsigned char count;
 
 	//Set output latch a with 00
-	for(count=0;count<=length;count++)
+	for (count=0;count<=length;count++)
 	{
 	    s_twiData[count] = data[count];
 	}
+
 	// TWI chip address to communicate with
 	s_twiPacket.chip = chip;
 	// TWI address/commands to issue to the other chip (node)
@@ -76,7 +78,8 @@ void write_mcp23018_bytes(unsigned char chip, unsigned char address,  unsigned c
 	// How many bytes do we want to write
 	s_twiPacket.length = length;
 	// perform a write access
-	if(twi_master_write(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
+
+	if (twi_master_write(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
 	{
 		debugErr("TWI: Failure to write (multiple bytes) to MCP23018\n");
 	}
@@ -100,7 +103,8 @@ unsigned char read_mcp23018(unsigned char chip, unsigned char address)
 	// How many bytes do we want to write
 	s_twiPacket.length = 1;
 	// perform a write access
-	if(twi_master_read(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
+
+	if (twi_master_read(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
 	{
 		debugErr("TWI: Failure to write to MCP23018\n");
 	}

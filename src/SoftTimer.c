@@ -210,6 +210,7 @@ void lcdPwTimerCallBack(void)
 	powerControl(LCD_CONTRAST_ENABLE, OFF);
 	clearLcdDisplay();
 	clearControlLinesLcdDisplay();
+	LcdClearPortReg();
 	powerControl(LCD_POWER_ENABLE, OFF);
 
 	if (g_sampleProcessing == ACTIVE_STATE)

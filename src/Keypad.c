@@ -649,22 +649,6 @@ uint8 handleCtrlKeyCombination(uint8 inputChar)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void initKeypad(void)
-{
-#if 0 // fix_ns8100
-	uint8* keypadAddress = (uint8*)KEYPAD_ADDRESS;
-
-	// Activate all the keypad rows
-	if (*keypadAddress != 0xFF)
-	{
-		debugErr("A Keypad key is stuck or broken (0x%x)\n", (uint8)(~(*keypadAddress)));
-	}
-#endif
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
 uint8 getKeypadKey(uint8 mode)
 {
 	//uint8 columnSelection = 0;

@@ -99,8 +99,10 @@ void Setup_8100_EIC_Keypad_ISR(void)
 	// Register the RTC interrupt handler to the interrupt controller.
 	INTC_register_interrupt(&eic_keypad_irq, AVR32_EIC_IRQ_5, 0);
 
+#if 0 // Some residual wrongly executed code
 	// Enable the interrupt
 	rtc_enable_interrupt(&AVR32_RTC);
+#endif
 
 	#if 0
 	// Test for int enable
@@ -126,8 +128,10 @@ void Setup_8100_EIC_System_ISR(void)
 	// Register the RTC interrupt handler to the interrupt controller.
 	INTC_register_interrupt(&eic_system_irq, AVR32_EIC_IRQ_4, 0);
 
+#if 0 // Some residual wrongly executed code
 	// Enable the interrupt
 	rtc_enable_interrupt(&AVR32_RTC);
+#endif
 
 	#if 0
 	// Test for int enable
@@ -183,6 +187,9 @@ void Setup_8100_Soft_Timer_Tick_ISR(void)
 {
 	// Register the RTC interrupt handler to the interrupt controller.
 	INTC_register_interrupt(&soft_timer_tick_irq, AVR32_RTC_IRQ, 0);
+	
+	// Enable half second tick
+	rtc_enable_interrupt(&AVR32_RTC);
 }
 
 ///----------------------------------------------------------------------------
@@ -270,9 +277,13 @@ void InitInterrupts_NS8100(void)
 	//Setup interrupt vectors
 	INTC_init_interrupts();
 
+	// Hook in and enable half second tick
 	Setup_8100_Soft_Timer_Tick_ISR();
+	
+	// Setup typematic timer for repeat key interrupt
 	Setup_8100_TC_Clock_ISR(ONE_MS_RESOLUTION, TC_TYPEMATIC_TIMER_CHANNEL);
 
+	// Setup keypad for interrupts
 	Setup_8100_EIC_Keypad_ISR();
 	Setup_8100_EIC_System_ISR();
 

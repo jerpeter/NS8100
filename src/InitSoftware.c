@@ -343,10 +343,13 @@ void InitSoftwareSettings_NS8100(void)
 	debug("Init Setup Menu Defaults...\n");
 	setupMnDef();
 
-	#if 1 // fix_ns8100
+	//-------------------------------------------------------------------------
+	// Reinitialize the external keypad
+	//-------------------------------------------------------------------------
+#if 1 // fix_ns8100
 	// Have to recall Keypad init otherwise interrupt hangs (Following code needs keypad access)
 	InitKeypad();
-	#endif
+#endif
 
 	//-------------------------------------------------------------------------
 	// Check for Timer mode activation
@@ -379,7 +382,7 @@ void InitSoftwareSettings_NS8100(void)
 	debug("Init Craft Init Status Flags...\n");
 	craftInitStatusFlags();
 
-	#if 0 // ns7100
+#if 0 // ns7100
 	// Overlay a message to alert the user that the system is checking the sensors
 	debug("Init LCD Message...\n");
 	char buff[50];
@@ -402,6 +405,7 @@ void InitSoftwareSettings_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Turn on the Green keypad LED when system init complete
 	//-------------------------------------------------------------------------
+	debug("Init complete, turning Kepypad LED Green...\n");
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
 
 	//-------------------------------------------------------------------------

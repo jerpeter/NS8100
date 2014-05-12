@@ -214,7 +214,7 @@ void isr_SCI1(void)
 #endif
 
 #if 0
-	// Check if the recieve data interrupt bit is set (if not, we have a problem)
+	// Check if the receive data interrupt bit is set (if not, we have a problem)
 	if (statusReg & MMC2114_SCI_SCISR1_RDRF)
 	{
 		if (statusReg & MMC2114_SCI_SCISR1_OR)

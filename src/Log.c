@@ -502,8 +502,8 @@ void initMonitorLogTableFromLogFile(void)
 			{
 				debug("Found Valid Monitor Log Entry with ID: %d\n", monitorLogEntry.uniqueEntryId);
 
-#if 1 // Test
-				debug("(ID: %03d) Mode: %d, Start Event #: %d, Status: %d, Seis Trig: 0x%x, Air Trig: 0x%x, Bit Acc: %d, Temp Adj: %d, Sensor Type: %d, Gain: %d\n",
+#if 0 // Test
+				debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\n",
 						monitorLogEntry.uniqueEntryId, monitorLogEntry.mode, monitorLogEntry. startEventNumber, monitorLogEntry.status, 
 						monitorLogEntry.seismicTriggerLevel, monitorLogEntry.airTriggerLevel, monitorLogEntry.bitAccuracy, monitorLogEntry.adjustForTempDrift,
 						monitorLogEntry.sensor_type, monitorLogEntry.sensitivity);

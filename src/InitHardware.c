@@ -436,8 +436,9 @@ void avr32_enable_muxed_pins(void)
 		{AVR32_EBI_NCS_2_PIN, AVR32_EBI_NCS_2_FUNCTION},
 		{AVR32_EBI_NCS_3_PIN, AVR32_EBI_NCS_3_FUNCTION},
 		
-#if 0
+#if 1
 		// EIC
+		{AVR32_EIC_EXTINT_4_PIN, AVR32_EIC_EXTINT_4_FUNCTION},
 		{AVR32_EIC_EXTINT_5_PIN, AVR32_EIC_EXTINT_5_FUNCTION},
 
 		// TWI
@@ -578,6 +579,7 @@ void _init_startup(void)
 ///----------------------------------------------------------------------------
 void InitKeypad(void)
 {
+#if 0
 	static const gpio_map_t EIC_GPIO_MAP =
 	{
 		{AVR32_EIC_EXTINT_4_PIN, AVR32_EIC_EXTINT_4_FUNCTION},
@@ -594,6 +596,10 @@ void InitKeypad(void)
 	// Enable External Interrupt for MCP23018
 	gpio_enable_module(EIC_GPIO_MAP, sizeof(EIC_GPIO_MAP) / sizeof(EIC_GPIO_MAP[0]));
 
+	// TWI gpio pins configuration
+	gpio_enable_module(TWI_GPIO_MAP, sizeof(TWI_GPIO_MAP) / sizeof(TWI_GPIO_MAP[0]));
+#endif
+
 	// TWI options.
 	twi_options_t opt;
 
@@ -601,9 +607,6 @@ void InitKeypad(void)
 	opt.pba_hz = FOSC0;
 	opt.speed = TWI_SPEED;
 	opt.chip = IO_ADDRESS_KPD;
-
-	// TWI gpio pins configuration
-	gpio_enable_module(TWI_GPIO_MAP, sizeof(TWI_GPIO_MAP) / sizeof(TWI_GPIO_MAP[0]));
 
 	// initialize TWI driver with options
 	if (twi_master_init(&AVR32_TWI, &opt) != TWI_SUCCESS)
@@ -974,7 +977,7 @@ void InitExternalAD(void)
 ///----------------------------------------------------------------------------
 void TestPowerDownAndStop(void)
 {
-	// Turn on the red keypad LED while loading
+	// Turn off the keypad LED
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | NO_LED_PINS));
 
 	spi_reset(&AVR32_SPI1);
@@ -1069,6 +1072,11 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	InitSerial485();
 	
+	// Make sure 485 lines aren't floating
+	gpio_enable_pin_pull_up(AVR32_USART3_RXD_0_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART3_TXD_0_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART3_RTS_0_1_PIN);
+
 	//-------------------------------------------------------------------------
 	// Turn on rs232 driver and receiver (Active low controls)
 	//-------------------------------------------------------------------------
@@ -1133,7 +1141,9 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init Keypad
 	//-------------------------------------------------------------------------
+#if 0 // Test not calling init here
 	InitExternalKeypad();
+#endif
 
 	//-------------------------------------------------------------------------
 	// Init External RTC Interrupt for interrupt source
@@ -1141,6 +1151,29 @@ void InitSystemHardware_NS8100(void)
 #if EXTERNAL_SAMPLING_SOURCE
 	// The internal pull up for this pin needs to be enables to bring the line high, otherwise the clock out will only reach half level
 	gpio_enable_pin_pull_up(AVR32_EIC_EXTINT_1_PIN);
+#endif
+
+	//-------------------------------------------------------------------------
+	// Enable pullups on input pins that may be floating
+	//-------------------------------------------------------------------------
+	// USB ID
+	gpio_enable_pin_pull_up(AVR32_PIN_PA21);
+
+	// RS232
+	gpio_enable_pin_pull_up(AVR32_USART1_RXD_0_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART1_DCD_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART1_DSR_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART1_CTS_0_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART1_RI_0_PIN);
+
+#if 0 // Current went up with this change
+	// Crystal inputs
+	gpio_enable_pin_pull_up(AVR32_PIN_PC00);
+	gpio_enable_pin_pull_up(AVR32_PIN_PC01);
+	gpio_enable_pin_pull_up(AVR32_PIN_PC02);
+	gpio_enable_pin_pull_up(AVR32_PIN_PC03);
+	gpio_enable_pin_pull_up(AVR32_PIN_PC04);
+	gpio_enable_pin_pull_up(AVR32_PIN_PC05);
 #endif
 
 	//-------------------------------------------------------------------------
