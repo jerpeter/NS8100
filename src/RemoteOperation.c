@@ -1066,8 +1066,8 @@ void handleUMM(CMD_BUFFER_STRUCT* inCmd)
 uint8 convertAscii2Binary(uint8 firstByte, uint8 secondByte)
 {
 	uint8 binaryByte = 0;
-	uint8 nibble1;
-	uint8 nibble2;
+	uint8 nibble1 = 0;
+	uint8 nibble2 = 0;
 
 	// Get the first nibble
 	if ((firstByte >= 0x30) && (firstByte <= 0x39))

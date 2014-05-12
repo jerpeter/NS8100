@@ -56,12 +56,12 @@ extern void SetupADChannelConfig(void);
 static uint8 s_calDisplayScreen = 0;
 static uint32 s_calSavedSampleRate = 0;
 static union {
-	int16 chan[4];
+	uint16 chan[4];
 	struct {
-		int16 a;
-		int16 r;
-		int16 v;
-		int16 t;
+		uint16 a;
+		uint16 r;
+		uint16 v;
+		uint16 t;
 	};
 } s_calPreTrigData[256];
 
@@ -241,10 +241,10 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	uint8 buff[50];
 	uint8 length;
 	uint16 i = 0, j = 0;
-	int16 chanMin[4];
-	int16 chanMax[4];
-	int32 chanAvg[4];
-	int16 chanMed[4][13];
+	uint16 chanMin[4];
+	uint16 chanMax[4];
+	uint32 chanAvg[4];
+	uint16 chanMed[4][13];
 
 	DATE_TIME_STRUCT time;
 

@@ -458,11 +458,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	char buff[50];
 	uint8 dotBuff[TOTAL_DOTS];
-	uint8 length, i = 0;
+	uint8 length = 0, i = 0;
 	static uint8 dotState = 0;
 	char displayFormat[22];
-	float div, tempR, tempV, tempT, tempA, tempVS, tempPeakDisp, normalize_max_peak;
-	float rFreq, vFreq, tFreq, tempFreq;
+	float div = 1, tempR = 0, tempV = 0, tempT = 0, tempA = 0, tempVS = 0, tempPeakDisp, normalize_max_peak;
+	float rFreq = 0, vFreq = 0, tFreq = 0, tempFreq;
 	uint8 arrowChar;
 	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
 
@@ -606,7 +606,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			// Show RTVA
 			//-----------------------------------------------------------------------
 			byteSet(&buff[0], 0, sizeof(buff));	
-			length = (uint8)sprintf(buff," x%3x x%3x x%3x x%3x", 
+			length = (uint8)sprintf(buff," r%3x v%3x t%3x a%3x", 
 				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r) & 0x0FFF),
 				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v) & 0x0FFF),
 				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t) & 0x0FFF),

@@ -340,15 +340,15 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	static uint8 dotState = 0;
 	uint8 adjust;
-	uint8 length, i = 0;
+	uint8 length = 0, i = 0;
 	uint8 dotBuff[TOTAL_DOTS];
 	uint8 gainFactor;
 	uint8 arrowChar;
 	float div;
 	float normalize_max_peak;
 	float tempVS;
-	float tempPeakDisp;
-	float tempFreq;
+	float tempPeakDisp = 0;
+	float tempFreq = 0;
 	char buff[50];
 	char displayFormat[10];
 	DATE_TIME_STRUCT time;

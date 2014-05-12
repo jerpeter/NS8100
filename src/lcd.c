@@ -682,7 +682,7 @@ void Display_small_char( uint8 number,
                    uint8 bConfig)
 {
     uint8 bTemp;
-   uint8 v_low;
+   uint8 v_low = 0;
    uint8 temp;
    uint8 lcd_data;
    uint8 offset;
@@ -693,7 +693,7 @@ void Display_small_char( uint8 number,
 
     uint16 character;
    uint16 iCharacterIndex;
-    int16 iLpCnt;
+    uint16 iLpCnt = 0;
 
     horizontal = h_position;
     if(horizontal < 64)

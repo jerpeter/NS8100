@@ -57,7 +57,7 @@ static void (*s_bootloader)(void) = NULL;
 #define AD_VOLTAGE_READ_LOOP_COUNT	15
 float getExternalVoltageLevelAveraged(uint8 type)
 {
-	uint32 adVoltageReadValue;
+	uint32 adVoltageReadValue = 0;
 	uint32 adChannelSum = 0;
 	uint32 adChannelValueLow = 0xFFFF;
 	uint32 adChannelValueHigh = 0;

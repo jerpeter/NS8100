@@ -241,6 +241,7 @@ void startDataCollection(uint32 sampleRate)
 
 	debug("Setup TC clocks...\n");
 	// Setup ISR to clock the data sampling
+
 	Setup_8100_TC_Clock_ISR(sampleRate, TC_SAMPLE_TIMER_CHANNEL);
 	Setup_8100_TC_Clock_ISR(CAL_PULSE_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
 
@@ -251,6 +252,9 @@ void startDataCollection(uint32 sampleRate)
 	// Change state to start processing the samples
 	debug("Raise signal to start sampling\n");
 	g_sampleProcessing = ACTIVE_STATE;
+
+	// Test - Throw away at some point
+	//debugRaw("\nA1M (%d)\n", g_helpRecord.alarm_one_mode);
 }
 
 /****************************************
@@ -388,8 +392,18 @@ void waitForEventProcessingToFinish(void)
 
 		while (g_doneTakingEvents == PENDING)
 		{
+#if 0 // Test (Throw away at some point)
+			if (getSystemEventState(WAVE_DATA_EVENT))
+			{
+				clearSystemEventFlag(WAVE_DATA_EVENT);
+
+extern void processAndMoveWaveformData_ISR_Inline(void);
+				processAndMoveWaveformData_ISR_Inline();		
+			}		
+#else // Normal
 			// Just wait for the cal and end immediately afterwards
 			soft_usecWait(250);
+#endif
 		}
 	}
 }

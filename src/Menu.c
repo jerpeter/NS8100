@@ -566,7 +566,7 @@ void wndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
    uint8 cbit_size;
    uint8 crow_size;
    uint8 ccol_size;
-   uint8 temp1;
+   uint8 temp1 = 0;
    int32 index;
    int32 row;
    int32 col;
@@ -1340,6 +1340,7 @@ void displayTimerModeSettings(void)
 		case TIMER_MODE_WEEKDAYS: 	activeModeTextType = DAILY_WEEKDAYS_TEXT; 	break;
 		case TIMER_MODE_WEEKLY: 	activeModeTextType = WEEKLY_TEXT; 			break;
 		case TIMER_MODE_MONTHLY: 	activeModeTextType = MONTHLY_TEXT; 			break;
+		default:					activeModeTextType = ERROR_TEXT;			break;
 	}
 
 	sprintf((char*)activeDates, "%02d-%s-%02d -> %02d-%s-%02d", g_helpRecord.tm_start_date.day,

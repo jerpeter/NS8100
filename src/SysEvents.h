@@ -39,7 +39,7 @@ typedef struct
 // System Events
 #define TRIGGER_EVENT		0x0001
 #define BARGRAPH_EVENT		0x0002
-#define UNUSED_EVENT		0x0004
+#define WAVE_DATA_EVENT		0x0004
 #define POWER_OFF_EVENT		0x0008
 #define KEYPAD_EVENT		0x0010
 #define CYCLIC_EVENT		0x0020

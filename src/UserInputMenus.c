@@ -93,7 +93,7 @@ USER_MENU_STRUCT airTriggerMenu[AIR_TRIGGER_MENU_ENTRIES] = {
 //-------------------------
 void airTriggerMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -107,7 +107,7 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 		{
 			debug("Air Trigger: %d\n", g_triggerRecord.trec.soundTriggerLevel);
 
-#if 1 // fix_ns8100
+#if 1 // fix_ns8100 - Up convert to 16-bit comparison
 			g_triggerRecord.trec.soundTriggerLevel *= 16;
 #endif
 		}
@@ -116,6 +116,10 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 		{
 			messageBox(getLangText(WARNING_TEXT), "BOTH SEISMIC AND AIR SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 			
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_triggerRecord.trec.seismicTriggerLevel /= 16;
+#endif
+
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
 				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
 		}
@@ -127,6 +131,10 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_triggerRecord.trec.seismicTriggerLevel /= 16;
+#endif
+
 		ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
 			SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
 	}
@@ -154,13 +162,13 @@ USER_MENU_STRUCT alarmOneSeismicLevelMenu[ALARM_ONE_SEISMIC_LEVEL_MENU_ENTRIES] 
 //-------------------------------------
 void alarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
 		g_helpRecord.alarm_one_seismic_lvl = *((uint32*)data);
 		
-#if 1 // fix_ns8100
+#if 1 // fix_ns8100 - Up convert to 16-bit comparison
 			g_helpRecord.alarm_one_seismic_lvl *= 16;
 #endif
 
@@ -168,6 +176,10 @@ void alarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH)
 		{
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_one_air_lvl /= 16;
+#endif
+
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
 				g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
 		}
@@ -205,13 +217,13 @@ USER_MENU_STRUCT alarmOneAirLevelMenu[ALARM_ONE_AIR_LEVEL_MENU_ENTRIES] = {
 //---------------------------------
 void alarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
 		g_helpRecord.alarm_one_air_lvl = *((uint32*)data);
 		
-#if 1 // fix_ns8100
+#if 1 // fix_ns8100 - Up convert to 16-bit comparison
 			g_helpRecord.alarm_one_air_lvl *= 16;
 #endif
 
@@ -225,6 +237,10 @@ void alarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 	{
 		if (g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH)
 		{
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_one_seismic_lvl /= 16;
+#endif
+
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
 				g_helpRecord.alarm_one_seismic_min_lvl, g_helpRecord.alarm_one_seismic_min_lvl, ALARM_SEIS_MAX_VALUE);
 		}
@@ -256,7 +272,7 @@ USER_MENU_STRUCT alarmOneTimeMenu[ALARM_ONE_TIME_MENU_ENTRIES] = {
 //----------------------------
 void alarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -270,11 +286,19 @@ void alarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_AIR))
 		{
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_one_air_lvl /= 16;
+#endif
+
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
 				g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
 		}
 		else if (g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC)
 		{
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_one_seismic_lvl /= 16;
+#endif
+
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
 				g_helpRecord.alarm_one_seismic_min_lvl, g_helpRecord.alarm_one_seismic_min_lvl, ALARM_SEIS_MAX_VALUE);
 		}
@@ -307,13 +331,13 @@ USER_MENU_STRUCT alarmTwoSeismicLevelMenu[ALARM_TWO_SEISMIC_LEVEL_MENU_ENTRIES] 
 //-------------------------------------
 void alarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
 		g_helpRecord.alarm_two_seismic_lvl = *((uint32*)data);
 		
-#if 1 // fix_ns8100
+#if 1 // fix_ns8100 - Up convert to 16-bit comparison
 			g_helpRecord.alarm_two_seismic_lvl *= 16;
 #endif
 
@@ -321,6 +345,10 @@ void alarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH)
 		{
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_two_air_lvl /= 16;
+#endif
+
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
 				g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
 		}
@@ -358,13 +386,13 @@ USER_MENU_STRUCT alarmTwoAirLevelMenu[ALARM_TWO_AIR_LEVEL_MENU_ENTRIES] = {
 //---------------------------------
 void alarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
 		g_helpRecord.alarm_two_air_lvl = *((uint32*)data);
 		
-#if 1 // fix_ns8100
+#if 1 // fix_ns8100 - Up convert to 16-bit comparison
 			g_helpRecord.alarm_two_air_lvl *= 16;
 #endif
 
@@ -378,6 +406,10 @@ void alarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 	{
 		if (g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH)
 		{
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_two_seismic_lvl /= 16;
+#endif
+
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
 				g_helpRecord.alarm_two_seismic_min_lvl, g_helpRecord.alarm_two_seismic_min_lvl, ALARM_SEIS_MAX_VALUE);
 		}
@@ -409,7 +441,7 @@ USER_MENU_STRUCT alarmTwoTimeMenu[ALARM_TWO_TIME_MENU_ENTRIES] = {
 //----------------------------
 void alarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -425,11 +457,19 @@ void alarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_AIR))
 		{
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_two_air_lvl /= 16;
+#endif
+
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
 				g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
 		}
 		else if (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC)
 		{
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_two_seismic_lvl /= 16;
+#endif
+
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
 				g_helpRecord.alarm_two_seismic_min_lvl, g_helpRecord.alarm_two_seismic_min_lvl, ALARM_SEIS_MAX_VALUE);
 		}
@@ -463,7 +503,7 @@ USER_MENU_STRUCT companyMenu[COMPANY_MENU_ENTRIES] = {
 //---------------------
 void companyMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -499,7 +539,7 @@ USER_MENU_STRUCT copiesMenu[COPIES_MENU_ENTRIES] = {
 //--------------------
 void copiesMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -546,7 +586,7 @@ USER_MENU_STRUCT distanceToSourceMenu[DISTANCE_TO_SOURCE_MENU_ENTRIES] = {
 //--------------------------------
 void distanceToSourceMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -595,7 +635,7 @@ USER_MENU_STRUCT lcdImpulseTimeMenu[LCD_IMPULSE_TIME_MENU_ENTRIES] = {
 //------------------------------
 void lcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -634,7 +674,7 @@ USER_MENU_STRUCT lcdTimeoutMenu[LCD_TIMEOUT_MENU_ENTRIES] = {
 //-------------------------
 void lcdTimeoutMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -675,7 +715,7 @@ USER_MENU_STRUCT modemDialMenu[MODEM_DIAL_MENU_ENTRIES] = {
 //------------------------
 void modemDialMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -714,7 +754,7 @@ USER_MENU_STRUCT modemInitMenu[MODEM_INIT_MENU_ENTRIES] = {
 //------------------------
 void modemInitMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -751,7 +791,7 @@ USER_MENU_STRUCT modemResetMenu[MODEM_RESET_MENU_ENTRIES] = {
 //-------------------------
 void modemResetMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -788,7 +828,7 @@ USER_MENU_STRUCT modemRetryMenu[MODEM_RETRY_MENU_ENTRIES] = {
 //-------------------------
 void modemRetryMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -825,7 +865,7 @@ USER_MENU_STRUCT modemRetryTimeMenu[MODEM_RETRY_TIME_MENU_ENTRIES] = {
 //------------------------------
 void modemRetryTimeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -868,7 +908,7 @@ USER_MENU_STRUCT notesMenu[NOTES_MENU_ENTRIES] = {
 //-------------------
 void notesMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -908,7 +948,7 @@ USER_MENU_STRUCT operatorMenu[OPERATOR_MENU_ENTRIES] = {
 //----------------------
 void operatorMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -977,7 +1017,7 @@ USER_MENU_STRUCT recordTimeMenu[RECORD_TIME_MENU_ENTRIES] = {
 //-------------------------
 void recordTimeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1003,6 +1043,10 @@ void recordTimeMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_triggerRecord.trec.soundTriggerLevel /= 16;
+#endif
+
 		ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.soundTriggerLevel,
 			AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
 	}
@@ -1030,7 +1074,7 @@ USER_MENU_STRUCT saveRecordMenu[SAVE_RECORD_MENU_ENTRIES] = {
 //-------------------------
 void saveRecordMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint8 availableLocation = 0;
 	uint8 choice;
 	uint8 match = NO;
@@ -1144,7 +1188,7 @@ USER_MENU_STRUCT seismicLocationMenu[SEISMIC_LOCATION_MENU_ENTRIES] = {
 //------------------------------
 void seismicLocationMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1181,7 +1225,7 @@ USER_MENU_STRUCT seismicTriggerMenu[SEISMIC_TRIGGER_MENU_ENTRIES] = {
 //-----------------------------
 void seismicTriggerMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1195,10 +1239,14 @@ void seismicTriggerMenuHandler(uint8 keyPressed, void* data)
 		{
 			debug("Seismic Trigger: %d counts\n", g_triggerRecord.trec.seismicTriggerLevel);
 
-#if 1 // fix_ns8100
+#if 1 // fix_ns8100 - Up convert to 16-bit comparison
 			g_triggerRecord.trec.seismicTriggerLevel *= 16;
 #endif
 		}
+
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_triggerRecord.trec.soundTriggerLevel /= 16;
+#endif
 
 		ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.soundTriggerLevel,
 			AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
@@ -1238,7 +1286,7 @@ USER_MENU_STRUCT serialNumberMenu[SERIAL_NUMBER_MENU_ENTRIES] = {
 //---------------------------
 void serialNumberMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1276,7 +1324,7 @@ USER_MENU_STRUCT weightPerDelayMenu[WEIGHT_PER_DELAY_MENU_ENTRIES] = {
 //------------------------------
 void weightPerDelayMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1318,7 +1366,7 @@ USER_MENU_STRUCT unlockCodeMenu[UNLOCK_CODE_MENU_ENTRIES] = {
 //-------------------------
 void unlockCodeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	
 	if (keyPressed == ENTER_KEY)
 	{	

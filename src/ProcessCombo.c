@@ -524,7 +524,7 @@ uint32 moveComboBarIntervalDataToFile(void)
 		byteSet(g_comboBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 
 		// Count the total number of intervals captured.
-		g_comboSumIntervalWritePtr->barIntervalsCaptured ++;
+		g_comboSumIntervalWritePtr->barIntervalsCaptured++;
 	}
 
 	// Flag for the end of bargraph, used to indicate that a bar interval was stored, thus a summary should be too

@@ -112,7 +112,7 @@ USER_MENU_STRUCT airScaleMenu[AIR_SCALE_MENU_ENTRIES] = {
 //-----------------------
 void airScaleMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	//uint16 newItemIndex = *((uint16*)data);
 
 	// Save Air Scale somewhere?
@@ -171,7 +171,7 @@ USER_MENU_STRUCT airSetupMenu[AIR_SETUP_MENU_ENTRIES] = {
 //-----------------------
 void airSetupMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -209,7 +209,7 @@ USER_MENU_STRUCT alarmOneMenu[ALARM_ONE_MENU_ENTRIES] = {
 //-----------------------
 void alarmOneMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -257,6 +257,10 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Call Alarm One Seismic Level
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_one_seismic_lvl /= 16;
+#endif
+
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
 						g_helpRecord.alarm_one_seismic_min_lvl, g_helpRecord.alarm_one_seismic_min_lvl, ALARM_SEIS_MAX_VALUE);
 				}
@@ -294,6 +298,10 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Call Alarm One Air Level
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_one_air_lvl /= 16;
+#endif
+
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
 						g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
 				}
@@ -350,6 +358,10 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Call Alarm One Seismic Level
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_one_seismic_lvl /= 16;
+#endif
+
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
 						g_helpRecord.alarm_one_seismic_min_lvl, g_helpRecord.alarm_one_seismic_min_lvl, ALARM_SEIS_MAX_VALUE);
 				}
@@ -400,7 +412,7 @@ USER_MENU_STRUCT alarmTwoMenu[ALARM_TWO_MENU_ENTRIES] = {
 //-----------------------
 void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -450,6 +462,10 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Call Alarm Two Seismic Level
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_two_seismic_lvl /= 16;
+#endif
+
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
 						g_helpRecord.alarm_two_seismic_min_lvl, g_helpRecord.alarm_two_seismic_min_lvl, ALARM_SEIS_MAX_VALUE);
 				}
@@ -487,6 +503,10 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Call Alarm One Air Level
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_two_air_lvl /= 16;
+#endif
+
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
 						g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
 				}
@@ -543,6 +563,10 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Call Alarm Two Seismic Level
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_helpRecord.alarm_two_seismic_lvl /= 16;
+#endif
+
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
 						g_helpRecord.alarm_two_seismic_min_lvl, g_helpRecord.alarm_two_seismic_min_lvl, ALARM_SEIS_MAX_VALUE);
 				}
@@ -585,7 +609,7 @@ USER_MENU_STRUCT alarmOutputMenu[ALARM_OUTPUT_MENU_ENTRIES] = {
 //--------------------------
 void alarmOutputMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -626,7 +650,7 @@ USER_MENU_STRUCT autoCalMenu[AUTO_CAL_MENU_ENTRIES] = {
 //----------------------
 void autoCalMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -675,7 +699,7 @@ USER_MENU_STRUCT autoMonitorMenu[AUTO_MONITOR_MENU_ENTRIES] = {
 //--------------------------
 void autoMonitorMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -716,7 +740,7 @@ USER_MENU_STRUCT barChannelMenu[BAR_CHANNEL_MENU_ENTRIES] = {
 //-------------------------
 void barChannelMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 	uint16 gainFactor = (uint16)((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400);
 
@@ -796,7 +820,7 @@ USER_MENU_STRUCT barIntervalMenu[BAR_INTERVAL_MENU_ENTRIES] = {
 //--------------------------
 void barIntervalMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -834,7 +858,7 @@ USER_MENU_STRUCT barScaleMenu[BAR_SCALE_MENU_ENTRIES] = {
 //--------------------------
 void barScaleMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -876,7 +900,7 @@ USER_MENU_STRUCT summaryIntervalMenu[SUMMARY_INTERVAL_MENU_ENTRIES] = {
 //------------------------------
 void summaryIntervalMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -913,7 +937,7 @@ USER_MENU_STRUCT barResultMenu[BAR_RESULT_MENU_ENTRIES] = {
 //------------------------
 void barResultMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -934,6 +958,10 @@ void barResultMenuHandler(uint8 keyPressed, void* data)
 				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = IN_TYPE;
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
 			}
+
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_triggerRecord.trec.seismicTriggerLevel /= 16;
+#endif
 
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
 				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
@@ -979,7 +1007,7 @@ USER_MENU_STRUCT baudRateMenu[BAUD_RATE_MENU_ENTRIES] = {
 #include "usart.h"
 void baudRateMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 	usart_options_t usart_1_rs232_options =
 	{
@@ -1041,7 +1069,7 @@ USER_MENU_STRUCT bitAccuracyMenu[BIT_ACCURACY_MENU_ENTRIES] = {
 //-------------------------
 void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1108,7 +1136,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 //--------------------
 void configMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1313,7 +1341,7 @@ USER_MENU_STRUCT displacementMenu[DISPLACEMENT_MENU_ENTRIES] = {
 //------------------------------
 void displacementMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1351,7 +1379,7 @@ USER_MENU_STRUCT eraseEventsMenu[ERASE_EVENTS_MENU_ENTRIES] = {
 //--------------------------
 void eraseEventsMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 	char stringBuff[75];
 	uint8 choice = MB_SECOND_CHOICE;
@@ -1427,7 +1455,7 @@ USER_MENU_STRUCT eraseSettingsMenu[ERASE_SETTINGS_MENU_ENTRIES] = {
 //----------------------------
 void eraseSettingsMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1491,7 +1519,7 @@ USER_MENU_STRUCT flashWrappingMenu[FLASH_WRAPPING_MENU_ENTRIES] = {
 //----------------------------
 void flashWrappingMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1529,7 +1557,7 @@ USER_MENU_STRUCT freqPlotMenu[FREQ_PLOT_MENU_ENTRIES] = {
 //-----------------------
 void freqPlotMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1578,7 +1606,7 @@ USER_MENU_STRUCT freqPlotStandardMenu[FREQ_PLOT_STANDARD_MENU_ENTRIES] = {
 //--------------------------------
 void freqPlotStandardMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1616,7 +1644,7 @@ USER_MENU_STRUCT helpMenu[HELP_MENU_ENTRIES] = {
 //------------------
 void helpMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1661,7 +1689,7 @@ USER_MENU_STRUCT infoMenu[INFO_MENU_ENTRIES] = {
 //------------------
 void infoMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	//uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1698,7 +1726,7 @@ USER_MENU_STRUCT languageMenu[LANGUAGE_MENU_ENTRIES] = {
 //----------------------
 void languageMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1748,7 +1776,7 @@ USER_MENU_STRUCT millibarMenu[MILLIBAR_MENU_ENTRIES] = {
 //-----------------------
 void millibarMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1785,7 +1813,7 @@ USER_MENU_STRUCT modeMenu[MODE_MENU_ENTRIES] = {
 //------------------
 void modeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1829,7 +1857,7 @@ USER_MENU_STRUCT modemSetupMenu[MODEM_SETUP_MENU_ENTRIES] = {
 //-------------------------
 void modemSetupMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1885,7 +1913,7 @@ USER_MENU_STRUCT monitorLogMenu[MONITOR_LOG_MENU_ENTRIES] = {
 //-------------------------
 void monitorLogMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if(keyPressed == ENTER_KEY)
@@ -1930,7 +1958,7 @@ USER_MENU_STRUCT printerEnableMenu[PRINTER_ENABLE_MENU_ENTRIES] = {
 //----------------------------
 void printerEnableMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -1968,7 +1996,7 @@ USER_MENU_STRUCT printOutMenu[PRINT_OUT_MENU_ENTRIES] = {
 //-----------------------
 void printOutMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 	uint8 tempCopies = COPIES_DEFAULT_VALUE;
 
@@ -2015,7 +2043,7 @@ USER_MENU_STRUCT printMonitorLogMenu[PRINT_MONITOR_LOG_RESULTS_MENU_ENTRIES] = {
 //---------------------------------------
 void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -2057,14 +2085,18 @@ USER_MENU_STRUCT sampleRateMenu[SAMPLE_RATE_MENU_ENTRIES] = {
 //-------------------------
 void sampleRateMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 	char message[70];
 
 	if (keyPressed == ENTER_KEY)
 	{
 		if ((sampleRateMenu[newItemIndex].data < sampleRateMenu[ITEM_1].data) || 
+#if 1 // Test 16K
+			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_6].data) ||
+#else
 			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_5].data) ||
+#endif
 			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && 
 			((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))))
 		{
@@ -2120,7 +2152,7 @@ USER_MENU_STRUCT saveSetupMenu[SAVE_SETUP_MENU_ENTRIES] = {
 //------------------------
 void saveSetupMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -2216,7 +2248,7 @@ USER_MENU_STRUCT sensitivityMenu[SENSITIVITY_MENU_ENTRIES] = {
 //-------------------------
 void sensitivityMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -2235,6 +2267,10 @@ void sensitivityMenuHandler(uint8 keyPressed, void* data)
 				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = IN_TYPE;
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
 			}
+
+#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
+			g_triggerRecord.trec.seismicTriggerLevel /= 16;
+#endif
 
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
 				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
@@ -2274,7 +2310,7 @@ USER_MENU_STRUCT sensorTypeMenu[SENSOR_TYPE_MENU_ENTRIES] = {
 //-------------------------
 void sensorTypeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -2324,7 +2360,7 @@ USER_MENU_STRUCT timerModeMenu[TIMER_MODE_MENU_ENTRIES] = {
 //------------------------
 void timerModeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -2385,7 +2421,7 @@ USER_MENU_STRUCT timerModeFreqMenu[TIMER_MODE_FREQ_MENU_ENTRIES] = {
 //-----------------------------
 void timerModeFreqMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -2424,7 +2460,7 @@ USER_MENU_STRUCT unitsMenu[UNITS_MENU_ENTRIES] = {
 //-------------------
 void unitsMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -2473,7 +2509,7 @@ USER_MENU_STRUCT vectorSumMenu[VECTOR_SUM_MENU_ENTRIES] = {
 //------------------------
 void vectorSumMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
@@ -2511,7 +2547,7 @@ USER_MENU_STRUCT waveformAutoCalMenu[WAVEFORM_AUTO_CAL_MENU_ENTRIES] = {
 //-------------------------------
 void waveformAutoCalMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if(keyPressed == ENTER_KEY)
@@ -2549,7 +2585,7 @@ USER_MENU_STRUCT zeroEventNumberMenu[ZERO_EVENT_NUMBER_MENU_ENTRIES] = {
 //-------------------------------
 void zeroEventNumberMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg;
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 	CURRENT_EVENT_NUMBER_STRUCT eventNumberRecord;
 

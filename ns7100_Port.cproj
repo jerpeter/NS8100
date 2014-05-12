@@ -11,6 +11,7 @@ MEMORY
 {
   FLASH (rxai!w) : ORIGIN = 0x80000000, LENGTH = 0x00080000
 /*  INTRAM (wxa!ri) : ORIGIN = 0xD0000000, LENGTH = 0x00100000 */
+  REALINTRAM (wxa!ri) : ORIGIN = 0x00000004, LENGTH = 0x0000FFFC
   INTRAM (wxa!ri) : ORIGIN = 0xD0000000, LENGTH = 0x00800000
 /*  EXTRAM (wxa!ri) : ORIGIN = 0xD0100000, LENGTH = 0x00700000 */
 /*  INTRAM (wxa!ri) : ORIGIN = 0x00000004, LENGTH = 0x0000FFFC */
@@ -27,6 +28,9 @@ MEMORY
 PHDRS
 {
   FLASH PT_LOAD;
+  REALINTRAM_ALIGN PT_NULL;
+  REALINTRAM_AT_FLASH PT_LOAD;
+  REALINTRAM PT_NULL;
   INTRAM_ALIGN PT_NULL;
   INTRAM_AT_FLASH PT_LOAD;
   INTRAM PT_NULL;
@@ -209,6 +213,14 @@ SECTIONS
   .debug_funcnames 0 : { *(.debug_funcnames) }
   .debug_typenames 0 : { *(.debug_typenames) }
   .debug_varnames  0 : { *(.debug_varnames) }
+  .stack         ORIGIN(REALINTRAM) + LENGTH(REALINTRAM) - 0x4000 :
+  {
+    _stack = .;
+    *(.stack)
+    . = 0x4000;
+    _estack = .;
+  } >REALINTRAM AT>REALINTRAM :REALINTRAM
+/*
   .stack         ORIGIN(INTRAM) + LENGTH(INTRAM) - 0x4000 :
   {
     _stack = .;
@@ -216,6 +228,7 @@ SECTIONS
     . = 0x4000;
     _estack = .;
   } >INTRAM AT>FLASH
+*/
   .userpage       : { *(.userpage .userpage.*) } >USERPAGE AT>USERPAGE :USERPAGE
   /DISCARD/ : { *(.note.GNU-stack) }
 

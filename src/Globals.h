@@ -84,9 +84,9 @@ extern uint16* g_bargraphDataWritePtr;
 extern uint16* g_bargraphDataReadPtr;
 extern uint16* g_bargraphDataEndPtr;
 extern uint8 g_powerNoiseFlag;
-extern uint8 volatile g_doneTakingEvents;
-extern uint8 volatile g_busyProcessingEvent;
-extern volatile uint8 g_sampleProcessing;
+extern uint8 g_doneTakingEvents;
+extern uint8 g_busyProcessingEvent;
+extern uint8 g_sampleProcessing;
 extern uint8 g_modemConnected;
 extern uint8 g_lcdBacklightFlag;
 extern uint8 g_lcdPowerFlag;
@@ -94,7 +94,7 @@ extern uint8 g_kpadProcessingFlag;
 extern uint8 g_kpadCheckForKeyFlag;
 extern uint8 g_factorySetupSequence;
 extern uint8 g_kpadLastKeyPressed;
-extern volatile uint32 g_keypadTimerTicks;
+extern uint32 g_keypadTimerTicks;
 extern uint32 g_kpadKeyRepeatCount;
 extern uint32 g_kpadLookForKeyTickCount;
 extern uint32 g_keypadNumberSpeed;
@@ -112,7 +112,7 @@ extern FACTORY_SETUP_STRUCT g_factorySetupRecord;
 // Structure to contain system paramters and system settings.
 extern REC_EVENT_MN_STRUCT g_triggerRecord;				// Contains trigger specific information.
 // Menu specific structures
-extern int16 g_activeMenu;							// For active menu number/enum.
+extern uint16 g_activeMenu;							// For active menu number/enum.
 extern MN_EVENT_STRUCT g_menuEventFlags;				// Menu event flags, for main loop processing.
 extern MN_TIMER_STRUCT g_timerEventFlags;					// Menu timer strucutre.
 // System Event Flags, for main loopo processing.
@@ -200,7 +200,7 @@ extern uint8 g_skipAutoCalInWaveformAfterMidnightCal;
 extern DATE_TIME_STRUCT g_currentTime;
 extern SOFT_TIMER_STRUCT g_rtcTimerBank[NUM_OF_SOFT_TIMERS];
 extern uint32 g_rtcSoftTimerTickCount;
-extern volatile uint32 g_rtcCurrentTickCount;
+extern uint32 g_rtcCurrentTickCount;
 extern uint32 g_UpdateCounter;
 extern uint8 g_autoCalDaysToWait;
 extern REC_HELP_MN_STRUCT g_helpRecord;

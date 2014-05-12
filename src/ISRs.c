@@ -38,6 +38,7 @@
 #include "twi.h"
 #include "spi.h"
 #include "ad_test_menu.h"
+#include "usart.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -58,10 +59,8 @@
 #include "Globals.h"
 extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
 extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
-extern uint16* g_startOfQuarterSecBuff;
-extern uint16* g_tailOfQuarterSecBuff;
-extern uint16* g_endOfQuarterSecBuff;
-extern OFFSET_DATA_STRUCT g_channelOffset;
+extern BOOLEAN processCraftCmd;
+extern uint8 craft_g_input_buffer[];
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -91,6 +90,10 @@ static uint8 s_channelReadsToSync = 0;
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
+__attribute__((__interrupt__))
+void tc_sample_irq(void);
+__attribute__((__interrupt__))
+void tc_typematic_irq(void);
 
 #if 0 // ns7100
 /*******************************************************************************
@@ -373,9 +376,6 @@ void eic_system_irq(void)
 // ============================================================================
 // usart_1_irq
 // ============================================================================
-#include "usart.h"
-extern BOOLEAN processCraftCmd;
-extern uint8 craft_g_input_buffer[];
 __attribute__((__interrupt__))
 void usart_1_rs232_irq(void)
 {
@@ -621,10 +621,6 @@ void Setup_8100_Soft_Timer_Tick_ISR(void)
 // ============================================================================
 // Setup_8100_TC_Clock_ISR
 // ============================================================================
-__attribute__((__interrupt__))
-void tc_sample_irq(void);
-void tc_typematic_irq(void);
-
 void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 {
 	volatile avr32_tc_t *tc = &AVR32_TC;
@@ -803,6 +799,9 @@ static inline void checkAlarms_ISR_Inline(void)
 		// Check if seismic is enabled for Alarm 1
 		if (g_helpRecord.alarm_one_mode & ALARM_MODE_SEISMIC)
 		{
+#if 1 // Test
+			debugRaw("PC Err! A1M (%d)\n", g_helpRecord.alarm_one_mode);
+#endif
 			if (s_R_channelReading > (g_helpRecord.alarm_one_seismic_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
 			else if (s_V_channelReading > (g_helpRecord.alarm_one_seismic_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
 			else if (s_T_channelReading > (g_helpRecord.alarm_one_seismic_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
@@ -841,7 +840,7 @@ static inline void processAndMoveManualCalData_ISR_Inline(void)
 	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
 
 	// Move the samples into the event buffer
-	*(SAMPLE_DATA_STRUCT*)g_currentEventSamplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+	*(volatile SAMPLE_DATA_STRUCT*)g_currentEventSamplePtr = *(volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
 
 	g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
@@ -890,13 +889,14 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 
 		//___________________________________________________________________________________________
 		//___Check if either a seismic or acoustic trigger threshold condition was achieved
-#if 0
+#if 1 // Normal
 		if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
 			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
-		{
-#else
+#else // Test
 		if (g_testTrigger == YES)
+#endif
 		{
+#if 1 // Test
 			g_testTrigger = NO;
 #endif
 			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
@@ -939,7 +939,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				//___________________________________________________________________________________________
 				//___Copy current quarter sec buffer sample to event
 #if 1
-				*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+				*(volatile SAMPLE_DATA_STRUCT*)s_samplePtr = *(volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
 #else // Test
 				*(s_samplePtr) = 0x3333;
 				*(s_samplePtr + 1) = 0x3333;
@@ -952,7 +952,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				{
 #if 1
 					// Copy first (which is currently the oldest) quarter sec buffer sample to pretrig
-					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
+					*(volatile SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(volatile SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
 #else // Test
 					*(s_pretrigPtr) = 0x1111;
 					*(s_pretrigPtr + 1) = 0x1111;
@@ -963,7 +963,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				else // Copy oldest quarter sec buffer sample to pretrigger
 				{
 #if 1
-					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
+					*(volatile SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(volatile SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
 #else // Test
 					*(s_pretrigPtr) = 0x1111;
 					*(s_pretrigPtr + 1) = 0x1111;
@@ -1014,11 +1014,11 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			if ((g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfQuarterSecBuff)
 			{
 				// Copy oldest (which is currently the first) quarter sec buffer samples to pretrig
-				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
+				*(volatile SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(volatile SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
 			}										
 			else // Copy oldest quarter sec buffer samples to pretrig
 			{
-				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
+				*(volatile SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(volatile SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
 			}										
 
 			s_pretrigPtr += NUMBER_OF_CHANNELS_DEFAULT;
@@ -1038,7 +1038,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 
 		//___________________________________________________________________________________________
 		//___Copy data samples to event buffer
-		*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+		*(volatile SAMPLE_DATA_STRUCT*)s_samplePtr = *(volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
 
 		s_samplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 		s_sampleCount--;
@@ -1119,7 +1119,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
 
 				// Copy cal data to the event buffer cal section
-				*(SAMPLE_DATA_STRUCT*)(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+				*(volatile SAMPLE_DATA_STRUCT*)(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = *(volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
 
 #if 0 // test crap
 			if (s_calSampleCount == 100)
@@ -1136,7 +1136,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				if (s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX] != NULL)
 				{
 					// Copy delayed cal data to event buffer cal section
-					*(SAMPLE_DATA_STRUCT*)(s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+					*(volatile SAMPLE_DATA_STRUCT*)(s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX]) = *(volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
 					s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX] += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -1144,7 +1144,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				if (s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX] != NULL)
 				{
 					// Copy delayed cal data to event buffer cal section
-					*(SAMPLE_DATA_STRUCT*)(s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+					*(volatile SAMPLE_DATA_STRUCT*)(s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX]) = *(volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
 					s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX] += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -1205,12 +1205,32 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 }
 
 // ============================================================================
+// moveWaveformData_ISR_Inline
+// ============================================================================
+#if 0 // Test
+static inline void moveWaveformData_ISR_Inline(void)
+{
+	// Copy sample over to bargraph buffer
+	*(volatile SAMPLE_DATA_STRUCT*)g_waveformDataWritePtr = *(volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+
+	// Increment the write pointer
+	g_waveformDataWritePtr += NUMBER_OF_CHANNELS_DEFAULT;
+	
+	// Check if write pointer is beyond the end of the circular bounds
+	if (g_waveformDataWritePtr >= g_waveformDataEndPtr) g_waveformDataWritePtr = g_waveformDataStartPtr;
+
+	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
+	raiseSystemEventFlag(WAVE_DATA_EVENT);
+}
+#endif
+
+// ============================================================================
 // moveBargraphData_ISR_Inline
 // ============================================================================
 static inline void moveBargraphData_ISR_Inline(void)
 {
 	// Copy sample over to bargraph buffer
-	*(SAMPLE_DATA_STRUCT*)g_bargraphDataWritePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+	*(volatile SAMPLE_DATA_STRUCT*)g_bargraphDataWritePtr = *(volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
 
 	// Increment the write pointer
 	g_bargraphDataWritePtr += NUMBER_OF_CHANNELS_DEFAULT;
@@ -1235,10 +1255,10 @@ static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 
 #if 1
 	// Store the data into the quarter sec buffer
-	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = s_R_channelReading;
-	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = s_V_channelReading;
-	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = s_T_channelReading;
-	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = s_A_channelReading;
+	((volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = s_R_channelReading;
+	((volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = s_V_channelReading;
+	((volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = s_T_channelReading;
+	((volatile SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = s_A_channelReading;
 #else // Test
 	static uint16 crap = 0;
 
@@ -1298,12 +1318,42 @@ static inline void getChannelDataWithReadbackCheck_ISR_Inline(void)
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
 
-    // Temp
+    // Temperature
     spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_temperatureReading);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
+}
+
+// ============================================================================
+// getChannelDataWithoutReadbackCheck_ISR_Inline
+// ============================================================================
+static inline void getChannelDataWithoutReadbackCheck_ISR_Inline(void)
+{
+	//___________________________________________________________________________________________
+	//___Sample Output with return config words for reference
+	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp:  dbe (b6d0)
+	
+    // Chan 0 - R
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+    // Chan 1 - T
+    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+    // Chan 2 - V
+    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+    // Chan 3 - A
+    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 }
 
 // ============================================================================
@@ -1356,6 +1406,7 @@ void tc_sample_irq(void)
 	//___________________________________________________________________________________________
 	//___AD raw data read all channels
 	getChannelDataWithReadbackCheck_ISR_Inline();
+	//getChannelDataWithoutReadbackCheck_ISR_Inline();
 
 	//___________________________________________________________________________________________
 	//___Check for channel sync error
@@ -1402,11 +1453,22 @@ void tc_sample_irq(void)
 		// Alarm checking section
 		checkAlarms_ISR_Inline();
 
+#if 0 // Test
+	g_doneTakingEvents = YES;
+
+	// clear the interrupt flag
+	DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+	DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+
+	return;
+#endif
+
 		//___________________________________________________________________________________________
 		//___Process and move the sample data for triggers in waveform or combo mode
 		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 		{
 			processAndMoveWaveformData_ISR_Inline();
+			//raiseSystemEventFlag(WAVE_DATA_EVENT);
 		}
 
 		//___________________________________________________________________________________________

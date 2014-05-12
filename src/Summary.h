@@ -109,7 +109,7 @@ typedef struct
 #pragma pack()
 
 // Capture Information - After an event, System data at the end of an event. 
-#define UNUSED_CAPTURE_SIZE	18
+#define UNUSED_CAPTURE_SIZE	20
 #pragma pack(1)
 typedef struct
 {
@@ -141,7 +141,7 @@ typedef struct
 // consistent with the previous release. Yes if we move data structure into 
 // channel data structure, the data layout would be neater, but users of 
 // the data has already defined their variable to use the old formats.
-#define UNUSED_CALCULATED_SIZE	50
+#define UNUSED_CALCULATED_SIZE	54
 #pragma pack(1)
 typedef struct
 {
@@ -299,13 +299,13 @@ typedef struct
 	uint8					subMode;
 } EVENT_SUMMARY_STRUCT;
 
-#pragma pack(2)
+//#pragma pack(4)
 typedef struct
 {
 	EVENT_HEADER_STRUCT 		header;
 	EVENT_SUMMARY_STRUCT		summary;
 } EVT_RECORD;
-#pragma pack()
+//#pragma pack()
 
 
 

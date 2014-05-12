@@ -216,7 +216,7 @@ void SPI_0_Init(void)
 	spi_options_t spiOptions =
 	{
 	.reg          = 0,
-	.baudrate     = 36000000, //33000000, // 33 MHz
+	.baudrate     = 33000000, //36000000, //33000000, // 33 MHz
 	.bits         = 16,
 	.spck_delay   = 0,
 	.trans_delay  = 0,
@@ -550,7 +550,7 @@ enum {
 	USB_NOT_CONNECTED = 1,
 	USB_CONNECTED_AND_PROCESSING = 2
 };
-extern volatile uint8 g_sampleProcessing;
+extern uint8 g_sampleProcessing;
 void UsbDeviceManager(void)
 {
 	static uint8 usbMassStorageState = USB_INIT_DRIVER;
@@ -897,6 +897,8 @@ void InitSoftwareSettings_NS8100(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 
+	debug("Address of local variable: 0x%x\n", &mn_msg);
+
 	debug("Init Software Settings\n");
     debug("Init Version Strings...\n");
 
@@ -1095,7 +1097,7 @@ int main(void)
 #if 0 // fix_ns8100
 			Wait();
 #else // ns8100
-			SLEEP(AVR32_PM_SMODE_IDLE);
+			//SLEEP(AVR32_PM_SMODE_IDLE);
 #endif
 		}
 	}    

@@ -1629,7 +1629,7 @@ void handleGMN(CMD_BUFFER_STRUCT* inCmd)
 	INPUT_MSG_STRUCT mn_msg;
 	uint8 gmnHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
 
-	uint8 nibble;
+	uint8 nibble = 0;
 	uint8 tempBuff[4];
 	uint16 readDex;
 	uint16 buffDex;

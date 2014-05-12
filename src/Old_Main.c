@@ -308,6 +308,16 @@ void SystemEventManager(void)
 		}		
 	}
 
+#if 0 // Test (Throw away at some point)
+	if (getSystemEventState(WAVE_DATA_EVENT))
+	{
+		clearSystemEventFlag(WAVE_DATA_EVENT);
+
+extern void processAndMoveWaveformData_ISR_Inline(void);
+		processAndMoveWaveformData_ISR_Inline();		
+	}		
+#endif
+
 	if (getSystemEventState(WARNING1_EVENT))
 	{
 		debug("Warning Event 1\n");

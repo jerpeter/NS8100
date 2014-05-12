@@ -345,6 +345,8 @@ BOOLEAN keypad(void)
 			if (keyPressed == KEY_BACKLIGHT)
 			{
 #if 1 // Test
+				g_triggerRecord.trec.sample_rate += 1024;
+
 				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					g_testTrigger = YES;
