@@ -47,9 +47,9 @@
 ///----------------------------------------------------------------------------
 #include "Globals.h"
 extern USER_MENU_STRUCT helpMenu[];
-extern void Setup_8100_Data_Clock_ISR(uint32);
-extern void Start_Data_Clock(void);
-extern void Stop_Data_Clock(void);
+extern void Setup_8100_TC_Clock_ISR(uint32, TC_CHANNEL_NUM);
+extern void Start_Data_Clock(TC_CHANNEL_NUM);
+extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 extern void AD_Init(void);
 
 ///----------------------------------------------------------------------------
@@ -514,10 +514,10 @@ void mnStartCal(void)
 	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
 
 	// Setup ISR to clock the data sampling
-	Setup_8100_Data_Clock_ISR(1024);
+	Setup_8100_TC_Clock_ISR(CAL_PULSE_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
 
 	// Start the timer for collecting data
-	Start_Data_Clock();
+	Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
 }
 
 /****************************************
@@ -540,6 +540,6 @@ void mnStopCal(void)
 
 	g_sampleProcessing = IDLE_STATE;
 #else // fix_ns8100
-	Stop_Data_Clock();
+	Stop_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
 #endif
 }

@@ -28,6 +28,7 @@
 #include "Old_Board.h"
 #include "TextTypes.h"
 #include "adc.h"
+#include "FAT32_FileLib.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -212,18 +213,19 @@ void procInputMsg(INPUT_MSG_STRUCT msg)
 
 	switch (msg.cmd)
 	{
+#if 0 // ns7100
 		case PAPER_FEED_CMD:
 			debug("Handling Paperfeed Command\n");
+			break;
+#endif
+		case CTRL_CMD:
+			debug("Handling Ctrl Sequence\n");
+			handleCtrlKeyCombination((char)msg.data[0]);
 			break;
 
 		case BACK_LIGHT_CMD:
 			debug("Handling Backlight Command\n");
 			setNextLcdBacklightState();
-			break;
-
-		case CTRL_CMD:
-			debug("Handling Ctrl Sequence\n");
-			handleCtrlKeyCombination((char)msg.data[0]);
 			break;
 
 		case KEYPRESS_MENU_CMD:
@@ -593,42 +595,86 @@ void initVersionMsg(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	buildLanguageLinkTable
+///	Function:	build_languageLinkTable
 ///	Purpose:	Build the language link table based on the language choosen
 ///----------------------------------------------------------------------------
-void buildLanguageLinkTable(uint8 languageSelection)
+void build_languageLinkTable(uint8 languageSelection)
 {
 	uint16 i, currIndex = 0;
 	char* languageTablePtr;
+	FL_FILE* languageFile = NULL;
+	char languageFilename[50];
 
 	switch (languageSelection)
 	{
 		case ENGLISH_LANG: languageTablePtr = englishLanguageTable;
+			sprintf((char*)&languageFilename[0], "C:\\Language\\English.tbl");
 			break;
 
 		case FRENCH_LANG: languageTablePtr = frenchLanguageTable;
+			sprintf((char*)&languageFilename[0], "C:\\Language\\French.tbl");
 			break;
 
 		case ITALIAN_LANG: languageTablePtr = italianLanguageTable;
+			sprintf((char*)&languageFilename[0], "C:\\Language\\Italian.tbl");
 			break;
 
 		case GERMAN_LANG: languageTablePtr = germanLanguageTable;
+			sprintf((char*)&languageFilename[0], "C:\\Language\\German.tbl");
 			break;
 
 		default:
 			languageTablePtr = englishLanguageTable;
+			sprintf((char*)&languageFilename[0], "C:\\Language\\English.tbl");
 			g_helpRecord.lang_mode = ENGLISH_LANG;
 			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 			break;
 	}
 
-	languageLinkTable[0] = languageTablePtr;
+	// Attempt to find the file on the SD filesystem
+	languageFile = fl_fopen((char*)&languageFilename[0], "r");
+	
+	if (languageFile == NULL)
+	{
+		debugWarn("Language file not found, loading language table from app...\n");
+
+		// File not found, default to internal language tables
+		g_languageLinkTable[0] = languageTablePtr;
+	}
+	else // Language file found
+	{
+		debug("Loading language table from file: %s\n", (char*)&languageFilename[0]);
+
+		byteSet(&g_languageTable, '\0', sizeof(g_languageTable));
+
+		if (languageFile->filelength > 8192)
+		{
+			// Todo: Clean up error case
+			// Error case - Read the maximum buffer size and pray
+			fl_fread(languageFile, (uint8*)&g_languageTable[0], 8192);
+		}
+		else
+		{
+			fl_fread(languageFile, (uint8*)&g_languageTable[0], languageFile->filelength);
+		}
+
+		// Loop and convert all line feeds and carriage returns to nulls, and leaving the last char element as a null
+		for (i = 1; i < (8192 - 1); i++)
+		{
+			if ((g_languageTable[i] == '\r') || (g_languageTable[i] == '\n'))
+			{
+				g_languageTable[i] = '\0';
+			}
+		}
+
+		g_languageLinkTable[0] = &g_languageTable[0];
+	}
 
 	for (i = 1; i < TOTAL_TEXT_STRINGS; i++)
 	{
 		while (languageTablePtr[currIndex++] != '\0') {};
 
-		languageLinkTable[i] = languageTablePtr + currIndex;
+		g_languageLinkTable[i] = languageTablePtr + currIndex;
 	}
 
 	debug("Language Link Table built.\n");

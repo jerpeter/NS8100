@@ -134,7 +134,7 @@ void setupMnDef(void)
     debug("Init Build Language Table...\n");
 
 	// Build the language table based on the user's last language choice
-	buildLanguageLinkTable(g_helpRecord.lang_mode);
+	build_languageLinkTable(g_helpRecord.lang_mode);
 
     debug("Init Activate Help Rec Options...\n");
 

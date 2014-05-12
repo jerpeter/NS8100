@@ -98,6 +98,7 @@ void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 			s_monitorMnCurrentLogIndex = (int16)getStartingMonitorLogTableIndex();
 			s_monitorMnLastLogIndex = __monitorLogTblIndex;
 
+			// Loop through circular buffer to find starting index
 			while((__monitorLogTbl[s_monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY) &&
 					(s_monitorMnCurrentLogIndex != s_monitorMnLastLogIndex))
 			{
@@ -109,7 +110,8 @@ void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 
 			s_monitorMnStartLogIndex = (uint16)s_monitorMnCurrentLogIndex;
 
-			if((s_monitorMnCurrentLogIndex == s_monitorMnLastLogIndex) && (__monitorLogTbl[s_monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY))
+			if((s_monitorMnCurrentLogIndex == s_monitorMnLastLogIndex) && 
+				(__monitorLogTbl[s_monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY))
 			{
 				s_monitorMnCurrentLogIndex = -1;
 			}
@@ -198,69 +200,72 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-	if(s_monitorMnCurrentLogIndex != -1)
+	if (s_monitorMnCurrentLogIndex != -1)
 	{
-		// Display Mode text
-		byteSet(&buff[0], 0, sizeof(buff));
-		switch(__monitorLogTbl[s_monitorMnCurrentLogIndex].mode)
+		if (__monitorLogTbl[s_monitorMnCurrentLogIndex].status != EMPTY_LOG_ENTRY)
 		{
-			case WAVEFORM_MODE:   length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(WAVEFORM_MODE_TEXT)); break;
-			case BARGRAPH_MODE:	  length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(BARGRAPH_MODE_TEXT)); break;
-			case MANUAL_CAL_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(CALIBRATION_TEXT)); break;
-		}
-
-		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
-		wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-
-		// Display Start Time text
-		byteSet(&buff[0], 0, sizeof(buff));
-		convertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[s_monitorMnCurrentLogIndex].startTime, REC_DATE_TIME_TYPE);
-		length = (uint8)strlen((char*)(&buff[0]));
-
-		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
-		wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-
-		// Display Stop Time text
-		byteSet(&buff[0], 0, sizeof(buff));
-		convertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[s_monitorMnCurrentLogIndex].stopTime, REC_DATE_TIME_TYPE);
-		length = (uint8)strlen((char*)(&buff[0]));
-
-		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
-		wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-
-		// Display Number of Events recorded text
-		if(__monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded == 0)
-		{
-			length = (uint8)sprintf((char*)(&buff[0]), "%s %s", getLangText(NO_TEXT), getLangText(EVENTS_RECORDED_TEXT));
-
-			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
-			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-		}
-		else
-		{
-			length = (uint8)sprintf((char*)(&buff[0]), "%s: %d", getLangText(EVENTS_RECORDED_TEXT), __monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded);
-
-			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
-			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-
-			if(__monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded == 1)
+			// Display Mode text
+			byteSet(&buff[0], 0, sizeof(buff));
+			switch(__monitorLogTbl[s_monitorMnCurrentLogIndex].mode)
 			{
-				length = (uint8)sprintf((char*)(&buff[0]), "EVENT #s: %d", __monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber);
+				case WAVEFORM_MODE:   length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(WAVEFORM_MODE_TEXT)); break;
+				case BARGRAPH_MODE:	  length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(BARGRAPH_MODE_TEXT)); break;
+				case MANUAL_CAL_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(CALIBRATION_TEXT)); break;
+			}
+
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
+			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+			// Display Start Time text
+			byteSet(&buff[0], 0, sizeof(buff));
+			convertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[s_monitorMnCurrentLogIndex].startTime, REC_DATE_TIME_TYPE);
+			length = (uint8)strlen((char*)(&buff[0]));
+
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
+			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+			// Display Stop Time text
+			byteSet(&buff[0], 0, sizeof(buff));
+			convertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[s_monitorMnCurrentLogIndex].stopTime, REC_DATE_TIME_TYPE);
+			length = (uint8)strlen((char*)(&buff[0]));
+
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
+			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+			// Display Number of Events recorded text
+			if(__monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded == 0)
+			{
+				length = (uint8)sprintf((char*)(&buff[0]), "%s %s", getLangText(NO_TEXT), getLangText(EVENTS_RECORDED_TEXT));
+
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
+				wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+				wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			}
 			else
 			{
-				length = (uint8)sprintf((char*)(&buff[0]), "EVENT #s: %d-%d", __monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber,
-										(__monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber + __monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded - 1));
-			}
+				length = (uint8)sprintf((char*)(&buff[0]), "%s: %d", getLangText(EVENTS_RECORDED_TEXT), __monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded);
 
-			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
-			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
+				wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+				wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+				if(__monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded == 1)
+				{
+					length = (uint8)sprintf((char*)(&buff[0]), "EVENT #s: %d", __monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber);
+				}
+				else
+				{
+					length = (uint8)sprintf((char*)(&buff[0]), "EVENT #s: %d-%d", __monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber,
+											(__monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber + __monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded - 1));
+				}
+
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
+				wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+				wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			}
 		}
 
 		if(s_monitorMnCurrentLogIndex == s_monitorMnStartLogIndex)

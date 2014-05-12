@@ -243,35 +243,39 @@ void adSetCalSignalOff(void)
 ///----------------------------------------------------------------------------
 void SetAnalogCutoffFrequency(uint8 freq)
 {
+	// Validated 8/20/2012
+	
 	switch (freq)
 	{
-		case ANALOG_CUTOFF_FREQ_1:
-			g_analogControl.bit.cutoffFreqSelectLow = 0;
-			g_analogControl.bit.cutoffFreqSelectHi = 0;
+		case ANALOG_CUTOFF_FREQ_LOW: // 500 Hz
+			g_analogControl.bit.cutoffFreqSelectEnable = 1;
 		break;
 
-		case ANALOG_CUTOFF_FREQ_2:
-			g_analogControl.bit.cutoffFreqSelectLow = 1;
-			g_analogControl.bit.cutoffFreqSelectHi = 0;
-		break;
-
-		case ANALOG_CUTOFF_FREQ_3:
-			g_analogControl.bit.cutoffFreqSelectLow = 0;
-			g_analogControl.bit.cutoffFreqSelectHi = 1;
-		break;
-
-		case ANALOG_CUTOFF_FREQ_4:
+		case ANALOG_CUTOFF_FREQ_1: // 1K Hz
 			g_analogControl.bit.cutoffFreqSelectLow = 1;
 			g_analogControl.bit.cutoffFreqSelectHi = 1;
+			g_analogControl.bit.cutoffFreqSelectEnable = 0;
+		break;
+
+		case ANALOG_CUTOFF_FREQ_2: // 2K Hz
+			g_analogControl.bit.cutoffFreqSelectLow = 0;
+			g_analogControl.bit.cutoffFreqSelectHi = 1;
+			g_analogControl.bit.cutoffFreqSelectEnable = 0;
+		break;
+
+		case ANALOG_CUTOFF_FREQ_3: // 4K Hz
+			g_analogControl.bit.cutoffFreqSelectLow = 1;
+			g_analogControl.bit.cutoffFreqSelectHi = 0;
+			g_analogControl.bit.cutoffFreqSelectEnable = 0;
+		break;
+
+		case ANALOG_CUTOFF_FREQ_4: // 14.3K Hz
+			g_analogControl.bit.cutoffFreqSelectLow = 0;
+			g_analogControl.bit.cutoffFreqSelectHi = 0;
+			g_analogControl.bit.cutoffFreqSelectEnable = 0;
 		break;
 	}
 
-	// Set enable to decode channel pin selection
-	g_analogControl.bit.cutoffFreqSelectEnable = 1;
-	WriteAnalogControl(g_analogControl.reg);
-
-	// Clear enable to make channel pins a don't care
-	g_analogControl.bit.cutoffFreqSelectEnable = 0;
 	WriteAnalogControl(g_analogControl.reg);
 }
 

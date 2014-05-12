@@ -141,6 +141,14 @@ enum {
 #define TRANSVERSE_CHANNEL_TYPE 12
 #define ACOUSTIC_CHANNEL_TYPE 	13
 
+#define CAL_PULSE_FIXED_SAMPLE_RATE	1024
+
+typedef enum {
+	TC_SAMPLE_TIMER_CHANNEL = 0,
+	TC_CALIBRATION_TIMER_CHANNEL,
+	TC_TYPEMATIC_TIMER_CHANNEL
+} TC_CHANNEL_NUM;
+
 // 430 Channel Input Number
 enum {
 	MSP430_CHANNEL_1_INPUT = 1,
@@ -211,7 +219,7 @@ BOOLEAN checkPitTimer(PIT_TIMER timer);
 void configPitTimer(PIT_TIMER timer, uint16 clockDivider, uint16 modulus);
 
 // Language translation
-void buildLanguageLinkTable(uint8 languageSelection);
+void build_languageLinkTable(uint8 languageSelection);
 
 // Version routine
 void initVersionStrings(void);

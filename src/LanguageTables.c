@@ -26,8 +26,6 @@
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
-char* languageLinkTable[TOTAL_TEXT_STRINGS];
-
 char englishLanguageTable[] = {
 "A WEIGHTING\0A WEIGHTING OPTION\0A/D CALIBRATED OK\0ACTIVE DATE PERIOD\0ACTIVE TIME PERIOD\0AFTER EVERY 24 HR\0"\
 "AFTER EVERY 48 HR\0AFTER EVERY 72 HR\0AIR\0AIR CHANNEL SCALE\0ALARM 1\0ALARM 1 AIR LEVEL\0ALARM 1 SEISMIC LVL\0"\

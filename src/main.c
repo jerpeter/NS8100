@@ -62,6 +62,7 @@
 ///	Defines
 ///----------------------------------------------------------------------------
 #define PBA_HZ         FOSC0
+#define ONE_MS_RESOLUTION	1000
 
 #define NRD_SETUP     30 //10
 #define NRD_PULSE     30 //135
@@ -181,7 +182,7 @@ void FactorySetupManager(void);
 void Setup_8100_EIC_Keypad_ISR(void);
 void Setup_8100_EIC_System_ISR(void);
 void Setup_8100_Soft_Timer_Tick_ISR(void);
-void Setup_8100_Data_Clock_ISR(uint32 sampleRate);
+void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM);
 void Setup_8100_Usart_RS232_ISR(void);
 
 //=============================================================================
@@ -558,7 +559,7 @@ void UsbDeviceManager(void)
 		{
 			if (g_sampleProcessing == SAMPLING_STATE)
 			{
-				overlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 2 * SOFT_SECS);
+				overlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 1 * SOFT_SECS);
 			}
 			else
 			{
@@ -807,7 +808,7 @@ void InitSystemHardware_NS8100(void)
     // Initialize USB clock.
     pm_configure_usb_clock();
 
-#if 0
+#if 0 // Moved to USB device manager
 	// Init USB and Mass Storage drivers
     usb_task_init();
     device_mass_storage_task_init();
@@ -829,6 +830,8 @@ void InitInterrupts_NS8100(void)
     INTC_init_interrupts();
 
 	Setup_8100_Soft_Timer_Tick_ISR();
+	Setup_8100_TC_Clock_ISR(ONE_MS_RESOLUTION, TC_TYPEMATIC_TIMER_CHANNEL);
+
 	Setup_8100_EIC_Keypad_ISR();
 	Setup_8100_EIC_System_ISR();
 
@@ -928,8 +931,8 @@ void InitSoftwareSettings_NS8100(void)
 //	Function:	Main
 //	Purpose:	Application starting point
 //=================================================================================================
-extern void Setup_8100_Data_Clock_ISR(uint32 sampleRate);
-extern void Start_Data_Clock(void);
+extern void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM);
+extern void Start_Data_Clock(TC_CHANNEL_NUM);
 extern void AD_Init(void);
 int main(void)
 {
@@ -953,6 +956,12 @@ int main(void)
 	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;
 	Menu_Functions = (unsigned long *)Main_Menu_Functions;
 	Menu_String = (unsigned char *)&Main_Menu_Text;
+
+#if 0
+extern volatile uint32 typematic_tick;
+	Setup_8100_TC_Clock_ISR(1000, TC_TYPEMATIC_TIMER_CHANNEL);
+	Start_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
+#endif
 
  	// ==============
 	// Executive loop

@@ -29,16 +29,25 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define KEYPAD_ACCESS_DELAY 		125	// In usecs
+//#define KEYPAD_ACCESS_DELAY 		125	// In usecs
+#if 0 // ns7100
 #define CHECK_FOR_REPEAT_KEY_DELAY 	100	// 100 * 10 msec ticks = 1 sec
 #define CHECK_FOR_COMBO_KEY_DELAY 	2	// 2 * 10 msec ticks = 20 mssec
 #define WAIT_AFTER_COMBO_KEY_DELAY 	25	// 25 * 10 msec ticks = 250 mssec
 #define REPEAT_DELAY 				10	// 10 * 10 msec ticks = 100 msecs
+#else // ns8100
+#define CHECK_FOR_REPEAT_KEY_DELAY 	1000	// 100 * 1 msec ticks = 1 sec
+#define CHECK_FOR_COMBO_KEY_DELAY 	20		// 2 * 1 msec ticks = 20 mssec
+#define WAIT_AFTER_COMBO_KEY_DELAY 	250		// 25 * 1 msec ticks = 250 mssec
+#define REPEAT_DELAY 				100		// 10 * 1 msec ticks = 100 msecs
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
+extern void Start_Data_Clock(TC_CHANNEL_NUM);
+extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -55,14 +64,10 @@ BOOLEAN keypad(void)
 {
 	INPUT_MSG_STRUCT msg;
 	INPUT_MSG_STRUCT* p_msg = &msg;
-
-	//volatile uint8* keypadAddress = (uint8*)KEYPAD_ADDRESS;
-
 	uint8 rowMask = 0;
 	uint8 keyPressed = KEY_NONE;
 	uint8 numKeysPressed = 0;
 	uint8 i = 0;
-	//uint8 j = 0;
 	uint8 ctrlKeyPressed = NO;
 	uint8 shiftKeyPressed = NO;
 
@@ -73,19 +78,28 @@ BOOLEAN keypad(void)
 	// Set flag to run keypad again to check for repeating keys or ctrl/shift key combos
 	g_kpadCheckForKeyFlag = ACTIVATED;
 
+#if 0 // ns7100
+	//volatile uint8* keypadAddress = (uint8*)KEYPAD_ADDRESS;
+
 	// Check if debug printing has been turned off
 	if (g_disableDebugPrinting)
 	{
 		// Wait to make sure key is still depressed (not a bouncing signal on release)
 		soft_usecWait(3 * SOFT_MSECS);
 	}
+#else // ns8100
+	// Read key immediately
+#endif
 
 #if 0 // ns7100
 	// Start the PIT timer
 	if (checkPitTimer(KEYPAD_TIMER) == DISABLED)
 		startPitTimer(KEYPAD_TIMER);
 #else // ns8100
-	// fix_ns8100
+	if (g_tcTypematicTimerActive == NO)
+	{
+		Start_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
+	}
 #endif
 
 	// Read the keys
@@ -100,6 +114,7 @@ BOOLEAN keypad(void)
 	// Re-read keys and mask in to catch signal bouncing
 	//s_keyMap[0] &= *keypadAddress;
 
+#if 0
 	if (SUPERGRAPH_UNIT)
 	{
 		// Check for ctrl key, row 7 column 7 (zero based)
@@ -122,7 +137,11 @@ BOOLEAN keypad(void)
 			s_keyMap[5] &= ~0x80;
 		}
 	}
+#endif
 
+	//---------------------------------------------------------------------------------
+	// Find key
+	//---------------------------------------------------------------------------------
 	// Find keys by locating the 1's in the map
 	for (rowMask = 0x01, i = 0; i < TOTAL_KEYPAD_KEYS; i++)
 	{
@@ -150,12 +169,13 @@ BOOLEAN keypad(void)
 		// Done looking for keys, disable the PIT timer
 		stopPitTimer(KEYPAD_TIMER);
 #else // ns8100
-		// fix_ns8100
+		Stop_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
 #endif
 
 		return(PASSED);
 	}
 
+#if 0
 	if (SUPERGRAPH_UNIT)
 	{
 		// Check if multiple keys were found
@@ -181,6 +201,7 @@ BOOLEAN keypad(void)
 			}
 		}
 	}
+#endif
 
 	// Check specific condition after a combo sequence where the special key was released before the regular key
 	if ((numKeysPressed == 1) && (g_kpadLastKeyPressed == keyPressed) &&
@@ -200,6 +221,9 @@ BOOLEAN keypad(void)
 		}
 	}
 
+	//---------------------------------------------------------------------------------
+	// Process repeating key
+	//---------------------------------------------------------------------------------
 	// Check if the same key is still being pressed
 	if ((keyPressed != KEY_NONE) && (g_kpadLastKeyPressed == keyPressed))
 	{
@@ -263,6 +287,9 @@ BOOLEAN keypad(void)
 
 		// Done processing repeating key
 	}
+	//---------------------------------------------------------------------------------
+	// Process new key
+	//---------------------------------------------------------------------------------
 	else // New key pressed
 	{
 		// Store current key for later comparison
@@ -305,6 +332,9 @@ BOOLEAN keypad(void)
 			g_kpadLookForKeyTickCount = CHECK_FOR_REPEAT_KEY_DELAY + g_keypadTimerTicks;
 		}
 
+		//---------------------------------------------------------------------------------
+		// Send new key message for action
+		//---------------------------------------------------------------------------------
 		// Process new key
 		if (keyPressed != KEY_NONE)
 		{
@@ -345,6 +375,9 @@ BOOLEAN keypad(void)
 				}
 			}
 
+			//---------------------------------------------------------------------------------
+			// Factory setup staging
+			//---------------------------------------------------------------------------------
 			// Handle factory setup special sequence
 			if ((g_factorySetupSequence == STAGE_1) && ((SUPERGRAPH_UNIT && (keyPressed == 'F')) ||
 				(keyPressed == KEY_UPARROW)))
@@ -384,6 +417,7 @@ BOOLEAN keypad(void)
 						p_msg->cmd = CTRL_CMD;
 						p_msg->data[0] = 'C';
 					}
+#if 1 // Test
 					else if (keyPressed == ESC_KEY)
 					{
 extern uint8 quickBootEntryJump;
@@ -395,6 +429,7 @@ extern void BootLoadManager(void);
 					{
 						copyValidFlashEventSummariesToRam();
 					}
+#endif
 				}
 				else if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 				{

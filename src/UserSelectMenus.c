@@ -1661,7 +1661,7 @@ void languageMenuHandler(uint8 keyPressed, void* data)
 			case ITALIAN_LANG:
 			case GERMAN_LANG:
 					g_helpRecord.lang_mode = (uint8)languageMenu[newItemIndex].data;
-					buildLanguageLinkTable(g_helpRecord.lang_mode);
+					build_languageLinkTable(g_helpRecord.lang_mode);
 					saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 					break;
 

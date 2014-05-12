@@ -47,10 +47,11 @@ enum {
 };
 
 enum {
-	ANALOG_CUTOFF_FREQ_1,
-	ANALOG_CUTOFF_FREQ_2,
-	ANALOG_CUTOFF_FREQ_3,
-	ANALOG_CUTOFF_FREQ_4
+	ANALOG_CUTOFF_FREQ_1, // Filters ~500 HZ and above 
+	ANALOG_CUTOFF_FREQ_2, // Filters ~1000 HZ and above 
+	ANALOG_CUTOFF_FREQ_3, // Filters ~2000 HZ and above 
+	ANALOG_CUTOFF_FREQ_4, // Filters ~4000 HZ and above 
+	ANALOG_CUTOFF_FREQ_5  // Filters ~14000 HZ and above 
 };
 
 typedef union

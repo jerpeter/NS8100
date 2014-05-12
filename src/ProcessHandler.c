@@ -218,6 +218,9 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 
 	// Setup Analog controls
 	debug("Setup Analog controls\n");
+
+	// Load from Factory setup record
+	// fix_ns8100
 	SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1);
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
@@ -226,8 +229,8 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 }
 
 #if 1
-extern void Setup_8100_Data_Clock_ISR(uint32 sampleRate);
-extern void Start_Data_Clock(void);
+extern void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel);
+extern void Start_Data_Clock(TC_CHANNEL_NUM channel);
 extern void AD_Init(void);
 #endif
 /****************************************
@@ -248,10 +251,11 @@ void startDataCollection(uint32 sampleRate)
 	GetChannelOffsets();
 
 	// Setup ISR to clock the data sampling
-	Setup_8100_Data_Clock_ISR(sampleRate);
+	Setup_8100_TC_Clock_ISR(sampleRate, TC_SAMPLE_TIMER_CHANNEL);
+	Setup_8100_TC_Clock_ISR(CAL_PULSE_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
 
 	// Start the timer for collecting data
-	Start_Data_Clock();
+	Start_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 
 	// Gather 1/4 second worth of data before comparing samples
 	soft_usecWait(1 * SOFT_SECS);
@@ -329,12 +333,12 @@ void stopMonitoring(uint8 mode, uint8 operation)
 *	Function:	 stopDataCollection
 *	Purpose:
 ****************************************/
-extern void Stop_Data_Clock(void);
+extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 void stopDataCollection(void)
 {
 	g_sampleProcessing = IDLE_STATE;
 
-	Stop_Data_Clock();
+	Stop_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 
 	powerControl(ANALOG_SLEEP_ENABLE, ON);		
 
@@ -357,7 +361,7 @@ void stopDataClock(void)
 {
 	g_sampleProcessing = IDLE_STATE;
 
-	Stop_Data_Clock();
+	Stop_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 
 	powerControl(ANALOG_SLEEP_ENABLE, OFF);		
 }
@@ -475,7 +479,7 @@ void handleManualCalibration(void)
 					// Generate Cal Signal
 					GenerateCalSignal();
 
-					// Wait until after the Cal Pulse has completed, 250ms to be safe (just less than 100 ms to complete)
+					// Wait until after the Cal Pulse has completed, 250ms to be safe (100 ms to complete)
 					soft_usecWait(250 * SOFT_MSECS);
 
 					// Stop data transfer
@@ -552,15 +556,14 @@ void bargraphForcedCalibration(void)
 
 	g_bargraphForcedCal = YES;
 
-	// Issue a Cal Pulse message to the 430
 	InitDataBuffs(MANUAL_CAL_MODE);
 	g_manualCalFlag = TRUE;
 
+#if 0 // ns7100
 	// Temp set mode to waveform to force the 430 ISR to call ProcessWaveformData instead of ProcessBargraphData 
 	// after the calibration finishes to prevent a lockup when bargraph references globals that are not inited yet
 	g_triggerRecord.op_mode = WAVEFORM_MODE;
 
-#if 0 // ns7100
 	// Set flag to Sampling, we are about to begin to sample.
 	g_sampleProcessing = SAMPLING_STATE;
 

@@ -25,6 +25,7 @@
 #include "ProcessBargraph.h"
 #include "Uart.h"
 #include "Msgs430.h"
+#include "TextTypes.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -280,5 +281,9 @@ USER_MENU_CACHE_STRUCT* 	g_userMenuCachePtr = &g_userMenuCache[0];
 USER_MENU_CACHE_DATA g_userMenuCacheData;
 void (*g_userMenuHandler)(uint8, void*);
 uint16 g_eventBufferIndex;
+uint8 g_tcSampleTimerActive = NO;
+uint8 g_tcTypematicTimerActive = NO;
+char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
+char g_languageTable[8192];
 uint8 spareBuffer[8192];
 uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];

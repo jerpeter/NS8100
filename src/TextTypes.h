@@ -29,12 +29,11 @@ extern char englishLanguageTable[];
 extern char frenchLanguageTable[];
 extern char italianLanguageTable[];
 extern char germanLanguageTable[];
-extern char* languageLinkTable[];
 
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define getLangText(x)	languageLinkTable[x]
+#define getLangText(x)	g_languageLinkTable[x]
 
 ///----------------------------------------------------------------------------
 ///	Text Types - Language Table/Translation/Strings

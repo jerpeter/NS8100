@@ -56,12 +56,12 @@ void ProcessManuelCalPulse(void)
 	DATE_TIME_STRUCT triggerTimeStamp;
 	//SUMMARY_DATA* sumEntry;
 
-	static uint8 manuelCalInProgess = FALSE;
+	static uint8 s_manualCalInProgess = FALSE;
 
 	switch (*g_tailOfPreTrigBuff & EMBEDDED_CMD)
 	{
 		case CAL_START:
-			manuelCalInProgess = TRUE;
+			s_manualCalInProgess = TRUE;
 			if (g_freeEventBuffers != 0)
 			{
 				g_RamEventRecord.summary.captured.eventTime = triggerTimeStamp = getCurrentTime();
@@ -79,7 +79,7 @@ void ProcessManuelCalPulse(void)
 			break;
 
 		case CAL_END:
-			manuelCalInProgess = FALSE;
+			s_manualCalInProgess = FALSE;
 
 			*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_END);
 			*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_END);
@@ -95,7 +95,7 @@ void ProcessManuelCalPulse(void)
 			break;
 
 		default:
-			if (manuelCalInProgess == TRUE)
+			if (s_manualCalInProgess == TRUE)
 			{
 				*(g_eventBufferPretrigPtr + 0) = *(g_tailOfPreTrigBuff + 0);
 				*(g_eventBufferPretrigPtr + 1) = *(g_tailOfPreTrigBuff + 1);
@@ -157,17 +157,6 @@ void MoveManuelCalToFlash(void)
 #if 0 // ns7100
 		// Set our flash event data pointer to the start of the flash event
 		advFlashDataPtrToEventData(ramSummaryEntry);
-#endif
-
-#if 1 // ns8100
-		// Get new file handle
-		g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
-				
-		if (g_currentEventFileHandle == NULL)
-			debugErr("Failed to get a new file handle for the current Waveform event!\n");
-
-		// Seek to beginning of where data will be stored in event
-		fl_fseek(g_currentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
 #endif
 
 		sumEntry = &g_summaryTable[g_currentEventBuffer];
@@ -244,21 +233,9 @@ void MoveManuelCalToFlash(void)
 			// Store entire sample
 #if 0 // ns7100
 			storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-#else // ns8100
-			fl_fwrite(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, g_currentEventFileHandle);
 #endif
 			
 			g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
-		}
-
-		if (++g_currentEventBuffer == g_maxEventBuffers)
-		{
-			g_currentEventBuffer = 0;
-			g_currentEventSamplePtr = g_startOfEventBufferPtr;
-		}
-		else
-		{
-			g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_currentEventBuffer * g_wordSizeInEvent);
 		}
 
 		sumEntry->waveShapeData.a.peak = (uint16)(hiA - lowA + 1);
@@ -273,6 +250,51 @@ void MoveManuelCalToFlash(void)
 
 		completeRamEventSummary(ramSummaryEntry, sumEntry);
 
+		// Get new event file handle
+		g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+				
+		if (g_currentEventFileHandle == NULL)
+		{
+			debugErr("Failed to get a new file handle for the Manual Cal event!\n");
+		}					
+		else // Write the file event to the SD card
+		{
+			char tempBuffer[50];
+					
+			sprintf(&tempBuffer[0], "EVENT #%d BEING SAVED TO SD CARD (MAY TAKE A WHILE)", g_nextEventNumberToUse);
+			overlayMessage("EVENT COMPLETE", &tempBuffer[0], 0);
+
+			// Write the event record header and summary
+			fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
+
+			// Write the event data, containing the pretrigger, event and cal
+			fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, g_currentEventFileHandle);
+
+			// Done writing the event file, close the file handle
+			fl_fclose(g_currentEventFileHandle);
+			debug("Event file closed\n");
+
+			ramSummaryEntry->fileEventNum = g_nextEventNumberToUse;
+					
+			// Don't log a monitor entry for Manual Cal
+			//updateMonitorLogEntry();
+
+			// After event numbers have been saved, store current event number in persistent storage.
+			storeCurrentEventNumber();
+
+			// Now store the updated event number in the universal ram storage.
+			g_RamEventRecord.summary.eventNumber = g_nextEventNumberToUse;
+		}
+
+		if (++g_currentEventBuffer == g_maxEventBuffers)
+		{
+			g_currentEventBuffer = 0;
+			g_currentEventSamplePtr = g_startOfEventBufferPtr;
+		}
+		else
+		{
+			g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_currentEventBuffer * g_wordSizeInEvent);
+		}
 		clearSystemEventFlag(MANUEL_CAL_EVENT);
 
 		g_lastCompletedRamSummary = ramSummaryEntry;

@@ -593,7 +593,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case ITALIAN_LANG:
 			case GERMAN_LANG:
 				g_helpRecord.lang_mode = cfg.printerCfg.lang_mode;
-				buildLanguageLinkTable(g_helpRecord.lang_mode);
+				build_languageLinkTable(g_helpRecord.lang_mode);
 				break;
 					
 			default:

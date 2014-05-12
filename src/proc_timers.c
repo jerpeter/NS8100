@@ -43,7 +43,7 @@
 // Local Scope Variables                                                      //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-#define TC_CHANNEL    0
+#define TC_CHANNEL_0    0
 extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
 extern int rtc_init(volatile avr32_rtc_t *rtc, unsigned char osc_type, unsigned char psel);
 extern void rtc_set_top_value(volatile avr32_rtc_t *rtc, unsigned long top);
@@ -111,7 +111,7 @@ __interrupt void tc_irq( void )
   tc_tick++;
 
   // clear the interrupt flag
-  AVR32_TC.channel[TC_CHANNEL].sr;
+  AVR32_TC.channel[TC_CHANNEL_0].sr;
 
   // specify that an interrupt has been raised
   print_sec = 1;
@@ -127,7 +127,7 @@ void Proc_Timers_PiT_1(void)
 	// Options for waveform genration.
 	tc_waveform_opt_t WAVEFORM_OPT =
 	{
-	.channel  = TC_CHANNEL,                        // Channel selection.
+	.channel  = TC_CHANNEL_0,                        // Channel selection.
 
 	.bswtrg   = TC_EVT_EFFECT_NOOP,                // Software trigger effect on TIOB.
 	.beevt    = TC_EVT_EFFECT_NOOP,                // External event effect on TIOB.
@@ -220,12 +220,12 @@ void Proc_Timers_PiT_1(void)
 	// Remember TC counter is 16-bits, so counting second is not possible.
 	// We configure it to count ms.
 	// We want: (1/(FPBA/4)) * RC = 1000 Hz => RC = (FPBA/4) / 1000 = 3000 to get an interrupt every 1ms
-	tc_write_rc(tc, TC_CHANNEL, (FOSC0/2)/1000);  // Set RC value.
+	tc_write_rc(tc, TC_CHANNEL_0, (FOSC0/2)/1000);  // Set RC value.
 
-	tc_configure_interrupts(tc, TC_CHANNEL, &TC_INTERRUPT);
+	tc_configure_interrupts(tc, TC_CHANNEL_0, &TC_INTERRUPT);
 
 	// Start the timer/counter.
-	tc_start(tc, TC_CHANNEL);                    // And start the timer/counter.
+	tc_start(tc, TC_CHANNEL_0);                    // And start the timer/counter.
 
 	tc_tick = 0;
 	while((usart_read_char(DBG_USART, &uart_rx_character))!= USART_SUCCESS)
@@ -418,7 +418,7 @@ void On_Off_Key_Off_Menu_Read_Once(void)
 
 
 #define FPBA    FOSC0
-#define TC_CHANNEL    0
+#define TC_CHANNEL_0    0
 
 // To specify we have to print a new time
 volatile static int print_sec = 1;
@@ -438,7 +438,7 @@ __interrupt void tc_irq( void )
   tc_tick++;
 
   // clear the interrupt flag
-  AVR32_TC.channel[TC_CHANNEL].sr;
+  AVR32_TC.channel[TC_CHANNEL_0].sr;
 
   // specify that an interrupt has been raised
   print_sec = 1;
@@ -475,7 +475,7 @@ int main(void)
   // Options for waveform genration.
   static const tc_waveform_opt_t WAVEFORM_OPT =
   {
-    .channel  = TC_CHANNEL,                        // Channel selection.
+    .channel  = TC_CHANNEL_0,                        // Channel selection.
 
     .bswtrg   = TC_EVT_EFFECT_NOOP,                // Software trigger effect on TIOB.
     .beevt    = TC_EVT_EFFECT_NOOP,                // External event effect on TIOB.
@@ -563,12 +563,12 @@ int main(void)
   // Remember TC counter is 16-bits, so counting second is not possible.
   // We configure it to count ms.
   // We want: (1/(FPBA/4)) * RC = 1000 Hz => RC = (FPBA/4) / 1000 = 3000 to get an interrupt every 1ms
-  tc_write_rc(tc, TC_CHANNEL, (FPBA/4)/1000);  // Set RC value.
+  tc_write_rc(tc, TC_CHANNEL_0, (FPBA/4)/1000);  // Set RC value.
 
-  tc_configure_interrupts(tc, TC_CHANNEL, &TC_INTERRUPT);
+  tc_configure_interrupts(tc, TC_CHANNEL_0, &TC_INTERRUPT);
 
   // Start the timer/counter.
-  tc_start(tc, TC_CHANNEL);                    // And start the timer/counter.
+  tc_start(tc, TC_CHANNEL_0);                    // And start the timer/counter.
 
   while(1)
   {

@@ -55,7 +55,7 @@
 #define TC_INVALID_ARGUMENT                     (-1)
 
 //! Number of timer/counter channels.
-#define TC_NUMBER_OF_CHANNELS                   (sizeof(((avr32_tc_t *)0)->channel) / sizeof(avr32_tc_channel_t))
+#define TC_NUMBER_OF_CHANNELS                   (sizeof(((avr32_tc_t *)0)->channel) / sizeof(avr32_TC_CHANNEL_t))
 
 /*! \name External Clock Signal 0 Selection
  */

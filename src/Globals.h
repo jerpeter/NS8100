@@ -25,6 +25,9 @@
 #include "ProcessBargraph.h"
 #include "Uart.h"
 #include "Msgs430.h"
+#include "TextTypes.h"
+
+// Global Externs ---------------------------------------------------------------------
 
 extern MSGS430_UNION g_msgs430;
 extern ANALOG_CONTROL_STRUCT g_analogControl;
@@ -223,12 +226,16 @@ extern uint8 g_printOutMode;
 extern uint8 g_summaryListMenuActive;
 extern uint8 g_summaryListArrowChar;
 extern uint8 g_disableDebugPrinting;
-extern USER_MENU_CACHE_STRUCT g_userMenuCache[35];
+extern USER_MENU_CACHE_STRUCT g_userMenuCache[36];
 extern USER_MENU_CACHE_STRUCT* g_userMenuCachePtr;
 extern USER_MENU_CACHE_DATA g_userMenuCacheData;
 extern uint8 g_enterMonitorModeAfterMidnightCal;
 extern void (*g_userMenuHandler)(uint8, void*);
 extern uint16 g_eventBufferIndex;
 extern uint8 spareBuffer[];
+extern uint8 g_tcSampleTimerActive;
+extern uint8 g_tcTypematicTimerActive;
+char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
+char g_languageTable[8192];
 
 #endif /* GLOBALS_H_ */

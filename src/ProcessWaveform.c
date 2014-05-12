@@ -565,7 +565,6 @@ void MoveWaveformEventToFlash(void)
 						sumEntry->waveShapeData.t.freq);
 #endif
 
-				debug("Call to complete the global ram event header\n");
 				completeRamEventSummary(ramSummaryEntry, sumEntry);
 
 				// Get new event file handle
