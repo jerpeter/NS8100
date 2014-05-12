@@ -208,7 +208,7 @@ BARGRAPH_BAR_INTERVAL_DATA g_bargraphBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS];
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalWritePtr = &(g_bargraphBarInterval[0]);
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalReadPtr = &(g_bargraphBarInterval[0]);
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalEndPtr = &(g_bargraphBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS - 1]);
-uint16 g_sampleDataMidpoint;
+uint16 g_sampleDataMidpoint = 0x8000;
 uint16 g_aImpulsePeak;
 uint16 g_rImpulsePeak;
 uint16 g_vImpulsePeak;

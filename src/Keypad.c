@@ -344,7 +344,7 @@ BOOLEAN keypad(void)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
-#if 0 // Test
+#if 1 // Test
 				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					g_testTrigger = YES;

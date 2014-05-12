@@ -936,7 +936,7 @@ void barResultMenuHandler(uint8 keyPressed, void* data)
 			}
 
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
-				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, g_sampleDataMidpoint);
+				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
 		}
 		else if ((g_helpRecord.alarm_one_mode == ALARM_MODE_OFF) && (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF))
 		{
@@ -1047,6 +1047,11 @@ void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{
 		g_triggerRecord.trec.bitAccuracy = bitAccuracyMenu[newItemIndex].data;
+
+		if (g_triggerRecord.trec.bitAccuracy == ACCURACY_10_BIT) { g_sampleDataMidpoint = 0x0200; }
+		else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_12_BIT) { g_sampleDataMidpoint = 0x0800; }
+		else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_14_BIT) { g_sampleDataMidpoint = 0x2000; }
+		else { g_sampleDataMidpoint = 0x8000; } // Default to 16-bit accuracy
 
 		ACTIVATE_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
 	}
@@ -2084,7 +2089,7 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 
 			debug("New Max Record Time: %d\n", g_triggerRecord.trec.record_time_max);
 
-			ACTIVATE_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
+			ACTIVATE_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -2232,7 +2237,7 @@ void sensitivityMenuHandler(uint8 keyPressed, void* data)
 			}
 
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
-				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, g_sampleDataMidpoint);
+				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
 		}
 		else if ((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 		{

@@ -106,6 +106,10 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 		else
 		{
 			debug("Air Trigger: %d\n", g_triggerRecord.trec.soundTriggerLevel);
+
+#if 1 // fix_ns8100
+			g_triggerRecord.trec.soundTriggerLevel *= 16;
+#endif
 		}
 
 		if ((g_triggerRecord.trec.soundTriggerLevel == NO_TRIGGER_CHAR) && g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR)
@@ -113,7 +117,7 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 			messageBox(getLangText(WARNING_TEXT), "BOTH SEISMIC AND AIR SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 			
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
-				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, g_sampleDataMidpoint);
+				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
 		}
 		else
 		{
@@ -124,7 +128,7 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 		ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
-			SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, g_sampleDataMidpoint);
+			SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
 	}
 
 	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
@@ -156,6 +160,10 @@ void alarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_helpRecord.alarm_one_seismic_lvl = *((uint32*)data);
 		
+#if 1 // fix_ns8100
+			g_helpRecord.alarm_one_seismic_lvl *= 16;
+#endif
+
 		debug("Alarm 1 Seismic Level Count: %d\n", g_helpRecord.alarm_one_seismic_lvl);
 
 		if (g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH)
@@ -203,6 +211,10 @@ void alarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_helpRecord.alarm_one_air_lvl = *((uint32*)data);
 		
+#if 1 // fix_ns8100
+			g_helpRecord.alarm_one_air_lvl *= 16;
+#endif
+
 		debug("Alarm 1 Air Level: %d\n", g_helpRecord.alarm_one_air_lvl);
 
 		ACTIVATE_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_helpRecord.alarm_one_time,
@@ -301,6 +313,10 @@ void alarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_helpRecord.alarm_two_seismic_lvl = *((uint32*)data);
 		
+#if 1 // fix_ns8100
+			g_helpRecord.alarm_two_seismic_lvl *= 16;
+#endif
+
 		debug("Alarm 2 Seismic Level Count: %d\n", g_helpRecord.alarm_two_seismic_lvl);
 
 		if (g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH)
@@ -348,6 +364,10 @@ void alarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_helpRecord.alarm_two_air_lvl = *((uint32*)data);
 		
+#if 1 // fix_ns8100
+			g_helpRecord.alarm_two_air_lvl *= 16;
+#endif
+
 		debug("Alarm 2 Air Level: %d\n", g_helpRecord.alarm_two_air_lvl);
 
 		ACTIVATE_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarm_two_time,
@@ -1174,6 +1194,10 @@ void seismicTriggerMenuHandler(uint8 keyPressed, void* data)
 		else
 		{
 			debug("Seismic Trigger: %d counts\n", g_triggerRecord.trec.seismicTriggerLevel);
+
+#if 1 // fix_ns8100
+			g_triggerRecord.trec.seismicTriggerLevel *= 16;
+#endif
 		}
 
 		ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.soundTriggerLevel,

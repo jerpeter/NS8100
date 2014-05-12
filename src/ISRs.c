@@ -890,9 +890,15 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 
 		//___________________________________________________________________________________________
 		//___Check if either a seismic or acoustic trigger threshold condition was achieved
+#if 0
 		if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
 			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
 		{
+#else
+		if (g_testTrigger == YES)
+		{
+			g_testTrigger = NO;
+#endif
 			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
 			//usart_write_char(&AVR32_USART1, '$');
 					
@@ -907,10 +913,9 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				//__Setup new event buffer pointers, counts, and flags
 				s_pretrigPtr = g_startOfEventBufferPtr + (g_eventBufferWriteIndex * g_wordSizeInEvent);
 				s_samplePtr = s_pretrigPtr + g_wordSizeInPretrig;
-				s_calPtr[s_consecEventsWithoutCal] = s_pretrigPtr + g_wordSizeInPretrig + g_wordSizeInEvent;
 
 				s_pretrigCount = g_samplesInPretrig;
-				s_sampleCount = g_samplesInEvent;
+				s_sampleCount = g_samplesInBody;
 
 				// Check if a cal pulse was already pending
 				if (s_calPulse == PENDING)
@@ -918,6 +923,9 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 					// An event has already been captured without a cal, so inc the consecutive count
 					s_consecEventsWithoutCal++;
 				}
+
+				// Set the cal pointer in the array corresponding to the appropriate event cal section buffer section
+				s_calPtr[s_consecEventsWithoutCal] = s_pretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 									
 				s_recordingEvent = YES;
 				s_calPulse = PENDING;
@@ -930,18 +938,38 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 									
 				//___________________________________________________________________________________________
 				//___Copy current quarter sec buffer sample to event
+#if 1
 				*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
-									
+#else // Test
+				*(s_samplePtr) = 0x3333;
+				*(s_samplePtr + 1) = 0x3333;
+				*(s_samplePtr + 2) = 0x3333;
+				*(s_samplePtr + 3) = 0x3333;
+#endif									
 				//___________________________________________________________________________________________
 				//___Copy oldest quarter sec buffer sample to pretrigger
 				if ((g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfQuarterSecBuff)
 				{
+#if 1
 					// Copy first (which is currently the oldest) quarter sec buffer sample to pretrig
 					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
+#else // Test
+					*(s_pretrigPtr) = 0x1111;
+					*(s_pretrigPtr + 1) = 0x1111;
+					*(s_pretrigPtr + 2) = 0x1111;
+					*(s_pretrigPtr + 3) = 0x1111;
+#endif
 				}										
 				else // Copy oldest quarter sec buffer sample to pretrigger
 				{
+#if 1
 					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
+#else // Test
+					*(s_pretrigPtr) = 0x1111;
+					*(s_pretrigPtr + 1) = 0x1111;
+					*(s_pretrigPtr + 2) = 0x1111;
+					*(s_pretrigPtr + 3) = 0x1111;
+#endif
 				}										
 
 				//___________________________________________________________________________________________
@@ -995,6 +1023,17 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 
 			s_pretrigPtr += NUMBER_OF_CHANNELS_DEFAULT;
 			s_pretrigCount--;
+
+#if 0 // test crap
+			if (s_pretrigCount == 0)
+			{
+				s_pretrigPtr -= NUMBER_OF_CHANNELS_DEFAULT;
+				*(s_pretrigPtr) = 0x2222;
+				*(s_pretrigPtr + 1) = 0x2222;
+				*(s_pretrigPtr + 2) = 0x2222;
+				*(s_pretrigPtr + 3) = 0x2222;
+			}
+#endif
 		}
 
 		//___________________________________________________________________________________________
@@ -1004,6 +1043,17 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		s_samplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 		s_sampleCount--;
 					
+#if 0 // test crap
+			if (s_sampleCount == 0)
+			{
+				s_samplePtr -= NUMBER_OF_CHANNELS_DEFAULT;
+				*(s_samplePtr) = 0x4444;
+				*(s_samplePtr + 1) = 0x4444;
+				*(s_samplePtr + 2) = 0x4444;
+				*(s_samplePtr + 3) = 0x4444;
+			}
+#endif
+
 		//___________________________________________________________________________________________
 		//___Check if all the event samples have been handled
 		if (s_sampleCount == 0)
@@ -1069,14 +1119,24 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
 
 				// Copy cal data to the event buffer cal section
-				*(SAMPLE_DATA_STRUCT*)s_calPtr[DEFAULT_CAL_BUFFER_INDEX] = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+				*(SAMPLE_DATA_STRUCT*)(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+
+#if 0 // test crap
+			if (s_calSampleCount == 100)
+			{
+				*(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = 0x5555;
+				*(s_calPtr[DEFAULT_CAL_BUFFER_INDEX] + 1) = 0x5555;
+				*(s_calPtr[DEFAULT_CAL_BUFFER_INDEX] + 2) = 0x5555;
+				*(s_calPtr[DEFAULT_CAL_BUFFER_INDEX] + 3) = 0x5555;
+			}
+#endif
 				s_calPtr[DEFAULT_CAL_BUFFER_INDEX] += NUMBER_OF_CHANNELS_DEFAULT;
 									
 				// Check if a delayed cal pointer has been established
 				if (s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX] != NULL)
 				{
 					// Copy delayed cal data to event buffer cal section
-					*(SAMPLE_DATA_STRUCT*)s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX] = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+					*(SAMPLE_DATA_STRUCT*)(s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
 					s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX] += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -1084,7 +1144,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				if (s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX] != NULL)
 				{
 					// Copy delayed cal data to event buffer cal section
-					*(SAMPLE_DATA_STRUCT*)s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX] = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+					*(SAMPLE_DATA_STRUCT*)(s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
 					s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX] += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -1092,6 +1152,13 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 
 				if (s_calSampleCount == 0)
 				{
+#if 0 // test crap
+					s_calPtr[DEFAULT_CAL_BUFFER_INDEX] -= NUMBER_OF_CHANNELS_DEFAULT;
+					*(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = 0x6666;
+					*(s_calPtr[DEFAULT_CAL_BUFFER_INDEX] + 1) = 0x6666;
+					*(s_calPtr[DEFAULT_CAL_BUFFER_INDEX] + 2) = 0x6666;
+					*(s_calPtr[DEFAULT_CAL_BUFFER_INDEX] + 3) = 0x6666;
+#endif
 					//debug("\n--> Cal done!\n");
 					//usart_write_char(&AVR32_USART1, '&');
 						
@@ -1156,9 +1223,9 @@ static inline void moveBargraphData_ISR_Inline(void)
 }
 
 // ============================================================================
-// applyOffsetAndCacheSampleData
+// applyOffsetAndCacheSampleData_ISR_Inline
 // ============================================================================
-static inline void applyOffsetAndCacheSampleData(void)
+static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 {
 	// Apply channel offset
 	s_R_channelReading -= g_channelOffset.r_offset;
@@ -1166,11 +1233,32 @@ static inline void applyOffsetAndCacheSampleData(void)
 	s_T_channelReading -= g_channelOffset.t_offset;
 	s_A_channelReading -= g_channelOffset.a_offset;
 
+#if 1
 	// Store the data into the quarter sec buffer
 	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = s_R_channelReading;
 	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = s_V_channelReading;
 	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = s_T_channelReading;
 	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = s_A_channelReading;
+#else // Test
+	static uint16 crap = 0;
+
+	if (s_calPulse == YES)
+	{
+		// Fake data
+		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = crap--;
+		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = crap--;
+		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = crap--;
+		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = crap--;
+	}
+	else
+	{
+		// Fake data
+		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = crap++;
+		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = crap++;
+		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = crap++;
+		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = crap++;
+	}
+#endif
 }
 
 // ============================================================================
@@ -1283,7 +1371,7 @@ void tc_sample_irq(void)
 	
 	//___________________________________________________________________________________________
 	//___AD data read successfully, Normal operation
-	applyOffsetAndCacheSampleData();
+	applyOffsetAndCacheSampleData_ISR_Inline();
 
 	//___________________________________________________________________________________________
 	//___Check if not actively sampling
