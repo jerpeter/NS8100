@@ -21,6 +21,8 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
 #ifndef ALARM_TEST_MENU_H_
 #define ALARM_TEST_MENU_H_
 
@@ -148,3 +150,5 @@ static void (*Alarm_Output_2_Menu_Functions[])(void) =
 	Alarm_Output_2_Set_High
 };
 #endif //ALARM_TEST_MENU_H_
+
+#endif

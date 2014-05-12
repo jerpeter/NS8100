@@ -167,6 +167,12 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					{
 						g_triggerRecord.trec.sample_rate = 1024;
 					}	
+#else // ns8100
+					// Check if the sample rate is greater than max working sample rate
+					if (g_triggerRecord.trec.sample_rate > 4096)
+					{
+						g_triggerRecord.trec.sample_rate = 1024;
+					}	
 #endif
 					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
 					g_aJobPeak = g_rJobPeak = g_vJobPeak = g_tJobPeak = 0;
@@ -207,6 +213,12 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 #if 0 // ns7100
 					// Check if the sample rate is not 1024
 					if (g_triggerRecord.trec.sample_rate != 1024)
+					{
+						g_triggerRecord.trec.sample_rate = 1024;
+					}	
+#else // ns8100
+					// Check if the sample rate is greater than max working sample rate
+					if (g_triggerRecord.trec.sample_rate > 4096)
 					{
 						g_triggerRecord.trec.sample_rate = 1024;
 					}	
@@ -597,10 +609,10 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			//-----------------------------------------------------------------------
 			byteSet(&buff[0], 0, sizeof(buff));	
 			length = (uint8)sprintf(buff," x%3x x%3x x%3x x%3x", 
-				((((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->r) & 0x0FFF),
-				((((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->v) & 0x0FFF),
-				((((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->t) & 0x0FFF),
-				((((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->a) & 0x0FFF));
+				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r) & 0x0FFF),
+				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v) & 0x0FFF),
+				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t) & 0x0FFF),
+				((((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a) & 0x0FFF));
 
 			wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 

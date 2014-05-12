@@ -117,7 +117,7 @@ void EndBargraph(void)
 
 /*****************************************************************************
 * Function:		ProcessBargraphData (Step 2)
-* Purpose:		Copy A/D channel data from pretrigger buffer into event buffer
+* Purpose:		Copy A/D channel data from quarter sec buffer into event buffer
 ******************************************************************************/
 void ProcessBargraphData(void)
 {
@@ -125,10 +125,10 @@ void ProcessBargraphData(void)
 	if ((g_bg430DataEndPtr - g_bg430DataWritePtr) >= 4)
 	{
 		// Move from the pre-trigger buffer to our large ram buffer.
-		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
-		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
-		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
-		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
 
 		// Check for the end and if so go to the top
 		if (g_bg430DataWritePtr > g_bg430DataEndPtr) 
@@ -137,21 +137,21 @@ void ProcessBargraphData(void)
 	else
 	{
 		// Move from the pre-trigger buffer to our large ram buffer, but check for data wrapping.
-		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
 		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 
-		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
 		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 
-		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
 		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 
-		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
 		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 	}
 
-	// Handle preTriggerBuf pointer for circular buffer
-	if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
+	// Handle quarter sec buffer pointer for circular buffer
+	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
 	raiseSystemEventFlag(BARGRAPH_EVENT);

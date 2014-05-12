@@ -22,7 +22,7 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 // Include Files                                                              //
@@ -559,5 +559,4 @@ void Network_Read_MAC(void){}
 void Network_Set_MAC(void){}
 void Network_Read_IP(void){}
 void Network_Set_IP(void){}
-
-
+#endif

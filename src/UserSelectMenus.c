@@ -2005,7 +2005,6 @@ USER_MENU_STRUCT sampleRateMenu[SAMPLE_RATE_MENU_ENTRIES] = {
 {ITEM_4, 4096, NULL_TEXT, NO_TAG, {4096}},
 {ITEM_5, 8192, NULL_TEXT, NO_TAG, {8192}},
 {ITEM_6, 16384, NULL_TEXT, NO_TAG, {16384}},
-//{ITEM_7, 32768, NULL_TEXT, NO_TAG, {32768}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&sampleRateMenuHandler}}
 };
 
@@ -2021,7 +2020,9 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{
 		if ((sampleRateMenu[newItemIndex].data < sampleRateMenu[ITEM_1].data) || 
-			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_6].data))
+			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_5].data) ||
+			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && 
+			((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))))
 		{
 			byteSet(&message[0], 0, sizeof(message));
 			sprintf((char*)message, "%lu %s", sampleRateMenu[newItemIndex].data,

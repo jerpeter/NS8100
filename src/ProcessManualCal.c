@@ -60,7 +60,7 @@ void ProcessManuelCalPulse(void)
 
 	static uint8 s_manualCalInProgess = FALSE;
 
-	switch (*g_tailOfPreTrigBuff & EMBEDDED_CMD)
+	switch (*g_tailOfQuarterSecBuff & EMBEDDED_CMD)
 	{
 		case CAL_START:
 			s_manualCalInProgess = TRUE;
@@ -70,26 +70,26 @@ void ProcessManuelCalPulse(void)
 #if 0 // ns7100
 				g_summaryTable[g_eventBufferIndex].linkPtr = g_eventBufferPretrigPtr;
 #endif
-				*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_START);
-				*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_START);
-				*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_START);
-				*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_START);
+				*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | EVENT_START);
+				*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | EVENT_START);
+				*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | EVENT_START);
+				*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | EVENT_START);
 
 				g_eventBufferPretrigPtr += 4;
-				g_tailOfPreTrigBuff += 4;
+				g_tailOfQuarterSecBuff += 4;
 			}
 			break;
 
 		case CAL_END:
 			s_manualCalInProgess = FALSE;
 
-			*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | EVENT_END);
 
 			g_eventBufferPretrigPtr += 4;
-			g_tailOfPreTrigBuff += 4;
+			g_tailOfQuarterSecBuff += 4;
 			
 			raiseSystemEventFlag(MANUEL_CAL_EVENT);
 			g_manualCalFlag = FALSE;
@@ -99,17 +99,17 @@ void ProcessManuelCalPulse(void)
 		default:
 			if (s_manualCalInProgess == TRUE)
 			{
-				*(g_eventBufferPretrigPtr + 0) = *(g_tailOfPreTrigBuff + 0);
-				*(g_eventBufferPretrigPtr + 1) = *(g_tailOfPreTrigBuff + 1);
-				*(g_eventBufferPretrigPtr + 2) = *(g_tailOfPreTrigBuff + 2);
-				*(g_eventBufferPretrigPtr + 3) = *(g_tailOfPreTrigBuff + 3);
+				*(g_eventBufferPretrigPtr + 0) = *(g_tailOfQuarterSecBuff + 0);
+				*(g_eventBufferPretrigPtr + 1) = *(g_tailOfQuarterSecBuff + 1);
+				*(g_eventBufferPretrigPtr + 2) = *(g_tailOfQuarterSecBuff + 2);
+				*(g_eventBufferPretrigPtr + 3) = *(g_tailOfQuarterSecBuff + 3);
 
 				g_eventBufferPretrigPtr += 4;
-				g_tailOfPreTrigBuff += 4;
+				g_tailOfQuarterSecBuff += 4;
 			}
 			else
 			{
-				g_tailOfPreTrigBuff += g_sensorInfoPtr->numOfChannels;
+				g_tailOfQuarterSecBuff += g_sensorInfoPtr->numOfChannels;
 			}
 			break;
 	}
@@ -131,8 +131,8 @@ void ProcessManuelCalPulse(void)
 		}
 	}  
 
-	// Check if the end of the PreTrigger buffer has been reached
-	if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
+	// Check if the end of the quarter sec buffer buffer has been reached
+	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
 }
 
 //*****************************************************************************

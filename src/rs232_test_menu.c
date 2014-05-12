@@ -22,7 +22,7 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 // Include Files                                                              //
@@ -100,4 +100,4 @@ void RS232_Read_DSR_Continuous_Test(void){}
 void RS232_Read_DCD_Continuous_Test(void){}
 void RS232_Read_RI_Continuous_Test(void){}
 void RS232_DCD_Wake_Test(void){}
-
+#endif

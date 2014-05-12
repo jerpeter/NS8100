@@ -442,6 +442,7 @@ extern void BootLoadManager(void);
 					}
 					else if (keyPressed == HELP_KEY)
 					{
+						//g_triggerRecord.trec.sample_rate += 1024;
 						//copyValidFlashEventSummariesToRam();
 						//powerControl(POWER_OFF, ON);
 					}

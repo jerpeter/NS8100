@@ -257,7 +257,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 #if 1
 extern void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel);
 extern void Start_Data_Clock(TC_CHANNEL_NUM channel);
-extern void AD_Init(void);
+extern void SetupADChannelConfig(void);
 #endif
 /****************************************
 *	Function:	 startDataCollection
@@ -269,8 +269,8 @@ void startDataCollection(uint32 sampleRate)
 	debug("Enable the A/D\n");
 	powerControl(ANALOG_SLEEP_ENABLE, OFF);		
 
-	// Initialize the A/D
-	AD_Init();
+	// Setup the A/D Channel configuration
+	SetupADChannelConfig();
 	
 	// Get current A/D offsets for normalization
 	debug("Getting channel offsets...\n");
@@ -285,7 +285,7 @@ void startDataCollection(uint32 sampleRate)
 	// Start the timer for collecting data
 	Start_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 
-#if 0 // Pretrigger fill is now inside the ISR
+#if 0 // Quarter sec buffer fill is now inside the ISR
 	// Gather 1/4 second worth of data before comparing samples
 	soft_usecWait(1 * SOFT_SECS);
 #endif

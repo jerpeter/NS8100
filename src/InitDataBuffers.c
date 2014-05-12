@@ -54,7 +54,7 @@
 //*****************************************************************************
 void InitDataBuffs(uint8 op_mode)
 { 
-	uint32 preTriggerSize;
+	uint32 quarterSecBufferSize;
 	uint32 sampleRate;
 	
 	if (op_mode == MANUAL_CAL_MODE)
@@ -70,13 +70,13 @@ void InitDataBuffs(uint8 op_mode)
 	}
 
 	// Setup the pre-trigger buffer pointers
-	g_startOfPreTrigBuff = &(g_preTrigBuff[0]);
-	g_tailOfPreTrigBuff = &(g_preTrigBuff[0]);
+	g_startOfQuarterSecBuff = &(g_quarterSecBuff[0]);
+	g_tailOfQuarterSecBuff = &(g_quarterSecBuff[0]);
 
-	// Set the PreTrigger size in words, 1/4 sec @ sample rate * number of channels, plus 1 sample (1/4 sec plus actual trigger sample)
-	preTriggerSize = ((uint32)(sampleRate / 4) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
+	// Set the Quarter Sec buffer size in words, 1/4 sec @ sample rate * number of channels, plus 1 sample (1/4 sec plus actual trigger sample)
+	quarterSecBufferSize = ((uint32)(sampleRate / 4) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
 	// Set up the end of the pre trigger buffer
-	g_endOfPreTrigBuff = &(g_preTrigBuff[preTriggerSize]);
+	g_endOfQuarterSecBuff = &(g_quarterSecBuff[quarterSecBufferSize]);
 
 	// Setup the pending event record information that is available at this time
 	initEventRecord(op_mode);
@@ -86,9 +86,9 @@ void InitDataBuffs(uint8 op_mode)
 	{
 		// Calculate samples for each section and total event
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
-		g_samplesInPretrig  = (uint32)(sampleRate / 4);
-		g_samplesInCal  = (uint32)MAX_CAL_SAMPLES;
-		g_samplesInEvent  = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
+		g_samplesInPretrig = (uint32)(sampleRate / 4);
+		g_samplesInCal = (uint32)MAX_CAL_SAMPLES;
+		g_samplesInEvent = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
 
 		// Calculate word size for each section and total event, since buffer is an array of words
 		g_wordSizeInPretrig = g_samplesInPretrig * g_sensorInfoPtr->numOfChannels;

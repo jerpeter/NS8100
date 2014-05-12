@@ -50,7 +50,7 @@ extern USER_MENU_STRUCT helpMenu[];
 extern void Setup_8100_TC_Clock_ISR(uint32, TC_CHANNEL_NUM);
 extern void Start_Data_Clock(TC_CHANNEL_NUM);
 extern void Stop_Data_Clock(TC_CHANNEL_NUM);
-extern void AD_Init(void);
+extern void SetupADChannelConfig(void);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -191,7 +191,7 @@ void calSetupMnProc(INPUT_MSG_STRUCT msg,
 
 			overlayMessage("STATUS", "PLEASE WAIT...", 0);
 
-			// Fool ISR into filling up pretrigger
+			// Fool ISR into filling up quarter sec buffer
 			s_calSavedSampleRate = g_triggerRecord.trec.sample_rate;
 			g_triggerRecord.trec.sample_rate = 1024;
 			InitDataBuffs(WAVEFORM_MODE);
@@ -270,7 +270,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 #endif
 	}
 
-	memcpy(&s_calPreTrigData[0], &g_startOfPreTrigBuff[0], (256 * 4 * 2));
+	memcpy(&s_calPreTrigData[0], &g_startOfQuarterSecBuff[0], (256 * 4 * 2));
 
 	// Zero the Med
 	memset(&chanMed[0][0], 0, sizeof(chanMed));
@@ -487,7 +487,7 @@ void mnStartCal(void)
 		g_msgs430.startMsg430.channel[i].group_num = SEISMIC_GROUP_2;
 	}
 
-	// Fake a waveform mode to just collect data in the pretrigger buffer
+	// Fake a waveform mode to just collect data in the quarter sec buffer
 	g_triggerRecord.op_mode = WAVEFORM_MODE;
 
 	g_msgs430.startMsg430.capture_mode = g_triggerRecord.op_mode;
@@ -504,8 +504,8 @@ void mnStartCal(void)
 #endif
 
 	// fix_ns8100
-	// Add in control to adjust the gain select
-	AD_Init();
+	// Setup AD Channel config
+	SetupADChannelConfig();
 	GetChannelOffsets();
 
 	// Setup Analog controls

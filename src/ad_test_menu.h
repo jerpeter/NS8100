@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 1
+
 #ifndef AD_TEST_MENU_H_
 #define AD_TEST_MENU_H_
 
@@ -137,3 +140,5 @@ void AD_Cal_Set_High(void);
 void AD_Cal_Set_Middle(void);
 
 #endif //AD_TEST_MENU_H_
+
+#endif

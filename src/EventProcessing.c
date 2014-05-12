@@ -1137,15 +1137,15 @@ BOOLEAN validEventFile(uint16 eventNumber)
 void reInitSdCardAndFat32(void)
 {
 	// Power off the SD card
-	SD_MMC_Power_Off();
+	gpio_clr_gpio_pin(AVR32_PIN_PB15);
 
-	// Wait for power to propogate
+	// Wait for power to propagate
 	soft_usecWait(10 * SOFT_MSECS);
 
-	// Power on the SD Card and init the file system
-	SD_MMC_Power_On();
+	// Power on the SD Card
+	gpio_set_gpio_pin(AVR32_PIN_PB15);
 
-	// Wait for power to propogate
+	// Wait for power to propagate
 	soft_usecWait(10 * SOFT_MSECS);
 
 	// Check if SD Detect pin 

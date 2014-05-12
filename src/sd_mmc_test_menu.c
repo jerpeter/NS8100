@@ -22,7 +22,7 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 // Include Files                                                              //
@@ -787,6 +787,4 @@ void SD_MMC_File_System_Rename(void){}
 void SD_MMC_File_System_Copy(void){}
 void SD_MMC_File_System_Change_Drive(void){}
 void SD_MMC_File_System_Volume(void){}
-
-
-
+#endif

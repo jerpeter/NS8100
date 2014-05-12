@@ -68,44 +68,44 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 {
 	uint16 trash;
 #if 1
-	spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &(dataPtr->r));
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &trash);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+    spi_write(&AVR32_SPI0, 0x0000);
+    spi_read(&AVR32_SPI0, &(dataPtr->r));
+    spi_write(&AVR32_SPI0, 0x0000);
+    spi_read(&AVR32_SPI0, &trash);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 
     // Chan 1
-    spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &(dataPtr->t));
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &trash);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+    spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+    spi_write(&AVR32_SPI0, 0x0000);
+    spi_read(&AVR32_SPI0, &(dataPtr->t));
+    spi_write(&AVR32_SPI0, 0x0000);
+    spi_read(&AVR32_SPI0, &trash);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 
     // Chan 2
-    spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &(dataPtr->v));
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &trash);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+    spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+    spi_write(&AVR32_SPI0, 0x0000);
+    spi_read(&AVR32_SPI0, &(dataPtr->v));
+    spi_write(&AVR32_SPI0, 0x0000);
+    spi_read(&AVR32_SPI0, &trash);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 
     // Chan 3
-    spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &(dataPtr->a));
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &trash);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+    spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+    spi_write(&AVR32_SPI0, 0x0000);
+    spi_read(&AVR32_SPI0, &(dataPtr->a));
+    spi_write(&AVR32_SPI0, 0x0000);
+    spi_read(&AVR32_SPI0, &trash);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 
     // Temp
-    spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &trash);
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &trash);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+    spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+    spi_write(&AVR32_SPI0, 0x0000);
+    spi_read(&AVR32_SPI0, &trash);
+    spi_write(&AVR32_SPI0, 0x0000);
+    spi_read(&AVR32_SPI0, &trash);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 #endif
 
 #if 0
@@ -163,9 +163,44 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 ///----------------------------------------------------------------------------
 void InitAnalogControl(void)
 {
+	g_analogControl.reg = 0x0;
+
 	SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1);
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
+}
+
+///----------------------------------------------------------------------------
+///	Function:	WriteADConfig
+///	Purpose:
+///----------------------------------------------------------------------------
+void WriteADConfig(unsigned int config)
+{
+	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_write(&AVR32_SPI0, ((unsigned short) config << 2));
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+}
+
+///----------------------------------------------------------------------------
+///	Function:	SetupADChannelConfig
+///	Purpose:
+///----------------------------------------------------------------------------
+void SetupADChannelConfig(void)
+{
+	// Setup config for 4 Chan + Temp + Read back config + others
+	WriteADConfig(0x39B4);
+
+	// Setup config for 4 Chan, No Temp, No read back
+	//WriteADConfig(0x39FF);
+
+	//Delay for 1.2us at least
+	soft_usecWait(2);
+
+	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_write(&AVR32_SPI0, 0x0000);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+
+	soft_usecWait(2);
 }
 
 ///----------------------------------------------------------------------------
@@ -204,9 +239,9 @@ void WriteAnalogControl(uint16 control)
 	reg_PORTE.reg |= ANALOG_CONTROL_STORAGE;
 	reg_PORTE.reg &= ~ANALOG_CONTROL_STORAGE;
 #else // ns8100
-	spi_selectChip(AD_CTL_SPI, AD_CTL_SPI_NPCS);
-	spi_write(AD_CTL_SPI, (unsigned short) control);
-    spi_unselectChip(AD_CTL_SPI, AD_CTL_SPI_NPCS);
+	spi_selectChip(&AVR32_SPI1, AD_CTL_SPI_NPCS);
+	spi_write(&AVR32_SPI1, (unsigned short) control);
+    spi_unselectChip(&AVR32_SPI1, AD_CTL_SPI_NPCS);
 #endif
 }
 
@@ -216,7 +251,10 @@ void WriteAnalogControl(uint16 control)
 ///----------------------------------------------------------------------------
 void adSetCalSignalLow(void)
 {
-	WriteAnalogControl(0x80);
+	g_analogControl.bit.calSignal = 0;
+	g_analogControl.bit.calSignalEnable = 1;
+
+	WriteAnalogControl(g_analogControl.reg);
 }
 
 ///----------------------------------------------------------------------------
@@ -225,7 +263,10 @@ void adSetCalSignalLow(void)
 ///----------------------------------------------------------------------------
 void adSetCalSignalHigh(void)
 {
-	WriteAnalogControl(0xC0);
+	g_analogControl.bit.calSignal = 1;
+	g_analogControl.bit.calSignalEnable = 1;
+
+	WriteAnalogControl(g_analogControl.reg);
 }
 
 ///----------------------------------------------------------------------------
@@ -234,7 +275,10 @@ void adSetCalSignalHigh(void)
 ///----------------------------------------------------------------------------
 void adSetCalSignalOff(void)
 {
-	WriteAnalogControl(0x00);
+	g_analogControl.bit.calSignal = 0;
+	g_analogControl.bit.calSignalEnable = 0;
+
+	WriteAnalogControl(g_analogControl.reg);
 }
 
 ///----------------------------------------------------------------------------
@@ -243,7 +287,7 @@ void adSetCalSignalOff(void)
 ///----------------------------------------------------------------------------
 void SetAnalogCutoffFrequency(uint8 freq)
 {
-	// Validated 8/20/2012
+	// Validated bit selection 8/20/2012
 	
 	switch (freq)
 	{
@@ -391,7 +435,7 @@ void GetChannelOffsets(void)
 	uint32 timeDelay = (977 / (g_triggerRecord.trec.sample_rate / 512) / 2);
 	uint8 powerAnalogDown = NO;
 
-	// Check to see if the A/D is already powered on
+	// Check to see if the A/D is in sleep mode
 	if (getPowerControlState(ANALOG_SLEEP_ENABLE) == YES)
 	{
 		// Power the A/D on to set the offsets
@@ -474,20 +518,20 @@ void GatherSampleData(void)
 	static uint8 recording = NO;
 	static uint8 calPulse = NO;
 
-	//debug("Tail of Pretrigger: 0x%x\n", g_tailOfPreTrigBuff);
+	//debug("Tail of Quarter Sec Buffer: 0x%x\n", g_tailOfQuarterSecBuff);
 
 	//debug("Read A/D Data\n");
-	ReadAnalogData((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff);
+	ReadAnalogData((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff);
 
-	//debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x\n", *(g_tailOfPreTrigBuff + 0), *(g_tailOfPreTrigBuff + 1), *(g_tailOfPreTrigBuff + 2), *(g_tailOfPreTrigBuff + 3));
+	//debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x\n", *(g_tailOfQuarterSecBuff + 0), *(g_tailOfQuarterSecBuff + 1), *(g_tailOfQuarterSecBuff + 2), *(g_tailOfQuarterSecBuff + 3));
 
 	// Convert the data to 12 bits to fit the format of the previous event record
-	*(g_tailOfPreTrigBuff + 0) >>= 4;
-	*(g_tailOfPreTrigBuff + 1) >>= 4;
-	*(g_tailOfPreTrigBuff + 2) >>= 4;
-	*(g_tailOfPreTrigBuff + 3) >>= 4;
+	*(g_tailOfQuarterSecBuff + 0) >>= 4;
+	*(g_tailOfQuarterSecBuff + 1) >>= 4;
+	*(g_tailOfQuarterSecBuff + 2) >>= 4;
+	*(g_tailOfQuarterSecBuff + 3) >>= 4;
 
-	//debug("A/D Data Shifted: 0x%x, 0x%x, 0x%x, 0x%x\n", *(g_tailOfPreTrigBuff + 0), *(g_tailOfPreTrigBuff + 1), *(g_tailOfPreTrigBuff + 2), *(g_tailOfPreTrigBuff + 3));
+	//debug("A/D Data Shifted: 0x%x, 0x%x, 0x%x, 0x%x\n", *(g_tailOfQuarterSecBuff + 0), *(g_tailOfQuarterSecBuff + 1), *(g_tailOfQuarterSecBuff + 2), *(g_tailOfQuarterSecBuff + 3));
 
 	// Check if handling a manual calibration
 	if (g_manualCalFlag == FALSE)
@@ -495,49 +539,49 @@ void GatherSampleData(void)
 		// Check if not recording an event and not handling a cal pulse
 		if ((recording == NO) && (calPulse == NO))
 		{
-			if (*(g_tailOfPreTrigBuff + 1) > 0x0800)
+			if (*(g_tailOfQuarterSecBuff + 1) > 0x0800)
 			{
-				if ((*(g_tailOfPreTrigBuff + 1) - 0x800) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((*(g_tailOfQuarterSecBuff + 1) - 0x800) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((0x800 - *(g_tailOfPreTrigBuff + 1)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((0x800 - *(g_tailOfQuarterSecBuff + 1)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 
-			if (*(g_tailOfPreTrigBuff + 2) > 0x0800)
+			if (*(g_tailOfQuarterSecBuff + 2) > 0x0800)
 			{
-				if ((*(g_tailOfPreTrigBuff + 2) - 0x800) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((*(g_tailOfQuarterSecBuff + 2) - 0x800) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((0x800 - *(g_tailOfPreTrigBuff + 2)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((0x800 - *(g_tailOfQuarterSecBuff + 2)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 
-			if (*(g_tailOfPreTrigBuff + 3) > 0x0800)
+			if (*(g_tailOfQuarterSecBuff + 3) > 0x0800)
 			{
-				if ((*(g_tailOfPreTrigBuff + 3) - 0x800) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((*(g_tailOfQuarterSecBuff + 3) - 0x800) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((0x800 - *(g_tailOfPreTrigBuff + 3)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((0x800 - *(g_tailOfQuarterSecBuff + 3)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 
-			if (*(g_tailOfPreTrigBuff + 0) > 0x0800)
+			if (*(g_tailOfQuarterSecBuff + 0) > 0x0800)
 			{
-				if ((*(g_tailOfPreTrigBuff + 0) - 0x800) > g_triggerRecord.trec.soundTriggerLevel) trigFound = YES;
+				if ((*(g_tailOfQuarterSecBuff + 0) - 0x800) > g_triggerRecord.trec.soundTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((0x800 - *(g_tailOfPreTrigBuff + 0)) > g_triggerRecord.trec.soundTriggerLevel) trigFound = YES;
+				if ((0x800 - *(g_tailOfQuarterSecBuff + 0)) > g_triggerRecord.trec.soundTriggerLevel) trigFound = YES;
 			}
 
 			if ((trigFound == YES) && (recording == NO) && (calPulse == NO))
 			{
 				// Add command nibble to signal a tigger
-				*(g_tailOfPreTrigBuff + 0) |= TRIG_ONE;
-				*(g_tailOfPreTrigBuff + 1) |= TRIG_ONE;
-				*(g_tailOfPreTrigBuff + 2) |= TRIG_ONE;
-				*(g_tailOfPreTrigBuff + 3) |= TRIG_ONE;
+				*(g_tailOfQuarterSecBuff + 0) |= TRIG_ONE;
+				*(g_tailOfQuarterSecBuff + 1) |= TRIG_ONE;
+				*(g_tailOfQuarterSecBuff + 2) |= TRIG_ONE;
+				*(g_tailOfQuarterSecBuff + 3) |= TRIG_ONE;
 
 				recording = YES;
 				sampleCount = g_triggerRecord.trec.record_time * g_triggerRecord.trec.sample_rate;
@@ -551,88 +595,88 @@ void GatherSampleData(void)
 			// Check if seismic is enabled for Alarm 1
 			if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC))
 			{
-				if (*(g_tailOfPreTrigBuff + 1) > 0x0800)
+				if (*(g_tailOfQuarterSecBuff + 1) > 0x0800)
 				{
-					if ((*(g_tailOfPreTrigBuff + 1) - 0x800) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 1) - 0x800) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 				else
 				{
-					if ((0x800 - *(g_tailOfPreTrigBuff + 1)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((0x800 - *(g_tailOfQuarterSecBuff + 1)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 
-				if (*(g_tailOfPreTrigBuff + 2) > 0x0800)
+				if (*(g_tailOfQuarterSecBuff + 2) > 0x0800)
 				{
-					if ((*(g_tailOfPreTrigBuff + 2) - 0x800) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 2) - 0x800) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 				else
 				{
-					if ((0x800 - *(g_tailOfPreTrigBuff + 2)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((0x800 - *(g_tailOfQuarterSecBuff + 2)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 
-				if (*(g_tailOfPreTrigBuff + 3) > 0x0800)
+				if (*(g_tailOfQuarterSecBuff + 3) > 0x0800)
 				{
-					if ((*(g_tailOfPreTrigBuff + 3) - 0x800) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 3) - 0x800) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 				else
 				{
-					if ((0x800 - *(g_tailOfPreTrigBuff + 3)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((0x800 - *(g_tailOfQuarterSecBuff + 3)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 			}
 
 			// Check if air is enabled for Alarm 1
 			if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_AIR))
 			{
-				if (*(g_tailOfPreTrigBuff + 0) > 0x0800)
+				if (*(g_tailOfQuarterSecBuff + 0) > 0x0800)
 				{
-					if ((*(g_tailOfPreTrigBuff + 0) - 0x800) > g_helpRecord.alarm_one_air_lvl) alarm1Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 0) - 0x800) > g_helpRecord.alarm_one_air_lvl) alarm1Found = YES;
 				}
 				else
 				{
-					if ((0x800 - *(g_tailOfPreTrigBuff + 0)) > g_helpRecord.alarm_one_air_lvl) alarm1Found = YES;
+					if ((0x800 - *(g_tailOfQuarterSecBuff + 0)) > g_helpRecord.alarm_one_air_lvl) alarm1Found = YES;
 				}
 			}
 
 			// Check if seismic is enabled for Alarm 2
 			if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC))
 			{
-				if (*(g_tailOfPreTrigBuff + 1) > 0x0800)
+				if (*(g_tailOfQuarterSecBuff + 1) > 0x0800)
 				{
-					if ((*(g_tailOfPreTrigBuff + 1) - 0x800) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 1) - 0x800) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 				else
 				{
-					if ((0x800 - *(g_tailOfPreTrigBuff + 1)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((0x800 - *(g_tailOfQuarterSecBuff + 1)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 
-				if (*(g_tailOfPreTrigBuff + 2) > 0x0800)
+				if (*(g_tailOfQuarterSecBuff + 2) > 0x0800)
 				{
-					if ((*(g_tailOfPreTrigBuff + 2) - 0x800) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 2) - 0x800) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 				else
 				{
-					if ((0x800 - *(g_tailOfPreTrigBuff + 2)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((0x800 - *(g_tailOfQuarterSecBuff + 2)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 
-				if (*(g_tailOfPreTrigBuff + 3) > 0x0800)
+				if (*(g_tailOfQuarterSecBuff + 3) > 0x0800)
 				{
-					if ((*(g_tailOfPreTrigBuff + 3) - 0x800) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 3) - 0x800) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 				else
 				{
-					if ((0x800 - *(g_tailOfPreTrigBuff + 3)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((0x800 - *(g_tailOfQuarterSecBuff + 3)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 			}
 
 			// Check if air is enabled for Alarm 2
 			if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC))
 			{
-				if (*(g_tailOfPreTrigBuff + 0) > 0x0800)
+				if (*(g_tailOfQuarterSecBuff + 0) > 0x0800)
 				{
-					if ((*(g_tailOfPreTrigBuff + 0) - 0x800) > g_helpRecord.alarm_two_air_lvl) alarm2Found = YES;
+					if ((*(g_tailOfQuarterSecBuff + 0) - 0x800) > g_helpRecord.alarm_two_air_lvl) alarm2Found = YES;
 				}
 				else
 				{
-					if ((0x800 - *(g_tailOfPreTrigBuff + 0)) > g_helpRecord.alarm_two_air_lvl) alarm2Found = YES;
+					if ((0x800 - *(g_tailOfQuarterSecBuff + 0)) > g_helpRecord.alarm_two_air_lvl) alarm2Found = YES;
 				}
 			}
 
@@ -640,19 +684,19 @@ void GatherSampleData(void)
 			if (alarm2Found == YES)
 			{
 				// Add command nibble to signal a tigger
-				*(g_tailOfPreTrigBuff + 0) |= TRIG_THREE;
-				*(g_tailOfPreTrigBuff + 1) |= TRIG_THREE;
-				*(g_tailOfPreTrigBuff + 2) |= TRIG_THREE;
-				*(g_tailOfPreTrigBuff + 3) |= TRIG_THREE;
+				*(g_tailOfQuarterSecBuff + 0) |= TRIG_THREE;
+				*(g_tailOfQuarterSecBuff + 1) |= TRIG_THREE;
+				*(g_tailOfQuarterSecBuff + 2) |= TRIG_THREE;
+				*(g_tailOfQuarterSecBuff + 3) |= TRIG_THREE;
 			}
 			// Else check if Alarm 1 condition was met
 			else if (alarm1Found == YES)
 			{
 				// Add command nibble to signal a tigger
-				*(g_tailOfPreTrigBuff + 0) |= TRIG_TWO;
-				*(g_tailOfPreTrigBuff + 1) |= TRIG_TWO;
-				*(g_tailOfPreTrigBuff + 2) |= TRIG_TWO;
-				*(g_tailOfPreTrigBuff + 3) |= TRIG_TWO;
+				*(g_tailOfQuarterSecBuff + 0) |= TRIG_TWO;
+				*(g_tailOfQuarterSecBuff + 1) |= TRIG_TWO;
+				*(g_tailOfQuarterSecBuff + 2) |= TRIG_TWO;
+				*(g_tailOfQuarterSecBuff + 3) |= TRIG_TWO;
 			}
 		}
 		// Else check if we are still recording but handling the last sample
@@ -663,10 +707,10 @@ void GatherSampleData(void)
 			calSampleCount = 100 * (g_triggerRecord.trec.sample_rate / 1024);
 
 			// Start Cal
-			*(g_tailOfPreTrigBuff + 0) |= CAL_START;
-			*(g_tailOfPreTrigBuff + 1) |= CAL_START;
-			*(g_tailOfPreTrigBuff + 2) |= CAL_START;
-			*(g_tailOfPreTrigBuff + 3) |= CAL_START;
+			*(g_tailOfQuarterSecBuff + 0) |= CAL_START;
+			*(g_tailOfQuarterSecBuff + 1) |= CAL_START;
+			*(g_tailOfQuarterSecBuff + 2) |= CAL_START;
+			*(g_tailOfQuarterSecBuff + 3) |= CAL_START;
 
 			SetCalSignalEnable(ON);
 		}
@@ -700,19 +744,19 @@ void GatherSampleData(void)
 		if (g_manualCalSampleCount == 0)
 		{
 			// Start Cal
-			*(g_tailOfPreTrigBuff + 0) |= CAL_START;
-			*(g_tailOfPreTrigBuff + 1) |= CAL_START;
-			*(g_tailOfPreTrigBuff + 2) |= CAL_START;
-			*(g_tailOfPreTrigBuff + 3) |= CAL_START;
+			*(g_tailOfQuarterSecBuff + 0) |= CAL_START;
+			*(g_tailOfQuarterSecBuff + 1) |= CAL_START;
+			*(g_tailOfQuarterSecBuff + 2) |= CAL_START;
+			*(g_tailOfQuarterSecBuff + 3) |= CAL_START;
 		}
 
 		if (g_manualCalSampleCount == 99)
 		{
 			// Stop Cal
-			*(g_tailOfPreTrigBuff + 0) |= CAL_END;
-			*(g_tailOfPreTrigBuff + 1) |= CAL_END;
-			*(g_tailOfPreTrigBuff + 2) |= CAL_END;
-			*(g_tailOfPreTrigBuff + 3) |= CAL_END;
+			*(g_tailOfQuarterSecBuff + 0) |= CAL_END;
+			*(g_tailOfQuarterSecBuff + 1) |= CAL_END;
+			*(g_tailOfQuarterSecBuff + 2) |= CAL_END;
+			*(g_tailOfQuarterSecBuff + 3) |= CAL_END;
 		}
 
 		g_manualCalSampleCount++;

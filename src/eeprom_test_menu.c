@@ -22,7 +22,7 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 // Include Files                                                              //
@@ -458,6 +458,4 @@ void EEPROM_Config_Write_CRC(void){}
 void EEPROM_Config_Erase_Data(void){}
 void EEPROM_Config_Test_Data(void){}
 void EEPROM_Config_Restore_Default_Data(void){}
-
-
-
+#endif

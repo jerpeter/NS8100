@@ -201,9 +201,52 @@ void soft_delay(volatile unsigned long int counter)
 #endif
 
 //=============================================================================
+// SPI_0_Init
+//=============================================================================
+void SPI_0_Init(void)
+{
+	const gpio_map_t spi0Map =
+	{
+		{AVR32_SPI0_SCK_0_0_PIN,  AVR32_SPI0_SCK_0_0_FUNCTION },  // SPI Clock.
+		{AVR32_SPI0_MISO_0_0_PIN, AVR32_SPI0_MISO_0_0_FUNCTION},  // MISO.
+		{AVR32_SPI0_MOSI_0_0_PIN, AVR32_SPI0_MOSI_0_0_FUNCTION},  // MOSI.
+		{AVR32_SPI0_NPCS_0_0_PIN, AVR32_SPI0_NPCS_0_0_FUNCTION}   // Chip Select NPCS.
+	};
+  
+	// SPI options.
+	spi_options_t spiOptions =
+	{
+	.reg          = 0,
+	.baudrate     = 36000000, //33000000, // 33 MHz
+	.bits         = 16,
+	.spck_delay   = 0,
+	.trans_delay  = 0,
+	.stay_act     = 1,
+	.spi_mode     = 0,
+	.modfdis      = 1
+	};
+
+	// Assign I/Os to SPI.
+	gpio_enable_module(spi0Map, sizeof(spi0Map) / sizeof(spi0Map[0]));
+
+	// Initialize as master.
+	spi_initMaster(&AVR32_SPI0, &spiOptions);
+
+	// Set SPI selection mode: variable_ps, pcs_decode, delay.
+	spi_selectionMode(&AVR32_SPI0, 0, 0, 0);
+
+	// Enable SPI module.
+	spi_enable(&AVR32_SPI0);
+
+	// Initialize AD driver with SPI clock (PBA).
+	// Setup SPI registers according to spiOptions.
+	spi_setupChipReg(&AVR32_SPI0, &spiOptions, FOSC0);
+}
+
+//=============================================================================
 // SPI_init
 //=============================================================================
-void SPI_init(void)
+void SPI_1_Init(void)
 {
 	// SPI 1 MAP Pin select	
 	const gpio_map_t spi1Map =
@@ -716,12 +759,17 @@ void InitSystemHardware_NS8100(void)
 	SET_RTS; SET_DTR;
 
 	//-------------------------------------------------------------------------
-	// Init the SPI interface
-	SPI_init();
+	// Init the SPI interfaces
+	SPI_0_Init();
+	SPI_1_Init();
 	
 	//-------------------------------------------------------------------------
 	// Initialize the external RTC
 	InitExternalRtc();
+
+	//-------------------------------------------------------------------------
+	// Initialize the AD Control
+	InitAnalogControl();
 
 	//-------------------------------------------------------------------------
     // Turn on display
@@ -734,17 +782,13 @@ void InitSystemHardware_NS8100(void)
     InitDisplay();
 
 	//-------------------------------------------------------------------------
-	// Initialize the Real Time Counter for half second tick used for state processing
-	if (!rtc_init(&AVR32_RTC, 1, 0))
-	{
-		debugErr("Error initializing the RTC\n");
-		while(1);
-	}
+	// Initialize the Internal Real Time Counter for half second tick used for state processing
+	rtc_init(&AVR32_RTC, 1, 0);
 
 	// Set top value to generate an interrupt every 1/2 second */
 	rtc_set_top_value(&AVR32_RTC, 8192);
 
-	// Enable the RTC
+	// Enable the Internal RTC
 	rtc_enable(&AVR32_RTC);
 
 	//-------------------------------------------------------------------------
@@ -771,17 +815,31 @@ void InitSystemHardware_NS8100(void)
 
 	//-------------------------------------------------------------------------
 	// Power on the SD Card and init the file system
-	SD_MMC_Power_On();
+	
+	// Necessary ?
+	// Set SD Power pin as GPIO
+	gpio_enable_gpio_pin(AVR32_PIN_PB15);
+	
+	// Necessary ?
+	// Set SD Write Protect pin as GPIO
+	gpio_enable_gpio_pin(AVR32_PIN_PA07);
+	
+	// Necessary ?
+	// Set SD Detect pin as GPIO
+	gpio_enable_gpio_pin(AVR32_PIN_PA02);
+	
+	// Enable Power to SD
+	gpio_set_gpio_pin(AVR32_PIN_PB15);
 
-	// Wait for power to propogate
+	// Wait for power to propagate
 	soft_usecWait(10 * SOFT_MSECS);
 
 	// Check if SD Detect pin 
 	if (gpio_get_pin_value(AVR32_PIN_PA02) == ON)
 	{
-		spi_selectChip(SDMMC_SPI, SD_MMC_SPI_NPCS);
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		sd_mmc_spi_internal_init();
-		spi_unselectChip(SDMMC_SPI, SD_MMC_SPI_NPCS);
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 
 		FAT32_InitDrive();
 		if (FAT32_InitFAT() == FALSE)
@@ -825,9 +883,10 @@ void InitInterrupts_NS8100(void)
 	Setup_8100_EIC_Keypad_ISR();
 	Setup_8100_EIC_System_ISR();
 
-	// Moved interrupt setup to the end of the BootloaderManager to allow for searching for Ctrl-B
-	//initCraftInterruptBuffers();
-	//Setup_8100_Usart_RS232_ISR();
+#if 0 // Moved interrupt setup to the end of the BootloaderManager to allow for searching for Ctrl-B
+	initCraftInterruptBuffers();
+	Setup_8100_Usart_RS232_ISR();
+#endif
 	
 	Enable_global_interrupt();
 }
@@ -973,9 +1032,6 @@ void InitSoftwareSettings_NS8100(void)
 //	Function:	Main
 //	Purpose:	Application starting point
 //=================================================================================================
-extern void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM);
-extern void Start_Data_Clock(TC_CHANNEL_NUM);
-extern void AD_Init(void);
 int main(void)
 {
     InitSystemHardware_NS8100();
@@ -986,10 +1042,18 @@ int main(void)
 	//debug("Unit Type: %s\n", "NS8100 Minigraph");
 	debug("--- System Init complete ---\n");
 
-#if 1
+#if 0 // Craft Test
 	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;
 	Menu_Functions = (unsigned long *)Main_Menu_Functions;
 	Menu_String = (unsigned char *)&Main_Menu_Text;
+#endif
+
+#if 0 // Clear Internal RAM static variables 
+	uint32 i = 0x28;
+	while (i)
+	{
+		*((uint8*)i--) = 0;
+	}
 #endif
 
  	// ==============
@@ -1031,6 +1095,8 @@ int main(void)
 			// Sleep
 #if 0 // fix_ns8100
 			Wait();
+#else // ns8100
+			SLEEP(AVR32_PM_SMODE_IDLE);
 #endif
 		}
 	}    
