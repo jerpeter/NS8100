@@ -87,7 +87,11 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	// Waveform specific - Initial conditions.
 	cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+#if 1 // Normal
 	cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+#else // Try
+	cfg.eventCfg.airTriggerLevel = airTriggerConvert(g_triggerRecord.trec.airTriggerLevel);
+#endif
 	cfg.eventCfg.recordTime = g_triggerRecord.trec.record_time;
 
 	// static non changing.
@@ -311,8 +315,6 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		//--------------------------------
-
-		// Distance to source check, cfg is in uint32 format not float.
 		switch (cfg.mode)
 		{
 			case WAVEFORM_MODE: 
@@ -384,7 +386,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			updateCurrentTime();
 		}
 
+		//--------------------------------
 		// Distance to source check, cfg is in uint32 format not float.
+		//--------------------------------
 		if (cfg.eventCfg.distToSource > (uint32)(DISTANCE_TO_SOURCE_MAX_VALUE * 100))
 		{
 			returnCode = CFG_ERR_DIST_TO_SRC;
@@ -394,7 +398,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			g_triggerRecord.trec.dist_to_source = (float)((float)cfg.eventCfg.distToSource / (float)100.0);
 		}
 
+		//--------------------------------
 		// Weight per delay check, cfg is in uint32 format not float.
+		//--------------------------------
 		if (cfg.eventCfg.weightPerDelay > (uint32)(WEIGHT_PER_DELAY_MAX_VALUE * 100))
 		{
 			returnCode = CFG_ERR_WEIGHT_DELAY;
@@ -404,7 +410,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			g_triggerRecord.trec.weight_per_delay = (float)((float)cfg.eventCfg.weightPerDelay / (float)100.0);
 		}
 
+		//--------------------------------
 		// Sample Rate check
+		//--------------------------------
 		if ((SAMPLE_RATE_512 == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_1K == cfg.eventCfg.sampleRate) || 
 			(SAMPLE_RATE_2K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_4K == cfg.eventCfg.sampleRate) || 
 			(SAMPLE_RATE_8K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_16K == cfg.eventCfg.sampleRate))
@@ -424,7 +432,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_SAMPLE_RATE;
 		}
 
+		//--------------------------------
 		// Seismic Trigger Level check
+		//--------------------------------
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.seismicTriggerLevel) 	||
 			(NO_TRIGGER_CHAR == cfg.eventCfg.seismicTriggerLevel) 	||
 			((cfg.eventCfg.seismicTriggerLevel >= SEISMIC_TRIGGER_MIN_VALUE) &&
@@ -440,7 +450,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 		
 #if 1 // Updated (Port missing change)
+		//--------------------------------
 		// Update air sensor type DB or MB
+		//--------------------------------
 		if ((uint8)cfg.eventCfg.airSensorType == MILLIBAR_TYPE)
 		{
 			g_helpRecord.units_of_air = MILLIBAR_TYPE;
@@ -451,7 +463,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 #endif
 
+		//--------------------------------
 		// Sound Trigger Level check
+		//--------------------------------
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
 			(NO_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
 			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_VALUE) &&
@@ -470,10 +484,12 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_SOUND_TRIG_LVL;
 		}
 
+		//--------------------------------
 		// Find Max Record time for a given sample rate. Max time is equal to
 		// Size of the (event buff - size of Pretrigger buffer - size of calibration buff) 
 		// divided by (sample rate * number of channels).
 		// Number of channels is hard coded to 4 = NUMBER_OF_CHANNELS_DEFAULT 
+		//--------------------------------
 		maxRecordTime = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS - 
 #if 0 // Fixed Pretrigger size
 			((g_triggerRecord.trec.sample_rate / 4) * NUMBER_OF_CHANNELS_DEFAULT) - 

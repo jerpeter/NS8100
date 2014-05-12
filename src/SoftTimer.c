@@ -323,11 +323,7 @@ void keypadLedUpdateTimerCallBack(void)
 #endif
 
 	// Check if the state changed
-#if 1 // fix_ns8100
 	if (ledState != lastLedState)
-#else
-	if (1)
-#endif
 	{
 		config = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 		

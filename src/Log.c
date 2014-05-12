@@ -148,7 +148,11 @@ void newMonitorLogEntry(uint8 mode)
 	__monitorLogTbl[__monitorLogTblIndex].status = PARTIAL_LOG_ENTRY;
 	
 	__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+#if 1 // Normal
 	__monitorLogTbl[__monitorLogTblIndex].soundTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+#else // Try
+	__monitorLogTbl[__monitorLogTblIndex].soundTriggerLevel = airTriggerConvert(g_triggerRecord.trec.airTriggerLevel);
+#endif
 	__monitorLogTbl[__monitorLogTblIndex].airUnitsOfMeasure = g_helpRecord.units_of_air;
 	__monitorLogTbl[__monitorLogTblIndex].sensor_type = g_factorySetupRecord.sensor_type;
 	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
