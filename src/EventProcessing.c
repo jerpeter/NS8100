@@ -599,7 +599,7 @@ void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 												ACCURACY_16_BIT : g_triggerRecord.trec.bitAccuracy;
 	eventRec->summary.parameters.numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;
 	eventRec->summary.parameters.aWeighting = (uint8)g_factorySetupRecord.aweight_option;
-	eventRec->summary.parameters.seismicSensorType = (uint16)g_factorySetupRecord.sensor_type;
+	eventRec->summary.parameters.seismicSensorType = g_factorySetupRecord.sensor_type;
 #if 0 // Port lost change
 	eventRec->summary.parameters.airSensorType = (uint16)0x0;
 #else // Updated

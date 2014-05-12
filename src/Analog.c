@@ -557,7 +557,7 @@ void GenerateCalSignal(void)
 void GetChannelOffsets(uint32 sampleRate)
 {
 	uint32 i = 0;
-	uint32 timeDelay = (977 / (g_triggerRecord.trec.sample_rate / 512) / 2);
+	uint32 timeDelay = (977 / (sampleRate / 512) / 2);
 	uint8 powerAnalogDown = NO;
 
 	// Check to see if the A/D is in sleep mode
@@ -575,7 +575,7 @@ void GetChannelOffsets(uint32 sampleRate)
 
 	debug("Get Channel Offset: Read and pitch... (Address boundary: %s)\n", ((uint32)(&s_tempData) % 4 == 0) ? "YES" : "NO");
 	// Read and pitch samples
-	for (i = 0; i < (g_triggerRecord.trec.sample_rate * 1); i++)
+	for (i = 0; i < (sampleRate * 1); i++)
 	{
 		ReadAnalogData(&s_tempData);
 
@@ -593,7 +593,7 @@ void GetChannelOffsets(uint32 sampleRate)
 
 	debug("Get Channel Offset: 1st Pass Read and sum...\n");
 	// Read and sum samples
-	for (i = 0; i < (g_triggerRecord.trec.sample_rate * 1); i++)
+	for (i = 0; i < (sampleRate * 1); i++)
 	{
 		ReadAnalogData(&s_tempData);
 
@@ -609,10 +609,10 @@ void GetChannelOffsets(uint32 sampleRate)
 	}
 
 	// Average out the summations
-	s_rTotal /= (g_triggerRecord.trec.sample_rate * 1);
-	s_vTotal /= (g_triggerRecord.trec.sample_rate * 1);
-	s_tTotal /= (g_triggerRecord.trec.sample_rate * 1);
-	s_aTotal /= (g_triggerRecord.trec.sample_rate * 1);
+	s_rTotal /= (sampleRate * 1);
+	s_vTotal /= (sampleRate * 1);
+	s_tTotal /= (sampleRate * 1);
+	s_aTotal /= (sampleRate * 1);
 
 	// Set the channel offsets
 	g_channelOffset.r_offset = (int16)(s_rTotal - ACCURACY_16_BIT_MIDPOINT);
@@ -637,7 +637,7 @@ void GetChannelOffsets(uint32 sampleRate)
 
 	debug("Get Channel Offset: 2nd Pass Read and sum...\n");
 	// Read and sum samples
-	for (i = 0; i < (g_triggerRecord.trec.sample_rate * 1); i++)
+	for (i = 0; i < (sampleRate * 1); i++)
 	{
 		ReadAnalogData(&s_tempData);
 
@@ -842,38 +842,38 @@ void GatherSampleData(void)
 		{
 			if (*(g_tailOfPretriggerBuff + 1) > ACCURACY_16_BIT_MIDPOINT)
 			{
-				if ((*(g_tailOfPretriggerBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((uint16)(*(g_tailOfPretriggerBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 1)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 1)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 
 			if (*(g_tailOfPretriggerBuff + 2) > ACCURACY_16_BIT_MIDPOINT)
 			{
-				if ((*(g_tailOfPretriggerBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((uint16)(*(g_tailOfPretriggerBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 2)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 2)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 
 			if (*(g_tailOfPretriggerBuff + 3) > ACCURACY_16_BIT_MIDPOINT)
 			{
-				if ((*(g_tailOfPretriggerBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((uint16)(*(g_tailOfPretriggerBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 3)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
+				if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 3)) > g_triggerRecord.trec.seismicTriggerLevel) trigFound = YES;
 			}
 
 			if (*(g_tailOfPretriggerBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 			{
-				if ((*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_airTriggerCount) trigFound = YES;
+				if ((uint16)(*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_airTriggerCount) trigFound = YES;
 			}
 			else
 			{
-				if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_airTriggerCount) trigFound = YES;
+				if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_airTriggerCount) trigFound = YES;
 			}
 
 			if ((trigFound == YES) && (recording == NO) && (calPulse == NO))
@@ -894,29 +894,29 @@ void GatherSampleData(void)
 			{
 				if (*(g_tailOfPretriggerBuff + 1) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfPretriggerBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 				else
 				{
-					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 1)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 1)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 
 				if (*(g_tailOfPretriggerBuff + 2) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfPretriggerBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 				else
 				{
-					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 2)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 2)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 
 				if (*(g_tailOfPretriggerBuff + 3) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfPretriggerBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 				else
 				{
-					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 3)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 3)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
 				}
 			}
 
@@ -925,11 +925,11 @@ void GatherSampleData(void)
 			{
 				if (*(g_tailOfPretriggerBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_alarm1AirTriggerCount) alarm1Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_alarm1AirTriggerCount) alarm1Found = YES;
 				}
 				else
 				{
-					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_alarm1AirTriggerCount) alarm1Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_alarm1AirTriggerCount) alarm1Found = YES;
 				}
 			}
 
@@ -938,29 +938,29 @@ void GatherSampleData(void)
 			{
 				if (*(g_tailOfPretriggerBuff + 1) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfPretriggerBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 				else
 				{
-					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 1)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 1)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 
 				if (*(g_tailOfPretriggerBuff + 2) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfPretriggerBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 				else
 				{
-					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 2)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 2)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 
 				if (*(g_tailOfPretriggerBuff + 3) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfPretriggerBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 				else
 				{
-					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 3)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 3)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
 				}
 			}
 
@@ -969,11 +969,11 @@ void GatherSampleData(void)
 			{
 				if (*(g_tailOfPretriggerBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_alarm2AirTriggerCount) alarm2Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_alarm2AirTriggerCount) alarm2Found = YES;
 				}
 				else
 				{
-					if ((ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_alarm2AirTriggerCount) alarm2Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_alarm2AirTriggerCount) alarm2Found = YES;
 				}
 			}
 

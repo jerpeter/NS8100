@@ -105,7 +105,7 @@ unsigned int flashc_get_page_count_per_region(void)
 
 unsigned int flashc_get_page_region(int page_number)
 {
-  return ((page_number >= 0) ? page_number : flashc_get_page_number()) / flashc_get_page_count_per_region();
+  return ((page_number >= 0) ? (unsigned int)page_number : flashc_get_page_number()) / flashc_get_page_count_per_region();
 }
 
 

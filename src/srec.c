@@ -142,11 +142,12 @@ int get_and_save_srec( FL_FILE* file )
            {
                records--;
 
+#if 0 // Does nothing because records is unsigned
                if( records < 0 )
                {
                    records = 0;
                }
-
+#endif
                // try each data record a total of 3 times for success
                if( badrecords++ == 2)
                {
@@ -278,11 +279,12 @@ int unpack_srec( FL_FILE* file )
             {
                 records--;
 
+#if 0 // Does nothing because records is unsigned
                 if( records < 0 )
                 {
                     records = 0;
                 }
-
+#endif
                 // try each data record a total of 3 times for success
                 if( badrecords++ == 2)
                 {

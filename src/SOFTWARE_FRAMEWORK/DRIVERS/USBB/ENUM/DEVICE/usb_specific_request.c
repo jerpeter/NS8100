@@ -81,6 +81,8 @@ void usb_user_endpoint_init(U8 conf_nb)
 {
   ms_multiple_drive = FALSE;
 
+	conf_nb += 0; // Avoid unused warning
+
   (void)Usb_configure_endpoint(EP_MS_IN,
                                EP_ATTRIBUTES_1,
                                DIRECTION_IN,
@@ -105,6 +107,8 @@ Bool usb_user_read_request(U8 type, U8 request)
 {
   U8 descriptor_type;
   U8 string_type;
+
+	type += 0; // Avoid unused warning
 
   string_type     = Usb_read_endpoint_data(EP_CONTROL, 8);
   descriptor_type = Usb_read_endpoint_data(EP_CONTROL, 8);

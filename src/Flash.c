@@ -261,6 +261,10 @@ int16 flashWrite(uint16* dest, uint16* src, uint32 length)
 		if (programWord((uint16*)(dest + x), src[x]) == FLASH_OP_ERROR)
 			return (FLASH_OP_ERROR);
 	}
+#else // Remove warnings
+	UNUSED(dest);
+	UNUSED(src);
+	UNUSED(length);
 #endif
 
 #if 0 // ns8100

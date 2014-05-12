@@ -243,6 +243,8 @@ spi_status_t spi_unselectChip(volatile avr32_spi_t *spi, unsigned char chip)
 {
   unsigned int timeout = SPI_TIMEOUT;
 
+	chip += 0; // Avoid unused warning
+
   while (!(spi->sr & AVR32_SPI_SR_TXEMPTY_MASK)) {
     if (!timeout--) {
       return SPI_ERROR_TIMEOUT;

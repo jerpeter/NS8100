@@ -745,7 +745,7 @@ void Display_small_char( uint8 number,
       for (; iLpCnt <6; iLpCnt++)
       {
     	  iCharacterIndex = iLpCnt + character;
-          if ((iLpCnt == 5) || (iLpCnt == -1))
+          if (iLpCnt == 5) // ((iLpCnt == 5) || (iLpCnt == -1)) // Can't be -1 since both storage types are unsigned
           {
              temp = 0x00; //blank column following a character (or in front of first)
           }
@@ -824,7 +824,7 @@ void Display_small_char( uint8 number,
          for (; iLpCnt <6; iLpCnt++)
          {// now write the character to the upper 8-row
             iCharacterIndex = iLpCnt + character;
-            if ((iLpCnt == 5) || (iLpCnt == -1))
+          if (iLpCnt == 5) // ((iLpCnt == 5) || (iLpCnt == -1)) // Can't be -1 since both storage types are unsigned
             {
                temp = 0x00; //blank column following a character (or in front of first)
             }
@@ -908,7 +908,7 @@ void Display_small_char( uint8 number,
          for (; iLpCnt <6; iLpCnt++)
          {// now write the character to the upper 8-row
             iCharacterIndex = iLpCnt + character;
-            if ((iLpCnt == 5) || (iLpCnt == -1))
+          if (iLpCnt == 5) // ((iLpCnt == 5) || (iLpCnt == -1)) // Can't be -1 since both storage types are unsigned
             {
                temp = 0x00; //blank column following a character
             }
@@ -1509,6 +1509,10 @@ void Write_multi_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half
 //   lcd_port_image |= 0x1B;
    buffer[4] = temp;
 //   write_mcp23018_bytes(IO_ADDRESS_LCD, GPIOA, buffer, 5);
+#else // Remove warnings
+	UNUSED(lcd_register);
+	UNUSED(lcd_data);
+	UNUSED(display_half);
 #endif
 }
 

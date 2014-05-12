@@ -553,12 +553,16 @@ Ctrl_status stream_mem_to_mem(U8 src_lun, U32 src_addr, U8 dest_lun, U32 dest_ad
 
 Ctrl_status stream_state(U8 id)
 {
+	id += 0; // Avoid unused warning
+
   return CTRL_GOOD;
 }
 
 
 U16 stream_stop(U8 id)
 {
+	id += 0; // Avoid unused warning
+
   return 0;
 }
 

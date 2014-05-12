@@ -148,7 +148,7 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 				if (USER_MENU_ACTIVE_ITEMS(g_userMenuCachePtr) < 10)
 				{
 					// Handle converting a number key input into a manu selection
-					if ((input >= ONE_KEY) && (input <= (USER_MENU_ACTIVE_ITEMS(g_userMenuCachePtr) | 0x30)))
+					if ((input >= (uint32)ONE_KEY) && (input <= (uint32)(USER_MENU_ACTIVE_ITEMS(g_userMenuCachePtr) | 0x30)))
 					{
 						// Convert the ASCII key hex value to a true number to set the current line
 						mn_layout_ptr->curr_ln = (uint16)(input - 0x30);
@@ -300,9 +300,11 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					}
 					else if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
 					{
+#if 0 // Unneeded check on unsigned value
 						// Check if the current index is greater than or equal to the first position
 						if (g_userMenuCachePtr[CURRENT_TEXT_INDEX].data >= 0)
 						{
+#endif
 							// Check if a space is in the current location, and a null follows it
 							if ((g_userMenuCacheData.text[g_userMenuCachePtr[CURRENT_TEXT_INDEX].data] == ' ') &&
 								(g_userMenuCacheData.text[(g_userMenuCachePtr[CURRENT_TEXT_INDEX].data) + 1] == '\0'))
@@ -320,7 +322,9 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 
 							// Copy the string data to the user menu display
 							copyDataToMenu(mn_layout_ptr);
+#if 0 // Unneeded check on unsigned value (end bracket)
 						}
+#endif
 					}
 				break;
 

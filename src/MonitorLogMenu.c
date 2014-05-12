@@ -98,7 +98,7 @@ void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 			{
 				s_monitorMnCurrentLogIndex++;
 
-				if(s_monitorMnCurrentLogIndex >= TOTAL_MONITOR_LOG_ENTRIES)
+				if(s_monitorMnCurrentLogIndex >= (int16)TOTAL_MONITOR_LOG_ENTRIES)
 					s_monitorMnCurrentLogIndex = 0;
 			}
 
@@ -124,7 +124,7 @@ void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 					{
 						s_monitorMnCurrentLogIndex++;
 
-						if(s_monitorMnCurrentLogIndex >= TOTAL_MONITOR_LOG_ENTRIES)
+						if(s_monitorMnCurrentLogIndex >= (int16)TOTAL_MONITOR_LOG_ENTRIES)
 							s_monitorMnCurrentLogIndex = 0;
 
 						while((__monitorLogTbl[s_monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY) &&
@@ -132,7 +132,7 @@ void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 						{
 							s_monitorMnCurrentLogIndex++;
 
-							if(s_monitorMnCurrentLogIndex >= TOTAL_MONITOR_LOG_ENTRIES)
+							if(s_monitorMnCurrentLogIndex >= (int16)TOTAL_MONITOR_LOG_ENTRIES)
 								s_monitorMnCurrentLogIndex = 0;
 						}
 					}

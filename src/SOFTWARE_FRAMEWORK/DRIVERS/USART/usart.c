@@ -468,6 +468,8 @@ int usart_init_sync_slave(volatile avr32_usart_t *usart, const usart_options_t *
   // Reset the USART and shutdown TX and RX.
   usart_reset(usart);
 
+	pba_hz += 0; // Avoid unused warning
+
   // Check input values.
   if (!opt || // Null pointer.
       opt->charlength < 5 || opt->charlength > 9 ||
@@ -690,6 +692,8 @@ int usart_init_spi_slave(volatile avr32_usart_t *usart, const usart_spi_options_
 {
   // Reset the USART and shutdown TX and RX.
   usart_reset(usart);
+
+	pba_hz += 0; // Avoid unused warning
 
   // Check input values.
   if (!opt || // Null pointer.

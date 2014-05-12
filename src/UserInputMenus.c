@@ -83,7 +83,7 @@ USER_MENU_STRUCT airTriggerMenu[AIR_TRIGGER_MENU_ENTRIES] = {
 #else // Updated
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, MB_TYPE)}},
 #endif
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&airTriggerMenuHandler}}
 };
 
@@ -92,7 +92,7 @@ USER_MENU_STRUCT airTriggerMenu[AIR_TRIGGER_MENU_ENTRIES] = {
 //-------------------------
 void airTriggerMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -175,8 +175,8 @@ USER_MENU_STRUCT alarmOneSeismicLevelMenu[ALARM_ONE_SEISMIC_LEVEL_MENU_ENTRIES] 
 {TITLE_PRE_TAG, 0, ALARM_1_SEISMIC_LVL_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_COUNT_TYPE, ALARM_ONE_SEISMIC_LEVEL_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_3)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(IN_TYPE, MM_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmOneSeismicLevelMenuHandler}}
 };
 
@@ -185,7 +185,7 @@ USER_MENU_STRUCT alarmOneSeismicLevelMenu[ALARM_ONE_SEISMIC_LEVEL_MENU_ENTRIES] 
 //-------------------------------------
 void alarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -257,7 +257,7 @@ USER_MENU_STRUCT alarmOneAirLevelMenu[ALARM_ONE_AIR_LEVEL_MENU_ENTRIES] = {
 #else // Updated
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, MB_TYPE)}},
 #endif
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmOneAirLevelMenuHandler}}
 };
 
@@ -266,7 +266,7 @@ USER_MENU_STRUCT alarmOneAirLevelMenu[ALARM_ONE_AIR_LEVEL_MENU_ENTRIES] = {
 //---------------------------------
 void alarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -312,7 +312,7 @@ USER_MENU_STRUCT alarmOneTimeMenu[ALARM_ONE_TIME_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, ALARM_1_TIME_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(FLOAT_TYPE, ALARM_ONE_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(SECS_TYPE, NO_ALT_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmOneTimeMenuHandler}}
 };
 
@@ -321,7 +321,7 @@ USER_MENU_STRUCT alarmOneTimeMenu[ALARM_ONE_TIME_MENU_ENTRIES] = {
 //----------------------------
 void alarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -383,8 +383,8 @@ USER_MENU_STRUCT alarmTwoSeismicLevelMenu[ALARM_TWO_SEISMIC_LEVEL_MENU_ENTRIES] 
 {TITLE_PRE_TAG, 0, ALARM_2_SEISMIC_LVL_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_COUNT_TYPE, ALARM_TWO_SEISMIC_LEVEL_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_3)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(IN_TYPE, MM_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmTwoSeismicLevelMenuHandler}}
 };
 
@@ -393,7 +393,7 @@ USER_MENU_STRUCT alarmTwoSeismicLevelMenu[ALARM_TWO_SEISMIC_LEVEL_MENU_ENTRIES] 
 //-------------------------------------
 void alarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -465,7 +465,7 @@ USER_MENU_STRUCT alarmTwoAirLevelMenu[ALARM_TWO_AIR_LEVEL_MENU_ENTRIES] = {
 #else
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, MB_TYPE)}},
 #endif
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmTwoAirLevelMenuHandler}}
 };
 
@@ -474,7 +474,7 @@ USER_MENU_STRUCT alarmTwoAirLevelMenu[ALARM_TWO_AIR_LEVEL_MENU_ENTRIES] = {
 //---------------------------------
 void alarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -520,7 +520,7 @@ USER_MENU_STRUCT alarmTwoTimeMenu[ALARM_TWO_TIME_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, ALARM_2_TIME_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(FLOAT_TYPE, ALARM_TWO_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(SECS_TYPE, NO_ALT_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmTwoTimeMenuHandler}}
 };
 
@@ -529,7 +529,7 @@ USER_MENU_STRUCT alarmTwoTimeMenu[ALARM_TWO_TIME_MENU_ENTRIES] = {
 //----------------------------
 void alarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -594,8 +594,8 @@ USER_MENU_STRUCT companyMenu[COMPANY_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, COMPANY_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(STRING_TYPE, COMPANY_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_COMPANY_CHARS}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&companyMenuHandler}}
 };
 
@@ -604,7 +604,7 @@ USER_MENU_STRUCT companyMenu[COMPANY_MENU_ENTRIES] = {
 //---------------------
 void companyMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -638,7 +638,7 @@ USER_MENU_STRUCT copiesMenu[COPIES_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, COPIES_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_BYTE_TYPE, COPIES_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(NO_TYPE, NO_ALT_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&copiesMenuHandler}}
 };
 
@@ -647,7 +647,7 @@ USER_MENU_STRUCT copiesMenu[COPIES_MENU_ENTRIES] = {
 //--------------------
 void copiesMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -684,7 +684,7 @@ USER_MENU_STRUCT distanceToSourceMenu[DISTANCE_TO_SOURCE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, DISTANCE_TO_SOURCE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(FLOAT_WITH_N_TYPE, DISTANCE_TO_SOURCE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(FT_TYPE, M_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&distanceToSourceMenuHandler}}
 };
 
@@ -693,7 +693,7 @@ USER_MENU_STRUCT distanceToSourceMenu[DISTANCE_TO_SOURCE_MENU_ENTRIES] = {
 //--------------------------------
 void distanceToSourceMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -733,7 +733,7 @@ USER_MENU_STRUCT lcdImpulseTimeMenu[LCD_IMPULSE_TIME_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, LCD_IMPULSE_TIME_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_BYTE_TYPE, LCD_IMPULSE_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(SECS_TYPE, NO_ALT_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&lcdImpulseTimeMenuHandler}}
 };
 
@@ -742,7 +742,7 @@ USER_MENU_STRUCT lcdImpulseTimeMenu[LCD_IMPULSE_TIME_MENU_ENTRIES] = {
 //------------------------------
 void lcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -772,7 +772,7 @@ USER_MENU_STRUCT lcdTimeoutMenu[LCD_TIMEOUT_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, LCD_TIMEOUT_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_BYTE_TYPE, LCD_TIMEOUT_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(MINS_TYPE, NO_ALT_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&lcdTimeoutMenuHandler}}
 };
 
@@ -781,7 +781,7 @@ USER_MENU_STRUCT lcdTimeoutMenu[LCD_TIMEOUT_MENU_ENTRIES] = {
 //-------------------------
 void lcdTimeoutMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -812,8 +812,8 @@ USER_MENU_STRUCT modemDialMenu[MODEM_DIAL_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, MODEM_DIAL_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(STRING_TYPE, MODEM_DIAL_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_MODEM_DIAL_CHARS}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&modemDialMenuHandler}}
 };
 
@@ -822,7 +822,7 @@ USER_MENU_STRUCT modemDialMenu[MODEM_DIAL_MENU_ENTRIES] = {
 //------------------------
 void modemDialMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -850,9 +850,9 @@ USER_MENU_STRUCT modemInitMenu[MODEM_INIT_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, MODEM_INIT_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(STRING_TYPE, MODEM_INIT_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_MODEM_INIT_CHARS}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&modemInitMenuHandler}}
 };
 
@@ -861,7 +861,7 @@ USER_MENU_STRUCT modemInitMenu[MODEM_INIT_MENU_ENTRIES] = {
 //------------------------
 void modemInitMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -889,7 +889,7 @@ USER_MENU_STRUCT modemResetMenu[MODEM_RESET_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, MODEM_RESET_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(STRING_TYPE, MODEM_RESET_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_MODEM_RESET_CHARS}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&modemResetMenuHandler}}
 };
 
@@ -898,7 +898,7 @@ USER_MENU_STRUCT modemResetMenu[MODEM_RESET_MENU_ENTRIES] = {
 //-------------------------
 void modemResetMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -926,7 +926,7 @@ USER_MENU_STRUCT modemRetryMenu[MODEM_RETRY_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, MODEM_RETRY_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_BYTE_TYPE, MODEM_RETRY_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(NO_TYPE, NO_ALT_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&modemRetryMenuHandler}}
 };
 
@@ -935,7 +935,7 @@ USER_MENU_STRUCT modemRetryMenu[MODEM_RETRY_MENU_ENTRIES] = {
 //-------------------------
 void modemRetryMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -963,7 +963,7 @@ USER_MENU_STRUCT modemRetryTimeMenu[MODEM_RETRY_TIME_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, MODEM_RETRY_TIME_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_BYTE_TYPE, MODEM_RETRY_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(MINS_TYPE, NO_ALT_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&modemRetryTimeMenuHandler}}
 };
 
@@ -972,7 +972,7 @@ USER_MENU_STRUCT modemRetryTimeMenu[MODEM_RETRY_TIME_MENU_ENTRIES] = {
 //------------------------------
 void modemRetryTimeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1002,11 +1002,11 @@ USER_MENU_STRUCT notesMenu[NOTES_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, NOTES_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(STRING_TYPE, NOTES_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_NOTES_CHARS}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&notesMenuHandler}}
 };
 
@@ -1015,7 +1015,7 @@ USER_MENU_STRUCT notesMenu[NOTES_MENU_ENTRIES] = {
 //-------------------
 void notesMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1045,8 +1045,8 @@ USER_MENU_STRUCT operatorMenu[OPERATOR_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, OPERATOR_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(STRING_TYPE, OPERATOR_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_OPERATOR_CHARS}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&operatorMenuHandler}}
 };
 
@@ -1055,7 +1055,7 @@ USER_MENU_STRUCT operatorMenu[OPERATOR_MENU_ENTRIES] = {
 //----------------------
 void operatorMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1115,7 +1115,7 @@ USER_MENU_STRUCT recordTimeMenu[RECORD_TIME_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, RECORD_TIME_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_LONG_TYPE, RECORD_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(SECS_TYPE, NO_ALT_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&recordTimeMenuHandler}}
 };
 
@@ -1124,7 +1124,7 @@ USER_MENU_STRUCT recordTimeMenu[RECORD_TIME_MENU_ENTRIES] = {
 //-------------------------
 void recordTimeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1181,7 +1181,7 @@ USER_MENU_STRUCT saveRecordMenu[SAVE_RECORD_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, NAME_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(STRING_TYPE, SAVE_RECORD_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_SAVE_RECORD_CHARS}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&saveRecordMenuHandler}}
 };
 
@@ -1190,7 +1190,7 @@ USER_MENU_STRUCT saveRecordMenu[SAVE_RECORD_MENU_ENTRIES] = {
 //-------------------------
 void saveRecordMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint8 availableLocation = 0;
 	uint8 choice;
 	uint8 match = NO;
@@ -1293,8 +1293,8 @@ USER_MENU_STRUCT seismicLocationMenu[SEISMIC_LOCATION_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, SEIS_LOCATION_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(STRING_TYPE, SEISMIC_LOCATION_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_SEISMIC_LOCATION_CHARS}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&seismicLocationMenuHandler}}
 };
 
@@ -1303,7 +1303,7 @@ USER_MENU_STRUCT seismicLocationMenu[SEISMIC_LOCATION_MENU_ENTRIES] = {
 //------------------------------
 void seismicLocationMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1330,8 +1330,8 @@ USER_MENU_STRUCT seismicTriggerMenu[SEISMIC_TRIGGER_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, SEISMIC_TRIGGER_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_COUNT_TYPE, SEISMIC_TRIGGER_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_3)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(IN_TYPE, MM_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&seismicTriggerMenuHandler}}
 };
 
@@ -1340,7 +1340,7 @@ USER_MENU_STRUCT seismicTriggerMenu[SEISMIC_TRIGGER_MENU_ENTRIES] = {
 //-----------------------------
 void seismicTriggerMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1407,7 +1407,7 @@ USER_MENU_STRUCT serialNumberMenu[SERIAL_NUMBER_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, SERIAL_NUMBER_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(STRING_TYPE, SERIAL_NUMBER_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_SERIAL_NUMBER_CHARS}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&serialNumberMenuHandler}}
 };
 
@@ -1416,7 +1416,7 @@ USER_MENU_STRUCT serialNumberMenu[SERIAL_NUMBER_MENU_ENTRIES] = {
 //---------------------------
 void serialNumberMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1443,7 +1443,7 @@ USER_MENU_STRUCT weightPerDelayMenu[WEIGHT_PER_DELAY_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, WEIGHT_PER_DELAY_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(FLOAT_WITH_N_TYPE, WEIGHT_PER_DELAY_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(LBS_TYPE, KG_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&weightPerDelayMenuHandler}}
 };
 
@@ -1452,7 +1452,7 @@ USER_MENU_STRUCT weightPerDelayMenu[WEIGHT_PER_DELAY_MENU_ENTRIES] = {
 //------------------------------
 void weightPerDelayMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1485,7 +1485,7 @@ USER_MENU_STRUCT unlockCodeMenu[UNLOCK_CODE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, UNLOCK_CODE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_WORD_FIXED_TYPE, UNLOCK_CODE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(NO_TYPE, NO_ALT_TYPE)}},
-{NO_TAG, 0, NULL_TEXT, NO_TAG},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&unlockCodeMenuHandler}}
 };
 
@@ -1494,7 +1494,7 @@ USER_MENU_STRUCT unlockCodeMenu[UNLOCK_CODE_MENU_ENTRIES] = {
 //-------------------------
 void unlockCodeMenuHandler(uint8 keyPressed, void* data)
 {
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
 	if (keyPressed == ENTER_KEY)
 	{	

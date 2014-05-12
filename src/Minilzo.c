@@ -1137,7 +1137,7 @@ match:
 					compressedDataCacheBuffer[1] = 0;
                 }
                 
-                if (tt <= 0) debugErr("MiniLZO compression Assert Failed! (tt <= 0)\n");
+                if (tt <= 0) { debugErr("MiniLZO compression Assert Failed! (tt <= 0)\n"); }
 
 				SEND_COMPRESSED_DATA();
 				compressedDataCacheBuffer[1] = LZO_BYTE(tt);
@@ -1149,7 +1149,7 @@ match:
             } while (--t > 0);
         }
 
-        if (ii != ip) debugErr("MiniLZO compression Assert Failed! (ii != ip)\n");
+        if (ii != ip) { debugErr("MiniLZO compression Assert Failed! (ii != ip)\n"); }
 
         ip += 3;
 
@@ -1159,8 +1159,8 @@ match:
             --ip;
             m_len = pd(ip, ii);
 
-	        if (m_len < 3) debugErr("MiniLZO compression Assert Failed! (m_len < 3)\n");
-	        if (m_len > M2_MAX_LEN) debugErr("MiniLZO compression Assert Failed! (m_len > M2_MAX_LEN)\n");
+	        if (m_len < 3) { debugErr("MiniLZO compression Assert Failed! (m_len < 3)\n"); }
+	        if (m_len > M2_MAX_LEN) { debugErr("MiniLZO compression Assert Failed! (m_len > M2_MAX_LEN)\n"); }
 
             if (m_off <= M2_MAX_OFFSET)
             {
@@ -1185,8 +1185,8 @@ match:
             {
                 m_off -= 0x4000;
 
-		        if (m_off <= 0) debugErr("MiniLZO compression Assert Failed! (m_off <= 0)\n");
-		        if (m_off > 0x7fff) debugErr("MiniLZO compression Assert Failed! (m_off > 0x7fff)\n");
+		        if (m_off <= 0) { debugErr("MiniLZO compression Assert Failed! (m_off <= 0)\n"); }
+		        if (m_off > 0x7fff) { debugErr("MiniLZO compression Assert Failed! (m_off > 0x7fff)\n"); }
 
 				SEND_COMPRESSED_DATA();
 				compressedDataCacheBuffer[1] = LZO_BYTE(M4_MARKER | ((m_off & 0x4000) >> 11) | (m_len - 2));
@@ -1206,7 +1206,7 @@ match:
                 m_len = pd(ip, ii);
             }
 
-	        if (m_len <= M2_MAX_LEN) debugErr("MiniLZO compression Assert Failed! (m_len <= M2_MAX_LEN)\n");
+	        if (m_len <= M2_MAX_LEN) { debugErr("MiniLZO compression Assert Failed! (m_len <= M2_MAX_LEN)\n"); }
 
             if (m_off <= M3_MAX_OFFSET)
             {
@@ -1231,8 +1231,8 @@ match:
             {
                 m_off -= 0x4000;
 
-		        if (m_off <= 0) debugErr("MiniLZO compression Assert Failed! (m_off <= 0)\n");
-		        if (m_off > 0x7fff) debugErr("MiniLZO compression Assert Failed! (m_off > 0x7fff)\n");
+		        if (m_off <= 0) { debugErr("MiniLZO compression Assert Failed! (m_off <= 0)\n"); }
+		        if (m_off > 0x7fff) { debugErr("MiniLZO compression Assert Failed! (m_off > 0x7fff)\n"); }
 
                 if (m_len <= M4_MAX_LEN)
                 {
@@ -1254,7 +1254,7 @@ m3_m4_len:
 						compressedDataCacheBuffer[1] = 0;
                     }
 
-		        	if (m_len <= 0) debugErr("MiniLZO compression Assert Failed! (m_len <= 0)\n");
+		        	if (m_len <= 0) { debugErr("MiniLZO compression Assert Failed! (m_len <= 0)\n"); }
 	                
 					SEND_COMPRESSED_DATA();
 					compressedDataCacheBuffer[1] = LZO_BYTE(m_len);
@@ -1327,7 +1327,7 @@ DO_COMPRESS      (const lzo_bytep in, lzo_uint in_len)
 				compressedDataCacheBuffer[1] = 0;
             }
 
-		    if (tt <= 0) debugErr("MiniLZO compression Assert Failed! (tt <= 0)\n");
+		    if (tt <= 0) { debugErr("MiniLZO compression Assert Failed! (tt <= 0)\n"); }
 
 			SEND_COMPRESSED_DATA();
 			compressedDataCacheBuffer[1] = LZO_BYTE(tt);

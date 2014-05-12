@@ -208,6 +208,8 @@ __attribute__((__always_inline__))
 extern __inline__ void cpu_delay_cy(unsigned long delay, unsigned long fcpu_hz)
 {
   t_cpu_time timer;
+  
+  fcpu_hz += 0; // Kill warning for unused variable
   cpu_set_timeout( delay, &timer);
   while( !cpu_is_timeout(&timer) );
 }

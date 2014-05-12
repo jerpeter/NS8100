@@ -104,6 +104,8 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 	INPUT_MSG_STRUCT mn_msg;
 	uint16 tempSummaryIndex = 0;
 
+	UNUSED(rd_summary_ptr);
+
 	if (msg.cmd == ACTIVATE_MENU_CMD)
 	{
 		wnd_layout_ptr->start_col = SUMMARY_WND_STARTING_COL;   /* 6 */
@@ -215,6 +217,8 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	uint16 itemsDisplayed = 1;
 	uint16 length;
 	uint16 tempSummaryIndex = 0;
+
+	UNUSED(rd_summary_ptr);
 
 	// Clear the LCD map
 	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));

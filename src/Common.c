@@ -198,39 +198,34 @@ uint8 adjustedRawBatteryLevel(void)
 ///----------------------------------------------------------------------------
 uint16 ckInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 {
-    int32 data_index;
-   /*If the pointers are not equal that means a msg has been
-   put into the input buffer queue. */
+	uint16 data_index;
 
+	/* If the pointers are not equal that means a msg has been
+	put into the input buffer queue. */
 
-    if (s_inputReadPtr != s_inputWritePtr)
-    {
+	if (s_inputReadPtr != s_inputWritePtr)
+	{
+		msg_ptr->cmd = s_inputReadPtr->cmd;
+		msg_ptr->length = s_inputReadPtr->length;
 
-        msg_ptr->cmd = s_inputReadPtr->cmd;
-        msg_ptr->length = s_inputReadPtr->length;
+		for (data_index = 0; data_index < msg_ptr->length; data_index++)
+		{
+			msg_ptr->data[data_index] = s_inputReadPtr->data[data_index];
+		}
 
-        for (data_index = 0; data_index < msg_ptr->length; data_index++)
-        {
+		if (s_inputReadPtr == (g_input_buffer + (INPUT_BUFFER_SIZE - 1)))
+		{
+			s_inputReadPtr = g_input_buffer;
+		}
+		else
+		{
+			s_inputReadPtr++;
+		}
 
-           msg_ptr->data[data_index] = s_inputReadPtr->data[data_index];
+		return (INPUT_BUFFER_NOT_EMPTY);
+	}
 
-        }
-
-        if (s_inputReadPtr == (g_input_buffer + (INPUT_BUFFER_SIZE - 1)))
-        {
-            s_inputReadPtr = g_input_buffer;
-        }
-        else
-        {
-            s_inputReadPtr++;
-        }
-
-        return (INPUT_BUFFER_NOT_EMPTY);
-    }
-
-
-    return (INPUT_BUFFER_EMPTY);
-
+	return (INPUT_BUFFER_EMPTY);
 }
 
 ///----------------------------------------------------------------------------
@@ -301,7 +296,7 @@ void procInputMsg(INPUT_MSG_STRUCT mn_msg)
 ///----------------------------------------------------------------------------
 uint16 sendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 {
-    int32 data_index;
+    uint16 data_index;
 
     if (s_inputWritePtr != (g_input_buffer + (INPUT_BUFFER_SIZE - 1)))
     {
@@ -309,6 +304,7 @@ uint16 sendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
         {
             s_inputWritePtr->cmd = msg_ptr->cmd;
             s_inputWritePtr->length = msg_ptr->length;
+
             for (data_index = 0; data_index < msg_ptr->length; data_index++)
             {
                 s_inputWritePtr->data[data_index] = msg_ptr->data[data_index];

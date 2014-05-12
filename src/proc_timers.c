@@ -95,7 +95,7 @@ void Proc_Timers_Exit(void)
    Menu_String = (unsigned char *)Main_Menu_Text;
 }
 
-volatile static int print_sec = 1;
+static volatile int print_sec = 1;
 volatile unsigned long int tc_tick=0;
 static int sec = 0;
 

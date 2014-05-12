@@ -88,7 +88,7 @@ void advanceMonitorLogIndex(void)
 ///----------------------------------------------------------------------------
 uint16 getStartingMonitorLogTableIndex(void)
 {
-	if ((__monitorLogTblIndex + 1) >= TOTAL_MONITOR_LOG_ENTRIES)
+	if ((__monitorLogTblIndex + (unsigned)1) >= TOTAL_MONITOR_LOG_ENTRIES)
 		return (0);
 	else
 		return (uint16)(__monitorLogTblIndex + 1);

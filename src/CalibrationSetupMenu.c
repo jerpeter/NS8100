@@ -162,7 +162,7 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 							overlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), 0);
 							
 							// Get new channel offsets
-							GetChannelOffsets(TC_CALIBRATION_TIMER_CHANNEL);
+							GetChannelOffsets(CALIBRATION_FIXED_SAMPLE_RATE);
 							
 							// Restart the data collection clock
 							Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);

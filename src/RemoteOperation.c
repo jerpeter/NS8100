@@ -85,7 +85,7 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.eventCfg.appMinorVersion = (uint8)minorVer;
 	cfg.appBuildVersion = buildVer;
 
-	// Waveform specific - Intitial conditions.
+	// Waveform specific - Initial conditions.
 	cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
 	cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
 	cfg.eventCfg.recordTime = g_triggerRecord.trec.record_time;
@@ -253,8 +253,8 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 	 	sizeOfCfg = sizeof(SYSTEM_CFG);
 		byteSet((uint8*)&cfg, 0, sizeOfCfg);
 
-		// Check to see if the incomming message is the correct size
-		if (((inCmd->size - 16)/2) < sizeOfCfg)
+		// Check to see if the incoming message is the correct size
+		if ((uint32)((inCmd->size - 16)/2) < sizeOfCfg)
 		{
 			debug("WARNING:Msg Size incorrect msgSize=%d cfgSize=%d \n", ((inCmd->size - 16)/2), sizeOfCfg);
 		}
@@ -594,7 +594,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 		// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
 		// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
-		if ((cfg.eventCfg.activeChannels >= 0) && (cfg.eventCfg.activeChannels <= BAR_AIR_CHANNEL))
+		if (cfg.eventCfg.activeChannels <= BAR_AIR_CHANNEL) //if ((cfg.eventCfg.activeChannels >= 0) && (cfg.eventCfg.activeChannels <= BAR_AIR_CHANNEL))
 		{
 			g_triggerRecord.berec.barChannel = cfg.eventCfg.activeChannels;
 		}

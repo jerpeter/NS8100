@@ -83,7 +83,7 @@ void disable_mpu(void)
  */
 Bool mpu_convert_kbsize_to_eregionsize(eRegionSize *peRegionSizeValue, U32 kBSizeValue)
 {
-  int i;
+  U32 i;
   eRegionSize RegVal;
   Bool Status = KO;
 
@@ -179,6 +179,8 @@ void disable_mpu_entry(unsigned int region_number, unsigned int register_select)
 {
   /* Set Address Register. */
   avr32_mpuar0_t ar;
+
+	register_select += 0; // Avoid unused variable warning
 
   ar.base = 0;
   ar.size = 0;

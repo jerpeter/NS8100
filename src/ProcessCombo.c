@@ -1134,8 +1134,7 @@ void MoveStartOfComboEventRecordToFile(void)
 	// Get new file handle
 	g_comboDualCurrentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
-	if (g_comboDualCurrentEventFileHandle == NULL)
-		debugErr("Failed to get a new file handle for the current Combo - Bargraph event!\n");
+	if (g_comboDualCurrentEventFileHandle == NULL) { debugErr("Failed to get a new file handle for the current Combo - Bargraph event!\n"); }
 
 	// Write in the current but unfinished event record to provide an offset to start writing in the data
 	fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_comboDualCurrentEventFileHandle);
