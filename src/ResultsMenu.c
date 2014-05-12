@@ -942,7 +942,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    // Air
 	    byteSet(&buff[0], 0, sizeof(buff));
 
-#if 0 // Port lost change
+#if 1 // Port lost change
 		if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
 #else // Updated
 		if(eventRecord->summary.parameters.airSensorType == MILLIBAR_TYPE)

@@ -659,8 +659,18 @@ void initEventRecord(uint8 op_mode)
 
 		if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
 		{
+#if 1 // Normal
 			eventRec->summary.parameters.seismicTriggerLevel = (uint32)g_triggerRecord.trec.seismicTriggerLevel;
+#else // Adjust trigger for bit accuracy
+			eventRec->summary.parameters.seismicTriggerLevel = (uint32)(g_triggerRecord.trec.seismicTriggerLevel /= (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint));
+#endif
+
+#if 1 // Normal
 			eventRec->summary.parameters.airTriggerLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
+#else // Adjust trigger for bit accuracy. WARNING: Only valid if air trigger gets converted to an A/D trigger count
+			eventRec->summary.parameters.airTriggerLevel = (uint32)(g_triggerRecord.trec.airTriggerLevel /= (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint));
+#endif
+
 			eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
 		}	
 		else // (op_mode == MANUAL_CAL_MODE)

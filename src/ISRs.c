@@ -781,8 +781,13 @@ static inline void fillPretriggerBuffer_ISR_Inline(void)
 {
 	s_pretriggerCount++;
 
-	// Check if the Pretrigger count has accumulated to 1/4 of a second
-	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / 4)) 
+#if 0 // Fixed Pretrigger size (1/4 sec)
+	// Check if the Pretrigger count has accumulated the full number of samples (1/4 sec)
+	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / 4)
+#else // Variable Pretrigger size
+	// Check if the Pretrigger count has accumulated the full number of samples (variable Pretrigger size)
+	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div)) 
+#endif
 	{ 
 		s_pretriggerFull = YES;
 		s_pretriggerCount = 0;
@@ -1103,8 +1108,13 @@ void processAndMoveWaveformData(void)
 			// Check if maximum consecutive events have not been captured, therefore pend Cal pulse
 			if (s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)
 			{
+#if 0 // Fixed Pretrigger
 				// Setup delay for Cal pulse (1/4 sample rate)
 				s_pendingCalCount = g_triggerRecord.trec.sample_rate / 4;
+#else // Variable Pretrigger
+				// Setup delay for Cal pulse (based on Pretrigger size)
+				s_pendingCalCount = g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div;
+#endif
 			}
 			else // Max number of events have been captured, force a Cal pulse
 			{
@@ -1418,8 +1428,13 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			// Check if maximum consecutive events have not been captured, therefore pend Cal pulse
 			if (s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)
 			{
+#if 0 // Fixed Pretrigger
 				// Setup delay for Cal pulse (1/4 sample rate)
 				s_pendingCalCount = g_triggerRecord.trec.sample_rate / 4;
+#else // Variable Pretrigger
+				// Setup delay for Cal pulse (based on Pretrigger size)
+				s_pendingCalCount = g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div;
+#endif
 			}
 			else // Max number of events have been captured, force a Cal pulse
 			{

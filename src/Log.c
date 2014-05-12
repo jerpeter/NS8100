@@ -484,6 +484,36 @@ void initMonitorLogTableFromLogFile(void)
 			{
 				debug("Found Valid Monitor Log Entry with ID: %d\n", monitorLogEntry.uniqueEntryId);
 
+#if 0 // Test
+				debug("(ID: %03d) Mode: %d, Start Event #: %d, Status: %d, Seis Trig: 0x%x, Air Trig: 0x%x, Sensor Type: %d, Gain: %d\n",
+						monitorLogEntry.uniqueEntryId, monitorLogEntry.mode, monitorLogEntry. startEventNumber, monitorLogEntry.status, 
+						monitorLogEntry.seismicTriggerLevel, monitorLogEntry.soundTriggerLevel, monitorLogEntry.sensor_type, monitorLogEntry.sensitivity);
+/*
+	uint16				uniqueEntryId;
+	uint8				status;
+	uint8				mode;
+	DATE_TIME_STRUCT	startTime;
+	DATE_TIME_STRUCT	stopTime;
+	uint16				eventsRecorded;
+	uint16				startEventNumber;
+	#if 1 // Updated (Port lost change)
+	uint32				seismicTriggerLevel;
+	uint32				soundTriggerLevel;
+	int32				sensor_type;
+	int32				sensitivity;
+	#endif
+	__monitorLogTbl[__monitorLogTblIndex].startTime = getCurrentTime();
+	__monitorLogTbl[__monitorLogTblIndex].startTime.valid = TRUE;
+	__monitorLogTbl[__monitorLogTblIndex].mode = mode;
+	__monitorLogTbl[__monitorLogTblIndex].startEventNumber = g_nextEventNumberToUse;
+	__monitorLogTbl[__monitorLogTblIndex].status = PARTIAL_LOG_ENTRY;
+	
+	__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+	__monitorLogTbl[__monitorLogTblIndex].soundTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+	__monitorLogTbl[__monitorLogTblIndex].sensor_type =  g_factorySetupRecord.sensor_type;
+	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
+*/
+#endif
 				__monitorLogTbl[__monitorLogTblIndex] = monitorLogEntry;
 			
 				advanceMonitorLogIndex();
