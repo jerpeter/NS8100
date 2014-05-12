@@ -141,12 +141,14 @@ void device_mass_storage_task(void)
 #endif  // FREERTOS_USED
 
 #if BOARD == EVK1100
+#if 0 // Test - fix_ns8100
     // Display Start-of-Frame counter on LEDs
     LED_Display_Field(LED_MONO0_GREEN |
                       LED_MONO1_GREEN |
                       LED_MONO2_GREEN |
                       LED_MONO3_GREEN,
                       sof_cnt >> 5);
+#endif
 #elif BOARD == EVK1101 || BOARD == EVK1104 || BOARD == EVK1105
     // Display Start-of-Frame counter on LEDs
     LED_Display_Field(LED0 |

@@ -379,7 +379,7 @@ BOOLEAN keypad(uint8 keySource)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
-#if 1 // Test (Keypad override of the backlight key for testing)
+#if 0 // Test (Keypad override of the backlight key for testing)
 				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					// Check if not processing an event
@@ -489,8 +489,11 @@ BOOLEAN keypad(uint8 keySource)
 					{
 extern uint8 quickBootEntryJump;
 extern void BootLoadManager(void);
-						quickBootEntryJump = YES;
-						BootLoadManager();
+						if (g_sampleProcessing == IDLE_STATE)
+						{
+							quickBootEntryJump = YES;
+							BootLoadManager();
+						}
 					}
 					else if (keyPressed == HELP_KEY)
 					{

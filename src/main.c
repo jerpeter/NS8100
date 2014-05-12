@@ -649,9 +649,14 @@ enum {
 	USB_CONNECTED_AND_PROCESSING = 2
 };
 extern uint8 g_sampleProcessing;
+#if 1 // Test - need access in main() to determine sleep level
+uint8 usbMassStorageState = USB_INIT_DRIVER;
+#endif
 void UsbDeviceManager(void)
 {
+#if 0 // Test - need access in main() to determine sleep level
 	static uint8 usbMassStorageState = USB_INIT_DRIVER;
+#endif
 	INPUT_MSG_STRUCT mn_msg;
 	
 	// Check if the USB and Mass Storage Driver have never been initialized
@@ -989,13 +994,8 @@ extern void ToggleLedOff8900(void);
 	ToggleLedOff8900();
 	soft_usecWait(250 * SOFT_MSECS);
 	
-	ToggleLedOn8900();
-	soft_usecWait(250 * SOFT_MSECS);
-	ToggleLedOff8900();
-	soft_usecWait(250 * SOFT_MSECS);
-
-	Sleep8900_LedOn();
-	//Sleep8900();
+	//Sleep8900_LedOn();
+	Sleep8900();
 #endif
 
 	//-------------------------------------------------------------------------
@@ -1032,10 +1032,12 @@ extern void ToggleLedOff8900(void);
 	adc_configure(&AVR32_ADC);
 
 	// Enable the A/D channels.
-	// Can't use the driver enable because it's a single channel enable only and a write only register
+#if 0 // Can't use the driver enable because it's a single channel enable only and a write only register
 	//adc_enable(&AVR32_ADC, VBAT_CHANNEL);
 	//adc_enable(&AVR32_ADC, VIN_CHANNEL);
+#else
 	AVR32_ADC.cher = 0x0C; // Directly enable
+#endif
 
 	//-------------------------------------------------------------------------
 	// Power on the SD Card and init the file system
@@ -1910,7 +1912,8 @@ int main(void)
 #if 0 // Normal
 			SLEEP(AVR32_IDLE_MODE);
 #else // Test
-			SLEEP(AVR32_PM_SMODE_FROZEN);
+			if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING) { SLEEP(AVR32_IDLE_MODE); }
+			else { SLEEP(AVR32_PM_SMODE_FROZEN); }
 #endif
 		}
 	}    

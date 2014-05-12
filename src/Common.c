@@ -126,8 +126,6 @@ BOOLEAN checkExternalChargeVoltagePresent(void)
 {
 	float adVoltageLevel = (float)0.0;
 	BOOLEAN	externalChargePresent = NO;
-
-#if 1
 	uint32 adVoltageReadValue = 0;
 
 	adc_start(&AVR32_ADC);
@@ -138,18 +136,13 @@ BOOLEAN checkExternalChargeVoltagePresent(void)
 	adVoltageReadValue = adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
 #endif
 					
-	// Only need a delay if doing multiple reads within this routine to prevent a lockup, EOC check inside adc_get_value appears not working as intended
-	//soft_usecWait(4);
-
-	// Converted A/D value / 1024 * 3.3 * 3
 	adVoltageLevel = adVoltageReadValue * (REFERENCE_VOLTAGE * VOLTAGE_RATIO_EXT_CHARGE);
 	adVoltageLevel /= BATT_RESOLUTION;
 
 	//debug("Ext Charge Voltage A/D Reading: 0x%x, Value: %f\n", adVoltageReadValue, adVoltageLevel);
-#else
-	adVoltageLevel = getExternalVoltageLevelAveraged(VIN_CHANNEL);
 
-	//debug("Ext Charge Voltage A/D: %03.2f\n", adVoltageLevel);
+#if 0 // Test
+	debug("Battery Voltage: %f\n", getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 #endif
 
 	if (adVoltageLevel > 5.0)
