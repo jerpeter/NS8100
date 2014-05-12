@@ -73,10 +73,9 @@ uint16 getNextValidRamSummaryIndex(uint16 currentValidSummaryIndex);
 uint16 getPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex);
 BOOLEAN checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex);
 
-/****************************************
-*	Function:	summaryMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void summaryMn(INPUT_MSG_STRUCT msg)
 {  
 	static WND_LAYOUT_STRUCT wnd_layout;
@@ -92,10 +91,9 @@ void summaryMn(INPUT_MSG_STRUCT msg)
 	}
 }
 
-/****************************************
-*	Function:	summaryMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void summaryMnProc(INPUT_MSG_STRUCT msg,
                    WND_LAYOUT_STRUCT *wnd_layout_ptr,
                    SUMMARY_DATA *rd_summary_ptr)
@@ -203,10 +201,9 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 	}
 }
 
-/****************************************
-*	Function:	 dsplySummaryMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
                     SUMMARY_DATA *rd_summary_ptr)
 {
@@ -302,10 +299,9 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	}
 }
 
-/****************************************
-*	Function:	summaryMnScroll
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void summaryMnScroll(char direction)
 {  
 	uint16 tempSummaryIndex = 0;
@@ -372,10 +368,9 @@ void summaryMnScroll(char direction)
 	}
 }
     
-/****************************************
-*	Function:	getFirstValidRamSummaryIndex
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 getFirstValidRamSummaryIndex(void)
 {
 	uint16 ramSummaryIndex = 0;
@@ -386,10 +381,9 @@ uint16 getFirstValidRamSummaryIndex(void)
 	return (ramSummaryIndex);
 }
 
-/****************************************
-*	Function:	getNextValidRamSummaryIndex
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 getNextValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 {
 	uint16 ramSummaryIndex = currentValidSummaryIndex;
@@ -408,10 +402,9 @@ uint16 getNextValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 	return (ramSummaryIndex);
 }
 
-/****************************************
-*	Function:	getPreviousValidRamSummaryIndex
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 getPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 {
 	uint16 ramSummaryIndex = currentValidSummaryIndex;
@@ -435,10 +428,9 @@ uint16 getPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 	return (ramSummaryIndex);
 }
 
-/****************************************
-*	Function:	checkRamSummaryIndexForEventLink
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 BOOLEAN checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 {
 	BOOLEAN validEventLink = NO;
@@ -454,10 +446,9 @@ BOOLEAN checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 	return (validEventLink);
 }
 
-/****************************************
-*	Function:	
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 SUMMARY_MENU_EVENT_CACHE_STRUCT* getSummaryEventInfo(uint16 tempSummaryIndex)
 {
 	EVT_RECORD resultsEventRecord;

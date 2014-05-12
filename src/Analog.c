@@ -9,7 +9,6 @@
 ///	Includes
 ///----------------------------------------------------------------------------
 #include "Typedefs.h"
-#include "Old_Board.h"
 #include "Common.h"
 #include "Analog.h"
 #include "Summary.h"
@@ -22,7 +21,6 @@
 #include "tc.h"
 #include "twi.h"
 #include "spi.h"
-#include "ad_test_menu.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -81,8 +79,7 @@ Chan 0 Config: 0xe1f0, Chan 1 Config: 0xe3f0, Chan 2 Config: 0xe5f0, Chan 3 Conf
 */
 
 ///----------------------------------------------------------------------------
-///	Function:	GetAnalogConfigReadback
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void GetAnalogConfigReadback(void)
 {
@@ -129,8 +126,7 @@ void GetAnalogConfigReadback(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	ReadAnalogData
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 {
@@ -290,8 +286,7 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	InitAnalogControl
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void InitAnalogControl(void)
 {
@@ -303,8 +298,7 @@ void InitAnalogControl(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	WriteADConfig
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void WriteADConfig(unsigned int config)
 {
@@ -314,8 +308,7 @@ void WriteADConfig(unsigned int config)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	SetupADChannelConfig
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void SetupADChannelConfig(uint32 sampleRate)
 {
@@ -402,8 +395,7 @@ void SetupADChannelConfig(uint32 sampleRate)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	WriteAnalogControl
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void WriteAnalogControl(uint16 control)
 {
@@ -444,8 +436,7 @@ void WriteAnalogControl(uint16 control)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	adSetCalSignalLow
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void adSetCalSignalLow(void)
 {
@@ -456,8 +447,7 @@ void adSetCalSignalLow(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	adSetCalSignalHigh
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void adSetCalSignalHigh(void)
 {
@@ -468,8 +458,7 @@ void adSetCalSignalHigh(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	adSetCalSignalOff
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void adSetCalSignalOff(void)
 {
@@ -480,8 +469,7 @@ void adSetCalSignalOff(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	SetAnalogCutoffFrequency
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void SetAnalogCutoffFrequency(uint8 freq)
 {
@@ -522,8 +510,7 @@ void SetAnalogCutoffFrequency(uint8 freq)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	SetSeismicGainSelect
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void SetSeismicGainSelect(uint8 seismicGain)
 {
@@ -540,8 +527,7 @@ void SetSeismicGainSelect(uint8 seismicGain)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	SetAcousticGainSelect
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void SetAcousticGainSelect(uint8 acousticGain)
 {
@@ -558,8 +544,7 @@ void SetAcousticGainSelect(uint8 acousticGain)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	SetCalSignalEnable
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void SetCalSignalEnable(uint8 enable)
 {
@@ -576,8 +561,7 @@ void SetCalSignalEnable(uint8 enable)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	SetCalSignal
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void SetCalSignal(uint8 data)
 {
@@ -594,8 +578,7 @@ void SetCalSignal(uint8 data)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	GenerateCalSignal
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void GenerateCalSignal(void)
 {
@@ -619,8 +602,7 @@ void GenerateCalSignal(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	GetChannelOffsets
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void GetChannelOffsets(uint32 sampleRate)
 {
@@ -776,8 +758,7 @@ void GetChannelOffsets(uint32 sampleRate)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	UpdateChannelOffsetsForTempChange
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void UpdateChannelOffsetsForTempChange(void)
 {
@@ -876,8 +857,7 @@ void UpdateChannelOffsetsForTempChange(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	GatherSampleData
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void GatherSampleData(void)
 {

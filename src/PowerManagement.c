@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include "Typedefs.h"
 #include "Common.h"
-#include "Old_Board.h"
 #include "Uart.h"
 #include "powerManagement.h"
 #include "RealTimeClock.h"
@@ -30,10 +29,9 @@
 ///----------------------------------------------------------------------------
 static POWER_MANAGEMENT_STRUCT s_powerManagement;
 
-/****************************************
-*	Function:		powerControl
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #include "gpio.h"
 #include "M23018.h"
 #include "lcd.h"
@@ -294,10 +292,9 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 	soft_usecWait(10 * SOFT_MSECS);
 }
 
-/****************************************
-*	Function:	getPowerControlState
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 BOOLEAN getPowerControlState(POWER_MGMT_OPTIONS option)
 {
 	BOOLEAN state = OFF;
@@ -372,10 +369,9 @@ BOOLEAN getPowerControlState(POWER_MGMT_OPTIONS option)
 	return (state);
 }
 
-/****************************************
-*	Function:		setMcorePwMgntDefaults
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 void setMcorePwMgntDefaults(void)
 {
@@ -407,10 +403,9 @@ void setMcorePwMgntDefaults(void)
 }
 #endif
 
-/****************************************
-*	Function:	void PowerUnitOff(uint8)
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void PowerUnitOff(uint8 powerOffMode)
 {
 #if 0 // ns7100

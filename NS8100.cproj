@@ -430,18 +430,6 @@
       <SubType>compile</SubType>
     </None>
     <Folder Include="src" />
-    <Compile Include="src\ad_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\ad_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\alarm_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\alarm_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\Analog.c">
       <SubType>compile</SubType>
     </Compile>
@@ -478,12 +466,6 @@
     <Compile Include="src\Common.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\craft.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\craft.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\Crc.c">
       <SubType>compile</SubType>
     </Compile>
@@ -506,12 +488,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\Display.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\eeprom_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\eeprom_test_menu.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\EventProcessing.c">
@@ -607,12 +583,6 @@
     <Compile Include="src\Keypad.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\keypad_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\keypad_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\LanguageTables.c">
       <SubType>compile</SubType>
     </Compile>
@@ -623,12 +593,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\LcdContrastMenu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\lcd_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\lcd_test_menu.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\LoadRecord.c">
@@ -679,37 +643,7 @@
     <Compile Include="src\NandFlash.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\network_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\network_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\NomisLogo.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\nsmarts_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\nsmarts_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\Old_Board.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\Old_Main.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\on_off_circuit_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\on_off_circuit_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\on_off_key_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\on_off_key_test_menu.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\OverwriteMenu.c">
@@ -737,12 +671,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\ProcessWaveform.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\proc_timers.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\proc_timers.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\Record.h">
@@ -784,43 +712,10 @@
     <None Include="src\asf\thirdparty\newlib_addons\libs\at32ucr2\libnewlib_addons-at32ucr2-speed_opt.a">
       <SubType>compile</SubType>
     </None>
-    <None Include="src\ROMable.lcf">
-      <SubType>compile</SubType>
-    </None>
-    <Compile Include="src\rs232_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\rs232_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\rs485_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\rs485_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\RealTimeClock.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\RealTimeClock.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\rtc_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\rtc_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\sdram_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\sdram_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\sd_mmc_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\sd_mmc_test_menu.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\Sensor.c">
@@ -848,12 +743,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TC\tc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\sram_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\sram_test_menu.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\srec.c">
@@ -892,12 +781,6 @@
     <Compile Include="src\TimerModeTimeMenu.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\trigger_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\trigger_test_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\Typedefs.h">
       <SubType>compile</SubType>
     </Compile>
@@ -905,12 +788,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\Uart.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\usb_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\usb_test_menu.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\UserInputMenus.c">
@@ -923,12 +800,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\Version.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\voltage_monitor_test_menu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\voltage_monitor_test_menu.h">
       <SubType>compile</SubType>
     </Compile>
     <Folder Include="src\asf\" />

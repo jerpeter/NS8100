@@ -43,35 +43,14 @@
 #define SOFT_DATE     		"6-22-2004"
 #define SOFT_TIME     		"08:35pm"
 
+// Define core clock rate
 #define FOSC0	66000000
 
-///----------------------------------------------------------------------------
-///	Macros
-///----------------------------------------------------------------------------
-int ReadPSR(void);
-void WritePSR(int);
-void Wait(void);
-void Doze(void);
-void Stop(void);
-
-#if 1
-#define EnableInterrupts      WritePSR(ReadPSR() | IE | EE)
-#define EnableFastInterrupts  WritePSR(ReadPSR() | FIE | EE)
-#define EnableAllInterrupts   WritePSR(ReadPSR() | FIE | IE | EE)
-#define DisableInterrupts     WritePSR(ReadPSR() & ~FIE & ~IE & ~EE)
-#endif
-
-///----------------------------------------------------------------------------
-///	Defines
-///----------------------------------------------------------------------------
 typedef enum
 {
 	KEYPAD_TIMER,
 	SAMPLE_TIMER
 } PIT_TIMER;
-
-#define TRIGGER_STOPPED 	0
-#define TRIGGER_STARTED 	1
 
 typedef struct
 {
@@ -169,20 +148,6 @@ typedef enum {
 	TC_TYPEMATIC_TIMER_CHANNEL = 2
 } TC_CHANNEL_NUM;
 
-#if 0 // ns7100
-// 430 Channel Input Number
-enum {
-	MSP430_CHANNEL_1_INPUT = 1,
-	MSP430_CHANNEL_2_INPUT,
-	MSP430_CHANNEL_3_INPUT,
-	MSP430_CHANNEL_4_INPUT,
-	MSP430_CHANNEL_5_INPUT,
-	MSP430_CHANNEL_6_INPUT,
-	MSP430_CHANNEL_7_INPUT,
-	MSP430_CHANNEL_8_INPUT
-};
-#endif
-
 enum {
 	SEISMIC_GROUP_1 = 1,
 	SEISMIC_GROUP_2
@@ -209,6 +174,26 @@ enum {
 #define VBAT_CHANNEL    3
 
 #define LOW_VOLTAGE_THRESHOLD	5.0
+
+/* Uart Info */
+#define CRAFT_BAUDRATE	115200 //14400 //38400
+#define CRAFT_COM_PORT	0
+#define RS485_BAUDRATE	2000000 //19200
+#define RS485_COM_PORT	1
+
+/* Battery Level defines */
+#define BATT_MIN_VOLTS 			4.0
+
+#define REFERENCE_VOLTAGE       (float)3.3
+#define BATT_RESOLUTION         (float)1024  // 10-bit resolution
+
+#if 0 // ns7100
+#define BATT_RESISTOR_RATIO     	((604 + 301)/301)
+#define EXT_CHARGE_RESISTOR_RATIO	((3000 + 200)/200)
+#else // ns8100
+#define VOLTAGE_RATIO_BATT			(float)3
+#define VOLTAGE_RATIO_EXT_CHARGE    (float)16.05
+#endif
 
 enum {
 	KEYPAD_LED_STATE_UNKNOWN = 0,

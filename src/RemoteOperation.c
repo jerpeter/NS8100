@@ -33,31 +33,22 @@
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
-//==================================================
-// Function: handleAAA
-// Description:  
-// 		Dummy function for testing purposes.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleAAA(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-
 //==================================================
 // Operating parameter commands
 //==================================================
 
-//==================================================
-// Function: handleDCM
-// Description: 
-// 		Download configuration data structure.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 {
 	SYSTEM_CFG cfg;					// 424 bytes, or 848 chars from the pc.
@@ -242,13 +233,9 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
-//==================================================
-// Function: handleUCM
-// Description: 
-// 		Upload configuration data structure.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 {
 	SYSTEM_CFG cfg;
@@ -1097,10 +1084,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: handleDMM
-// Description: Download modem configuration data structure.
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleDMM(CMD_BUFFER_STRUCT* inCmd)
 {
 	MODEM_SETUP_STRUCT modemCfg;
@@ -1137,10 +1123,9 @@ void handleDMM(CMD_BUFFER_STRUCT* inCmd)
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
-//==================================================
-// Function: handleUMM
-// Description:	Upload modem configuration data structure.
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleUMM(CMD_BUFFER_STRUCT* inCmd)
 {
 	MODEM_SETUP_STRUCT modemCfg;
@@ -1238,10 +1223,9 @@ void handleUMM(CMD_BUFFER_STRUCT* inCmd)
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
-//==================================================
-// Function: convertAscii2Binary
-// Description:	convert 2 bytes of ascii into 1 binary data byte
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 convertAscii2Binary(uint8 firstByte, uint8 secondByte)
 {
 	uint8 binaryByte = 0;
@@ -1266,227 +1250,162 @@ uint8 convertAscii2Binary(uint8 firstByte, uint8 secondByte)
 	return (binaryByte);
 }
 
-//==================================================
-// Function: handleVTI
-// Description: 
-// 		View time.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleVTI(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleSTI
-// Description: 
-// 		Set time.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleSTI(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleVDA
-// Description: 
-// 		View date.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleVDA(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleSDA
-// Description: 
-// 		Set date.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleSDA(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleZRO
-// Description: 
-// 		Zero sensors.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleZRO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleTTO
-// Description: 
-// 		Toggle test mode on/off.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleTTO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleCAL
-// Description: 
-// 		Calibrate sensors with cal pulse.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleCAL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleVOL
-// Description: 
-// 		View on/off log.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleVOL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleVCG
-// Description: 
-// 		View command log.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleVCG(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleVSL
-// Description: 
-// 		View summary log.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleVSL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleVEL
-// Description: 
-// 		View event log.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleVEL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleVBD
-// Description: 
-// 		View backlight delay.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleVBD(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleSBD
-// Description: 
-// 		Set backlight delay.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleSBD(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleVDT
-// Description: 
-// 		View display timeout.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleVDT(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleSDT
-// Description: 
-// 		Set display timeout.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleSDT(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleVCL
-// Description: 
-// 		View contrast level.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleVCL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleSCL
-// Description: 
-// 		Set contrast level.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleSCL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void modemInitProcess(void)
 {
 	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
@@ -1518,13 +1437,9 @@ void modemInitProcess(void)
 	g_modemStatus.firstConnection = NOP_CMD;
 }
 
-//==================================================
-//	Procedure: modemResetProcess()
-//	Description:
-//
-//	Input: void
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void modemResetProcess(void)
 {
 	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
@@ -1541,13 +1456,9 @@ void modemResetProcess(void)
 	assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(15 * TICKS_PER_SEC), modemResetTimerCallback);
 }
 
-//==================================================
-// Function: handleMRC
-// Description:
-// 		Modem reset.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMRS(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
@@ -1563,169 +1474,117 @@ void handleMRS(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: handleMVS
-// Description:
-// 		Modem view settings.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMVS(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMPO
-// Description:
-// 		Toggle modem on/off.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMPO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMMO
-// Description:
-// 		Toggle modem mode transmit/receive.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMMO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMNO
-// Description:
-// 		Toggle modem phone number A/B/C.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMNO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMTO
-// Description:
-// 		Toggle modem log on/off.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMTO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMSD
-// Description:
-// 		Modem set default initialization string.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMSD(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMSR
-// Description:
-// 		Modem set receive initialization string.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMSR(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMST
-// Description:
-// 		Modem set transmit initialization string.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMST(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMSA
-// Description:
-// 		Modem set phone number A.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMSA(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMSB
-// Description:
-// 		Modem set phone number B.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMSB(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMSC
-// Description:
-// 		Modem set phone number C.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMSC(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMVI
-// Description:
-// 		Modem view last call in detail.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMVI(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleMVO
-// Description:
-// 		Modem view last call out detail.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMVO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);

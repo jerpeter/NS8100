@@ -46,17 +46,16 @@ static uint16 s_monitorSessionFirstEvent = 0;
 static uint16 s_monitorSessionLastEvent = 0;
 static EVT_RECORD resultsEventRecord;
 
-/*******************************************************************************
-*  Function prototypes
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Prototypes
+///----------------------------------------------------------------------------
 void resultsMnDsply(WND_LAYOUT_STRUCT*);
 void resultsMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 EVT_RECORD* getResultsEventInfoFromCache(uint32 fileEventNumber);
 
-/****************************************
-*	Function:	resultsMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void resultsMn(INPUT_MSG_STRUCT msg)
 {
 	static WND_LAYOUT_STRUCT wnd_layout;
@@ -71,10 +70,9 @@ void resultsMn(INPUT_MSG_STRUCT msg)
 	}
 }
 
-/****************************************
-*	Function:	resultsMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void resultsMnProc(INPUT_MSG_STRUCT msg,
                   WND_LAYOUT_STRUCT *wnd_layout_ptr,
                   MN_LAYOUT_STRUCT *mn_layout_ptr)
@@ -334,10 +332,9 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 	}
 }
 
-/****************************************
-*	Function:	resultsMnDsply
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	static uint8 dotState = 0;
@@ -1025,10 +1022,9 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 }
 
-/****************************************
-*	Function:	
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 EVT_RECORD* getResultsEventInfoFromCache(uint32 fileEventNumber)
 {
 	uint32 i = 0;
@@ -1057,10 +1053,9 @@ EVT_RECORD* getResultsEventInfoFromCache(uint32 fileEventNumber)
 	return (NULL);
 }
 
-/****************************************
-*	Function:	
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void cacheResultsEventInfo(EVT_RECORD* eventRecordToCache)
 {
 	byteCpy(&g_resultsEventCache[g_resultsCacheIndex], eventRecordToCache, sizeof(EVT_RECORD));

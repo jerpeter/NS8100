@@ -133,8 +133,7 @@ static const uint32 s_CCITT32[TABLE_SIZE] =
 };
 
 ///----------------------------------------------------------------------------
-///	Function:	calcCrc8
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 calcCrc8(uint8* data, uint32 length, uint8 seed)
 {
@@ -149,9 +148,7 @@ uint8 calcCrc8(uint8* data, uint32 length, uint8 seed)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	CalcCCITT32
-///	Purpose:	Calculate a CRC32 with a pointer to data, length in bytes, and
-///				the inital or previously calculated seed
+///	Function Break
 ///----------------------------------------------------------------------------
 uint32 CalcCCITT32(uint8* data, uint32 length, uint32 seed)
 {

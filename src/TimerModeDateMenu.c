@@ -10,7 +10,6 @@
 ///----------------------------------------------------------------------------
 #include <stdio.h>
 #include <string.h>
-#include "Old_Board.h"
 #include "Common.h"
 #include "Typedefs.h"
 #include "Menu.h"
@@ -69,10 +68,9 @@ void timerModeActiveMinutes(void);
 void timerModeDateScroll(char, MN_LAYOUT_STRUCT*);
 uint8 validateTimerModeSettings(void);
 
-/****************************************
-*	Function:	    timerModeDateMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void timerModeDateMn (INPUT_MSG_STRUCT msg)
 {
     static WND_LAYOUT_STRUCT wnd_layout;
@@ -88,14 +86,10 @@ void timerModeDateMn (INPUT_MSG_STRUCT msg)
     }
 }
 
-/****************************************
-*	Function:	    timerModeDateMnProc
-*	Purpose:
-****************************************/
-void timerModeDateMnProc(INPUT_MSG_STRUCT msg,
-                    REC_MN_STRUCT *rec_ptr,
-                    WND_LAYOUT_STRUCT *wnd_layout_ptr,
-                    MN_LAYOUT_STRUCT *mn_layout_ptr)
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void timerModeDateMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 
 	INPUT_MSG_STRUCT mn_msg;
@@ -175,10 +169,9 @@ void timerModeDateMnProc(INPUT_MSG_STRUCT msg,
 
 }
 
-/****************************************
-*	Function:	timerModeDateScroll
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void timerModeDateScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
    switch (direction)
@@ -199,10 +192,9 @@ void timerModeDateScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
    }
 }
 
-/****************************************
-*	Function:	timerModeDateDvScroll
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void timerModeDateDvScroll(char dir_key, REC_MN_STRUCT *rec_ptr)
 {
 	switch (dir_key)
@@ -231,13 +223,10 @@ void timerModeDateDvScroll(char dir_key, REC_MN_STRUCT *rec_ptr)
 	}
 }
 
-/****************************************
-*	Function:	dsplyTimerModeDateMn
-*	Purpose:
-****************************************/
-void dsplyTimerModeDateMn(REC_MN_STRUCT *rec_ptr,
-                     WND_LAYOUT_STRUCT *wnd_layout_ptr,
-                     MN_LAYOUT_STRUCT *mn_layout_ptr)
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void dsplyTimerModeDateMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	uint8 sbuff[50];
 	uint8 top;
@@ -351,10 +340,9 @@ void dsplyTimerModeDateMn(REC_MN_STRUCT *rec_ptr,
 	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_STOP_YEAR) ? CURSOR_LN : REG_LN);
 }
 
-/****************************************
-*	Function:	loadTimerModeDateMnDefRec
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void loadTimerModeDateMnDefRec(REC_MN_STRUCT *rec_ptr, DATE_TIME_STRUCT *time_ptr)
 {
     // START DAY
@@ -424,10 +412,9 @@ void loadTimerModeDateMnDefRec(REC_MN_STRUCT *rec_ptr, DATE_TIME_STRUCT *time_pt
     rec_ptr[TMD_STOP_YEAR].numrec.num_type = FIXED_TIME_TYPE_YEAR;
 }
 
-/****************************************
-*	Function:	timerModeActiveMinutes
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void timerModeActiveMinutes(void)
 {
 	// Find the Time mode active time period in minutes
@@ -485,10 +472,9 @@ void timerModeActiveMinutes(void)
     saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 }
 
-/****************************************
-*	Function:	validateTimerModeSettings
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 validateTimerModeSettings(void)
 {
 	DATE_TIME_STRUCT time = getCurrentTime();
@@ -560,10 +546,9 @@ uint8 validateTimerModeSettings(void)
 	return (PASSED);
 }
 
-/****************************************
-*	Function:	processTimerModeSettings
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void processTimerModeSettings(uint8 mode)
 {
 	//uint8 dayOfWeek = 0;

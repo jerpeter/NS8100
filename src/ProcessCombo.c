@@ -12,7 +12,6 @@
 #include "InitDataBuffers.h"
 #include "SysEvents.h"
 #include "Summary.h"
-#include "Old_Board.h"
 #include "Uart.h"
 #include "RealTimeClock.h"
 #include "Record.h"
@@ -41,10 +40,9 @@
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
-//*****************************************************************************
-// Function:	StartNewCombo
-// Purpose :
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void StartNewCombo(void)
 {
 	g_comboSummaryPtr = NULL;
@@ -86,10 +84,9 @@ void StartNewCombo(void)
 	updateMonitorLogEntry();
 }
 
-//*****************************************************************************
-// Function:
-// Purpose :
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void EndCombo(void)
 {
 	uint32 barIntervalsStored;
@@ -109,10 +106,9 @@ void EndCombo(void)
 	g_fileProcessActiveUsbLockout = OFF;
 }
 
-/*****************************************************************************
-* Function:		ProcessComboData (Step 2)
-* Purpose:		Copy A/D channel data from Pretrigger buffer into event buffer
-******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 void ProcessComboData(void)
 {
@@ -127,10 +123,9 @@ void ProcessComboData(void)
 }
 #endif
 
-/*****************************************************************************
-* Function:		ProcessComboDataSkipBargraphDuringCal (Step 2)
-* Purpose:		Copy A/D channel data from Pretrigger buffer into event buffer
-******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 void ProcessComboDataSkipBargraphDuringCal(void)
 {
@@ -140,10 +135,9 @@ void ProcessComboDataSkipBargraphDuringCal(void)
 }
 #endif
 
-/*****************************************************************************
-* Function:		ProcessComboBargraphData (Step 2)
-* Purpose:		Copy A/D channel data from Pretrigger buffer into event buffer
-******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 void ProcessComboBargraphData(void)
 {
@@ -181,11 +175,9 @@ void ProcessComboBargraphData(void)
 }
 #endif
 
-//*****************************************************************************
-// Function:	ProcessComboSampleData (Step 2)
-// Purpose :	Copy A/D channel data from Pretrigger buffer into event buffers and
-//				check for command nibble
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 void ProcessComboSampleData(void)
 {
@@ -495,10 +487,9 @@ void ProcessComboSampleData(void)
 }
 #endif
 
-//*****************************************************************************
-// Function: moveComboBarIntervalDataToFile(void)
-// Purpose : Transfer the data from the bar interval buffers into the event file
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint32 moveComboBarIntervalDataToFile(void)
 {
 	uint32 accumulatedBarIntervalCount = g_barIntervalCnt;
@@ -526,10 +517,9 @@ uint32 moveComboBarIntervalDataToFile(void)
 	return (accumulatedBarIntervalCount);
 }
 
-//*****************************************************************************
-// Function: moveComboSummaryIntervalDataToFile(void)
-// Purpose : Transfer the data from the summary interval buffer into the event file
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void moveComboSummaryIntervalDataToFile(void)
 {
 	float rFreq, vFreq, tFreq;
@@ -569,11 +559,9 @@ void moveComboSummaryIntervalDataToFile(void)
 	byteSet(&g_comboFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
 }
 
-/*****************************************************************************
-	Function:	CalculateComboData
-	Purpose :	Calculate combo specific info from the raw A/D data that
-				was copied into the event buffer
-******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 CalculateComboData(void)
 {
 	// Temp variables, assigned as static to prevent storing on stack
@@ -1125,10 +1113,9 @@ uint8 CalculateComboData(void)
 	}
 }
 
-//*****************************************************************************
-// Function: MoveStartOfComboEventRecordToFile
-// Purpose : Move the combo Event Record into file
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void MoveStartOfComboEventRecordToFile(void)
 {
 	// Get new file handle
@@ -1147,10 +1134,9 @@ void MoveStartOfComboEventRecordToFile(void)
 	g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 }
 
-//*****************************************************************************
-// Function: MoveEndOfComboEventRecordToFile
-// Purpose : Move the combo Event Record into the file
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void MoveEndOfComboEventRecordToFile(void)
 {
 	// The following data will be filled in when the data has been moved over to flash.
@@ -1175,10 +1161,9 @@ void MoveEndOfComboEventRecordToFile(void)
 #endif
 }
 
-//*****************************************************************************
-// Function:	advanceBarIntervalBufPtr
-// Purpose :	handle advancing the bar interval buffer pointer
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void advanceComboBarIntervalBufPtr(uint8 bufferType)
 {
 	if (bufferType == READ_PTR)
@@ -1195,10 +1180,9 @@ void advanceComboBarIntervalBufPtr(uint8 bufferType)
 	}
 }
 
-//*****************************************************************************
-// Function:	advanceSumIntervalBufPtr
-// Purpose :	handle advancing the bar interval buffer pointer
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void advanceComboSumIntervalBufPtr(uint8 bufferType)
 {
 
@@ -1216,10 +1200,9 @@ void advanceComboSumIntervalBufPtr(uint8 bufferType)
 	}
 }
 
-//*****************************************************************************
-// FUNCTION:	void UpdateComboJobTotals(void)
-// DESCRIPTION
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void UpdateComboJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 {
 	// Update Combo Job Totals structure with most recent Summary Interval max's
@@ -1308,10 +1291,9 @@ void UpdateComboJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 }
 
 #if 0 // Unused
-//*****************************************************************************
-// Function:	checkSpaceForBarSummaryInterval
-// Purpose:
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 BOOLEAN checkSpaceForComboBarSummaryInterval(void)
 {
 	FLASH_USAGE_STRUCT flashStats;
@@ -1331,10 +1313,9 @@ BOOLEAN checkSpaceForComboBarSummaryInterval(void)
 }
 #endif
 
-//*****************************************************************************
-// Function:	MoveComboWaveformEventToFile
-// Purpose :
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void MoveComboWaveformEventToFile(void)
 {
 	static FLASH_MOV_STATE waveformProcessingState = FLASH_IDLE;

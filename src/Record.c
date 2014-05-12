@@ -19,7 +19,6 @@
 #include "RealTimeClock.h"
 #include "Display.h"
 #include "spi.h"
-#include "eeprom_test_menu.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -35,10 +34,9 @@
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
-/****************************************
-*	Function:  storeMnData()
-*	Purpose:   
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void saveRecData(void* src_ptr, uint32 num, uint8 type)
 {        
 	uint16 loc;
@@ -117,10 +115,9 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 	}
 }
 
-/****************************************
-*	Function:  getRecData()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void getRecData(void* dst_ptr, uint32 num, uint8 type)
 { 
 	uint16 loc;
@@ -171,10 +168,9 @@ void getRecData(void* dst_ptr, uint32 num, uint8 type)
 	}
 }
 
-/****************************************
-*	Function:  convertTimeToString()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void convertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 {        
 	REC_EVENT_MN_STRUCT *ttemp;
@@ -290,10 +286,9 @@ void convertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 	}
 }
 
-/****************************************
-*	Function:  copyFlashBlock()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void copyFlashBlock(uint16* dst, uint16* src, uint32 len)
 {
 	while (len > 0)
@@ -312,10 +307,9 @@ void copyFlashBlock(uint16* dst, uint16* src, uint32 len)
 	return;
 }
 
-/****************************************
-*	Function:  copyRecIntoFlashBk()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void copyRecIntoFlashBk(uint16* dst,uint16* src, uint32 loc, uint32 len)
 {
 	//debugPrint(RAW, "\n CRIFBK -> ");
@@ -336,10 +330,9 @@ void copyRecIntoFlashBk(uint16* dst,uint16* src, uint32 loc, uint32 len)
 	}
 }
 
-/****************************************
-*	Function:  checkForAvailableTriggerRecordEntry()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 checkForAvailableTriggerRecordEntry(char* name, uint8* match)
 {
 	REC_EVENT_MN_STRUCT temp_rec;
@@ -377,10 +370,9 @@ uint8 checkForAvailableTriggerRecordEntry(char* name, uint8* match)
 	return (availableRecord);
 }
 
-/****************************************
-*	Function:	 loadTrigRecordDefaults
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void loadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 {
 	// General components
@@ -424,10 +416,9 @@ void loadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 	} 
 }
 
-/****************************************
-*	Function:	 loadHelpRecordDefaults
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 {  
 	// Initialize the help record
@@ -482,10 +473,9 @@ void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 	}
 }
 
-/****************************************
-*	Function:	 activateHelpRecordOptions
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void activateHelpRecordOptions(void)
 {
 	g_contrast_value = g_helpRecord.lcd_contrast;
@@ -520,10 +510,9 @@ void activateHelpRecordOptions(void)
 	}
 }
 
-/****************************************
-*	Function:	 loadModemSetupRecordDefaults
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void loadModemSetupRecordDefaults()
 {
 	// Initialize the help record
@@ -540,10 +529,9 @@ void loadModemSetupRecordDefaults()
 	//g_modemSetupRecord.reset
 }
 
-/****************************************
-*	Function:	 validateModemSetupParameters
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void validateModemSetupParameters(void)
 {
 	uint8 updated = NO;
@@ -567,10 +555,9 @@ void validateModemSetupParameters(void)
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Fcuntion:	
-// Purpose:		
-//-----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void GetParameterMemory(uint8* dataDest, uint16 startAddr, uint16 dataLength)
 {
 	uint16 tempData;
@@ -598,10 +585,9 @@ void GetParameterMemory(uint8* dataDest, uint16 startAddr, uint16 dataLength)
 	spi_unselectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
 }
 
-//-----------------------------------------------------------------------------
-// Fcuntion:	
-// Purpose:		
-//-----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #define EEPROM_PAGE_SIZE	32
 void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 {
@@ -671,10 +657,9 @@ void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Fcuntion:	
-// Purpose:		
-//-----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void EraseParameterMemory(uint16 startAddr, uint16 dataLength)
 {
 	uint16 tempData = 0x00FF;
@@ -718,10 +703,9 @@ void EraseParameterMemory(uint16 startAddr, uint16 dataLength)
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Fcuntion:	
-// Purpose:		
-//-----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 uint8 ReadParameterMemory(uint16 address)
 {
@@ -758,10 +742,9 @@ uint8 ReadParameterMemory(uint16 address)
 }
 #endif	
 
-//-----------------------------------------------------------------------------
-// Fcuntion:	
-// Purpose:		
-//-----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 void WriteParameterMemory(uint16 address, uint8 data)
 {
@@ -795,10 +778,9 @@ void WriteParameterMemory(uint16 address, uint8 data)
 }
 #endif
 
-//-----------------------------------------------------------------------------
-// Fcuntion:	
-// Purpose:		Disable Writes
-//-----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 void ResetWriteEnableLatchParameterMemory(void)
 {
@@ -819,10 +801,9 @@ void ResetWriteEnableLatchParameterMemory(void)
 }
 #endif
 
-//-----------------------------------------------------------------------------
-// Fcuntion:	
-// Purpose:		Enable Writes
-//-----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 void SetWriteEnableLatchParameterMemory(void)
 {
@@ -843,10 +824,9 @@ void SetWriteEnableLatchParameterMemory(void)
 }
 #endif
 
-//-----------------------------------------------------------------------------
-// Fcuntion:	
-// Purpose:		
-//-----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 uint8 ReadStatusParameterMemory(void)
 {
@@ -873,10 +853,9 @@ uint8 ReadStatusParameterMemory(void)
 }
 #endif
 
-//-----------------------------------------------------------------------------
-// Fcuntion:	
-// Purpose:		
-//-----------------------------------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 void WriteStatusParameterMemory(uint8 data)
 {

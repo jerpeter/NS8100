@@ -62,10 +62,9 @@ uint16 findCurrentItemEntry(uint32 item);
 void advanceInputNumber(uint32 dir);
 void removeExtraSpaces(void);
 
-/****************************************
-*	Function:	userMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void userMn(INPUT_MSG_STRUCT msg)
 { 
     static WND_LAYOUT_STRUCT wnd_layout;
@@ -85,10 +84,9 @@ void userMn(INPUT_MSG_STRUCT msg)
     }
 }
 
-/****************************************
-*	Function:	userMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -377,10 +375,9 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 	}
 }
 
-/****************************************
-*	Function:	advanceInputChar
-*	Purpose:	Increment or decrement the char value at the current index for the current menu
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void advanceInputChar(uint32 direction)
 {
 	// Store the char at the current index
@@ -438,10 +435,9 @@ void advanceInputChar(uint32 direction)
 	}
 }
 
-/****************************************
-*	Function:	advanceInputNumber
-*	Purpose:	Increment or decrement the numerical value for the current menu
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void advanceInputNumber(uint32 direction)
 {
 	// Check if direction is an up arrow to increment the number
@@ -786,10 +782,9 @@ void advanceInputNumber(uint32 direction)
 	}
 }
 
-/****************************************
-*	Function:	copyMenuToCache
-*	Purpose:	Copy the static menu data to the user menu display cache
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void copyMenuToCache(USER_MENU_STRUCT* currentMenu)
 {
 	int i;
@@ -826,10 +821,9 @@ void copyMenuToCache(USER_MENU_STRUCT* currentMenu)
 	strcpy(g_userMenuCachePtr[i].text, ".end.");
 }
 
-/****************************************
-*	Function:	copyDataToCache
-*	Purpose:	Copy the variable data (passed in via pointer) to the user menu data cache 
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void copyDataToCache(void* data)
 {
 	// Switch on the menu type
@@ -1046,10 +1040,9 @@ void copyDataToCache(void* data)
 	}
 }
 
-/****************************************
-*	Function:	copyDataToMenu
-*	Purpose:	Copy the variable data into the user menu display cache
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 {
 	uint32 charLen = 0;
@@ -1343,10 +1336,9 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 	}
 }
 
-/****************************************
-*	Function:	findCurrentItemEntry
-*	Purpose:	Return the index that matches the current data value
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 findCurrentItemEntry(uint32 item)
 {
 	uint16 i;
@@ -1364,10 +1356,9 @@ uint16 findCurrentItemEntry(uint32 item)
 	return (USER_MENU_DEFAULT_ITEM(g_userMenuCachePtr));
 }
 
-/****************************************
-*	Function:	removeExtraSpaces
-*	Purpose:	Removes trailing spaces left in the text of the user menu data cache
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void removeExtraSpaces(void)
 {
 	uint16 i = (uint16)strlen(g_userMenuCacheData.text);

@@ -35,10 +35,9 @@
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
-/****************************************
-*	Function:	LcdInit
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void LcdInit(void)
 {
 #if 0 // convert to new hardware
@@ -56,10 +55,9 @@ void LcdInit(void)
 // reg_PortD converted to reg_PortA
 //
 
-/****************************************
-*	Function:	LcdResetPulse
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void LcdResetPulse(void)
 {
 #if 0 // fix_ns8100
@@ -71,10 +69,9 @@ void LcdResetPulse(void)
 #endif
 }
 
-/****************************************
-*	Function:	LcdClearPortReg
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void LcdClearPortReg(void)
 {
 	volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
@@ -82,10 +79,9 @@ void LcdClearPortReg(void)
 	*lcd = 0x0000;
 }
 
-/****************************************
-*	Function:	LcdWrite
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void LcdWrite(uint8 mode, uint8 data, uint8 segment)
 {
 #if	1
@@ -195,10 +191,9 @@ extern uint16 lcd_port_image;
 #endif
 }
 
-/****************************************
-*	Function:	LcdRead
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 uint8 LcdRead(uint8 mode, uint8 segment)
 {
@@ -257,10 +252,9 @@ uint8 LcdRead(uint8 mode, uint8 segment)
 #endif
 
 #if 0
-/****************************************
-*	Function:	clockDataFromLcd
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline uint8 clockDataFromLcd(uint8 lcdCmd)
 {
 	// Take Eanble high
@@ -275,10 +269,9 @@ inline uint8 clockDataFromLcd(uint8 lcdCmd)
 #endif
 
 #if 0
-/****************************************
-*	Function:	clockDataToLcd
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline void clockDataToLcd(uint8 lcdCmd, uint8 lcdData)
 {
 	// Take Eanble high
@@ -292,10 +285,9 @@ inline void clockDataToLcd(uint8 lcdCmd, uint8 lcdData)
 }
 #endif
 
-/****************************************
-*	Function:	waitForLcdReady
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline void waitForLcdReady(uint8 segment)
 {
 	UNUSED(segment);
@@ -304,10 +296,9 @@ inline void waitForLcdReady(uint8 segment)
 }
 
 #if 0
-/****************************************
-*	Function:	readLcdData
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline uint8 readLcdData(uint8 segment)
 {
 	return (LcdRead(LCD_DATA, segment));
@@ -315,10 +306,9 @@ inline uint8 readLcdData(uint8 segment)
 #endif
 
 #if 0
-/****************************************
-*	Function:	writeLcdData
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline void writeLcdData(uint8 lcdData, uint8 segment)
 {
 	LcdWrite(LCD_DATA, lcdData, segment);
@@ -327,10 +317,9 @@ inline void writeLcdData(uint8 lcdData, uint8 segment)
 }
 #endif
 
-/****************************************
-*	Function:	setLcdStartLine
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline void setLcdStartLine(uint8 lcdData, uint8 segment)
 {
 	// Or in Start Line instruction to LCD data
@@ -341,10 +330,9 @@ inline void setLcdStartLine(uint8 lcdData, uint8 segment)
 	waitForLcdReady(segment);
 }
 
-/****************************************
-*	Function:	setLcdXPosition
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline void setLcdXPosition(uint8 lcdData, uint8 segment)
 {
 	// Or in X location instruction to the row selection in LCD data
@@ -355,10 +343,9 @@ inline void setLcdXPosition(uint8 lcdData, uint8 segment)
 	waitForLcdReady(segment);
 }
 
-/****************************************
-*	Function:	setLcdYPosition
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline void setLcdYPosition(uint8 lcdData, uint8 segment)
 {
 	// Or in Y location instruction to the column slection in LCD data
@@ -369,10 +356,9 @@ inline void setLcdYPosition(uint8 lcdData, uint8 segment)
 	waitForLcdReady(segment);
 }
 
-/****************************************
-*	Function:	setLcdMode
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline void setLcdMode(uint8 lcdData, uint8 segment)
 {
 	// Check if LCD data is set for turining on or off display
@@ -392,10 +378,9 @@ inline void setLcdMode(uint8 lcdData, uint8 segment)
 	waitForLcdReady(segment);
 }
 
-/****************************************
-*	Function:	DsplySetOrigin
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline void setLcdOrigin(uint8 x, uint8 y, uint8 segment)
 {
 	// Set both X and Y coordinate positions
@@ -403,10 +388,9 @@ inline void setLcdOrigin(uint8 x, uint8 y, uint8 segment)
     setLcdYPosition(y, segment);
 }
 
-/****************************************
-*	Function:	writeStringToLcd
-*	Purpose:	Untested...
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void writeStringToLcd(uint8* p, uint8 x, uint8 y, uint8 (*table_ptr)[2][10])
 {
 	// =========================================
@@ -465,10 +449,9 @@ void writeStringToLcd(uint8* p, uint8 x, uint8 y, uint8 (*table_ptr)[2][10])
 	}
 }
 
-/****************************************
-*	Function:	writeMapToLcd
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void writeMapToLcd(uint8 (*g_mmap_ptr)[128])
 {
     uint8 segment;
@@ -531,10 +514,9 @@ void writeMapToLcd(uint8 (*g_mmap_ptr)[128])
     }
 }
 
-/****************************************
-*	Function:	initLcdDisplay
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void initLcdDisplay(void)
 {    
 	// Issue reset pulse to LCD display
@@ -557,20 +539,18 @@ void initLcdDisplay(void)
 	clearLcdDisplay();
 }
 
-/****************************************
-*	Function:	clearControlLinesLcdDisplay
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void clearControlLinesLcdDisplay(void)
 {
 	LcdWrite(LCD_INSTRUCTION, 0x00, LCD_SEGMENT1);
 	LcdWrite(LCD_DATA, 0x00, LCD_SEGMENT1);
 }
 
-/****************************************
-*	Function:	void clearLcdDisplay(void)
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void clearLcdDisplay(void)
 {
 	// Turn all of the LCD pixels off (0's), effectively clearing the display
@@ -578,10 +558,9 @@ void clearLcdDisplay(void)
     writeMapToLcd(g_mmap);
 }
 
-/****************************************
-*	Function:	void fillLcdDisplay(void)
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void fillLcdDisplay(void)
 {
 	// Turn all of the LCD pixels on (1's), effectively filling the display
@@ -589,11 +568,9 @@ void fillLcdDisplay(void)
     writeMapToLcd(g_mmap);
 }
 
-
-/****************************************
-*	Function:	void backLightState(LCD_BACKLIGHT_STATES state)
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void setNextLcdBacklightState(void)
 {
 	LCD_BACKLIGHT_STATES backlightState;
@@ -610,10 +587,9 @@ void setNextLcdBacklightState(void)
 	}
 }
 
-/****************************************
-*	Function:	void backLightState(LCD_BACKLIGHT_STATES state)
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 LCD_BACKLIGHT_STATES getLcdBacklightState(void)
 {    
 	if (getPowerControlState(LCD_BACKLIGHT_ENABLE) == ON)
@@ -633,10 +609,9 @@ LCD_BACKLIGHT_STATES getLcdBacklightState(void)
 	}
 }
 
-/****************************************
-*	Function:	void backLightState(LCD_BACKLIGHT_STATES state)
-*	Purpose:	
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void setLcdBacklightState(LCD_BACKLIGHT_STATES state)
 {    
 	switch (state)
@@ -666,10 +641,9 @@ void setLcdBacklightState(LCD_BACKLIGHT_STATES state)
 	}
 }
 
-/*******************************************************************************
- *  Function:  		adjustLcdContrast
- *  Purpose :  		Adjust the contrast either lighter or darker
- *******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void adjustLcdContrast(CONTRAST_ADJUSTMENT adjust)
 {
 	switch (adjust)
@@ -699,12 +673,9 @@ void adjustLcdContrast(CONTRAST_ADJUSTMENT adjust)
 	saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 }
 
-/*******************************************************************************
- *  Function:  		set_lcd_contrast
- *  Description:	This function sets the LCD contrast voltage on the
- *                  LCD display by writing a number to the contrast
- *                  voltage generation circuit.
- *******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void setLcdContrast(uint8 cmd)
 {
 	//uint16* powerManagementPort = (uint16*)POWER_CONTROL_ADDRESS;

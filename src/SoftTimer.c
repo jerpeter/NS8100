@@ -19,7 +19,6 @@
 #include "PowerManagement.h"
 #include "InitDataBuffers.h"
 #include "SysEvents.h"
-#include "Old_Board.h"
 #include "Uart.h"
 #include "Keypad.h"
 #include "RemoteOperation.h"
@@ -41,10 +40,9 @@
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
-/****************************************
-*	Function:    assignSoftTimer
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void assignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 {
 	if (timerNum >= NUM_OF_SOFT_TIMERS)
@@ -65,10 +63,9 @@ void assignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 	return;
 }
 
-/****************************************
-*	Function:    assignSoftTimer
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void resetSoftTimer(uint16 timerNum)
 {
 	if (timerNum >= NUM_OF_SOFT_TIMERS)
@@ -86,10 +83,9 @@ void resetSoftTimer(uint16 timerNum)
 	return;
 }
 
-/****************************************
-*	Function:    clearSoftTimer
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void clearSoftTimer(uint16 timerNum)
 {
 	if (timerNum >= NUM_OF_SOFT_TIMERS)
@@ -105,10 +101,9 @@ void clearSoftTimer(uint16 timerNum)
 	g_rtcTimerBank[timerNum].callback = NULL;
 }
 
-/****************************************
-*	Function:    checkSoftTimers
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void checkSoftTimers(void)
 {
 	uint16 softTimerIndex;
@@ -174,10 +169,9 @@ void checkSoftTimers(void)
 	return;
 }
 
-/****************************************
-*	Function:    displayTimerCallBack
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void displayTimerCallBack(void)
 {
 	debug("LCD Backlight Timer callback: activated.\n");
@@ -186,30 +180,27 @@ void displayTimerCallBack(void)
 	setLcdBacklightState(BACKLIGHT_OFF);
 }
 
-/****************************************
-*	Function:    alarmOneOutputTimerCallback
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void alarmOneOutputTimerCallback(void)
 {
 	// Deactivate alarm 1 signal
 	powerControl(ALARM_1_ENABLE, OFF);
 }
 
-/****************************************
-*	Function:    alarmTwoOutputTimerCallback
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void alarmTwoOutputTimerCallback(void)
 {
 	// Deactivate alarm 2 signal
 	powerControl(ALARM_2_ENABLE, OFF);
 }
 
-/****************************************
-*	Function:    lcdPwTimerCallBack
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void lcdPwTimerCallBack(void)
 {
 	debug("LCD Power Timer callback: activated.\n");
@@ -228,10 +219,9 @@ void lcdPwTimerCallBack(void)
 	}
 }
 
-/****************************************
-*	Function:    monitorUpdateTimerCallback
-*	Purpose:	 update the LCD to show updated time and battery voltage
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void menuUpdateTimerCallBack(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -245,10 +235,9 @@ void menuUpdateTimerCallBack(void)
 	assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
 }
 
-/****************************************
-*	Function:    keypadLedUpdateTimerCallBack
-*	Purpose:	 update the LED on the Keypad
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void keypadLedUpdateTimerCallBack(void)
 {
 	static uint8 ledState = KEYPAD_LED_STATE_UNKNOWN;
@@ -355,10 +344,9 @@ void keypadLedUpdateTimerCallBack(void)
 	assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
 }
 
-/****************************************
-*	Function:    powerOffTimerCallBack
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void powerOffTimerCallback(void)
 {
 	debug("Power Off Timer callback: activated.\n");
@@ -386,10 +374,9 @@ void powerOffTimerCallback(void)
 	PowerUnitOff(SHUTDOWN_UNIT);
 }
 
-/****************************************
-*	Function:    modemDelayTimerCallback
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void modemDelayTimerCallback(void)
 {
 	if (YES == g_modemStatus.modemAvailable)
@@ -405,19 +392,17 @@ void modemDelayTimerCallback(void)
 	}
 }
 
-/****************************************
-*	Function:    autoCalInWaveformTimerCallback
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void autoCalInWaveformTimerCallback(void)
 {
 	handleManualCalibration();
 }
 
-/****************************************
-*	Function:    modemResetTimerCallback
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void modemResetTimerCallback(void)
 {
 	if (g_modemResetStage == 0)
@@ -458,10 +443,9 @@ void modemResetTimerCallback(void)
 	}
 }
 
-/****************************************
-*	Function:    autoMonitorTimerCallBack
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void autoMonitorTimerCallBack(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -480,10 +464,9 @@ void autoMonitorTimerCallBack(void)
 	}
 }
 
-/****************************************
-*	Function:    procTimerEvents(void)
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void procTimerEvents(void)
 {
 	static uint8 processingMidnight = NO;
@@ -532,10 +515,9 @@ void procTimerEvents(void)
 	}
 }
 
-/****************************************
-*	Function:   handleMidnightEvent
-*	Purpose:	Handle the operations that need to occur at or after midnight
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleMidnightEvent(void)
 {
 	INPUT_MSG_STRUCT mn_msg;

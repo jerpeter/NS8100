@@ -49,10 +49,9 @@ static TEMP_MENU_DATA_STRUCT s_overwriteMenuTable[OVERWRITE_MN_TABLE_SIZE] = {
 void overWriteMn (INPUT_MSG_STRUCT);
 void overWriteMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 
-/****************************************
-*	Function:	overWriteMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void overWriteMn(INPUT_MSG_STRUCT msg)
 { 
     static WND_LAYOUT_STRUCT wnd_layout;
@@ -67,10 +66,9 @@ void overWriteMn(INPUT_MSG_STRUCT msg)
     }
 }
 
-/****************************************
-*	Function:	overWriteMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	char buff[20];

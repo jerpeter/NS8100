@@ -55,10 +55,9 @@ void mainMn(INPUT_MSG_STRUCT);
 void mainMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 void mainMnScroll(char, char, MN_LAYOUT_STRUCT*);
 
-/****************************************
-*	Function:	mainMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void mainMn(INPUT_MSG_STRUCT msg)
 { 
     static WND_LAYOUT_STRUCT wnd_layout;
@@ -73,10 +72,9 @@ void mainMn(INPUT_MSG_STRUCT msg)
     }
 }
 
-/****************************************
-*	Function:	mainMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -267,10 +265,9 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 
 }
 
-/****************************************
-*	Function:	mainMnScroll
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void mainMnScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT * mn_layout_ptr)
 {   
    uint8 buff[50];

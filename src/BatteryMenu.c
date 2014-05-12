@@ -13,7 +13,6 @@
 #include "Typedefs.h"
 #include "Menu.h"
 #include "Display.h"
-#include "Old_Board.h"
 #include "Uart.h"
 #include "Display.h"
 #include "Keypad.h"
@@ -46,10 +45,9 @@ void batteryMn (INPUT_MSG_STRUCT);
 void batteryMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT *);
 void batteryMnDsply(WND_LAYOUT_STRUCT*);
 
-/****************************************
-*	Function:	batteryMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void batteryMn(INPUT_MSG_STRUCT msg)
 {
     static WND_LAYOUT_STRUCT wnd_layout;
@@ -64,10 +62,9 @@ void batteryMn(INPUT_MSG_STRUCT msg)
     }
 }
 
-/****************************************
-*	Function:	batteryMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void batteryMnProc(INPUT_MSG_STRUCT msg,
                    WND_LAYOUT_STRUCT *wnd_layout_ptr,
                    MN_LAYOUT_STRUCT *mn_layout_ptr)
@@ -119,10 +116,9 @@ void batteryMnProc(INPUT_MSG_STRUCT msg,
 
 }
 
-/****************************************
-*	Function:	batteryMnDsply
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void batteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
     uint8 buff[25];

@@ -12,7 +12,6 @@
 #include <string.h>
 #include "Typedefs.h"
 #include "Common.h"
-#include "Old_Board.h"
 #include "Menu.h"
 #include "PowerManagement.h"
 #include "Uart.h"
@@ -58,10 +57,9 @@ static MB_CHOICE s_messageChoices[MB_TOTAL_CHOICES] =
 	// Add new s_messageChoices entry for new choices aboove this line
 };
 
-/****************************************
-*	Function:  loadUserMenuTable()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void loadTempMenuTable(TEMP_MENU_DATA_STRUCT* currentMenu)
 {
 	uint16 i = 0;
@@ -76,10 +74,9 @@ void loadTempMenuTable(TEMP_MENU_DATA_STRUCT* currentMenu)
 	strcpy((char*)g_menuPtr[i].data, ".end.");
 }
 
-/****************************************
-*	Function:	mnScroll
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void mnScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
 	uint8 buff[50];
@@ -121,10 +118,9 @@ void mnScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 
 }
 
-/****************************************
-*	Function:	userMenuScroll
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void userMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
 	char buff[50];
@@ -162,10 +158,9 @@ void userMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout
 	}
 }
 
-/****************************************
-*	Function:	 dsplySelMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void dsplySelMn(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr, uint8 titlePosition)
 {
    uint8 buff[50];
@@ -229,10 +224,9 @@ void dsplySelMn(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_p
    }/* END OF WHILE LOOP */
 }
 
-/****************************************
-*	Function:	 displayUserMenu
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void displayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr, uint8 titlePosition)
 {
 	uint8 buff[50]; /* made it bigger then NUM_CHAR_PER_LN just in case someone trys to make a big string.*/
@@ -319,17 +313,9 @@ void displayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_lay
 	}
 }
 
-/****************************************
-*	Function:   wndMpWrtString
-*	Purpose:
-*
-*	ProtoType:	void wndMpWrtString(char* buff,
-*                                  Wnd_Layout_Struct *wnd_layout,
-*                                  int32 font_type,
-*                                  int32 ln_type)
-*	Input:
-*	Output:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void wndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, int ln_type)
 {
    const uint8 (*fmap_ptr)[FONT_MAX_COL_SIZE];
@@ -495,10 +481,9 @@ void wndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
 	wnd_layout->next_col = mmcurr_col;
 }
 
-//=============================================================================
-// Function:	messageBorder
-// Purpose:		create a border for a MessageBox
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void messageBorder(void)
 {
 	uint8 i = 0;
@@ -538,10 +523,9 @@ void messageBorder(void)
 	}
 }
 
-//=============================================================================
-// Function:	messageTitle
-// Purpose:		write the title string into the MessageBox (highlighted)
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void messageTitle(char* titleString)
 {
 	uint8 i = 0, j = 0;
@@ -572,10 +556,9 @@ void messageTitle(char* titleString)
 		g_mmap[1][i] = 0xff;
 }
 
-//=============================================================================
-// Function:	messageText
-// Purpose:		write the message text string into the MessageBox
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void messageText(char* textString)
 {
 	uint8 i = 0, j = 0;
@@ -708,10 +691,9 @@ void messageText(char* textString)
 	}
 }
 
-//=============================================================================
-// Function:	messageChoice
-// Purpose:		write the choice/choices into the MessageBox
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void messageChoice(MB_CHOICE_TYPE choiceType)
 {
 	uint8 i = 0, j = 0;
@@ -783,10 +765,9 @@ void messageChoice(MB_CHOICE_TYPE choiceType)
 	}
 }
 
-//=============================================================================
-// Function:	messageChoiceActiveSwap
-// Purpose:		swap the active (highlighted) choices in the MessageBox
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void messageChoiceActiveSwap(MB_CHOICE_TYPE choiceType)
 {
 	uint8 i = 0;
@@ -825,10 +806,9 @@ void messageChoiceActiveSwap(MB_CHOICE_TYPE choiceType)
 	g_mmap[6][128-startPosition+1] ^= 0x3e;
 }
 
-//=============================================================================
-// Function:	messageBox
-// Purpose:		provide a generic MessageBox with text and choices
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 messageBoxActiveFlag = NO;
 uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 {
@@ -901,10 +881,9 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 		return (MB_NO_ACTION);
 }
 
-//=============================================================================
-// Function:	overlayMessage
-// Purpose:		provide a generic overlay message with variable display time
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void overlayMessage(char* titleString, char* textString, uint32 displayTime)
 {
 	messageBorder();
@@ -915,10 +894,9 @@ void overlayMessage(char* titleString, char* textString, uint32 displayTime)
 	soft_usecWait(displayTime);
 }
 
-//=============================================================================
-// Function:	updateModeMenuTitle
-// Purpose:		Update the Mode menu title with the appropriate mode string
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void updateModeMenuTitle(uint8 mode)
 {
 	switch (mode)
@@ -937,10 +915,9 @@ void updateModeMenuTitle(uint8 mode)
 	}
 }
 
-/****************************************
-*	Function:	displaySplashScreen
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 testg_mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 
 void displaySplashScreen(void)
@@ -1013,10 +990,9 @@ void displaySplashScreen(void)
 	writeMapToLcd(g_mmap);
 }
 
-//=============================================================================
-// Function:	displayCalDate
-// Purpose:
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void displayCalDate(void)
 {
 	char dateString[35];
@@ -1037,10 +1013,9 @@ void displayCalDate(void)
 	}
 }
 
-//=============================================================================
-// Function:	displaySensorType
-// Purpose:
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void displaySensorType(void)
 {
 	uint16 sensorType = NULL_TEXT;
@@ -1067,10 +1042,9 @@ void displaySensorType(void)
 	}
 }
 
-//=============================================================================
-// Function:	displaySerialNumber
-// Purpose:
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void displaySerialNumber(void)
 {
 	char message[75];
@@ -1087,10 +1061,9 @@ void displaySerialNumber(void)
 	}
 }
 
-//=============================================================================
-// Function:	displayTimerModeSettings
-// Purpose:
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void displayTimerModeSettings(void)
 {
 	char message[75];
@@ -1131,10 +1104,9 @@ void displayTimerModeSettings(void)
 	messageBox(getLangText(TIMER_MODE_TEXT), (char*)message, MB_OK);
 }
 
-//=============================================================================
-// Function:	displayFlashUsageStats
-// Purpose:
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void displayFlashUsageStats(void)
 {
 	FLASH_USAGE_STRUCT usage;
@@ -1199,10 +1171,9 @@ void displayFlashUsageStats(void)
 #endif
 }
 
-//=============================================================================
-// Function:	displayAutoDialInfo
-// Purpose:
-//=============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void displayAutoDialInfo(void)
 {
 	char message[75];

@@ -55,10 +55,9 @@ void monitorMn(INPUT_MSG_STRUCT);
 void monitorMnDsply(WND_LAYOUT_STRUCT *);
 void monitorMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 
-/****************************************
-*	Function:	monitorMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void monitorMn(INPUT_MSG_STRUCT msg)
 {   
 	static WND_LAYOUT_STRUCT wnd_layout;
@@ -73,10 +72,9 @@ void monitorMn(INPUT_MSG_STRUCT msg)
 	}
 }
 
-/****************************************
-*	Function:	monitorMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 g_showRVTA = NO;
 void monitorMnProc(INPUT_MSG_STRUCT msg,
 	WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
@@ -483,10 +481,9 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 	}  
 }
 
-/****************************************
-*	Function:	monitorMnDsply
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	char buff[50];

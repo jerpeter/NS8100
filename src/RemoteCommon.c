@@ -14,7 +14,6 @@
 #include "Common.h"
 #include "Uart.h"
 #include "Record.h"
-#include "Old_Board.h"
 #include "RemoteHandler.h"
 #include "RemoteCommon.h"
 #include "Crc.h"
@@ -35,12 +34,9 @@
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
-//==================================================
-//	Procedure: parseIncommingMsgHeader()
-//	Description:
-//	Input: CMD_BUFFER_STRUCT* inCmd
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 parseIncommingMsgHeader(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* incommingHdr)
 {
 	uint8 errCode = NO;
@@ -93,12 +89,9 @@ uint8 parseIncommingMsgHeader(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* 
 	return (errCode);
 }
 
-//==================================================
-//	Procedure: parseIncommingMsgHeader()
-//	Description:
-//	Input: CMD_BUFFER_STRUCT* inCmd
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 parseIncommingMsgCmd(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* incommingHdr)
 {
 	uint8 errCode = NO;
@@ -122,12 +115,9 @@ uint8 parseIncommingMsgCmd(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* inc
 }
 
 
-//==================================================
-//	Procedure: buildMsgHeader()
-//	Description:
-//	Input: CMD_BUFFER_STRUCT* inCmd
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void buildOutgoingHeaderBuffer(COMMAND_MESSAGE_HEADER* msgHdrData, uint8* msgHdrBuf)
 {
 	uint8* bufPtr = msgHdrBuf;
@@ -164,13 +154,9 @@ void buildOutgoingHeaderBuffer(COMMAND_MESSAGE_HEADER* msgHdrData, uint8* msgHdr
 
 }
 
-
-//==================================================
-//	Procedure: buildOutgoingSimpleHeaderBuffer()
-//	Description:
-//	Input:
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void buildOutgoingSimpleHeaderBuffer(uint8* msgHdrBuf,
 	uint8* msgCmd, uint8* msgType, uint32 dataLength,
 	uint8 verFlag, uint8 crcFlag)
@@ -200,13 +186,9 @@ void buildOutgoingSimpleHeaderBuffer(uint8* msgHdrBuf,
 	*bufPtr = 0x46;
 }
 
-
-//==================================================
-//	Procedure: sendErrorMsg()
-//	Description:
-//	Input:
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void sendErrorMsg(uint8* msgCmd, uint8* msgType)
 {
 	uint32 msgCRC = 0;
@@ -224,14 +206,9 @@ void sendErrorMsg(uint8* msgCmd, uint8* msgType)
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
-
-//==================================================
-// Function: getInt16Field
-// Description:
-// 		Download event memory.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 getInt16Field(uint8* dataPtr)
 {
 	uint16 int16Data = 0;
@@ -245,12 +222,9 @@ uint16 getInt16Field(uint8* dataPtr)
 	return (int16Data);
 }
 
-//==================================================
-//	Procedure: buildOutgoingDataLength()
-//	Description:
-//	Input: COMMAND_MESSAGE_HEADER* hdrData, uint32 dataLength
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void buildIntDataField(char* strBuffer, uint32 data, uint8 fieldLen)
 {
 	if (fieldLen == FIELD_LEN_08)
@@ -271,12 +245,9 @@ void buildIntDataField(char* strBuffer, uint32 data, uint8 fieldLen)
 	}
 }
 
-//==================================================
-//	Procedure: buildOutgoingDataLength()
-//	Description:
-//	Input: COMMAND_MESSAGE_HEADER* hdrData, uint32 dataLength
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint32 dataLengthStrToUint32(uint8* dataLengthStr)
 {
 	uint32 dataLength = 0;
@@ -317,10 +288,9 @@ uint32 dataLengthStrToUint32(uint8* dataLengthStr)
 	return (dataLength);
 }
 
-//==================================================
-//	Function:	writeCompressedData
-//	Purpose:	Send out the compressed data byte
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void writeCompressedData(uint8 compressedData)
 {
 	g_demXferStructPtr->xmitBuffer[g_demXferStructPtr->xmitSize] = compressedData;
@@ -340,10 +310,9 @@ void writeCompressedData(uint8 compressedData)
 	}
 }
 
-//==================================================
-//	Function:	initAutoDialout
-//	Purpose:
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void initAutoDialout(void)
 {
 	// Check if the table key is not valid
@@ -363,10 +332,9 @@ void initAutoDialout(void)
 	__autoDialoutTbl.lastStoredEvent = getLastStoredEventNumber();
 }
 
-//==================================================
-//	Function:	checkAutoDialoutStatus
-//	Purpose:
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void checkAutoDialoutStatus(void)
 {
 	if ((g_autoDialoutState == AUTO_DIAL_IDLE) && (READ_DCD == NO_CONNECTION) &&
@@ -376,10 +344,9 @@ void checkAutoDialoutStatus(void)
 	}
 }
 
-//==================================================
-//	Function:	startAutoDialoutProcess
-//	Purpose:
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void startAutoDialoutProcess(void)
 {
 	if (READ_DCD == NO_CONNECTION)
@@ -389,10 +356,9 @@ void startAutoDialoutProcess(void)
 	}
 }
 
-//==================================================
-//	Function:	autoDialoutStateMachine
-//	Purpose:
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void autoDialoutStateMachine(void)
 {
 	static uint32 timer = 0;

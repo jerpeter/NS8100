@@ -30,7 +30,7 @@ static uint8 s_twiData[10];
 static twi_package_t s_twiPacket;
 
 ///----------------------------------------------------------------------------
-/// write_mcp23018
+///	Function Break
 ///----------------------------------------------------------------------------
 void write_mcp23018(unsigned char chip, unsigned char address, unsigned char data)
 {
@@ -54,7 +54,7 @@ void write_mcp23018(unsigned char chip, unsigned char address, unsigned char dat
 }
 
 ///----------------------------------------------------------------------------
-/// write_mcp23018_bytes
+///	Function Break
 ///----------------------------------------------------------------------------
 void write_mcp23018_bytes(unsigned char chip, unsigned char address,  unsigned char *data, unsigned char length)
 {
@@ -83,7 +83,7 @@ void write_mcp23018_bytes(unsigned char chip, unsigned char address,  unsigned c
 }
 
 ///----------------------------------------------------------------------------
-/// read_mcp23018
+///	Function Break
 ///----------------------------------------------------------------------------
 unsigned char read_mcp23018(unsigned char chip, unsigned char address)
 {
@@ -109,7 +109,7 @@ unsigned char read_mcp23018(unsigned char chip, unsigned char address)
 }
 
 ///----------------------------------------------------------------------------
-/// init_mcp23018
+///	Function Break
 ///----------------------------------------------------------------------------
 void init_mcp23018(unsigned char chip)
 {

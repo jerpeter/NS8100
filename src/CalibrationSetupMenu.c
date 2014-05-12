@@ -86,10 +86,9 @@ void calSetupMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 void mnStartCal(void);
 void mnStopCal(void);
 
-/****************************************
-*	Function:	calSetupMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void calSetupMn(INPUT_MSG_STRUCT msg)
 {
 	static WND_LAYOUT_STRUCT wnd_layout;
@@ -257,10 +256,9 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 	}
 }
 
-/****************************************
-*	Function:	calSetupMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void calSetupMnProc(INPUT_MSG_STRUCT msg,
 	WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
@@ -331,10 +329,9 @@ void calSetupMnProc(INPUT_MSG_STRUCT msg,
 
 }
 
-/****************************************
-*	Function:	calSetupMnDsply
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	uint8 buff[50];
@@ -571,10 +568,9 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 }
 
-/****************************************
-*	Function:  mnStartCal()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void mnStartCal(void)
 {
 	// Setup Analog controls
@@ -613,10 +609,9 @@ void mnStartCal(void)
 #endif
 }
 
-/****************************************
-*	Function:  mnStopCal()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void mnStopCal(void)
 {
 #if INTERNAL_SAMPLING_SOURCE

@@ -27,8 +27,7 @@
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireInit
-///	Purpose:	Init the port data and direction
+///	Function Break
 ///----------------------------------------------------------------------------
 void OneWireInit(void)
 {
@@ -42,8 +41,7 @@ void OneWireInit(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireReset
-///	Purpose:	Send a reset on the bus
+///	Function Break
 ///----------------------------------------------------------------------------
 #if 0
 uint8 OneWireReset(uint8 sensor)
@@ -86,8 +84,7 @@ uint8 OneWireReset(uint8 sensor)
 #endif
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireWriteByte
-///	Purpose:	Write a byte on the OneWire bus
+///	Function Break
 ///----------------------------------------------------------------------------
 #if 0
 void OneWireWriteByte(uint8 sensor, uint8 data)
@@ -138,8 +135,7 @@ void OneWireWriteByte(uint8 sensor, uint8 data)
 #endif
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireReadByte
-///	Purpose:	Read a byte on the OneWire bus
+///	Function Break
 ///----------------------------------------------------------------------------
 #if 0
 uint8 OneWireReadByte(uint8 sensor)
@@ -191,8 +187,7 @@ uint8 OneWireReadByte(uint8 sensor)
 #endif
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireTest
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void OneWireTest(uint8 sensor)
 {
@@ -235,8 +230,7 @@ void OneWireTest(uint8 sensor)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireFunctions
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void OneWireFunctions(uint8 sensor)
 {
@@ -417,8 +411,7 @@ void OneWireFunctions(uint8 sensor)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireReadMemory
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 OneWireReadROM(uint8 sensor)
 {
@@ -466,8 +459,7 @@ uint8 OneWireReadROM(uint8 sensor)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireReadMemory
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 OneWireReadMemory(uint8 sensor, uint8 address, uint8 length, uint8* data)
 {
@@ -504,8 +496,7 @@ uint8 OneWireReadMemory(uint8 sensor, uint8 address, uint8 length, uint8* data)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireWriteScratchpad
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 OneWireWriteScratchpad(uint8 sensor, uint8 address, uint8 length, uint8* data)
 {
@@ -542,8 +533,7 @@ uint8 OneWireWriteScratchpad(uint8 sensor, uint8 address, uint8 length, uint8* d
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireReadScratchpad
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 OneWireReadScratchpad(uint8 sensor, uint8 address, uint8 length, uint8* data)
 {
@@ -580,8 +570,7 @@ uint8 OneWireReadScratchpad(uint8 sensor, uint8 address, uint8 length, uint8* da
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireCopyScratchpad
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 OneWireCopyScratchpad(uint8 sensor)
 {
@@ -611,8 +600,7 @@ uint8 OneWireCopyScratchpad(uint8 sensor)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireWriteAppRegister
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 OneWireWriteAppRegister(uint8 sensor, uint8 address, uint8 length, uint8* data)
 {
@@ -649,8 +637,7 @@ uint8 OneWireWriteAppRegister(uint8 sensor, uint8 address, uint8 length, uint8* 
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireReadStatusRegister
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 OneWireReadStatusRegister(uint8 sensor, uint8* data)
 {
@@ -683,8 +670,7 @@ uint8 OneWireReadStatusRegister(uint8 sensor, uint8* data)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireReadAppRegister
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 OneWireReadAppRegister(uint8 sensor, uint8 address, uint8 length, uint8* data)
 {
@@ -721,8 +707,7 @@ uint8 OneWireReadAppRegister(uint8 sensor, uint8 address, uint8 length, uint8* d
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	OneWireCopyAndLockAppRegister
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 OneWireCopyAndLockAppRegister(uint8 sensor)
 {

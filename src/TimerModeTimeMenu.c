@@ -70,10 +70,9 @@ void timerModeTimeDvScroll (char dir_key,
 void tmKeepTime(void* src_ptr);
 void timerModeTimeScroll(char, MN_LAYOUT_STRUCT *);
 
-/****************************************
-*	Function:	timerModeTimeMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void timerModeTimeMn (INPUT_MSG_STRUCT msg)
 { 
     static WND_LAYOUT_STRUCT wnd_layout;
@@ -89,16 +88,11 @@ void timerModeTimeMn (INPUT_MSG_STRUCT msg)
     }
 }
 
-/****************************************
-*	Function:	timerModeTimeMnProc
-*	Purpose:
-****************************************/
-void timerModeTimeMnProc(INPUT_MSG_STRUCT msg,
-	                       REC_MN_STRUCT *rec_ptr,
-	                       WND_LAYOUT_STRUCT *wnd_layout_ptr,
-	                       MN_LAYOUT_STRUCT *mn_layout_ptr)
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void timerModeTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
-
    INPUT_MSG_STRUCT mn_msg;
    DATE_TIME_STRUCT time;
    uint32 input;
@@ -183,10 +177,9 @@ void timerModeTimeMnProc(INPUT_MSG_STRUCT msg,
    
 }
 
-/****************************************
-*	Function:	timerModeTimeScroll
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void timerModeTimeScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {   
 	switch (direction)
@@ -207,10 +200,9 @@ void timerModeTimeScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
 	}
 }
 
-/****************************************
-*	Function:	timerModeTimeDvScroll
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void timerModeTimeDvScroll (char dir_key,REC_MN_STRUCT *rec_ptr)
 {
 	switch (dir_key)
@@ -239,13 +231,10 @@ void timerModeTimeDvScroll (char dir_key,REC_MN_STRUCT *rec_ptr)
 	}  
 }
 
-/****************************************
-*	Function:	dsplyTimerModeTimeMn
-*	Purpose:
-****************************************/
-void dsplyTimerModeTimeMn(REC_MN_STRUCT *rec_ptr,
-							WND_LAYOUT_STRUCT *wnd_layout_ptr,
-							MN_LAYOUT_STRUCT *mn_layout_ptr)
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void dsplyTimerModeTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	char sbuff[50];
 	uint8 top;
@@ -333,10 +322,9 @@ void dsplyTimerModeTimeMn(REC_MN_STRUCT *rec_ptr,
 	wndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_STOP_MIN) ? CURSOR_LN : REG_LN);
 }
 
-/****************************************
-*	Function:	        loadTimerModeTimeMnDefRec
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void loadTimerModeTimeMnDefRec(REC_MN_STRUCT *rec_ptr,DATE_TIME_STRUCT *time_ptr)
 {
     // START HOUR
@@ -416,10 +404,9 @@ void loadTimerModeTimeMnDefRec(REC_MN_STRUCT *rec_ptr,DATE_TIME_STRUCT *time_ptr
     rec_ptr[TMT_STOP_MIN].numrec.num_type = WHOLE_NUM_TYPE;
 }
 
-/****************************************
-*	Function:       tmKeepTime
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void tmKeepTime(void* src_ptr)
 {
    REC_MN_STRUCT *rtemp;

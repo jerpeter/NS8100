@@ -31,6 +31,9 @@ uint32  bytes_loaded;
 #define SRAM_CODE           (((void *)AVR32_EBI_CS1_ADDRESS) + 0x00700000)
 #define SRAM_CODE_SIZE      0x00100000
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static char * srec_uart_gets( char *s, int channel )
 {
     char *b = s;
@@ -94,7 +97,9 @@ static char * srec_uart_gets( char *s, int channel )
     return s;
 }
 
-
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 int get_and_save_srec( FL_FILE* file )
 {
    uint16 badrecords = 0;
@@ -163,14 +168,9 @@ int get_and_save_srec( FL_FILE* file )
     return(imageType);
 }
 
-
-//
-//  function: BOOL GetSrec( );
-//   returns: TRUE if srecord received, FALSE if error in record
-// operation: gets the srecord data one line at a time and converts
-//            the line data to hex data and puts the data into and
-//            array that is used to program FLASH.
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 int unpack_srec( FL_FILE* file )
 {
     uint8  lineDone;
@@ -301,12 +301,9 @@ int unpack_srec( FL_FILE* file )
     return(imageType);
 }
 
-
-//
-//  function: SrecGetLine( );
-//   returns: ascii data structure
-// operation: receives the ascii line data from host
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void srec_get_line( ASCII_SREC_DATA * asciidata)
 {
     //uint32 timercount;
@@ -336,11 +333,9 @@ void srec_get_line( ASCII_SREC_DATA * asciidata)
     return;
 }
 
-//
-//  function: SrecConvertLine( );
-//   returns: data structure
-// operation: converts the ascii line data to hex data structure
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 RECORD_DATA srec_convert_line( ASCII_SREC_DATA linedata )
 {
     uint8 count;
@@ -385,11 +380,9 @@ RECORD_DATA srec_convert_line( ASCII_SREC_DATA linedata )
     return( srecdata );
 }
 
-//
-//  function: SrecChecksum( linedata )
-//   returns: TRUE if checksum ok FALSE if not ok
-// operation: calculates the checksum and compares it to received checksum
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 bool srec_checksum( RECORD_DATA linedata )
 {
     uint8 bytecount;
@@ -424,11 +417,9 @@ bool srec_checksum( RECORD_DATA linedata )
     return( result );
 }
 
-//
-//  function: SrecGetData( linedata, *data )
-//   returns: nothing
-// operation: copies data from srecord line to data array
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void srec_get_data( RECORD_DATA Linedata, uint8 *data )
 {
     uint8 bytecount, byteindex;
@@ -442,30 +433,25 @@ void srec_get_data( RECORD_DATA Linedata, uint8 *data )
     }
 }
 
-//
-//  function: SrecAck( )
-//   returns: nothing
-// operation: sends an ack to host
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void srec_ack( void )
 {
     usart_putchar( DBG_USART, ACK );
 }
 
-//
-//  function: SrecNack( )
-//   returns: nothing
-// operation: sends a nack to host
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void srec_nack( void )
 {
     usart_putchar( DBG_USART, NACK );
 }
 
-//===========================================================================
-// Function: atoc( uint8 ch )
-// Purpose:  A faster solution to converting ascii text to raw hex values
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 atoc( uint8 ch )
 {
     if((ch >= 0x30) && (ch <= 0x39))
@@ -489,12 +475,9 @@ uint8 atoc( uint8 ch )
     }
 }
 
-//
-//  function: atonum( uint8 ch )
-//   returns: 8 bit integer value of converted character
-// operation: converts the lower nibble of the character to an integer
-//            equal to the hex value of the integer.
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 atonum( uint8 ch )
 {
     if( ch == '1' )
@@ -578,12 +561,9 @@ uint8 atonum( uint8 ch )
     }
 }
 
-//
-//  function: atoh_4( uint8 * ch )
-//   returns: 32 bit integer value of converted character string
-// operation: converts the character string to a 32 bit integer
-//            equal to the hex value of the string.
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint32 atoh_4( uint8 * ch )
 {
     uint32 result = 0;
@@ -606,12 +586,9 @@ uint32 atoh_4( uint8 * ch )
     return( result );
 }
 
-//
-//  function: atoh_2( uint8 * ch )
-//   returns: 8 bit integer value of converted character string
-// operation: converts the character string to a 8 bit integer
-//            equal to the hex value of the string.
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 atoh_2( uint8 * ch )
 {
     uint8 result = 0;
@@ -622,13 +599,9 @@ uint8 atoh_2( uint8 * ch )
     return( result );
 }
 
-//
-//  function: atoh_1( uint8 * ch )
-//   returns: 8 bit integer value of converted character string
-// operation: converts the lower nibble of the character string
-//            to a 8 bit integer equal to the hex value of the
-//            string.
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 atoh_1( uint8 * ch )
 {
     uint8 result = 0;
@@ -637,29 +610,18 @@ uint8 atoh_1( uint8 * ch )
     return( result );
 }
 
-//
-//  function:
-//  returns:
-//  operation:
-//
-//
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void srec_xOff( void )
 {
     usart_putchar( DBG_USART, XOFF );
 }
 
-//
-//  function:
-//   returns:
-// operation:
-//
-//
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void srec_xOn(void)
 {
     usart_putchar( DBG_USART, XON );
 }
-
-
-
-

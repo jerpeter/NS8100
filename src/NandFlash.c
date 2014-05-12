@@ -8,7 +8,6 @@
 ///----------------------------------------------------------------------------
 ///	Includes
 ///----------------------------------------------------------------------------
-#include "Old_Board.h"
 #include "Common.h"
 #include "Typedefs.h"
 #include "NandFlash.h"
@@ -38,8 +37,7 @@
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void writeNandData(uint8 data)
 {
@@ -47,8 +45,7 @@ void writeNandData(uint8 data)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void writeNandCommand(uint8 data)
 {
@@ -56,8 +53,7 @@ void writeNandCommand(uint8 data)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void writeNandAddress(uint8 data)
 {
@@ -65,8 +61,7 @@ void writeNandAddress(uint8 data)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void writeNandFullAddress(uint32 data)
 {
@@ -77,8 +72,7 @@ void writeNandFullAddress(uint32 data)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void writeNandAddressParts(uint8 block, uint8 page, uint8 byte);
 void writeNandAddressParts(uint8 block, uint8 page, uint8 byte)
@@ -90,8 +84,7 @@ void writeNandAddressParts(uint8 block, uint8 page, uint8 byte)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 readNandData(void)
 {
@@ -103,8 +96,7 @@ uint8 readNandData(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 readNandAddress(uint8 type, uint32 address)
 {
@@ -121,8 +113,7 @@ uint8 readNandAddress(uint8 type, uint32 address)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void ReadNandFlash(uint8* dest, uint32 address, uint32 length)
 {
@@ -138,8 +129,7 @@ void ReadNandFlash(uint8* dest, uint32 address, uint32 length)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void WriteNandFlash(uint8* src, uint32 address, uint32 length)
 {
@@ -155,8 +145,7 @@ void WriteNandFlash(uint8* src, uint32 address, uint32 length)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 readNandID(void)
 {
@@ -180,8 +169,7 @@ uint8 readNandID(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void readNandStatus(void)
 {
@@ -201,8 +189,7 @@ void readNandStatus(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void waitWhileBusyNand(void)
 {
@@ -218,8 +205,7 @@ void waitWhileBusyNand(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void issueNandReset(void)
 {
@@ -227,8 +213,7 @@ void issueNandReset(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void blockEraseNand(uint32 blockAddress)
 {
@@ -242,8 +227,7 @@ void blockEraseNand(uint32 blockAddress)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void pageProgramNand(uint8 type, uint32 address, uint8* data, uint16 length)
 {
@@ -274,8 +258,7 @@ void pageProgramNand(uint8 type, uint32 address, uint8* data, uint16 length)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:
-/// Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void copyBackNand(uint32 readAddress, uint32 writeAddress)
 {

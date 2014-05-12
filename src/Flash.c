@@ -8,7 +8,6 @@
 ///----------------------------------------------------------------------------
 ///	Includes
 ///----------------------------------------------------------------------------
-#include "Old_Board.h"
 #include "Flash.h"
 #include "Uart.h"
 #include "Common.h"
@@ -26,12 +25,9 @@
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
-/*==================================================
- * Procedure: chipErase()
- * Description: Erase the entire flash chip
- * Input: None
- * Output: Status
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 int16 chipErase(void)
 {
@@ -94,12 +90,9 @@ int16 chipErase(void)
 }
 #endif
 
-/*==================================================
- * Procedure: sectorErase()
- * Description: Erase a sector on the flash chip.
- * Input: Sector number
- * Output: None
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 {
@@ -247,10 +240,9 @@ int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 }
 #endif
 
-/*******************************************************************************
-*	Function:	flashWrite
-*	Purpose: Original routine, with the guts replace by the new flash function
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 int16 flashWrite(uint16* dest, uint16* src, uint32 length)
 {
 #if 0 // ns7100
@@ -275,12 +267,9 @@ extern FL_FILE* g_currentEventFileHandle;
 	return (FLASH_OP_SUCCESS);
 }
 
-/*==================================================
- * Procedure: programWord()
- * Description: Program one word in flash
- * Input: Program address, word data
- * Output: None
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 int16 programWord(uint16* destAddr, uint16 data)
 {
@@ -346,12 +335,9 @@ int16 programWord(uint16* destAddr, uint16 data)
 }
 #endif
 
-/*==================================================
- * Procedure: programByte()
- * Description: Program one byte in flash to retrofit old code
- * Input: Program address, byte data
- * Output: Status
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 int16 programByte(uint8* destAddr, uint8 data)
 {
@@ -444,12 +430,9 @@ int16 programByte(uint8* destAddr, uint8 data)
 }
 #endif
 
-/*==================================================
- * Procedure: issueReset()
- * Description: Issue the reset command to the flash device
- * Input: None
- * Output: None
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 void issueReset(void)
 {
@@ -460,12 +443,9 @@ void issueReset(void)
 }
 #endif
 
-/*==================================================
- * Procedure: waitWhileFlashOperationBusy()
- * Description:
- * Input: None
- * Output: None
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 void waitWhileFlashOperationBusy(void)
 {
@@ -485,12 +465,9 @@ void waitWhileFlashOperationBusy(void)
 }
 #endif
 
-/*==================================================
- * Procedure: flashCmdCompletePolling()
- * Description: Check to make sure the flash command has completed
- * Input: Addr (to chip, or sector, or specific addr)
- * Output: Status
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 int16 flashCmdCompletePolling(volatile uint16* addr)
 {
@@ -547,12 +524,9 @@ int16 flashCmdCompletePolling(volatile uint16* addr)
 }
 #endif
 
-/*==================================================
- * Procedure: flashDataPolling()
- * Description: Check to make sure the data had been written to the flash successfully
- * Input: Addr, Data
- * Output: Status
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 int16 flashDataPolling(volatile uint16* addr, uint16 data)
 {
@@ -596,12 +570,9 @@ int16 flashDataPolling(volatile uint16* addr, uint16 data)
 }
 #endif
 
-/*==================================================
- * Procedure: verifyFlashAddr()
- * Description: Check to make sure the flash address is valid
- * Input: Addr
- * Output: Status
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 int16 verifyFlashAddr(uint16* addr)
 {
@@ -613,12 +584,9 @@ int16 verifyFlashAddr(uint16* addr)
 }
 #endif
 
-/*==================================================
- * Procedure: verifyFlashDevice()
- * Description: Verify the flash device is a Macronix with the appropriate type
- * Input: None
- * Output: Status
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 int16 verifyFlashDevice(uint8 printResults)
 {
@@ -693,12 +661,9 @@ int16 verifyFlashDevice(uint8 printResults)
 }
 #endif
 
-/*==================================================
- * Procedure: verifyAtmelFlashDevice()
- * Description: Verify the flash device is a Macronix with the appropriate type
- * Input: None
- * Output: Status
- */
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 uint8 verifyAtmelFlashDevice(void)
 {

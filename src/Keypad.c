@@ -13,7 +13,6 @@
 #include "Record.h"
 #include "Common.h"
 #include "Typedefs.h"
-#include "Old_Board.h"
 #include "SoftTimer.h"
 #include "Display.h"
 #include "PowerManagement.h"
@@ -52,10 +51,9 @@ extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 static uint32 s_fixedSpecialSpeed;
 static uint8 s_keyMap[8];
 
-/****************************************
-*	Function:	isr_keypad
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 BOOLEAN keypad(uint8 keySource)
 {
 	INPUT_MSG_STRUCT msg;
@@ -547,10 +545,9 @@ extern void BootLoadManager(void);
 	return(PASSED);
 }
 
-/****************************************
-*	Function:	keypressEventMgr
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void keypressEventMgr(void)
 {
 	// Check if the LCD Power was turned off
@@ -594,14 +591,9 @@ void keypressEventMgr(void)
 	}
 }
 
-/****************************************
-*	Function:	getShiftChar
-*	Purpose:	If in here, we want the shifted char if available.
-*
-*	ProtoType:	void getShiftChar (uint8)
-*	Input:
-*	Output:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 getShiftChar(uint8 inputChar)
 {
 	switch (inputChar)
@@ -631,10 +623,9 @@ uint8 getShiftChar(uint8 inputChar)
 	return (inputChar);
 }
 
-/****************************************
-*	Function:	handleCtrlKeyCombination
-*	Purpose:	handle ctrl-keys
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 handleCtrlKeyCombination(uint8 inputChar)
 {
 	switch (inputChar)
@@ -655,10 +646,9 @@ uint8 handleCtrlKeyCombination(uint8 inputChar)
 	return (KEY_NONE);
 }
 
-/****************************************
-*	Function:	initKeypad
-*	Purpose:	Initialize the keypad IO device
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void initKeypad(void)
 {
 #if 0 // fix_ns8100
@@ -672,10 +662,9 @@ void initKeypad(void)
 #endif
 }
 
-/****************************************
-*	Function:	getKeypadKey
-*	Purpose:	Returns the active key on the keypad
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 getKeypadKey(uint8 mode)
 {
 	//uint8 columnSelection = 0;
@@ -755,10 +744,9 @@ uint8 getKeypadKey(uint8 mode)
 	return (keyPressed);
 }
 
-/****************************************
-*	Function:	scanKeypad
-*	Purpose:	Returns the active key on the keypad
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 messageBoxKeyInput = 0;
 extern uint8 messageBoxActiveFlag;
 uint8 scanKeypad(void)

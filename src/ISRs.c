@@ -17,7 +17,6 @@
 #include "ProcessCombo.h"
 #include "SysEvents.h"
 #include "Uart.h"
-#include "Old_Board.h"
 #include "Keypad.h"
 #include "RealTimeClock.h"
 #include "SoftTimer.h"
@@ -32,7 +31,6 @@
 #include "tc.h"
 #include "twi.h"
 #include "spi.h"
-#include "ad_test_menu.h"
 #include "usart.h"
 
 ///----------------------------------------------------------------------------
@@ -91,10 +89,9 @@ __attribute__((__interrupt__))
 void tc_typematic_irq(void);
 
 #if 0 // ns7100
-/*******************************************************************************
-* Function: isr_PowerOffKey
-* Purpose:
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 //#pragma interrupt on
 void isr_PowerOffKey(void)
 {
@@ -138,10 +135,9 @@ void isr_PowerOffKey(void)
 }
 //#pragma interrupt off
 
-/*******************************************************************************
-* Function: isr_SCI1
-* Purpose: Handle serial data coming into the processor
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 //#pragma interrupt on
 extern uint8 messageBoxActiveFlag;
 extern uint8 messageBoxKeyInput;
@@ -249,9 +245,9 @@ void isr_SCI1(void)
 //#pragma interrupt off
 #endif
 
-// ============================================================================
-// eic_external_rtc_irq
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
 void eic_external_rtc_irq(void)
 {
@@ -271,9 +267,9 @@ void eic_external_rtc_irq(void)
 	AVR32_EIC.ICR.int1 = 1;
 }
 
-// ============================================================================
-// eic_keypad_irq
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
 void eic_keypad_irq(void)
 {
@@ -316,9 +312,9 @@ void eic_keypad_irq(void)
 	AVR32_EIC.ICR.int5 = 1;
 }
 
-// ============================================================================
-// eic_keypad_irq
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
 void eic_system_irq(void)
 {
@@ -412,9 +408,9 @@ void eic_system_irq(void)
 	AVR32_EIC.ICR.int4 = 1;
 }
 
-// ============================================================================
-// usart_1_irq
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
 void usart_1_rs232_irq(void)
 {
@@ -545,9 +541,9 @@ static uint8 craftBufferCount = 0;
 #endif
 }
 
-// ============================================================================
-// soft_timer_tick_irq
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
 void soft_timer_tick_irq(void)
 {
@@ -582,9 +578,9 @@ void soft_timer_tick_irq(void)
 	rtc_clear_interrupt(&AVR32_RTC);
 }
 
-// ============================================================================
-// Start_Data_Clock
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Start_Data_Clock(TC_CHANNEL_NUM channel)
 {
 	//volatile avr32_tc_t *tc = &AVR32_TC;
@@ -607,9 +603,9 @@ void Start_Data_Clock(TC_CHANNEL_NUM channel)
 	}
 }	
 
-// ============================================================================
-// Stop_Data_Clock
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Stop_Data_Clock(TC_CHANNEL_NUM channel)
 {
 	//volatile avr32_tc_t *tc = &AVR32_TC;
@@ -632,9 +628,9 @@ void Stop_Data_Clock(TC_CHANNEL_NUM channel)
 	}
 }	
 
-// ============================================================================
-// tc_typematic_irq
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
 void tc_typematic_irq(void)
 {
@@ -645,9 +641,9 @@ void tc_typematic_irq(void)
 	DUMMY_READ(AVR32_TC.channel[TC_TYPEMATIC_TIMER_CHANNEL].sr);
 }
 
-// ============================================================================
-// fillPretriggerBuffer_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void fillPretriggerBuffer_ISR_Inline(void)
 {
 	s_pretriggerCount++;
@@ -674,9 +670,9 @@ static inline void fillPretriggerBuffer_ISR_Inline(void)
 	}					
 }
 
-// ============================================================================
-// normalizeSampleData_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void normalizeSampleData_ISR_Inline(void)
 {
 	if (s_R_channelReading < ACCURACY_16_BIT_MIDPOINT) { s_R_channelReading = ACCURACY_16_BIT_MIDPOINT - s_R_channelReading; }
@@ -692,9 +688,9 @@ static inline void normalizeSampleData_ISR_Inline(void)
 	else { s_A_channelReading -= ACCURACY_16_BIT_MIDPOINT; }
 }
 	
-// ============================================================================
-// checkAlarms_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void checkAlarms_ISR_Inline(void)
 {
 	if (g_helpRecord.alarm_one_mode != ALARM_MODE_OFF)
@@ -728,9 +724,9 @@ static inline void checkAlarms_ISR_Inline(void)
 	}				
 }
 
-// ============================================================================
-// processAndMoveManualCalData
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void processAndMoveManualCalData_ISR_Inline(void)
 {
 	// Wait 5 samples to start cal signaling (~5 ms)
@@ -758,9 +754,9 @@ static inline void processAndMoveManualCalData_ISR_Inline(void)
 }
 
 #if 0 // Test (First attempt to process waveform data buffered and outside of the ISR)
-// ============================================================================
-// processAndMoveWaveformData
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void processAndMoveWaveformData(void)
 {
 	uint16 processingCount = (g_triggerRecord.trec.sample_rate / 8);
@@ -1124,9 +1120,9 @@ void processAndMoveWaveformData(void)
 }
 #endif
 
-// ============================================================================
-// processAndMoveWaveformData
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void processAndMoveWaveformData_ISR_Inline(void)
 {
 	//_____________________________________________________________________________________
@@ -1436,9 +1432,9 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 }
 
 #if 0 // Test (First attempt to buffer waveform data for processing outside of the ISR)
-// ============================================================================
-// moveWaveformData_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void moveWaveformData_ISR_Inline(void)
 {
 	// Copy sample over to bargraph buffer
@@ -1455,9 +1451,9 @@ static inline void moveWaveformData_ISR_Inline(void)
 }
 #endif
 
-// ============================================================================
-// moveBargraphData_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void moveBargraphData_ISR_Inline(void)
 {
 	// Copy sample over to bargraph buffer
@@ -1473,9 +1469,9 @@ static inline void moveBargraphData_ISR_Inline(void)
 	raiseSystemEventFlag(BARGRAPH_EVENT);
 }
 
-// ============================================================================
-// checkForTemperatureDrift_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void checkForTemperatureDrift_ISR_Inline(void)
 {
 	// Check if the stored temp reading is higher than the current reading
@@ -1506,9 +1502,9 @@ static inline void checkForTemperatureDrift_ISR_Inline(void)
 	}
 }
 
-// ============================================================================
-// applyOffsetAndCacheSampleData_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 {
 	// Apply channel zero offset
@@ -1524,9 +1520,9 @@ static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->a = s_A_channelReading;
 }
 
-// ============================================================================
-// getChannelDataWithReadbackWithTemp_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void getChannelDataWithReadbackWithTemp_ISR_Inline(void)
 {
 	//___________________________________________________________________________________________
@@ -1574,9 +1570,9 @@ static inline void getChannelDataWithReadbackWithTemp_ISR_Inline(void)
 	if(s_channelConfigReadBack != 0xb750) { s_channelSyncError = YES; }
 }
 
-// ============================================================================
-// getChannelDataNoReadbackWithTemp_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void getChannelDataNoReadbackWithTemp_ISR_Inline(void)
 {
 	// Chan 0 - R
@@ -1605,9 +1601,9 @@ static inline void getChannelDataNoReadbackWithTemp_ISR_Inline(void)
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 }
 
-// ============================================================================
-// getChannelDataNoReadbackNoTemp_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void getChannelDataNoReadbackNoTemp_ISR_Inline(void)
 {
 	//___________________________________________________________________________________________
@@ -1635,9 +1631,9 @@ static inline void getChannelDataNoReadbackNoTemp_ISR_Inline(void)
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 }
 
-// ============================================================================
-// handleChannelSyncError_ISR_Inline
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void handleChannelSyncError_ISR_Inline(void)
 {
 	debugErr("AD Channel Sync Error!\n");
@@ -1680,18 +1676,18 @@ static inline void handleChannelSyncError_ISR_Inline(void)
 	}
 }
 
-// ============================================================================
-// dataIsrInit
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void dataIsrInit(void)
 {
 	s_pretriggerFull = NO;
 	s_checkTempDrift = NO;
 }
 
-// ============================================================================
-// tc_sample_irq
-// ============================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
 void tc_sample_irq(void)
 {

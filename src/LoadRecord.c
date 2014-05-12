@@ -49,10 +49,9 @@ static TEMP_MENU_DATA_STRUCT s_loadRecordMenuTable [LOAD_REC_MN_TABLE_SIZE] = {
 void loadRecMn (INPUT_MSG_STRUCT);
 void loadRecMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 
-/****************************************
-*	Function:	loadRecMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void loadRecMn(INPUT_MSG_STRUCT msg)
 { 
     static WND_LAYOUT_STRUCT wnd_layout;
@@ -67,10 +66,9 @@ void loadRecMn(INPUT_MSG_STRUCT msg)
     }
 }
 
-/****************************************
-*	Function:	loadRecMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void loadRecMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	uint8 buff[20];

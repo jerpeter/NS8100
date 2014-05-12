@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Old_Board.h"
 #include "Typedefs.h"
 #include "RealTimeClock.h"
 #include "SoftTimer.h"
@@ -42,10 +41,9 @@ static RTC_ALARM_FREQ_STRUCT s_rtcAlarmFreq[] = {
 };
 #endif
 
-/****************************************
-*	Function:   InitExternalRtc(void)
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 BOOLEAN InitExternalRtc(void)
 {
 	// REDO & Update to new RTC
@@ -117,9 +115,9 @@ BOOLEAN InitExternalRtc(void)
 	return (TRUE);
 }
 
-//=======================================================
-// startExternalRTCClock
-//=======================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void startExternalRTCClock(uint16 sampleRate)
 {
 	RTC_MEM_MAP_STRUCT rtcMap;
@@ -143,9 +141,9 @@ void startExternalRTCClock(uint16 sampleRate)
 	rtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
 }
 
-//=======================================================
-// stopExternalRTCClock
-//=======================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void stopExternalRTCClock(void)
 {
 	RTC_MEM_MAP_STRUCT rtcMap;
@@ -157,10 +155,9 @@ void stopExternalRTCClock(void)
 	rtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
 }
 
-/****************************************
-*	Function:   setRtcTime
-*	Purpose: Set the RTC clock time.
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 setRtcTime(DATE_TIME_STRUCT* time)
 {
 	RTC_TIME_STRUCT rtcTime;
@@ -181,10 +178,9 @@ uint8 setRtcTime(DATE_TIME_STRUCT* time)
 	return (status);
 }
 
-/****************************************
-*	Function:   setRtcDate
-*	Purpose: Set the RTC date values.
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 setRtcDate(DATE_TIME_STRUCT* time)
 {
 	RTC_DATE_STRUCT rtcDate;
@@ -216,14 +212,9 @@ uint8 setRtcDate(DATE_TIME_STRUCT* time)
 	return (status);
 }
 
-/****************************************
-*	Function:   getRtcTime
-*	Purpose:
-*
-*	ProtoType:  getRtcTime(void)
-*	Input:
-*	Output:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 DATE_TIME_STRUCT getRtcTime(void)
 {
 	DATE_TIME_STRUCT time;
@@ -249,20 +240,18 @@ DATE_TIME_STRUCT getRtcTime(void)
     return (time);
 }
 
-/****************************************
-*	Function:   updateCurrentTime
-*	Purpose:	Update the current time with the RTC time
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void updateCurrentTime(void)
 {
 	g_rtcCurrentTickCount = 0;
 	g_currentTime = getRtcTime();
 }
 
-/****************************************
-*	Function:   getCurrentTime
-*	Purpose:	Gets the current time adjusted by the expired seconds since being stored
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 DATE_TIME_STRUCT getCurrentTime(void)
 {
 	DATE_TIME_STRUCT currentTime = g_currentTime;
@@ -314,10 +303,9 @@ DATE_TIME_STRUCT getCurrentTime(void)
 	return (currentTime);
 }
 
-/****************************************
-*	Function:    convertCurrentTimeForFat
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void convertCurrentTimeForFat(uint8* fatTimeField)
 {
 	DATE_TIME_STRUCT currentTime = getCurrentTime();
@@ -341,10 +329,9 @@ void convertCurrentTimeForFat(uint8* fatTimeField)
 	fatTimeField[1] = (uint8)(conversionTime >> 8);
 }
 
-/****************************************
-*	Function:    convertCurrentDateForFat
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void convertCurrentDateForFat(uint8* fatDateField)
 {
 	DATE_TIME_STRUCT currentDate = getCurrentTime();
@@ -368,10 +355,9 @@ void convertCurrentDateForFat(uint8* fatDateField)
 	fatDateField[1] = (uint8)(conversionDate >> 8);
 }
 
-/****************************************
-*	Function:    DisableRtcAlarm
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void DisableRtcAlarm(void)
 {
 	RTC_ALARM_STRUCT disableAlarm;
@@ -392,10 +378,9 @@ void DisableRtcAlarm(void)
 }
 
 #if 1 // Normal
-/****************************************
-*	Function:    EnableRtcAlarm
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 {
 	RTC_ALARM_STRUCT enableAlarm;
@@ -416,10 +401,9 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 	debug("Enable RTC Alarm with Day: %d, Hour: %d, Minute: %d and Second: %d\n", day, hour, minute, second);
 }
 #else // Test
-/****************************************
-*	Function:    EnableRtcAlarm
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 {
 	RTC_ALARM_STRUCT enableAlarm;
@@ -439,10 +423,9 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 }
 #endif
 
-/****************************************
-*	Function:    
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void rtcWrite(uint8 registerAddress, int length, uint8* data)
 {
 	uint16 dataContainer = 0;
@@ -466,10 +449,9 @@ void rtcWrite(uint8 registerAddress, int length, uint8* data)
 	spi_unselectChip(&AVR32_SPI1, RTC_SPI_NPCS);
 }
 
-/****************************************
-*	Function:    
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void rtcRead(uint8 registerAddress, int length, uint8* data)
 {
 	uint16 dataContainer = 0;
@@ -496,10 +478,9 @@ void rtcRead(uint8 registerAddress, int length, uint8* data)
 }
 
 #if 0 // Add / Fix later
-/****************************************
-*	Function:    
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static DATE_TIME_STRUCT timestampEventCache[10];
 static uint16 timestampEventIndex = 0;
 

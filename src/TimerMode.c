@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Old_Board.h"
 #include "Typedefs.h"
 #include "RealTimeClock.h"
 #include "SoftTimer.h"
@@ -37,10 +36,9 @@
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
-/****************************************
-*	Function:    timerModeActiveCheck
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 BOOLEAN timerModeActiveCheck(void)
 {
 	BOOLEAN status = FALSE;
@@ -120,10 +118,9 @@ BOOLEAN timerModeActiveCheck(void)
 	return (status);
 }
 
-/****************************************
-*	Function:    processTimerMode
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void processTimerMode(void)
 {
 	DATE_TIME_STRUCT currTime = getRtcTime();
@@ -260,10 +257,9 @@ void processTimerMode(void)
 	debug("Timer mode: running...\n");
 }
 
-/****************************************
-*	Function:    handleUserPowerOffDuringTimerMode
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleUserPowerOffDuringTimerMode(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -313,10 +309,9 @@ void handleUserPowerOffDuringTimerMode(void)
 	JUMP_TO_ACTIVE_MENU();
 }
 
-/****************************************
-*	Function:    resetTimeOfDayAlarm
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void resetTimeOfDayAlarm(void)
 {
 	DATE_TIME_STRUCT currTime = getRtcTime();

@@ -13,7 +13,6 @@
 #include "InitDataBuffers.h"
 #include "SysEvents.h"
 #include "Summary.h"
-#include "Old_Board.h"
 #include "Uart.h"
 #include "RealTimeClock.h"
 #include "Record.h"
@@ -38,10 +37,9 @@
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
-//*****************************************************************************
-// Function:	StartNewBargraph
-// Purpose :
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void StartNewBargraph(void)
 {
 	g_bargraphSummaryPtr = NULL;
@@ -83,10 +81,9 @@ void StartNewBargraph(void)
 	updateMonitorLogEntry();
 }
 
-//*****************************************************************************
-// Function:
-// Purpose :
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void EndBargraph(void)
 {
 	uint32 eventDataFlag;
@@ -106,10 +103,9 @@ void EndBargraph(void)
 	g_fileProcessActiveUsbLockout = OFF;
 }
 
-/*****************************************************************************
-* Function:		ProcessBargraphData (Step 2)
-* Purpose:		Copy A/D channel data from Pretrigger buffer into event buffer
-******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0
 void ProcessBargraphData(void)
 {
@@ -150,10 +146,9 @@ void ProcessBargraphData(void)
 }
 #endif
 
-//*****************************************************************************
-// Function: moveBarIntervalDataToFile(void)
-// Purpose : Transfer the data from the bar interval buffers into the event file
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint32 moveBarIntervalDataToFile(void)
 {
 	uint32 accumulatedBarIntervalCount = g_barIntervalCnt;
@@ -181,11 +176,9 @@ uint32 moveBarIntervalDataToFile(void)
 	return (accumulatedBarIntervalCount);
 }
 
-//*****************************************************************************
-// Function: moveSummaryIntervalDataToFile(void)
-// Purpose : Transfer the data from the summary interval buffers into the event
-//				write buffers for storage into flash.
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void moveSummaryIntervalDataToFile(void)
 {
 #if 0 // Port lost change
@@ -255,11 +248,9 @@ void moveSummaryIntervalDataToFile(void)
 	byteSet(&g_bargraphFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
 }
 
-/*****************************************************************************
-	Function:	CalculateBargraphData
-	Purpose :	Calculate bargraph specific info from the raw A/D data that
-				was copied into the event buffer
-******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 CalculateBargraphData(void)
 {
 	// Temp variables, assigned as static to prevent storing on stack
@@ -825,11 +816,9 @@ uint8 CalculateBargraphData(void)
 }
 
 #if 0 // ns7100
-//*****************************************************************************
-// Function: MoveBargraphEventDataToFlash(void)
-// Purpose : Move the data in the bargarphg_eventDataBufferer into flash. Copy
-//				all the data from the buffer until the readPtr == writePtr.
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void MoveBargraphEventDataToFlash(void)
 {
 	// While we haven't found the end of the Bargraph Event data
@@ -850,13 +839,9 @@ void MoveBargraphEventDataToFlash(void)
 }
 #endif
 
-//*****************************************************************************
-// Function: MoveStartofBargraphEventRecordToFlash
-// Purpose : Move the Bargraph Event Record into flash. Copy most of the
-//				event record data. Unable to copy the captured data structures
-//				until they are filled out. so only copy the header and system
-//				data structs.
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void MoveStartOfBargraphEventRecordToFlash(void)
 {
 	// Get new file handle
@@ -871,14 +856,9 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 	fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 }
 
-
-//*****************************************************************************
-// Function: MoveEndOfBargraphEventRecordToFlash
-// Purpose : Move the Bargraph Event Record into flash. Copy most of the
-//				event record data. Unable to copy the captured data structures
-//				until they are filled out. so only copy the header and system
-//				data structs.
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void MoveEndOfBargraphEventRecordToFlash(void)
 {
 	// The following data will be filled in when the data has been moved over to flash.
@@ -901,10 +881,9 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 	storeCurrentEventNumber();
 }
 
-//*****************************************************************************
-// Function:	advanceBarIntervalBufPtr
-// Purpose :	handle advancing the bar interval buffer pointer
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void advanceBarIntervalBufPtr(uint8 bufferType)
 {
 	if (bufferType == READ_PTR)
@@ -921,10 +900,9 @@ void advanceBarIntervalBufPtr(uint8 bufferType)
 	}
 }
 
-//*****************************************************************************
-// Function:	advanceSumIntervalBufPtr
-// Purpose :	handle advancing the bar interval buffer pointer
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void advanceSumIntervalBufPtr(uint8 bufferType)
 {
 
@@ -942,12 +920,9 @@ void advanceSumIntervalBufPtr(uint8 bufferType)
 	}
 }
 
-
-
-//*****************************************************************************
-// FUNCTION:	void UpdateBargraphJobTotals(void)
-// DESCRIPTION
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void UpdateBargraphJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 {
 	// Update Bargraph Job Totals structure with most recent Summary Interval max's
@@ -1035,10 +1010,9 @@ void UpdateBargraphJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 	g_pendingBargraphRecord.summary.calculated.calcStructEndFlag = 0xEECCCCEE;
 }
 
-//*****************************************************************************
-// Function:	checkSpaceForBarSummaryInterval
-// Purpose:
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 BOOLEAN checkSpaceForBarSummaryInterval(void)
 {
 	FLASH_USAGE_STRUCT flashStats;

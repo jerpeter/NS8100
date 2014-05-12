@@ -54,10 +54,9 @@ void lcdContrastMnProc(INPUT_MSG_STRUCT,
                        MN_LAYOUT_STRUCT *);
 void addLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr);
 
-/****************************************
-*	Function:	lcdContrastMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void lcdContrastMn(INPUT_MSG_STRUCT msg)
 {
     static WND_LAYOUT_STRUCT wnd_layout;
@@ -73,10 +72,9 @@ void lcdContrastMn(INPUT_MSG_STRUCT msg)
     }
 }
 
-/****************************************
-*	Function:	lcdContrastMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void lcdContrastMnProc(INPUT_MSG_STRUCT msg,
                        WND_LAYOUT_STRUCT *wnd_layout_ptr,
                        MN_LAYOUT_STRUCT *mn_layout_ptr)
@@ -170,10 +168,9 @@ void lcdContrastMnProc(INPUT_MSG_STRUCT msg,
 	}
 }
 
-/****************************************
-*	Function:	addLcdContrastLevelDisplay
-*	Purpose:	Provide a level indicator for the LCD Contrast
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void addLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
     uint8 buff[25];

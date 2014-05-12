@@ -10,7 +10,6 @@
 ///----------------------------------------------------------------------------
 #include <stdio.h>
 #include <string.h>
-#include "Old_Board.h"
 #include "EventProcessing.h"
 #include "Flash.h"
 #include "Summary.h"
@@ -43,10 +42,9 @@ static uint16* s_endFlashSectorPtr;
 static uint16 s_numOfFlashSummarys;
 static uint16 s_currFlashSummary;
 
-//*****************************************************************************
-// Function:	initRamSummaryTbl
-// Purpose:
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void initRamSummaryTbl(void)
 {
 	debug("Initializing ram summary table...\n");
@@ -59,10 +57,9 @@ void initRamSummaryTbl(void)
 	//debugRaw(" done.\n");
 }
 
-//*****************************************************************************
-// Function: copyValidFlashEventSummariesToRam
-// Purpose: When the ram summary table is garbage, copy flash summaries to ram
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #include "lcd.h"
 #define TOTAL_DOTS	4
 void copyValidFlashEventSummariesToRam(void)
@@ -228,10 +225,9 @@ void copyValidFlashEventSummariesToRam(void)
 	}
 }
 
-//*****************************************************************************
-// Function: condenseRamSummaryTable
-// Purpose: Condense all the entries to the begenning of the table since they are indexed sequentially
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void condenseRamSummaryTable(void)
 {
 	uint16 i = 0, j = 0;
@@ -274,10 +270,9 @@ void condenseRamSummaryTable(void)
 }
 
 #if 0 // ns7100
-//*****************************************************************************
-// Function:	advFlashDataPtrToEventData
-// Purpose:
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void advFlashDataPtrToEventData(SUMMARY_DATA* currentSummary)
 {
 	// Check if the event record offset to start storing data is beyond the end of flash event storage
@@ -303,10 +298,9 @@ void advFlashDataPtrToEventData(SUMMARY_DATA* currentSummary)
 }
 #endif
 
-//*****************************************************************************
-// FUNCTION
-//  void InitFlashEvtBuff(void)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 InitFlashEvtBuff(void)
 {
 	uint16 i = 0;
@@ -449,10 +443,9 @@ uint8 InitFlashEvtBuff(void)
 	return (PASSED);
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void InitFlashBuffs(void)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void InitFlashBuffs(void)
 {
 	uint16 i;
@@ -550,10 +543,9 @@ void InitFlashBuffs(void)
 	}
 }
 
-//*****************************************************************************
-// FUNCTION:
-// DESCRIPTION:
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 {
 	uint8 i;
@@ -635,10 +627,9 @@ void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	}
 }
 
-//*****************************************************************************
-// FUNCTION:	initEventRecord
-// DESCRIPTION:
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void initEventRecord(uint8 op_mode)
 {
 	EVT_RECORD* eventRec;
@@ -743,10 +734,9 @@ void initEventRecord(uint8 op_mode)
 	}	
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void initCurrentEventNumber(void)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void initCurrentEventNumber(void)
 {
 #if 0 // ns7100
@@ -809,19 +799,17 @@ void initCurrentEventNumber(void)
 	debug("Stored Event ID: %d, Next Event ID to use: %d\n", (g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void getLastStoredEventNumber(void)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 getLastStoredEventNumber(void)
 {
 	return ((uint16)(g_nextEventNumberToUse - 1));
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void storeCurrentEventNumber(void)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void storeCurrentEventNumber(void)
 {
 #if 0
@@ -906,10 +894,9 @@ void storeCurrentEventNumber(void)
 #endif
 }
 
-//*****************************************************************************
-// FUNCTION
-//  uint16 getUniqueEventNumber(SUMMARY_DATA*)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 getUniqueEventNumber(SUMMARY_DATA* currentSummary)
 {
 #if 0 // ns7100	
@@ -922,10 +909,9 @@ uint16 getUniqueEventNumber(SUMMARY_DATA* currentSummary)
 #endif
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void getEventFileInfo(uint16 eventNumer)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void getEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
@@ -982,10 +968,9 @@ void getEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 	}	
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void getEventFileRecord(uint16 eventNumer)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void getEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
@@ -1022,10 +1007,9 @@ void getEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 	}
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void deleteEventFileRecord(uint16 eventNumer)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void deleteEventFileRecord(uint16 eventNumber)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
@@ -1037,10 +1021,9 @@ void deleteEventFileRecord(uint16 eventNumber)
 	}
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void deleteEventFileRecords(uint16 eventNumer)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void deleteEventFileRecords(void)
 {
 	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(g_eventDataBuffer[0]);
@@ -1077,10 +1060,9 @@ void deleteEventFileRecords(void)
 	overlayMessage("DELETE EVENTS", popupText, 3 * SOFT_SECS);
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void cacheEventDataToRam(uint16 eventNumer)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void cacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
@@ -1113,10 +1095,9 @@ void cacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 	}
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void cacheEventToRam(uint16 eventNumer)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void cacheEventToRam(uint16 eventNumber)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
@@ -1144,10 +1125,9 @@ void cacheEventToRam(uint16 eventNumber)
 	}
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void validEventFile(uint16 eventNumer)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 BOOLEAN validEventFile(uint16 eventNumber)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
@@ -1190,12 +1170,10 @@ BOOLEAN validEventFile(uint16 eventNumber)
 	return(validFile);
 }
 
-//*****************************************************************************
-// FUNCTION
-//*****************************************************************************
-#include "sd_mmc_test_menu.h"
 #define SD_MMC_SPI_NPCS	2
-
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void reInitSdCardAndFat32(void)
 {
 	// Power off the SD card
@@ -1229,9 +1207,9 @@ void reInitSdCardAndFat32(void)
 	}
 }
 
-//*****************************************************************************
-// FUNCTION
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void powerDownSDCard(void)
 {
 	debugRaw("\n Powering down SD Card... ");
@@ -1245,9 +1223,9 @@ void powerDownSDCard(void)
 	debugRaw("done.\n");
 }
 
-//*****************************************************************************
-// FUNCTION
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void powerUpSDCardAndInitFat32(void)
 {
 	debugRaw("\nPowering up SD Card and ReInit Fat32... \n");
@@ -1279,10 +1257,9 @@ void powerUpSDCardAndInitFat32(void)
 	debugRaw("done.\n");
 }
 
-//*****************************************************************************
-// FUNCTION
-//  void getEventFileHandle(uint16 eventNumer)
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 FL_FILE* getEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 {
 	FL_FILE* fileHandle;
@@ -1323,20 +1300,9 @@ FL_FILE* getEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 	return (fl_fopen(fileName, fileOption));
 }
 
-//*****************************************************************************
-// FUNCTION
-//  uint16 GetRamSummaryEntry(SUMMARY_DATA* entryPtr)
-//
-// DESCRIPTION
-//  general description of function.
-//
-// INPUTS
-//  inputs to the function
-//
-// HISTORY
-//  DATE         NAME              REMARKS
-//   5/11/2003 - Paul Hankins      - Initial Coding
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr)
 {
 	uint16 success = TRUE;
@@ -1425,10 +1391,9 @@ uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr)
 	return (success);
 }
 
-/*******************************************************************************
-*	Function:	adjustSampleForBitAccuracy
-*	Purpose:
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 inline void adjustSampleForBitAccuracy(void)
 {
 	// Shift the sample data to adjust for the lower accuracy
@@ -1438,13 +1403,9 @@ inline void adjustSampleForBitAccuracy(void)
 	*(g_currentEventSamplePtr + 3) >>= g_bitShiftForAccuracy;
 }
 
-/*****************************************************************************
-  FUNCTION
-		void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
-  INPUTS
-	SUMMARY_DATA* flashSummPtr 	- location of the flash memory
-	SUMMARY_DATA* ramSummPtr	- location of the ram memory
-*****************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
 {
 	//--------------------------------
@@ -1545,9 +1506,9 @@ void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 }
 
 #if 0 // ns7100
-//******************************************************************************
-// Function:	ReclaimSpace
-//******************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void ReclaimSpace(uint16* sectorAddr)
 {
 	uint8 needToEraseSector = NO;
@@ -1620,19 +1581,17 @@ void ReclaimSpace(uint16* sectorAddr)
 }
 #endif
 
-/*******************************************************************************
-*	Function:	getFlashDataPointer
-*	Purpose:
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16* getFlashDataPointer(void)
 {
 	return (s_flashDataPtr);
 }
 
-/*******************************************************************************
-*	Function:	checkFlashDataPointer
-*	Purpose:
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 void checkFlashDataPointer(void)
 {
@@ -1656,10 +1615,9 @@ void checkFlashDataPointer(void)
 }
 #endif
 
-/*******************************************************************************
-*	Function:	storeData
-*	Purpose:
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // Unused
 void storeData(uint16* dataPtr, uint16 dataWords)
 {
@@ -1683,10 +1641,9 @@ void storeData(uint16* dataPtr, uint16 dataWords)
 }
 #endif
 
-/*******************************************************************************
-*	Function:	flashUsage
-*	Purpose:
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void getFlashUsageStats(FLASH_USAGE_STRUCT* usage)
 {
 	//FLASH_USAGE_STRUCT usage;

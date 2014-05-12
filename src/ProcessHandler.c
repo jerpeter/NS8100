@@ -51,10 +51,9 @@ extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 void dataIsrInit(void);
 void startDataCollection(uint32 sampleRate);
 
-/****************************************
-*	Function:  startMonitoring()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mode)
 { 
 	UNUSED(cmd_id);
@@ -246,10 +245,9 @@ extern void Start_Data_Clock(TC_CHANNEL_NUM channel);
 extern void SetupADChannelConfig(uint32 sampleRate);
 extern void Setup_8100_EIC_External_RTC_ISR(void);
 #endif
-/****************************************
-*	Function:	 startDataCollection
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void startDataCollection(uint32 sampleRate)
 {
 	// Enable the A/D
@@ -296,10 +294,9 @@ void startDataCollection(uint32 sampleRate)
 	//debugRaw("\nA1M (%d)\n", g_helpRecord.alarm_one_mode);
 }
 
-/****************************************
-*	Function:	 stopMonitoring
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void stopMonitoring(uint8 mode, uint8 operation)
 {
 	overlayMessage(getLangText(STATUS_TEXT), "CLOSING MONITOR SESSION...", 0);
@@ -391,10 +388,9 @@ void stopMonitoring(uint8 mode, uint8 operation)
 	}
 }
 
-/****************************************
-*	Function:	 stopDataCollection
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void stopDataCollection(void)
 {
 	g_sampleProcessing = IDLE_STATE;
@@ -422,10 +418,9 @@ void stopDataCollection(void)
 	}
 }
 
-/****************************************
-*	Function:	 stopDataClock
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void stopDataClock(void)
 {
 	g_sampleProcessing = IDLE_STATE;
@@ -439,10 +434,9 @@ void stopDataClock(void)
 	powerControl(ANALOG_SLEEP_ENABLE, ON);		
 }
 
-/****************************************
-*	Function:	 waitForEventProcessingToFinish
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void waitForEventProcessingToFinish(void)
 {
 	if (g_doneTakingEvents == PENDING)
@@ -470,10 +464,9 @@ extern void processAndMoveWaveformData_ISR_Inline(void);
 }
 
 #if 0 // ns7100 (Used to convert trigger level for the 430)
-/****************************************
-*	Function:	 seisTriggerConvert
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 seisTriggerConvert(float seismicTriggerLevel)
 {
     uint16 seisTriggerVal;
@@ -499,10 +492,9 @@ uint16 seisTriggerConvert(float seismicTriggerLevel)
 }
 #endif
 
-/****************************************
-*	Function:	 airTriggerConvert
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 airTriggerConvert(uint32 airTriggerToConvert)
 {
 	// Check if the air trigger level is not no trigger and not manual trigger
@@ -528,10 +520,9 @@ uint16 airTriggerConvert(uint32 airTriggerToConvert)
 	return (airTriggerToConvert);
 }
 
-/****************************************
-*	Function:	 handleManualCalibration
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleManualCalibration(void)
 {
 	FLASH_USAGE_STRUCT flashStats;
@@ -639,10 +630,9 @@ void handleManualCalibration(void)
 	}
 }
 
-/****************************************
-*	Function:	 bargraphForcedCalibration
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void bargraphForcedCalibration(void)
 {
 	INPUT_MSG_STRUCT mn_msg;

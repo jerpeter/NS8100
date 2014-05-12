@@ -71,10 +71,9 @@ void loadDateTimeMnDefRec(REC_MN_STRUCT *,
 void dateTimeDvScroll(char, REC_MN_STRUCT *);
 void dateTimeScroll(char, MN_LAYOUT_STRUCT *);
 
-/****************************************
-*	Function:	dateTimeMn()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void dateTimeMn (INPUT_MSG_STRUCT msg)
 {
 	static WND_LAYOUT_STRUCT wnd_layout;
@@ -90,10 +89,9 @@ void dateTimeMn (INPUT_MSG_STRUCT msg)
 	}
 }
 
-/****************************************
-*	Function:	dateTimeMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
                     WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
@@ -233,10 +231,9 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 
 }
 
-/****************************************
-*	Function:	dateTimeScroll
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void dateTimeScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
 	if (direction == DOWN)
@@ -255,10 +252,9 @@ void dateTimeScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
 	}
 }
 
-/****************************************
-*	Function:	dateTimeDvScroll
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void dateTimeDvScroll(char dir_key, REC_MN_STRUCT *rec_ptr)
 {
 	switch (dir_key)
@@ -287,10 +283,9 @@ void dateTimeDvScroll(char dir_key, REC_MN_STRUCT *rec_ptr)
 	}
 }
 
-/****************************************
-*	Function:	dsplyDateTimeMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void dsplyDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	uint8 sbuff[50];
@@ -387,10 +382,9 @@ void dsplyDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_YEAR) ? CURSOR_LN : REG_LN);
 }
 
-/****************************************
-*	Function:	loadDateTimeMnDefRec
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void loadDateTimeMnDefRec(REC_MN_STRUCT *rec_ptr,DATE_TIME_STRUCT *time_ptr)
 {
 	byteSet(rec_ptr, 0, (sizeof(REC_MN_STRUCT) * 6));

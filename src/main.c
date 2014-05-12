@@ -15,7 +15,6 @@
 #include "intc.h"
 #include "usart.h"
 #include "print_funcs.h"
-#include "craft.h"
 #include "lcd.h"
 #include <stdio.h>
 
@@ -23,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Typedefs.h"
-#include "Old_Board.h"
 #include "Common.h"
 #include "Display.h"
 #include "Menu.h"
@@ -41,11 +39,6 @@
 #include "RemoteHandler.h"
 #include "TextTypes.h"
 #include "RemoteCommon.h"
-#include "ad_test_menu.h"
-#include "rtc_test_menu.h"
-#include "usb_test_menu.h"
-#include "sd_mmc_test_menu.h"
-#include "eeprom_test_menu.h"
 #include "twi.h"
 #include "M23018.h"
 #include "sd_mmc_spi.h"
@@ -73,6 +66,7 @@ extern void InitSystemHardware_NS8100(void);
 extern void InitInterrupts_NS8100(void);
 extern void InitSoftwareSettings_NS8100(void);
 extern void testSnippetsAfterInit(void);
+extern void Setup_8100_Usart_RS232_ISR(void);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -81,7 +75,6 @@ extern void testSnippetsAfterInit(void);
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-//void InitSystemHardware(void);
 void InitInterrupts(void);
 void InitSoftwareSettings(void);
 void SystemEventManager(void);
@@ -89,52 +82,397 @@ void MenuEventManager(void);
 void CraftManager(void);
 void MessageManager(void);
 void FactorySetupManager(void);
-void Setup_8100_EIC_External_RTC_ISR(void);
-void Setup_8100_EIC_Keypad_ISR(void);
-void Setup_8100_EIC_System_ISR(void);
-void Setup_8100_Soft_Timer_Tick_ISR(void);
-void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM);
-void Setup_8100_Usart_RS232_ISR(void);
 
-//-----------------------------------------------------------------------------
-uint8 craft_g_input_buffer[120];
-BOOLEAN processCraftCmd = NO;
-void craftTestMenuThruDebug(void)
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void SystemEventManager(void)
 {
-	int count;
-    int character;
-    int reply=0;
+	//debug("System Event Manager called\n");
 
-	//if(usart_test_hit(&AVR32_USART1))
-	if (processCraftCmd == YES)
+	if (getSystemEventState(TRIGGER_EVENT))
 	{
-		if(Get_User_Input((uint8*)&g_input_buffer[0]) > 0)
+		if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 		{
-        	reply = atoi((char *)g_input_buffer);
+			debug("Trigger Event (Wave)\n");
+			MoveWaveformEventToFlash();
+		}
+		else if (g_triggerRecord.op_mode == COMBO_MODE)
+		{
+			debug("Trigger Event (Combo)\n");
+			MoveComboWaveformEventToFile();
+		}
+	}
+
+	if (getSystemEventState(MANUEL_CAL_EVENT))
+	{
+		debug("Cal Pulse Event\n");
+		MoveManuelCalToFlash();
+	}
+
+	if ((getSystemEventState(KEYPAD_EVENT)) ||
+	(g_kpadCheckForKeyFlag && (g_kpadLookForKeyTickCount < g_keypadTimerTicks)))
+	{
+		if (getSystemEventState(KEYPAD_EVENT))
+		{
+			debug("Keypad Event\n");
+			clearSystemEventFlag(KEYPAD_EVENT);
+
+			keypad(KEY_SOURCE_IRQ);
+		}
+		else
+		{
+			keypad(KEY_SOURCE_TIMER);
 		}
 
-		if(reply < Menu_Items)
-		{
-        	((void(*)())*(Menu_Functions + reply))();
-		}
+	}
 
-    	count = 0;
-    	character = Menu_String[count];
-    	while(character != 0)
-    	{
-    		print_dbg_char(character);
-    		count++;
-    		character = Menu_String[count];
-    	}
-		Command_Prompt();
+	if (getSystemEventState(POWER_OFF_EVENT))
+	{
+		debug("Power Off Event\n");
+		clearSystemEventFlag(POWER_OFF_EVENT);
+
+		handleUserPowerOffDuringTimerMode();
+	}
+
+	if (getSystemEventState(CYCLIC_EVENT))
+	{
+		debug("Cyclic Event\n");
+		clearSystemEventFlag(CYCLIC_EVENT);
+
+		#if 1 // Test (ISR/Exec Cycles)
+		//sprintf((char*)&g_spareBuffer[0], "%d (%s) %d", (int)g_execCycles, ((g_channelSyncError == YES) ? "YES" : "NO"), (int)(g_sampleCount / 4));
+		//overlayMessage("EXEC CYCLES", (char*)&g_spareBuffer[0], 500 * SOFT_MSECS);
+		debugRaw("ISR Ticks/sec: %d (E:%s), Exec: %d\n", (g_sampleCountHold / 4), ((g_channelSyncError == YES) ? "YES" : "NO"), g_execCycles);
+		g_sampleCountHold = 0;
+		g_execCycles = 0;
+		g_channelSyncError = NO;
+		#endif
 		
-		processCraftCmd = NO;
+		#if 0 // Test (Bargraph buffer)
+		uint32 bgDataBufferSize = (g_bargraphDataEndPtr - g_bargraphDataStartPtr);
+		float bgUsed;
+		float bgLocation;
+		
+		if (((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)) && (g_sampleProcessing == ACTIVE_STATE))
+		{
+			if (g_bargraphDataWritePtr >= g_bargraphDataReadPtr)
+			{
+				bgUsed = (((float)100 * (float)(g_bargraphDataWritePtr - g_bargraphDataReadPtr)) / (float)bgDataBufferSize);
+			}
+			else
+			{
+				bgUsed = (((float)100 * (float)(bgDataBufferSize + g_bargraphDataWritePtr - g_bargraphDataReadPtr)) / (float)bgDataBufferSize);
+			}
+
+			bgLocation = (((float)100 * (float)(g_bargraphDataWritePtr - g_bargraphDataStartPtr)) / (float)bgDataBufferSize);
+
+			debugRaw("Bargraph Data Buffer Used: %3.2f%%, Free: %3.2f%%, Location: %3.2f%%\n", bgUsed, (float)(100 - bgUsed), bgLocation);
+		}
+		#endif
+
+		procTimerEvents();
+	}
+
+	if (getSystemEventState(MIDNIGHT_EVENT))
+	{
+		debug("Midnight Event\n");
+		clearSystemEventFlag(MIDNIGHT_EVENT);
+
+		handleMidnightEvent();
+	}
+
+	if (getSystemEventState(UPDATE_TIME_EVENT))
+	{
+		clearSystemEventFlag(UPDATE_TIME_EVENT);
+		updateCurrentTime();
+	}
+
+	if (getSystemEventState(BARGRAPH_EVENT))
+	{
+		clearSystemEventFlag(BARGRAPH_EVENT);
+
+		if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+		{
+			CalculateBargraphData();
+		}
+		else if (g_triggerRecord.op_mode == COMBO_MODE)
+		{
+			CalculateComboData();
+		}
+	}
+
+	#if 0 // Test (Attempt to process buffered waveform data - Throw away at some point)
+	if (getSystemEventState())
+	{
+		clearSystemEventFlag();
+
+		extern void processAndMoveWaveformData_ISR_Inline(void);
+		processAndMoveWaveformData_ISR_Inline();
+	}
+	#endif
+
+	if (getSystemEventState(WARNING1_EVENT))
+	{
+		debug("Warning Event 1\n");
+		clearSystemEventFlag(WARNING1_EVENT);
+
+		powerControl(ALARM_1_ENABLE, ON);
+
+		// Assign soft timer to turn the Alarm 1 signal off
+		assignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarm_one_time * 2), alarmOneOutputTimerCallback);
+	}
+
+	if (getSystemEventState(WARNING2_EVENT))
+	{
+		debug("Warning Event 2\n");
+		clearSystemEventFlag(WARNING2_EVENT);
+
+		powerControl(ALARM_2_ENABLE, ON);
+
+		// Assign soft timer to turn the Alarm 2 signal off
+		assignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarm_two_time * 2), alarmTwoOutputTimerCallback);
+	}
+
+	if (getSystemEventState(UPDATE_OFFSET_EVENT))
+	{
+		UpdateChannelOffsetsForTempChange();
+	}
+
+	if (getSystemEventState(AUTO_DIALOUT_EVENT))
+	{
+		clearSystemEventFlag(AUTO_DIALOUT_EVENT);
+
+		startAutoDialoutProcess();
 	}
 }
 
-//=================================================================================================
-//	Function:	UsbDeviceManager
-//=================================================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void MenuEventManager(void)
+{
+	//debug("Menu Event Manager called\n");
+
+	INPUT_MSG_STRUCT mn_msg;
+
+	if (getMenuEventState(RESULTS_MENU_EVENT))
+	{
+		clearMenuEventFlag(RESULTS_MENU_EVENT);
+
+		if (g_triggerRecord.op_mode == MANUAL_CAL_MODE)
+		{
+			SETUP_RESULTS_MENU_MANUEL_CAL_MSG(RESULTS_MENU);
+		}
+		else
+		{
+			SETUP_RESULTS_MENU_MONITORING_MSG(RESULTS_MENU);
+		}
+		JUMP_TO_ACTIVE_MENU();
+	}
+
+	if (getTimerEventState(SOFT_TIMER_CHECK_EVENT))
+	{
+		clearTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
+
+		// Handle and process software timers
+		checkSoftTimers();
+	}
+
+	if (getTimerEventState(TIMER_MODE_TIMER_EVENT))
+	{
+		clearTimerEventFlag(TIMER_MODE_TIMER_EVENT);
+
+		debug("Timer mode: Start monitoring...\n");
+		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+		JUMP_TO_ACTIVE_MENU();
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void CraftManager(void)
+{
+	//debug("Craft Manager called\n");
+
+	// Check if there is an modem present and if the connection state is connected
+	if ((MODEM_CONNECTED == READ_DSR) && (CONNECTED == g_modemStatus.connectionState))
+	{
+		// Check if the connection has been lost
+		if (NO_CONNECTION == READ_DCD)
+		{
+			// Check if a ring indicator has been received
+			if ((g_modemStatus.ringIndicator != READ_RI) && (READ_RI == RING))
+			{
+				// Check if nine rings have been received
+				if (g_modemStatus.numberOfRings++ > 9)
+				{
+					// Reset flag
+					g_modemStatus.numberOfRings = 0;
+
+					// Assign timer to process modem init
+					assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_QUICK_DELAY, modemDelayTimerCallback);
+				}
+			}
+
+			// Assign ring indicator to the status of the ring indicator line
+			g_modemStatus.ringIndicator = (uint8)READ_RI;
+
+			// Relock the system
+			g_modemStatus.systemIsLockedFlag = YES;
+
+			if (CONNECTED == g_modemStatus.firstConnection)
+			{
+				g_modemStatus.firstConnection = NOP_CMD;
+				assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_QUICK_DELAY, modemDelayTimerCallback);
+			}
+		}
+		else
+		{
+			g_modemStatus.firstConnection = CONNECTED;
+		}
+	}
+	else
+	{
+		if ((YES == g_modemSetupRecord.modemStatus) && (CONNECTED == g_modemStatus.connectionState))
+		{
+			g_modemStatus.connectionState = NOP_CMD;
+			g_modemStatus.systemIsLockedFlag = YES;
+			assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_DELAY, modemDelayTimerCallback);
+		}
+	}
+
+	// Check if the Auto Dialout state is not idle
+	if (g_autoDialoutState != AUTO_DIAL_IDLE)
+	{
+		// Run the Auto Dialout State machine
+		autoDialoutStateMachine();
+	}
+
+	// Are we transfering data, if so process the correct command.
+	if (NOP_CMD != g_modemStatus.xferState)
+	{
+		if (DEMx_CMD == g_modemStatus.xferState)
+		{
+			g_modemStatus.xferState = sendDEMData();
+
+			if (NOP_CMD == g_modemStatus.xferState)
+			{
+				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
+			}
+		}
+		else if (DSMx_CMD == g_modemStatus.xferState)
+		{
+			g_modemStatus.xferState = sendDSMData();
+
+			if (NOP_CMD == g_modemStatus.xferState)
+			{
+				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
+			}
+		}
+		else if (DQMx_CMD == g_modemStatus.xferState)
+		{
+			g_modemStatus.xferState = sendDQMData();
+
+			if (NOP_CMD == g_modemStatus.xferState)
+			{
+				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
+			}
+		}
+		else if (VMLx_CMD == g_modemStatus.xferState)
+		{
+			sendVMLData();
+
+			if (NOP_CMD == g_modemStatus.xferState)
+			{
+				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
+			}
+		}
+	}
+
+	// Data from the craft port is independent of the modem.
+	if (YES == g_modemStatus.craftPortRcvFlag)
+	{
+		g_modemStatus.craftPortRcvFlag = NO;
+		processCraftData();
+	}
+
+	// Did we raise the craft data port flag, if so process the incomming data.
+	if (getSystemEventState(CRAFT_PORT_EVENT))
+	{
+		clearSystemEventFlag(CRAFT_PORT_EVENT);
+		cmdMessageProcessing();
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void MessageManager(void)
+{
+	INPUT_MSG_STRUCT input_msg;
+
+	// Check if there is a message in the queue
+	if (ckInputMsg(&input_msg) != INPUT_BUFFER_EMPTY)
+	{
+		debug("Processing message...\n");
+
+		// Process message
+		procInputMsg(input_msg);
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void FactorySetupManager(void)
+{
+	//debug("Factory Setup Manager called\n");
+
+	INPUT_MSG_STRUCT mn_msg;
+
+	if (g_factorySetupSequence == ENTER_FACTORY_SETUP)
+	{
+		g_factorySetupSequence = PROCESS_FACTORY_SETUP;
+
+		keypressEventMgr();
+		messageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
+
+		SETUP_MENU_MSG(DATE_TIME_MENU);
+		JUMP_TO_ACTIVE_MENU();
+	}
+	#if 0 // Added to work around On Key IRQ problem
+	else if (g_factorySetupRecord.invalid && g_factorySetupSequence != PROCESS_FACTORY_SETUP)
+	{
+		g_factorySetupSequence = PROCESS_FACTORY_SETUP;
+
+		keypressEventMgr();
+		messageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
+
+		SETUP_MENU_MSG(DATE_TIME_MENU);
+		JUMP_TO_ACTIVE_MENU();
+	}
+	#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void handleSystemEvents(void)
+{
+	if (g_systemEventFlags.wrd)
+	SystemEventManager();
+
+	if (g_menuEventFlags.wrd)
+	MenuEventManager();
+
+	MessageManager();
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 enum USB_STATES {
 	USB_INIT_DRIVER = 0,
 	USB_NOT_CONNECTED = 1,
@@ -220,9 +558,9 @@ void UsbDeviceManager(void)
 	}	
 }
 
-//=================================================================================================
-//	Function:	BootLoadManager
-//=================================================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #define APPLICATION    (((void *)AVR32_EBI_CS1_ADDRESS) + 0x00700000)
 const char default_boot_name[] = {
 	"Boot.s\0"
@@ -310,9 +648,9 @@ void BootLoadManager(void)
 	Setup_8100_Usart_RS232_ISR();
 }
 
-//=================================================================================================
-//	Function Break
-//=================================================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void SleepManager(void)
 {
 	// Check if no System Events and LCD is off and Modem is not transferring
@@ -345,9 +683,9 @@ void SleepManager(void)
 	}
 }
 
-//=================================================================================================
-//	Function Break
-//=================================================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void DisplayVersionToCraft(void)
 {
 	int majorVer, minorVer;
@@ -357,59 +695,52 @@ void DisplayVersionToCraft(void)
 	debug("--- System Init complete (Version %d.%d.%c) ---\n", majorVer, minorVer, buildVer);
 }
 
-//=================================================================================================
-//	Function:	Main
-//	Purpose:	Application starting point
-//=================================================================================================
-int main(void)
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void TestExternalSamplingSource(void)
 {
-	// Test code
-	//testSnippetsBeforeInit();
-
-    InitSystemHardware_NS8100();
-	InitInterrupts_NS8100();
-	InitSoftwareSettings_NS8100();
-	BootLoadManager();
-	
-	DisplayVersionToCraft();
-	
-#if 0 // External sampling source
 extern void startExternalRTCClock(uint16 sampleRate);
 	g_updateCounter = 1;
-	startExternalRTCClock(TEST_SAMPLE_RATE);
+	uint16 sampleRate = 1024;
+
+	startExternalRTCClock(sampleRate);
 
 	while (1==1)
 	{
 		g_updateCounter++;
-		
-		if (g_updateCounter % TEST_SAMPLE_RATE == 0)
+	
+		if (g_updateCounter % sampleRate == 0)
 		{
-			debug("Tick tock (%d, %d)\n", TEST_SAMPLE_RATE, g_updateCounter / TEST_SAMPLE_RATE);
+			debug("Tick tock (%d, %d)\n", sampleRate, g_updateCounter / sampleRate);
 		}
-		
+	
 		while (!usart_tx_empty(DBG_USART)) {;}
 		SLEEP(AVR32_PM_SMODE_IDLE);
 	}
-#endif
+}
 
-	// Test code
-	testSnippetsAfterInit();
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+int main(void)
+{
+    // Initialize the system
+	InitSystemHardware_NS8100();
+	InitInterrupts_NS8100();
+	InitSoftwareSettings_NS8100();
 
-#if 1 // Normal
+	BootLoadManager();
+	DisplayVersionToCraft();
+
  	// ==============
 	// Executive loop
 	// ==============
 	while (1)
 	{
+		// Count Exec cycles
 		g_execCycles++;
 
-		// Debug Test routines
-		//craftTestMenuThruDebug();
-
-		// Test code
-		//testSnippetsExecLoop();
-
-#if 1 // Normal operational cycle
 		// Handle system events
 	    SystemEventManager();
 
@@ -427,13 +758,11 @@ extern void startExternalRTCClock(uint16 sampleRate);
 		
 		// Handle processing the factory setup
 		FactorySetupManager();
-#endif
 
 		// Check if able to go to sleep
 		SleepManager();
 	}    
 	// End of NS8100 Main
-#endif
 
 	// End of the world
 	return (0);

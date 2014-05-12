@@ -33,8 +33,7 @@
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
-///	Function:	initMonitorLog
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 void initMonitorLog(void)
 {
@@ -70,8 +69,7 @@ void initMonitorLog(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	advanceMonitorLogIndex
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 void advanceMonitorLogIndex(void)
 {
@@ -83,8 +81,7 @@ void advanceMonitorLogIndex(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	getStartingMonitorLogTableIndex
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 uint16 getStartingMonitorLogTableIndex(void)
 {
@@ -94,19 +91,17 @@ uint16 getStartingMonitorLogTableIndex(void)
 		return (uint16)(__monitorLogTblIndex + 1);
 }
 
-//*****************************************************************************
-// Function:	getStartingEventNumberForCurrentMonitorLog
-// Purpose:		
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 getStartingEventNumberForCurrentMonitorLog(void)
 {
 	return(__monitorLogTbl[__monitorLogTblIndex].startEventNumber);
 }
 
-//*****************************************************************************
-// Function:	clearMonitorLogEntry
-// Purpose:		
-//*****************************************************************************
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void clearMonitorLogEntry(void)
 {
 	// Set all log entries to all zero's, status to EMPTY_LOG_ENTRY, start and stop times INVALID
@@ -116,8 +111,7 @@ void clearMonitorLogEntry(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	newMonitorLogEntry
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 void newMonitorLogEntry(uint8 mode)
 {
@@ -190,8 +184,7 @@ void newMonitorLogEntry(uint8 mode)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	updateMonitorLogEntry
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 void updateMonitorLogEntry()
 {
@@ -206,8 +199,7 @@ void updateMonitorLogEntry()
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	closeMonitorLogEntry
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 void closeMonitorLogEntry()
 {
@@ -232,8 +224,7 @@ void closeMonitorLogEntry()
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	initMonitorLogUniqueEntryId
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 void initMonitorLogUniqueEntryId(void)
 {
@@ -303,8 +294,7 @@ void initMonitorLogUniqueEntryId(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	storeMonitorLogUniqueEntryId
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 void storeMonitorLogUniqueEntryId(void)
 {
@@ -383,8 +373,7 @@ void storeMonitorLogUniqueEntryId(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	getNextMonitorLogEntry
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 getNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, MONITOR_LOG_ENTRY_STRUCT* logEntry)
 {
@@ -422,8 +411,7 @@ uint8 getNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, M
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	numOfNewMonitorLogEntries
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 uint16 numOfNewMonitorLogEntries(uint16 uid)
 {
@@ -447,8 +435,7 @@ uint16 numOfNewMonitorLogEntries(uint16 uid)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	appendMonitorLogEntryFile
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 void appendMonitorLogEntryFile(void)
 {
@@ -481,8 +468,7 @@ void appendMonitorLogEntryFile(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	initMonitorLogTableFromLogFile
-///	Purpose:	
+///	Function Break
 ///----------------------------------------------------------------------------
 void initMonitorLogTableFromLogFile(void)
 {

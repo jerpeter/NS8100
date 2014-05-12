@@ -14,7 +14,6 @@
 #include "RemoteCommon.h"
 #include "RemoteImmediate.h"
 #include "RemoteOperation.h"
-#include "Old_Board.h"
 #include "Uart.h"
 #include "Menu.h"
 #include "EventProcessing.h"
@@ -39,13 +38,9 @@
 ///----------------------------------------------------------------------------
 static VMLx_XFER_STRUCT s_vmlXferStruct;
 
-//==================================================
-// Function: handleUNL
-// Description:
-// 		Unlock unit.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleUNL(CMD_BUFFER_STRUCT* inCmd)
 {
 	uint8 matchFlag = NO;
@@ -122,14 +117,9 @@ void handleUNL(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-
-//==================================================
-// Function: handleRST
-// Description:
-// 		Reset the unit.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleRST(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
@@ -157,13 +147,9 @@ void handleRST(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: handleDDP
-// Description:
-// 		Disable Debug Printing, This would be a toggle.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleDDP(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
@@ -180,13 +166,9 @@ void handleDDP(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: handleDAI
-// Description:
-// 		Download Application Image.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleDAI(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
@@ -204,26 +186,18 @@ void handleDAI(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: handleESM
-// Description:
-// 		Erase summary memory.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleESM(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleEEM
-// Description:
-// 		Erase event memory.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleEEM(CMD_BUFFER_STRUCT* inCmd)
 {
 	uint8 eemHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
@@ -268,36 +242,27 @@ void handleEEM(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: handleECM
-// Description:
-// 		Erase configuration memory.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleECM(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleTRG
-// Description:
-// 		Trigger an event.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleTRG(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
 }
 
-//==================================================
-// Function: handleVML
-// Description:
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleVML(CMD_BUFFER_STRUCT* inCmd)
 {
 	// Set the data pointer to start after the VML character data bytes
@@ -323,10 +288,9 @@ void handleVML(CMD_BUFFER_STRUCT* inCmd)
 	g_modemStatus.xferPrintState = g_helpRecord.auto_print;
 }
 
-//==================================================
-// Function:	sendVMLData
-// Description:
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void sendVMLData(void)
 {
 	uint32 dataLength;
@@ -435,10 +399,9 @@ void sendVMLData(void)
 	}
 }
 
-//==================================================
-// Function: handleUDE
-// Description:
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleUDE(CMD_BUFFER_STRUCT* inCmd)
 {
 	// Set the data pointer to start after the UDE character data bytes
@@ -454,10 +417,9 @@ void handleUDE(CMD_BUFFER_STRUCT* inCmd)
 	g_transferCount = 0;
 }
 
-//==================================================
-// Function: handleGAD
-// Description:
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleGAD(CMD_BUFFER_STRUCT* inCmd)
 {
 	uint32 dataLength;
@@ -545,10 +507,9 @@ void handleGAD(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: handleGFS
-// Description:
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleGFS(CMD_BUFFER_STRUCT* inCmd)
 {
 	uint32 dataLength;
@@ -620,13 +581,9 @@ void handleGFS(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: handleDQS
-// Description:
-// 		Download Quick Summary Memory.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleDQM(CMD_BUFFER_STRUCT* inCmd)
 {
 
@@ -685,12 +642,9 @@ void handleDQM(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: sendDSMData
-// Description:
-// Input:
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 sendDQMData(void)
 {
 	uint8 idex;
@@ -807,13 +761,9 @@ uint8 sendDQMData(void)
 	return (xferState);
 }
 
-//==================================================
-// Function: handleDSM
-// Description:
-// 		Download summary memory.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleDSM(CMD_BUFFER_STRUCT* inCmd)
 {
 	// Download summary memory...
@@ -886,12 +836,9 @@ void handleDSM(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: sendDSMData
-// Description:
-// Input:
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 sendDSMData(void)
 {
 	EVT_RECORD* eventRecord;
@@ -1016,13 +963,9 @@ uint8 sendDSMData(void)
 	return (xferState);
 }
 
-//==================================================
-// Function: handleDEM
-// Description:
-// 		Download event memory.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleDEM(CMD_BUFFER_STRUCT* inCmd)
 {
 	uint16 idex;
@@ -1186,13 +1129,9 @@ void handleDEM(CMD_BUFFER_STRUCT* inCmd)
 	return;
 }
 
-//==================================================
-// Function: prepareDEMData
-// Description:
-// 		Download event memory.
-// Input: CMD_BUFFER_STRUCT* inCmd
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #include "InitDataBuffers.h"
 void prepareDEMDataToSend(EVT_RECORD* eventRecord, COMMAND_MESSAGE_HEADER* g_inCmdHeaderPtr)
 {
@@ -1419,13 +1358,9 @@ extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 	return;
 }
 
-
-//==================================================
-// Function: sendDEMData
-// Description:
-// Input:
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 sendDEMData(void)
 {
 	uint8 xferState = DEMx_CMD;
@@ -1532,12 +1467,9 @@ uint8 sendDEMData(void)
 	return (xferState);
 }
 
-//==================================================
-// Function: sendDataFlashWrapCheck
-// Description:
-// Input:
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ns7100
 uint8* sendDataFlashWrapCheck(uint8* xferPtr)
 {
@@ -1576,12 +1508,9 @@ uint8* sendDataFlashWrapCheck(uint8* xferPtr)
 }
 #endif
 
-//==================================================
-// Function: sendDataNoFlashWrapCheck
-// Description:
-// Input:
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8* sendDataNoFlashWrapCheck(uint8* xferPtr, uint8* endPtr)
 {
 	uint32 xmitSize = XMIT_SIZE_MONITORING;
@@ -1615,15 +1544,9 @@ uint8* sendDataNoFlashWrapCheck(uint8* xferPtr, uint8* endPtr)
 	return (xferPtr);
 }
 
-
-
-//==================================================
-// Function: handleGMN
-// Description: Start Monitoring waveform/bargraph/combo.
-//
-// Input: SUMMARY_DATA* ramTblElement
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleGMN(CMD_BUFFER_STRUCT* inCmd)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -1697,13 +1620,9 @@ void handleGMN(CMD_BUFFER_STRUCT* inCmd)
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
-//==================================================
-// Function: handleHLT
-// Description: Halt Monitoring waveform/bargraph/combo.
-//
-// Input: SUMMARY_DATA* ramTblElement
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void handleHLT(CMD_BUFFER_STRUCT* inCmd)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -1741,13 +1660,9 @@ void handleHLT(CMD_BUFFER_STRUCT* inCmd)
 
 }
 
-//==================================================
-// Function: debugSummaryData
-// Description:
-//
-// Input: SUMMARY_DATA* ramTblElement
-// Return: void
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void debugSummaryData(SUMMARY_DATA* ramTblElement)
 {
 	UNUSED(ramTblElement);

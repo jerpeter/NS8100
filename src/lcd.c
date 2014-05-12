@@ -378,45 +378,15 @@ uint16 lcd_port_image = 0;
 // Local Function Prototypes                                                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void Display_small_char( uint8 number,
-                         uint8 position,
-                   uint8 line,
-                   uint8 polarity,
-                   uint8 bConfig);
+void Display_small_char( uint8 number, uint8 position, uint8 line, uint8 polarity, uint8 bConfig);
+void Display_large_char(uint8 number, uint8 position, uint8 line, uint8 polarity);
+void Clear_line(uint8 line);
+void Clear_screen(void);
+uint8 Bit_Swap(uint8 data);
 
-void Display_large_char( uint8 number,
-                         uint8 position,
-                   uint8 line,
-                   uint8 polarity);
-
-void Clear_line( uint8 line );
-
-void Clear_screen( void );
-
-uint8 Bit_Swap( uint8 data );
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  WriteLCD_Vline                                                      //
-//                                                                            //
-//       Will write a vertical line on the colomn specified. End is less than   //
-//     start. Bottom left of screen is 0x 0y.                                 //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     uint8 x_pos - Column to start in from 0 to 127.                      //
-//                                                                            //
-//     uint8 y_pos1 - Row to start in from 0 to 64.                         //
-//                                                                            //
-//     uint8 y_pos2 - Row to end in from 0 to 64.                           //
-//                                                                            //
-//     uint8 bLineType - Normal, reversed or dotted line.                   //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void WriteLCD_Vline( uint8 x_pos,
                      uint8 y_pos1,
                      uint8 y_pos2,
@@ -549,29 +519,9 @@ void WriteLCD_Vline( uint8 x_pos,
 
 } // End of function
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  WriteLCD_Hline                                                      //
-//                                                                            //
-//       Will write a horizontal line on the row specified. End is >= the       //
-//     start. Bottom left of screen is 0x 0y.                                 //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     uint8 y_pos - Row to start in from 0 to 64.                          //
-//                                                                            //
-//     uint8 start - Column to start in from 0 to 127.                      //
-//                                                                            //
-//     uint8 end - Column to end in from 0 to 127.                          //
-//                                                                            //
-//     uint8 bLineType - Normal, reversed only. Dotted not available.       //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void WriteLCD_Hline( uint8 y_pos,
                      uint8 start,
                 uint8 end,
@@ -651,31 +601,9 @@ void WriteLCD_Hline( uint8 y_pos,
 
 } // End of function
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  Display_small_char                                                  //
-//                                                                            //
-//       Will display the small font characters on the display. The location    //
-//     for the character is the lower left hand corner of the character.      //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     uint8 number - Character to be displayed.                            //
-//                                                                            //
-//     uint8 h_position - Column to start in from 0 to 123.                 //
-//                                                                            //
-//     uint8 v_position - Row to start in from 0 to 56.                     //
-//                                                                            //
-//     uint8 polarity - Reverse or Normal.                                  //
-//                                                                            //
-//     uint8 bConfig - ???                                                  //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Display_small_char( uint8 number,
                          uint8 h_position,
                    uint8 v_position,
@@ -962,29 +890,9 @@ void Display_small_char( uint8 number,
     } // End if if
 } // End of function
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  WriteLCD_lgText                                                     //
-//                                                                            //
-//       Will display the large font characters on the display. The location    //
-//     for the character is the lower left hand corner of the character.      //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     uint8 line - Line to use between 2 and 8.                            //
-//                                                                            //
-//     uint8 position - Column to start in from 1 to 118.                   //
-//                                                                            //
-//     const uint8 *lcd_data - Data to display.                             //
-//                                                                            //
-//     uint8 polarity - Reverse or Normal.                                  //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void WriteLCD_lgText( uint8       line,
                       uint8       position,
                  const uint8 *lcd_data,
@@ -1004,29 +912,9 @@ void WriteLCD_lgText( uint8       line,
    }
 } // End of function
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  Display_large_char                                                  //
-//                                                                            //
-//       Will display the large font characters on the display.                 //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     uint8 number - Character to be displayed.                            //
-//                                                                            //
-//     uint8 position - Column to start in from 1 to 118.                   //
-//                                                                            //
-//     uint8 line - Line to display on 2-8. Each character requires two     //
-//                 lines of the normal font.                                  //
-//                                                                            //
-//     uint8 polarity - Reverse or Normal.                                  //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Display_large_char( uint8 number,
                          uint8 position,
                    uint8 line,
@@ -1126,29 +1014,9 @@ void Display_large_char( uint8 number,
 
 } //End of function
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  WriteLCD_smText                                                     //
-//                                                                            //
-//       Will display the small font characters on the display.                 //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     uint8 x_pos - Character to be displayed.                             //
-//                                                                            //
-//     uint8 y_pos - Column to start in from 1 to 118.                      //
-//                                                                            //
-//     const uint8 *lcd_data - Pointer to the data to display               //
-//                 lines of the normal font.                                  //
-//                                                                            //
-//     uint8 polarity - Reverse or Normal.                                  //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void WriteLCD_smText( uint8 x_pos,
                       uint8 y_pos,
                  const uint8 *lcd_data,
@@ -1200,22 +1068,9 @@ void WriteLCD_smText( uint8 x_pos,
    } // End of if
 } // End of function
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  ClearLCDscreen                                                      //
-//                                                                            //
-//       Will clear the entire display.                                         //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void ClearLCDscreen(void)
 {
     uint8 count;
@@ -1225,22 +1080,9 @@ void ClearLCDscreen(void)
    }
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  Clear_line                                                          //
-//                                                                            //
-//       Will clear an entire line of the display.                              //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     byte line - Line to be cleared                                         //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Clear_line( uint8 line )
 {
     uint8 column;
@@ -1274,41 +1116,9 @@ void Clear_line( uint8 line )
 
 } //End of function
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  Write_lcd                                                           //
-//                                                                            //
-//       Will write a byte of command data or display data to the display.      //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     uint8 lcd_data - Data to write to the display.                       //
-//                                                                            //
-//     uint8 lcd_register - Specifies the type opf data (command or data).  //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  InitDisplay                                                         //
-//                                                                            //
-//       Will reset and initialize the display.                                 //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void InitDisplay( void )
 {
     volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
@@ -1344,24 +1154,9 @@ void InitDisplay( void )
 
 } //End of function
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  Write_display                                                       //
-//                                                                            //
-//       Will write a byte of command data or display data to the display.      //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     uint8 lcd_register - Specifies the type of data (command or data).   //
-//                                                                            //
-//     uint8 lcd_data - Data to write to the display.                       //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Write_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half )
 {
 //    static unsigned short temp = 0;
@@ -1416,23 +1211,9 @@ void Write_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half )
     soft_usecWait(100);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  Write_display                                                       //
-//                                                                            //
-//       Will write a byte of command data or display data to the display.      //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     void                                                                   //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     uint8 lcd_register - Specifies the type of data (command or data).   //
-//                                                                            //
-//     uint8 lcd_data - Data to write to the display.                       //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Write_multi_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half )
 {
 #if 0
@@ -1516,21 +1297,9 @@ void Write_multi_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half
 #endif
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// NAME:  Read_display                                                        //
-//                                                                            //
-//       Will read a byte of command data or display data to the display.       //
-//                                                                            //
-// RETURN:                                                                    //
-//                                                                            //
-//     uint8 - Data read from display.                                      //
-//                                                                            //
-// ARGUMENTS:                                                                 //
-//                                                                            //
-//     uint8 command - Specifies the type of data (command or data).        //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 Read_display( uint8 lcd_register, uint8 display_half )
 {
     uint16 lcd_data;
@@ -1580,6 +1349,9 @@ uint8 Read_display( uint8 lcd_register, uint8 display_half )
    return((uint8)(lcd_data & 0xFF));
 }// End of function
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Backlight_On( void )
 {
     volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
@@ -1588,6 +1360,9 @@ void Backlight_On( void )
     *lcd = lcd_port_image;
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Backlight_Off( void )
 {
     volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
@@ -1596,6 +1371,9 @@ void Backlight_Off( void )
     *lcd = lcd_port_image;
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Backlight_High( void )
 {
     volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
@@ -1604,6 +1382,9 @@ void Backlight_High( void )
     *lcd = lcd_port_image;
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Backlight_Low( void )
 {
     volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
@@ -1612,6 +1393,9 @@ void Backlight_Low( void )
     *lcd = lcd_port_image;
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Reset_Contrast( void )
 {
 
@@ -1624,6 +1408,9 @@ void Reset_Contrast( void )
     gpio_set_gpio_pin(AVR32_PIN_PB21); //adjust
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Set_Contrast( uint8 level )
 {
     uint8 counts = 0;
@@ -1648,6 +1435,9 @@ void Set_Contrast( uint8 level )
     }
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 Bit_Swap( uint8 data )
 {
     uint8 tempData = 0;

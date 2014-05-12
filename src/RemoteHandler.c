@@ -91,10 +91,9 @@ static const COMMAND_MESSAGE_STRUCT s_cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] 
 	{ 'Z', 'Z', 'Z', handleAAA }		// Help on menus.
 };
 
-/********************************************************************/
-// Function:	initCraftInterruptBuffers
-// Purpose :	
-/********************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void initCraftInterruptBuffers(void)
 {
 	byteSet(g_isrMessageBufferPtr, 0, sizeof(CMD_BUFFER_STRUCT));
@@ -103,13 +102,9 @@ void initCraftInterruptBuffers(void)
 	g_isrMessageBufferPtr->writePtr = g_isrMessageBufferPtr->readPtr = g_isrMessageBufferPtr->msg;
 }
 
-//==================================================
-//	Procedure: cmdMessageHandler()
-//	Description: 
-//		Start determining the type of command.
-//	Input: CMD_BUFFER_STRUCT* inCmd
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 cmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 {
 	uint8 cmdIndex = 0;
@@ -179,16 +174,9 @@ uint8 cmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 	return (0);
 }
 
-
-
-//==================================================
-//	Procedure: cmdMessageProcessing()
-//	Description: 
-//		Processing the incomming data string and determine if a 
-//		valid cmd has been received. If it has handle the msg.
-//	Input: CMD_BUFFER_STRUCT* inCmd
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void cmdMessageProcessing()
 {
 	// Check if there is a potentially fatal error.
@@ -227,14 +215,9 @@ void cmdMessageProcessing()
 	return;
 }
 
-
-
-//==================================================
-//	Procedure: processCraftData()
-//	Description: 
-//	Input: 
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void processCraftData()			
 {
 	uint8 newPoolBuffer = NO;
@@ -311,13 +294,9 @@ void processCraftData()
 	return;
 }
 
-//==================================================
-//	Procedure: cmdMessageHandlerInit()
-//	Description: 
-//		Initialize the buffer variables.
-//	Input: CMD_BUFFER_STRUCT* inCmd
-//	Output: none
-//--------------------------------------------------
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void cmdMessageHandlerInit()
 {	
 	// Clear and set up the addresses for the ptrs from the buffer array.
@@ -336,10 +315,9 @@ void cmdMessageHandlerInit()
 	return;
 }
 
-/********************************************************************/
-// Function:	craftInitStatusFlags
-// Purpose :	
-/********************************************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void craftInitStatusFlags(void)
 {
 	byteSet(&g_modemStatus, 0, sizeof(MODEM_STATUS_STRUCT));

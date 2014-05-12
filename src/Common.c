@@ -20,7 +20,6 @@
 #include "PowerManagement.h"
 #include "Keypad.h"
 #include "SysEvents.h"
-#include "Old_Board.h"
 #include "TextTypes.h"
 #include "adc.h"
 #include "FAT32_FileLib.h"
@@ -46,8 +45,7 @@ static INPUT_MSG_STRUCT* s_inputReadPtr = &(g_input_buffer[0]);
 static void (*s_bootloader)(void) = NULL;
 
 ///----------------------------------------------------------------------------
-///	Function:	getExternalVoltageLevelAveraged
-///	Purpose:	Convert the raw external voltage level from the a-to-d to the actual value
+///	Function Break
 ///----------------------------------------------------------------------------
 #define AD_VOLTAGE_READ_LOOP_COUNT	15
 float getExternalVoltageLevelAveraged(uint8 type)
@@ -119,8 +117,7 @@ float getExternalVoltageLevelAveraged(uint8 type)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	checkExternalChargeVoltagePresent
-///	Purpose:	Convert the raw external voltage level from the a-to-d to the actual value
+///	Function Break
 ///----------------------------------------------------------------------------
 BOOLEAN checkExternalChargeVoltagePresent(void)
 {
@@ -152,8 +149,7 @@ BOOLEAN checkExternalChargeVoltagePresent(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	adjustedRawBatteryLevel
-///	Purpose:	Calculate the adjusted raw battery from the min level
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 adjustedRawBatteryLevel(void)
 {
@@ -193,8 +189,7 @@ uint8 adjustedRawBatteryLevel(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	ckInputMsg
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint16 ckInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 {
@@ -229,8 +224,7 @@ uint16 ckInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	procInputMsg
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void procInputMsg(INPUT_MSG_STRUCT mn_msg)
 {
@@ -291,8 +285,7 @@ void procInputMsg(INPUT_MSG_STRUCT mn_msg)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	sendInputMsg
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint16 sendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 {
@@ -341,8 +334,7 @@ uint16 sendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	soft_usecWait
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void soft_usecWait(uint32 usecs)
 {
@@ -368,8 +360,7 @@ void soft_usecWait(uint32 usecs)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	spinBar
-///	Purpose:	Spin a bar around while waiting
+///	Function Break
 ///----------------------------------------------------------------------------
 void spinBar(void)
 {
@@ -385,8 +376,7 @@ void spinBar(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	swapInt
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint16 swapInt(uint16 Scr)
 {
@@ -401,10 +391,7 @@ uint16 swapInt(uint16 Scr)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	hexToDB
-///	Purpose:	20 * log(+/- (mb/.0000002)), mb always positive
-///				.0000002 = 1/5000000 = 1/DB_CONVERSION_VALUE
-///				log(100) = 2 : 100 = 10**2 : 100 = 10 ** log(100)
+///	Function Break
 ///----------------------------------------------------------------------------
 float hexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
@@ -421,9 +408,7 @@ float hexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	hexToMB
-///	Purpose:	ABS((hexValue - 2048) * 25 / 10000), Where (hexValue - 2048)
-///				is for the full spread between 0 - 4096
+///	Function Break
 ///----------------------------------------------------------------------------
 float hexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
@@ -451,8 +436,7 @@ float hexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	hexToPsi
-///	Purpose:	psi = mb * 14.70/1013.25, 1 atmosphere = 14.7 psi = 1013.25 mb
+///	Function Break
 ///----------------------------------------------------------------------------
 float hexToPsi(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
@@ -466,8 +450,7 @@ float hexToPsi(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	dbToHex
-///	Purpose:	Convert the db value to a raw hex number between 0 and 2048
+///	Function Break
 ///----------------------------------------------------------------------------
 uint16 dbToHex(uint16 db)
 {
@@ -484,10 +467,9 @@ uint16 dbToHex(uint16 db)
 }
 
 #if 1 // Updated (Port lost change)
-/****************************************
-*  Function:   mbToHex
-*  Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint16 mbToHex(float mb)
 {
 	// Range is from 0 to 2048. Incoming mb is adjusted up by 10,000. Divide by 25 to bring to the correct range.
@@ -496,10 +478,9 @@ uint16 mbToHex(float mb)
 	return (mbValue);
 }
 
-/****************************************
-*  Function:   convertDBtoMB
-*  Purpose: Convert the db value to mb
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint32 convertDBtoMB(uint32 level)
 {
 #if 0 // Poor
@@ -541,10 +522,9 @@ uint32 convertDBtoMB(uint32 level)
 #endif
 }
 
-/****************************************
-*  Function:   convertMBtoDB
-*  Purpose: Convert the mb value to db
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint32 convertMBtoDB(uint32 level)
 {
 #if 0 // Poor
@@ -584,9 +564,7 @@ uint32 convertMBtoDB(uint32 level)
 #endif
 
 ///----------------------------------------------------------------------------
-///	Function:	isqrt
-///	Purpose:	Provide an integer square root routine that is as fast as
-///				possible (~25 usecs)
+///	Function Break
 ///----------------------------------------------------------------------------
 uint16 isqrt(uint32 x)
 {
@@ -615,8 +593,7 @@ uint16 isqrt(uint32 x)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	startPitTimer
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
 void startPitTimer(PIT_TIMER timer)
@@ -634,8 +611,7 @@ void startPitTimer(PIT_TIMER timer)
 #endif
 
 ///----------------------------------------------------------------------------
-///	Function:	stopPitTimer
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
 void stopPitTimer(PIT_TIMER timer)
@@ -653,8 +629,7 @@ void stopPitTimer(PIT_TIMER timer)
 #endif
 
 ///----------------------------------------------------------------------------
-///	Function:	checkPitTimer
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
 BOOLEAN checkPitTimer(PIT_TIMER timer)
@@ -677,8 +652,7 @@ BOOLEAN checkPitTimer(PIT_TIMER timer)
 #endif
 
 ///----------------------------------------------------------------------------
-///	Function:	configPitTimer
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
 void configPitTimer(PIT_TIMER timer, uint16 clockDivider, uint16 modulus)
@@ -697,8 +671,7 @@ void configPitTimer(PIT_TIMER timer, uint16 clockDivider, uint16 modulus)
 #endif
 
 ///----------------------------------------------------------------------------
-///	Function:	initVersionStrings
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
 void initVersionStrings(void)
@@ -740,8 +713,7 @@ void initVersionStrings(void)
 #endif
 
 ///----------------------------------------------------------------------------
-///	Function:	initVersionMsg
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void initVersionMsg(void)
 {
@@ -760,8 +732,7 @@ void initVersionMsg(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	build_languageLinkTable
-///	Purpose:	Build the language link table based on the language choosen
+///	Function Break
 ///----------------------------------------------------------------------------
 void build_languageLinkTable(uint8 languageSelection)
 {
@@ -861,8 +832,7 @@ void build_languageLinkTable(uint8 languageSelection)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	getBootFunctionAddress
-///	Purpose:	Grab the address stored in the RTC that the bootloader assigned
+///	Function Break
 ///----------------------------------------------------------------------------
 void getBootFunctionAddress(void)
 {
@@ -870,8 +840,7 @@ void getBootFunctionAddress(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	jumpToBootFunction
-///	Purpose:	Jump to the bootloader app loader routine
+///	Function Break
 ///----------------------------------------------------------------------------
 void jumpToBootFunction(void)
 {
@@ -925,8 +894,7 @@ void jumpToBootFunction(void)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	byteCpy
-///	Purpose:	Our own memcpy
+///	Function Break
 ///----------------------------------------------------------------------------
 void byteCpy(void* dest, void* src, uint32 size)
 {
@@ -937,8 +905,7 @@ void byteCpy(void* dest, void* src, uint32 size)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	byteSet
-///	Purpose:	Our own memset
+///	Function Break
 ///----------------------------------------------------------------------------
 void byteSet(void* dest, uint8 value, uint32 size)
 {
@@ -949,8 +916,7 @@ void byteSet(void* dest, uint8 value, uint32 size)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	getDateString
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void getDateString(char* buff, uint8 monthNum, uint8 bufSize)
 {
@@ -967,8 +933,7 @@ void getDateString(char* buff, uint8 monthNum, uint8 bufSize)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	getDaysPerMonth
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint8 getDaysPerMonth(uint8 month, uint16 year)
 {
@@ -1045,8 +1010,7 @@ uint8 getDayOfWeek(uint8 year, uint8 month, uint8 day)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	getTotalDaysFromReference
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 uint16 getTotalDaysFromReference(TM_DATE_STRUCT date)
 {
@@ -1090,8 +1054,7 @@ uint16 getTotalDaysFromReference(TM_DATE_STRUCT date)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	initTimeMsg
-///	Purpose:
+///	Function Break
 ///----------------------------------------------------------------------------
 void initTimeMsg(void)
 {

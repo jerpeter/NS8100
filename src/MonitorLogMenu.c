@@ -50,10 +50,9 @@ void monitorLogMn(INPUT_MSG_STRUCT);
 void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *, MN_LAYOUT_STRUCT *);
 void monitorLogMnDsply(WND_LAYOUT_STRUCT *);
 
-/****************************************
-*	Function:	monitorLogMn
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void monitorLogMn(INPUT_MSG_STRUCT msg)
 {
     static WND_LAYOUT_STRUCT wnd_layout;
@@ -68,10 +67,9 @@ void monitorLogMn(INPUT_MSG_STRUCT msg)
     }
 }
 
-/****************************************
-*	Function:	monitorLogMnProc
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -175,10 +173,9 @@ void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 	}
 }
 
-/****************************************
-*	Function:	monitorLogMnDsply
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
     uint8 buff[25];

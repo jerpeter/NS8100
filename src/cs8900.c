@@ -50,6 +50,9 @@ extern unsigned short ISNGenHigh;                         // upper word of our I
 
 extern unsigned char TCPTimer;                          // inc'd each 262ms
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
 static void compare_irq_handler(void)
 {
@@ -61,6 +64,9 @@ static void compare_irq_handler(void)
   Set_sys_compare(Get_sys_count() + NB_CLOCK_CYCLE_DELAY_SHORT);
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void counter_init(void)
 {
    U32 u32CompareVal;
@@ -76,11 +82,15 @@ void counter_init(void)
 }
 
 
-// configure port-pins for use with LAN-controller,
-// reset it and send the configuration-sequence
-// (InitSeq[])
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Init8900(void)
 {
+	// configure port-pins for use with LAN-controller,
+	// reset it and send the configuration-sequence
+	// (InitSeq[])
+
    unsigned int i;
 
    //turn sleep off
@@ -101,18 +111,27 @@ void Init8900(void)
 
 #include "Typedefs.h"
 #include "Uart.h"
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Sleep8900(void)
 {
    Write8900(ADD_PORT, PP_SelfCTL);
    Write8900(DATA_PORT, 0x0300);          // Sleep the Ethernet-Controller
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Sleep8900_LedOn(void)
 {
    Write8900(ADD_PORT, PP_SelfCTL);
    Write8900(DATA_PORT, 0x5300);          // Sleep the Ethernet-Controller
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void ToggleLedOn8900(void)
 {
    Write8900(ADD_PORT, PP_SelfCTL);
@@ -120,6 +139,9 @@ void ToggleLedOn8900(void)
 	//debug("Lan data port: 0x%x\n", Read8900(DATA_PORT));
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void ToggleLedOff8900(void)
 {
    Write8900(ADD_PORT, PP_SelfCTL);
@@ -127,6 +149,9 @@ void ToggleLedOff8900(void)
 	//debug("Lan data port: 0x%x\n", Read8900(DATA_PORT));
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void ReadId8900(void)
 {
    Write8900(ADD_PORT, PP_ChipID);
@@ -136,36 +161,50 @@ void ReadId8900(void)
 	debug("Lan ID (1): 0x%x\n", Read8900(DATA_PORT));
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void BlindReadId8900(void)
 {
 	debug("Blind Lan ID (0): 0x%x\n", Read8900(DATA_PORT));
 }
 
-// writes a word in little-endian byte order to
-// a specified port-address
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void Write8900(unsigned short *Address, unsigned short Data)
 {
+	// writes a word in little-endian byte order to
+	// a specified port-address
+
 	volatile unsigned short *cs8900 = Address;
 
    *cs8900 = Data;                                  // write low order byte to data bus
 }
 
 
-// writes a word in little-endian byte order to TX_FRAME_PORT
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void WriteFrame8900(unsigned int Data)
 {
+	// writes a word in little-endian byte order to TX_FRAME_PORT
+
 	volatile unsigned short *cs8900 = TX_FRAME_PORT;
 
     *cs8900 = Data;                                  // write low order byte to data bus
 }
 
-
-// copies bytes from MCU-memory to frame port
-// NOTES: * an odd number of byte may only be transfered
-//          if the frame is written to the end!
-//        * MCU-memory MUST start at word-boundary
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void CopyToFrame8900(void *Source, unsigned int Size)
 {
+	// copies bytes from MCU-memory to frame port
+	// NOTES: * an odd number of byte may only be transfered
+	//          if the frame is written to the end!
+	//        * MCU-memory MUST start at word-boundary
+
    unsigned short temp;
 
    while (Size > 1)
@@ -182,11 +221,14 @@ void CopyToFrame8900(void *Source, unsigned int Size)
    }
 }                                                // ignores the highbyte)
 
-
-// reads a word in little-endian byte order from
-// a specified port-address
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 unsigned short Read8900(unsigned short *Address)
 {
+	// reads a word in little-endian byte order from
+	// a specified port-address
+
    unsigned short ReturnValue = 0;
    volatile unsigned short *cs8900 = Address;
 
@@ -195,10 +237,13 @@ unsigned short Read8900(unsigned short *Address)
    return ReturnValue;
 }
 
-
-// reads a word in little-endian byte order from RX_FRAME_PORT
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 unsigned int ReadFrame8900(void)
 {
+	// reads a word in little-endian byte order from RX_FRAME_PORT
+
    unsigned int ReturnValue = 0;
 //   unsigned int temp;
    volatile unsigned short *cs8900 = RX_FRAME_PORT;
@@ -210,12 +255,15 @@ unsigned int ReadFrame8900(void)
    return ReturnValue;
 }
 
-
-// reads a word in big-endian byte order from RX_FRAME_PORT
-// (useful to avoid permanent byte-swapping while reading
-// TCP/IP-data)
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 unsigned int ReadFrameBE8900(void)
 {
+	// reads a word in big-endian byte order from RX_FRAME_PORT
+	// (useful to avoid permanent byte-swapping while reading
+	// TCP/IP-data)
+
    unsigned int ReturnValue = 0;
    unsigned int temp;
    volatile unsigned short *cs8900 = RX_FRAME_PORT;
@@ -227,13 +275,16 @@ unsigned int ReadFrameBE8900(void)
    return ReturnValue;
 }
 
-
-// reads a word in little-endian byte order from
-// a specified port-address
-// NOTE: this func. xfers the high-byte 1st, must be used to
-//       access some special registers (e.g. RxStatus)
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 unsigned int ReadHB1ST8900(unsigned short *Address)
 {
+	// reads a word in little-endian byte order from
+	// a specified port-address
+	// NOTE: this func. xfers the high-byte 1st, must be used to
+	//       access some special registers (e.g. RxStatus)
+
    unsigned int ReturnValue = 0;
    volatile unsigned short *cs8900 = Address;
 
@@ -242,13 +293,16 @@ unsigned int ReadHB1ST8900(unsigned short *Address)
    return ReturnValue;
 }
 
-
-// copies bytes from frame port to MCU-memory
-// NOTES: * an odd number of byte may only be transfered
-//          if the frame is read to the end!
-//        * MCU-memory MUST start at word-boundary
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void CopyFromFrame8900(void *Dest, unsigned int Size)
 {
+	// copies bytes from frame port to MCU-memory
+	// NOTES: * an odd number of byte may only be transfered
+	//          if the frame is read to the end!
+	//        * MCU-memory MUST start at word-boundary
+
    unsigned short temp;
 
    while (Size > 1)
@@ -265,11 +319,14 @@ void CopyFromFrame8900(void *Dest, unsigned int Size)
    }
 }                                                // for the highbyte
 
-
-// does a dummy read on frame-I/O-port
-// NOTE: only an even number of bytes is read!
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void DummyReadFrame8900(unsigned int Size)       // discards an EVEN number of bytes
 {                                                // from RX-fifo
+	// does a dummy read on frame-I/O-port
+	// NOTE: only an even number of bytes is read!
+
    while (Size > 1)
    {
       ReadFrame8900();
@@ -277,20 +334,26 @@ void DummyReadFrame8900(unsigned int Size)       // discards an EVEN number of b
    }
 }
 
-
-// requests space in CS8900's on-chip memory for
-// storing an outgoing frame
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void RequestSend(unsigned int FrameSize)
 {
+	// requests space in CS8900's on-chip memory for
+	// storing an outgoing frame
+
   Write8900(TX_CMD_PORT, TX_START_ALL_BYTES);
   Write8900(TX_LEN_PORT, FrameSize);
 }
 
-
-// check if CS8900 is ready to accept the
-// frame we want to send
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 unsigned int Rdy4Tx(void)
 {
+	// check if CS8900 is ready to accept the
+	// frame we want to send
+
   Write8900(ADD_PORT, PP_BusST);
   return (Read8900(DATA_PORT) & READY_FOR_TX_NOW);
 }

@@ -15,7 +15,6 @@
 #include "intc.h"
 #include "usart.h"
 #include "print_funcs.h"
-#include "craft.h"
 #include "lcd.h"
 #include <stdio.h>
 
@@ -23,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Typedefs.h"
-#include "Old_Board.h"
 #include "Common.h"
 #include "Display.h"
 #include "Menu.h"
@@ -73,10 +71,9 @@ extern void InitKeypad(void);
 ///	Prototypes
 ///----------------------------------------------------------------------------
 
-/****************************************
-*	Function:	setupMnDef
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void setupMnDef(void)
 {
 	char buff[50];
@@ -261,10 +258,9 @@ void setupMnDef(void)
 	initSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
 }
 
-/****************************************
-*	Function:  initSensorParameters()
-*	Purpose:
-****************************************/
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void initSensorParameters(uint16 sensor_type, uint8 sensitivity)
 {
 	uint8 gainFactor = (uint8)((sensitivity == LOW) ? 2 : 4);
@@ -299,9 +295,9 @@ void initSensorParameters(uint16 sensor_type, uint8 sensitivity)
 	g_sensorInfoPtr->sensorValue = (uint16)(g_factorySetupRecord.sensor_type / gainFactor); // sensor value X 100.
 }
 
-//=================================================================================================
-//	Function:	InitSoftwareSettings_NS8100
-//=================================================================================================
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void InitSoftwareSettings_NS8100(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
