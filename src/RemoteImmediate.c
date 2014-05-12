@@ -141,7 +141,7 @@ void handleRST(CMD_BUFFER_STRUCT* inCmd)
 	UNUSED(inCmd);
 
 	// Check if the unit is in monitor mode
-	if (g_sampleProcessing == SAMPLING_STATE)
+	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 		// Turn printing off
 		g_helpRecord.auto_print = NO;
@@ -239,7 +239,7 @@ void handleEEM(CMD_BUFFER_STRUCT* inCmd)
 	UNUSED(inCmd);
 
 
-	if (SAMPLING_STATE == g_sampleProcessing)
+	if (ACTIVE_STATE == g_sampleProcessing)
 	{
 		// Error in message length
 		returnCode = CFG_ERR_MONITORING_STATE;
@@ -1625,7 +1625,7 @@ void handleGMN(CMD_BUFFER_STRUCT* inCmd)
 	uint32 returnCode = CFG_ERR_NONE;
 	uint32 msgCRC = 0;
 
-	if (SAMPLING_STATE == g_sampleProcessing)
+	if (ACTIVE_STATE == g_sampleProcessing)
 	{
 		// Error in message length
 		returnCode = CFG_ERR_MONITORING_STATE;
@@ -1704,7 +1704,7 @@ void handleHLT(CMD_BUFFER_STRUCT* inCmd)
 
 	UNUSED(inCmd);
 
-	if (SAMPLING_STATE == g_sampleProcessing)
+	if (ACTIVE_STATE == g_sampleProcessing)
 	{
 		// Stop 430 data transfers for the current mode and let the event processing handle the rest
 		stopMonitoring(g_triggerRecord.op_mode, EVENT_PROCESSING);

@@ -80,8 +80,8 @@ typedef struct
 
 // Processing states
 enum {
-	IDLE_STATE			= 0x10,
-	SAMPLING_STATE		= 0x20
+	IDLE_STATE = 0,
+	ACTIVE_STATE
 };
 
 #define START_TRIGGER_CMD 20

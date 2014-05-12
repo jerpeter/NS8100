@@ -70,15 +70,21 @@ float convertedBatteryLevel(uint8 type)
 		switch (type)
 		{
 			case EXT_CHARGE_VOLTAGE:
-				adc_start(&AVR32_ADC);
-				adVoltageReadValue = adc_get_value(&AVR32_ADC, VIN_CHANNEL);
-				//debug("Ext Charge Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+				{
+					adc_start(&AVR32_ADC);
+					adVoltageReadValue = adc_get_value(&AVR32_ADC, VIN_CHANNEL);
+					soft_usecWait(5);
+					//debug("Ext Charge Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+				}				
 				break;
 
 			case BATTERY_VOLTAGE:
-				adc_start(&AVR32_ADC);
-				adVoltageReadValue = adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
-				//debug("Battery Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+				{
+					adc_start(&AVR32_ADC);
+					adVoltageReadValue = adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
+					soft_usecWait(5);
+					//debug("Battery Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+				}
 				break;
 		}
 		
@@ -698,7 +704,7 @@ void jumpToBootFunction(void)
 	if (s_bootloader != NULL)
 	{
 		// Check if the unit is in monitor mode
-		if (g_sampleProcessing == SAMPLING_STATE)
+		if (g_sampleProcessing == ACTIVE_STATE)
 		{
 			// Check if auto monitor is disabled
 			if (g_helpRecord.auto_monitor_mode == AUTO_NO_TIMEOUT)

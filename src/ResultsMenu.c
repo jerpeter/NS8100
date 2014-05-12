@@ -216,7 +216,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 	        switch (msg.data[0])
 	        {
 				case (ENTER_KEY):
-					if (g_sampleProcessing != SAMPLING_STATE)
+					if (g_sampleProcessing != ACTIVE_STATE)
 					{
 						if (SUPERGRAPH_UNIT)
 						{
@@ -237,12 +237,12 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
     	        break;
 
 				case (ESC_KEY):
-					if (g_sampleProcessing == SAMPLING_STATE)
+					if (g_sampleProcessing == ACTIVE_STATE)
 					{
 						g_monitorEscapeCheck = YES;
 						g_promtForLeavingMonitorMode = TRUE;
 					}
-					else // g_sampleProcessing != SAMPLING_STATE
+					else // g_sampleProcessing != ACTIVE_STATE
 					{
  						if (g_summaryListMenuActive == YES)
  						{
@@ -279,7 +279,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 
 				case (DOWN_ARROW_KEY):
 				case (UP_ARROW_KEY):
-					if (g_sampleProcessing == SAMPLING_STATE)
+					if (g_sampleProcessing == ACTIVE_STATE)
 					{
 						if(msg.data[0] == DOWN_ARROW_KEY)
 						{
@@ -367,14 +367,15 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//getEventFileRecord(__ramFlashSummaryTbl[g_resultsRamSummaryIndex].fileEventNum, &resultsEventRecord);
 		getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
 		g_updateResultsEventRecord = NO;
+
+		debugRaw("\n\tResults Evt: %04d, Mode: %d\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
+		debugRaw("\tStored peaks: a:%x r:%x v:%x t:%x\n", 
+				eventRecord->summary.calculated.a.peak, 
+				eventRecord->summary.calculated.r.peak,
+				eventRecord->summary.calculated.v.peak,
+				eventRecord->summary.calculated.t.peak);
 	}
 #endif
-	debugRaw("\n\tResults Evt: %04d, Mode: %d\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
-	debugRaw("\tStored peaks: a:%x r:%x v:%x t:%x\n", 
-			eventRecord->summary.calculated.a.peak, 
-			eventRecord->summary.calculated.r.peak,
-			eventRecord->summary.calculated.v.peak,
-			eventRecord->summary.calculated.t.peak);
 
 	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
@@ -388,7 +389,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	//-----------------------------------------------------------------------
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 
-	if (g_sampleProcessing == SAMPLING_STATE)
+	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 		byteSet(&buff[0], 0, sizeof(buff));
 		byteSet(&dotBuff[0], 0, sizeof(dotBuff));
@@ -443,7 +444,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
 
 	// Next line after title
-	if (g_sampleProcessing == SAMPLING_STATE)
+	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 		if(g_monitorOperationMode == WAVEFORM_MODE)
 		{
@@ -475,7 +476,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// Advance to next row
 	wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-	if ((g_sampleProcessing == SAMPLING_STATE) && (eventRecord->summary.mode != MANUAL_CAL_MODE))
+	if ((g_sampleProcessing == ACTIVE_STATE) && (eventRecord->summary.mode != MANUAL_CAL_MODE))
 	{
 		// Date & Time
 		time = getCurrentTime();

@@ -31,6 +31,7 @@
 #include "ProcessBargraph.h"
 #include "TextTypes.h"
 #include "EventProcessing.h"
+#include "M23018.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -213,7 +214,7 @@ void lcdPwTimerCallBack(void)
 	clearControlLinesLcdDisplay();
 	powerControl(LCD_POWER_ENABLE, OFF);
 
-	if (g_sampleProcessing == SAMPLING_STATE)
+	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 		debug("LCD Power Timer callback: disabling Monitor Update Timer.\n");
 		clearSoftTimer(MENU_UPDATE_TIMER_NUM);
@@ -235,6 +236,37 @@ void menuUpdateTimerCallBack(void)
 	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 
 	assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
+}
+
+/****************************************
+*	Function:    keypadLedUpdateTimerCallBack
+*	Purpose:	 update the LED on the Keypad
+****************************************/
+#define GREEN_LED_PIN	0x10
+void keypadLedUpdateTimerCallBack(void)
+{
+	static uint8 ledState = OFF;
+	uint8 config = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+
+	// Check if Green enabled
+	if (ledState)
+	{
+		// Clear bits 4 and 5 (bottom nibble is a don't care)
+		config &= ~GREEN_LED_PIN;
+		
+		ledState = OFF;
+	}
+	else // Green on
+	{
+		// Enable Green
+		config |= GREEN_LED_PIN;
+		
+		ledState = ON;
+	}
+
+	write_mcp23018(IO_ADDRESS_KPD, GPIOA, config);
+
+	assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
 }
 
 /****************************************
@@ -345,7 +377,7 @@ void autoMonitorTimerCallBack(void)
 	clearSoftTimer(AUTO_MONITOR_TIMER_NUM);
 
 	// Check if the unit is not alread monitoring
-	if (g_sampleProcessing != SAMPLING_STATE)
+	if (g_sampleProcessing != ACTIVE_STATE)
 	{
 		// Enter monitor mode with the current mode
 		g_activeMenu = MONITOR_MENU;
@@ -380,7 +412,7 @@ void procTimerEvents(void)
 	}
 
 	// Check if the unit is in monitor mode and the battery voltage has dropped below 5 volts
-	if ((g_sampleProcessing == SAMPLING_STATE) && (convertedBatteryLevel(BATTERY_VOLTAGE) < 5.0))
+	if ((g_sampleProcessing == ACTIVE_STATE) && (convertedBatteryLevel(BATTERY_VOLTAGE) < 5.0))
 	{
 		// Disable the monitor menu update timer
 		clearSoftTimer(MENU_UPDATE_TIMER_NUM);
@@ -417,7 +449,7 @@ void handleMidnightEvent(void)
 	char message[50];
 	FLASH_USAGE_STRUCT flashStats;
 
-	if ((g_triggerRecord.op_mode == BARGRAPH_MODE) && (g_sampleProcessing == SAMPLING_STATE))
+	if ((g_triggerRecord.op_mode == BARGRAPH_MODE) && (g_sampleProcessing == ACTIVE_STATE))
 	{
 		// Do not handle midnight calibration since a manual cal is forced at the beginning of Bargraph
 
@@ -454,7 +486,7 @@ void handleMidnightEvent(void)
 			}
 
 			// Set flag to alert the Results menu which action to take after a cal pulse result is received
-			if (g_sampleProcessing == SAMPLING_STATE)
+			if (g_sampleProcessing == ACTIVE_STATE)
 				g_enterMonitorModeAfterMidnightCal = YES;
 
 			// Handle stopping 430 communication and finishing any processing

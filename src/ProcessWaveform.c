@@ -380,7 +380,7 @@ void MoveWaveformEventToFlash(void)
 	static uint32 vectorSumTotal;
 
 	uint16 normalizedData;
-	uint16 i;
+	uint32 i;
 	uint16 sample;
 	uint32 vectorSum;
 	uint16 tempPeak;
@@ -428,7 +428,7 @@ void MoveWaveformEventToFlash(void)
 				break;
         
 			case FLASH_PRE:
-				for (i = (uint16)g_samplesInPretrig; i != 0; i--)
+				for (i = g_samplesInPretrig; i != 0; i--)
 				{
 					// Store entire sample
 					//debugRaw("\nEvent Pretrigger --> ");
@@ -439,7 +439,7 @@ void MoveWaveformEventToFlash(void)
 				break;
 	        
 			case FLASH_BODY_INT:
-				sampGrpsLeft = (int)(g_samplesInBody - 1);
+				sampGrpsLeft = (g_samplesInBody - 1);
 	        
 				// A channel
 				sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
@@ -541,7 +541,7 @@ void MoveWaveformEventToFlash(void)
 			case FLASH_CAL:
 #if 0 // Does nothing
 				// Loop 100 times
-				for (i = (uint16)(g_samplesInCal / (g_triggerRecord.trec.sample_rate / 1024)); i != 0; i--)
+				for (i = g_samplesInCal; i != 0; i--)
 				{
 					// Store entire sample
 					//debugRaw("\nEvent Cal --> ");
@@ -576,10 +576,8 @@ void MoveWaveformEventToFlash(void)
 				}					
 				else // Write the file event to the SD card
 				{
-					char tempBuffer[50];
-					
-					sprintf(&tempBuffer[0], "EVENT #%d BEING SAVED TO SD CARD (MAY TAKE A WHILE)", g_nextEventNumberToUse);
-					overlayMessage("EVENT COMPLETE", &tempBuffer[0], 0);
+					sprintf((char*)&g_spareBuffer[0], "EVENT #%d BEING SAVED TO SD CARD (MAY TAKE A WHILE)", g_nextEventNumberToUse);
+					overlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
 					// Write the event record header and summary
 					fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
@@ -656,7 +654,7 @@ void MoveWaveformEventToFlash(void)
 		clearSystemEventFlag(TRIGGER_EVENT);
 		
 		// Check if not monitoring
-		if (g_sampleProcessing != SAMPLING_STATE)
+		if (g_sampleProcessing != ACTIVE_STATE)
 		{
  			// There were queued event buffers after monitoring was stopped
  			// Close the monitor log entry now since all events have been stored

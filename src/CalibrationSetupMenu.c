@@ -257,7 +257,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
-	if (g_sampleProcessing == SAMPLING_STATE)
+	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 #if 0 // ns7100
 		// If IDLE, wait for IDLE state to finish
@@ -334,7 +334,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wndMpWrtString(buff,wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 
 #if 0 // ns7100
-		if (g_sampleProcessing != SAMPLING_STATE)
+		if (g_sampleProcessing != ACTIVE_STATE)
 		{
 			return;
 		}
@@ -498,7 +498,7 @@ void mnStartCal(void)
 
 	InitDataBuffs(g_msgs430.startMsg430.capture_mode);
 
-	g_sampleProcessing = SAMPLING_STATE;
+	g_sampleProcessing = ACTIVE_STATE;
 
 	ISPI_SendMsg(g_msgs430.startMsg430.cmd_id);
 #endif
@@ -527,7 +527,7 @@ void mnStartCal(void)
 void mnStopCal(void)
 {
 #if 0 // ns7100
-	if (g_sampleProcessing == SAMPLING_STATE)
+	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 		// If IDLE, wait for IDLE state to finish
 		while (ISPI_GetISPI_State() == ISPI_IDLE){ /*spinBar()*/;}

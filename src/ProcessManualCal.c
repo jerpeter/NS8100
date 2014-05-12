@@ -268,7 +268,7 @@ void MoveManuelCalToFlash(void)
 			fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
 			// Write the event data, containing the pretrigger, event and cal
-			fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, g_currentEventFileHandle);
+			fl_fwrite(g_currentEventStartPtr, g_wordSizeInCal, 2, g_currentEventFileHandle);
 
 			// Done writing the event file, close the file handle
 			fl_fclose(g_currentEventFileHandle);

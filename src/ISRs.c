@@ -43,6 +43,8 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
+#define DUMMY_READ(x) if ((volatile int)x == 0) {}
+
 #if SUPERGRAPH_UNIT
 #define ESC_KEY_ROW			0x02
 #define ESC_KEY_POSITION	0x20
@@ -262,7 +264,7 @@ void isr_PowerOffKey(void)
     //MMC2114_IMM *imm = mmc2114_get_immp();
 	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '@';
 
-	if (g_sampleProcessing != SAMPLING_STATE)
+	if (g_sampleProcessing != ACTIVE_STATE)
 	{
 		// Check if timer mode is enabled and power off enable has been turned off
 		if ((g_helpRecord.timer_mode == ENABLED) && (getPowerControlState(POWER_SHUTDOWN_ENABLE) == OFF))
@@ -391,7 +393,7 @@ void isr_RTC(void)
 
 	if (rtcFlags.bit.periodicIntFlag)
 	{
-		if(g_sampleProcessing == SAMPLING_STATE)
+		if(g_sampleProcessing == ACTIVE_STATE)
 		{
 			GatherSampleData();
 
@@ -574,7 +576,7 @@ void isr_SCI1(void)
 			else if ((g_factorySetupSequence == STAGE_2) && (dataReg == 'd'))
 			{
 				// Check if actively in Monitor mode
-				if (g_sampleProcessing == SAMPLING_STATE)
+				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					// Don't allow access to the factory setup
 					g_factorySetupSequence = SEQ_NOT_STARTED;
@@ -1030,7 +1032,7 @@ static uint8 craftBufferCount = 0;
 			else if ((g_factorySetupSequence == STAGE_2) && (dataReg == 'd'))
 			{
 				// Check if actively in Monitor mode
-				if (g_sampleProcessing == SAMPLING_STATE)
+				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					// Don't allow access to the factory setup
 					g_factorySetupSequence = SEQ_NOT_STARTED;
@@ -1306,7 +1308,7 @@ void tc_typematic_irq(void)
 	g_keypadTimerTicks++;
 
 	// clear the interrupt flag
-	AVR32_TC.channel[TC_TYPEMATIC_TIMER_CHANNEL].sr;
+	DUMMY_READ(AVR32_TC.channel[TC_TYPEMATIC_TIMER_CHANNEL].sr);
 }
 
 // ============================================================================
@@ -1326,13 +1328,15 @@ __attribute__((__interrupt__))
 void tc_sample_irq(void)
 {
 	// Don't even bother with creating and clearing stack variables every time
-	static uint16 s_rChannelReading, s_vChannelReading, s_tChannelReading, s_aChannelReading;
+	static uint16 s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading;
 	static uint16 s_temperatureReading, s_channelConfigReadBack;
 	static uint32 s_sampleCount = 0;
 	static uint32 s_calSampleCount = 0;
 	static uint32 s_pendingCalCount = 0;
+	static uint32 s_pretriggerCount = 0;
 	static uint16 s_consecSeismicTriggerCount = 0;
 	static uint16 s_consecAirTriggerCount = 0;
+	static uint8 s_pretriggerFull = NO;
 	static uint8 s_seismicTriggerSample = NO;
 	static uint8 s_airTriggerSample = NO;
 	static uint8 s_recording = NO;
@@ -1344,48 +1348,50 @@ void tc_sample_irq(void)
 	//___________________________________________________________________________________________
 	//___Sample Output with return config words for reference
 	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp:  dbe (b6d0)
-
+	
 	//___________________________________________________________________________________________
 	//___AD raw data read all channels
     // Chan 0 - R
 	spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_rChannelReading);
+    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_R_channelReading);
     spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe0d0) { debugErr("AD Channel Sync Error!\n"); s_channelSyncError = YES; }
+	if(s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
 
     // Chan 1 - T
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_tChannelReading);
+    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_T_channelReading);
     spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe2d0) { debugErr("AD Channel Sync Error!\n"); s_channelSyncError = YES; }
+	if(s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
 
     // Chan 2 - V
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_vChannelReading);
+    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_V_channelReading);
     spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe4d0) { debugErr("AD Channel Sync Error!\n"); s_channelSyncError = YES; }
+	if(s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
 
     // Chan 3 - A
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_aChannelReading);
+    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_A_channelReading);
     spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe6d0) { debugErr("AD Channel Sync Error!\n"); s_channelSyncError = YES; }
+	if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
 
     // Temp
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
     spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_temperatureReading);
     spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xb6d0) { debugErr("AD Channel Sync Error!\n"); s_channelSyncError = YES; }
+	if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
 
 	//___________________________________________________________________________________________
 	//___Check for channel sync error
 	if (s_channelSyncError == YES)
 	{
+		debugErr("AD Channel Sync Error!\n");
+		
 		// Attempt channel recovery
 		spi_selectChip(AD_SPI, AD_SPI_NPCS);
 		spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_temperatureReading);
@@ -1400,14 +1406,16 @@ void tc_sample_irq(void)
 			case 0xe6d0: s_channelReadsToSync = 1; break; // A Chan
 			case 0xb6d0: s_channelReadsToSync = 0; break; // Temp Chan
 
-			default: s_channelReadsToSync = 0; // Houston, we have a problem... all channels read and unable to match
+			default: 
+				s_channelReadsToSync = 0; // Houston, we have a problem... all channels read and unable to match
+				debugErr("Error: ISR Processing AD --> Unable to Sync channels, data collection broken!\n");
 				break;
 		}
 		
 		while (s_channelReadsToSync--)
 		{
 			// Dummy reads to realign channel processing
-			spi_selectChip(AD_SPI, AD_SPI_NPCS);
+			spi_selectChip(AD_SPI, AD_SPI_NPCS); 
 			spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_temperatureReading);
 			spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
 			spi_unselectChip(AD_SPI, AD_SPI_NPCS);
@@ -1415,262 +1423,328 @@ void tc_sample_irq(void)
 	}
 	//___________________________________________________________________________________________
 	//___AD data read successfully, Normal operation
-	else // Normal operation
+	else // Analog data ready to be processed
 	{
-		// Store Data in Pretrigger
-		// Check for Triggers and Alarms
-
 		// Fit into legacy design, throw away 4 bits
-		s_rChannelReading = s_rChannelReading / 16;
-		s_vChannelReading = s_vChannelReading / 16;
-		s_tChannelReading = s_tChannelReading / 16;
-		s_aChannelReading = s_aChannelReading / 16;
+		s_R_channelReading = s_R_channelReading / 16;
+		s_V_channelReading = s_V_channelReading / 16;
+		s_T_channelReading = s_T_channelReading / 16;
+		s_A_channelReading = s_A_channelReading / 16;
 	
 		// Apply channel offset
-		s_rChannelReading -= g_channelOffset.r_12bit;
-		s_vChannelReading -= g_channelOffset.v_12bit;
-		s_tChannelReading -= g_channelOffset.t_12bit;
-		s_aChannelReading -= g_channelOffset.a_12bit;
+		s_R_channelReading -= g_channelOffset.r_12bit;
+		s_V_channelReading -= g_channelOffset.v_12bit;
+		s_T_channelReading -= g_channelOffset.t_12bit;
+		s_A_channelReading -= g_channelOffset.a_12bit;
 
-		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->r = s_rChannelReading;
-		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->v = s_vChannelReading;
-		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->t = s_tChannelReading;
-		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->a = s_aChannelReading;
+		// Store the data into the pretrigger buffer
+		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->r = s_R_channelReading;
+		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->v = s_V_channelReading;
+		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->t = s_T_channelReading;
+		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->a = s_A_channelReading;
 
 		//___________________________________________________________________________________________
-		//___Fill Pretrigger if necessary
-		// Check to see if collecting data to fill the pretrigger buffer
-		if ((g_sampleProcessing != SAMPLING_STATE) && (g_triggerRecord.op_mode == WAVEFORM_MODE || g_triggerRecord.op_mode == COMBO_MODE))
+		//___Check if the system flag is idle
+		if (g_sampleProcessing == IDLE_STATE)
 		{
+			// Idle and not processing, might as well adjust the channel offsets
+			// fix_ns8100
+
+			// Advance to the next pretrigger sample in the buffer
 			g_tailOfPreTrigBuff += g_sensorInfoPtr->numOfChannels;
 
 			// Check if the end of the PreTrigger buffer has been reached
 			if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
 		}
-
 		//___________________________________________________________________________________________
 		//___Processing Data in real time for Alarms, Triggers and Cal pulse
-		if (g_sampleProcessing == SAMPLING_STATE)
+		else // (g_sampleProcessing == ACTIVE_STATE)
 		{
+			//_____________________________________________________________________________________
+			//___Check if the pretrigger is not full, which is necessary for an event
+			if (s_pretriggerFull == NO)
+			{
+				s_pretriggerCount++;
+
+				// Check if the pretrigger count has accumulated to 1/4 of a second
+				if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / 4)) 
+				{ 
+					s_pretriggerFull = YES;
+					s_pretriggerCount = 0;
+				}					
+					
+				// Advance to the next pretrigger sample in the buffer
+				g_tailOfPreTrigBuff += g_sensorInfoPtr->numOfChannels;
+
+				// Check if the end of the PreTrigger buffer has been reached
+				if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
+			}
 			//___________________________________________________________________________________________
-			//___Normalize to zero for comparison
-			if (s_rChannelReading > 0x800) { s_rChannelReading -= 0x800; } else { s_rChannelReading = 0x800 - s_rChannelReading; }
-			if (s_vChannelReading > 0x800) { s_vChannelReading -= 0x800; } else { s_vChannelReading = 0x800 - s_vChannelReading; }
-			if (s_tChannelReading > 0x800) { s_tChannelReading -= 0x800; } else { s_tChannelReading = 0x800 - s_tChannelReading; }
-			if (s_aChannelReading > 0x800) { s_aChannelReading -= 0x800; } else { s_aChannelReading = 0x800 - s_aChannelReading; }
-	
-			//___________________________________________________________________________________________
-			//___Not handling a manual Cal
-			if (g_manualCalFlag == FALSE)
+			//___Pretrigger is full and ready
+			else // (s_pretriggerFull == YES)
 			{
 				//___________________________________________________________________________________________
-				//___Start of Alarm section
-				// Collecting data for any mode (other than calibration), signal alarm if active
-				if (g_helpRecord.alarm_one_mode != ALARM_MODE_OFF)
+				//___If handling a Manual Cal
+				if (g_manualCalFlag == TRUE)
 				{
-					// Check if seismic is enabled for Alarm 1
-					if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC))
+					// Wait 5 samples to start cal signaling (~5 ms)
+					if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
+					if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
+					if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
+					if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
+
+					// Mark the start of the Manual Cal pulse
+					if (g_manualCalSampleCount == MAX_CAL_SAMPLES)
 					{
-						if (s_rChannelReading > g_helpRecord.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
-						if (s_vChannelReading > g_helpRecord.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
-						if (s_tChannelReading > g_helpRecord.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
+						// Signal the start of the Cal pulse
+						*(g_tailOfPreTrigBuff + 0) |= CAL_START;
+						*(g_tailOfPreTrigBuff + 1) |= CAL_START;
+						*(g_tailOfPreTrigBuff + 2) |= CAL_START;
+						*(g_tailOfPreTrigBuff + 3) |= CAL_START;
 					}
 
-					// Check if air is enabled for Alarm 1
-					if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_AIR))
+					if (g_manualCalSampleCount)
 					{
-						if (s_aChannelReading > g_helpRecord.alarm_one_air_lvl) raiseSystemEventFlag(WARNING1_EVENT);
+						g_manualCalSampleCount--;
+
+						// Check if done with the Manual Cal pulse
+						if (g_manualCalSampleCount == 0)
+						{
+							// Mark the end of the Cal pulse
+							*(g_tailOfPreTrigBuff + 0) |= CAL_END;
+							*(g_tailOfPreTrigBuff + 1) |= CAL_END;
+							*(g_tailOfPreTrigBuff + 2) |= CAL_END;
+							*(g_tailOfPreTrigBuff + 3) |= CAL_END;
+						}
 					}
+
+					// Process the samples
+					ProcessManuelCalPulse();
 				}
-						
-				if (g_helpRecord.alarm_two_mode != ALARM_MODE_OFF)
+				//___________________________________________________________________________________________
+				//___For all other modes check for Alarms and mode specific triggers and cal
+				else // (g_manualCalFlag == FALSE)
 				{
-					// Check if seismic is enabled for Alarm 2
-					if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC))
+					//___________________________________________________________________________________________
+					//___Normalize to zero (positive) for comparison
+					if (s_R_channelReading < 0x800) { s_R_channelReading = 0x800 - s_R_channelReading; } else { s_R_channelReading -= 0x800; }
+					if (s_V_channelReading < 0x800) { s_V_channelReading = 0x800 - s_V_channelReading; } else { s_V_channelReading -= 0x800; }
+					if (s_T_channelReading < 0x800) { s_T_channelReading = 0x800 - s_T_channelReading; } else { s_T_channelReading -= 0x800; }
+					if (s_A_channelReading < 0x800) { s_A_channelReading = 0x800 - s_A_channelReading; } else { s_A_channelReading -= 0x800; }
+	
+					//___________________________________________________________________________________________
+					//___Start of Alarm section
+					// Collecting data for any mode (other than calibration), signal alarm if active
+					if (g_helpRecord.alarm_one_mode != ALARM_MODE_OFF)
 					{
-						if (s_rChannelReading > g_helpRecord.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
-						if (s_vChannelReading > g_helpRecord.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
-						if (s_tChannelReading > g_helpRecord.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
-					}
+						// Check if seismic is enabled for Alarm 1
+						if (g_helpRecord.alarm_one_mode & ALARM_MODE_SEISMIC)
+						{
+							if (s_R_channelReading > g_helpRecord.alarm_one_seismic_lvl) { raiseSystemEventFlag(WARNING1_EVENT); }
+							else if (s_V_channelReading > g_helpRecord.alarm_one_seismic_lvl) { raiseSystemEventFlag(WARNING1_EVENT); }
+							else if (s_T_channelReading > g_helpRecord.alarm_one_seismic_lvl) { raiseSystemEventFlag(WARNING1_EVENT); }
+						}
 
-					// Check if air is enabled for Alarm 2
-					if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_AIR))
-					{
-						if (s_aChannelReading > g_helpRecord.alarm_two_air_lvl) raiseSystemEventFlag(WARNING2_EVENT);
+						// Check if air is enabled for Alarm 1
+						if (g_helpRecord.alarm_one_mode & ALARM_MODE_AIR)
+							if (s_A_channelReading > g_helpRecord.alarm_one_air_lvl) { raiseSystemEventFlag(WARNING1_EVENT); }
 					}
-				}				
-
-				//_____________________________________________________________________________________
-				//___Check if not recording _and_ no cal pulse, or if pending cal and all below consec threshold
-				if ((((s_recording == NO) && (s_calPulse == NO)) || (s_pendingCalCount)) && 
-					(s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD))
-				{
-					//_____________________________________________________________________________________
-					//___Check for triggers
-					if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
-					{
-						if (s_rChannelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
-						else if (s_vChannelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
-						else if (s_tChannelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
-					
-						if (s_seismicTriggerSample == YES) { s_consecSeismicTriggerCount++; s_seismicTriggerSample = NO; }
-						else {s_consecSeismicTriggerCount = 0; }
-					}
-
-					if (g_triggerRecord.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
-					{
-						if (s_aChannelReading > g_triggerRecord.trec.soundTriggerLevel) { s_airTriggerSample = YES; }
 						
-						if (s_airTriggerSample == YES) { s_consecAirTriggerCount++; s_airTriggerSample = NO; }
-						else { s_consecAirTriggerCount = 0; }
+					if (g_helpRecord.alarm_two_mode != ALARM_MODE_OFF)
+					{
+						// Check if seismic is enabled for Alarm 2
+						if (g_helpRecord.alarm_two_mode & ALARM_MODE_SEISMIC)
+						{
+							if (s_R_channelReading > g_helpRecord.alarm_two_seismic_lvl) { raiseSystemEventFlag(WARNING2_EVENT); }
+							else if (s_V_channelReading > g_helpRecord.alarm_two_seismic_lvl) { raiseSystemEventFlag(WARNING2_EVENT); }
+							else if (s_T_channelReading > g_helpRecord.alarm_two_seismic_lvl) { raiseSystemEventFlag(WARNING2_EVENT); }
+						}
+
+						// Check if air is enabled for Alarm 2
+						if (g_helpRecord.alarm_two_mode & ALARM_MODE_AIR)
+							if (s_A_channelReading > g_helpRecord.alarm_two_air_lvl) { raiseSystemEventFlag(WARNING2_EVENT); }
 					}				
 
-					//___________________________________________________________________________________________
-					//___If a pending Cal is in progress, decrement the counter
-					if (s_pendingCalCount) s_pendingCalCount--;
-					
-					//___________________________________________________________________________________________
-					//___Check if either a seismic or acoustic trigger threshold condition was achieved
-					if ((s_consecSeismicTriggerCount >= CONSECUTIVE_TRIGGERS_THRESHOLD) || 
-						(s_consecAirTriggerCount >= CONSECUTIVE_TRIGGERS_THRESHOLD))
+					//_____________________________________________________________________________________
+					//___If processing Waveform or Combo mode, look for triggers and manage the cal pulse
+					if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 					{
-						// Add command nibble to signal a tigger
-						*(g_tailOfPreTrigBuff + 0) |= TRIG_ONE;
-						*(g_tailOfPreTrigBuff + 1) |= TRIG_ONE;
-						*(g_tailOfPreTrigBuff + 2) |= TRIG_ONE;
-						*(g_tailOfPreTrigBuff + 3) |= TRIG_ONE;
-
-						debug("--> Trigger Found! %x %x %x %x\n", s_rChannelReading, s_vChannelReading, s_tChannelReading, s_aChannelReading);
+						//_____________________________________________________________________________________
+						//___Check if not recording _and_ no cal pulse, or if pending cal and all below consec threshold
+						if ((((s_recording == NO) && (s_calPulse == NO)) || (s_pendingCalCount)) && 
+							(s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD))
+						{
+							//_____________________________________________________________________________________
+							//___Check for triggers
+							if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
+							{
+								if (s_R_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
+								else if (s_V_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
+								else if (s_T_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
 					
-						s_consecSeismicTriggerCount = 0;
-						s_consecAirTriggerCount = 0;
-						s_recording = YES;
-						s_calPulse = PENDING;
-						s_pendingCalCount = 0;
-						s_consecEventsWithoutCal++;
+								if (s_seismicTriggerSample == YES) { s_consecSeismicTriggerCount++; s_seismicTriggerSample = NO; }
+								else {s_consecSeismicTriggerCount = 0; }
+							}
 
-						// Already handled trigger sample, so now get 1 sample less than the total
-						s_sampleCount = (g_triggerRecord.trec.record_time * g_triggerRecord.trec.sample_rate - 1);
-					}
-				}
-				//___________________________________________________________________________________________
-				//___Check if we are still recording
-				else if ((s_recording == YES) && (s_sampleCount))
-				{
-					s_sampleCount--;
-					
-					// Check if all the event samples have been handled
-					if (s_sampleCount == 0)
-					{
-						//debug("--> Recording done!\n");
-						s_recording = NO;
-
-						// Setup delay for Cal pulse (1/4 sample rate)
-						s_pendingCalCount = g_triggerRecord.trec.sample_rate / 4;
-					}
-				}
-				//___________________________________________________________________________________________
-				//___Check if done recording and either done pending cal looking for event of hit consec event threshold
-				else if (((s_recording == NO) && (s_calPulse == PENDING)) && 
-							((s_pendingCalCount == 0) || (s_consecEventsWithoutCal == CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)))
-				{
-					// Time to handle Cal Pulse
-					s_calPulse = YES;
-					s_calSampleCount = MAX_CAL_SAMPLES;
-					
-					// Swap to alternate timer/counter for default 1024 sample rate for Cal
-					AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr;
-					tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
-					tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
-				}
-				//___________________________________________________________________________________________
-				//___Check if starting Cal pulse
-				else if ((s_calPulse == YES) && (s_calSampleCount == MAX_CAL_SAMPLES))
-				{
-					// Start Cal
-					*(g_tailOfPreTrigBuff + 0) |= CAL_START;
-					*(g_tailOfPreTrigBuff + 1) |= CAL_START;
-					*(g_tailOfPreTrigBuff + 2) |= CAL_START;
-					*(g_tailOfPreTrigBuff + 3) |= CAL_START;
-
-					s_calSampleCount--;
-				}
-				//___________________________________________________________________________________________
-				//___Check if a cal pulse is processing
-				else if ((s_calPulse == YES) && (s_calSampleCount))
-				{
-					// Wait 5 samples to start cal signaling
-					if (s_calSampleCount == 95) adSetCalSignalHigh(); // Cal signal high for 10 samples
-					if (s_calSampleCount == 85) adSetCalSignalLow();  // Cal signal low for 20 samples
-					if (s_calSampleCount == 65) adSetCalSignalHigh(); // Cal signal high for 10 samples
-					if (s_calSampleCount == 55) adSetCalSignalOff(); // Cal signal off for 55 samples
-
-					s_calSampleCount--;
-
-					if (s_calSampleCount == 0)
-					{
-						//debug("--> Cal done!\n");
+							if (g_triggerRecord.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
+							{
+								if (s_A_channelReading > g_triggerRecord.trec.soundTriggerLevel) { s_airTriggerSample = YES; }
 						
-						// Reset all states and counters (that haven't already)
-						s_calPulse = NO;
-						s_consecSeismicTriggerCount = 0;
-						s_consecAirTriggerCount = 0;
-						s_consecEventsWithoutCal = 0;
+								if (s_airTriggerSample == YES) { s_consecAirTriggerCount++; s_airTriggerSample = NO; }
+								else { s_consecAirTriggerCount = 0; }
+							}				
+
+							//___________________________________________________________________________________________
+							//___Check if either a seismic or acoustic trigger threshold condition was achieved
+							if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
+								(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
+							{
+								// Signal the start of a Trigger
+								*(g_tailOfPreTrigBuff + 0) |= TRIG_ONE;
+								*(g_tailOfPreTrigBuff + 1) |= TRIG_ONE;
+								*(g_tailOfPreTrigBuff + 2) |= TRIG_ONE;
+								*(g_tailOfPreTrigBuff + 3) |= TRIG_ONE;
+
+								debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
 					
-						// Swap back to original sampling rate
-						AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr;
-						tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
-						tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+								s_consecSeismicTriggerCount = 0;
+								s_consecAirTriggerCount = 0;
+								s_recording = YES;
+								s_calPulse = PENDING;
+								s_pendingCalCount = 0;
+								s_consecEventsWithoutCal++;
+
+								// Already handled trigger sample, so now record 1 sample less than the total
+								s_sampleCount = (g_triggerRecord.trec.record_time * g_triggerRecord.trec.sample_rate - 1);
+							}
+							//___________________________________________________________________________________________
+							//___Check if pending for a cal pulse since no trigger was found
+							else if (s_pendingCalCount)
+							{
+								s_pendingCalCount--;
+						
+								// Check if done pending for a Cal pulse
+								if (s_pendingCalCount == 0)
+								{
+									// Time to handle the Cal pulse
+									s_calPulse = YES;
+									s_calSampleCount = MAX_CAL_SAMPLES;
+					
+									// Check if on high sensitivity and if so set to low sensitivity for Cal pulse
+									if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
+
+									// Swap to alternate timer/counter for default 1024 sample rate for Cal
+									DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+									tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+									tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+								}
+							}
+						}
+						//___________________________________________________________________________________________
+						//___Check if handling event samples
+						else if ((s_recording == YES) && (s_sampleCount))
+						{
+							s_sampleCount--;
+					
+							// Check if all the event samples have been handled
+							if (s_sampleCount == 0)
+							{
+								//debug("--> Recording done!\n");
+								s_recording = NO;
+
+								// Check if maximum consecutive events have not been captured, therefore pend Cal pulse
+								if (s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)
+								{
+									// Setup delay for Cal pulse (1/4 sample rate)
+									s_pendingCalCount = g_triggerRecord.trec.sample_rate / 4;
+								}
+								else // Max number of events have been captured, force a Cal pulse
+								{
+									// Time to handle the Cal pulse
+									s_calPulse = YES;
+									s_calSampleCount = MAX_CAL_SAMPLES;
+					
+									// Check if on high sensitivity and if so set to low sensitivity for Cal pulse
+									if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
+
+									// Swap to alternate timer/counter for default 1024 sample rate for Cal
+									DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+									tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+									tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+								}
+							}
+						}
+						//___________________________________________________________________________________________
+						//___Check if handling cal pulse samples
+						else if ((s_calPulse == YES) && (s_calSampleCount))
+						{
+							// Wait 5 samples to start cal signaling (~5 ms)
+							if (s_calSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh();	}	// (~10 ms)
+							if (s_calSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
+							if (s_calSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
+							if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
+
+							// Signal the start of a Cal
+							if (s_calSampleCount == MAX_CAL_SAMPLES)
+							{
+								*(g_tailOfPreTrigBuff + 0) |= CAL_START;
+								*(g_tailOfPreTrigBuff + 1) |= CAL_START;
+								*(g_tailOfPreTrigBuff + 2) |= CAL_START;
+								*(g_tailOfPreTrigBuff + 3) |= CAL_START;
+							}
+
+							s_calSampleCount--;
+
+							if (s_calSampleCount == 0)
+							{
+								debug("--> Cal done!\n");
+						
+								// Reset all states and counters (that haven't already)
+								s_calPulse = NO;
+								s_consecSeismicTriggerCount = 0;
+								s_consecAirTriggerCount = 0;
+								s_consecEventsWithoutCal = 0;
+					
+								// Check if on high sensitivity and if so reset to high sensitivity after Cal pulse (done on low)
+								if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
+
+								// Swap back to original sampling rate
+								DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+								tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+								tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+
+								// Invalidate the pretrigger until it's filled again
+								s_pretriggerFull = NO;
+							}
+						}
+						else
+						{
+							// Should _never_ get here
+							debugErr("Error in ISR processing!\n");
+						}
+					} // End of processing waveform and combo trigger and cal pulse			
+
+					//___________________________________________________________________________________________
+					//___Process the data with the mode specific handler
+					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+					{
+						ProcessWaveformData();
 					}
-				}
-			}
-			//___________________________________________________________________________________________
-			//___Handling a Manual Cal
-			else //g_manualCalFlag == TRUE
-			{
-				if (g_manualCalSampleCount == 0)
-				{
-					// Start Cal
-					*(g_tailOfPreTrigBuff + 0) |= CAL_START;
-					*(g_tailOfPreTrigBuff + 1) |= CAL_START;
-					*(g_tailOfPreTrigBuff + 2) |= CAL_START;
-					*(g_tailOfPreTrigBuff + 3) |= CAL_START;
-				}
+					else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+					{
+						ProcessBargraphData();
+					}
+					else if (g_triggerRecord.op_mode == COMBO_MODE)
+					{
+						ProcessComboData();
+					}
 
-				if (g_manualCalSampleCount == 99)
-				{
-					// Stop Cal
-					*(g_tailOfPreTrigBuff + 0) |= CAL_END;
-					*(g_tailOfPreTrigBuff + 1) |= CAL_END;
-					*(g_tailOfPreTrigBuff + 2) |= CAL_END;
-					*(g_tailOfPreTrigBuff + 3) |= CAL_END;
-				}
-
-				g_manualCalSampleCount++;
-			}
-
-			//___________________________________________________________________________________________
-			//___Process the data with the mode specific handler
-			if (g_manualCalFlag)
-			{
-				ProcessManuelCalPulse();
-			}
-			else if (g_triggerRecord.op_mode == WAVEFORM_MODE)
-			{
-				ProcessWaveformData();
-			}
-			else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-			{
-				ProcessBargraphData();
-			}
-			else if (g_triggerRecord.op_mode == COMBO_MODE)
-			{
-				ProcessComboData();
-			}
-		}
-	}
+				} // End of process all modes except for manual cal
+			} // End of pretrigger full
+		} // End of (g_sampleProcessing == ACTIVE_STATE)
+	} // End of data processing
 
 	// clear the interrupt flag
-	AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr;
-	AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr;
+	DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+	DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
 }

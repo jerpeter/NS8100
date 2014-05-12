@@ -233,7 +233,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 	float  timeCheckFloat;
 	float  timeAlarmFloat;
 
-	if (SAMPLING_STATE == g_sampleProcessing)
+	if (ACTIVE_STATE == g_sampleProcessing)
 	{   
 		returnCode = CFG_ERR_MONITORING_STATE;
 	}
@@ -659,7 +659,6 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			switch (cfg.alarmCfg.alarm_one_mode)
 			{
 				case ALARM_MODE_OFF:
-				case ALARM_MODE_ON:
 				case ALARM_MODE_SEISMIC:
 				case ALARM_MODE_AIR:
 				case ALARM_MODE_BOTH:
@@ -742,7 +741,6 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			switch (cfg.alarmCfg.alarm_two_mode)
 			{
 				case ALARM_MODE_OFF:
-				case ALARM_MODE_ON:
 				case ALARM_MODE_SEISMIC:
 				case ALARM_MODE_AIR:
 				case ALARM_MODE_BOTH:

@@ -85,7 +85,7 @@ void InitDataBuffs(uint8 op_mode)
 		// Calculate samples for each section and total event
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
 		g_samplesInPretrig  = (uint32)(sampleRate / 4);
-		g_samplesInCal  = (uint32)((sampleRate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES);
+		g_samplesInCal  = (uint32)MAX_CAL_SAMPLES;
 		g_samplesInEvent  = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
 
 		// Calculate word size for each section and total event, since buffer is an array of words
@@ -128,9 +128,9 @@ void InitDataBuffs(uint8 op_mode)
 		// Waveform init
 		// Calculate samples for each section and total event
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
-		g_samplesInPretrig  = (uint32)(sampleRate / 4);
-		g_samplesInCal  = (uint32)((sampleRate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES);
-		g_samplesInEvent  = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
+		g_samplesInPretrig = (uint32)(sampleRate / 4);
+		g_samplesInCal = (uint32)MAX_CAL_SAMPLES;
+		g_samplesInEvent = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
 
 		// Calculate word size for each section and total event, since buffer is an array of words
 		g_wordSizeInPretrig = g_samplesInPretrig * g_sensorInfoPtr->numOfChannels;

@@ -960,23 +960,34 @@ void barResultMenuHandler(uint8 keyPressed, void* data)
 // Baud Rate Menu
 //=============================================================================
 //*****************************************************************************
-#define BAUD_RATE_MENU_ENTRIES 5
+#define BAUD_RATE_MENU_ENTRIES 7
 USER_MENU_STRUCT baudRateMenu[BAUD_RATE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, BAUD_RATE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAUD_RATE_MENU_ENTRIES, TITLE_LEFT_JUSTIFIED, DEFAULT_ITEM_1)}},
-{ITEM_1, 38400, NULL_TEXT,	NO_TAG, {BAUD_RATE_38400}},
-{ITEM_2, 19200, NULL_TEXT,	NO_TAG, {BAUD_RATE_19200}},
-{ITEM_3, 9600, NULL_TEXT,	NO_TAG, {BAUD_RATE_9600}},
+{ITEM_1, 0, BAUD_RATE_115200_TEXT,	NO_TAG, {BAUD_RATE_115200}},
+{ITEM_2, 57600, BAUD_RATE_TEXT,	NO_TAG, {BAUD_RATE_57600}},
+{ITEM_3, 38400, BAUD_RATE_TEXT,	NO_TAG, {BAUD_RATE_38400}},
+{ITEM_4, 19200, BAUD_RATE_TEXT,	NO_TAG, {BAUD_RATE_19200}},
+{ITEM_5, 9600, BAUD_RATE_TEXT,	NO_TAG, {BAUD_RATE_9600}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&baudRateMenuHandler}}
 };
 
 //-----------------------
 // Baud Rate Menu Handler
 //-----------------------
+#include "usart.h"
+#define FOSC0	66000000
 void baudRateMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	uint16 newItemIndex = *((uint16*)data);
+	usart_options_t usart_1_rs232_options =
+	{
+		.charlength = 8,
+		.paritytype = USART_NO_PARITY,
+		.stopbits = USART_1_STOPBIT,
+		.channelmode = USART_NORMAL_CHMODE
+	};
 
 	if (keyPressed == ENTER_KEY)
 	{
@@ -986,20 +997,15 @@ void baudRateMenuHandler(uint8 keyPressed, void* data)
 
 			switch (baudRateMenu[newItemIndex].data)
 			{
-#if 0 // fix_ns8100
-				case BAUD_RATE_38400:
-					uart_init(38400, CRAFT_COM_PORT);
-					break;
-
-				case BAUD_RATE_19200:
-					uart_init(19200, CRAFT_COM_PORT);
-					break;
-
-				case BAUD_RATE_9600:
-					uart_init(9600, CRAFT_COM_PORT);
-					break;
-#endif
+				case BAUD_RATE_115200: usart_1_rs232_options.baudrate = 115200; break;
+				case BAUD_RATE_57600: usart_1_rs232_options.baudrate = 57600; break;
+				case BAUD_RATE_38400: usart_1_rs232_options.baudrate = 38400; break;
+				case BAUD_RATE_19200: usart_1_rs232_options.baudrate = 19200; break;
+				case BAUD_RATE_9600: usart_1_rs232_options.baudrate = 9600; break;
 			}
+
+			// Re-Initialize the RS232 with the new baud rate
+			usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
 
 			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 		}

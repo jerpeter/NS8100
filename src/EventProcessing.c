@@ -77,7 +77,7 @@ void copyValidFlashEventSummariesToRam(void)
 #if 1 // ns8100 ---------------------------------------------------------------------------------------
 	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(g_eventDataBuffer[0]);
 	uint16 entriesFound = 0;
-	char* fileName = (char*)&spareBuffer[0];
+	char* fileName = (char*)&g_spareBuffer[0];
 	FL_FILE* eventFile;
 	EVT_RECORD tempEventRecord;
 	unsigned long int dirStartCluster;
@@ -1074,7 +1074,7 @@ BOOLEAN validEventFile(uint16 eventNumber)
 //*****************************************************************************
 FL_FILE* getEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 {
-	char* fileName = (char*)&spareBuffer[0];
+	char* fileName = (char*)&g_spareBuffer[0];
 	char fileOption[3];
 	
 	sprintf(fileName, "C:\\Events\\Evt%d.ns8", newFileEventNumber);

@@ -508,7 +508,7 @@ enum {
 	USB_NOT_CONNECTED = 1,
 	USB_CONNECTED_AND_PROCESSING = 2
 };
-extern uint8 g_sampleProcessing;
+extern volatile uint8 g_sampleProcessing;
 void UsbDeviceManager(void)
 {
 	static uint8 usbMassStorageState = USB_INIT_DRIVER;
@@ -528,7 +528,7 @@ void UsbDeviceManager(void)
 	}
 
 	// Check if USB Cable is plugged in and not monitoring and not handling a trigger
-	if ((Is_usb_vbus_high()) && (g_sampleProcessing != SAMPLING_STATE) && (!getSystemEventState(TRIGGER_EVENT)))
+	if ((Is_usb_vbus_high()) && (g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)))
 	{
 		// Check if USB and Mass Storage driver init needs to occur
 		if (usbMassStorageState == USB_NOT_CONNECTED)
@@ -557,7 +557,7 @@ void UsbDeviceManager(void)
 		// Check if the USB was plugged in prior
 		if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
 		{
-			if (g_sampleProcessing == SAMPLING_STATE)
+			if (g_sampleProcessing == ACTIVE_STATE)
 			{
 				overlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 1 * SOFT_SECS);
 			}
@@ -778,8 +778,8 @@ void InitSystemHardware_NS8100(void)
 	adc_configure(&AVR32_ADC);
 
 	// Enable the A/D channels.
-	adc_enable(&AVR32_ADC, VIN_CHANNEL);
 	adc_enable(&AVR32_ADC, VBAT_CHANNEL);
+	adc_enable(&AVR32_ADC, VIN_CHANNEL);
 
 	SD_MMC_Power_On();
 

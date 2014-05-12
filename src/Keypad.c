@@ -25,6 +25,7 @@
 #include "Uart.h"
 #include "SysEvents.h"
 #include "TextTypes.h"
+#include "M23018.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -36,10 +37,10 @@
 #define WAIT_AFTER_COMBO_KEY_DELAY 	25	// 25 * 10 msec ticks = 250 mssec
 #define REPEAT_DELAY 				10	// 10 * 10 msec ticks = 100 msecs
 #else // ns8100
-#define CHECK_FOR_REPEAT_KEY_DELAY 	1000	// 100 * 1 msec ticks = 1 sec
-#define CHECK_FOR_COMBO_KEY_DELAY 	20		// 2 * 1 msec ticks = 20 mssec
-#define WAIT_AFTER_COMBO_KEY_DELAY 	250		// 25 * 1 msec ticks = 250 mssec
-#define REPEAT_DELAY 				100		// 10 * 1 msec ticks = 100 msecs
+#define CHECK_FOR_REPEAT_KEY_DELAY 	750		// 750 * 1 msec ticks = 750 msecs
+#define CHECK_FOR_COMBO_KEY_DELAY 	20		// 20 * 1 msec ticks = 20 mssec
+#define WAIT_AFTER_COMBO_KEY_DELAY 	250		// 250 * 1 msec ticks = 250 mssec
+#define REPEAT_DELAY 				100		// 100 * 1 msec ticks = 100 msecs
 #endif
 
 ///----------------------------------------------------------------------------
@@ -59,7 +60,6 @@ static uint8 s_keyMap[8];
 *	Function:	isr_keypad
 *	Purpose:
 ****************************************/
-#include "M23018.h"
 BOOLEAN keypad(void)
 {
 	INPUT_MSG_STRUCT msg;
@@ -388,7 +388,7 @@ BOOLEAN keypad(void)
 				(keyPressed == KEY_DOWNARROW)))
 			{
 				// Check if actively in Monitor mode
-				if (g_sampleProcessing == SAMPLING_STATE)
+				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					// Don't allow access to the factory setup
 					g_factorySetupSequence = SEQ_NOT_STARTED;
@@ -464,7 +464,7 @@ void keypressEventMgr(void)
 		assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 
 		// Check if the unit is monitoring, if so, reassign the monitor update timer
-		if (g_sampleProcessing == SAMPLING_STATE)
+		if (g_sampleProcessing == ACTIVE_STATE)
 		{
 			debug("Keypress Timer Mgr: enabling Monitor Update Timer.\n");
 			assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
@@ -488,7 +488,7 @@ void keypressEventMgr(void)
 	}
 
 	// Check if Auto Monitor is active and not in monitor mode
-	if ((g_helpRecord.auto_monitor_mode != AUTO_NO_TIMEOUT) && (g_sampleProcessing != SAMPLING_STATE))
+	if ((g_helpRecord.auto_monitor_mode != AUTO_NO_TIMEOUT) && (g_sampleProcessing != ACTIVE_STATE))
 	{
 		assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.auto_monitor_mode * TICKS_PER_MIN), autoMonitorTimerCallBack);
 	}

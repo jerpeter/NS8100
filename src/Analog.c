@@ -289,7 +289,7 @@ void SetSeismicGainSelect(uint8 seismicGain)
 	{
 		g_analogControl.bit.seismicGainSelect = 0;
 	}
-	else // seismicGain == SEISMIC_GAIN_HI
+	else // seismicGain == SEISMIC_GAIN_HIGH
 	{
 		g_analogControl.bit.seismicGainSelect = 1;
 	}
@@ -358,24 +358,22 @@ void SetCalSignal(uint8 data)
 void GenerateCalSignal(void)
 {
 	// Previous NS7100 timing was:
-	// 1) Enable cal (cut off real channels)
-	// 2) Drive reference high for 9ms
-	// 3) Drive reference low for 18ms
-	// 4) Drive reference high for 9ms
-	// 5) Disable cal and delay for 64ms and then off
+	// 1) Enable cal (cut off real channels) and delay 5ms
+	// 2) Drive reference high for 10ms
+	// 3) Drive reference low for 20ms
+	// 4) Drive reference high for 10ms
+	// 5) Disable cal and delay for 55ms and then off
 
 	SetCalSignalEnable(ON);
-
+	soft_usecWait(5 * SOFT_MSECS);
 	SetCalSignal(ON);
-	soft_usecWait(9 * SOFT_MSECS);
+	soft_usecWait(10 * SOFT_MSECS);
 	SetCalSignal(OFF);
-	soft_usecWait(18 * SOFT_MSECS);
+	soft_usecWait(20 * SOFT_MSECS);
 	SetCalSignal(ON);
-	soft_usecWait(9 * SOFT_MSECS);
-
+	soft_usecWait(10 * SOFT_MSECS);
 	SetCalSignalEnable(OFF);
-
-	soft_usecWait(64 * SOFT_MSECS);
+	soft_usecWait(55 * SOFT_MSECS);
 }
 
 ///----------------------------------------------------------------------------
@@ -384,14 +382,14 @@ void GenerateCalSignal(void)
 ///----------------------------------------------------------------------------
 void GetChannelOffsets(void)
 {
-	uint8 i = 0;
 	SAMPLE_DATA_STRUCT tempData;
-	uint8 powerAnalogDown = NO;
-	uint32 delay = 100 * (8192 / g_triggerRecord.trec.sample_rate);
 	uint32 rTotal = 0;
 	uint32 vTotal = 0;
 	uint32 tTotal = 0;
 	uint32 aTotal = 0;
+	uint32 i = 0;
+	uint32 timeDelay = (977 / (g_triggerRecord.trec.sample_rate / 512) / 2);
+	uint8 powerAnalogDown = NO;
 
 	// Check to see if the A/D is already powered on
 	if (getPowerControlState(ANALOG_SLEEP_ENABLE) == YES)
@@ -406,19 +404,21 @@ void GetChannelOffsets(void)
 	// Reset offset values
 	byteSet(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
 
-	// Read and pitch 50 samples
-	for (i=0;i<50;i++)
+	debug("Get Channel Offset: Read and pitch... (Address boundary: %s)\n", ((uint32)(&tempData) % 4 == 0) ? "YES" : "NO");
+	// Read and pitch samples
+	for (i = 0; i < g_triggerRecord.trec.sample_rate; i++)
 	{
 		ReadAnalogData(&tempData);
 
 		//debug("Offset throw away data: 0x%x, 0x%x, 0x%x, 0x%x\n", tempData.r, tempData.v, tempData.t, tempData.a);
 
 		// Delay equivalent to the time in between gathering samples for the current sample rate
-		soft_usecWait(delay);
+		soft_usecWait(timeDelay);
 	}
 
-	// Read and sum 50 samples
-	for (i=0;i<50;i++)
+	debug("Get Channel Offset: Read and sum...\n");
+	// Read and sum samples
+	for (i = 0; i < g_triggerRecord.trec.sample_rate; i++)
 	{
 		ReadAnalogData(&tempData);
 
@@ -430,14 +430,14 @@ void GetChannelOffsets(void)
 		aTotal += tempData.a;
 
 		// Delay equivalent to the time in between gathering samples for the current sample rate
-		soft_usecWait(delay);
+		soft_usecWait(timeDelay);
 	}
 
 	// Average out the summations
-	rTotal /= 50;
-	vTotal /= 50;
-	tTotal /= 50;
-	aTotal /= 50;
+	rTotal /= g_triggerRecord.trec.sample_rate;
+	vTotal /= g_triggerRecord.trec.sample_rate;
+	tTotal /= g_triggerRecord.trec.sample_rate;
+	aTotal /= g_triggerRecord.trec.sample_rate;
 
 	debug("A/D Channel offset average: 0x%x, 0x%x, 0x%x, 0x%x\n", rTotal, vTotal, tTotal, aTotal);
 

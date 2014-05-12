@@ -34,6 +34,7 @@ enum{
 	POWER_OFF_TIMER_NUM,
 	MODEM_DELAY_TIMER_NUM,
 	MODEM_RESET_TIMER_NUM,
+	KEYPAD_LED_TIMER_NUM,
 	// Add new timers here
 	NUM_OF_SOFT_TIMERS
 };
@@ -78,6 +79,7 @@ void displayTimerCallBack(void);
 void lcdPwTimerCallBack(void);
 void autoMonitorTimerCallBack(void);
 void menuUpdateTimerCallBack(void);
+void keypadLedUpdateTimerCallBack(void);
 void alarmOneOutputTimerCallback(void);
 void alarmTwoOutputTimerCallback(void);
 void powerOffTimerCallback(void);

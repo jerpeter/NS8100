@@ -132,8 +132,8 @@ void batteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
     uint8 buff[25];
 	char spaceBuff[25];
-    uint8 batt_buff[11];
-    uint32 x;
+    uint8 batt_buff[20];
+    uint32 x = 0;
     float curr_batt_volts;
     float batt_rng;
     uint8 length;
@@ -158,7 +158,7 @@ void batteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// ********** Print Battery text **********
 	byteSet(&buff[0], 0, sizeof(buff));
     sprintf((char*)buff,"%.2f %s", curr_batt_volts, getLangText(VOLTS_TEXT));
-	debug("Battery: %s\n", buff);
+	debug("Battery: %s\n", (char*)&buff[0]);
 
     wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
     wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
@@ -171,14 +171,15 @@ void batteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	length = (uint8)(strlen(getLangText(LOW_TEXT)) + strlen(getLangText(FULL_TEXT)));
 	spaceBuff[(20 - length)] = '\0';
 
-	sprintf((char*)buff,"%s%s%s", getLangText(LOW_TEXT), spaceBuff, getLangText(FULL_TEXT));
+	sprintf((char*)&buff[0], "%s%s%s", getLangText(LOW_TEXT), (char*)&spaceBuff[0], getLangText(FULL_TEXT));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
     wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// ********** E========F **********
     byteSet(&buff[0], 0, sizeof(buff));
-    byteSet(&batt_buff[0], ' ', (sizeof(buff) - 1));
+    byteSet(&batt_buff[0], 0, sizeof(batt_buff));
+    byteSet(&batt_buff[0], ' ', (sizeof(batt_buff) - 1));
 
     batt_rng = (float).25;
     x = 0;
