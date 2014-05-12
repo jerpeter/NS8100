@@ -270,7 +270,7 @@ void eic_keypad_irq(void)
 		raiseSystemEventFlag(KEYPAD_EVENT);
 
 		// Found a new key, reset last stored key
-		g_kpadLastKeyPressed = 0;
+		g_kpadLastKeyPressed = KEY_NONE;
 	}
 	else
 	{
@@ -320,7 +320,7 @@ void eic_system_irq(void)
 		raiseSystemEventFlag(KEYPAD_EVENT);
 
 		// Found a new key, reset last stored key
-		g_kpadLastKeyPressed = 0;
+		g_kpadLastKeyPressed = KEY_NONE;
 	}
 #endif
 
@@ -371,10 +371,26 @@ void eic_system_irq(void)
 		powerOffAttempted = YES;
 		onKeyCount = 0;
 	}
-#endif
 
+	// Check of the external trigger signal has been found
+	if (keyFlag & 0x08)
+	{
+		// Clear trigger found signal from self or any external unit connected (Active high control)
+		gpio_clr_gpio_pin(AVR32_PIN_PB05);
+		
+		//debugRaw("-ET-");
+		
+		// Check if not processing an event
+		if (g_busyProcessingEvent == NO)
+		{
+			// Signal the start of an event
+			g_externalTrigger = YES;
+		}
+	}
+#else
 	read_mcp23018(IO_ADDRESS_KPD, INTFA);
 	read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+#endif
 
 	// clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int4 = 1;
@@ -908,19 +924,15 @@ void processAndMoveWaveformData(void)
 
 		//___________________________________________________________________________________________
 		//___Check if either a seismic or acoustic trigger threshold condition was achieved
-#if 1 // Normal
 		if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
-			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
-#else // Test (Part of the test trigger ability)
-		if (g_testTrigger == YES)
-#endif
+			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || (g_externalTrigger == YES))
 		{
-#if 0 // Test (Part of the test trigger ability)
-			g_testTrigger = NO;
-#endif
 			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
 			//usart_write_char(&AVR32_USART1, '$');
 					
+			// Reset the external trigger flag
+			g_externalTrigger = NO;
+
 			s_consecSeismicTriggerCount = 0;
 			s_consecAirTriggerCount = 0;
 
@@ -1257,20 +1269,27 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		}				
 
 		//___________________________________________________________________________________________
-		//___Check if either a seismic or acoustic trigger threshold condition was achieved
-#if 1 // Normal
+		//___Check if either a seismic or acoustic trigger threshold condition was achieved or an external trigger was found
 		if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
-			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
-#else // Test (Part of the test trigger ability)
-		if (g_testTrigger == YES)
-#endif
+			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || (g_externalTrigger == YES))
 		{
-#if 0 // Test (Part of the test trigger ability)
-			g_testTrigger = NO;
-#endif
 			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
 			//usart_write_char(&AVR32_USART1, '$');
+			
+			// Check if the source was not an external trigger
+			if (g_externalTrigger == NO)
+			{
+				// Signal a trigger found for any external unit connected (Active high control)
+				gpio_set_gpio_pin(AVR32_PIN_PB05);
 					
+				//debugRaw("+ET+");
+			}
+			else // Externally triggered event
+			{
+				// Reset the external trigger flag
+				g_externalTrigger = NO;
+			}
+
 			s_consecSeismicTriggerCount = 0;
 			s_consecAirTriggerCount = 0;
 

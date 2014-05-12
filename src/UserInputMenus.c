@@ -109,6 +109,7 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 			debug("Air Trigger: %d\n", g_triggerRecord.trec.airTriggerLevel);
 		}
 
+#if 0 // ns7100
 		if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) && g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR)
 		{
 			messageBox(getLangText(WARNING_TEXT), "BOTH SEISMIC AND AIR SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
@@ -129,6 +130,10 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 				RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 		}
+#else // ns8100
+		SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
+			RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{

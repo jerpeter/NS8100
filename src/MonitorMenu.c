@@ -995,7 +995,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
-					if (g_helpRecord.report_millibars == NO)
+					if (g_helpRecord.units_of_air == NO)
 					{
 						sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), hexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 					}
@@ -1016,7 +1016,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-							if (g_helpRecord.report_millibars == NO)
+							if (g_helpRecord.units_of_air == NO)
 							{
 								sprintf(buff, "AIR %4.1f dB ", hexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
@@ -1033,7 +1033,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_comboSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-							if (g_helpRecord.report_millibars == NO)
+							if (g_helpRecord.units_of_air == NO)
 							{
 								sprintf(buff, "AIR %4.1f dB ", hexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
@@ -1051,7 +1051,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 									((float)((g_aJobFreq * 2) - 1)));
 						}
 
-						if (g_helpRecord.report_millibars == NO)
+						if (g_helpRecord.units_of_air == NO)
 						{
 							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 						}

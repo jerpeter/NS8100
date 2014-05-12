@@ -604,6 +604,7 @@ void handleMidnightEvent(void)
 	if (g_autoDialoutState == AUTO_DIAL_IDLE)
 	{
 		// At midnight reset the modem (to better handle problems with USR modems)
+		g_autoRetries = 0;
 		modemResetProcess();
 	}
 }

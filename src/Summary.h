@@ -133,8 +133,7 @@ typedef struct
 	uint16 peak;							// Max peak, kept in raw values, not in units of measurements.
 	uint16 frequency;						// The Count of a period. The frequency is calculated from this. 
 	uint32 displacement;					// Peak Displacement = Peak / (2 * PI * Freq)
-	uint16 acceleration;					// TBD
-	uint16 unused1;							// Spare for expansion.
+	uint32 acceleration;					// Peak Acceleration = 2 * PI * Peak * Freq / 386.4 in/sec^2 (9814.6 mm/sec^2)
 } CHANNEL_CALCULATED_DATA_STRUCT;
 
 // Calculated Data Struct - The following has defined to keep the data format 

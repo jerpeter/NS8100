@@ -132,7 +132,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 				g_enterMonitorModeAfterMidnightCal = NO;
 
 				// Check if Auto Cal is enabled
-				if (g_helpRecord.auto_cal_in_waveform == ENABLED)
+				if (g_helpRecord.auto_cal_in_waveform == YES)
 				{
 					// Set flag to skip auto calibration at start of waveform
 					g_skipAutoCalInWaveformAfterMidnightCal = YES;
@@ -834,7 +834,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    // Air
 	    byteSet(&buff[0], 0, sizeof(buff));
 
-		if (g_helpRecord.report_millibars == OFF)
+		if (g_helpRecord.units_of_air == OFF)
 		{
 		    sprintf(buff,"%0.1f dB", hexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}

@@ -249,9 +249,14 @@ void SystemEventManager(void)
 		{
 			debug("Keypad Event\n");
 			clearSystemEventFlag(KEYPAD_EVENT);
+
+			keypad(KEY_SOURCE_IRQ);
+		}
+		else
+		{
+			keypad(KEY_SOURCE_TIMER);
 		}
 
-		keypad();
 	}
 
 	if (getSystemEventState(POWER_OFF_EVENT))

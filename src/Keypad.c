@@ -41,6 +41,7 @@
 #define CHECK_FOR_COMBO_KEY_DELAY 	20		// 20 * 1 msec ticks = 20 mssec
 #define WAIT_AFTER_COMBO_KEY_DELAY 	250		// 250 * 1 msec ticks = 250 mssec
 #define REPEAT_DELAY 				100		// 100 * 1 msec ticks = 100 msecs
+#define DEBOUNCE_READS 				15		// 100 * 1 msec ticks = 100 msecs
 #endif
 
 ///----------------------------------------------------------------------------
@@ -60,7 +61,7 @@ static uint8 s_keyMap[8];
 *	Function:	isr_keypad
 *	Purpose:
 ****************************************/
-BOOLEAN keypad(void)
+BOOLEAN keypad(uint8 keySource)
 {
 	INPUT_MSG_STRUCT msg;
 	INPUT_MSG_STRUCT* p_msg = &msg;
@@ -87,39 +88,43 @@ BOOLEAN keypad(void)
 		// Wait to make sure key is still depressed (not a bouncing signal on release)
 		soft_usecWait(3 * SOFT_MSECS);
 	}
-#else // ns8100
-	// Read key immediately
-#endif
 
-#if 0 // ns7100
-	// Start the PIT timer
-	if (checkPitTimer(KEYPAD_TIMER) == DISABLED)
-		startPitTimer(KEYPAD_TIMER);
-#else // ns8100
-	if (g_tcTypematicTimerActive == NO)
-	{
-		Start_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
-	}
-#endif
-
-	// Read the keys
-#if 0 // ns7100
 	s_keyMap[0] = (uint8)(~(*keypadAddress));
+
+	// Re-read keys and mask in to catch signal bouncing
+	s_keyMap[0] &= *keypadAddress;
 #else // ns8100
+	// Check if the key timer has already been started and key processing source is a key interrupt
+	if ((keySource == KEY_SOURCE_IRQ) && (g_tcTypematicTimerActive == YES))
+	{
+#if 0 // Test
+		// Dealing with a key release, need to check for a debouncing key
+		s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+		soft_usecWait(5 * SOFT_MSECS);
+		s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+		soft_usecWait(5 * SOFT_MSECS);
+		s_keyMap[3] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	
+		// Logic AND all the keypad reads to filter any signal flopping
+		s_keyMap[0] = (s_keyMap[1] & s_keyMap[2] & s_keyMap[3]);
+#else
+		s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 
-#if 0 // Test (Multi read (3) and filter for out debounce)
-	s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-	s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-	s_keyMap[3] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-	
-	s_keyMap[0] = (s_keyMap[1] & s_keyMap[2] & s_keyMap[3]);
-#else // Test (Multi read (2) reads to filter out debounce (seems to work as effective as 3 reads))
-	s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-	s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-	
-	s_keyMap[0] = (s_keyMap[1] & s_keyMap[2]);
+		if (s_keyMap[0])
+		{
+			for (i = 0; i < DEBOUNCE_READS; i++)
+			{
+				s_keyMap[0] &= read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+				soft_usecWait(i * 50);
+			}
+		}
 #endif
-
+	}
+	else // Keypad interrupt and key timer hasn't been started, or key processing source was the timer
+	{
+		// Key is being pressed, and only one read should be sufficient for detecting the key
+		s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	}
 #endif
 
 	if (s_keyMap[0]) 
@@ -127,9 +132,6 @@ BOOLEAN keypad(void)
 		debugRaw(" (Key Pressed: %x)", s_keyMap[0]);
 	}
 	else { debugRaw(" (Key Release)", s_keyMap[0]); }
-
-	// Re-read keys and mask in to catch signal bouncing
-	//s_keyMap[0] &= *keypadAddress;
 
 #if 0 // ns7100
 	if (SUPERGRAPH_UNIT)
@@ -175,12 +177,15 @@ BOOLEAN keypad(void)
 
 	s_keyMap[0] = 0x00;
 
-	// Check if we found any keys
+	// Check if any keys were discovered
 	if (numKeysPressed == 0)
 	{
 		// Done looking for keys
 		g_kpadProcessingFlag = DEACTIVATED;
 		g_kpadCheckForKeyFlag = DEACTIVATED;
+
+		// Clear last key pressed
+		g_kpadLastKeyPressed = KEY_NONE;
 
 		while (g_kpadInterruptWhileProcessing == YES)
 		{
@@ -192,11 +197,27 @@ BOOLEAN keypad(void)
 		// Done looking for keys, disable the PIT timer
 		stopPitTimer(KEYPAD_TIMER);
 #else // ns8100
+		// Disable the key timer
 		Stop_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
 #endif
 
+		// No keys detected, done processing
 		return(PASSED);
 	}
+
+	// Key detected, begin higher level processing
+#if 0 // ns7100
+	// Start the PIT timer
+	if (checkPitTimer(KEYPAD_TIMER) == DISABLED)
+		startPitTimer(KEYPAD_TIMER);
+#else // ns8100
+	// Check if the key timer hasn't been activated already
+	if (g_tcTypematicTimerActive == NO)
+	{
+		// Start the key timer
+		Start_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
+	}
+#endif
 
 #if 0
 	if (SUPERGRAPH_UNIT)
@@ -252,7 +273,7 @@ BOOLEAN keypad(void)
 	{
 		// Process repeating key
 
-		// Set delay for 100ms before looking for key again
+		// Set delay before looking for key again
 		g_kpadLookForKeyTickCount = REPEAT_DELAY + g_keypadTimerTicks;
 
 		// The following determines the scrolling adjustment magnitude
@@ -363,16 +384,21 @@ BOOLEAN keypad(void)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
-#if 0 // Test (Keypad override of the backlight key for testing)
+#if 1 // Test (Keypad override of the backlight key for testing)
 				if (g_sampleProcessing == ACTIVE_STATE)
 				{
-					g_testTrigger = YES;
+					// Check if not processing an event
+					if (g_busyProcessingEvent == NO)
+					{
+						// Signal the start of an event
+						g_externalTrigger = YES;
+					}
 				}
 				else
 				{
-					RTC_MEM_MAP_STRUCT rtcMap;
-					rtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
-					debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
+					//RTC_MEM_MAP_STRUCT rtcMap;
+					//rtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
+					//debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
 
 					//__monitorLogTblKey = 0;
 					//initMonitorLog();
@@ -482,8 +508,15 @@ extern void BootLoadManager(void);
 						displayTimerCallBack();
 						lcdPwTimerCallBack();
 						
-						p_msg->cmd = 0;
-						p_msg->length = 0;
+						g_kpadProcessingFlag = DEACTIVATED;
+
+						while (g_kpadInterruptWhileProcessing == YES)
+						{
+							g_kpadInterruptWhileProcessing = NO;
+							read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+						}
+
+						return(PASSED);
 					}
 #endif
 				}

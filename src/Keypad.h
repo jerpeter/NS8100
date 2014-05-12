@@ -83,10 +83,15 @@ enum {
 	TOTAL_FACTORY_SETUP_STATES
 };
 
+enum {
+	KEY_SOURCE_IRQ,
+	KEY_SOURCE_TIMER
+};
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-BOOLEAN keypad(void);
+BOOLEAN keypad(uint8 keySource);
 void keypressEventMgr(void);
 uint8 getShiftChar(uint8 inputChar);
 uint8 handleCtrlKeyCombination(uint8 inputChar);

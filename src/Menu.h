@@ -160,6 +160,7 @@ enum {
 	KG_TYPE,
 	DB_TYPE,
 	DBA_TYPE,
+	MB_TYPE,
 	SECS_TYPE,
 	MINS_TYPE,
 	MG_TYPE,
@@ -196,9 +197,15 @@ enum {
 } UNIT_OP_MODES;
 
 // Air Trigger stuff
-#define AIR_TRIGGER_DEFAULT_VALUE	NO_TRIGGER_CHAR
-#define AIR_TRIGGER_MIN_VALUE		92
-#define AIR_TRIGGER_MAX_VALUE		148
+#define AIR_TRIGGER_DEFAULT_VALUE		NO_TRIGGER_CHAR
+#define AIR_TRIGGER_INC_VALUE			1
+#define AIR_TRIGGER_MIN_VALUE			92
+#define AIR_TRIGGER_MAX_VALUE			148
+
+#define AIR_TRIGGER_MB_DEFAULT_VALUE	NO_TRIGGER_CHAR
+#define AIR_TRIGGER_MB_INC_VALUE		25
+#define AIR_TRIGGER_MB_MIN_VALUE		100
+#define AIR_TRIGGER_MB_MAX_VALUE		51200
 
 // Alarm modes
 enum {
@@ -213,12 +220,18 @@ enum {
 #define ALARM_ONE_AIR_DEFAULT_TRIG_LVL	120
 #define ALARM_TWO_SEIS_DEFAULT_TRIG_LVL	24576	//1536 // (2048 * 3 / 4) 75%
 #define ALARM_TWO_AIR_DEFAULT_TRIG_LVL	140
+
 #define ALARM_SEIS_DEFAULT_VALUE		16384	//1024
 #define ALARM_SEIS_MIN_VALUE			64		//3
 #define ALARM_SEIS_MAX_VALUE			0x8000	//2048
+
 #define ALARM_AIR_DEFAULT_VALUE			(AIR_TRIGGER_MIN_VALUE)
 #define ALARM_AIR_MIN_VALUE				(AIR_TRIGGER_MIN_VALUE)
 #define ALARM_AIR_MAX_VALUE				(AIR_TRIGGER_MAX_VALUE)
+
+#define ALARM_AIR_MB_DEFAULT_VALUE		(AIR_TRIGGER_MB_MIN_VALUE)
+#define ALARM_AIR_MB_MIN_VALUE			(AIR_TRIGGER_MB_MIN_VALUE)
+#define ALARM_AIR_MB_MAX_VALUE			(AIR_TRIGGER_MB_MAX_VALUE)
 
 // Alarm Times
 #define ALARM_OUTPUT_TIME_DEFAULT	5 		// secs
@@ -395,12 +408,13 @@ enum {
 	PRINTER,
 	PRINT_MONITOR_LOG,
 	REPORT_DISPLACEMENT,
-	REPORT_MILLIBARS,
+	REPORT_PEAK_ACC,
 	SENSOR_GAIN_TYPE,
 	SERIAL_NUMBER,
 	SUMMARIES_EVENTS,
 	TIMER_MODE,
 	UNITS_OF_MEASURE,
+	UNITS_OF_AIR,
 	VECTOR_SUM,
 	WAVEFORM_AUTO_CAL,
 	ZERO_EVENT_NUMBER,
@@ -438,9 +452,10 @@ enum {
 
 // Alternate Results
 enum {
-	DEFAULT_RESULTS = 0,
+	DEFAULT_RESULTS = 0, // Show Air channel results
 	VECTOR_SUM_RESULTS,
-	PEAK_DISPLACEMENT_RESULTS
+	PEAK_DISPLACEMENT_RESULTS,
+	PEAK_ACCELERATION_RESULTS
 };
 
 // Stop Monitoring operation types
@@ -456,8 +471,17 @@ enum {
 };
 
 // Measurement conversion values
-#define IMPERIAL 		1
+#define IMPERIAL		1
 #define METRIC 			25.4
+
+enum {
+	DECIBEL_TYPE = 1,
+	MILLIBAR_TYPE
+};
+
+// Measurement conversion values
+#define DECIBEL			1
+#define MILLIBAR		1
 
 // Old Menu number types
 #define FIXED_NUM_TYPE 				2
@@ -819,10 +843,10 @@ void freqPlotStandardMenuHandler(uint8 key, void* data);
 void helpMenuHandler(uint8 key, void* data);
 void infoMenuHandler(uint8 key, void* data);
 void languageMenuHandler(uint8 key, void* data);
-void millibarMenuHandler(uint8 key, void* data);
 void modeMenuHandler(uint8 key, void* data);
 void modemSetupMenuHandler(uint8 key, void* data);
 void monitorLogMenuHandler(uint8 key, void* data);
+void peakAccMenuHandler(uint8 key, void* data);
 void printerEnableMenuHandler(uint8 key, void* data);
 void printOutMenuHandler(uint8 key, void* data);
 void printMonitorLogMenuHandler(uint8 keyPressed, void* data);
@@ -834,7 +858,8 @@ void sensorTypeMenuHandler(uint8 key, void* data);
 void summaryIntervalMenuHandler(uint8 key, void* data);
 void timerModeMenuHandler(uint8 key, void* data);
 void timerModeFreqMenuHandler(uint8 key, void* data);
-void unitsMenuHandler(uint8 key, void* data);
+void unitsOfMeasureMenuHandler(uint8 key, void* data);
+void unitsOfAirMenuHandler(uint8 key, void* data);
 void vectorSumMenuHandler(uint8 key, void* data);
 void waveformAutoCalMenuHandler(uint8 key, void* data);
 void zeroEventNumberMenuHandler(uint8 key, void* data);

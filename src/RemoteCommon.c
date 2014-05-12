@@ -39,7 +39,6 @@
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
-static uint16 s_autoRetries = 0;
 
 //==================================================
 //	Procedure: parseIncommingMsgHeader()
@@ -390,7 +389,7 @@ void startAutoDialoutProcess(void)
 {
 	if (READ_DCD == NO_CONNECTION)
 	{
-		s_autoRetries = g_modemSetupRecord.retries;
+		g_autoRetries = g_modemSetupRecord.retries;
 		g_autoDialoutState = AUTO_DIAL_INIT;
 	}
 }
@@ -546,7 +545,7 @@ void autoDialoutStateMachine(void)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_RETRY:
 			// Check if retries have been exhausted
-			if (s_autoRetries == 0)
+			if (g_autoRetries == 0)
 			{
 				// Advance to Finish state
 				g_autoDialoutState = AUTO_DIAL_FINISH;
@@ -554,7 +553,7 @@ void autoDialoutStateMachine(void)
 			else // Keep trying
 			{
 				// Decrement retry count
-				s_autoRetries--;
+				g_autoRetries--;
 
 				// Unable to successfully connect to remote end, start retry with modem reset
 				modemResetProcess();

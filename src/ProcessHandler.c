@@ -441,7 +441,7 @@ extern void processAndMoveWaveformData_ISR_Inline(void);
 	}
 }
 
-#if 0 // Unused?
+#if 0 // ns7100 (Used to convert trigger level for the 430)
 /****************************************
 *	Function:	 seisTriggerConvert
 *	Purpose:

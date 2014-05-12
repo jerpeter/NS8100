@@ -1355,7 +1355,10 @@ void modemResetProcess(void)
 
 	g_modemStatus.systemIsLockedFlag = YES;
 
-	CLEAR_DTR;
+	if(g_autoRetries == 0)
+	{
+		CLEAR_DTR;
+	}	
 
 	g_modemResetStage = 1;
 	assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(15 * TICKS_PER_SEC), modemResetTimerCallback);
@@ -1376,6 +1379,7 @@ void handleMRS(CMD_BUFFER_STRUCT* inCmd)
 
 	if (YES == g_modemSetupRecord.modemStatus)
 	{
+		g_autoRetries = 0;
 		modemResetProcess();
 	}
 

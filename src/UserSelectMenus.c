@@ -66,7 +66,6 @@ extern USER_MENU_STRUCT infoMenu[];
 extern USER_MENU_STRUCT languageMenu[];
 extern USER_MENU_STRUCT lcdImpulseTimeMenu[];
 extern USER_MENU_STRUCT lcdTimeoutMenu[];
-extern USER_MENU_STRUCT millibarMenu[];
 extern USER_MENU_STRUCT modemSetupMenu[];
 extern USER_MENU_STRUCT modemInitMenu[];
 extern USER_MENU_STRUCT monitorLogMenu[];
@@ -85,7 +84,8 @@ extern USER_MENU_STRUCT serialNumberMenu[];
 extern USER_MENU_STRUCT summaryIntervalMenu[];
 extern USER_MENU_STRUCT timerModeFreqMenu[];
 extern USER_MENU_STRUCT timerModeMenu[];
-extern USER_MENU_STRUCT unitsMenu[];
+extern USER_MENU_STRUCT unitsOfMeasureMenu[];
+extern USER_MENU_STRUCT unitsOfAirMenu[];
 extern USER_MENU_STRUCT vectorSumMenu[];
 extern USER_MENU_STRUCT waveformAutoCalMenu[];
 extern USER_MENU_STRUCT zeroEventNumberMenu[];
@@ -180,7 +180,7 @@ void airSetupMenuHandler(uint8 keyPressed, void* data)
 		g_factorySetupRecord.aweight_option = (uint8)airSetupMenu[newItemIndex].data;
 
 #if 0 // ns7100
-		SETUP_USER_MENU_MSG(&millibarMenu, g_helpRecord.report_millibars);
+		SETUP_USER_MENU_MSG(&unitsOfAirMenu, g_helpRecord.units_of_air);
 #else // ns8100
 		SETUP_MENU_MSG(CAL_SETUP_MENU);
 #endif
@@ -1149,12 +1149,12 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, PRINTER_TEXT,				NO_TAG, {PRINTER}},
 {NO_TAG, 0, PRINT_MONITOR_LOG_TEXT,		NO_TAG, {PRINT_MONITOR_LOG}},
 {NO_TAG, 0, REPORT_DISPLACEMENT_TEXT,	NO_TAG, {REPORT_DISPLACEMENT}},
-{NO_TAG, 0, REPORT_MILLIBARS_TEXT,		NO_TAG, {REPORT_MILLIBARS}},
 {NO_TAG, 0, SENSOR_GAIN_TYPE_TEXT,		NO_TAG, {SENSOR_GAIN_TYPE}},
 {NO_TAG, 0, SERIAL_NUMBER_TEXT,			NO_TAG, {SERIAL_NUMBER}},
 {NO_TAG, 0, SUMMARIES_EVENTS_TEXT,		NO_TAG, {SUMMARIES_EVENTS}},
 {NO_TAG, 0, TIMER_MODE_TEXT,			NO_TAG, {TIMER_MODE}},
 {NO_TAG, 0, UNITS_OF_MEASURE_TEXT,		NO_TAG, {UNITS_OF_MEASURE}},
+{NO_TAG, 0, UNITS_OF_AIR_TEXT,			NO_TAG, {UNITS_OF_AIR}},
 {NO_TAG, 0, VECTOR_SUM_TEXT,			NO_TAG, {VECTOR_SUM}},
 {NO_TAG, 0, WAVEFORM_AUTO_CAL_TEXT,		NO_TAG, {WAVEFORM_AUTO_CAL}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&configMenuHandler}}
@@ -1286,10 +1286,6 @@ void configMenuHandler(uint8 keyPressed, void* data)
 				SETUP_USER_MENU_MSG(&displacementMenu, g_helpRecord.report_displacement);
 			break;
 
-			case (REPORT_MILLIBARS):
-				SETUP_USER_MENU_MSG(&millibarMenu, g_helpRecord.report_millibars);
-			break;
-
 			case (SENSOR_GAIN_TYPE):
 				displaySensorType();
 			break;
@@ -1335,7 +1331,11 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (UNITS_OF_MEASURE):
-				SETUP_USER_MENU_MSG(&unitsMenu, g_helpRecord.units_of_measure);
+				SETUP_USER_MENU_MSG(&unitsOfMeasureMenu, g_helpRecord.units_of_measure);
+			break;
+
+			case (UNITS_OF_AIR):
+				SETUP_USER_MENU_MSG(&unitsOfAirMenu, g_helpRecord.units_of_air);
 			break;
 
 			case (VECTOR_SUM):
@@ -1477,7 +1477,7 @@ void eraseEventsMenuHandler(uint8 keyPressed, void* data)
 #define ERASE_SETTINGS_MENU_ENTRIES 4
 USER_MENU_STRUCT eraseSettingsMenu[ERASE_SETTINGS_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, ERASE_SETTINGS_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, ERASE_SETTINGS_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, ERASE_SETTINGS_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
 {ITEM_1, 0, YES_TEXT,	NO_TAG, {YES}},
 {ITEM_2, 0, NO_TEXT,	NO_TAG, {NO}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&eraseSettingsMenuHandler}}
@@ -1784,51 +1784,6 @@ void languageMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&configMenu, LANGUAGE);
-	}
-
-	JUMP_TO_ACTIVE_MENU();
-}
-
-//*****************************************************************************
-//=============================================================================
-// Millibar Menu
-//=============================================================================
-//*****************************************************************************
-#define MILLIBAR_MENU_ENTRIES 4
-USER_MENU_STRUCT millibarMenu[MILLIBAR_MENU_ENTRIES] = {
-{TITLE_PRE_TAG, 0, REPORT_MILLIBARS_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, MILLIBAR_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
-{ITEM_1, 0, YES_TEXT,	NO_TAG, {YES}},
-{ITEM_2, 0, NO_TEXT,	NO_TAG, {NO}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&millibarMenuHandler}}
-};
-
-//-----------------------
-// Millibar Menu Handler
-//-----------------------
-void millibarMenuHandler(uint8 keyPressed, void* data)
-{
-	INPUT_MSG_STRUCT mn_msg = {0, 0};
-	uint16 newItemIndex = *((uint16*)data);
-
-	if (keyPressed == ENTER_KEY)
-	{
-		g_helpRecord.report_millibars = (uint8)millibarMenu[newItemIndex].data;
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-
-#if 0 // ns7100
-		SETUP_MENU_MSG(CAL_SETUP_MENU);
-#else
-		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
-#endif
-	}
-	else if (keyPressed == ESC_KEY)
-	{
-#if 0 // ns7100
-		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
-#else // ns8100
-		SETUP_USER_MENU_MSG(&configMenu, REPORT_DISPLACEMENT);
-#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -2525,29 +2480,29 @@ void timerModeFreqMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
-// Units Menu
+// Units Of Measure Menu
 //=============================================================================
 //*****************************************************************************
-#define UNITS_MENU_ENTRIES 4
-USER_MENU_STRUCT unitsMenu[UNITS_MENU_ENTRIES] = {
+#define UNITS_OF_MEASURE_MENU_ENTRIES 4
+USER_MENU_STRUCT unitsOfMeasureMenu[UNITS_OF_MEASURE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, UNITS_OF_MEASURE_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, UNITS_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, UNITS_OF_MEASURE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, IMPERIAL_TEXT,	NO_TAG, {IMPERIAL_TYPE}},
 {ITEM_2, 0, METRIC_TEXT,	NO_TAG, {METRIC_TYPE}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&unitsMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&unitsOfMeasureMenuHandler}}
 };
 
-//-------------------
-// Units Menu Handler
-//-------------------
-void unitsMenuHandler(uint8 keyPressed, void* data)
+//------------------------------
+// Units Of Measure Menu Handler
+//------------------------------
+void unitsOfMeasureMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.units_of_measure = (uint8)unitsMenu[newItemIndex].data;
+		g_helpRecord.units_of_measure = (uint8)unitsOfMeasureMenu[newItemIndex].data;
 
 		if (g_helpRecord.units_of_measure == IMPERIAL_TYPE)
 		{
@@ -2567,6 +2522,51 @@ void unitsMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&configMenu, UNITS_OF_MEASURE);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Units Of Air Menu
+//=============================================================================
+//*****************************************************************************
+#define UNITS_OF_AIR_MENU_ENTRIES 4
+USER_MENU_STRUCT unitsOfAirMenu[UNITS_OF_AIR_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, UNITS_OF_AIR_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, UNITS_OF_AIR_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
+{ITEM_1, 0, YES_TEXT,	NO_TAG, {YES}},
+{ITEM_2, 0, NO_TEXT,	NO_TAG, {NO}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&unitsOfAirMenuHandler}}
+};
+
+//--------------------------
+// Units Of Air Menu Handler
+//--------------------------
+void unitsOfAirMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_helpRecord.units_of_air = (uint8)unitsOfAirMenu[newItemIndex].data;
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+
+#if 0 // ns7100
+		SETUP_MENU_MSG(CAL_SETUP_MENU);
+#else
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+#endif
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+#if 0 // ns7100
+		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
+#else // ns8100
+		SETUP_USER_MENU_MSG(&configMenu, REPORT_DISPLACEMENT);
+#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();

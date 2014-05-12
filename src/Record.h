@@ -63,6 +63,9 @@ enum {
 #define LBS_PER_KG			 		2.2
 #define FT_PER_METER				3.280833
 
+#define ONE_GRAVITY_IN_INCHES		386.4
+#define ONE_GRAVITY_IN_MM			9814.6
+
 #define REC_MN_STRING_SIZE			20
 #define TRIGGER_EVENT_STRING_SIZE	101
 #define REC_MN_DATAVAL_SIZE			7
@@ -101,12 +104,13 @@ enum {
 typedef struct {
 	// Sensor type information 
 	uint8	numOfChannels;			// The number of channels from a sensor.
-	uint8   sensorAccuracy;			// = 100, sensor values are X 100 for numeric accuaracy. 
+	uint8   sensorAccuracy;			// = 100, sensor values are X 100 for numeric accuracy. 
 	uint8	unitsFlag;	 			// 0 = SAE; 1 = Metric
-	uint8	spare;
+	uint8	airUnitsFlag;			// 0 = Decibel; 1 = Millibar
 
 	float	hexToLengthConversion;
 	float	measurementRatio;	 	// 1 = SAE; 25.4 = Metric
+	float	ameasurementRatio;		// ? = Decibel; 1 = Millibar
 	float	sensorTypeNormalized;	
 
 	uint16  shiftVal;
@@ -226,8 +230,8 @@ typedef struct
 	uint16 encode_ln;
 	uint8 unused[6];
 	uint8 unused1;
-	uint8 unused2;
 	uint8 auto_cal_in_waveform;
+	uint8 report_peak_acceleration;
 	uint8 report_displacement;
 	uint8 flash_wrapping;
 	uint8 auto_monitor_mode;
@@ -240,7 +244,7 @@ typedef struct
 	uint8 lcd_timeout;
 	uint8 auto_print;
 	uint8 units_of_measure;
-	uint8 report_millibars;
+	uint8 units_of_air;
 	uint8 alarm_one_mode;
 	uint8 alarm_two_mode;
 	uint8 print_monitor_log;

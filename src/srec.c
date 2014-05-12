@@ -202,7 +202,8 @@ int unpack_srec( FL_FILE* file )
         if(bytes_loaded > progress)
         {
             sprintf(textBuffer,"Loading Boot..%d%c",(unsigned int)(progress/(filelength / 100)),0x25);
-            WriteLCD_smText( 0, 64, (uint8*)textBuffer, NORMAL_LCD);
+            //WriteLCD_smText( 0, 64, (uint8*)textBuffer, NORMAL_LCD);
+			WriteLCD_smText( 0, 0, (uint8*)textBuffer, NORMAL_LCD);
             progress += filelength / 100;
         }
         //srec_file_get_line( &asciidata);

@@ -126,6 +126,7 @@ typedef struct
 #define UNUSED(p) ((void)p)
 
 #define	DB_CONVERSION_VALUE		5000000
+#define  MB_CONVERSION_VALUE	1
 
 enum {
 	INPUT_BUFFER_EMPTY = 0,
@@ -225,6 +226,9 @@ float hexToDB(uint16, uint8, uint16);
 float hexToMillBars(uint16, uint8, uint16);
 float hexToPsi(uint16, uint8, uint16);
 uint16 dbToHex(uint16);
+float mbToHex(float);
+uint16 convertDBtoMB(uint32);
+uint16 convertMBtoDB(uint32);
 
 // PIT timers
 void startPitTimer(PIT_TIMER timer);

@@ -100,7 +100,7 @@ extern uint8 g_kpadCheckForKeyFlag;
 extern uint8 g_factorySetupSequence;
 extern uint8 g_kpadLastKeyPressed;
 extern uint8 g_kpadInterruptWhileProcessing;
-extern uint32 g_keypadTimerTicks;
+extern volatile uint32 g_keypadTimerTicks;
 extern uint32 g_kpadKeyRepeatCount;
 extern uint32 g_kpadLookForKeyTickCount;
 extern uint32 g_keypadNumberSpeed;
@@ -199,14 +199,15 @@ extern BARGRAPH_BAR_INTERVAL_DATA g_comboBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS
 extern BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalWritePtr;
 extern BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalReadPtr;
 extern BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalEndPtr;
-extern uint16 g_manualCalFlag;
 extern uint16 g_manualCalSampleCount;
+extern uint8 g_manualCalFlag;
 extern uint8 g_bargraphForcedCal;
 extern uint8 g_skipAutoCalInWaveformAfterMidnightCal;
+extern uint8 g_autoRetries;
 extern DATE_TIME_STRUCT g_currentTime;
 extern SOFT_TIMER_STRUCT g_rtcTimerBank[NUM_OF_SOFT_TIMERS];
 extern uint32 g_rtcSoftTimerTickCount;
-extern uint32 g_rtcCurrentTickCount;
+extern volatile uint32 g_rtcCurrentTickCount;
 extern uint32 g_UpdateCounter;
 extern uint8 g_autoCalDaysToWait;
 extern REC_HELP_MN_STRUCT g_helpRecord;
@@ -242,9 +243,9 @@ extern uint8 g_tcSampleTimerActive;
 extern uint8 g_tcTypematicTimerActive;
 extern char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
 extern char g_languageTable[LANGUAGE_TABLE_MAX_SIZE];
-extern uint16 g_testTrigger;
 extern uint8 g_fileProcessActiveUsbLockout;
-extern uint8 g_spi1AccessLock;
+extern volatile uint8 g_spi1AccessLock;
+extern volatile uint8 g_externalTrigger;
 extern EVT_RECORD g_resultsEventCache[50];
 extern uint16 g_resultsCacheIndex;
 extern uint32 g_cyclicEventDelay;
@@ -256,7 +257,7 @@ extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 // Test
 extern uint32 g_execCycles;
 extern uint8 g_channelSyncError;
-extern uint32 g_sampleCount;
+extern volatile uint32 g_sampleCount;
 extern uint32 g_sampleCountHold;
 
 #endif /* GLOBALS_H_ */

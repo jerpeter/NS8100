@@ -637,27 +637,6 @@ void craftTestMenuThruDebug(void)
 	}
 }
 
-//-----------------------------------------------------------------------------
-volatile uint32 tempTick;
-void testKeypad(void)
-{
-	uint8 keyScan;
-
-	//InitKeypad();
-
-	//print_dbg("\r\nAttempting to read the Keypad... ");
-	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-	if(keyScan)
-	{
-		debug("Found character: %c", keyScan);
-			
-		keypad();
-
-		tempTick = g_rtcSoftTimerTickCount;
-		while(tempTick == g_rtcSoftTimerTickCount) {}
-	}
-}
-
 //=================================================================================================
 //	Function:	UsbDeviceManager
 //=================================================================================================
