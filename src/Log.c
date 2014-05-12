@@ -149,7 +149,8 @@ void newMonitorLogEntry(uint8 mode)
 	
 	__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
 	__monitorLogTbl[__monitorLogTblIndex].soundTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
-	__monitorLogTbl[__monitorLogTblIndex].sensor_type =  g_factorySetupRecord.sensor_type;
+	__monitorLogTbl[__monitorLogTblIndex].airUnitsOfMeasure = g_helpRecord.units_of_air;
+	__monitorLogTbl[__monitorLogTblIndex].sensor_type = g_factorySetupRecord.sensor_type;
 	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
 
 	byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
@@ -485,9 +486,10 @@ void initMonitorLogTableFromLogFile(void)
 				debug("Found Valid Monitor Log Entry with ID: %d\n", monitorLogEntry.uniqueEntryId);
 
 #if 0 // Test
-				debug("(ID: %03d) Mode: %d, Start Event #: %d, Status: %d, Seis Trig: 0x%x, Air Trig: 0x%x, Sensor Type: %d, Gain: %d\n",
+				debug("(ID: %03d) Mode: %d, Start Event #: %d, Status: %d, Seis Trig: 0x%x, Air Trig: 0x%x, Air Units: %d, Sensor Type: %d, Gain: %d\n",
 						monitorLogEntry.uniqueEntryId, monitorLogEntry.mode, monitorLogEntry. startEventNumber, monitorLogEntry.status, 
-						monitorLogEntry.seismicTriggerLevel, monitorLogEntry.soundTriggerLevel, monitorLogEntry.sensor_type, monitorLogEntry.sensitivity);
+						monitorLogEntry.seismicTriggerLevel, monitorLogEntry.soundTriggerLevel, monitorLogEntry.airUnitsOfMeasure, 
+						monitorLogEntry.sensor_type, monitorLogEntry.sensitivity);
 /*
 	uint16				uniqueEntryId;
 	uint8				status;

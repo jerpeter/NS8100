@@ -68,6 +68,7 @@ extern USER_MENU_STRUCT operatorMenu[];
 #if 1 // Updated (Port lost change)
 extern USER_MENU_STRUCT peakAccMenu[];
 #endif
+extern USER_MENU_STRUCT pretriggerSizeMenu[];
 extern USER_MENU_STRUCT printerEnableMenu[];
 extern USER_MENU_STRUCT printMonitorLogMenu[];
 extern USER_MENU_STRUCT recalibrateMenu[];
@@ -1229,7 +1230,7 @@ void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
 #if 0 // Port lost change
 #define CONFIG_MENU_ENTRIES 27
 #else // Updated
-#define CONFIG_MENU_ENTRIES 28
+#define CONFIG_MENU_ENTRIES 29
 #endif
 #endif
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
@@ -1257,6 +1258,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, LCD_TIMEOUT_TEXT,			NO_TAG, {LCD_TIMEOUT}},
 {NO_TAG, 0, MODEM_SETUP_TEXT,			NO_TAG, {MODEM_SETUP}},
 {NO_TAG, 0, MONITOR_LOG_TEXT,			NO_TAG, {MONITOR_LOG}},
+{NO_TAG, 0, PRETRIGGER_SIZE_TEXT,		NO_TAG, {PRETRIGGER_SIZE}},
 #if 0 // ns7100
 {NO_TAG, 0, PRINTER_TEXT,				NO_TAG, {PRINTER}},
 {NO_TAG, 0, PRINT_MONITOR_LOG_TEXT,		NO_TAG, {PRINT_MONITOR_LOG}},
@@ -1374,6 +1376,10 @@ void configMenuHandler(uint8 keyPressed, void* data)
 
 			case (MONITOR_LOG):
 				SETUP_USER_MENU_MSG(&monitorLogMenu, DEFAULT_ITEM_1);
+			break;
+
+			case (PRETRIGGER_SIZE):
+				SETUP_USER_MENU_MSG(&pretriggerSizeMenu, g_helpRecord.pretrig_buffer_div);
 			break;
 
 			case (PRINTER):
@@ -2128,6 +2134,47 @@ void peakAccMenuHandler(uint8 keyPressed, void* data)
 	else if(keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&configMenu, REPORT_PEAK_ACC);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Pretrigger Size Menu
+//=============================================================================
+//*****************************************************************************
+#define PRETRIGGER_SIZE_MENU_ENTRIES 5
+USER_MENU_STRUCT pretriggerSizeMenu[PRETRIGGER_SIZE_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, PRETRIGGER_SIZE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, PRETRIGGER_SIZE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, QUARTER_SECOND_TEXT,	NO_TAG, {4}},
+{ITEM_2, 0, HALF_SECOND_TEXT,	NO_TAG, {2}},
+{ITEM_3, 0, FULL_SECOND_TEXT,	NO_TAG, {1}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&pretriggerSizeMenuHandler}}
+};
+
+//-----------------------------
+// Pretrigger Size Menu Handler
+//-----------------------------
+void pretriggerSizeMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_helpRecord.pretrig_buffer_div = (uint8)pretriggerSizeMenu[newItemIndex].data;
+
+		debug("New Pretrigger divider: %d\n", g_helpRecord.pretrig_buffer_div);
+
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu, PRETRIGGER_SIZE);
 	}
 
 	JUMP_TO_ACTIVE_MENU();

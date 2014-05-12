@@ -300,8 +300,9 @@ typedef struct
 #if 1 // Updated (Port lost change)
 	uint32				seismicTriggerLevel;
 	uint32				soundTriggerLevel;
-	int32				sensor_type;
-	int32				sensitivity;
+	uint16				airUnitsOfMeasure;
+	uint16				sensor_type;
+	uint32				sensitivity;
 #endif
 } MONITOR_LOG_ENTRY_STRUCT;
 

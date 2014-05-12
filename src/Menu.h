@@ -411,6 +411,7 @@ enum {
 	LCD_TIMEOUT,
 	MODEM_SETUP,
 	MONITOR_LOG,
+	PRETRIGGER_SIZE,
 	PRINTER,
 	PRINT_MONITOR_LOG,
 	REPORT_DISPLACEMENT,
@@ -856,6 +857,7 @@ void modeMenuHandler(uint8 key, void* data);
 void modemSetupMenuHandler(uint8 key, void* data);
 void monitorLogMenuHandler(uint8 key, void* data);
 void peakAccMenuHandler(uint8 key, void* data);
+void pretriggerSizeMenuHandler(uint8 key, void* data);
 void printerEnableMenuHandler(uint8 key, void* data);
 void printOutMenuHandler(uint8 key, void* data);
 void printMonitorLogMenuHandler(uint8 keyPressed, void* data);
