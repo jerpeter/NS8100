@@ -84,29 +84,31 @@ MONTH_TABLE_STRUCT monthTable[] =  {
 ///	Function:	convertedBatteryLevel
 ///	Purpose:	Convert the raw battery level from the a-to-d to the actual value
 ///----------------------------------------------------------------------------
-#define AD_VOLTAGE_READ_LOOP_COUNT	10
+#define AD_VOLTAGE_READ_LOOP_COUNT	15
 float convertedBatteryLevel(uint8 type)
 {
-	uint16 adVoltageReadValue;
+	uint32 adVoltageReadValue;
 	uint32 adChannelSum = 0;
-	uint16 adChannelValueLow = 0xFFFF;
-	uint16 adChannelValueHigh = 0;
+	uint32 adChannelValueLow = 0xFFFF;
+	uint32 adChannelValueHigh = 0;
 	float adVoltageLevel = (float)0.0;
 	uint32 i = 0;
 
 	// Need to average some amount of reads
 	for(i = 0; i < AD_VOLTAGE_READ_LOOP_COUNT; i++)
 	{
-		adc_start(&AVR32_ADC);
-
 		switch (type)
 		{
 			case EXT_CHARGE_VOLTAGE:
+				adc_start(&AVR32_ADC);
 				adVoltageReadValue = adc_get_value(&AVR32_ADC, VIN_CHANNEL);
+				//debug("Ext Charge Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
 				break;
 
 			case BATTERY_VOLTAGE:
+				adc_start(&AVR32_ADC);
 				adVoltageReadValue = adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
+				//debug("Battery Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
 				break;
 		}
 		
@@ -120,7 +122,7 @@ float convertedBatteryLevel(uint8 type)
 	}
 
 	// Remove the lowest and highest values read
-	adChannelSum -= (adChannelValueLow + adChannelValueHigh);
+	adVoltageLevel = adChannelSum - (adChannelValueLow + adChannelValueHigh);
 	
 	adVoltageLevel /= (AD_VOLTAGE_READ_LOOP_COUNT - 2);
 		

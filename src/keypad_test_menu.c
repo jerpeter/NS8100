@@ -303,7 +303,8 @@ void Keypad_LED_Off( void )
 
    state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
    state &= 0xC0;
-   write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
+   //write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
+   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
 }
 
 void Keypad_LED_Red( void )
@@ -313,7 +314,8 @@ void Keypad_LED_Red( void )
    state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
    state &= 0xC0;
    state |= 0x10;
-   write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
+   //write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
+   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
 }
 
 void Keypad_LED_Green( void )
@@ -323,6 +325,90 @@ void Keypad_LED_Green( void )
    state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
    state &= 0xC0;
    state |= 0x20;
-   write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
+   //write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
+   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
 }
 
+void Keypad_Toggle_LED_Red(void)
+{
+   int state;
+   int *uart_rx_character = 0;
+
+   print_dbg("\n\rPress any key to exit. \n\r");
+
+   while((usart_read_char(DBG_USART, uart_rx_character))!= USART_SUCCESS)
+   {
+	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	   state |= 0x10;
+	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
+
+		//soft_delay(250 * SOFT_MSECS);
+	
+	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	   state &= ~0x10;
+	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
+   }	   
+}
+
+void Keypad_Toggle_LED_Green(void)
+{
+   int state;
+   int *uart_rx_character = 0;
+
+   print_dbg("\n\rPress any key to exit. \n\r");
+
+   while((usart_read_char(DBG_USART, uart_rx_character))!= USART_SUCCESS)
+   {
+	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	   state |= 0x20;
+	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
+
+		//soft_delay(250 * SOFT_MSECS);
+	
+	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	   state &= ~0x20;
+	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
+   }	   
+}
+
+void Keypad_Toggle_P_Off(void)
+{
+   int state;
+   int *uart_rx_character = 0;
+
+   print_dbg("\n\rPress any key to exit. \n\r");
+
+   while((usart_read_char(DBG_USART, uart_rx_character))!= USART_SUCCESS)
+   {
+	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	   state |= 0x40;
+	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
+
+		//soft_delay(250 * SOFT_MSECS);
+	
+	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	   state &= ~0x40;
+	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
+   }	   
+}
+
+void Keypad_Toggle_P_Off_En(void)
+{
+   int state;
+   int *uart_rx_character = 0;
+
+   print_dbg("\n\rPress any key to exit. \n\r");
+
+   while((usart_read_char(DBG_USART, uart_rx_character))!= USART_SUCCESS)
+   {
+	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	   state |= 0x80;
+	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
+
+		//soft_delay(250 * SOFT_MSECS);
+	
+	   state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	   state &= ~0x80;
+	   write_mcp23018(IO_ADDRESS_KPD, GPIOA, state);
+   }	   
+}

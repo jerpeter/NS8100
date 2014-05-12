@@ -236,8 +236,6 @@ DATE_TIME_STRUCT getRtcTime(void)
 
 	rtc_read(RTC_SECONDS_ADDR_TEMP, 7, (uint16*)&currentDateTime);
 
-	//RTC_FREEZE_UPDATES;
-
 	translateTime.seconds.reg = currentDateTime[0];
 	translateTime.minutes.reg = currentDateTime[1];
 	translateTime.hours.reg = currentDateTime[2];
@@ -254,7 +252,16 @@ DATE_TIME_STRUCT getRtcTime(void)
 	time.min = (uint8)(translateTime.minutes.bit.oneMinute + (translateTime.minutes.bit.tenMinute * 10));
 	time.sec = (uint8)(translateTime.seconds.bit.oneSecond + (translateTime.seconds.bit.tenSecond * 10));
 
-	//RTC_UNFREEZE_UPDATES;
+	// Check for RTC reset
+	if ((time.year == 0) && (time.month == 0) && (time.day == 0))
+	{
+		debug("RTC read from power loss, Date incorrect... applying default date\n");
+		time.year = 12;
+		time.month = 1;
+		time.day = 1;
+
+		setRtcDate(&time);
+	}
 
     return (time);
 }

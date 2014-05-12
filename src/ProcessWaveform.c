@@ -475,7 +475,7 @@ void MoveWaveformEventToFlash(void)
 
 				if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 				{
-					debugErr("Out of Flash Summary Entrys\n");
+					debugErr("Out of Ram Summary Entrys\n");
 				}
 
 #if 0 // ns7100
@@ -509,24 +509,24 @@ void MoveWaveformEventToFlash(void)
 				sampGrpsLeft = (int)(gSamplesInBody - 1);
 	        
 				// A channel
-				sample = *(gCurrentEventSamplePtr + 0);
+				sample = *(gCurrentEventSamplePtr + A_CHAN_OFFSET);
 				sumEntry->waveShapeData.a.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				sumEntry->waveShapeData.a.peakPtr = (gCurrentEventSamplePtr + 0);
 
 				// R channel
-				sample = *(gCurrentEventSamplePtr + 1);
+				sample = *(gCurrentEventSamplePtr + R_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.r.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				vectorSum = (uint32)(tempPeak * tempPeak);
 				sumEntry->waveShapeData.r.peakPtr = (gCurrentEventSamplePtr + 1);
 
 				// V channel
-				sample = *(gCurrentEventSamplePtr + 2);
+				sample = *(gCurrentEventSamplePtr + V_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.v.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				vectorSum += (uint32)(tempPeak * tempPeak);
 				sumEntry->waveShapeData.v.peakPtr = (gCurrentEventSamplePtr + 2);
 
 				// T channel
-				sample = *(gCurrentEventSamplePtr + 3);
+				sample = *(gCurrentEventSamplePtr + T_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.t.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				vectorSum += (uint32)(tempPeak * tempPeak);
 				sumEntry->waveShapeData.t.peakPtr = (gCurrentEventSamplePtr + 3);
@@ -547,7 +547,7 @@ void MoveWaveformEventToFlash(void)
 					sampGrpsLeft--;
 
 					// A channel
-					sample = *(gCurrentEventSamplePtr + 0);
+					sample = *(gCurrentEventSamplePtr + A_CHAN_OFFSET);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.a.peak)
 					{
@@ -556,7 +556,7 @@ void MoveWaveformEventToFlash(void)
 					}
 
 					// R channel
-					sample = *(gCurrentEventSamplePtr + 1);
+					sample = *(gCurrentEventSamplePtr + R_CHAN_OFFSET);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.r.peak)
 					{
@@ -566,7 +566,7 @@ void MoveWaveformEventToFlash(void)
 					vectorSum = (uint32)(normalizedData * normalizedData);
 
 					// V channel
-					sample = *(gCurrentEventSamplePtr + 2);
+					sample = *(gCurrentEventSamplePtr + V_CHAN_OFFSET);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.v.peak)
 					{
@@ -576,7 +576,7 @@ void MoveWaveformEventToFlash(void)
 					vectorSum += (normalizedData * normalizedData);
 
 					// T channel
-					sample = *(gCurrentEventSamplePtr + 3);
+					sample = *(gCurrentEventSamplePtr + T_CHAN_OFFSET);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.t.peak)
 					{
@@ -624,6 +624,15 @@ void MoveWaveformEventToFlash(void)
 				sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, (uint16)trig_rec.trec.sample_rate);   
 				sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, (uint16)trig_rec.trec.sample_rate);       
 
+#if 0
+				debug("Cached freq: a:%d r:%d v:%d t:%d\n", 
+						sumEntry->waveShapeData.a.freq,
+						sumEntry->waveShapeData.r.freq,
+						sumEntry->waveShapeData.v.freq,
+						sumEntry->waveShapeData.t.freq);
+#endif
+
+				debug("Call to complete the global ram event header\n");
 				completeRamEventSummary(ramSummaryEntry, sumEntry);
 
 				// Get new event file handle
@@ -645,6 +654,8 @@ void MoveWaveformEventToFlash(void)
 					fl_fclose(gCurrentEventFileHandle);
 					debug("Event file closed\n");
 
+					ramSummaryEntry->fileEventNum = g_currentEventNumber;
+					
 					updateMonitorLogEntry();
 
 					// After event numbers have been saved, store current event number in persistent storage.

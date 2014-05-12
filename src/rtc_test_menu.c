@@ -829,7 +829,7 @@ static void powerUnitOffNow(void)
 	// initialize TWI driver with options
 	twi_master_init(&AVR32_TWI, &opt);
 
-	init_mcp23018(IO_ADDRESS_KPD);
+	//init_mcp23018(IO_ADDRESS_KPD);
 	state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 	state |= 0x40;
 	write_mcp23018(IO_ADDRESS_KPD, OLATA, state);

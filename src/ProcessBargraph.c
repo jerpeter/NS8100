@@ -126,7 +126,7 @@ void StartNewBargraph(void)
 	// Get the address of an empty Ram summary
 	if (GetRamSummaryEntry(&gBargraphSummaryPtr) == FALSE)
 	{
-		debug("Out of Flash Summary Entrys\n");
+		debug("Out of Ram Summary Entrys\n");
 		return;
 	}
 #if 0 // ns7100
@@ -1065,7 +1065,7 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 	// Check if we have a valid flash ptr.
 	if (gBargraphSummaryPtr == 0)
 	{	// If failed the ptr will be 0.
-		debug("Out of Flash Summary Entrys\n");
+		debug("Out of Ram Summary Entrys\n");
 	}
 	else
 	{
@@ -1122,7 +1122,7 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 	// Check if we have a valid flash ptr.
 	if (gBargraphSummaryPtr == 0)
 	{	// If failed the ptr will be 0.
-		debug("Out of Flash Summary Entrys\n");
+		debug("Out of Ram Summary Entrys\n");
 	}
 	else
 	{

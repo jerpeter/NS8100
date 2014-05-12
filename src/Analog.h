@@ -75,7 +75,7 @@ typedef union
 ///----------------------------------------------------------------------------
 void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr);
 void InitAnalogControl(void);
-void WriteAnalogControl(uint8 data);
+void WriteAnalogControl(uint16 data);
 void SetAnalogCutoffFrequency(uint8 freq);
 void SetSeismicGainSelect(uint8 seismicGain);
 void SetAcousticGainSelect(uint8 acousticGain);
@@ -84,5 +84,8 @@ void SetCalSignal(uint8 data);
 void GenerateCalSignal(void);
 void GetChannelOffsets(void);
 void GatherSampleData(void);
+void adSetCalSignalLow(void);
+void adSetCalSignalHigh(void);
+void adSetCalSignalOff(void);
 
 #endif //_ANALOG_H_

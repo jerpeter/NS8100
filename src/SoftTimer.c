@@ -198,9 +198,11 @@ void displayTimerCallBack(void)
 ****************************************/
 void alarmOneOutputTimerCallback(void)
 {
-#if 0 // fix_ns8100
+#if 0 // ns7100
 	// Deactivate alarm 1 signal
 	reg_TIM2PORT.reg &= 0x0B;
+#else //ns8100
+	powerControl(ALARM_1_ENABLE, OFF);
 #endif
 }
 
@@ -210,10 +212,13 @@ void alarmOneOutputTimerCallback(void)
 ****************************************/
 void alarmTwoOutputTimerCallback(void)
 {
-#if 0 // fix_ns8100
+#if 0 // ns7100
 	// Deactivate alarm 2 signal
 	reg_TIM2PORT.reg &= 0x07;
+#else //ns8100
+	powerControl(ALARM_2_ENABLE, OFF);
 #endif
+
 }
 
 /****************************************

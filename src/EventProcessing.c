@@ -133,7 +133,7 @@ void copyValidFlashEventSummariesToRam(void)
 					((fileEventHeader.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
 					(fileEventHeader.headerLength == sizeof(EVENT_HEADER_STRUCT)))
 				{
-					debug("Found Valid Event File: %s\n", dirList[entriesFound].name);
+					//debug("Found Valid Event File: %s\n", dirList[entriesFound].name);
 
 					fl_fread(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
 
@@ -663,7 +663,7 @@ void initEventRecord(EVT_RECORD* eventRec, uint8 op_mode)
 
 //*****************************************************************************
 // FUNCTION
-//  void InitUniqueEventNumber(void)
+//  void initCurrentEventNumber(void)
 //*****************************************************************************
 void initCurrentEventNumber(void)
 {
@@ -884,7 +884,7 @@ void getEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 
 	if (eventSummaryPtr != NULL)
 	{
-		byteCpy(eventSummaryPtr, &fileSummary, sizeof(EVENT_HEADER_STRUCT));
+		byteCpy(eventSummaryPtr, &fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
 	}	
 }
 
@@ -1060,16 +1060,30 @@ void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 	// Check if Waveform or Manual Cal mode
 	if ((g_RamEventRecord.summary.mode == WAVEFORM_MODE) || (g_RamEventRecord.summary.mode == MANUAL_CAL_MODE))
 	{
+		debug("Copy calculated from Waveform buffer to global ram event record\n");
+		
 		// Fill in calculated data (Bargraph data filled in at the end of bargraph)
-		g_RamEventRecord.summary.calculated.a.peak = ramSummPtr->waveShapeData.a.peak;
-		g_RamEventRecord.summary.calculated.r.peak = ramSummPtr->waveShapeData.r.peak;
-		g_RamEventRecord.summary.calculated.v.peak = ramSummPtr->waveShapeData.v.peak;
-		g_RamEventRecord.summary.calculated.t.peak = ramSummPtr->waveShapeData.t.peak;
+		g_RamEventRecord.summary.calculated.a.peak = flashSummPtr->waveShapeData.a.peak = ramSummPtr->waveShapeData.a.peak;
+		g_RamEventRecord.summary.calculated.r.peak = flashSummPtr->waveShapeData.r.peak = ramSummPtr->waveShapeData.r.peak;
+		g_RamEventRecord.summary.calculated.v.peak = flashSummPtr->waveShapeData.v.peak = ramSummPtr->waveShapeData.v.peak;
+		g_RamEventRecord.summary.calculated.t.peak = flashSummPtr->waveShapeData.t.peak = ramSummPtr->waveShapeData.t.peak;
 
-		g_RamEventRecord.summary.calculated.a.frequency = ramSummPtr->waveShapeData.a.freq;
-		g_RamEventRecord.summary.calculated.r.frequency = ramSummPtr->waveShapeData.r.freq;
-		g_RamEventRecord.summary.calculated.v.frequency = ramSummPtr->waveShapeData.v.freq;
-		g_RamEventRecord.summary.calculated.t.frequency = ramSummPtr->waveShapeData.t.freq;
+		debug("Newly stored peaks: a:%x r:%x v:%x t:%x\n", 
+				g_RamEventRecord.summary.calculated.a.peak, 
+				g_RamEventRecord.summary.calculated.r.peak,
+				g_RamEventRecord.summary.calculated.v.peak,
+				g_RamEventRecord.summary.calculated.t.peak);
+
+		g_RamEventRecord.summary.calculated.a.frequency = flashSummPtr->waveShapeData.a.freq = ramSummPtr->waveShapeData.a.freq;
+		g_RamEventRecord.summary.calculated.r.frequency = flashSummPtr->waveShapeData.r.freq = ramSummPtr->waveShapeData.r.freq;
+		g_RamEventRecord.summary.calculated.v.frequency = flashSummPtr->waveShapeData.v.freq = ramSummPtr->waveShapeData.v.freq;
+		g_RamEventRecord.summary.calculated.t.frequency = flashSummPtr->waveShapeData.t.freq = ramSummPtr->waveShapeData.t.freq;
+
+		debug("Newly stored freq: a:%d r:%d v:%d t:%d\n", 
+				g_RamEventRecord.summary.calculated.a.frequency, 
+				g_RamEventRecord.summary.calculated.r.frequency,
+				g_RamEventRecord.summary.calculated.v.frequency,
+				g_RamEventRecord.summary.calculated.t.frequency);
 
 		g_RamEventRecord.summary.calculated.a.displacement = 0;
 

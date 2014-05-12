@@ -74,7 +74,7 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			{
 				init_mcp23018(IO_ADDRESS_KPD);
 				state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
-				state &= ~0x80;
+				state |= 0x80;
 				write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
 				powerManagement.reg |= POWER_SHUTDOWN_ENABLE_BIT;
 			} 
@@ -82,7 +82,7 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			{
 				init_mcp23018(IO_ADDRESS_KPD);
 				state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
-				state |= 0x80;
+				state &= ~0x80;
 				write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
 				powerManagement.reg &= ~(POWER_SHUTDOWN_ENABLE_BIT);
 			}
@@ -92,12 +92,12 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			//debug("Alarm 1 Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				gpio_clr_gpio_pin(AVR32_PIN_PB06);
+				gpio_set_gpio_pin(AVR32_PIN_PB06);
 				powerManagement.reg |= ALARM_1_ENABLE_BIT;
 			}
 			else
 			{
-				gpio_set_gpio_pin(AVR32_PIN_PB06);
+				gpio_clr_gpio_pin(AVR32_PIN_PB06);
 				powerManagement.reg &= ~(ALARM_1_ENABLE_BIT);
 			}
 			break;
@@ -106,12 +106,12 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			//debug("Alarm 2 Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				gpio_clr_gpio_pin(AVR32_PIN_PB07);
+				gpio_set_gpio_pin(AVR32_PIN_PB07);
 				powerManagement.reg |= ALARM_2_ENABLE_BIT;
 			}
 			else
 			{
-				gpio_set_gpio_pin(AVR32_PIN_PB07);
+				gpio_clr_gpio_pin(AVR32_PIN_PB07);
 				powerManagement.reg &= ~(ALARM_2_ENABLE_BIT);
 			}
 			break;

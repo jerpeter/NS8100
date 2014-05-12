@@ -182,9 +182,9 @@ void InitAnalogControl(void)
 ///	Function:	WriteAnalogControl
 ///	Purpose:
 ///----------------------------------------------------------------------------
-void WriteAnalogControl(uint8 data)
+void WriteAnalogControl(uint16 control)
 {
-#if 0 // fix_ns8100
+#if 0 // ns7100
 	uint8 i = 0;
 	uint8 mask = 0x80;
 
@@ -213,7 +213,38 @@ void WriteAnalogControl(uint8 data)
 	// Move shift register contents into storage register by rising edge of storage pin
 	reg_PORTE.reg |= ANALOG_CONTROL_STORAGE;
 	reg_PORTE.reg &= ~ANALOG_CONTROL_STORAGE;
+#else // ns8100
+	spi_selectChip(AD_CTL_SPI, AD_CTL_SPI_NPCS);
+	spi_write(AD_CTL_SPI, (unsigned short) control);
+    spi_unselectChip(AD_CTL_SPI, AD_CTL_SPI_NPCS);
 #endif
+}
+
+///----------------------------------------------------------------------------
+///	Function:	adSetCalSignalLow
+///	Purpose:
+///----------------------------------------------------------------------------
+void adSetCalSignalLow(void)
+{
+	WriteAnalogControl(0x80);
+}
+
+///----------------------------------------------------------------------------
+///	Function:	adSetCalSignalHigh
+///	Purpose:
+///----------------------------------------------------------------------------
+void adSetCalSignalHigh(void)
+{
+	WriteAnalogControl(0xC0);
+}
+
+///----------------------------------------------------------------------------
+///	Function:	adSetCalSignalOff
+///	Purpose:
+///----------------------------------------------------------------------------
+void adSetCalSignalOff(void)
+{
+	WriteAnalogControl(0x00);
 }
 
 ///----------------------------------------------------------------------------
@@ -422,13 +453,15 @@ void GetChannelOffsets(void)
 	g_channelOffset.t_16bit = (int16)(tTotal - 0x8000);
 	g_channelOffset.a_16bit = (int16)(aTotal - 0x8000);
 
-	g_channelOffset.r_12bit = g_channelOffset.r_16bit >> 4;
-	g_channelOffset.v_12bit = g_channelOffset.v_16bit >> 4;
-	g_channelOffset.t_12bit = g_channelOffset.t_16bit >> 4;
-	g_channelOffset.a_12bit = g_channelOffset.a_16bit >> 4;
+	g_channelOffset.r_12bit = (g_channelOffset.r_16bit / 16);
+	g_channelOffset.v_12bit = (g_channelOffset.v_16bit / 16);
+	g_channelOffset.t_12bit = (g_channelOffset.t_16bit / 16);
+	g_channelOffset.a_12bit = (g_channelOffset.a_16bit / 16);
 
-	debug("A/D Channel offsets: %d, %d, %d, %d\n",
+	debug("A/D Channel offsets (16-bit): %d, %d, %d, %d\n",
 		g_channelOffset.r_16bit, g_channelOffset.v_16bit, g_channelOffset.t_16bit, g_channelOffset.a_16bit);
+	debug("A/D Channel offsets (12-bit): %d, %d, %d, %d\n",
+		g_channelOffset.r_12bit, g_channelOffset.v_12bit, g_channelOffset.t_12bit, g_channelOffset.a_12bit);
 
 	// If we had to power on the A/D, then power it off
 	if (powerAnalogDown == YES)

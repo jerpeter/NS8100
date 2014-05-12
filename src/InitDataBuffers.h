@@ -103,6 +103,14 @@ typedef union
 	uint8  sampleByte[16];
 } ISPI_PACKET;
 
+enum
+{
+	A_CHAN_OFFSET = 0,
+	R_CHAN_OFFSET = 1,
+	V_CHAN_OFFSET = 2,
+	T_CHAN_OFFSET = 3
+};
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------

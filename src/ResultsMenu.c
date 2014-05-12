@@ -152,8 +152,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 			monitorSessionFirstEvent = (uint16)(monitorSessionLastEvent - TOTAL_RAM_SUMMARIES + 1);
 		}
 
-		debug("gLastCompDataSum = %#08x\n", gLastCompDataSum);
-		debug("results_summtable_ptr = %#08x\n", results_summtable_ptr);
+		debug("gLastCompDataSum Event Number = %d\n", gLastCompDataSum->fileEventNum);
 
 		// Check if data corresponds to a Calibration Pulse
 		if (msg.data[0] == 13)
@@ -398,10 +397,15 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	if ((updateResultsEventRecord == YES) || (g_bargraphForcedCal == YES))
 	{
 		debug("Results menu: updating event record cache\n");
-		getEventFileInfo(results_summtable_ptr->fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary);
+		getEventFileInfo(results_summtable_ptr->fileEventNum, &(resultsEventRecord.header), &(resultsEventRecord.summary));
 		updateResultsEventRecord = NO;
 	}
 #endif
+	debug("File stored peaks: a:%x r:%x v:%x t:%x\n", 
+			eventRecord->summary.calculated.a.peak, 
+			eventRecord->summary.calculated.r.peak,
+			eventRecord->summary.calculated.v.peak,
+			eventRecord->summary.calculated.t.peak);
 
 	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
 

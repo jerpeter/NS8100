@@ -83,35 +83,46 @@ unsigned char read_mcp23018(unsigned char chip, unsigned char address)
 
 void init_mcp23018(unsigned char chip)
 {
+	// I/O Config
+    write_mcp23018(chip, IOCONA, 0x20);
+    write_mcp23018(chip, IOCONB, 0x20);
+
+	// Port Value
+	write_mcp23018(chip, GPIOA, 0x00);
+    write_mcp23018(chip, GPIOB, 0x00);
+
 	// Port Direction
     write_mcp23018(chip, IODIRA, 0x0F);
     write_mcp23018(chip, IODIRB, 0xFF);
 
-	// Polarity
-    write_mcp23018(chip, IOPOLA, 0x00);
-    write_mcp23018(chip, IOPOLB, 0xFF);
+	// Pullup (Open drain outputs only, without pullups you can't drive
+    write_mcp23018(chip, GPPUA, 0xFF);
+    write_mcp23018(chip, GPPUB, 0xFF);
 
-	// Interrupt Enable on Change
-    write_mcp23018(chip, GPINTENA, 0x0F);
-    write_mcp23018(chip, GPINTENB, 0xFF);
+	// Polarity
+    write_mcp23018(chip, IOPOLA, 0x0E);
+    write_mcp23018(chip, IOPOLB, 0xFF);
 
 	// Default Value
     write_mcp23018(chip, DEFVALA, 0x00);
     write_mcp23018(chip, DEFVALB, 0x00);
 
 	// Interrupt on Change Compare
-	write_mcp23018(chip, INTCONA, 0x0F);
+	write_mcp23018(chip, INTCONA, 0x00);
 	write_mcp23018(chip, INTCONB, 0x00);
 
-	// I/O Config
-    write_mcp23018(chip, IOCONA, 0x00);
-    write_mcp23018(chip, IOCONB, 0x00);
+	// Interrupt Enable on Change
+    write_mcp23018(chip, GPINTENA, 0x0F);
+    write_mcp23018(chip, GPINTENB, 0xFF);
 
-	// Pullup
-    write_mcp23018(chip, GPPUA, 0x01);
-    write_mcp23018(chip, GPPUB, 0xFF);
+	// Clear any interrupt generation
+	read_mcp23018(IO_ADDRESS_KPD, INTFA);
+	read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 
-	// Port Value
-	write_mcp23018(chip, GPIOA, 0x00);
-    write_mcp23018(chip, GPIOB, 0x00);
+	read_mcp23018(IO_ADDRESS_KPD, INTFB);
+	read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+
+	// clear the interrupt flag in the processor
+	AVR32_EIC.ICR.int4 = 1;
+	AVR32_EIC.ICR.int5 = 1;
 }

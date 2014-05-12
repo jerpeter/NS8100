@@ -161,7 +161,7 @@ void StartNewCombo(void)
 	// Get the address and empty Ram summary
 	if (GetRamSummaryEntry(&gComboSummaryPtr) == FALSE)
 	{
-		debug("Out of Flash Summary Entrys\n");
+		debug("Out of Ram Summary Entrys\n");
 		return;
 	}
 
@@ -1509,7 +1509,7 @@ void MoveComboWaveformEventToFile(void)
 			case FLASH_IDLE:
 				if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 				{
-					debugErr("Out of Flash Summary Entrys\n");
+					debugErr("Out of Ram Summary Entrys\n");
 				}
 
 				sumEntry = &summaryTable[gCurrentEventBuffer];

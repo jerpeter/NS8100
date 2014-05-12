@@ -209,7 +209,7 @@ void MoveManuelCalToFlash(void)
 	{
 		if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 		{
-			debugErr("Out of Flash Summary Entrys\n");
+			debugErr("Out of Ram Summary Entrys\n");
 		}
 
 #if 0 // ns7100

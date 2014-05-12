@@ -413,6 +413,15 @@ void avr32_enable_muxed_pins(void)
 		{AVR32_EBI_NCS_2_PIN, AVR32_EBI_NCS_2_FUNCTION},
 		{AVR32_EBI_NCS_3_PIN, AVR32_EBI_NCS_3_FUNCTION},
 		
+#if 0 
+		// EIC
+		{AVR32_EIC_EXTINT_5_PIN, AVR32_EIC_EXTINT_5_FUNCTION},
+
+		// TWI
+		{AVR32_TWI_SDA_0_0_PIN, AVR32_TWI_SDA_0_0_FUNCTION},
+		{AVR32_TWI_SCL_0_0_PIN, AVR32_TWI_SCL_0_0_FUNCTION},
+#endif
+
 		// Voltage monitor pins
 		{AVR32_ADC_AD_2_PIN, AVR32_ADC_AD_2_FUNCTION},
 		{AVR32_ADC_AD_3_PIN, AVR32_ADC_AD_3_FUNCTION}
@@ -468,8 +477,8 @@ void _init_startup(void)
 }
 //=================================================================================================
 void InitKeypad(void)
-
 {
+#if 1
 	static const gpio_map_t EIC_GPIO_MAP =
 	{
 		{AVR32_EIC_EXTINT_5_PIN, AVR32_EIC_EXTINT_5_FUNCTION}
@@ -484,6 +493,7 @@ void InitKeypad(void)
 
 	// Enable External Interrupt for MCP23018
 	gpio_enable_module(EIC_GPIO_MAP, sizeof(EIC_GPIO_MAP) / sizeof(EIC_GPIO_MAP[0]));
+#endif
 
 	// TWI options.
 	twi_options_t opt;
@@ -493,17 +503,24 @@ void InitKeypad(void)
 	opt.speed = TWI_SPEED;
 	opt.chip = IO_ADDRESS_KPD;
 
+#if 1
 	// TWI gpio pins configuration
 	gpio_enable_module(TWI_GPIO_MAP, sizeof(TWI_GPIO_MAP) / sizeof(TWI_GPIO_MAP[0]));
+#endif
 
 	// initialize TWI driver with options
-	twi_master_init(&AVR32_TWI, &opt);
+	if (twi_master_init(&AVR32_TWI, &opt) != TWI_SUCCESS)
+	{
+		debugErr("Two Wire Interface failed to initialize!\n");
+	}
 
-	soft_usecWait(250 * SOFT_MSECS);
+	soft_usecWait(25 * SOFT_MSECS);
+	//soft_usecWait(250 * SOFT_MSECS);
+	//soft_usecWait(1 * SOFT_SECS);
 
 	init_mcp23018(IO_ADDRESS_KPD);
 
-	soft_usecWait(250 * SOFT_MSECS);
+	soft_usecWait(25 * SOFT_MSECS);
 }
 
 //-----------------------------------------------------------------------------

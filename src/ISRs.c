@@ -911,7 +911,7 @@ void eic_system_irq(void)
 	}
 #endif
 
-#if 1
+#if 0
 	uint8 keyScan;
 	keyScan = read_mcp23018(IO_ADDRESS_KPD, INTFA);
 	{
@@ -921,6 +921,20 @@ void eic_system_irq(void)
 	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 	{
 		debug("System IRQ: Key Pressed: %x\n", keyScan);
+	}
+#endif
+
+#if 1
+	uint8 keyScan;
+	keyScan = read_mcp23018(IO_ADDRESS_KPD, INTFA);
+
+	if (keyScan & 0x04)
+	{
+		if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
+		{
+			debug("Factory Setup: Stage 1\n");
+			g_factorySetupSequence = STAGE_1;
+		}
 	}
 #endif
 
@@ -1202,13 +1216,19 @@ void tc_irq(void)
 
 	// Store Data in Pretrigger
 	// Check for Triggers and Alarms
+
+	// Fit into legacy design, throw away 4 bits
+	r_chan_read = r_chan_read / 16;
+	v_chan_read = v_chan_read / 16;
+	t_chan_read = t_chan_read / 16;
+	a_chan_read = a_chan_read / 16;
 	
-	// Fit into legacy design
-	r_chan_read >>= 4;
-	v_chan_read >>= 4;
-	t_chan_read >>= 4;
-	a_chan_read >>= 4;
-	
+	// Apply channel offset
+	r_chan_read -= g_channelOffset.r_12bit;
+	v_chan_read -= g_channelOffset.v_12bit;
+	t_chan_read -= g_channelOffset.t_12bit;
+	a_chan_read -= g_channelOffset.a_12bit;
+
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->r = r_chan_read;
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->v = v_chan_read;
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->t = t_chan_read;
@@ -1227,22 +1247,35 @@ void tc_irq(void)
 	//___Processing Data in real time____________________________________________________________
 	if (g_sampleProcessing == SAMPLING_STATE)
 	{
+		//debug("OS: %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
+
 		// Normalize
-		if(r_chan_read > g_channelOffset.r_12bit) r_chan_read = r_chan_read - g_channelOffset.r_12bit; 
-			else r_chan_read = g_channelOffset.r_12bit - r_chan_read;
+		if (r_chan_read > 0x800) 
+			r_chan_read -= 0x800; 
+		else 
+			r_chan_read = 0x800 - r_chan_read;
 
-		if(v_chan_read > g_channelOffset.v_12bit) v_chan_read = v_chan_read - g_channelOffset.v_12bit; 
-			else v_chan_read = g_channelOffset.v_12bit - v_chan_read;
+		if (v_chan_read > 0x800)
+			v_chan_read -= 0x800; 
+		else 
+			v_chan_read = 0x800 - v_chan_read;
 
-		if(t_chan_read > g_channelOffset.t_12bit) t_chan_read = t_chan_read - g_channelOffset.t_12bit; 
-			else t_chan_read = g_channelOffset.t_12bit - t_chan_read;
+		if (t_chan_read > 0x800) 
+			t_chan_read -= 0x800; 
+		else 
+			t_chan_read = 0x800 - t_chan_read;
 
-		if(a_chan_read > g_channelOffset.a_12bit) a_chan_read = a_chan_read - g_channelOffset.a_12bit; 
-			else a_chan_read = g_channelOffset.a_12bit - a_chan_read;
+		if (a_chan_read > 0x800)
+			a_chan_read -= 0x800; 
+		else 
+			a_chan_read = 0x800 - a_chan_read;
 	
+		//debug("NS: %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
+
 		//___Not handling a manual Cal____________________________________________________________
 		if (manual_cal_flag == FALSE)
 		{
+#if 1
 			//___Start of Alarm section____________________________________________________________
 			// Collecting data for any mode (other than calibration), signal alarm if active
 			if (help_rec.alarm_one_mode != ALARM_MODE_OFF)
@@ -1250,18 +1283,15 @@ void tc_irq(void)
 				// Check if seismic is enabled for Alarm 1
 				if ((help_rec.alarm_one_mode == ALARM_MODE_BOTH) || (help_rec.alarm_one_mode == ALARM_MODE_SEISMIC))
 				{
-					if ((r_chan_read > help_rec.alarm_one_seismic_lvl) || (v_chan_read > help_rec.alarm_one_seismic_lvl) ||
-						(t_chan_read > help_rec.alarm_one_seismic_lvl))
-					{
-						raiseSystemEventFlag(WARNING1_EVENT);
-					}
+					if (r_chan_read > help_rec.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
+					if (v_chan_read > help_rec.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
+					if (t_chan_read > help_rec.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
 				}
 
 				// Check if air is enabled for Alarm 1
 				if ((help_rec.alarm_one_mode == ALARM_MODE_BOTH) || (help_rec.alarm_one_mode == ALARM_MODE_AIR))
 				{
-					if (a_chan_read > help_rec.alarm_one_air_lvl) 
-						raiseSystemEventFlag(WARNING1_EVENT);
+					if (a_chan_read > help_rec.alarm_one_air_lvl) raiseSystemEventFlag(WARNING1_EVENT);
 				}
 			}
 						
@@ -1270,37 +1300,49 @@ void tc_irq(void)
 				// Check if seismic is enabled for Alarm 2
 				if ((help_rec.alarm_two_mode == ALARM_MODE_BOTH) || (help_rec.alarm_two_mode == ALARM_MODE_SEISMIC))
 				{
-					if ((r_chan_read > help_rec.alarm_two_seismic_lvl) || (v_chan_read > help_rec.alarm_two_seismic_lvl) || 
-						(t_chan_read > help_rec.alarm_two_seismic_lvl))
-					{
-						raiseSystemEventFlag(WARNING2_EVENT);
-					}						
+					if (r_chan_read > help_rec.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
+					if (v_chan_read > help_rec.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
+					if (t_chan_read > help_rec.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
 				}
 
 				// Check if air is enabled for Alarm 2
 				if ((help_rec.alarm_two_mode == ALARM_MODE_BOTH) || (help_rec.alarm_two_mode == ALARM_MODE_AIR))
 				{
-					if (a_chan_read > help_rec.alarm_two_air_lvl) 
-						raiseSystemEventFlag(WARNING2_EVENT);
+					if (a_chan_read > help_rec.alarm_two_air_lvl) raiseSystemEventFlag(WARNING2_EVENT);
 				}
 			}				
 			//___End of Alarm section______________________________________________________________
-
+#endif
 			// Check if not recording an event and not handling a cal pulse
 			if ((recording == NO) && (calPulse == NO))
 			{
 				if (trig_rec.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 				{
-					if ((r_chan_read > trig_rec.trec.seismicTriggerLevel) || (v_chan_read > trig_rec.trec.seismicTriggerLevel) ||
-						(t_chan_read > trig_rec.trec.seismicTriggerLevel))
+					//debug("Testing Trigger by Seismic\n");
+
+					if (r_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
+					if (v_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
+					if (t_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
+					
+					if (trigFound == YES)
 					{
-						trigFound = YES;
-					}
+						//debug("Trigger Found by Seismic\n");
+						//debug("NS: %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
+					}						
 				}
 
 				if (trig_rec.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
-					if (a_chan_read > trig_rec.trec.soundTriggerLevel)
-						trigFound = YES;
+				{
+					//debug("Testing Trigger by Air\n");
+					
+					if (a_chan_read > trig_rec.trec.soundTriggerLevel) trigFound = YES;
+
+					if (trigFound == YES)
+					{
+						debug("Trigger Found by Air\n");
+						debug("NS: %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
+					}						
+				}				
 
 				if ((trigFound == YES) && (recording == NO) && (calPulse == NO))
 				{
@@ -1310,7 +1352,7 @@ void tc_irq(void)
 					*(tailOfPreTrigBuff + 2) |= TRIG_ONE;
 					*(tailOfPreTrigBuff + 3) |= TRIG_ONE;
 
-					//debug("--> Trigger Found! %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
+					debug("--> Trigger Found! %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
 					
 					recording = YES;
 					sampleCount = trig_rec.trec.record_time * trig_rec.trec.sample_rate;
@@ -1337,25 +1379,15 @@ void tc_irq(void)
 				*(tailOfPreTrigBuff + 2) |= CAL_START;
 				*(tailOfPreTrigBuff + 3) |= CAL_START;
 
-				SetCalSignalEnable(ON);
+				adSetCalSignalHigh();
 			}
 			// Else check if a cal pulse is enabled
 			else if ((calPulse == YES) && (calSampleCount))
 			{
-				if (calSampleCount == (MAX_CAL_SAMPLES * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE)))
-				{
-					SetCalSignalEnable(ON);
-					SetCalSignal(ON);
-				}
-
-				if (calSampleCount == (45 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE)))
-					SetCalSignal(OFF);
-
-				if (calSampleCount == (36 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE)))
-					SetCalSignal(ON);
-
-				if (calSampleCount == (32 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE)))
-					SetCalSignalEnable(OFF);
+				if (calSampleCount == (50 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalHigh();
+				if (calSampleCount == (45 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalLow();
+				if (calSampleCount == (35 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalHigh();
+				if (calSampleCount == (30 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalOff();
 
 				calSampleCount--;
 			}
