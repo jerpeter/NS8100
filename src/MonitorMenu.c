@@ -646,6 +646,9 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 #if 1 // Show hidden RTVA Values
 		if (g_showRVTA == YES)
 		{
+			debug("R: %x, V: %x, T: %x, A: %x, t: %x\n", (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r), (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v),
+					(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t), (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->a), g_currentTempReading);
+
 			//-----------------------------------------------------------------------
 			// Show RTVA
 			//-----------------------------------------------------------------------

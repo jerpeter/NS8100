@@ -497,12 +497,8 @@ extern void BootLoadManager(void);
 					}
 					else if (keyPressed == HELP_KEY)
 					{
-#if 0 // Test
-						powerControl(LCD_CONTRAST_ENABLE, OFF);
-						clearLcdDisplay();
-						clearControlLinesLcdDisplay();
-						LcdClearPortReg();
-						powerControl(LCD_POWER_ENABLE, OFF);
+#if 1 // Test
+						// Blank
 #endif
 
 #if 0 // Test

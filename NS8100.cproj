@@ -389,7 +389,19 @@
     <Compile Include="src\Globals.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\InitHardware.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\InitInterrupts.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\InitSoftware.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\ProcessHandler.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\TestSnippets.c">
       <SubType>compile</SubType>
     </Compile>
     <None Include="NS8100_Flash_uc3a0512.lds">

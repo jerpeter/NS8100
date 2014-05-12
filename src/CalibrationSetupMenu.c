@@ -39,7 +39,8 @@
 enum {
 	CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY,
 	CAL_MENU_CALIBRATED_DISPLAY,
-	CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY
+	CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY,
+	CAL_MENU_DISPLAY_SAMPLES
 };
 
 ///----------------------------------------------------------------------------
@@ -130,6 +131,8 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 
 				key = getKeypadKey(CHECK_ONCE_FOR_KEY);
 
+				soft_usecWait(10 * SOFT_MSECS);
+
 				switch (key)
 				{
 					case UP_ARROW_KEY:
@@ -148,6 +151,11 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 						{
 							//debug("Cal Menu Screen 2 selected\n");
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
+						}
+						else if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
+						{
+							//debug("Cal Menu Screen 2 selected\n");
+							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
 						}
 
 						key = 0;
@@ -186,6 +194,11 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 						{
 							//debug("Cal Menu Screen 3 selected\n");
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
+						}
+						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
+						{
+							//debug("Cal Menu Screen 3 selected\n");
+							s_calDisplayScreen = CAL_MENU_DISPLAY_SAMPLES;
 						}
 
 						key = 0;
@@ -388,7 +401,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 	}
 
-	if ((s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) || (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY))
+	if ((s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) || (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY) || (CAL_MENU_DISPLAY_SAMPLES))
 	{
 		// PRINT CAL_SETUP
 		byteSet(&buff[0], 0, sizeof(buff));
@@ -415,7 +428,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
 			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 		}
-		else // s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY
+		else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
 		{
 			// PRINT Table separator
 			byteSet(&buff[0], 0, sizeof(buff));
@@ -424,33 +437,74 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
 			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 		}
+		else // CAL_MENU_DISPLAY_SAMPLES
+		{
+			// PRINT Table separator
+			byteSet(&buff[0], 0, sizeof(buff));
+			//sprintf((char*)buff, "--------------------");
+			sprintf((char*)buff, "-----RAW SAMPLES-----");
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
+		}
 
-		// PRINT Table header
-		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "C|  Min|  Max|  Avg|");
-		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
-		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
+		if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
+		{
+			// PRINT Table header
+			byteSet(&buff[0], 0, sizeof(buff));
+			sprintf((char*)buff, "C|  1st|  2nd|  3rd|");
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 
-		// PRINT R,V,T,A Min, Max and Avg
-		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "R|%+5ld|%+5ld|%+5ld|", chanMin[1], chanMax[1], chanAvg[1]);
-		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
-		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			// PRINT R,V,T,A Min, Max and Avg
+			byteSet(&buff[0], 0, sizeof(buff));
+			sprintf((char*)buff, "R| %04x| %04x| %04x|", s_calibrationData[0].chan[1], s_calibrationData[1].chan[1], s_calibrationData[2].chan[1]);
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "V|%+5ld|%+5ld|%+5ld|", chanMin[2], chanMax[2], chanAvg[2]);
-		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
-		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			byteSet(&buff[0], 0, sizeof(buff));
+			sprintf((char*)buff, "V| %04x| %04x| %04x|", s_calibrationData[0].chan[2], s_calibrationData[1].chan[2], s_calibrationData[2].chan[2]);
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "T|%+5ld|%+5ld|%+5ld|", chanMin[3], chanMax[3], chanAvg[3]);
-		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
-		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			byteSet(&buff[0], 0, sizeof(buff));
+			sprintf((char*)buff, "T| %04x| %04x| %04x|", s_calibrationData[0].chan[3], s_calibrationData[1].chan[3], s_calibrationData[2].chan[3]);
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "A|%+5ld|%+5ld|%+5ld|", chanMin[0], chanMax[0], chanAvg[0]);
-		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
-		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			byteSet(&buff[0], 0, sizeof(buff));
+			sprintf((char*)buff, "A| %04x| %04x| %04x|", s_calibrationData[0].chan[0], s_calibrationData[1].chan[0], s_calibrationData[2].chan[0]);
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		}
+		else // ((s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) || (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY))
+		{
+			// PRINT Table header
+			byteSet(&buff[0], 0, sizeof(buff));
+			sprintf((char*)buff, "C|  Min|  Max|  Avg|");
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
+
+			// PRINT R,V,T,A Min, Max and Avg
+			byteSet(&buff[0], 0, sizeof(buff));
+			sprintf((char*)buff, "R|%+5ld|%+5ld|%+5ld|", chanMin[1], chanMax[1], chanAvg[1]);
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+			byteSet(&buff[0], 0, sizeof(buff));
+			sprintf((char*)buff, "V|%+5ld|%+5ld|%+5ld|", chanMin[2], chanMax[2], chanAvg[2]);
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+			byteSet(&buff[0], 0, sizeof(buff));
+			sprintf((char*)buff, "T|%+5ld|%+5ld|%+5ld|", chanMin[3], chanMax[3], chanAvg[3]);
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+			byteSet(&buff[0], 0, sizeof(buff));
+			sprintf((char*)buff, "A|%+5ld|%+5ld|%+5ld|", chanMin[0], chanMax[0], chanAvg[0]);
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		}
 	}
 	else // s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY
 	{

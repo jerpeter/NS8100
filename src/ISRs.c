@@ -53,7 +53,6 @@
 ///----------------------------------------------------------------------------
 #include "Globals.h"
 extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
-extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
 extern BOOLEAN processCraftCmd;
 extern uint8 craft_g_input_buffer[];
 
@@ -581,184 +580,6 @@ void soft_timer_tick_irq(void)
 
 	// clear the interrupt flag
 	rtc_clear_interrupt(&AVR32_RTC);
-}
-
-// ============================================================================
-// Setup_8100_EIC_Keypad_ISR
-// ============================================================================
-void Setup_8100_EIC_Keypad_ISR(void)
-{
-	// External Interrupt Controller setup
-	AVR32_EIC.IER.int5 = 1;
-	AVR32_EIC.MODE.int5 = 0;
-	AVR32_EIC.EDGE.int5 = 0;
-	AVR32_EIC.LEVEL.int5 = 0;
-	AVR32_EIC.FILTER.int5 = 0;
-	AVR32_EIC.ASYNC.int5 = 1;
-	AVR32_EIC.EN.int5 = 1;
-
-	// Register the RTC interrupt handler to the interrupt controller.
-	INTC_register_interrupt(&eic_keypad_irq, AVR32_EIC_IRQ_5, 0);
-
-	// Enable the interrupt
-	rtc_enable_interrupt(&AVR32_RTC);
-
-#if 0
-	// Test for int enable
-	if(AVR32_EIC.IMR.int5 == 0x01) debug("\nKeypad Interrupt Enabled\n");
-	else debug("\nKeypad Interrupt Not Enabled\n");
-#endif
-}
-
-// ============================================================================
-// Setup_8100_EIC_System_ISR
-// ============================================================================
-void Setup_8100_EIC_System_ISR(void)
-{
-	// External Interrupt Controller setup
-	AVR32_EIC.IER.int4 = 1;
-	AVR32_EIC.MODE.int4 = 0;
-	AVR32_EIC.EDGE.int4 = 0;
-	AVR32_EIC.LEVEL.int4 = 0;
-	AVR32_EIC.FILTER.int4 = 0;
-	AVR32_EIC.ASYNC.int4 = 1;
-	AVR32_EIC.EN.int4 = 1;
-
-	// Register the RTC interrupt handler to the interrupt controller.
-	INTC_register_interrupt(&eic_system_irq, AVR32_EIC_IRQ_4, 0);
-
-	// Enable the interrupt
-	rtc_enable_interrupt(&AVR32_RTC);
-
-#if 0 
-	// Test for int enable
-	if(AVR32_EIC.IMR.int4 == 0x01) debug("\nSystem Interrupt Enabled\n");
-	else debug("\nSystem Interrupt Not Enabled\n");
-#endif
-}
-
-// ============================================================================
-// Setup_8100_EIC_External_RTC_ISR
-// ============================================================================
-void Setup_8100_EIC_External_RTC_ISR(void)
-{
-	// External Interrupt Controller setup
-	AVR32_EIC.IER.int1 = 1;
-	AVR32_EIC.MODE.int1 = 0;
-	AVR32_EIC.EDGE.int1 = 0;
-	AVR32_EIC.LEVEL.int1 = 0;
-	AVR32_EIC.FILTER.int1 = 0;
-	AVR32_EIC.ASYNC.int1 = 1;
-	AVR32_EIC.EN.int1 = 1;
-
-	// Register the RTC interrupt handler to the interrupt controller.
-#if 0 // Test
-	INTC_register_interrupt(&eic_external_rtc_irq, AVR32_EIC_IRQ_1, 0);
-#else // Hook in the External RTC interrupt to the actual sample processing interrupt handler
-	INTC_register_interrupt(&tc_sample_irq, AVR32_EIC_IRQ_1, 0);
-#endif
-
-#if 1
-	// Test for int enable
-	if(AVR32_EIC.IMR.int1 == 0x01) { debug("External RTC Interrupt Enabled\n"); }
-	else { debug("External RTC Interrupt Not Enabled\n"); }
-#endif
-}
-
-// ============================================================================
-// Setup_8100_Usart_ISR
-// ============================================================================
-void Setup_8100_Usart_RS232_ISR(void)
-{
-	INTC_register_interrupt(&usart_1_rs232_irq, AVR32_USART1_IRQ, 1);
-
-	// Enable Receive Ready, Overrun, Parity and Framing error interrupts
-	AVR32_USART1.ier = (AVR32_USART_IER_RXRDY_MASK | AVR32_USART_IER_OVRE_MASK |
-						AVR32_USART_IER_PARE_MASK | AVR32_USART_IER_FRAME_MASK);
-}
-
-// ============================================================================
-// Setup_8100_Soft_Timer_Tick_ISR
-// ============================================================================
-void Setup_8100_Soft_Timer_Tick_ISR(void)
-{
-	// Register the RTC interrupt handler to the interrupt controller.
-	INTC_register_interrupt(&soft_timer_tick_irq, AVR32_RTC_IRQ, 0);
-}
-
-// ============================================================================
-// Setup_8100_TC_Clock_ISR
-// ============================================================================
-void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
-{
-	volatile avr32_tc_t *tc = &AVR32_TC;
-
-	// Options for waveform generation.
-	tc_waveform_opt_t WAVEFORM_OPT =
-	{
-		.channel  = channel,						   // Channel selection.
-		.bswtrg   = TC_EVT_EFFECT_NOOP,                // Software trigger effect on TIOB.
-		.beevt    = TC_EVT_EFFECT_NOOP,                // External event effect on TIOB.
-		.bcpc     = TC_EVT_EFFECT_NOOP,                // RC compare effect on TIOB.
-		.bcpb     = TC_EVT_EFFECT_NOOP,                // RB compare effect on TIOB.
-		.aswtrg   = TC_EVT_EFFECT_NOOP,                // Software trigger effect on TIOA.
-		.aeevt    = TC_EVT_EFFECT_NOOP,                // External event effect on TIOA.
-		.acpc     = TC_EVT_EFFECT_NOOP,                // RC compare effect on TIOA: toggle.
-		.acpa     = TC_EVT_EFFECT_NOOP,                // RA compare effect on TIOA: toggle (other possibilities are none, set and clear).
-		.wavsel   = TC_WAVEFORM_SEL_UP_MODE_RC_TRIGGER,// Waveform selection: Up mode with automatic trigger(reset) on RC compare.
-		.enetrg   = FALSE,                             // External event trigger enable.
-		.eevt     = 0,                                 // External event selection.
-		.eevtedg  = TC_SEL_NO_EDGE,                    // External event edge selection.
-		.cpcdis   = FALSE,                             // Counter disable when RC compare.
-		.cpcstop  = FALSE,                             // Counter clock stopped with RC compare.
-		.burst    = FALSE,                             // Burst signal selection.
-		.clki     = FALSE,                             // Clock inversion.
-		.tcclks   = TC_CLOCK_SOURCE_TC2                // Internal source clock 2 - connected to PBA/2
-	};
-
-	// Options for interrupt
-	tc_interrupt_t TC_INTERRUPT =
-	{
-		.etrgs = 0,
-		.ldrbs = 0,
-		.ldras = 0,
-		.cpcs  = 1,
-		.cpbs  = 0,
-		.cpas  = 0,
-		.lovrs = 0,
-		.covfs = 0
-	};
-
-	switch (channel)
-	{
-		case TC_SAMPLE_TIMER_CHANNEL:
-			// Register the RTC interrupt handler to the interrupt controller.
-			INTC_register_interrupt(&tc_sample_irq, AVR32_TC_IRQ0, 3);
-			break;
-			
-		case TC_CALIBRATION_TIMER_CHANNEL:
-			// Register the RTC interrupt handler to the interrupt controller.
-			INTC_register_interrupt(&tc_sample_irq, AVR32_TC_IRQ1, 3);
-			break;
-			
-		case TC_TYPEMATIC_TIMER_CHANNEL:
-			// Register the RTC interrupt handler to the interrupt controller.
-			INTC_register_interrupt(&tc_typematic_irq, AVR32_TC_IRQ2, 0);
-			break;
-	}
-
-	// Initialize the timer/counter.
-	tc_init_waveform(tc, &WAVEFORM_OPT);         // Initialize the timer/counter waveform.
-
-	// Set the compare triggers.
-	// Remember TC counter is 16-bits, so counting second is not possible.
-	// We configure it to count ms.
-	// We want: (1/(FOSC0/4)) * RC = 1000 Hz => RC = (FOSC0/4) / 1000 = 3000 to get an interrupt every 1ms
-	//tc_write_rc(tc, TC_CHANNEL_0, (FOSC0/2)/1000);  // Set RC value.
-	//tc_write_rc(tc, channel, (FOSC0 / (sampleRate * 2)));
-	tc_write_rc(tc, channel, (32900000 / sampleRate));
-	
-	tc_configure_interrupts(tc, channel, &TC_INTERRUPT);
 }
 
 // ============================================================================
@@ -1704,9 +1525,9 @@ static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 }
 
 // ============================================================================
-// getChannelDataWithReadbackCheck_ISR_Inline
+// getChannelDataWithReadbackWithTemp_ISR_Inline
 // ============================================================================
-static inline void getChannelDataWithReadbackCheck_ISR_Inline(void)
+static inline void getChannelDataWithReadbackWithTemp_ISR_Inline(void)
 {
 	//___________________________________________________________________________________________
 	//___Sample Output with return config words for reference
@@ -1754,9 +1575,40 @@ static inline void getChannelDataWithReadbackCheck_ISR_Inline(void)
 }
 
 // ============================================================================
-// getChannelDataWithoutReadbackCheck_ISR_Inline
+// getChannelDataNoReadbackWithTemp_ISR_Inline
 // ============================================================================
-static inline void getChannelDataWithoutReadbackCheck_ISR_Inline(void)
+static inline void getChannelDataNoReadbackWithTemp_ISR_Inline(void)
+{
+	// Chan 0 - R
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+	// Chan 1 - T
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+	// Chan 2 - V
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+	// Chan 3 - A
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+    // Temperature
+    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &g_currentTempReading);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+}
+
+// ============================================================================
+// getChannelDataNoReadbackNoTemp_ISR_Inline
+// ============================================================================
+static inline void getChannelDataNoReadbackNoTemp_ISR_Inline(void)
 {
 	//___________________________________________________________________________________________
 	//___Sample Output with return config words for reference
@@ -1866,10 +1718,29 @@ void tc_sample_irq(void)
 	g_sampleCount++;
 
 	//___________________________________________________________________________________________
-	//___AD raw data read all 4 channels with config readback and temp
-	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_AND_TEMP)
+	//___AD raw data read all 4 channels without config read back and no temp
+	if (g_adChannelConfig == FOUR_AD_CHANNELS_NO_READBACK_NO_TEMP)
 	{
-		getChannelDataWithReadbackCheck_ISR_Inline();
+		getChannelDataNoReadbackNoTemp_ISR_Inline();
+	}
+	//___________________________________________________________________________________________
+	//___AD raw data read all 4 channels without config read back and temp
+	else if (g_adChannelConfig == FOUR_AD_CHANNELS_NO_READBACK_WITH_TEMP)
+	{
+		getChannelDataNoReadbackWithTemp_ISR_Inline();
+
+		//___________________________________________________________________________________________
+		//___Check for temperature drift (only will start after Pretrigger buffer is full initially)
+		if (s_checkTempDrift == YES)
+		{
+			checkForTemperatureDrift_ISR_Inline();
+		}
+	}
+	//___________________________________________________________________________________________
+	//___AD raw data read all 4 channels with config read back and temp
+	else // (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_WITH_TEMP)
+	{
+		getChannelDataWithReadbackWithTemp_ISR_Inline();
 		
 		//___________________________________________________________________________________________
 		//___Check for channel sync error
@@ -1893,12 +1764,6 @@ void tc_sample_irq(void)
 		{
 			checkForTemperatureDrift_ISR_Inline();
 		}
-	}		
-	//___________________________________________________________________________________________
-	//___AD raw data read all 4 channels without config read back and no temp
-	else
-	{
-		getChannelDataWithoutReadbackCheck_ISR_Inline();
 	}		
 
 	//___________________________________________________________________________________________

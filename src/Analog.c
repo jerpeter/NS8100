@@ -89,7 +89,7 @@ void GetAnalogConfigReadback(void)
 	SAMPLE_DATA_STRUCT dummyData;
 	uint16 channelConfigReadback;
 
-	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_AND_TEMP)
+	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_WITH_TEMP)
 	{
 		// Chan 0
 		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
@@ -142,7 +142,7 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 */
 
 #if 1
-	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_AND_TEMP)
+	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_WITH_TEMP)
 	{
 		// Chan 0
 		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
@@ -188,6 +188,33 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 		{
 			debugErr("AD Channel config error! Channel data is not in sync!\n");
 		}
+	}
+	else if (g_adChannelConfig == FOUR_AD_CHANNELS_NO_READBACK_WITH_TEMP)
+	{
+		// Chan 0
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+
+		// Chan 1
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->t));
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+
+		// Chan 2
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+
+		// Chan 3
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->a));
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+
+		// Temp
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &g_currentTempReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 	}
 	else // FOUR_AD_CHANNELS_NO_READBACK_NO_TEMP
 	{
@@ -292,33 +319,49 @@ void WriteADConfig(unsigned int config)
 ///----------------------------------------------------------------------------
 void SetupADChannelConfig(uint32 sampleRate)
 {
-	// AD config all channels w/ temp
-	// Overwrite, Unipolar, INx referenced to COM = GND ± 0.1 V, Stop after Channel 3 (0 bias), Full BW, 
+	// AD config all channels, with temp, with read back
+	// Overwrite (set config), Unipolar, INx referenced to COM = GND ± 0.1 V, Stop after Channel 3 (0 bias), Full BW, 
 	//	External reference, temperature enabled (assumed internal buffer disabled), Scan IN0 to IN3 then read temp, Read back the CFG register
 	// 00 1 110 011 1 010 10 0
 	// 0011 1001 1101 0100 - 0x39D4
 	
-	// AD config all channels w/no temp, no readback
-	// Overwrite, Unipolar, INx referenced to COM = GND ± 0.1 V, Stop after Channel 3 (0 bias), Full BW,
+	// AD config all channels, with temp, no read back
+	// Overwrite (set config), Unipolar, INx referenced to COM = GND ± 0.1 V, Stop after Channel 3 (0 bias), Full BW,
+	//	External reference, temperature enabled (assumed internal buffer disabled), Scan IN0 to IN3 then read temp, Do not read back the CFG register
+	// 00 1 110 011 1 010 10 1
+	// 0011 1001 1101 0101 - 0x39D5
+	
+	// AD config all channels, no temp, no read back
+	// Overwrite (set config), Unipolar, INx referenced to COM = GND ± 0.1 V, Stop after Channel 3 (0 bias), Full BW,
 	//	External reference, temperature disabled (assumed internal buffer disabled), Scan IN0 to IN3 only, Do not read back the CFG register
 	// 00 1 110 011 1 110 11 1
 	// 0011 1001 1111 0111 - 0x39F7
 
-
 	// For any sample rate 8K and below
 	if (sampleRate <= SAMPLE_RATE_8K)
 	{
-		// Setup config for 4 Chan + Temp, Read back config
-		//WriteADConfig(0x39B4); // Old config
-		WriteADConfig(0x39D4); // New config
+#if 1 // Read back config
+		// Setup config for 4 Chan, No read back, With temp
+		WriteADConfig(0x39D4);
+		WriteADConfig(0x39D4);
+		WriteADConfig(0x39D4);
 		
-		g_adChannelConfig = FOUR_AD_CHANNELS_WITH_READBACK_AND_TEMP;
+		g_adChannelConfig = FOUR_AD_CHANNELS_WITH_READBACK_WITH_TEMP;
+#else // Don't read back config
+		// Setup config for 4 Chan, No read back, With temp
+		WriteADConfig(0x39D5);
+		WriteADConfig(0x39D5);
+		WriteADConfig(0x39D5);
+		
+		g_adChannelConfig = FOUR_AD_CHANNELS_NO_READBACK_WITH_TEMP;
+#endif
 	}
 	else // Sample rates above 8192 take too long to read back config and temp, so skip them
 	{
-		// Setup config for 4 Chan, No Temp, No read back
-		//WriteADConfig(0x39FF); // Old config
-		WriteADConfig(0x39F7); // New config
+		// Setup config for 4 Chan, No read back, No temp
+		WriteADConfig(0x39F7);
+		WriteADConfig(0x39F7);
+		WriteADConfig(0x39F7);
 
 		g_adChannelConfig = FOUR_AD_CHANNELS_NO_READBACK_NO_TEMP;
 	}
@@ -331,6 +374,31 @@ void SetupADChannelConfig(uint32 sampleRate)
     spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 
 	soft_usecWait(2);
+
+#if 0
+	uint16 dummyRead = 0x8000;
+
+	// Need 2 dummy reads to start and sync the channels
+	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &dummyRead);
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+
+	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &dummyRead);
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+#endif
+
+#if 0
+	uint16 dummyRead = 0x8000;
+
+	// Need dummy reads to start and sync the channels
+	while (dummyRead > 0x2000)
+	{
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &dummyRead);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	}
+#endif
 }
 
 ///----------------------------------------------------------------------------
