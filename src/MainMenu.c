@@ -88,6 +88,9 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 	DATE_TIME_STRUCT currentTime = getCurrentTime();
 	uint32 input;
 	uint8 length;
+#if 1 // Test
+	RTC_MEM_MAP_STRUCT rtcMap;
+#endif
 
 	switch (msg.cmd)
 	{
@@ -198,16 +201,31 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					break;      
 
 				case (DOWN_ARROW_KEY):
+#if 1 // Test
+					// Set RTC Timestamp pin high
+					gpio_clr_gpio_pin(AVR32_PIN_PB18);
+#endif
 					mainMnScroll(DOWN, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (UP_ARROW_KEY):
+#if 1 // Test
+					// Set RTC Timestamp pin high
+					gpio_set_gpio_pin(AVR32_PIN_PB18);
+#endif
 					mainMnScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (MINUS_KEY): 
 #if 1 // Test
-					powerDownSDCard();
-				    gpio_enable_gpio_pin(AVR32_PIN_PA19);
-					gpio_clr_gpio_pin(AVR32_PIN_PA19);
+					//powerDownSDCard();
+				    //gpio_enable_gpio_pin(AVR32_PIN_PA19);
+					//gpio_clr_gpio_pin(AVR32_PIN_PA19);
+
+					rtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
+					debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
+					rtcMap.control_1 &= ~(0x10);
+					rtcMap.control_2 = RTC_ALARM_INT_ENABLE;
+					debug("RTC New Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
+					rtcWrite(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
 #else
 					adjustLcdContrast(DARKER);
 #endif
@@ -215,8 +233,15 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 				case (PLUS_KEY): 
 #if 1 // Test
 				    //gpio_set_gpio_pin(AVR32_PIN_PB19);
-					gpio_enable_module_pin(AVR32_PIN_PA19, AVR32_SPI1_NPCS_2_0_FUNCTION);
-					powerUpSDCardAndInitFat32();
+					//gpio_enable_module_pin(AVR32_PIN_PA19, AVR32_SPI1_NPCS_2_0_FUNCTION);
+					//powerUpSDCardAndInitFat32();
+
+					rtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
+					debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
+					rtcMap.control_1 &= ~(0x10);
+					rtcMap.control_2 = (RTC_ALARM_INT_ENABLE | RTC_TIMESTAMP_INT_ENABLE);
+					debug("RTC New Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
+					rtcWrite(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
 #else
 					adjustLcdContrast(LIGHTER); 
 #endif

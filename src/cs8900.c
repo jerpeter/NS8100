@@ -99,6 +99,37 @@ void Init8900(void)
    }
 }
 
+#include "Typedefs.h"
+#include "Uart.h"
+void Sleep8900(void)
+{
+   Write8900(ADD_PORT, PP_SelfCTL);
+   Write8900(DATA_PORT, 0x0300);          // Sleep the Ethernet-Controller
+}
+
+void ToggleLedOn8900(void)
+{
+   Write8900(ADD_PORT, PP_SelfCTL);
+   Write8900(DATA_PORT, 0x5000);          // Sleep the Ethernet-Controller
+	debug("Lan data port: 0x%x\n", Read8900(DATA_PORT));
+}
+
+void ToggleLedOff8900(void)
+{
+   Write8900(ADD_PORT, PP_SelfCTL);
+   Write8900(DATA_PORT, 0x4000);          // Sleep the Ethernet-Controller
+	debug("Lan data port: 0x%x\n", Read8900(DATA_PORT));
+}
+
+void ReadId8900(void)
+{
+   Write8900(ADD_PORT, PP_ChipID);
+	debug("Lan ID (0): 0x%x\n", Read8900(DATA_PORT));
+
+   Write8900(ADD_PORT, (PP_ChipID + 2));
+	debug("Lan ID (1): 0x%x\n", Read8900(DATA_PORT));
+}
+
 
 // writes a word in little-endian byte order to
 // a specified port-address

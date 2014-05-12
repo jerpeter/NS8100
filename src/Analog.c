@@ -690,12 +690,21 @@ void UpdateChannelOffsetsForTempChange(void)
 
 				debug("Temp change - A/D Channel offsets (new): %d, %d, %d, %d\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 				
+#if 0 // Test
+				// Check if the delta of movement in the offset has settled
+				if ((abs(s_rTotal - ACCURACY_16_BIT_MIDPOINT) < 4) && (abs(s_vTotal - ACCURACY_16_BIT_MIDPOINT) < 4) && 
+					(abs(s_tTotal - ACCURACY_16_BIT_MIDPOINT) < 4) && (abs(s_aTotal - ACCURACY_16_BIT_MIDPOINT) < 4))
+				{
+					clearSystemEventFlag(UPDATE_OFFSET_EVENT);
+				}
+#else // Normal
 				clearSystemEventFlag(UPDATE_OFFSET_EVENT);
+#endif
 			}
 		}
 		else // Start processing counter for new zero crossing
 		{
-			debug("Starting Temp Adjustment...\n");
+			debug("Resume Offset adjustment for temp drift...\n");
 			
 			// Initialize the counter for checking samples
 			g_updateOffsetCount = g_triggerRecord.trec.sample_rate;

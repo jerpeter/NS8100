@@ -40,6 +40,12 @@
 #define CAL_SETUP_WND_END_ROW (DEFAULT_MENU_ROW_SEVEN)
 #define CAL_SETUP_MN_TBL_START_LINE 0
 
+enum {
+	CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY,
+	CAL_MENU_CALIBRATED_DISPLAY,
+	CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY
+};
+
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
@@ -103,7 +109,7 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 	if (choice == MB_FIRST_CHOICE)
 	{
 		calSetupMnProc(msg, &wnd_layout, &mn_layout);
-		s_calDisplayScreen = 0;
+		s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
 	}
 
 	if (g_activeMenu == CAL_SETUP_MENU)
@@ -132,18 +138,65 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 				switch (key)
 				{
 					case UP_ARROW_KEY:
-						s_calDisplayScreen = 0;
+						if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
+						{
+							// Clear the stored offsets so that the A/D channel data is raw
+							memset(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
+							
+							// Clear the pretrigger buffer
+							soft_usecWait(250 * SOFT_MSECS);
+							
+							s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
+						}
+						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
+						{
+							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
+						}
 						break;
+
 					case DOWN_ARROW_KEY:
-						s_calDisplayScreen = 1;
+						if (s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY)
+						{
+							// Stop A/D data collection clock
+							Stop_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
+							
+							// Alert the system operator that the unit is calibrating
+							overlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), 0);
+							
+							// Get new channel offsets
+							GetChannelOffsets(TC_CALIBRATION_TIMER_CHANNEL);
+							
+							// Restart the data collection clock
+							Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
+							
+							// Clear the pretrigger buffer
+							soft_usecWait(250 * SOFT_MSECS);
+
+							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
+						}
+						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
+						{
+							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
+						}
 						break;
-					case ENTER_KEY :
-					case ESC_KEY :
+
+					case ENTER_KEY:
+					case ESC_KEY:
 						// Not really used, keys are grabbed in calSetupMn
 						mbChoice = messageBox(getLangText(STATUS_TEXT), getLangText(ARE_YOU_DONE_WITH_CAL_SETUP_Q_TEXT), MB_YESNO);
 						if ((mbChoice == MB_SECOND_CHOICE) || (mbChoice == MB_NO_ACTION))
 						{
-							// Dont leave
+							// Don't leave
+							key = 0;
+						}
+						break;
+						
+					case HELP_KEY:
+						// Not really used, keys are grabbed in calSetupMn
+						mbChoice = messageBox(getLangText(SAMPLE_RATE_TEXT), "", MB_YESNO);
+						if ((mbChoice == MB_SECOND_CHOICE) || (mbChoice == MB_NO_ACTION))
+						{
+							// Don't leave
 							key = 0;
 						}
 						break;
@@ -151,6 +204,8 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 			}
 
 			mnStopCal();
+			
+			// Reestablish the previously stored sample rate
 			g_triggerRecord.trec.sample_rate = s_calSavedSampleRate;
 
 			if (messageBox(getLangText(CONFIRM_TEXT), getLangText(DO_YOU_WANT_TO_SAVE_THE_CAL_DATE_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
@@ -198,15 +253,22 @@ void calSetupMnProc(INPUT_MSG_STRUCT msg,
 
 			overlayMessage("STATUS", "PLEASE WAIT...", 0);
 
-			// Fool ISR into filling up quarter sec buffer
+			// Save the currently stored sample rate to later be reverted
 			s_calSavedSampleRate = g_triggerRecord.trec.sample_rate;
+			
+			// Set the sample rate to a fixed 1K
 			g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
+
+			// Fool system and initialize buffers and pointers as if a waveform
 			InitDataBuffs(WAVEFORM_MODE);
 
 #if 0 // ns7100
 			mnStopCal();
 #endif
+
+			// Hand setup A/D data collection and start the data clock
 			mnStartCal();
+			
 			// Allow pre-trigger buffer to fill up
 			soft_usecWait(250 * SOFT_MSECS);
 		break;
@@ -220,7 +282,6 @@ void calSetupMnProc(INPUT_MSG_STRUCT msg,
 					break;
 
 				case (ESC_KEY):
-
 					mbChoice = messageBox(getLangText(WARNING_TEXT), getLangText(DO_YOU_WANT_TO_LEAVE_CAL_SETUP_MODE_Q_TEXT), MB_YESNO);
 					if ((mbChoice == MB_SECOND_CHOICE) || (mbChoice == MB_NO_ACTION))
 					{
@@ -313,7 +374,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 	}
 
-	if (s_calDisplayScreen == 0)
+	if ((s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) || (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY))
 	{
 		// PRINT CAL_SETUP
 		byteSet(&buff[0], 0, sizeof(buff));
@@ -331,18 +392,24 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ONE;
 		wndMpWrtString(buff,wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 
-#if 0 // ns7100
-		if (g_sampleProcessing != ACTIVE_STATE)
+		if (s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY)
 		{
-			return;
+			// PRINT Table separator
+			byteSet(&buff[0], 0, sizeof(buff));
+			//sprintf((char*)buff, "--------------------");
+			sprintf((char*)buff, "-----RAW NO CAL-----");
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 		}
-#endif		
-
-		// PRINT Table separator
-		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "--------------------");
-		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
-		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
+		else // s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY
+		{
+			// PRINT Table separator
+			byteSet(&buff[0], 0, sizeof(buff));
+			//sprintf((char*)buff, "--------------------");
+			sprintf((char*)buff, "-----CALIBRATED-----");
+			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
+			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
+		}
 
 		// PRINT Table header
 		byteSet(&buff[0], 0, sizeof(buff));
@@ -350,7 +417,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
 		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 
-		// PRINT R,V,T,A last sample value, .1 sec avg, .25 sec avg
+		// PRINT R,V,T,A Min, Max and Avg
 		byteSet(&buff[0], 0, sizeof(buff));
 		sprintf((char*)buff, "R|%+5ld|%+5ld|%+5ld|", chanMin[1], chanMax[1], chanAvg[1]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
@@ -371,7 +438,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	}
-	else
+	else // s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY
 	{
 		// R
 		byteSet(&buff[0], 0, sizeof(buff));
@@ -462,8 +529,10 @@ void mnStartCal(void)
 	// Setup AD Channel config
 	SetupADChannelConfig(CALIBRATION_FIXED_SAMPLE_RATE);
 
+#if 0 // Now skipped since the default menu display (CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) does not use channel offsets
 	// Get channel offsets
 	GetChannelOffsets(CALIBRATION_FIXED_SAMPLE_RATE);
+#endif
 
 	// Setup ISR to clock the data sampling
 	Setup_8100_TC_Clock_ISR(CALIBRATION_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);

@@ -703,7 +703,7 @@ void build_languageLinkTable(uint8 languageSelection)
 
 		if (languageFile->filelength > LANGUAGE_TABLE_MAX_SIZE)
 		{
-			// Todo: Clean up error case
+			// fix_ns8100 - Clean up error case
 			// Error case - Read the maximum buffer size and pray
 			fl_fread(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
 		}

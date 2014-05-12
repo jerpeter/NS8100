@@ -357,15 +357,19 @@ BOOLEAN keypad(void)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
-#if 0 // Test
+#if 1 // Test
 				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					g_testTrigger = YES;
 				}
 				else
 				{
-					__monitorLogTblKey = 0;
-					initMonitorLog();
+					RTC_MEM_MAP_STRUCT rtcMap;
+					rtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
+					debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
+
+					//__monitorLogTblKey = 0;
+					//initMonitorLog();
 					
 					//g_triggerRecord.trec.sample_rate += 1024;
 					//debug("New sample rate: %d\n", g_triggerRecord.trec.sample_rate);

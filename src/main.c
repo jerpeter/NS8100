@@ -155,6 +155,86 @@
   g_smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
   }
 
+#define NRD_SETUP_SPECIAL     10 //10
+#define NRD_PULSE_SPECIAL     135 //135
+#define NRD_CYCLE_SPECIAL     180 //180
+
+#define NCS_RD_SETUP_SPECIAL  35 //10
+#define NCS_RD_PULSE_SPECIAL  150 //250
+
+#define NWE_SETUP_SPECIAL     20 //20
+#define NWE_PULSE_SPECIAL     110 //110
+#define NWE_CYCLE_SPECIAL     165 //150
+
+#define NCS_WR_SETUP_SPECIAL  35 //20
+#define NCS_WR_PULSE_SPECIAL  150 //230
+
+#define SMC_CS_SETUP_SPECIAL(ncs) { \
+  U32 nwe_setup    = ((NWE_SETUP_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+  U32 ncs_wr_setup = ((NCS_WR_SETUP_SPECIAL * hsb_mhz_up + 999) / 1000); \
+  U32 nrd_setup    = ((NRD_SETUP_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+  U32 ncs_rd_setup = ((NCS_RD_SETUP_SPECIAL * hsb_mhz_up + 999) / 1000); \
+  U32 nwe_pulse    = ((NWE_PULSE_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+  U32 ncs_wr_pulse = ((NCS_WR_PULSE_SPECIAL * hsb_mhz_up + 999) / 1000); \
+  U32 nrd_pulse    = ((NRD_PULSE_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+  U32 ncs_rd_pulse = ((NCS_RD_PULSE_SPECIAL * hsb_mhz_up + 999) / 1000); \
+  U32 nwe_cycle    = ((NWE_CYCLE_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+  U32 nrd_cycle    = ((NRD_CYCLE_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+                                                                 \
+  /* Some coherence checks...                             */     \
+  /* Ensures CS is active during Rd or Wr                 */     \
+  if( ncs_rd_setup + ncs_rd_pulse < nrd_setup + nrd_pulse )      \
+    ncs_rd_pulse = nrd_setup + nrd_pulse - ncs_rd_setup;         \
+  if( ncs_wr_setup + ncs_wr_pulse < nwe_setup + nwe_pulse )      \
+    ncs_wr_pulse = nwe_setup + nwe_pulse - ncs_wr_setup;         \
+                                                                 \
+  /* ncs_hold = n_cycle - ncs_setup - ncs_pulse           */     \
+  /* n_hold   = n_cycle - n_setup - n_pulse               */     \
+  /*                                                      */     \
+  /* All holds parameters must be positive or null, so:   */     \
+  /* nwe_cycle shall be >= ncs_wr_setup + ncs_wr_pulse    */     \
+  if( nwe_cycle < ncs_wr_setup + ncs_wr_pulse )                  \
+    nwe_cycle = ncs_wr_setup + ncs_wr_pulse;                     \
+                                                                 \
+  /* nwe_cycle shall be >= nwe_setup + nwe_pulse          */     \
+  if( nwe_cycle < nwe_setup + nwe_pulse )                        \
+    nwe_cycle = nwe_setup + nwe_pulse;                           \
+                                                                 \
+  /* nrd_cycle shall be >= ncs_rd_setup + ncs_rd_pulse    */     \
+  if( nrd_cycle < ncs_rd_setup + ncs_rd_pulse )                  \
+    nrd_cycle = ncs_rd_setup + ncs_rd_pulse;                     \
+                                                                 \
+  /* nrd_cycle shall be >= nrd_setup + nrd_pulse          */     \
+  if( nrd_cycle < nrd_setup + nrd_pulse )                        \
+    nrd_cycle = nrd_setup + nrd_pulse;                           \
+                                                                 \
+  AVR32_SMC.cs[ncs].setup = (nwe_setup    << AVR32_SMC_SETUP0_NWE_SETUP_OFFSET) | \
+                            (ncs_wr_setup << AVR32_SMC_SETUP0_NCS_WR_SETUP_OFFSET) | \
+                            (nrd_setup    << AVR32_SMC_SETUP0_NRD_SETUP_OFFSET) | \
+                            (ncs_rd_setup << AVR32_SMC_SETUP0_NCS_RD_SETUP_OFFSET); \
+  AVR32_SMC.cs[ncs].pulse = (nwe_pulse    << AVR32_SMC_PULSE0_NWE_PULSE_OFFSET) | \
+                            (ncs_wr_pulse << AVR32_SMC_PULSE0_NCS_WR_PULSE_OFFSET) | \
+                            (nrd_pulse    << AVR32_SMC_PULSE0_NRD_PULSE_OFFSET) | \
+                            (ncs_rd_pulse << AVR32_SMC_PULSE0_NCS_RD_PULSE_OFFSET); \
+  AVR32_SMC.cs[ncs].cycle = (nwe_cycle    << AVR32_SMC_CYCLE0_NWE_CYCLE_OFFSET) | \
+                            (nrd_cycle    << AVR32_SMC_CYCLE0_NRD_CYCLE_OFFSET); \
+  AVR32_SMC.cs[ncs].mode = (((NCS_CONTROLLED_READ) ? AVR32_SMC_MODE0_READ_MODE_NCS_CONTROLLED : \
+                           AVR32_SMC_MODE0_READ_MODE_NRD_CONTROLLED) << AVR32_SMC_MODE0_READ_MODE_OFFSET) | \
+                           (((NCS_CONTROLLED_WRITE) ? AVR32_SMC_MODE0_WRITE_MODE_NCS_CONTROLLED : \
+                           AVR32_SMC_MODE0_WRITE_MODE_NWE_CONTROLLED) << AVR32_SMC_MODE0_WRITE_MODE_OFFSET) | \
+                           (NWAIT_MODE << AVR32_SMC_MODE0_EXNW_MODE_OFFSET) | \
+                           (((SMC_8_BIT_CHIPS) ? AVR32_SMC_MODE0_BAT_BYTE_WRITE : \
+                           AVR32_SMC_MODE0_BAT_BYTE_SELECT) << AVR32_SMC_MODE0_BAT_OFFSET) | \
+                           (((SMC_DBW <= 8 ) ? AVR32_SMC_MODE0_DBW_8_BITS  : \
+                           (SMC_DBW <= 16) ? AVR32_SMC_MODE0_DBW_16_BITS : \
+                           AVR32_SMC_MODE0_DBW_32_BITS) << AVR32_SMC_MODE0_DBW_OFFSET) | \
+                           (TDF_CYCLES << AVR32_SMC_MODE0_TDF_CYCLES_OFFSET) | \
+                           (TDF_OPTIM << AVR32_SMC_MODE0_TDF_MODE_OFFSET) | \
+                           (PAGE_MODE << AVR32_SMC_MODE0_PMEN_OFFSET) | \
+                           (PAGE_SIZE << AVR32_SMC_MODE0_PS_OFFSET); \
+  g_smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
+  }
+
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
@@ -360,6 +440,11 @@ void avr32_enable_muxed_pins(void)
 		{AVR32_USART1_RTS_0_0_PIN, AVR32_USART1_RTS_0_0_FUNCTION},
 		{AVR32_USART1_CTS_0_0_PIN, AVR32_USART1_CTS_0_0_FUNCTION},
 
+		// Usart 3 - RS485
+		{AVR32_USART3_RXD_0_0_PIN, AVR32_USART3_RXD_0_0_FUNCTION},
+		{AVR32_USART3_TXD_0_0_PIN, AVR32_USART3_TXD_0_0_FUNCTION},
+		{AVR32_USART3_RTS_0_1_PIN, AVR32_USART3_RTS_0_1_FUNCTION},
+
 		// Voltage monitor pins
 		{AVR32_ADC_AD_2_PIN, AVR32_ADC_AD_2_FUNCTION},
 		{AVR32_ADC_AD_3_PIN, AVR32_ADC_AD_3_FUNCTION}
@@ -375,10 +460,10 @@ void avr32_chip_select_init(unsigned long hsb_hz)
   unsigned long int hsb_mhz_up = (hsb_hz + 999999) / 1000000;
 
   // Setup all 4 chip selects
-  SMC_CS_SETUP(0) // LCD
-  SMC_CS_SETUP(1) // External RAM
-  SMC_CS_SETUP(2) // Network/LAN
-  SMC_CS_SETUP(3) // Network/LAN Manager
+  SMC_CS_SETUP(0)			// LCD
+  SMC_CS_SETUP(1)			// External RAM
+  SMC_CS_SETUP_SPECIAL(2)	// Network/LAN
+  SMC_CS_SETUP(3)			// Network/LAN Memory
 
   // Put the multiplexed MCU pins used for the SM under control of the SMC.
   avr32_enable_muxed_pins();
@@ -415,6 +500,12 @@ void _init_startup(void)
     pm_cksel(&AVR32_PM, 0, 0, 0, 0, 0, 0);
     flashc_set_wait_state(1);
     pm_switch_to_clock(&AVR32_PM, AVR32_PM_MCSEL_PLL0);
+
+#if 1 // Test
+    gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
+    gpio_clr_gpio_pin(AVR32_EBI_NWE1_0_PIN);
+    gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
+#endif
 
 	// Chip Select Initialization
 	avr32_chip_select_init(FOSC0);
@@ -705,15 +796,6 @@ void InitSystemHardware_NS8100(void)
 	gpio_set_gpio_pin(AVR32_PIN_PB18);
 
 	//-------------------------------------------------------------------------
-	// Set LAN to Sleep
-    gpio_clr_gpio_pin(AVR32_PIN_PB27);
-	
-	//-------------------------------------------------------------------------
-	// Set LAN and LAN Mem CS High
-	gpio_set_gpio_pin(AVR32_EBI_NCS_2_PIN);
-	gpio_set_gpio_pin(AVR32_EBI_NCS_3_PIN);	
-
-	//-------------------------------------------------------------------------
     // Turn on rs232 driver and receiver on NS8100 board ?
     gpio_clr_gpio_pin(AVR32_PIN_PB08);
     gpio_clr_gpio_pin(AVR32_PIN_PB09);
@@ -733,6 +815,44 @@ void InitSystemHardware_NS8100(void)
 
 	// Init signals for ready to send and terminal ready
 	SET_RTS; SET_DTR;
+
+	// Options for debug USART.
+	usart_options_t usart_3_rs485_usart_options =
+	{
+		.baudrate = 38400,
+		.charlength = 8,
+		.paritytype = USART_NO_PARITY,
+		.stopbits = USART_1_STOPBIT,
+		.channelmode = USART_NORMAL_CHMODE
+	};
+
+	// Initialize it in RS485 mode.
+	usart_init_rs485(&AVR32_USART3, &usart_3_rs485_usart_options, FOSC0);
+
+#if 1 // Normal
+extern void Sleep8900(void);
+extern void ReadId8900(void);
+extern void ToggleLedOn8900(void);
+extern void ToggleLedOff8900(void);
+	//-------------------------------------------------------------------------
+	// Set LAN to Sleep
+    gpio_clr_gpio_pin(AVR32_PIN_PB27);
+	soft_usecWait(10 * SOFT_MSECS);
+	
+	//-------------------------------------------------------------------------
+	// Set LAN and LAN Mem CS High (Don't need anymore)
+	//gpio_set_gpio_pin(AVR32_EBI_NCS_2_PIN);
+	//gpio_set_gpio_pin(AVR32_EBI_NCS_3_PIN);	
+	
+	//ReadId8900();
+	//ToggleLedOn8900();
+	//soft_usecWait(1 * SOFT_SECS);
+	Sleep8900();
+	//ToggleLedOn8900();
+	//soft_usecWait(1 * SOFT_SECS);
+	//ToggleLedOff8900();
+	soft_usecWait(10 * SOFT_SECS);
+#endif
 
 	//-------------------------------------------------------------------------
 	// Init the SPI interfaces
@@ -836,11 +956,37 @@ void InitSystemHardware_NS8100(void)
 	}
 
 	// Turn on the red keypad LED while loading
+#if 0 // Normal
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
+#endif
 
 	//-------------------------------------------------------------------------
 	//Display_Craft_Logo();
 	//soft_usecWait(3 * SOFT_SECS);
+	
+#if 1 // Test
+	//debug("Closing up shop.\n\n");
+
+    gpio_set_gpio_pin(AVR32_PIN_PB08);
+    gpio_set_gpio_pin(AVR32_PIN_PB09);
+	
+    // SDATA and ADATA low
+	gpio_clr_gpio_pin(AVR32_PIN_PB02);
+    gpio_clr_gpio_pin(AVR32_PIN_PB03);
+
+	//displayTimerCallBack();
+	setLcdBacklightState(BACKLIGHT_OFF);
+	//lcdPwTimerCallBack();
+	powerControl(LCD_CONTRAST_ENABLE, OFF);
+	clearLcdDisplay();
+	clearControlLinesLcdDisplay();
+	powerControl(LCD_POWER_ENABLE, OFF);
+
+	//SLEEP(AVR32_PM_SMODE_IDLE);
+	SLEEP(AVR32_PM_SMODE_STOP);
+	
+	while (1) {}
+#endif	
 }
 
 //=================================================================================================
@@ -1007,19 +1153,43 @@ void InitSoftwareSettings_NS8100(void)
 }
 
 //=================================================================================================
-//	Function:	Main
-//	Purpose:	Application starting point
+//	Function:	testSnippetsExecLoop
 //=================================================================================================
-int main(void)
+void testSnippetsBeforeInit(void)
 {
-    InitSystemHardware_NS8100();
-	InitInterrupts_NS8100();
-	InitSoftwareSettings_NS8100();
-	BootLoadManager();
+#if 0 // Test
+    gpio_clr_gpio_pin(AVR32_PIN_PB08);
+    gpio_clr_gpio_pin(AVR32_PIN_PB09);
 
-	//debug("Unit Type: %s\n", "NS8100 Minigraph");
-	debug("--- System Init complete ---\n");
+    // Setup debug serial port
+	usart_options_t usart_1_rs232_options =
+	{
+		.baudrate = 115200,
+		.charlength = 8,
+		.paritytype = USART_NO_PARITY,
+		.stopbits = USART_1_STOPBIT,
+		.channelmode = USART_NORMAL_CHMODE
+	};
 
+	// Initialize it in RS232 mode.
+	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
+
+	// Init signals for ready to send and terminal ready
+	SET_RTS; SET_DTR;
+
+	debug("--- System Deep Stop ---\n");
+
+	SLEEP(AVR32_PM_SMODE_DEEP_STOP);
+
+	while (1) {;}
+#endif
+}
+
+//=================================================================================================
+//	Function:	testSnippetsAfterInit
+//=================================================================================================
+void testSnippetsAfterInit(void)
+{
 #if 0 // Craft Test
 	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;
 	Menu_Functions = (unsigned long *)Main_Menu_Functions;
@@ -1047,6 +1217,159 @@ int main(void)
 		spi_unselectChip(&AVR32_SPI1, 2);
 		soft_usecWait(5 * SOFT_SECS);
 	}		
+#endif
+
+#if 0 // Test (SDMMC Reset to enable standby power)
+	uint8 r1;
+	uint32 retry = 0;
+	uint32 timedAccess = 0;
+	FL_FILE* monitorLogFile;
+	MONITOR_LOG_ENTRY_STRUCT monitorLogEntry;
+	int32 bytesRead = 0;
+
+	while (1)
+	{
+		//---Idle low power-------------------------------------------------------------------
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		retry = 0;
+		do
+		{
+			r1 = sd_mmc_spi_send_command(MMC_GO_IDLE_STATE, 0);
+			spi_write(SD_MMC_SPI,0xFF);
+			retry++;
+		}
+		while(r1 != 0x01);
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		debug("SDMMC Cycles to enter idle state: %d\n", retry);
+	
+		soft_usecWait(5 * SOFT_SECS);
+		//----------------------------------------------------------------------
+		
+		//---Init and idle-------------------------------------------------------------------
+		debug("SDMMC Init and idle...\n", retry);
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		sd_mmc_spi_internal_init();
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+
+		soft_usecWait(5 * SOFT_SECS);
+		//----------------------------------------------------------------------
+		
+		//---Idle low power-------------------------------------------------------------------
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		retry = 0;
+		do
+		{
+			r1 = sd_mmc_spi_send_command(MMC_GO_IDLE_STATE, 0);
+			spi_write(SD_MMC_SPI,0xFF);
+			retry++;
+		}
+		while(r1 != 0x01);
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		debug("SDMMC Cycles to enter idle state: %d\n", retry);
+
+		soft_usecWait(5 * SOFT_SECS);
+		//----------------------------------------------------------------------
+
+		//---Init and FAT32 Cycle-------------------------------------------------------------------
+		debug("SDMMC Init and FAT32 Init cycle...\n", retry);
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		sd_mmc_spi_internal_init();
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+
+		timedAccess = g_rtcSoftTimerTickCount;
+		
+		while (g_rtcSoftTimerTickCount < (timedAccess + 10))
+		{
+			FAT32_InitDrive();
+			if (FAT32_InitFAT() == FALSE)
+			{
+				debugErr("FAT32 Initialization failed!\n\r");
+			}
+		}
+		//----------------------------------------------------------------------
+
+		//---Idle low power-------------------------------------------------------------------
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		retry = 0;
+		do
+		{
+			r1 = sd_mmc_spi_send_command(MMC_GO_IDLE_STATE, 0);
+			spi_write(SD_MMC_SPI,0xFF);
+			retry++;
+		}
+		while(r1 != 0x01);
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		debug("SDMMC Cycles to enter idle state: %d\n", retry);
+
+		soft_usecWait(5 * SOFT_SECS);
+		//----------------------------------------------------------------------
+
+		//---Init and Read cycle-------------------------------------------------------------------
+		debug("SDMMC Init and Read cycle...\n", retry);
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		sd_mmc_spi_internal_init();
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+
+		FAT32_InitDrive();
+		if (FAT32_InitFAT() == FALSE)
+		{
+			debugErr("FAT32 Initialization failed!\n\r");
+		}
+
+		timedAccess = g_rtcSoftTimerTickCount;
+		
+		while (g_rtcSoftTimerTickCount < (timedAccess + 10))
+		{
+			monitorLogFile = fl_fopen("C:\\Logs\\TestLogRead.ns8", "r");
+			if (monitorLogFile == NULL) { debugErr("Test Read file not found!\n"); }
+			bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+			while (bytesRead > 0) { bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT)); }
+			fl_fclose(monitorLogFile);
+		}		
+		//----------------------------------------------------------------------
+
+		//---Idle low power-------------------------------------------------------------------
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		retry = 0;
+		do
+		{
+			r1 = sd_mmc_spi_send_command(MMC_GO_IDLE_STATE, 0);
+			spi_write(SD_MMC_SPI,0xFF);
+			retry++;
+		}
+		while(r1 != 0x01);
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		debug("SDMMC Cycles to enter idle state: %d\n", retry);
+
+		soft_usecWait(5 * SOFT_SECS);
+		//----------------------------------------------------------------------
+
+		//---Init and Write cycle-------------------------------------------------------------------
+		debug("SDMMC Init and Write cycle...\n", retry);
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		sd_mmc_spi_internal_init();
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+
+		FAT32_InitDrive();
+		if (FAT32_InitFAT() == FALSE)
+		{
+			debugErr("FAT32 Initialization failed!\n\r");
+		}
+
+		timedAccess = g_rtcSoftTimerTickCount;
+		
+		while (g_rtcSoftTimerTickCount < (timedAccess + 10))
+		{
+			monitorLogFile = fl_fopen("C:\\Logs\\TestLogWrite.ns8", "a+");
+			if (monitorLogFile == NULL) { debugErr("Test Write file not opened!\n"); }
+			for (retry = 0; retry < 250; retry++)
+			{
+				fl_fwrite((uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT), 1, monitorLogFile);
+			}
+			fl_fclose(monitorLogFile);
+		}
+		//----------------------------------------------------------------------
+		}
 #endif
 
 #if 0 // Test (Ineffective CS Low for SDMMC)
@@ -1121,13 +1444,25 @@ unsigned int i;
 	}
 #endif
 
- 	// ==============
-	// Executive loop
-	// ==============
-	while (1)
-	{
-		g_execCycles++;
+#if 0 // Test
+	debug("\n--- System Init Complete ---\n");
+	soft_usecWait(10 * SOFT_SECS);
+	displayTimerCallBack();
+	lcdPwTimerCallBack();
+	soft_usecWait(10 * SOFT_SECS);
+	debug("--- System Deep Stop ---\n");
 
+	SLEEP(AVR32_PM_SMODE_DEEP_STOP);
+
+	while (1) {;}
+#endif
+}
+
+//=================================================================================================
+//	Function:	testSnippetsExecLoop
+//=================================================================================================
+void testSnippetsExecLoop(void)
+{
 #if 0 // Test (Timer mode)
 		if (counter)
 		{
@@ -1175,13 +1510,41 @@ unsigned int i;
 		}
 #endif
 
+}
+
+//=================================================================================================
+//	Function:	Main
+//	Purpose:	Application starting point
+//=================================================================================================
+int main(void)
+{
+	// Test code
+	testSnippetsBeforeInit();
+
+    InitSystemHardware_NS8100();
+	//InitInterrupts_NS8100();
+	//InitSoftwareSettings_NS8100();
+	//BootLoadManager();
+
+	debug("--- System Init complete ---\n");
+
+	// Test code
+	testSnippetsAfterInit();
+
+ 	// ==============
+	// Executive loop
+	// ==============
+	while (1)
+	{
+		g_execCycles++;
+
 		// Debug Test routines
 		//craftTestMenuThruDebug();
 
-		//debugRaw("k");
-		//testKeypad();
+		// Test code
+		testSnippetsExecLoop();
 
-#if 1 // Normal operational cycle
+#if 0 // Normal operational cycle
 		// Handle system events
 	    SystemEventManager();
 
@@ -1200,16 +1563,12 @@ unsigned int i;
 		// Handle processing the factory setup
 		FactorySetupManager();
 #endif
-		// Check if no System Events and Lcd is off and Modem is not transfering
+		// Check if no System Events and Lcd is off and Modem is not transferring
 		if ((g_systemEventFlags.wrd == 0x0000) && (getPowerControlState(LCD_POWER_ENABLE) == OFF) &&
 			(g_modemStatus.xferState == NOP_CMD))
 		{
-			// Sleep
-#if 0 // ns7100
-			Wait();
-#else // ns8100
+			// Sleepy time
 			SLEEP(AVR32_PM_SMODE_IDLE);
-#endif
 		}
 	}    
 	// End of NS8100 Main
