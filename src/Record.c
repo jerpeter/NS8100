@@ -72,7 +72,7 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 	switch (type)
 	{
 		case REC_TRIGGER_USER_MENU_TYPE:
-			debug("Programing Trigger Record...\n");
+			debug("Programming Trigger Record...\n");
 			((REC_EVENT_MN_STRUCT *)src_ptr)->time_stamp = getCurrentTime();
 
 			//rec_size = sizeof(REC_EVENT_MN_STRUCT)/2;
@@ -85,7 +85,7 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_HELP_USER_MENU_TYPE:
-			debug("Programing Help Record...\n");
+			debug("Programming Help Record...\n");
 
 			((REC_HELP_MN_STRUCT *)src_ptr)->encode_ln = 0xA5A5;
 
@@ -99,7 +99,7 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_MODEM_SETUP_TYPE:
-			debug("Programing Modem Setup Configuration...\n");
+			debug("Programming Modem Setup Configuration...\n");
 
 			((MODEM_SETUP_STRUCT *)src_ptr)->invalid = 0x0000;
 
@@ -115,7 +115,7 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_FACTORY_SETUP_TYPE:
-			debug("Programing Factory Setup Configuration...\n");
+			debug("Programming Factory Setup Configuration...\n");
 
 			((FACTORY_SETUP_STRUCT *)src_ptr)->invalid = 0x0000;
 
@@ -130,7 +130,7 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_CURRENT_EVENT_NUM_TYPE:
-			debug("Programing Current Event Number Configuration...\n");
+			debug("Programming Current Event Number Configuration...\n");
 
 			((CURRENT_EVENT_NUMBER_STRUCT*)src_ptr)->invalid = 0x0000;
 
@@ -691,7 +691,7 @@ void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 			
 		while(writeLength--)
 		{
-			debugRaw("%02x ", *dataSrc);
+			//debugRaw("%02x ", *dataSrc);
 
 			tempData = *dataSrc++;
 			spi_write(EEPROM_SPI, tempData);

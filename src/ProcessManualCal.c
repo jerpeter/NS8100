@@ -33,6 +33,7 @@
 #include "ProcessBargraph.h"
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
+#include "FAT32_FileLib.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -95,6 +96,10 @@ extern uint16* gp_bg430DataStart;
 extern uint16* gp_bg430DataWrite;
 extern uint16* gp_bg430DataRead;
 extern uint16* gp_bg430DataEnd;
+
+// ns8100
+extern FL_FILE* gCurrentEventFileHandle;
+extern uint16 g_currentEventNumber;
 
 ///----------------------------------------------------------------------------
 ///	Globals
@@ -207,9 +212,20 @@ void MoveManuelCalToFlash(void)
 			debugErr("Out of Flash Summary Entrys\n");
 		}
 
-#if 0 // fix_ns8100
+#if 0 // ns7100
 		// Set our flash event data pointer to the start of the flash event
 		advFlashDataPtrToEventData(flashSumEntry);
+#endif
+
+#if 1 // ns8100
+		// Get new file handle
+		gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+				
+		if (gCurrentEventFileHandle == NULL)
+			debugErr("Failed to get a new file handle for the current Waveform event!\n");
+
+		// Seek to beginning of where data will be stored in event
+		fl_fseek(gCurrentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
 #endif
 
 		sumEntry = &summaryTable[gCurrentEventBuffer];
@@ -284,7 +300,12 @@ void MoveManuelCalToFlash(void)
 			}
 
 			// Store entire sample
+#if 0 // ns7100
 			storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+#else // ns8100
+			fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
+#endif
+			
 			gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 		}
 

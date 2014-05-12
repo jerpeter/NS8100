@@ -80,6 +80,8 @@ extern uint8 print_millibars;
 ///	Globals
 ///----------------------------------------------------------------------------
 uint8 enterMonitorModeAfterMidnightCal = NO;
+// fix_ns8100 - Prefer to be a unit8, may cause a bounds issue
+uint32 updateResultsEventRecord = NO;
 uint16 monitorSessionFirstEvent = 0;
 uint16 monitorSessionLastEvent = 0;
 
@@ -138,6 +140,8 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 		mn_layout_ptr->top_ln =		RESULTS_MN_TBL_START_LINE;
 
 		results_summtable_ptr = gLastCompDataSum;
+		updateResultsEventRecord = YES;
+		
 		monitorSessionFirstEvent = getStartingEventNumberForCurrentMonitorLog();
 		monitorSessionLastEvent = getUniqueEventNumber(results_summtable_ptr);
 
@@ -316,6 +320,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 							if(getUniqueEventNumber(results_summtable_ptr) < monitorSessionLastEvent)
 							{
 								results_summtable_ptr++;
+								updateResultsEventRecord = YES;
 
 								if(results_summtable_ptr > &__ramFlashSummaryTbl[LAST_RAM_SUMMARY_INDEX])
 								{
@@ -328,6 +333,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 							if(getUniqueEventNumber(results_summtable_ptr) > monitorSessionFirstEvent)
 							{
 								results_summtable_ptr--;
+								updateResultsEventRecord = YES;
 
 								if(results_summtable_ptr < &__ramFlashSummaryTbl[0])
 								{
@@ -381,8 +387,21 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	char buff[50];
 	char displayFormat[10];
 	DATE_TIME_STRUCT time;
-	EVT_RECORD* eventRecord = (EVT_RECORD *)results_summtable_ptr->linkPtr;
 	uint8 calResults = PASSED;
+
+#if 0 // ns7100
+	EVT_RECORD* eventRecord = (EVT_RECORD *)results_summtable_ptr->linkPtr;
+#else // ns8100
+	static EVT_RECORD resultsEventRecord;
+	EVT_RECORD* eventRecord = &resultsEventRecord;
+	
+	if ((updateResultsEventRecord == YES) || (g_bargraphForcedCal == YES))
+	{
+		debug("Results menu: updating event record cache\n");
+		getEventFileInfo((uint16)((uint32)(results_summtable_ptr->linkPtr)), &(resultsEventRecord.header), &resultsEventRecord.summary);
+		updateResultsEventRecord = NO;
+	}
+#endif
 
 	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
 

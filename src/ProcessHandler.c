@@ -614,13 +614,13 @@ void bargraphForcedCalibration(void)
 	// after the calibration finishes to prevent a lockup when bargraph references globals that are not inited yet
 	trig_rec.op_mode = WAVEFORM_MODE;
 
-#if 0 // fix_ns8100
+#if 0 // ns7100
 	// Set flag to Sampling, we are about to begin to sample.
 	g_sampleProcessing = SAMPLING_STATE;
 
 	// Send message to 430
 	//ISPI_SendMsg(MANUAL_CAL_PULSE_CMD);
-#else
+#else // ns8100
 	startDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
 #endif
 
@@ -639,11 +639,15 @@ void bargraphForcedCalibration(void)
 	{
 		clearMenuEventFlag(RESULTS_MENU_EVENT);
 
+#if 0 // fix_ns8100
 		active_menu = RESULTS_MENU;
 
 		RESULTS_MENU_MANUEL_CAL_MSG();
 
 		(*menufunc_ptrs[active_menu]) (mn_msg);
+#else
+		UNUSED(mn_msg);
+#endif
 	}
 
 	// Wait until after the Cal Pulse has completed, 250ms to be safe (just less than 100 ms to complete)

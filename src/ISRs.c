@@ -1105,7 +1105,7 @@ void tc_irq(void)
 					*(tailOfPreTrigBuff + 2) |= TRIG_ONE;
 					*(tailOfPreTrigBuff + 3) |= TRIG_ONE;
 
-					debug("--> Trigger Found! %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
+					//debug("--> Trigger Found! %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
 					
 					recording = YES;
 					sampleCount = trig_rec.trec.record_time * trig_rec.trec.sample_rate;

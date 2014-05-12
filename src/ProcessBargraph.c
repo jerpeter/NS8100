@@ -26,6 +26,7 @@
 #include "ProcessBargraph.h"
 #include "Flash.h"
 #include "EventProcessing.h"
+#include "FAT32_FileLib.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -54,6 +55,10 @@ extern uint16* gp_bg430DataStart;
 extern uint16* gp_bg430DataWrite;
 extern uint16* gp_bg430DataRead;
 extern uint16* gp_bg430DataEnd;
+
+// ns8100
+extern FL_FILE* gCurrentEventFileHandle;
+extern uint16 g_currentEventNumber;
 
 ///----------------------------------------------------------------------------
 ///	Globals
@@ -119,13 +124,13 @@ void StartNewBargraph(void)
 {
 	gBargraphSummaryPtr = NULL;
 
-#if 0 // fix_ns8100
 	// Get the address of an empty Ram summary
 	if (GetFlashSumEntry(&gBargraphSummaryPtr) == FALSE)
 	{
 		debug("Out of Flash Summary Entrys\n");
 		return;
 	}
+#if 0 // ns7100
 	else
 	{
 		// Setup location of the event data in flash. True for bargraph and waveform.
@@ -166,10 +171,8 @@ void StartNewBargraph(void)
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
 	byteSet(g_bargraphSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
 
-#if 0 // fix_ns8100
 	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
 	MoveStartOfBargraphEventRecordToFlash();
-#endif
 
 	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
 	// Save the captured event after the the preliminary ram event record.
@@ -1020,7 +1023,12 @@ void MoveBargraphEventDataToFlash(void)
 	while (g_bargraphEventDataReadPtr != g_bargraphEventDataWritePtr)
 	{
 		// Write in data (alternates between Air and RVT max normalized values) for a bar interval
+#if 0 // ns7100
 		storeData(g_bargraphEventDataReadPtr, 1);
+#else // ns8100
+		fl_fwrite(g_bargraphEventDataReadPtr, 1, 2, gCurrentEventFileHandle);
+#endif
+
 		g_bargraphEventDataReadPtr += 1;
 
 		// Check to see if the read ptr has gone past the end, if it has start at the top again.
@@ -1037,11 +1045,6 @@ void MoveBargraphEventDataToFlash(void)
 //*****************************************************************************
 void MoveStartOfBargraphEventRecordToFlash(void)
 {
-	uint32 moveSizeInWords;
-	uint16* destPtr;
-	uint16* srcPtr;
-	EVT_RECORD* flashEventRecord;
-
 	// Check if we have a valid flash ptr.
 	if (gBargraphSummaryPtr == 0)
 	{	// If failed the ptr will be 0.
@@ -1049,6 +1052,12 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 	}
 	else
 	{
+#if 0 // ns7100
+	uint32 moveSizeInWords;
+	uint16* destPtr;
+	uint16* srcPtr;
+	EVT_RECORD* flashEventRecord;
+
 		flashEventRecord = (EVT_RECORD *)(gBargraphSummaryPtr->linkPtr);
 
 		moveSizeInWords = (sizeof(EVT_RECORD))/2;
@@ -1057,6 +1066,21 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 		flashWrite(destPtr, srcPtr, moveSizeInWords);
 
 		byteSet((uint8*)&(g_RamEventRecord.summary.calculated), 0, sizeof(CALCULATED_DATA_STRUCT));
+
+#else // ns8100
+		// Get new file handle
+		gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+				
+		if (gCurrentEventFileHandle == NULL)
+			debugErr("Failed to get a new file handle for the current Bargraph event!\n");
+
+		// Make sure at the beginning of the file
+		fl_fseek(gCurrentEventFileHandle, 0, SEEK_SET);
+		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
+		
+		// Move to the start of the data section
+		fl_fseek(gCurrentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
+#endif
 	}
 
 }
@@ -1075,14 +1099,15 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 	// SUMMARY_DATA* gBargraphSummaryPtr;
 	// EVENT_REC* flashEventRecord = (EVENT_REC *)gBargraphSummaryPtr->linkPtr;
 
+#if 0 // ns7100
 	//uint16 checksumDex = 0;
 	uint32 moveSizeInWords;
-
 	EVT_RECORD* flashEventRecord = (EVT_RECORD*)gBargraphSummaryPtr->linkPtr;
 	uint16* eventDataPtr;
 	uint16* destPtr;
 	uint16* srcPtr;
 	uint16* flashPtr = getFlashDataPointer();
+#endif
 
 	// Check if we have a valid flash ptr.
 	if (gBargraphSummaryPtr == 0)
@@ -1091,6 +1116,7 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 	}
 	else
 	{
+#if 0 // ns7100
 		// Set our flash event data pointer to the start of the flash event
 	    eventDataPtr = (uint16*)((uint8*)flashEventRecord + sizeof(EVT_RECORD));
 
@@ -1105,6 +1131,7 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 			g_RamEventRecord.header.dataLength = (uint32)((FLASH_EVENT_END - (uint32)eventDataPtr) +
 				((uint32)flashPtr - FLASH_EVENT_START));
 		}
+#endif
 
 /*
 		// Is the checksum done in words or bytes, do we do a crc?
@@ -1124,6 +1151,7 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 		g_RamEventRecord.header.dataChecksum = 0xCCDD;
 		g_RamEventRecord.header.dataCompression = 0;
 
+#if 0 // ns7100
 		// We dont worry about the end of the falsh buffer because when the new flash event record is setup,
 		// a check is made so the event record is one contiguous structure, not including the event data.
 		// Not sure if flashwrite will mod the ptrs, so setup dest and src ptrs. We are copying over the
@@ -1132,9 +1160,11 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 		destPtr = (uint16*)(&(flashEventRecord->header.dataLength));
 		srcPtr = (uint16*)(&(g_RamEventRecord.header.dataLength));
 		flashWrite(destPtr, srcPtr, moveSizeInWords);
+#endif
 
 		g_RamEventRecord.summary.captured.endTime = getCurrentTime();
 
+#if 0 // ns7100
 		// Setup ptrs so we are at the beginning of the CAPTURE_INFO_STRUCT. Copy over only the
 		// CAPTURE_INFO_STRUCT and CALCULATED_DATA_STRUCT. Get the size of the data to copy.
 		moveSizeInWords = sizeof(CAPTURE_INFO_STRUCT)/2;
@@ -1148,6 +1178,17 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 		destPtr = (uint16*)(&(flashEventRecord->summary.calculated));
 		srcPtr = (uint16*)(&(g_RamEventRecord.summary.calculated));
 		flashWrite(destPtr, srcPtr, moveSizeInWords);
+#endif
+
+#if 1 // ns8100
+		// Make sure at the beginning of the file
+		fl_fseek(gCurrentEventFileHandle, 0, SEEK_SET);
+		// Rewrite the event record
+		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
+
+		debug("Bargraph event file closed\n");
+		fl_fclose(gCurrentEventFileHandle);
+#endif
 	}
 
 	// Store and increment the event number even if we do not save the event header information.

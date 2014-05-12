@@ -91,6 +91,10 @@ extern uint16* gp_bg430DataWrite;
 extern uint16* gp_bg430DataRead;
 extern uint16* gp_bg430DataEnd;
 
+// ns8100
+extern FL_FILE* gCurrentEventFileHandle;
+extern uint16 g_currentEventNumber;
+
 ///----------------------------------------------------------------------------
 ///	Globals
 ///----------------------------------------------------------------------------
@@ -120,7 +124,7 @@ void ProcessWaveformData(void)
 				case TRIG_THREE:
 				case TRIG_TWO:
 				case TRIG_ONE:
-					debugRaw("\nEvtBeg\n");
+					//debugRaw("\nEvtBeg\n");
 					
 					// Check if the command is a trigger two, which is the 1st warning event
 					if (commandNibble == TRIG_TWO)
@@ -400,7 +404,7 @@ void ProcessWaveformData(void)
 		// Check if all the event data from the PreTrigger buffer has been moved into the event buffer
 		if (isTriggered == 0)
 		{
-			debugRaw("\nEvtEnd\n");
+			//debugRaw("\nEvtEnd\n");
 			
 			gFreeEventBuffers--;
 			gCurrentEventNumber++;
@@ -475,10 +479,12 @@ void MoveWaveformEventToFlash(void)
 #endif
 
 #if 1 // ns8100
-extern FL_FILE* gCurrentEventFileHandle;
 				// Get new file handle
-				gCurrentEventFileHandle = getNewEventFileHandle(gCurrentEventNumber);
+				gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
 				
+				if (gCurrentEventFileHandle == NULL)
+					debugErr("Failed to get a new file handle for the current Waveform event!\n");
+
 				// Seek to beginning of where data will be stored in event
 				fl_fseek(gCurrentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
 #endif

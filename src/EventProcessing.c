@@ -48,6 +48,9 @@ extern char appVersion[];
 extern AUTODIALOUT_STRUCT __autoDialoutTbl;
 extern uint16 eventDataBuffer[];
 
+// ns8100
+extern FL_FILE* gCurrentEventFileHandle;
+
 ///----------------------------------------------------------------------------
 ///	Globals
 ///----------------------------------------------------------------------------
@@ -928,15 +931,15 @@ BOOLEAN validEventFile(uint16 eventNumber)
 // FUNCTION
 //  void getNewEventFileHandle(uint16 eventNumer)
 //*****************************************************************************
-FL_FILE* getNewEventFileHandle(uint16 eventNumber)
+FL_FILE* getNewEventFileHandle(uint16 newFileEventNumber)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
-	FL_FILE* eventFile;
 	
-	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
-	eventFile = fl_fopen(fileName, "w");
+	sprintf(fileName, "C:\\Events\\Evt%d.ns8", newFileEventNumber);
 
-	return(eventFile);
+	debug("File to open: %s\n", fileName);
+
+	return(fl_fopen(fileName, "w"));
 }
 
 //*****************************************************************************
@@ -1007,7 +1010,7 @@ uint16 GetFlashSumEntry(SUMMARY_DATA** sumEntryPtr)
 		__ramFlashSummaryTbl[currFlashSummary].linkPtr = (uint16*)sFlashDataPtr;
 
 		// Set the current summary pointer to the current ram summary
-		*sumEntryPtr = &__ramFlashSummaryTbl[currFlashSummary];
+		*sumEntryPtr = &(__ramFlashSummaryTbl[currFlashSummary]);
 
 		debug("Ram Summary Table Entry %d: Event pointer: 0x%x\n", currFlashSummary, sFlashDataPtr);
 #endif
@@ -1122,14 +1125,11 @@ void FillInFlashSummarys(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
 
 #if 0 // ns7100
 	flashWrite((uint16*)flashEventRecord, (uint16*)&(g_RamEventRecord), eventDataSize);
-#endif
-
-
-#if 1 // ns8100
-extern FL_FILE* gCurrentEventFileHandle;
+#else // ns8100
 	fl_fseek(gCurrentEventFileHandle, 0, SEEK_SET);
 	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
 	fl_fclose(gCurrentEventFileHandle);
+	debug("Event file closed\n");
 #endif
 
 	updateMonitorLogEntry();

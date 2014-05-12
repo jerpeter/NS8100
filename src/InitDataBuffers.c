@@ -68,6 +68,7 @@ uint16* endOfPreTrigBuff;
 uint16 gMaxEventBuffers;
 uint16 gCurrentEventNumber;
 FL_FILE* gCurrentEventFileHandle;
+FL_FILE* gComboDualCurrentEventFileHandle;
 uint16 gFreeEventBuffers;
 uint16 gCalTestExpected;
 uint32 gSamplesInBody;
