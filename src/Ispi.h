@@ -111,7 +111,6 @@ void ISPI_BaudRate(uint8 baud_);
 void ISPI_SlaveSelectOutputMode(SLAVE_SELECT_OUTPUT_MODE_E mode_);
 void ISPI_ClearIRQ_Flag(void);
 void ISPI_SetISPI_State(ISPI_STATE_E state_);
-#define ISPI_GetISPI_State() _ISPI_State
     
 /*******************************************************************************
 *  Prototypes

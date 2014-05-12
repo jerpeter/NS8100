@@ -17,7 +17,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include "Mmc2114.h"
 #include "Common.h"
 #include "Uart.h"
 #include "Display.h"
@@ -39,46 +38,16 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern int32 active_menu;
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern REC_HELP_MN_STRUCT help_rec;
-extern char applicationVersion[];
-extern char applicationDate[];
-extern uint8 contrast_value;
-extern uint32 isTriggered;
-extern uint32 processingCal;
-extern uint16 gCalTestExpected;
-extern uint8 g_doneTakingEvents;
-extern uint8 g_sampleProcessing;
-extern REC_EVENT_MN_STRUCT trig_rec;
+#include "Globals.h"
+extern const char applicationVersion[];
+extern const char applicationDate[];
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-INPUT_MSG_STRUCT input_buffer[INPUT_BUFFER_SIZE];
-INPUT_MSG_STRUCT *wrt_ptr = &(input_buffer[0]);
-INPUT_MSG_STRUCT *rd_ptr = &(input_buffer[0]);
-char appVersion[15];
-char appDate[15];
-char appTime[15];
-void (*bootloader)(void) = NULL;
-
-MONTH_TABLE_STRUCT monthTable[] =  {
-	{0, "\0\0\0\0", 0},
-	{JAN, "JAN\0", 31},
-	{FEB, "FEB\0", 28},
-	{MAR, "MAR\0", 31},
-	{APR, "APR\0", 30},
-	{MAY, "MAY\0", 31},
-	{JUN, "JUN\0", 30},
-	{JUL, "JUL\0", 31},
-	{AUG, "AUG\0", 31},
-	{SEP, "SEP\0", 30},
-	{OCT, "OCT\0", 31},
-	{NOV, "NOV\0", 30},
-	{DEC, "DEC\0", 31}
-};
+static INPUT_MSG_STRUCT* s_inputWritePtr = &(g_input_buffer[0]);
+static INPUT_MSG_STRUCT* s_inputReadPtr = &(g_input_buffer[0]);
+static void (*s_bootloader)(void) = NULL;
 
 ///----------------------------------------------------------------------------
 ///	Function:	convertedBatteryLevel
@@ -185,26 +154,26 @@ uint16 ckInputMsg(INPUT_MSG_STRUCT *msg_ptr)
    put into the input buffer queue. */
 
 
-    if (rd_ptr != wrt_ptr)
+    if (s_inputReadPtr != s_inputWritePtr)
     {
 
-        msg_ptr->cmd = rd_ptr->cmd;
-        msg_ptr->length = rd_ptr->length;
+        msg_ptr->cmd = s_inputReadPtr->cmd;
+        msg_ptr->length = s_inputReadPtr->length;
 
         for (data_index = 0; data_index < msg_ptr->length; data_index++)
         {
 
-           msg_ptr->data[data_index] = rd_ptr->data[data_index];
+           msg_ptr->data[data_index] = s_inputReadPtr->data[data_index];
 
         }
 
-        if (rd_ptr == (input_buffer + (INPUT_BUFFER_SIZE - 1)))
+        if (s_inputReadPtr == (g_input_buffer + (INPUT_BUFFER_SIZE - 1)))
         {
-            rd_ptr = input_buffer;
+            s_inputReadPtr = g_input_buffer;
         }
         else
         {
-            rd_ptr++;
+            s_inputReadPtr++;
         }
 
         return (INPUT_BUFFER_NOT_EMPTY);
@@ -235,7 +204,7 @@ void procInputMsg(INPUT_MSG_STRUCT msg)
 		clearSystemEventFlag(UPDATE_MENU_EVENT);
 
 		// Recall the current active menu
-		(*menufunc_ptrs[active_menu])(msg);
+		(*menufunc_ptrs[g_activeMenu])(msg);
 
 		// Done processing, return
 		return;
@@ -259,7 +228,7 @@ void procInputMsg(INPUT_MSG_STRUCT msg)
 
 		case KEYPRESS_MENU_CMD:
 			debug("Handling Keypress Command\n");
-			(*menufunc_ptrs[active_menu])(msg);
+			(*menufunc_ptrs[g_activeMenu])(msg);
 			break;
 
 		case POWER_OFF_CMD:
@@ -276,18 +245,18 @@ uint16 sendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 {
     int32 data_index;
 
-    if (wrt_ptr != (input_buffer + (INPUT_BUFFER_SIZE - 1)))
+    if (s_inputWritePtr != (g_input_buffer + (INPUT_BUFFER_SIZE - 1)))
     {
-        if ((wrt_ptr + 1) != rd_ptr)
+        if ((s_inputWritePtr + 1) != s_inputReadPtr)
         {
-            wrt_ptr->cmd = msg_ptr->cmd;
-            wrt_ptr->length = msg_ptr->length;
+            s_inputWritePtr->cmd = msg_ptr->cmd;
+            s_inputWritePtr->length = msg_ptr->length;
             for (data_index = 0; data_index < msg_ptr->length; data_index++)
             {
-                wrt_ptr->data[data_index] = msg_ptr->data[data_index];
+                s_inputWritePtr->data[data_index] = msg_ptr->data[data_index];
             }
 
-            wrt_ptr++;
+            s_inputWritePtr++;
         }
         else
         {
@@ -296,17 +265,17 @@ uint16 sendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
     }
     else
     {
-        if (rd_ptr != input_buffer)
+        if (s_inputReadPtr != g_input_buffer)
         {
-            wrt_ptr->cmd = msg_ptr->cmd;
-            wrt_ptr->length = msg_ptr->length;
+            s_inputWritePtr->cmd = msg_ptr->cmd;
+            s_inputWritePtr->length = msg_ptr->length;
 
             for (data_index = 0; data_index < msg_ptr->length; data_index++)
             {
-                wrt_ptr->data[data_index] = msg_ptr->data[data_index];
+                s_inputWritePtr->data[data_index] = msg_ptr->data[data_index];
             }
 
-            wrt_ptr = input_buffer;
+            s_inputWritePtr = g_input_buffer;
         }
         else
         {
@@ -323,6 +292,7 @@ uint16 sendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 ///----------------------------------------------------------------------------
 void soft_usecWait(uint32 usecs)
 {
+#if 0 // ns7100
 	volatile uint32 i = 0;
 
 	// The system clock devided 16M is approx. a microsecond if running code within processor
@@ -330,6 +300,17 @@ void soft_usecWait(uint32 usecs)
 
 	// The system clock devided 6M is approx. a microsecond if running code outside processor with 2 wait states
 	//for (i = 0; i < (uint32)(usecs * (SYSCLK / 6000000)); i++) {}
+
+#else // ns8100
+
+	unsigned long int countdown = (usecs << 2) + usecs;
+	
+	for(; countdown > 0;)
+	{
+		countdown--;
+	}
+
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -479,9 +460,9 @@ uint16 isqrt(uint32 x)
 ///	Function:	startPitTimer
 ///	Purpose:
 ///----------------------------------------------------------------------------
+#if 0 // ns7100
 void startPitTimer(PIT_TIMER timer)
 {
-#if 0 // fix_ns8100
 	// Enable the specified PIT timer
 	if (timer == KEYPAD_TIMER)
 	{
@@ -491,16 +472,16 @@ void startPitTimer(PIT_TIMER timer)
 	{
 		reg_PCSR2.reg |= 0x0001;
 	}
-#endif
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function:	stopPitTimer
 ///	Purpose:
 ///----------------------------------------------------------------------------
+#if 0 // ns7100
 void stopPitTimer(PIT_TIMER timer)
 {
-#if 0 // fix_ns8100
 	// Disable the specified PIT timer
 	if (timer == KEYPAD_TIMER)
 	{
@@ -510,16 +491,16 @@ void stopPitTimer(PIT_TIMER timer)
 	{
 		reg_PCSR2.reg &= ~0x0001;
 	}
-#endif
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function:	checkPitTimer
 ///	Purpose:
 ///----------------------------------------------------------------------------
+#if 0 // ns7100
 BOOLEAN checkPitTimer(PIT_TIMER timer)
 {
-#if 0 // fix_ns8100
 	if (timer == KEYPAD_TIMER)
 	{
 		if (reg_PCSR1.reg & 0x0001)
@@ -534,18 +515,16 @@ BOOLEAN checkPitTimer(PIT_TIMER timer)
 		else
 			return (DISABLED);
 	}
-#else
-	return (DISABLED);
-#endif
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function:	configPitTimer
 ///	Purpose:
 ///----------------------------------------------------------------------------
+#if 0 // ns7100
 void configPitTimer(PIT_TIMER timer, uint16 clockDivider, uint16 modulus)
 {
-#if 0 // fix_ns8100
 	if (timer == KEYPAD_TIMER)
 	{
 		reg_PCSR1.bit.PRE = clockDivider;
@@ -556,8 +535,8 @@ void configPitTimer(PIT_TIMER timer, uint16 clockDivider, uint16 modulus)
 		reg_PCSR2.bit.PRE = clockDivider;
 		reg_PMR2 = modulus;
 	}
-#endif
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function:	initVersionStrings
@@ -569,35 +548,35 @@ void initVersionStrings(void)
 	char tempDate[15];
 	uint8 month = 0;
 
-	byteSet(&appVersion[0], 0, sizeof(appVersion));
-	byteSet(&appDate[0], 0, sizeof(appDate));
-	byteSet(&appTime[0], 0, sizeof(appTime));
+	byteSet(&g_appVersion[0], 0, sizeof(g_appVersion));
+	byteSet(&g_appDate[0], 0, sizeof(g_appDate));
+	byteSet(&g_appTime[0], 0, sizeof(g_appTime));
 	byteSet(&tempDate[0], 0, sizeof(tempDate));
 
 	// Scan the Date and Time into buffers
-	sscanf((char*)&applicationDate, "$Date: %s %s", (char*)&tempDate, (char*)&appTime);
+	sscanf((char*)&applicationDate, "$Date: %s %s", (char*)&tempDate, (char*)&g_appTime);
 
 	// Copy over version number string from the app version string starting at position 11
-	sprintf((char*)&appVersion, "%s", (char*)&(applicationVersion[11]));
+	sprintf((char*)&g_appVersion, "%s", (char*)&(applicationVersion[11]));
 
 	// Get the length of the version number string
-	length = (uint8)strlen(appVersion);
+	length = (uint8)strlen(g_appVersion);
 
 	// Set the null 2 characters from the end of the string to get rid of the " $"
-	appVersion[length-2] = '\0';
+	g_appVersion[length-2] = '\0';
 
 	// Copy over the Day
-	appDate[0] = tempDate[8];
-	appDate[1] = tempDate[9];
-	appDate[2] = ' ';
+	g_appDate[0] = tempDate[8];
+	g_appDate[1] = tempDate[9];
+	g_appDate[2] = ' ';
 
 	// Copy over the Month converted from the month number to the shortened month text
 	month = (uint8)(atoi((char*)&(tempDate[5])));
-	strcpy((char*)&(appDate[3]), (char*)monthTable[month].name);
-	appDate[6] = ' ';
+	strcpy((char*)&(g_appDate[3]), (char*)g_monthTable[month].name);
+	g_appDate[6] = ' ';
 
 	// Copy over the Year
-	strncpy((char*)&(appDate[7]), (char*)&(tempDate[0]), 4);
+	strncpy((char*)&(g_appDate[7]), (char*)&(tempDate[0]), 4);
 }
 
 ///----------------------------------------------------------------------------
@@ -607,9 +586,9 @@ void initVersionStrings(void)
 void initVersionMsg(void)
 {
 	debugRaw("\n\n");
-	debugRaw("  Software Version: %s\n", appVersion);
-	debugRaw("  Software Date:    %s\n", appDate);
-	debugRaw("  Software Time:    %s\n", appTime);
+	debugRaw("  Software Version: %s\n", g_appVersion);
+	debugRaw("  Software Date:    %s\n", g_appDate);
+	debugRaw("  Software Time:    %s\n", g_appTime);
 	debugRaw("\n");
 }
 
@@ -638,8 +617,8 @@ void buildLanguageLinkTable(uint8 languageSelection)
 
 		default:
 			languageTablePtr = englishLanguageTable;
-			help_rec.lang_mode = ENGLISH_LANG;
-			saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+			g_helpRecord.lang_mode = ENGLISH_LANG;
+			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 			break;
 	}
 
@@ -661,7 +640,7 @@ void buildLanguageLinkTable(uint8 languageSelection)
 ///----------------------------------------------------------------------------
 void getBootFunctionAddress(void)
 {
-	bootloader = NULL;
+	s_bootloader = NULL;
 }
 
 ///----------------------------------------------------------------------------
@@ -670,23 +649,23 @@ void getBootFunctionAddress(void)
 ///----------------------------------------------------------------------------
 void jumpToBootFunction(void)
 {
-	if (bootloader != NULL)
+	if (s_bootloader != NULL)
 	{
 		// Check if the unit is in monitor mode
 		if (g_sampleProcessing == SAMPLING_STATE)
 		{
 			// Check if auto monitor is disabled
-			if (help_rec.auto_monitor_mode == AUTO_NO_TIMEOUT)
+			if (g_helpRecord.auto_monitor_mode == AUTO_NO_TIMEOUT)
 			{
-				help_rec.auto_monitor_mode = AUTO_TWO_MIN_TIMEOUT;
+				g_helpRecord.auto_monitor_mode = AUTO_TWO_MIN_TIMEOUT;
 
-				saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+				saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 			}
 
 			// Turn printing off
-			help_rec.auto_print = NO;
+			g_helpRecord.auto_print = NO;
 
-			stopMonitoring(trig_rec.op_mode, FINISH_PROCESSING);
+			stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 		}
 
 		// Check if the LCD is currently powered
@@ -696,7 +675,7 @@ void jumpToBootFunction(void)
 			powerControl(LCD_POWER_ENABLE, ON);
 
 			// Set contrast
-			setLcdContrast(contrast_value);
+			setLcdContrast(g_contrast_value);
 
 			// Setup LCD segments and clear display buffer
 			initLcdDisplay();
@@ -709,11 +688,13 @@ void jumpToBootFunction(void)
 		soft_usecWait(1 * SOFT_SECS);
 
 		// Disable interrupts to prevent access to ISR's while in boot
-#if 0 // fix_ns8100
+#if 0 // ns7100
 		DisableInterrupts;
+#else // ns8100
+		Disable_global_interrupt();
 #endif
 		// Jump to the bootloader routine to update the app image
-		(*bootloader)();
+		(*s_bootloader)();
 	}
 }
 
@@ -755,7 +736,7 @@ void getDateString(char* buff, uint8 monthNum, uint8 bufSize)
 		}
 
 		byteSet(buff, 0, bufSize);
-		strcpy((char*)buff, (char*)monthTable[monthNum].name);
+		strcpy((char*)buff, (char*)g_monthTable[monthNum].name);
 	}
 }
 
@@ -767,7 +748,7 @@ uint8 getDaysPerMonth(uint8 month, uint16 year)
 {
 	uint8 daysInTheMonth = 0;
 
-	daysInTheMonth = (uint8)monthTable[month].days;
+	daysInTheMonth = (uint8)g_monthTable[month].days;
 
 	if (month == FEB)
 	{
@@ -848,7 +829,7 @@ void initTimeMsg(void)
 	DATE_TIME_STRUCT time = getRtcTime();
 #endif
 
-	debug("RTC: Current Date: %s %02d, %4d\n", monthTable[time.month].name,	time.day, (time.year + 2000));
+	debug("RTC: Current Date: %s %02d, %4d\n", g_monthTable[time.month].name,	time.day, (time.year + 2000));
 	debug("RTC: Current Time: %02d:%02d:%02d %s\n", ((time.hour > 12) ? (time.hour - 12) : time.hour),
 			time.min, time.sec, ((time.hour > 12) ? "PM" : "AM"));
 }

@@ -39,24 +39,15 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern SUMMARY_DATA __ramFlashSummaryTbl[TOTAL_RAM_SUMMARIES];
-extern int32 active_menu;
+#include "Globals.h"
 extern USER_MENU_STRUCT configMenu[];
-extern USER_MENU_STRUCT printOutMenu[];
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
-extern uint32 num_speed;
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-SUMMARY_DATA *flash_rd_summtable_ptr = &__ramFlashSummaryTbl[0];
-SUMMARY_DATA *results_summtable_ptr;
-uint8 print_out_mode;
-uint16 topMenuSummaryIndex = 0;
-uint16 currentSummaryIndex = 0;
-uint8 summaryListMenuActive = NO;
-uint8 summaryListArrowChar = BOTH_ARROWS_CHAR;
+static SUMMARY_DATA *s_flashReadSummaryTablePtr = &__ramFlashSummaryTbl[0];
+static uint16 s_topMenuSummaryIndex = 0;
+static uint16 s_currentSummaryIndex = 0;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -86,12 +77,12 @@ void summaryMn(INPUT_MSG_STRUCT msg)
 	//static MN_LAYOUT_STRUCT mn_layout;
 	//BOOL mode = 0;
 
-	summaryMnProc(msg, &wnd_layout, flash_rd_summtable_ptr);
+	summaryMnProc(msg, &wnd_layout, s_flashReadSummaryTablePtr);
 	
-	if (active_menu == SUMMARY_MENU)
+	if (g_activeMenu == SUMMARY_MENU)
 	{
-		dsplySummaryMn(&wnd_layout, flash_rd_summtable_ptr);
-		writeMapToLcd(mmap);
+		dsplySummaryMn(&wnd_layout, s_flashReadSummaryTablePtr);
+		writeMapToLcd(g_mmap);
 	}
 }
 
@@ -115,14 +106,14 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 		wnd_layout_ptr->start_row = SUMMARY_WND_STARTING_ROW;   /* 8 */
 		wnd_layout_ptr->end_row =   SUMMARY_WND_END_ROW;        /* 6 */
 
-		summaryListMenuActive = YES;
+		g_summaryListMenuActive = YES;
 
 		if (msg.data[0] == START_FROM_TOP)
 		{
 			// Find the first valid summary index and set the top and current index to match
-			topMenuSummaryIndex = currentSummaryIndex = getFirstValidRamSummaryIndex();
+			s_topMenuSummaryIndex = s_currentSummaryIndex = getFirstValidRamSummaryIndex();
 			
-			summaryListArrowChar = DOWN_ARROW_CHAR;
+			g_summaryListArrowChar = DOWN_ARROW_CHAR;
 		}
 	}
 	else if (msg.cmd == KEYPRESS_MENU_CMD)
@@ -131,17 +122,19 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 		{
 			case (ENTER_KEY):
 				// Check if the top menu summary index represents a valid index
-				if (topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
+				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
 				{
-					results_summtable_ptr = (rd_summary_ptr + currentSummaryIndex);
+					g_resultsRamSummaryPtr = (rd_summary_ptr + s_currentSummaryIndex);
 #if 0 // ns7100
-					eventRecord = (EVT_RECORD *)results_summtable_ptr->linkPtr;
+					eventRecord = (EVT_RECORD *)g_resultsRamSummaryPtr->linkPtr;
 #else // ns8100
 					static EVT_RECORD resultsEventRecord;
 					eventRecord = &resultsEventRecord;
 	
 					debug("Summary menu: updating event record cache\n");
-					getEventFileInfo(results_summtable_ptr->fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary);
+					//getEventFileInfo(g_resultsRamSummaryPtr->fileEventNum, &(resultsEventRecord.header), 
+					//					&resultsEventRecord.summary, NO);
+					getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
 #endif
 
 					//debugPrint(RAW, "Evt: %04d, Mode: %d\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
@@ -156,16 +149,16 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 					{
 						case WAVEFORM_MODE:
 						case MANUAL_CAL_MODE:
-							print_out_mode = WAVEFORM_MODE;
-							active_menu = RESULTS_MENU;
+							g_printOutMode = WAVEFORM_MODE;
+							g_activeMenu = RESULTS_MENU;
 							ACTIVATE_MENU_MSG();
-							(*menufunc_ptrs[active_menu]) (mn_msg);
+							(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							break;   
 	                   case BARGRAPH_MODE: 
-							print_out_mode = BARGRAPH_MODE;
-							active_menu = RESULTS_MENU;
+							g_printOutMode = BARGRAPH_MODE;
+							g_activeMenu = RESULTS_MENU;
 							ACTIVATE_MENU_MSG();
-							(*menufunc_ptrs[active_menu]) (mn_msg);
+							(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							break;    
 						case COMBO_MODE:
 							break;
@@ -179,14 +172,14 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 				
 			case (DOWN_ARROW_KEY):
 				// Check if the top menu summary index represents a valid index
-				if (topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
+				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
 				{
 					summaryMnScroll(DOWN);
 				}
 				break;
 			case (UP_ARROW_KEY):
 				// Check if the top menu summary index represents a valid index
-				if (topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
+				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
 				{
 					summaryMnScroll(UP);
 				}
@@ -196,20 +189,20 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 				tempSummaryIndex = getFirstValidRamSummaryIndex();
 				
 				// Check if the top menu summary index represents a valid index and if the current index isn't the first
-				if ((topMenuSummaryIndex < TOTAL_RAM_SUMMARIES) && (tempSummaryIndex != currentSummaryIndex))
+				if ((s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES) && (tempSummaryIndex != s_currentSummaryIndex))
 				{
-					topMenuSummaryIndex = currentSummaryIndex = tempSummaryIndex;
+					s_topMenuSummaryIndex = s_currentSummaryIndex = tempSummaryIndex;
 
-					summaryListArrowChar = DOWN_ARROW_CHAR;
+					g_summaryListArrowChar = DOWN_ARROW_CHAR;
 
 					debug("Summary List: Setting Current Index to first valid Summary index\n");
 				}
 				else // We're done here
 				{
-					summaryListMenuActive = NO;
+					g_summaryListMenuActive = NO;
 
 					ACTIVATE_USER_MENU_MSG(&configMenu, SUMMARIES_EVENTS);
-					(*menufunc_ptrs[active_menu]) (mn_msg);
+					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 				}
 				break;
 			default:
@@ -234,7 +227,7 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	EVT_RECORD* eventRecord;
 
 	// Clear the LCD map
-	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Display the Title centered on the Top line
 	sprintf(lineBuff, "-%s-", getLangText(LIST_OF_SUMMARIES_TEXT));
@@ -249,17 +242,17 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
 	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
-	// Check if topMenuSummaryIndex is valid
-	if (topMenuSummaryIndex == TOTAL_RAM_SUMMARIES)
+	// Check if s_topMenuSummaryIndex is valid
+	if (s_topMenuSummaryIndex == TOTAL_RAM_SUMMARIES)
 	{
 		debug("Summary List: No valid summary found for display\n");	
 		sprintf(lineBuff, "<%s>", getLangText(EMPTY_TEXT));
 		wndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		// We're done
 	}
-	else // topMenuSummaryIndex is a valid index indicating valid events in flash
+	else // s_topMenuSummaryIndex is a valid index indicating valid events in flash
 	{
-		tempSummaryIndex = topMenuSummaryIndex;
+		tempSummaryIndex = s_topMenuSummaryIndex;
 
 		while ((itemsDisplayed <= SUMMARY_MENU_ACTIVE_ITEMS) && (tempSummaryIndex < TOTAL_RAM_SUMMARIES))
 		{
@@ -270,7 +263,8 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 			eventRecord = &resultsEventRecord;
 	
 			debug("Summary menu: updating event record cache\n");
-			getEventFileInfo(results_summtable_ptr->fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary);
+			//getEventFileInfo(g_resultsRamSummaryPtr->fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary, NO);
+			getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
 #endif
 
 			// Clear and setup the time stamp string for the current event
@@ -294,7 +288,7 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 			sprintf(lineBuff, "E%03d %s %s", eventRecord->summary.eventNumber, dateBuff, modeBuff);
 
 			// Check if the current line is to be highlighted
-			if (tempSummaryIndex == currentSummaryIndex)
+			if (tempSummaryIndex == s_currentSummaryIndex)
 			{           
 				wndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
 			}
@@ -329,65 +323,65 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 void summaryMnScroll(char direction)
 {  
 	uint16 tempSummaryIndex = 0;
-	uint16 compareCurrentSummaryIndex = currentSummaryIndex;
+	uint16 compareCurrentSummaryIndex = s_currentSummaryIndex;
 	uint16 i = 0;
 	
-	summaryListArrowChar = BOTH_ARROWS_CHAR;
+	g_summaryListArrowChar = BOTH_ARROWS_CHAR;
 	
-	for(i=0;i<num_speed;i++)
+	for(i=0;i<g_keypadNumberSpeed;i++)
 	{	
 		if (direction == DOWN)
 		{
-			tempSummaryIndex = getNextValidRamSummaryIndex(currentSummaryIndex);
+			tempSummaryIndex = getNextValidRamSummaryIndex(s_currentSummaryIndex);
 			
 			if (tempSummaryIndex < TOTAL_RAM_SUMMARIES)
 			{
-				currentSummaryIndex = tempSummaryIndex;
+				s_currentSummaryIndex = tempSummaryIndex;
 				
-				if ((currentSummaryIndex - topMenuSummaryIndex) >= SUMMARY_MENU_ACTIVE_ITEMS)
+				if ((s_currentSummaryIndex - s_topMenuSummaryIndex) >= SUMMARY_MENU_ACTIVE_ITEMS)
 				{
-					topMenuSummaryIndex = getNextValidRamSummaryIndex(topMenuSummaryIndex);
+					s_topMenuSummaryIndex = getNextValidRamSummaryIndex(s_topMenuSummaryIndex);
 				}
 			}
 			else // For the last item, bump the top menu summary index one to show the end of the list
 			{
-				if ((currentSummaryIndex - topMenuSummaryIndex) >= (SUMMARY_MENU_ACTIVE_ITEMS - 1))
+				if ((s_currentSummaryIndex - s_topMenuSummaryIndex) >= (SUMMARY_MENU_ACTIVE_ITEMS - 1))
 				{
-					topMenuSummaryIndex = getNextValidRamSummaryIndex(topMenuSummaryIndex);
+					s_topMenuSummaryIndex = getNextValidRamSummaryIndex(s_topMenuSummaryIndex);
 				}
 			}
 			
-			compareCurrentSummaryIndex = getNextValidRamSummaryIndex(currentSummaryIndex);
+			compareCurrentSummaryIndex = getNextValidRamSummaryIndex(s_currentSummaryIndex);
 			if(compareCurrentSummaryIndex == TOTAL_RAM_SUMMARIES)
 			{
-				summaryListArrowChar = UP_ARROW_CHAR;
+				g_summaryListArrowChar = UP_ARROW_CHAR;
 			}
 
 			//debug("Summary List: Scroll Down, Top Menu Index: %d, Current Index: %d\n",
-			//		topMenuSummaryIndex, currentSummaryIndex);
+			//		s_topMenuSummaryIndex, s_currentSummaryIndex);
 		}
 		else if (direction == UP)
 		{
-			tempSummaryIndex = getPreviousValidRamSummaryIndex(currentSummaryIndex);
+			tempSummaryIndex = getPreviousValidRamSummaryIndex(s_currentSummaryIndex);
 			
 			if (tempSummaryIndex < TOTAL_RAM_SUMMARIES)
 			{
-				currentSummaryIndex = tempSummaryIndex;
+				s_currentSummaryIndex = tempSummaryIndex;
 				
-				if (currentSummaryIndex < topMenuSummaryIndex)
+				if (s_currentSummaryIndex < s_topMenuSummaryIndex)
 				{
-					topMenuSummaryIndex = currentSummaryIndex;
+					s_topMenuSummaryIndex = s_currentSummaryIndex;
 				}
 			}
 
-			compareCurrentSummaryIndex = getPreviousValidRamSummaryIndex(currentSummaryIndex);
+			compareCurrentSummaryIndex = getPreviousValidRamSummaryIndex(s_currentSummaryIndex);
 			if(compareCurrentSummaryIndex == TOTAL_RAM_SUMMARIES)
 			{
-				summaryListArrowChar = DOWN_ARROW_CHAR;
+				g_summaryListArrowChar = DOWN_ARROW_CHAR;
 			}
 
 			//debug("Summary List: Scroll Up, Top Menu Index: %d, Current Index: %d\n",
-			//		topMenuSummaryIndex, currentSummaryIndex);
+			//		s_topMenuSummaryIndex, s_currentSummaryIndex);
 		}
 	}
 }

@@ -142,8 +142,12 @@ uint16* getFlashDataPointer(void);
 void checkFlashDataPointer(void);
 void storeData(uint16* dataPtr, uint16 dataWords);
 void getFlashUsageStats(FLASH_USAGE_STRUCT* usage);
-void getEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr);
+void getEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
+void getEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
+void cacheEventDataToRam(uint16 eventNumber, uint32 dataSize);
 BOOLEAN validEventFile(uint16 eventNumber);
 FL_FILE* getNewEventFileHandle(uint16 eventNumber);
+void deleteEventFileRecord(uint16 eventNumber);
+void deleteEventFileRecords(void);
 
 #endif // _FLASHEVTS_H_

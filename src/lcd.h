@@ -26,7 +26,6 @@
 // Include Files                                                              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-#include "vartype.h"
 #include "Typedefs.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,29 +98,29 @@
 // Function Prototypes                                                        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void WriteLCD_Vline( uint8_t x_pos,
-                     uint8_t y_start,
-					 uint8_t y_end,
-					 uint8_t dotted);
+void WriteLCD_Vline( uint8 x_pos,
+                     uint8 y_start,
+					 uint8 y_end,
+					 uint8 dotted);
 
-void WriteLCD_Hline( uint8_t y_pos,
-                     uint8_t x_start,
-					 uint8_t x_end,
-					 uint8_t bLineColor);
+void WriteLCD_Hline( uint8 y_pos,
+                     uint8 x_start,
+					 uint8 x_end,
+					 uint8 bLineColor);
 
-void WriteLCD_lgText( uint8_t x_pos,
-                      uint8_t y_pos,
-					  const uint8_t *lcd_data,
-					  uint8_t polarity);
+void WriteLCD_lgText( uint8 x_pos,
+                      uint8 y_pos,
+					  const uint8 *lcd_data,
+					  uint8 polarity);
 
-void WriteLCD_smText( uint8_t x_pos,
-                      uint8_t y_pos,
-					  const uint8_t *lcd_data,
-					  uint8_t polarity);
+void WriteLCD_smText( uint8 x_pos,
+                      uint8 y_pos,
+					  const uint8 *lcd_data,
+					  uint8 polarity);
 
-void Write_display( uint8_t lcd_register, uint8_t lcd_data, uint8_t display_half );
+void Write_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half );
 
-uint8_t Read_display( uint8_t lcd_register, uint8_t display_half );
+uint8 Read_display( uint8 lcd_register, uint8 display_half );
 
 void ClearLCDscreen( void );
 
@@ -137,9 +136,9 @@ void Backlight_Low( void );
 
 void Reset_Contrast( void );
 
-void Set_Contrast( uint8_t level );
+void Set_Contrast( uint8 level );
 
-void Write_multi_display( uint8_t lcd_register, uint8_t lcd_data, uint8_t display_half );
+void Write_multi_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half );
 
 #endif //LCD_H_
 

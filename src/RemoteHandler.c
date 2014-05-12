@@ -24,28 +24,20 @@
 #include "TextTypes.h"
 
 ///----------------------------------------------------------------------------
+///	Defines
+///----------------------------------------------------------------------------
+
+///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern uint8 g_disableDebugPrinting;
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern CMD_BUFFER_STRUCT* gp_ISRMessageBuffer;
-extern MODEM_STATUS_STRUCT g_ModemStatus;
-extern MODEM_SETUP_STRUCT modem_setup_rec;
-extern REC_HELP_MN_STRUCT help_rec;				// Struct containing system parameters 
-extern uint8 g_modemDataTransfered;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-uint16 g_CRLF = 0x0D0A;
-
-// Index for the message pool.
-uint8 readIndex;
-uint8 writeIndex;
-// Holds a pool of buffers for processing input from the craft port
-CMD_BUFFER_STRUCT g_msgPool[CMD_MSG_POOL_SIZE];
-
-const COMMAND_MESSAGE_STRUCT cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] = {
+static uint8 s_msgReadIndex;
+static uint8 s_msgWriteIndex;
+static const COMMAND_MESSAGE_STRUCT s_cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] = {
 	{ 'A', 'A', 'A', handleAAA },	// Dummy function call.
 	{ 'M', 'R', 'S', handleMRS },		// Modem reset.
 
@@ -105,15 +97,15 @@ const COMMAND_MESSAGE_STRUCT cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] = {
 };
 
 /********************************************************************/
-// Function:	initInterruptBuffers
+// Function:	initCraftInterruptBuffers
 // Purpose :	
 /********************************************************************/
-void initInterruptBuffers(void)
+void initCraftInterruptBuffers(void)
 {
-	byteSet(gp_ISRMessageBuffer, 0, sizeof(CMD_BUFFER_STRUCT));
-	gp_ISRMessageBuffer->status = CMD_MSG_NO_ERR;
-	gp_ISRMessageBuffer->overRunCheck = 0xBADD;
-	gp_ISRMessageBuffer->writePtr = gp_ISRMessageBuffer->readPtr = gp_ISRMessageBuffer->msg;
+	byteSet(g_isrMessageBufferPtr, 0, sizeof(CMD_BUFFER_STRUCT));
+	g_isrMessageBufferPtr->status = CMD_MSG_NO_ERR;
+	g_isrMessageBufferPtr->overRunCheck = 0xBADD;
+	g_isrMessageBufferPtr->writePtr = g_isrMessageBufferPtr->readPtr = g_isrMessageBufferPtr->msg;
 }
 
 //==================================================
@@ -127,7 +119,7 @@ uint8 cmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 {
 	uint8 cmdIndex = 0;
 		
-	if (g_ModemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
+	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
 
 	debug("\nCMH:<%s>\n", cmdMsg->msg);
 
@@ -144,34 +136,34 @@ uint8 cmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 		
 		// If the system is now locked and there is a xfer in progress, 
 		// halt the xfer. This is used as a break command.
-		if (	(YES == g_ModemStatus.systemIsLockedFlag) &&
-			(YES == g_ModemStatus.xferMutex))
+		if (	(YES == g_modemStatus.systemIsLockedFlag) &&
+			(YES == g_modemStatus.xferMutex))
 		{
-			g_ModemStatus.xferState = NOP_CMD;
-			g_ModemStatus.xferMutex = NO;
+			g_modemStatus.xferState = NOP_CMD;
+			g_modemStatus.xferMutex = NO;
 		}
 	}
 
 	else 
 	{ 
-		if (NO == g_ModemStatus.systemIsLockedFlag)
+		if (NO == g_modemStatus.systemIsLockedFlag)
 		{
 			debug("System NOT Locked\n");
 		
 			// If the system is unlocked and a xfer command is not in progress 
 			// look for the next command to complet. Else, toss the message.
-			if (NO == g_ModemStatus.xferMutex)
+			if (NO == g_modemStatus.xferMutex)
 			{
 				for (cmdIndex = 0; cmdIndex < TOTAL_COMMAND_MESSAGES; cmdIndex++)
 				{
-					if ((cmdMsg->msg[0] == cmdMessageTable[ cmdIndex ].cmdChar1) &&
-						(cmdMsg->msg[1] == cmdMessageTable[ cmdIndex ].cmdChar2) &&
-						(cmdMsg->msg[2] == cmdMessageTable[ cmdIndex ].cmdChar3))
+					if ((cmdMsg->msg[0] == s_cmdMessageTable[ cmdIndex ].cmdChar1) &&
+						(cmdMsg->msg[1] == s_cmdMessageTable[ cmdIndex ].cmdChar2) &&
+						(cmdMsg->msg[2] == s_cmdMessageTable[ cmdIndex ].cmdChar3))
 					{
 						// Command successfully decoded, signal that data has been transfered
 						g_modemDataTransfered = YES;
 
-						cmdMessageTable[ cmdIndex ].cmdFunction(cmdMsg);
+						s_cmdMessageTable[ cmdIndex ].cmdFunction(cmdMsg);
 						break;
 					}
 				}
@@ -184,7 +176,7 @@ uint8 cmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 	}
 
 		
-	if ((g_ModemStatus.testingFlag == YES) && (g_ModemStatus.testingPrintFlag == YES))
+	if ((g_modemStatus.testingFlag == YES) && (g_modemStatus.testingPrintFlag == YES))
 	{
 		g_disableDebugPrinting = YES;
 	}
@@ -205,9 +197,9 @@ uint8 cmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 void cmdMessageProcessing()
 {
 	// Check if there is a potentially fatal error.
-	if (0xBADD != g_msgPool[readIndex].overRunCheck)
+	if (0xBADD != g_msgPool[s_msgReadIndex].overRunCheck)
 	{
-		g_msgPool[readIndex].overRunCheck = 0xBADD;
+		g_msgPool[s_msgReadIndex].overRunCheck = 0xBADD;
 		overlayMessage(getLangText(STATUS_TEXT), "CRAFT MESSAGE OVERRUN", 0);
 	}
 
@@ -216,22 +208,22 @@ void cmdMessageProcessing()
 	// assuming that only 3 char cmds are being sent. If data or a field is
 	// sent with the incomming command we need to deal with it differently.
 
-	cmdMessageHandler(&(g_msgPool[readIndex]));
+	cmdMessageHandler(&(g_msgPool[s_msgReadIndex]));
 
-	byteSet(g_msgPool[readIndex].msg, 0, sizeof(CMD_BUFFER_SIZE));
-	g_msgPool[readIndex].size = 0;	
-	g_msgPool[readIndex].readPtr = g_msgPool[readIndex].msg;	
-	g_msgPool[readIndex].writePtr = g_msgPool[readIndex].msg;
-	g_msgPool[readIndex].overRunCheck = 0xBADD;
+	byteSet(g_msgPool[s_msgReadIndex].msg, 0, sizeof(CMD_BUFFER_SIZE));
+	g_msgPool[s_msgReadIndex].size = 0;	
+	g_msgPool[s_msgReadIndex].readPtr = g_msgPool[s_msgReadIndex].msg;	
+	g_msgPool[s_msgReadIndex].writePtr = g_msgPool[s_msgReadIndex].msg;
+	g_msgPool[s_msgReadIndex].overRunCheck = 0xBADD;
 	
-	readIndex++;
-	if (readIndex >= CMD_MSG_POOL_SIZE)
+	s_msgReadIndex++;
+	if (s_msgReadIndex >= CMD_MSG_POOL_SIZE)
 	{
-		readIndex = 0;
+		s_msgReadIndex = 0;
 	}
 
 	// Are any more buffers filled?
-	if (readIndex != writeIndex)
+	if (s_msgReadIndex != s_msgWriteIndex)
 	{
 		// Flag to indicate complete message to process
 		raiseSystemEventFlag(CRAFT_PORT_EVENT);
@@ -253,42 +245,42 @@ void processCraftData()
 	uint8 newPoolBuffer = NO;
 
 	// Halt all debugging message when recieving data.	
-	if (g_ModemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
+	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
 
 	// Check status and then reset it to no error.
-	if (CMD_MSG_OVERFLOW_ERR == gp_ISRMessageBuffer->status)
+	if (CMD_MSG_OVERFLOW_ERR == g_isrMessageBufferPtr->status)
 	{
-		gp_ISRMessageBuffer->status = CMD_MSG_NO_ERR;
+		g_isrMessageBufferPtr->status = CMD_MSG_NO_ERR;
 		overlayMessage(getLangText(STATUS_TEXT), "MODEM SYNC FAILED", 0);
 	}
 
 	// Check status and then reset it to no error.
-	if (0xBADD != gp_ISRMessageBuffer->overRunCheck)
+	if (0xBADD != g_isrMessageBufferPtr->overRunCheck)
 	{
-		gp_ISRMessageBuffer->overRunCheck = 0xBADD;
+		g_isrMessageBufferPtr->overRunCheck = 0xBADD;
 		overlayMessage(getLangText(STATUS_TEXT), "CRAFT OVERRUN ERROR", 0);
 	}
 
-	while (gp_ISRMessageBuffer->readPtr != gp_ISRMessageBuffer->writePtr)
+	while (g_isrMessageBufferPtr->readPtr != g_isrMessageBufferPtr->writePtr)
 	{
-		debugRaw("<%c>",*gp_ISRMessageBuffer->readPtr);
+		debugRaw("<%c>",*g_isrMessageBufferPtr->readPtr);
 
-		if ((*gp_ISRMessageBuffer->readPtr != 0x0A) &&
-			(*gp_ISRMessageBuffer->readPtr != 0x0D))
+		if ((*g_isrMessageBufferPtr->readPtr != 0x0A) &&
+			(*g_isrMessageBufferPtr->readPtr != 0x0D))
 		{
-			*(g_msgPool[writeIndex].writePtr) = *gp_ISRMessageBuffer->readPtr;
-			g_msgPool[writeIndex].writePtr++;
-			g_msgPool[writeIndex].size++;
+			*(g_msgPool[s_msgWriteIndex].writePtr) = *g_isrMessageBufferPtr->readPtr;
+			g_msgPool[s_msgWriteIndex].writePtr++;
+			g_msgPool[s_msgWriteIndex].size++;
 
 			// The buffer is full, go to the next buffer pool.
-			if (g_msgPool[writeIndex].size >= (CMD_BUFFER_SIZE-2))
+			if (g_msgPool[s_msgWriteIndex].size >= (CMD_BUFFER_SIZE-2))
 			{
 				newPoolBuffer = YES;
 			}
 		}
 		else
 		{
-			if (g_msgPool[writeIndex].size > 0)
+			if (g_msgPool[s_msgWriteIndex].size > 0)
 			{
 				newPoolBuffer = YES;
 			}	
@@ -298,25 +290,25 @@ void processCraftData()
 		if (YES == newPoolBuffer)
 		{
 			// The message is now complete so go to the next message pool buffer.
-			writeIndex++;
-			if (writeIndex >= CMD_MSG_POOL_SIZE)
+			s_msgWriteIndex++;
+			if (s_msgWriteIndex >= CMD_MSG_POOL_SIZE)
 			{
-				writeIndex = 0;
+				s_msgWriteIndex = 0;
 			}
 			
 			// Flag to indicate complete message to process
 			raiseSystemEventFlag(CRAFT_PORT_EVENT);
 		}
 		
-		*gp_ISRMessageBuffer->readPtr = 0x00;
-		gp_ISRMessageBuffer->readPtr++;
-		if (gp_ISRMessageBuffer->readPtr >=  (gp_ISRMessageBuffer->msg + CMD_BUFFER_SIZE))
+		*g_isrMessageBufferPtr->readPtr = 0x00;
+		g_isrMessageBufferPtr->readPtr++;
+		if (g_isrMessageBufferPtr->readPtr >=  (g_isrMessageBufferPtr->msg + CMD_BUFFER_SIZE))
 		{			
-			gp_ISRMessageBuffer->readPtr = gp_ISRMessageBuffer->msg;
+			g_isrMessageBufferPtr->readPtr = g_isrMessageBufferPtr->msg;
 		}
 	}
 
-	if ((g_ModemStatus.testingFlag == YES) && (g_ModemStatus.testingPrintFlag == YES))
+	if ((g_modemStatus.testingFlag == YES) && (g_modemStatus.testingPrintFlag == YES))
 	{
 		g_disableDebugPrinting = YES;
 	}
@@ -336,15 +328,15 @@ void cmdMessageHandlerInit()
 	// Clear and set up the addresses for the ptrs from the buffer array.
 	byteSet(g_msgPool, 0, (sizeof(CMD_BUFFER_STRUCT) * CMD_MSG_POOL_SIZE));
 
-	for (writeIndex = 0; writeIndex < CMD_MSG_POOL_SIZE; writeIndex++)
+	for (s_msgWriteIndex = 0; s_msgWriteIndex < CMD_MSG_POOL_SIZE; s_msgWriteIndex++)
 	{	
-		g_msgPool[writeIndex].overRunCheck = 0xBADD;
-		g_msgPool[writeIndex].readPtr = g_msgPool[writeIndex].msg;
-		g_msgPool[writeIndex].writePtr = g_msgPool[writeIndex].msg;
+		g_msgPool[s_msgWriteIndex].overRunCheck = 0xBADD;
+		g_msgPool[s_msgWriteIndex].readPtr = g_msgPool[s_msgWriteIndex].msg;
+		g_msgPool[s_msgWriteIndex].writePtr = g_msgPool[s_msgWriteIndex].msg;
 	}
 	
 	// Initialize index to the start.
-	writeIndex = readIndex = 0;
+	s_msgWriteIndex = s_msgReadIndex = 0;
 
 	return;
 }
@@ -355,36 +347,36 @@ void cmdMessageHandlerInit()
 /********************************************************************/
 void craftInitStatusFlags(void)
 {
-	byteSet(&g_ModemStatus, 0, sizeof(MODEM_STATUS_STRUCT));
+	byteSet(&g_modemStatus, 0, sizeof(MODEM_STATUS_STRUCT));
 
 	// Modem and craft port specific flags.
-	g_ModemStatus.connectionState = NOP_CMD;	// State flag to indicate which modem command to handle.
+	g_modemStatus.connectionState = NOP_CMD;	// State flag to indicate which modem command to handle.
 
 	// Check if the Modem setup record is valid and Modem status is yes
-	if ((!modem_setup_rec.invalid) && (modem_setup_rec.modemStatus == YES))
+	if ((!g_modemSetupRecord.invalid) && (g_modemSetupRecord.modemStatus == YES))
 	{
 		// Signal that the modem is available
-		g_ModemStatus.modemAvailable = YES;
+		g_modemStatus.modemAvailable = YES;
 
 		assignSoftTimer(MODEM_DELAY_TIMER_NUM, (MODEM_ATZ_DELAY), modemDelayTimerCallback);
 	}
 	else
 	{
 		// Signal that the modem is not available
-		g_ModemStatus.modemAvailable = NO;
+		g_modemStatus.modemAvailable = NO;
 	}
 
-	g_ModemStatus.craftPortRcvFlag = NO;	// Flag to indicate that incomming data has been received.
-	g_ModemStatus.xferState = NOP_CMD;		// Flag for xmitting data to the craft.
-	g_ModemStatus.xferMutex = NO;			// Flag to stop other message command from executing.
-	g_ModemStatus.systemIsLockedFlag = YES;
+	g_modemStatus.craftPortRcvFlag = NO;	// Flag to indicate that incomming data has been received.
+	g_modemStatus.xferState = NOP_CMD;		// Flag for xmitting data to the craft.
+	g_modemStatus.xferMutex = NO;			// Flag to stop other message command from executing.
+	g_modemStatus.systemIsLockedFlag = YES;
 
-	g_ModemStatus.ringIndicator = 0;
-	g_ModemStatus.xferPrintState = help_rec.auto_print;
+	g_modemStatus.ringIndicator = 0;
+	g_modemStatus.xferPrintState = g_helpRecord.auto_print;
 	
 	// Modem is being tested/debugged set debug to true.
-	g_ModemStatus.testingPrintFlag = g_disableDebugPrinting;		
+	g_modemStatus.testingPrintFlag = g_disableDebugPrinting;		
 	// Modem is being tested/debugged, set to print to the PC
-	g_ModemStatus.testingFlag = MODEM_DEBUG_TEST_FLAG;
+	g_modemStatus.testingFlag = MODEM_DEBUG_TEST_FLAG;
 }
 

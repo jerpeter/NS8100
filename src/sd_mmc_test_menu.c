@@ -332,10 +332,10 @@ void SD_MMC_File_System_Format(void)
 }
 
 #include "FAT32_Opts.h"
-extern unsigned short int eventDataBuffer[];
+extern unsigned short int g_eventDataBuffer[];
 void SD_MMC_File_System_List_Directory(void)
 {
-	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(eventDataBuffer[0]);
+	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(g_eventDataBuffer[0]);
     unsigned int fatPresent=FALSE;
 	unsigned long int dirStartCluster;
 	unsigned int entriesFound = 0;
@@ -362,9 +362,9 @@ void SD_MMC_File_System_List_Directory(void)
     }
 
 	print_dbg("Address of EventBuff: 0x");
-	print_dbg_hex((unsigned long int)&eventDataBuffer[0]);
+	print_dbg_hex((unsigned long int)&g_eventDataBuffer[0]);
 	print_dbg(", Aligned x4: ");
-	if (((unsigned long int)&eventDataBuffer[0]) % 4 == 0) print_dbg("Yes\r\n"); else print_dbg("No\r\n"); 
+	if (((unsigned long int)&g_eventDataBuffer[0]) % 4 == 0) print_dbg("Yes\r\n"); else print_dbg("No\r\n"); 
 
 	print_dbg("Address of dirList: 0x");
 	print_dbg_hex((unsigned long int)dirList);

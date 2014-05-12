@@ -55,23 +55,12 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern MN_MEM_DATA_STRUCT mn_ptr[DEFAULT_MN_SIZE];
-extern int32 active_menu;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern uint32 num_speed;
-extern uint32 fixed_special_speed;
-extern REC_HELP_MN_STRUCT help_rec;
+#include "Globals.h"
 extern USER_MENU_STRUCT configMenu[];
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
-extern MONTH_TABLE_STRUCT monthTable[];
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-uint32 start_leap_num = 0;
-uint32 stop_leap_num = 0;
-uint32 start_num_month  = 0;
-uint32 stop_num_month = 0;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -97,10 +86,10 @@ void timerModeDateMn (INPUT_MSG_STRUCT msg)
 
     timerModeDateMnProc(msg, mn_rec, &wnd_layout, &mn_layout);
 
-    if (active_menu == TIMER_MODE_DATE_MENU)
+    if (g_activeMenu == TIMER_MODE_DATE_MENU)
     {
         dsplyTimerModeDateMn(mn_rec, &wnd_layout, &mn_layout);
-        writeMapToLcd(mmap);
+        writeMapToLcd(g_mmap);
     }
 }
 
@@ -142,17 +131,17 @@ void timerModeDateMnProc(INPUT_MSG_STRUCT msg,
 			switch (input)
 			{
 				case (ENTER_KEY):
-					help_rec.tm_start_date.day = (char)rec_ptr[TMD_START_DAY].numrec.tindex;
-					help_rec.tm_start_date.month = (char)rec_ptr[TMD_START_MONTH].numrec.tindex;
-					help_rec.tm_start_date.year = (char)rec_ptr[TMD_START_YEAR].numrec.tindex;
-					help_rec.tm_stop_date.day = (char)rec_ptr[TMD_STOP_DAY].numrec.tindex;
-					help_rec.tm_stop_date.month = (char)rec_ptr[TMD_STOP_MONTH].numrec.tindex;
-					help_rec.tm_stop_date.year = (char)rec_ptr[TMD_STOP_YEAR].numrec.tindex;
+					g_helpRecord.tm_start_date.day = (char)rec_ptr[TMD_START_DAY].numrec.tindex;
+					g_helpRecord.tm_start_date.month = (char)rec_ptr[TMD_START_MONTH].numrec.tindex;
+					g_helpRecord.tm_start_date.year = (char)rec_ptr[TMD_START_YEAR].numrec.tindex;
+					g_helpRecord.tm_stop_date.day = (char)rec_ptr[TMD_STOP_DAY].numrec.tindex;
+					g_helpRecord.tm_stop_date.month = (char)rec_ptr[TMD_STOP_MONTH].numrec.tindex;
+					g_helpRecord.tm_stop_date.year = (char)rec_ptr[TMD_STOP_YEAR].numrec.tindex;
 
 					processTimerModeSettings(PROMPT);
 
 					ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
-					(*menufunc_ptrs[active_menu]) (mn_msg);
+					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 					break;
                case (DOWN_ARROW_KEY):
                      if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
@@ -177,9 +166,9 @@ void timerModeDateMnProc(INPUT_MSG_STRUCT msg,
                      rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
                      break;
                case (ESC_KEY):
-                     active_menu = TIMER_MODE_TIME_MENU;
+                     g_activeMenu = TIMER_MODE_TIME_MENU;
                      ACTIVATE_MENU_MSG();
-                     (*menufunc_ptrs[active_menu]) (mn_msg);
+                     (*menufunc_ptrs[g_activeMenu]) (mn_msg);
                      break;
                default:
                      break;
@@ -261,7 +250,7 @@ void dsplyTimerModeDateMn(REC_MN_STRUCT *rec_ptr,
 	uint8 menu_ln;
 	uint8 length = 0;
 
-	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	menu_ln = 0;
 	top = (uint8)mn_layout_ptr->top_ln;
@@ -323,7 +312,7 @@ void dsplyTimerModeDateMn(REC_MN_STRUCT *rec_ptr,
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the month text
-	sprintf((char*)sbuff, "%s", (char*)&(monthTable[(uint8)(rec_ptr[TMD_START_MONTH].numrec.tindex)].name[0]));
+	sprintf((char*)sbuff, "%s", (char*)&(g_monthTable[(uint8)(rec_ptr[TMD_START_MONTH].numrec.tindex)].name[0]));
 	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_START_MONTH) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
@@ -356,7 +345,7 @@ void dsplyTimerModeDateMn(REC_MN_STRUCT *rec_ptr,
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the month text
-	sprintf((char*)sbuff, "%s", (char*)&(monthTable[(uint8)(rec_ptr[TMD_STOP_MONTH].numrec.tindex)].name[0]));
+	sprintf((char*)sbuff, "%s", (char*)&(g_monthTable[(uint8)(rec_ptr[TMD_STOP_MONTH].numrec.tindex)].name[0]));
 	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_STOP_MONTH) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
@@ -450,23 +439,23 @@ void tmKeepDateTime(void)
 	// Find the Time mode active time period in ticks
 
 	// Check if the stop time (in minutes resolution) is greater than the start time, thus running the same day
-	if (((help_rec.tm_stop_time.hour * 60) + help_rec.tm_stop_time.min) >
-		((help_rec.tm_start_time.hour * 60) + help_rec.tm_start_time.min))
+	if (((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min) >
+		((g_helpRecord.tm_start_time.hour * 60) + g_helpRecord.tm_start_time.min))
 	{
 		// Set active minutes as the difference in the stop and start times
-		help_rec.timer_mode_active_minutes = (uint16)(((help_rec.tm_stop_time.hour * 60) + help_rec.tm_stop_time.min) -
-												((help_rec.tm_start_time.hour * 60) + help_rec.tm_start_time.min));
+		g_helpRecord.timer_mode_active_minutes = (uint16)(((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min) -
+												((g_helpRecord.tm_start_time.hour * 60) + g_helpRecord.tm_start_time.min));
 	}
 	else // The timer mode active period will see midnight, thus running 2 consecutive days
 	{
 		// Set active minutes as the difference from midnight and the start time, plus the stop time the next day
-		help_rec.timer_mode_active_minutes = (uint16)((24 * 60) - ((help_rec.tm_start_time.hour * 60) + help_rec.tm_start_time.min) +
-												((help_rec.tm_stop_time.hour * 60) + help_rec.tm_stop_time.min));
+		g_helpRecord.timer_mode_active_minutes = (uint16)((24 * 60) - ((g_helpRecord.tm_start_time.hour * 60) + g_helpRecord.tm_start_time.min) +
+												((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min));
 	}
 
-	debug("Timer Active Minutes: %d\n", help_rec.timer_mode_active_minutes);
+	debug("Timer Active Minutes: %d\n", g_helpRecord.timer_mode_active_minutes);
 
-    saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+    saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 }
 
 /****************************************
@@ -477,16 +466,16 @@ uint8 validateTimerModeSettings(void)
 {
 	DATE_TIME_STRUCT time = getCurrentTime();
 
-	char start_min = help_rec.tm_start_time.min;
-	char start_hour = help_rec.tm_start_time.hour;
-	char stop_min = help_rec.tm_stop_time.min;
-	char stop_hour = help_rec.tm_stop_time.hour;
-	char start_day = help_rec.tm_start_date.day;
-	char start_month = help_rec.tm_start_date.month;
-	char start_year = help_rec.tm_start_date.year;
-	char stop_day = help_rec.tm_stop_date.day;
-	char stop_month = help_rec.tm_stop_date.month;
-	char stop_year = help_rec.tm_stop_date.year;
+	char start_min = g_helpRecord.tm_start_time.min;
+	char start_hour = g_helpRecord.tm_start_time.hour;
+	char stop_min = g_helpRecord.tm_stop_time.min;
+	char stop_hour = g_helpRecord.tm_stop_time.hour;
+	char start_day = g_helpRecord.tm_start_date.day;
+	char start_month = g_helpRecord.tm_start_date.month;
+	char start_year = g_helpRecord.tm_start_date.year;
+	char stop_day = g_helpRecord.tm_stop_date.day;
+	char stop_month = g_helpRecord.tm_stop_date.month;
+	char stop_year = g_helpRecord.tm_stop_date.year;
 
 	debug("Timer Date: (Start) %d/%d/%d -> (End) %d/%d/%d\n", start_month, start_day, start_year,
 															  stop_month, stop_day, stop_year);
@@ -558,10 +547,10 @@ void processTimerModeSettings(uint8 mode)
 	uint8 status = validateTimerModeSettings();
 
 	// Check if the timer mode settings check failed or if the timer mode setting has been disabled
-	if ((status == FAILED) || (help_rec.timer_mode == DISABLED))
+	if ((status == FAILED) || (g_helpRecord.timer_mode == DISABLED))
 	{
-		help_rec.timer_mode = DISABLED;
-		saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		g_helpRecord.timer_mode = DISABLED;
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 		// Disable the Power Off timer in case it's set
 		clearSoftTimer(POWER_OFF_TIMER_NUM);
@@ -579,24 +568,24 @@ void processTimerModeSettings(uint8 mode)
 
 		RTC_FLAGS.reg = RTC_FLAGS.reg;
 
-		//dayOfWeek = getDayOfWeek(help_rec.tm_start_date.year, help_rec.tm_start_date.month,
-		//						help_rec.tm_start_date.day);
+		//dayOfWeek = getDayOfWeek(g_helpRecord.tm_start_date.year, g_helpRecord.tm_start_date.month,
+		//						g_helpRecord.tm_start_date.day);
 
-		startDay = help_rec.tm_start_date.day;
+		startDay = g_helpRecord.tm_start_date.day;
 
 		// Check if in progress
 		if(status == IN_PROGRESS)
 		{
 			// Check if the stop time is greater than the start time
-			if((help_rec.tm_stop_time.hour > help_rec.tm_start_time.hour) ||
-				((help_rec.tm_stop_time.hour == help_rec.tm_start_time.hour) &&
-				(help_rec.tm_stop_time.min > help_rec.tm_start_time.min)))
+			if((g_helpRecord.tm_stop_time.hour > g_helpRecord.tm_start_time.hour) ||
+				((g_helpRecord.tm_stop_time.hour == g_helpRecord.tm_start_time.hour) &&
+				(g_helpRecord.tm_stop_time.min > g_helpRecord.tm_start_time.min)))
 			{
 				// Advance the start day
 				startDay++;
 
 				// Check if the start day is beond the total days in the current month
-				if (startDay > monthTable[(uint8)(help_rec.tm_start_date.month)].days)
+				if (startDay > g_monthTable[(uint8)(g_helpRecord.tm_start_date.month)].days)
 				{
 					// Set the start day to the first day of next month
 					startDay = 1;
@@ -604,7 +593,7 @@ void processTimerModeSettings(uint8 mode)
 			}
 		}
 
-		EnableRtcAlarm(startDay, help_rec.tm_start_time.hour, help_rec.tm_start_time.min, 0);
+		EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
 
 		if (status == PASSED)
 		{
@@ -616,18 +605,18 @@ void processTimerModeSettings(uint8 mode)
 			}
 
 			// Check if start time is greater than the current time
-			if (((help_rec.tm_start_time.hour * 60) + help_rec.tm_start_time.min) >
+			if (((g_helpRecord.tm_start_time.hour * 60) + g_helpRecord.tm_start_time.min) >
 				((currentTime.hour * 60) + currentTime.min))
 			{
 				// Take the difference between start time and current time
-				minutesLeft = (uint16)(((help_rec.tm_start_time.hour * 60) + help_rec.tm_start_time.min) -
+				minutesLeft = (uint16)(((g_helpRecord.tm_start_time.hour * 60) + g_helpRecord.tm_start_time.min) -
 							((currentTime.hour * 60) + currentTime.min));
 			}
 			else // Current time is after the start time, meaning the start time is the next day
 			{
 				// Take the difference between 24 hours and the current time plus the start time
 				minutesLeft = (uint16)((24 * 60) - ((currentTime.hour * 60) + currentTime.min) +
-							((help_rec.tm_start_time.hour * 60) + help_rec.tm_start_time.min));
+							((g_helpRecord.tm_start_time.hour * 60) + g_helpRecord.tm_start_time.min));
 			}
 
 			// Check if the start time is within the next minute
@@ -660,16 +649,16 @@ void processTimerModeSettings(uint8 mode)
 			}
 
 			// Check if the current time is greater than the stop time, indicating that midnight boundary was crossed
-			if(((currentTime.hour * 60) + currentTime.min) > ((help_rec.tm_stop_time.hour * 60) + help_rec.tm_stop_time.min))
+			if(((currentTime.hour * 60) + currentTime.min) > ((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min))
 			{
 				// Calculate the time left before powering off to be 24 + the stop time minus the current time
-				minutesLeft = (uint16)(((24 * 60) + (help_rec.tm_stop_time.hour * 60) + help_rec.tm_stop_time.min) -
+				minutesLeft = (uint16)(((24 * 60) + (g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min) -
 								((currentTime.hour * 60) + currentTime.min));
 			}
 			else // Current time is less than start time, operating within the same day
 			{
 				// Calculate the time left before powering off to be the stop time minus the current time
-				minutesLeft = (uint16)(((help_rec.tm_stop_time.hour * 60) + help_rec.tm_stop_time.min) -
+				minutesLeft = (uint16)(((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min) -
 								((currentTime.hour * 60) + currentTime.min));
 			}
 

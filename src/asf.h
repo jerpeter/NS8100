@@ -39,6 +39,22 @@
 #ifndef ASF_H
 #define ASF_H
 
+/*
+ * This file includes all API header files for the selected drivers from ASF.
+ * Note: There might be duplicate includes required by more than one driver.
+ *
+ * The file is automatically generated and will be re-written when
+ * running the ASF driver selector tool. Any changes will be discarded.
+ */
 
+// From module: CPU - Interrupt management
+#include <interrupt.h>
+
+// From module: TIMING - WDT - Watchdog Timer
+#include <wdt.h>
+
+// From module: UTILITY - Compiler abstraction layer and code utilities
+#include <compiler.h>
+#include <status_codes.h>
 
 #endif // ASF_H

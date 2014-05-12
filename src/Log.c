@@ -16,12 +16,13 @@
 #include <stdio.h>
 #include "Typedefs.h"
 #include "Board.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Uart.h"
 #include "Menu.h"
 #include "SysEvents.h"
 #include "Flash.h"
 #include "TextTypes.h"
+#include "FAT32_FileLib.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -30,16 +31,10 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern uint32 __monitorLogTblKey;
-extern uint16 __monitorLogTblIndex;
-extern uint16 __monitorLogUniqueEntryId;
-extern MONITOR_LOG_ENTRY_STRUCT __monitorLogTbl[TOTAL_MONITOR_LOG_ENTRIES];
-extern uint16 g_currentEventNumber;
-extern REC_HELP_MN_STRUCT help_rec;
-extern SYS_EVENT_STRUCT SysEvents_flags;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
@@ -63,6 +58,8 @@ void initMonitorLog(void)
 		__monitorLogTblKey = VALID_MONITOR_LOG_TABLE_KEY;
 		
 		initMonitorLogUniqueEntryId();
+
+		initMonitorLogTableFromLogFile();
 	}
 	// Check if the current monitor log entry is a partial entry (suggesting the entry was not closed)
 	else if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
@@ -194,6 +191,8 @@ void closeMonitorLogEntry()
 		__monitorLogTbl[__monitorLogTblIndex].stopTime.valid = TRUE;
 		__monitorLogTbl[__monitorLogTblIndex].status = COMPLETED_LOG_ENTRY;
 
+		appendMonitorLogEntryFile();
+
 		byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
 		convertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
 		//debugPrint(RAW, "\tStop Time: %s\n", (char*)&spareBuffer[0]);
@@ -206,13 +205,9 @@ void closeMonitorLogEntry()
 ///----------------------------------------------------------------------------
 void initMonitorLogUniqueEntryId(void)
 {
-#if 0 // fix_ns8100
-	// Get the starting address of the 3rd boot sector (base + boot sector size * 2)
-	//uint16* uniqueEntryIdStartPtr = (uint16*)(FLASH_BASE_ADDR + (FLASH_BOOT_SECTOR_SIZE_x8 * 2));
+#if 0 // ns7100
 	uint16 uniqueEntryIdOffset = (FLASH_BOOT_SECTOR_SIZE_x8 + 2);
 	uint16 uniqueEntryId = 0;
-
-#if 0
 	uint16 uniqueEntryIdOffset = (FLASH_BOOT_SECTOR_SIZE_x8 * 2);
 
 	// Get the end address (Start of the 4th boot sector)
@@ -244,24 +239,31 @@ void initMonitorLogUniqueEntryId(void)
 		// Set the Monitor Log Entry number to the last stored Monitor Log number stored plus 1
 		__monitorLogUniqueEntryId = (uint16)(uniqueEntryId + 1);
 	}
-#else
-	GetParameterMemory((uint8*)&uniqueEntryId, uniqueEntryIdOffset, sizeof(uniqueEntryId));
+#else // ns8100
+	MONITOR_LOG_ID_STRUCT monitorLogRec;
 
-	// Check if the storage location is 0xFF which indicates the unit hasn't recorded any monitor log entries
-	if (uniqueEntryId == 0xFFFF)
+	getRecData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
+
+	// Check if the Monitor Log Record is valid
+	if (!monitorLogRec.invalid)
+	{
+		if (monitorLogRec.currentMonitorLogID == 0xFFFF)
+		{
+			__monitorLogUniqueEntryId = 1;
+		}
+		else
+		{
+			// Set the Current Event number to the last event number stored plus 1
+			__monitorLogUniqueEntryId = (monitorLogRec.currentMonitorLogID + 1);
+		}
+	}
+	else // record is invalid
 	{
 		__monitorLogUniqueEntryId = 1;
+		monitorLogRec.currentMonitorLogID = __monitorLogUniqueEntryId;
+		
+		saveRecData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
 	}
-	else
-	{
-		// Set the Monitor Log Entry number to the last stored Monitor Log number stored plus 1
-		__monitorLogUniqueEntryId = (uint16)(uniqueEntryId + 1);
-	}
-#endif
-#endif
-
-#if 1 // fix_ns8100
-	__monitorLogUniqueEntryId = 1;
 #endif
 
 	debug("Total Monitor Log entries to date: %d, Current Monitor Log entry number: %d\n", 
@@ -274,9 +276,9 @@ void initMonitorLogUniqueEntryId(void)
 ///----------------------------------------------------------------------------
 void storeMonitorLogUniqueEntryId(void)
 {
+#if 0 // ns7100
 	uint16 uniqueEntryIdOffset = (FLASH_BOOT_SECTOR_SIZE_x8 + 2);
 
-#if 0
 	// Get the starting address of the 3rd boot sector (base + boot sector size * 2)
 	//uint16* uniqueEntryIdStorePtr = (uint16*)(FLASH_BASE_ADDR + (FLASH_BOOT_SECTOR_SIZE_x8 * 2));
 	uint16 uniqueEntryIdOffset = (FLASH_BOOT_SECTOR_SIZE_x8 * 2);
@@ -336,9 +338,12 @@ void storeMonitorLogUniqueEntryId(void)
 	// If we get here, then we failed a validation check
 	debugErr("Unique Monitor Log Entry number storage doesnt match Current Monitor Log Entry number. (0x%x, %d)\n", 
 				uniqueEntryIdOffset, __monitorLogUniqueEntryId);
-#else
-	// Store the current Monitor Log Entry number as the newest unique entry number
-	SaveParameterMemory((uint8*)&__monitorLogUniqueEntryId, uniqueEntryIdOffset, sizeof(__monitorLogUniqueEntryId));
+#else // ns8100
+	MONITOR_LOG_ID_STRUCT monitorLogRec;
+
+	monitorLogRec.currentMonitorLogID = __monitorLogUniqueEntryId;
+
+	saveRecData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
 
 	// Increment to a new Monitor Log Entry number
 	__monitorLogUniqueEntryId++;
@@ -408,3 +413,83 @@ uint16 numOfNewMonitorLogEntries(uint16 uid)
 
 	return (total);
 }
+
+///----------------------------------------------------------------------------
+///	Function:	appendMonitorLogEntryFile
+///	Purpose:	
+///----------------------------------------------------------------------------
+void appendMonitorLogEntryFile(void)
+{
+	FL_FILE* monitorLogFile;
+	
+	monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "a+");
+
+	// Verify file ID
+	if (monitorLogFile == NULL)
+	{
+		debugErr("Error: Monitor Log File not found!\r\n");
+		overlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
+	}		
+	else // Monitor log file contains entries
+	{
+		if (monitorLogFile->filelength % sizeof(MONITOR_LOG_ENTRY_STRUCT) != 0)
+		{
+			debugWarn("Warning: Monitor Log File size does not comprise all whole entries!\r\n");
+		}
+
+		fl_fwrite((uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT), 1, monitorLogFile);
+
+		// Done reading, close the monitor log file
+		fl_fclose(monitorLogFile);
+		
+		debug("Monitor log entry appended to log file\n");
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function:	initMonitorLogTableFromLogFile
+///	Purpose:	
+///----------------------------------------------------------------------------
+void initMonitorLogTableFromLogFile(void)
+{
+	FL_FILE* monitorLogFile;
+	MONITOR_LOG_ENTRY_STRUCT monitorLogEntry;
+	int32 bytesRead = 0;
+	
+	monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "r");
+
+	// Verify file ID
+	if (monitorLogFile == NULL)
+	{
+		debugWarn("Warning: Monitor Log File not found or has not yet been created\r\n");
+	}		
+	// Verify file is big enough
+	else if (monitorLogFile->filelength < sizeof(MONITOR_LOG_ENTRY_STRUCT))
+	{
+		debugErr("Error: Monitor Log File is corrupt!\r\n");
+		overlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
+	}		
+	else // Monitor log file contains entries
+	{
+		bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+		
+		// Loop while data continues to be read from MONITOR log file
+		while (bytesRead > 0)
+		{
+			if ((monitorLogEntry.status == COMPLETED_LOG_ENTRY) || (monitorLogEntry.status == INCOMPLETE_LOG_ENTRY))
+			{
+				debug("Found Valid Monitor Log Entry with ID: %d\n", monitorLogEntry.uniqueEntryId);
+
+				__monitorLogTbl[__monitorLogTblIndex] = monitorLogEntry;
+			
+				advanceMonitorLogIndex();
+
+				bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+			}
+		}
+
+		// Done reading, close the monitor log file
+		fl_fclose(monitorLogFile);
+	}
+}
+

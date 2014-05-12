@@ -20,9 +20,8 @@
 #include "Board.h"
 #include "Common.h"
 #include "PowerManagement.h"
-#include "Mmc2114.h"
 #include "Uart.h"
-#include "Rec.h"
+#include "Record.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -34,25 +33,11 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern POWER_MANAGEMENT_STRUCT powerManagement;
-extern uint8 contrast_value;
-extern REC_HELP_MN_STRUCT help_rec;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
-uint8 contrast_value;
-uint8 g_LcdPowerState = ENABLED;
-
-//  00C0_0000  reg_PORTA   Port A Output Data Register             Supervisor / User
-//  00C0_0001  reg_PORTB   Port B Output Data Register             Supervisor / User
-//  00C0_000C  reg_DDRA    Port A Data Direction Register          Supervisor / User
-//  00C0_000D  reg_DDRB    Port B Data Direction Register          Supervisor / User
-//  00C0_0018  reg_SETA    Port A Set Data Register                Supervisor / User
-//  00C0_0019  reg_SETB    Port B Set Data Register                Supervisor / User
-//  00C0_0024  reg_CLRA    Port A Clear Output Data Register       Supervisor / User
-//  00C0_0025  reg_CLRB    Port B Clear Output Data Register       Supervisor / User
 
 /****************************************
 *	Function:	LcdInit
@@ -480,7 +465,7 @@ void writeStringToLcd(uint8* p, uint8 x, uint8 y, uint8 (*table_ptr)[2][10])
 *	Function:	writeMapToLcd
 *	Purpose:	
 ****************************************/
-void writeMapToLcd(uint8 (*mmap_ptr)[128])
+void writeMapToLcd(uint8 (*g_mmap_ptr)[128])
 {
     uint8 segment;
     uint8* pixel_byte_ptr;
@@ -498,7 +483,7 @@ void writeMapToLcd(uint8 (*mmap_ptr)[128])
     while (row_index < 8)
 	{
 	    col_index = 0;
-	    pixel_byte_ptr = (uint8*)mmap_ptr[row_index];	
+	    pixel_byte_ptr = (uint8*)g_mmap_ptr[row_index];	
             
         segment = LCD_SEGMENT1;
 		setLcdOrigin(row_index, DEFAULT_Y_LOC, segment);        
@@ -585,8 +570,8 @@ void clearControlLinesLcdDisplay(void)
 void clearLcdDisplay(void)
 {
 	// Turn all of the LCD pixels off (0's), effectively clearing the display
-    byteSet(&(mmap[0][0]), 0, sizeof(mmap));
-    writeMapToLcd(mmap);
+    byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+    writeMapToLcd(g_mmap);
 }
 
 /****************************************
@@ -596,8 +581,8 @@ void clearLcdDisplay(void)
 void fillLcdDisplay(void)
 {
 	// Turn all of the LCD pixels on (1's), effectively filling the display
-    byteSet(&(mmap[0][0]), 0xff, sizeof(mmap));
-    writeMapToLcd(mmap);
+    byteSet(&(g_mmap[0][0]), 0xff, sizeof(g_mmap));
+    writeMapToLcd(g_mmap);
 }
 
 
@@ -687,27 +672,27 @@ void adjustLcdContrast(CONTRAST_ADJUSTMENT adjust)
 	{
 		case LIGHTER:
 			// Check if an increment in contrast will exceed the max
-			if ((contrast_value + CONTRAST_STEPPING) <= MAX_CONTRAST)
+			if ((g_contrast_value + CONTRAST_STEPPING) <= MAX_CONTRAST)
 			{
-				contrast_value += CONTRAST_STEPPING;
+				g_contrast_value += CONTRAST_STEPPING;
 			} 
 
-			setLcdContrast(contrast_value);
+			setLcdContrast(g_contrast_value);
 			break;
 		
 		case DARKER:
 			// Check if an deincrement in contrast will exceed the min
-			if ((contrast_value - CONTRAST_STEPPING) >= MIN_CONTRAST)
+			if ((g_contrast_value - CONTRAST_STEPPING) >= MIN_CONTRAST)
 			{
-				contrast_value -= CONTRAST_STEPPING;
+				g_contrast_value -= CONTRAST_STEPPING;
 			} 
 
-			setLcdContrast(contrast_value);
+			setLcdContrast(g_contrast_value);
 			break;
 	}
 	
-	help_rec.lcd_contrast = contrast_value;
-	saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	g_helpRecord.lcd_contrast = g_contrast_value;
+	saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 }
 
 /*******************************************************************************
@@ -724,7 +709,7 @@ void setLcdContrast(uint8 cmd)
 	// Check if lcd contrast adjustment is out of visable range
 	if (cmd > DEFAULT_MAX_CONTRAST)
 	{
-		contrast_value = DEFAULT_MAX_CONTRAST;
+		g_contrast_value = DEFAULT_MAX_CONTRAST;
 		return;
 	}
 

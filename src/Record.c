@@ -18,7 +18,7 @@
 #include <string.h>
 #include "Menu.h"
 #include "Flash.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Summary.h"
 #include "Uart.h"
 #include "RealTimeClock.h"
@@ -35,22 +35,11 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern MONTH_TABLE_STRUCT monthTable[];
-//extern SUMMARY_DATA summaryTable[MAX_RAM_SUMMARYS];
-extern REC_HELP_MN_STRUCT help_rec;
-extern uint8 contrast_value;
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-extern uint8 autoCalDaysToWait;
-extern MODEM_SETUP_STRUCT modem_setup_rec;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-uint8 current_seismic_trig_type = IMPERIAL_TYPE;
-uint16 flash_store_bk[RECORD_STORAGE_SIZE_x16];
-REC_HELP_MN_STRUCT help_rec;
-uint8 print_millibars = OFF;
 
 /****************************************
 *	Function:  storeMnData()
@@ -58,26 +47,14 @@ uint8 print_millibars = OFF;
 ****************************************/
 void saveRecData(void* src_ptr, uint32 num, uint8 type)
 {        
-#if 1 // fix_ns8100
-	//uint16* mem_loc;
 	uint16 loc;
 	uint16 rec_size;
-
-	//mem_loc = (uint16*)FLASH_BASE_ADDR;
-	//byteSet(&flash_store_bk[0], 0, (RECORD_STORAGE_SIZE_x16 * 2));
-
-	//copyFlashBlock(flash_store_bk, mem_loc, RECORD_STORAGE_SIZE_x16);
-	//GetParameterMemory((uint8*)&flash_store_bk[0], 0, (RECORD_STORAGE_SIZE_x16 * 2));
 
 	switch (type)
 	{
 		case REC_TRIGGER_USER_MENU_TYPE:
 			debug("Programming Trigger Record...\n");
 			((REC_EVENT_MN_STRUCT *)src_ptr)->time_stamp = getCurrentTime();
-
-			//rec_size = sizeof(REC_EVENT_MN_STRUCT)/2;
-			//loc = (uint16)((sizeof(REC_EVENT_MN_STRUCT) / 2) * num);
-			//copyRecIntoFlashBk(&flash_store_bk[0], (uint16*)src_ptr, loc, rec_size);
 
 			rec_size = sizeof(REC_EVENT_MN_STRUCT);
 			loc = (uint16)(sizeof(REC_EVENT_MN_STRUCT) * num);
@@ -89,10 +66,6 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 
 			((REC_HELP_MN_STRUCT *)src_ptr)->encode_ln = 0xA5A5;
 
-			//rec_size = sizeof(REC_HELP_MN_STRUCT)/2;
-			//loc = (sizeof(REC_EVENT_MN_STRUCT)/2) * (MAX_NUM_OF_SAVED_SETUPS + 1);
-			//copyRecIntoFlashBk(&flash_store_bk[0], (uint16*)src_ptr, loc, rec_size);
-
 			rec_size = sizeof(REC_HELP_MN_STRUCT);
 			loc = (sizeof(REC_EVENT_MN_STRUCT)) * (MAX_NUM_OF_SAVED_SETUPS + 1);
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
@@ -103,11 +76,6 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 
 			((MODEM_SETUP_STRUCT *)src_ptr)->invalid = 0x0000;
 
-			//rec_size = sizeof(MODEM_SETUP_STRUCT)/2;
-			//loc = ((sizeof(REC_EVENT_MN_STRUCT)/2) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
-			//		(sizeof(REC_HELP_MN_STRUCT)/2) + (sizeof(FACTORY_SETUP_STRUCT)/2));
-			//copyRecIntoFlashBk(&flash_store_bk[0], (uint16*)src_ptr, loc, rec_size);
-
 			rec_size = sizeof(MODEM_SETUP_STRUCT);
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
 					sizeof(REC_HELP_MN_STRUCT));
@@ -115,13 +83,9 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_FACTORY_SETUP_TYPE:
-			debug("Programming Factory Setup Configuration...\n");
+			debug("Programming Factory Setup Record...\n");
 
 			((FACTORY_SETUP_STRUCT *)src_ptr)->invalid = 0x0000;
-
-			//rec_size = sizeof(FACTORY_SETUP_STRUCT)/2;
-			//loc = ((sizeof(REC_EVENT_MN_STRUCT)/2) * (MAX_NUM_OF_SAVED_SETUPS + 1) + (sizeof(REC_HELP_MN_STRUCT)/2));
-			//copyRecIntoFlashBk(&flash_store_bk[0], (uint16*)src_ptr, loc, rec_size);
 
 			rec_size = sizeof(FACTORY_SETUP_STRUCT);
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
@@ -129,14 +93,10 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
-		case REC_CURRENT_EVENT_NUM_TYPE:
-			debug("Programming Current Event Number Configuration...\n");
+		case REC_UNIQUE_EVENT_ID_TYPE:
+			debug("Programming Current Event Number Record...\n");
 
 			((CURRENT_EVENT_NUMBER_STRUCT*)src_ptr)->invalid = 0x0000;
-
-			//rec_size = sizeof(FACTORY_SETUP_STRUCT)/2;
-			//loc = ((sizeof(REC_EVENT_MN_STRUCT)/2) * (MAX_NUM_OF_SAVED_SETUPS + 1) + (sizeof(REC_HELP_MN_STRUCT)/2));
-			//copyRecIntoFlashBk(&flash_store_bk[0], (uint16*)src_ptr, loc, rec_size);
 
 			rec_size = sizeof(CURRENT_EVENT_NUMBER_STRUCT);
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
@@ -145,17 +105,22 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
+		case REC_UNIQUE_MONITOR_LOG_ID_TYPE:
+			debug("Programming Monitor Log ID Record...\n");
+
+			((MONITOR_LOG_ID_STRUCT*)src_ptr)->invalid = 0x0000;
+
+			rec_size = sizeof(MONITOR_LOG_ID_STRUCT);
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
+					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+					sizeof(FACTORY_SETUP_STRUCT) + sizeof(CURRENT_EVENT_NUMBER_STRUCT));
+			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
+			break;
+
 		default: // If type doesnt match, just return
 			return;
 			break;
 	}
-#endif	
-	//sectorErase(mem_loc, 1);
-	//flashWrite(mem_loc, flash_store_bk, RECORD_STORAGE_SIZE_x16);
-	//byteCpy(mem_loc, flash_store_bk, RECORD_STORAGE_SIZE_x16);
-	//SaveParameterMemory((uint8*)&flash_store_bk[0], 0, (RECORD_STORAGE_SIZE_x16 * 2));
-
-	//debugRaw(" done.\n");
 }
 
 /****************************************
@@ -164,16 +129,12 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 ****************************************/
 void getRecData(void* dst_ptr, uint32 num, uint8 type)
 { 
-#if 1 // fix_ns8100
-	//uint16* mem_loc = (uint16*)FLASH_BASE_ADDR;
-	//uint16* mem_loc = (uint16*)0x00;
 	uint16 loc;
 
 	switch (type)
 	{
 		case REC_TRIGGER_USER_MENU_TYPE:
 			loc = (uint16)(sizeof(REC_EVENT_MN_STRUCT) * num);
-			//byteCpy((uint8*)dst_ptr, (uint8*)mem_loc + loc, sizeof(REC_EVENT_MN_STRUCT));
 			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(REC_EVENT_MN_STRUCT));
 			break;
 
@@ -182,36 +143,38 @@ void getRecData(void* dst_ptr, uint32 num, uint8 type)
 
 		case REC_HELP_USER_MENU_TYPE:
 			loc = sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1);
-			//byteCpy((uint8*)dst_ptr, (uint8*)mem_loc + loc, sizeof(REC_HELP_MN_STRUCT));       
 			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(REC_HELP_MN_STRUCT));
 			break;
 
 		case REC_MODEM_SETUP_TYPE:
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1)) + 
 					sizeof(REC_HELP_MN_STRUCT);
-			//byteCpy((uint8*)dst_ptr, (uint8*)mem_loc + loc, sizeof(MODEM_SETUP_STRUCT));       
 			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(MODEM_SETUP_STRUCT));
 			break;
 
 		case REC_FACTORY_SETUP_TYPE:
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1)) + 
 					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT);
-			//byteCpy((uint8*)dst_ptr, (uint8*)mem_loc + loc, sizeof(FACTORY_SETUP_STRUCT));       
 			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(FACTORY_SETUP_STRUCT));
 			break;
 
-		case REC_CURRENT_EVENT_NUM_TYPE:
+		case REC_UNIQUE_EVENT_ID_TYPE:
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1)) + 
 					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
 					sizeof(FACTORY_SETUP_STRUCT);
-			//byteCpy((uint8*)dst_ptr, (uint8*)mem_loc + loc, sizeof(FACTORY_SETUP_STRUCT));       
 			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(CURRENT_EVENT_NUMBER_STRUCT));
+			break;
+
+		case REC_UNIQUE_MONITOR_LOG_ID_TYPE:
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1)) + 
+					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+					sizeof(FACTORY_SETUP_STRUCT) + sizeof(CURRENT_EVENT_NUMBER_STRUCT);
+			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(MONITOR_LOG_ID_STRUCT));
 			break;
 
 		default:
 			break;
 	}
-#endif
 }
 
 /****************************************
@@ -242,11 +205,11 @@ void convertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 
 			if((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
-				strcpy((char*)tbuff, (char*)(monthTable[tempTime->month].name));
+				strcpy((char*)tbuff, (char*)(g_monthTable[tempTime->month].name));
 			}
 			else
 			{
-				strcpy((char*)tbuff, (char*)(monthTable[1].name));
+				strcpy((char*)tbuff, (char*)(g_monthTable[1].name));
 			}			
 			
 			sprintf((char*)buff,"%02d-%s-%02d", tempTime->day, tbuff, tempTime->year);
@@ -257,11 +220,11 @@ void convertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 
 			if ((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
-				strcpy((char*)tbuff, (char*)(monthTable[tempTime->month].name));
+				strcpy((char*)tbuff, (char*)(g_monthTable[tempTime->month].name));
 			}
 			else
 			{
-				strcpy((char*)tbuff, (char*)(monthTable[1].name));
+				strcpy((char*)tbuff, (char*)(g_monthTable[1].name));
 			}			
 			
 			sprintf((char*)buff,"%02d-%s-%02d %02d:%02d:%02d",
@@ -274,11 +237,11 @@ void convertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 
 			if ((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
-				strcpy((char*)tbuff, (char*)(monthTable[tempTime->month].name));
+				strcpy((char*)tbuff, (char*)(g_monthTable[tempTime->month].name));
 			}
 			else
 			{
-				strcpy((char*)tbuff, (char*)(monthTable[1].name));
+				strcpy((char*)tbuff, (char*)(g_monthTable[1].name));
 			}			
 
 			if (tempTime->hour > 12)
@@ -300,11 +263,11 @@ void convertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 			
 			if ((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
-				strcpy((char*)tbuff, (char*)(monthTable[tempTime->month].name));
+				strcpy((char*)tbuff, (char*)(g_monthTable[tempTime->month].name));
 			}
 			else
 			{
-				strcpy((char*)tbuff, (char*)(monthTable[1].name));
+				strcpy((char*)tbuff, (char*)(g_monthTable[1].name));
 			}			
 			
 			sprintf((char*)buff,"%02d%s%02d %02d:%02d",
@@ -317,11 +280,11 @@ void convertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 			
 			if ((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
-				strcpy((char*)tbuff, (char*)(monthTable[tempTime->month].name));
+				strcpy((char*)tbuff, (char*)(g_monthTable[tempTime->month].name));
 			}
 			else
 			{
-				strcpy((char*)tbuff, (char*)(monthTable[1].name));
+				strcpy((char*)tbuff, (char*)(g_monthTable[1].name));
 			}			
 
 			sprintf((char*)buff,"%02d-%s-%02d", 
@@ -522,32 +485,32 @@ void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 ****************************************/
 void activateHelpRecordOptions(void)
 {
-	contrast_value = help_rec.lcd_contrast;
+	g_contrast_value = g_helpRecord.lcd_contrast;
 
-	if ((contrast_value < MIN_CONTRAST) || (contrast_value > MAX_CONTRAST))
+	if ((g_contrast_value < MIN_CONTRAST) || (g_contrast_value > MAX_CONTRAST))
 	{
-		help_rec.lcd_contrast = contrast_value = DEFUALT_CONTRAST;
+		g_helpRecord.lcd_contrast = g_contrast_value = DEFUALT_CONTRAST;
 	}               
 
-	setLcdContrast(contrast_value);
+	setLcdContrast(g_contrast_value);
 
 	// The choices are between metric and sae measurement systems.
-	gp_SensorInfo->unitsFlag = help_rec.units_of_measure;
+	g_sensorInfoPtr->unitsFlag = g_helpRecord.units_of_measure;
 
 	assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
 
-	if ((help_rec.lcd_timeout < LCD_TIMEOUT_MIN_VALUE) || (help_rec.lcd_timeout > LCD_TIMEOUT_MAX_VALUE))
+	if ((g_helpRecord.lcd_timeout < LCD_TIMEOUT_MIN_VALUE) || (g_helpRecord.lcd_timeout > LCD_TIMEOUT_MAX_VALUE))
 	{
-		help_rec.lcd_timeout = LCD_TIMEOUT_DEFAULT_VALUE;
+		g_helpRecord.lcd_timeout = LCD_TIMEOUT_DEFAULT_VALUE;
 	}
-	assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(help_rec.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+	assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 
-	debug("Auto Monitor Mode: %s\n", (help_rec.auto_monitor_mode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
-    assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(help_rec.auto_monitor_mode * TICKS_PER_MIN), autoMonitorTimerCallBack);     
+	debug("Auto Monitor Mode: %s\n", (g_helpRecord.auto_monitor_mode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
+    assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.auto_monitor_mode * TICKS_PER_MIN), autoMonitorTimerCallBack);     
 
-	if (help_rec.auto_cal_mode != AUTO_NO_CAL_TIMEOUT)
+	if (g_helpRecord.auto_cal_mode != AUTO_NO_CAL_TIMEOUT)
 	{
-		autoCalDaysToWait = 1;
+		g_autoCalDaysToWait = 1;
 	}
 }
 
@@ -558,17 +521,17 @@ void activateHelpRecordOptions(void)
 void loadModemSetupRecordDefaults()
 {
 	// Initialize the help record
-	byteSet(&modem_setup_rec, 0, sizeof(MODEM_SETUP_STRUCT));
+	byteSet(&g_modemSetupRecord, 0, sizeof(MODEM_SETUP_STRUCT));
 
-	modem_setup_rec.modemStatus = NO;
-	modem_setup_rec.retries = MODEM_RETRY_DEFAULT_VALUE;
-	modem_setup_rec.retryTime = MODEM_RETRY_TIME_DEFAULT_VALUE;
+	g_modemSetupRecord.modemStatus = NO;
+	g_modemSetupRecord.retries = MODEM_RETRY_DEFAULT_VALUE;
+	g_modemSetupRecord.retryTime = MODEM_RETRY_TIME_DEFAULT_VALUE;
 
 	// No need to set these since the memset to zero satisifies initialization
-	//modem_setup_rec.unlockCode
-	//modem_setup_rec.init
-	//modem_setup_rec.dial
-	//modem_setup_rec.reset
+	//g_modemSetupRecord.unlockCode
+	//g_modemSetupRecord.init
+	//g_modemSetupRecord.dial
+	//g_modemSetupRecord.reset
 }
 
 /****************************************
@@ -579,22 +542,22 @@ void validateModemSetupParameters(void)
 {
 	uint8 updated = NO;
 
-	if ((modem_setup_rec.retries < MODEM_RETRY_MIN_VALUE) || (modem_setup_rec.retries > MODEM_RETRY_MAX_VALUE))
+	if ((g_modemSetupRecord.retries < MODEM_RETRY_MIN_VALUE) || (g_modemSetupRecord.retries > MODEM_RETRY_MAX_VALUE))
 	{
-		modem_setup_rec.retries = MODEM_RETRY_DEFAULT_VALUE;
+		g_modemSetupRecord.retries = MODEM_RETRY_DEFAULT_VALUE;
 		updated = YES;	
 	}
 
-	if ((modem_setup_rec.retryTime < MODEM_RETRY_TIME_MIN_VALUE) || (modem_setup_rec.retryTime > MODEM_RETRY_TIME_MAX_VALUE))
+	if ((g_modemSetupRecord.retryTime < MODEM_RETRY_TIME_MIN_VALUE) || (g_modemSetupRecord.retryTime > MODEM_RETRY_TIME_MAX_VALUE))
 	{
-		modem_setup_rec.retryTime = MODEM_RETRY_TIME_DEFAULT_VALUE;
+		g_modemSetupRecord.retryTime = MODEM_RETRY_TIME_DEFAULT_VALUE;
 		updated = YES;
 	}
 	
 	if (updated)
 	{
 		// Save the Modem Setup Record
-		saveRecData(&modem_setup_rec, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
+		saveRecData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
 	}
 }
 
@@ -753,11 +716,11 @@ void EraseParameterMemory(uint16 startAddr, uint16 dataLength)
 // Fcuntion:	
 // Purpose:		
 //-----------------------------------------------------------------------------
+#if 0
 uint8 ReadParameterMemory(uint16 address)
 {
 	uint8 data = 0;
 
-#if 0 // fix_ns8100
 	while(ReadStatusParameterMemory() & 0x01) {};
 
 	// Assert slave select
@@ -784,17 +747,18 @@ uint8 ReadParameterMemory(uint16 address)
 
 	// Deassert slave select
 	reg_SPIPORT.reg |= 0x08;
-#endif	
+
 	return (data);
 }
+#endif	
 
 //-----------------------------------------------------------------------------
 // Fcuntion:	
 // Purpose:		
 //-----------------------------------------------------------------------------
+#if 0
 void WriteParameterMemory(uint16 address, uint8 data)
 {
-#if 0 // fix_ns8100
 	while(ReadStatusParameterMemory() & 0x01) {};
 	SetWriteEnableLatchParameterMemory();
 
@@ -822,16 +786,16 @@ void WriteParameterMemory(uint16 address, uint8 data)
 
 	// Deassert slave select
 	reg_SPIPORT.reg |= 0x08;
-#endif
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Fcuntion:	
 // Purpose:		Disable Writes
 //-----------------------------------------------------------------------------
+#if 0
 void ResetWriteEnableLatchParameterMemory(void)
 {
-#if 0 // fix_ns8100
 	uint8 data;
 
 	// Assert slave select
@@ -846,16 +810,16 @@ void ResetWriteEnableLatchParameterMemory(void)
 
 	// Deassert slave select
 	reg_SPIPORT.reg |= 0x08;
-#endif
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Fcuntion:	
 // Purpose:		Enable Writes
 //-----------------------------------------------------------------------------
+#if 0
 void SetWriteEnableLatchParameterMemory(void)
 {
-#if 0 // fix_ns8100
 	uint8 data;
 	
 	// Assert slave select
@@ -870,18 +834,18 @@ void SetWriteEnableLatchParameterMemory(void)
 
 	// Deassert slave select
 	reg_SPIPORT.reg |= 0x08;
-#endif
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Fcuntion:	
 // Purpose:		
 //-----------------------------------------------------------------------------
+#if 0
 uint8 ReadStatusParameterMemory(void)
 {
 	uint8 status = 0;
 
-#if 0 // fix_ns8100
 	// Assert slave select
 	reg_SPIPORT.reg &= ~0x08;
 
@@ -898,17 +862,18 @@ uint8 ReadStatusParameterMemory(void)
 
 	// Deassert slave select
 	reg_SPIPORT.reg |= 0x08;
-#endif
+
 	return (status);
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Fcuntion:	
 // Purpose:		
 //-----------------------------------------------------------------------------
+#if 0
 void WriteStatusParameterMemory(uint8 data)
 {
-#if 0 // fix_ns8100
 	// Assert slave select
 	reg_SPIPORT.reg &= ~0x08;
 
@@ -925,5 +890,5 @@ void WriteStatusParameterMemory(uint8 data)
 
 	// Deassert slave select
 	reg_SPIPORT.reg |= 0x08;
-#endif
 }
+#endif

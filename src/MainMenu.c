@@ -35,19 +35,14 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern MN_MEM_DATA_STRUCT mn_ptr[DEFAULT_MN_SIZE];
-extern int32 active_menu;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern REC_EVENT_MN_STRUCT trig_rec;
+#include "Globals.h"
 extern USER_MENU_STRUCT modeMenu[];
 extern USER_MENU_STRUCT helpMenu[];
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-TEMP_MENU_DATA_STRUCT main_mn_table_test[MAIN_MN_TABLE_SIZE] = {
+static TEMP_MENU_DATA_STRUCT s_mainMenuTable[MAIN_MN_TABLE_SIZE] = {
 {MAIN_PRE_TAG, NOMIS_MAIN_MENU_TEXT, MAIN_POST_TAG},
 {NO_TAG, SELECT_TEXT, NO_TAG},
 {NO_TAG, NULL_TEXT, NO_TAG},
@@ -76,10 +71,10 @@ void mainMn(INPUT_MSG_STRUCT msg)
   
     mainMnProc(msg, &wnd_layout, &mn_layout);           
 
-    if (active_menu == MAIN_MENU)
+    if (g_activeMenu == MAIN_MENU)
     {
         dsplySelMn(&wnd_layout, &mn_layout, TITLE_CENTERED);
-        writeMapToLcd(mmap);
+        writeMapToLcd(g_mmap);
     }
 }
 
@@ -113,7 +108,7 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 				mn_layout_ptr->top_ln = (uint16)(mn_layout_ptr->curr_ln - 5);
 			}
 
-			loadTempMenuTable(main_mn_table_test);
+			loadTempMenuTable(s_mainMenuTable);
 			break;
 
 		case (KEYPRESS_MENU_CMD):
@@ -132,71 +127,74 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					switch (mn_layout_ptr->curr_ln)
 					{
 						case (3):
-							if (factory_setup_rec.invalid)
+							if (g_factorySetupRecord.invalid)
 							{
 								debugWarn("Factory setup record not found.\n");
 								messageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
 							}
 							else
 							{
-								trig_rec.op_mode = WAVEFORM_MODE;
-								updateModeMenuTitle(trig_rec.op_mode);
+								g_triggerRecord.op_mode = WAVEFORM_MODE;
+								updateModeMenuTitle(g_triggerRecord.op_mode);
 								ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
-								(*menufunc_ptrs[active_menu]) (mn_msg);
+								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							}
 							break; 
 						case (4):
-							if (factory_setup_rec.invalid)
+							if (g_factorySetupRecord.invalid)
 							{
 								debugWarn("Factory setup record not found.\n");
 								messageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
 							}
 							else
 							{
-								trig_rec.op_mode = BARGRAPH_MODE;
-								updateModeMenuTitle(trig_rec.op_mode);
+								g_triggerRecord.op_mode = BARGRAPH_MODE;
+								updateModeMenuTitle(g_triggerRecord.op_mode);
 								ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
-								(*menufunc_ptrs[active_menu]) (mn_msg);
+								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							}
 							break;
 						case (5): 
-							// Combo mode - not operational yet
-							//messageBox(getLangText(STATUS_TEXT), getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT), MB_OK);
-							if (factory_setup_rec.invalid)
+							if (g_factorySetupRecord.invalid)
 							{
 								debugWarn("Factory setup record not found.\n");
 								messageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
 							}
 							else
 							{
-								trig_rec.op_mode = COMBO_MODE;
-								updateModeMenuTitle(trig_rec.op_mode);
+								g_triggerRecord.op_mode = COMBO_MODE;
+								updateModeMenuTitle(g_triggerRecord.op_mode);
 								ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
-								(*menufunc_ptrs[active_menu]) (mn_msg);
+								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							}
 							break;
-						case (6): active_menu = LOAD_REC_MENU;
-							ACTIVATE_MENU_MSG(); (*menufunc_ptrs[active_menu]) (mn_msg);
+						case (6): g_activeMenu = LOAD_REC_MENU;
+							ACTIVATE_MENU_MSG(); (*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							break;
 						default:
 							break;
 					}
 					break;      
+
 				case (DOWN_ARROW_KEY):
 					mainMnScroll(DOWN, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (UP_ARROW_KEY):
 					mainMnScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
-				case (MINUS_KEY): adjustLcdContrast(DARKER); break;
-				case (PLUS_KEY): adjustLcdContrast(LIGHTER); break;
+				case (MINUS_KEY): 
+					adjustLcdContrast(DARKER);
+					break;
+				case (PLUS_KEY): 
+					adjustLcdContrast(LIGHTER); 
+					break;
 				case (ESC_KEY):
 					// Reset the current line to tbe the top line	
 					mn_layout_ptr->curr_ln = 3;
 					break;
 				case (HELP_KEY):
 					ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
-					(*menufunc_ptrs[active_menu]) (mn_msg);
+					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 					break;
 				default:
 					break;
@@ -217,7 +215,7 @@ void mainMnScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT * mn_layout_pt
 {   
    uint8 buff[50];
    
-   strcpy((char*)buff, (char*)(mn_ptr + mn_layout_ptr->curr_ln + 1)->data);
+   strcpy((char*)buff, (char*)(g_menuPtr + mn_layout_ptr->curr_ln + 1)->data);
 
    switch (direction)
    {

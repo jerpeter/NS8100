@@ -43,9 +43,13 @@ If not, force to SEGMENT and map segment to ROM in loader.
 #define TABLE_SIZE 256
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Externs
 ///----------------------------------------------------------------------------
-static const uint8 CRC8TABLE[TABLE_SIZE] =
+
+///----------------------------------------------------------------------------
+///	Local Scope Globals
+///----------------------------------------------------------------------------
+static const uint8 s_CRC8TABLE[TABLE_SIZE] =
 {
   0x00, 0x5E, 0xBC, 0xE2, 0x61, 0x3F, 0xDD, 0x83, 0xC2, 0x9C, 0x7E, 0x20, 0xA3, 0xFD, 0x1F, 0x41,
   0x9D, 0xC3, 0x21, 0x7F, 0xFC, 0xA2, 0x40, 0x1E, 0x5F, 0x01, 0xE3, 0xBD, 0x3E, 0x60, 0x82, 0xDC,
@@ -65,7 +69,7 @@ static const uint8 CRC8TABLE[TABLE_SIZE] =
   0x74, 0x2A, 0xC8, 0x96, 0x15, 0x4B, 0xA9, 0xF7, 0xB6, 0xE8, 0x0A, 0x54, 0xD7, 0x89, 0x6B, 0x35
 };
 
-static const uint32 CCITT32[TABLE_SIZE] =
+static const uint32 s_CCITT32[TABLE_SIZE] =
 {
   0x00000000L, 0x77073096L, 0xEE0E612CL, 0x990951BAL,
   0x076DC419L, 0x706AF48FL, 0xE963A535L, 0x9E6495A3L,
@@ -143,7 +147,7 @@ uint8 calcCrc8(uint8* data, uint32 length, uint8 seed)
 
     for (i = 0; i < length; ++i)
     {
-        seed = CRC8TABLE[*data++ ^ seed];
+        seed = s_CRC8TABLE[*data++ ^ seed];
     }
     
     return (seed);
@@ -163,7 +167,7 @@ uint32 CalcCCITT32(uint8* data, uint32 length, uint32 seed)
     {
         index = (uint8)(*data++ ^ (uint8)seed);
         seed >>= 8;
-        seed ^= CCITT32[index];
+        seed ^= s_CCITT32[index];
     }
     
     return (seed);

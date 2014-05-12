@@ -21,7 +21,7 @@
 #include "Old_Board.h"
 #include "Uart.h"
 #include "RealTimeClock.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Menu.h"
 #include "ProcessBargraph.h"
 #include "Flash.h"
@@ -35,85 +35,11 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern uint16* endFlashSectorPtr;
-extern EVT_RECORD g_RamEventRecord;				// The event record in Ram, being filled for the current event.
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;// Sensor information, calculated when sensor parameters change.
-extern REC_EVENT_MN_STRUCT trig_rec;		// Current trigger record structure in ram.
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-extern REC_HELP_MN_STRUCT help_rec;
-extern MN_EVENT_STRUCT mn_event_flags;		// Event flags to indicate current calling menu
-extern SYS_EVENT_STRUCT SysEvents_flags;	// System flags for main loop processing.
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-
-extern uint16* startOfPreTrigBuff;
-extern uint16* tailOfPreTrigBuff;
-extern uint16* endOfPreTrigBuff;
-
-// Print flag to indicate printing attempt or skip printing.
-extern uint8 print_out_mode;
-extern uint16* gp_bg430DataStart;
-extern uint16* gp_bg430DataWrite;
-extern uint16* gp_bg430DataRead;
-extern uint16* gp_bg430DataEnd;
-
-// ns8100
-extern FL_FILE* gCurrentEventFileHandle;
-extern uint16 g_currentEventNumber;
-extern uint16 eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-SUMMARY_DATA* gBargraphSummaryPtr = 0;
-
-// For bargraph processing.
-uint8 gOneMinuteCount = 0;					// Counters
-uint32 gOneSecondCnt = 0;
-uint32 gBarIntervalCnt = 0;
-uint32 gTotalBarIntervalCnt = 0;
-uint32 gSummaryIntervalCnt = 0;
-uint16 gSummaryCnt = 1;
-
-BARGRAPH_FREQ_CALC_BUFFER g_bargraphFreqCalcBuffer;
-
-// A queue of buffers containing summary Interval data, so the
-// summary interval data can be printed outside of the ISR context.
-CALCULATED_DATA_STRUCT g_bargraphSummaryInterval[NUM_OF_SUM_INTERVAL_BUFFERS];
-CALCULATED_DATA_STRUCT* g_bargraphSumIntervalWritePtr = &(g_bargraphSummaryInterval[0]);
-CALCULATED_DATA_STRUCT* g_bargraphSumIntervalReadPtr = &(g_bargraphSummaryInterval[0]);
-CALCULATED_DATA_STRUCT* g_bargraphSumIntervalEndPtr = &(g_bargraphSummaryInterval[NUM_OF_SUM_INTERVAL_BUFFERS-1]);
-
-// A queue of buffers containing bar Interval data, so the
-// bar interval data can be printed outside of the ISR context.
-BARGRAPH_BAR_INTERVAL_DATA g_bargraphBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS];
-BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalWritePtr = &(g_bargraphBarInterval[0]);
-BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalReadPtr = &(g_bargraphBarInterval[0]);
-BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalEndPtr = &(g_bargraphBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS - 1]);
-
-// The following are the Event Data ram buffer pointers.
-#if 0 // ns7100
-uint16* g_bargrapheventDataBuffer;
-uint16* g_bargraphEventDataStartPtr;
-uint16* g_bargraphEventDataWritePtr;
-uint16* g_bargraphEventDataReadPtr;
-uint16* g_bargraphEventDataEndPtr;
-#endif
-
-uint16 aImpulsePeak;
-uint16 rImpulsePeak;
-uint16 vImpulsePeak;
-uint16 tImpulsePeak;
-uint32 vsImpulsePeak;
-uint16 impulseMenuCount;
-uint16 aJobPeak;
-uint16 aJobFreq;
-uint16 rJobPeak;
-uint16 rJobFreq;
-uint16 vJobPeak;
-uint16 vJobFreq;
-uint16 tJobPeak;
-uint16 tJobFreq;
-uint32 vsJobPeak;
 
 //*****************************************************************************
 // Function:	StartNewBargraph
@@ -121,10 +47,10 @@ uint32 vsJobPeak;
 //*****************************************************************************
 void StartNewBargraph(void)
 {
-	gBargraphSummaryPtr = NULL;
+	g_bargraphSummaryPtr = NULL;
 
 	// Get the address of an empty Ram summary
-	if (GetRamSummaryEntry(&gBargraphSummaryPtr) == FALSE)
+	if (GetRamSummaryEntry(&g_bargraphSummaryPtr) == FALSE)
 	{
 		debug("Out of Ram Summary Entrys\n");
 		return;
@@ -133,7 +59,7 @@ void StartNewBargraph(void)
 	else
 	{
 		// Setup location of the event data in flash. True for bargraph and waveform.
-		advFlashDataPtrToEventData(gBargraphSummaryPtr);
+		advFlashDataPtrToEventData(g_bargraphSummaryPtr);
 	}
 #endif
 
@@ -145,23 +71,23 @@ void StartNewBargraph(void)
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
 	byteSet(&g_bargraphFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
 
-	gSummaryCnt = 0;
-	gOneSecondCnt = 0;			// Count the secs so that we can increment the sum capture rate.
-	gOneMinuteCount = 0;		// Flag to mark the end of a summary sample in terms of time.
-	gBarIntervalCnt = 0;		// Count the number of samples that make up a bar interval.
-	gSummaryIntervalCnt = 0;	// Count the number of bars that make up a summary interval.
-	gTotalBarIntervalCnt = 0;
+	g_summaryCount = 0;
+	g_oneSecondCnt = 0;			// Count the secs so that we can increment the sum capture rate.
+	g_oneMinuteCount = 0;		// Flag to mark the end of a summary sample in terms of time.
+	g_barIntervalCnt = 0;		// Count the number of samples that make up a bar interval.
+	g_summaryIntervalCnt = 0;	// Count the number of bars that make up a summary interval.
+	g_totalBarIntervalCnt = 0;
 
 #if 0 // ns7100
-	g_bargrapheventDataBuffer = &eventDataBuffer[0];
+	g_bargraphg_eventDataBuffer = &g_eventDataBuffer[0];
 
 	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
-	byteSet(&(g_bargrapheventDataBuffer[0]), 0, (sizeof(uint16) * BG_DATA_BUFFER_SIZE));
+	byteSet(&(g_bargraphg_eventDataBuffer[0]), 0, (sizeof(uint16) * BG_DATA_BUFFER_SIZE));
 
-	g_bargraphEventDataStartPtr = &(g_bargrapheventDataBuffer[0]);
-	g_bargraphEventDataWritePtr = &(g_bargrapheventDataBuffer[0]);
-	g_bargraphEventDataReadPtr = &(g_bargrapheventDataBuffer[0]);
-	g_bargraphEventDataEndPtr = &(g_bargrapheventDataBuffer[BG_DATA_BUFFER_SIZE - 1]);
+	g_bargraphEventDataStartPtr = &(g_bargraphg_eventDataBuffer[0]);
+	g_bargraphEventDataWritePtr = &(g_bargraphg_eventDataBuffer[0]);
+	g_bargraphEventDataReadPtr = &(g_bargraphg_eventDataBuffer[0]);
+	g_bargraphEventDataEndPtr = &(g_bargraphg_eventDataBuffer[BG_DATA_BUFFER_SIZE - 1]);
 #endif
 
 	g_bargraphBarIntervalWritePtr = &(g_bargraphBarInterval[0]);
@@ -183,8 +109,8 @@ void StartNewBargraph(void)
 	// For Bargraph, these values are filled in at the end of bargraph.
 	g_RamEventRecord.summary.captured.batteryLevel =
 		(uint32)((float)100.0 * (float)convertedBatteryLevel(BATTERY_VOLTAGE));
-	g_RamEventRecord.summary.captured.printerStatus = (uint8)(help_rec.auto_print);
-	g_RamEventRecord.summary.captured.calDate = factory_setup_rec.cal_date;
+	g_RamEventRecord.summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
+	g_RamEventRecord.summary.captured.calDate = g_factorySetupRecord.cal_date;
 
 	// Get the time
 	g_RamEventRecord.summary.captured.eventTime =
@@ -208,7 +134,7 @@ void EndBargraph(void)
 	eventDataFlag = moveBarIntervalDataToFile();
 
 	// If no data, both flags are zero, then skip, end of record.
-	if ((eventDataFlag > 0) || (gSummaryIntervalCnt>0))
+	if ((eventDataFlag > 0) || (g_summaryIntervalCnt>0))
 	{
 		moveSummaryIntervalDataToFile();
 #if 0 // ns7100
@@ -229,7 +155,7 @@ void ProcessBargraphData(void)
 	uint16 commandNibble = 0x0000;
 
 	// Store the command nibble for the first channel of data
-	commandNibble = (uint16)(*(tailOfPreTrigBuff) & EMBEDDED_CMD);
+	commandNibble = (uint16)(*(g_tailOfPreTrigBuff) & EMBEDDED_CMD);
 
 	// Check if the command is a trigger two, which is the 1st warning event
 	if (commandNibble == TRIG_TWO)
@@ -244,36 +170,36 @@ void ProcessBargraphData(void)
 #endif
 
 	// Check to see if we have a chunk of ram buffer to write, otherwise check for data wrapping.
-	if ((gp_bg430DataEnd - gp_bg430DataWrite) >= 4)
+	if ((g_bg430DataEndPtr - g_bg430DataWritePtr) >= 4)
 	{
 		// Move from the pre-trigger buffer to our large ram buffer.
-		*gp_bg430DataWrite++ = *tailOfPreTrigBuff++;
-		*gp_bg430DataWrite++ = *tailOfPreTrigBuff++;
-		*gp_bg430DataWrite++ = *tailOfPreTrigBuff++;
-		*gp_bg430DataWrite++ = *tailOfPreTrigBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
 
 		// Check for the end and if so go to the top
-		if (gp_bg430DataWrite > gp_bg430DataEnd) 
-			gp_bg430DataWrite = gp_bg430DataStart;
+		if (g_bg430DataWritePtr > g_bg430DataEndPtr) 
+			g_bg430DataWritePtr = g_bg430DataStartPtr;
 	}
 	else
 	{
 		// Move from the pre-trigger buffer to our large ram buffer, but check for data wrapping.
-		*gp_bg430DataWrite++ = *tailOfPreTrigBuff++;
-		if (gp_bg430DataWrite > gp_bg430DataEnd) gp_bg430DataWrite = gp_bg430DataStart;
+		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 
-		*gp_bg430DataWrite++ = *tailOfPreTrigBuff++;
-		if (gp_bg430DataWrite > gp_bg430DataEnd) gp_bg430DataWrite = gp_bg430DataStart;
+		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 
-		*gp_bg430DataWrite++ = *tailOfPreTrigBuff++;
-		if (gp_bg430DataWrite > gp_bg430DataEnd) gp_bg430DataWrite = gp_bg430DataStart;
+		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 
-		*gp_bg430DataWrite++ = *tailOfPreTrigBuff++;
-		if (gp_bg430DataWrite > gp_bg430DataEnd) gp_bg430DataWrite = gp_bg430DataStart;
+		*g_bg430DataWritePtr++ = *g_tailOfPreTrigBuff++;
+		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 	}
 
 	// Handle preTriggerBuf pointer for circular buffer
-	if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
+	if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
 	raiseSystemEventFlag(BARGRAPH_EVENT);
@@ -285,13 +211,13 @@ void ProcessBargraphData(void)
 //*****************************************************************************
 uint32 moveBarIntervalDataToFile(void)
 {
-	uint32 accumulatedBarIntervalCount = gBarIntervalCnt;
+	uint32 accumulatedBarIntervalCount = g_barIntervalCnt;
 
 	// If Bar Intervals have been cached
-	if (gBarIntervalCnt > 0)
+	if (g_barIntervalCnt > 0)
 	{
 		// Reset the bar interval count
-		gBarIntervalCnt = 0;
+		g_barIntervalCnt = 0;
 
 #if 0 // ns7100
 		// Save Bar Interval peak Air into event data buffer
@@ -308,7 +234,7 @@ uint32 moveBarIntervalDataToFile(void)
 		*(g_bargraphEventDataWritePtr++) = (uint16)(g_bargraphBarIntervalWritePtr->vsMax & 0x0000FFFF);
 		END_OF_EVENT_BUFFER_CHECK(g_bargraphEventDataWritePtr, g_bargraphEventDataStartPtr, g_bargraphEventDataEndPtr);
 #else // ns8100
-		fl_fwrite(g_bargraphBarIntervalWritePtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, gCurrentEventFileHandle);		
+		fl_fwrite(g_bargraphBarIntervalWritePtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, g_currentEventFileHandle);		
 #endif
 
 		// Advance the Bar Interval global buffer pointer
@@ -334,9 +260,9 @@ void moveSummaryIntervalDataToFile(void)
 {
 	float rFreq, vFreq, tFreq;
 
-	rFreq = (float)((float)trig_rec.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1));
-	vFreq = (float)((float)trig_rec.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1));
-	tFreq = (float)((float)trig_rec.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1));
+	rFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1));
+	vFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1));
+	tFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1));
 
 	// Calculate the Peak Displacement
 	g_bargraphSumIntervalWritePtr->a.displacement = 0;
@@ -345,15 +271,15 @@ void moveSummaryIntervalDataToFile(void)
 	g_bargraphSumIntervalWritePtr->t.displacement = (uint32)(g_bargraphSumIntervalWritePtr->t.peak * 1000000 / 2 / PI / tFreq);
 
 	// Store timestamp for the end of the summary interval
-	gSummaryCnt++;
-	g_bargraphSumIntervalWritePtr->summariesCaptured = gSummaryCnt;
+	g_summaryCount++;
+	g_bargraphSumIntervalWritePtr->summariesCaptured = g_summaryCount;
 	g_bargraphSumIntervalWritePtr->intervalEnd_Time = getCurrentTime();
 	g_bargraphSumIntervalWritePtr->batteryLevel =
 		(uint32)(100.0 * convertedBatteryLevel(BATTERY_VOLTAGE));
 	g_bargraphSumIntervalWritePtr->calcStructEndFlag = 0xEECCCCEE;	// End structure flag
 
 	// Reset summary interval count
-	gSummaryIntervalCnt = 0;
+	g_summaryIntervalCnt = 0;
 
 #if 0 // ns7100
 	uint32 sizeOfRemainingBuffer;
@@ -392,7 +318,7 @@ void moveSummaryIntervalDataToFile(void)
 		g_bargraphEventDataWritePtr += ((sizeOfRemainingBuffer+1)/2);
 	}
 #else // ns8100
-	fl_fwrite(g_bargraphSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT), 1, gCurrentEventFileHandle);		
+	fl_fwrite(g_bargraphSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT), 1, g_currentEventFileHandle);		
 #endif
 
 	// Move update the job totals.
@@ -418,8 +344,8 @@ uint8 CalculateBargraphData(void)
 	static uint32 vsTemp;
 	static uint16 aTempNorm, rTempNorm, vTempNorm, tTempNorm;
 	static DATE_TIME_STRUCT aTempTime, rTempTime, vTempTime, tTempTime;
-	static uint8 aJobFreqFlag = NO, rJobFreqFlag = NO, vJobFreqFlag = NO, tJobFreqFlag = NO;
-	static uint8 aJobPeakMatch = NO, rJobPeakMatch = NO, vJobPeakMatch = NO, tJobPeakMatch = NO;
+	static uint8 g_aJobFreqFlag = NO, g_rJobFreqFlag = NO, g_vJobFreqFlag = NO, g_tJobFreqFlag = NO;
+	static uint8 g_aJobPeakMatch = NO, g_rJobPeakMatch = NO, g_vJobPeakMatch = NO, g_tJobPeakMatch = NO;
 
 	uint8 gotDataFlag = NO;
 	//int32 delta = 0;
@@ -427,66 +353,66 @@ uint8 CalculateBargraphData(void)
 	uint16* dataReadStart;
 	INPUT_MSG_STRUCT msg;
 
-	while ((gp_bg430DataRead != gp_bg430DataWrite) && (processingCount-- > 0))
+	while ((g_bg430DataReadPtr != g_bg430DataWritePtr) && (processingCount-- > 0))
 	{
 
 		if (processingCount == 1)
 		{
-			if (gp_bg430DataWrite < gp_bg430DataRead)
+			if (g_bg430DataWritePtr < g_bg430DataReadPtr)
 			{
-				if (((gp_bg430DataWrite - gp_bg430DataStart) +
-					 (gp_bg430DataEnd - gp_bg430DataRead)) > 500)
+				if (((g_bg430DataWritePtr - g_bg430DataStartPtr) +
+					 (g_bg430DataEndPtr - g_bg430DataReadPtr)) > 500)
 					processingCount = 500;
 			}
 			else
 			{
-				if ((gp_bg430DataWrite - gp_bg430DataRead) > 500)
+				if ((g_bg430DataWritePtr - g_bg430DataReadPtr) > 500)
 					processingCount = 500;
 			}
 		}
 
-		dataReadStart = gp_bg430DataRead;
+		dataReadStart = g_bg430DataReadPtr;
 
 		// Make sure that we will not catch up to writing the data, almost impossible.
-		if (gp_bg430DataRead == gp_bg430DataWrite)
+		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
 		{
 			debugErr("1a - Reading ptr equal to writing ptr.");
-			gp_bg430DataRead = dataReadStart;
+			g_bg430DataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
 		// Move from the pre-trigger buffer to our large ram buffer, but check for data wrapping.
-		aTemp = (uint16)((*gp_bg430DataRead++) & DATA_MASK);
-		if (gp_bg430DataRead > gp_bg430DataEnd) gp_bg430DataRead = gp_bg430DataStart;
+		aTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
 
 		// We have caught up to the end of the write with out it being completed.
-		if (gp_bg430DataRead == gp_bg430DataWrite)
+		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
 		{
 			debugErr("1b - Reading ptr equal to writing ptr.");
-			gp_bg430DataRead = dataReadStart;
+			g_bg430DataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		rTemp = (uint16)((*gp_bg430DataRead++) & DATA_MASK);
-		if (gp_bg430DataRead > gp_bg430DataEnd) gp_bg430DataRead = gp_bg430DataStart;
-		if (gp_bg430DataRead == gp_bg430DataWrite)
+		rTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
+		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
 		{
 			debugErr("1c - Reading ptr equal to writing ptr.");
-			gp_bg430DataRead = dataReadStart;
+			g_bg430DataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		vTemp = (uint16)((*gp_bg430DataRead++) & DATA_MASK);
-		if (gp_bg430DataRead > gp_bg430DataEnd) gp_bg430DataRead = gp_bg430DataStart;
-		if (gp_bg430DataRead == gp_bg430DataWrite)
+		vTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
+		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
 		{
 			debugErr("1d - Reading ptr equal to writing ptr.");
-			gp_bg430DataRead = dataReadStart;
+			g_bg430DataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		tTemp = (uint16)((*gp_bg430DataRead++) & DATA_MASK);
-		if (gp_bg430DataRead > gp_bg430DataEnd) gp_bg430DataRead = gp_bg430DataStart;
+		tTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
 
 		// If here we got data;
 		gotDataFlag = YES;
@@ -505,22 +431,22 @@ uint8 CalculateBargraphData(void)
 		//=================================================
 		// Impulse Interval
 		//=================================================
-		if (impulseMenuCount >= trig_rec.berec.impulseMenuUpdateSecs)
+		if (g_impulseMenuCount >= g_triggerRecord.berec.impulseMenuUpdateSecs)
 		{
-			impulseMenuCount = 0;
-			aImpulsePeak = rImpulsePeak = vImpulsePeak = tImpulsePeak = 0;
-			vsImpulsePeak = 0;
+			g_impulseMenuCount = 0;
+			g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
+			g_vsImpulsePeak = 0;
 		}
 
 		// ---------------------------------
 		// A, R, V, T channel and Vector Sum
 		// ---------------------------------
 		// Store the max A, R, V or T normalized value if a new max was found
-		if (aTempNorm > aImpulsePeak) aImpulsePeak = aTempNorm;
-		if (rTempNorm > rImpulsePeak) rImpulsePeak = rTempNorm;
-		if (vTempNorm > vImpulsePeak) vImpulsePeak = vTempNorm;
-		if (tTempNorm > tImpulsePeak) tImpulsePeak = tTempNorm;
-		if (vsTemp > vsImpulsePeak) vsImpulsePeak = vsTemp;
+		if (aTempNorm > g_aImpulsePeak) g_aImpulsePeak = aTempNorm;
+		if (rTempNorm > g_rImpulsePeak) g_rImpulsePeak = rTempNorm;
+		if (vTempNorm > g_vImpulsePeak) g_vImpulsePeak = vTempNorm;
+		if (tTempNorm > g_tImpulsePeak) g_tImpulsePeak = tTempNorm;
+		if (vsTemp > g_vsImpulsePeak) g_vsImpulsePeak = vsTemp;
 
 		//=================================================
 		// Bar Interval
@@ -579,17 +505,17 @@ uint8 CalculateBargraphData(void)
 				g_bargraphFreqCalcBuffer.a.matchFlag = FALSE;
 			}
 
-			if (aTempNorm >= aJobPeak)
+			if (aTempNorm >= g_aJobPeak)
 			{
-				if (aTempNorm == aJobPeak)
-					aJobPeakMatch = YES;
+				if (aTempNorm == g_aJobPeak)
+					g_aJobPeakMatch = YES;
 				else
 				{
-					aJobPeak = aTempNorm;
-					aJobPeakMatch = NO;
+					g_aJobPeak = aTempNorm;
+					g_aJobPeakMatch = NO;
 				}
 
-				aJobFreqFlag = YES;
+				g_aJobFreqFlag = YES;
 			}
 
 			// Set update flag since we have either a matched or a new max
@@ -620,17 +546,17 @@ uint8 CalculateBargraphData(void)
 				g_bargraphFreqCalcBuffer.r.matchFlag = FALSE;
 			}
 
-			if (rTempNorm >= rJobPeak)
+			if (rTempNorm >= g_rJobPeak)
 			{
-				if (rTempNorm == rJobPeak)
-					rJobPeakMatch = YES;
+				if (rTempNorm == g_rJobPeak)
+					g_rJobPeakMatch = YES;
 				else
 				{
-					rJobPeak = rTempNorm;
-					rJobPeakMatch = NO;
+					g_rJobPeak = rTempNorm;
+					g_rJobPeakMatch = NO;
 				}
 
-				rJobFreqFlag = YES;
+				g_rJobFreqFlag = YES;
 			}
 
 			// Set update flag since we have either a matched or a new max
@@ -661,17 +587,17 @@ uint8 CalculateBargraphData(void)
 				g_bargraphFreqCalcBuffer.v.matchFlag = FALSE;
 			}
 
-			if (vTempNorm >= vJobPeak)
+			if (vTempNorm >= g_vJobPeak)
 			{
-				if (vTempNorm == vJobPeak)
-					vJobPeakMatch = YES;
+				if (vTempNorm == g_vJobPeak)
+					g_vJobPeakMatch = YES;
 				else
 				{
-					vJobPeak = vTempNorm;
-					vJobPeakMatch = NO;
+					g_vJobPeak = vTempNorm;
+					g_vJobPeakMatch = NO;
 				}
 
-				vJobFreqFlag = YES;
+				g_vJobFreqFlag = YES;
 			}
 
 			// Set update flag since we have either a matched or a new max
@@ -702,17 +628,17 @@ uint8 CalculateBargraphData(void)
 				g_bargraphFreqCalcBuffer.t.matchFlag = FALSE;
 			}
 
-			if (tTempNorm >= tJobPeak)
+			if (tTempNorm >= g_tJobPeak)
 			{
-				if (tTempNorm == tJobPeak)
-					tJobPeakMatch = YES;
+				if (tTempNorm == g_tJobPeak)
+					g_tJobPeakMatch = YES;
 				else
 				{
-					tJobPeak = tTempNorm;
-					tJobPeakMatch = NO;
+					g_tJobPeak = tTempNorm;
+					g_tJobPeakMatch = NO;
 				}
 
-				tJobFreqFlag = YES;
+				g_tJobFreqFlag = YES;
 			}
 
 			// Set update flag since we have either a matched or a new max
@@ -730,9 +656,9 @@ uint8 CalculateBargraphData(void)
 			// Store timestamp
 			g_bargraphSumIntervalWritePtr->vs_Time = getCurrentTime();
 
-			if (vsTemp > vsJobPeak)
+			if (vsTemp > g_vsJobPeak)
 			{
-				vsJobPeak = vsTemp;
+				g_vsJobPeak = vsTemp;
 			}
 		}
 
@@ -774,21 +700,21 @@ uint8 CalculateBargraphData(void)
 				g_bargraphFreqCalcBuffer.a.matchFlag = FALSE;
 			}
 
-			if (aJobFreqFlag == YES)
+			if (g_aJobFreqFlag == YES)
 			{
-				if (aJobPeakMatch == YES)
+				if (g_aJobPeakMatch == YES)
 				{
-					if (g_bargraphFreqCalcBuffer.a.freq_count > aJobFreq)
-						aJobFreq = g_bargraphFreqCalcBuffer.a.freq_count;
+					if (g_bargraphFreqCalcBuffer.a.freq_count > g_aJobFreq)
+						g_aJobFreq = g_bargraphFreqCalcBuffer.a.freq_count;
 
-					aJobPeakMatch = NO;
+					g_aJobPeakMatch = NO;
 				}
 				else
 				{
-					aJobFreq = g_bargraphFreqCalcBuffer.a.freq_count;
+					g_aJobFreq = g_bargraphFreqCalcBuffer.a.freq_count;
 				}
 
-				aJobFreqFlag = NO;
+				g_aJobFreqFlag = NO;
 			}
 
 			// Reset count to 1 since we have a sample that's crossed zero boundary
@@ -835,21 +761,21 @@ uint8 CalculateBargraphData(void)
 				g_bargraphFreqCalcBuffer.r.matchFlag = FALSE;
 			}
 
-			if (rJobFreqFlag == YES)
+			if (g_rJobFreqFlag == YES)
 			{
-				if (rJobPeakMatch == YES)
+				if (g_rJobPeakMatch == YES)
 				{
-					if (g_bargraphFreqCalcBuffer.r.freq_count > rJobFreq)
-						rJobFreq = g_bargraphFreqCalcBuffer.r.freq_count;
+					if (g_bargraphFreqCalcBuffer.r.freq_count > g_rJobFreq)
+						g_rJobFreq = g_bargraphFreqCalcBuffer.r.freq_count;
 
-					rJobPeakMatch = NO;
+					g_rJobPeakMatch = NO;
 				}
 				else
 				{
-					rJobFreq = g_bargraphFreqCalcBuffer.r.freq_count;
+					g_rJobFreq = g_bargraphFreqCalcBuffer.r.freq_count;
 				}
 
-				rJobFreqFlag = NO;
+				g_rJobFreqFlag = NO;
 			}
 
 			// Reset count to 1 since we have a sample that's crossed zero boundary
@@ -896,21 +822,21 @@ uint8 CalculateBargraphData(void)
 				g_bargraphFreqCalcBuffer.v.matchFlag = FALSE;
 			}
 
-			if (vJobFreqFlag == YES)
+			if (g_vJobFreqFlag == YES)
 			{
-				if (vJobPeakMatch == YES)
+				if (g_vJobPeakMatch == YES)
 				{
-					if (g_bargraphFreqCalcBuffer.v.freq_count > vJobFreq)
-						vJobFreq = g_bargraphFreqCalcBuffer.v.freq_count;
+					if (g_bargraphFreqCalcBuffer.v.freq_count > g_vJobFreq)
+						g_vJobFreq = g_bargraphFreqCalcBuffer.v.freq_count;
 
-					vJobPeakMatch = NO;
+					g_vJobPeakMatch = NO;
 				}
 				else
 				{
-					vJobFreq = g_bargraphFreqCalcBuffer.v.freq_count;
+					g_vJobFreq = g_bargraphFreqCalcBuffer.v.freq_count;
 				}
 
-				vJobFreqFlag = NO;
+				g_vJobFreqFlag = NO;
 			}
 
 			// Reset count to 1 since we have a sample that's crossed zero boundary
@@ -957,21 +883,21 @@ uint8 CalculateBargraphData(void)
 				g_bargraphFreqCalcBuffer.t.matchFlag = FALSE;
 			}
 
-			if (tJobFreqFlag == YES)
+			if (g_tJobFreqFlag == YES)
 			{
-				if (tJobPeakMatch == YES)
+				if (g_tJobPeakMatch == YES)
 				{
-					if (g_bargraphFreqCalcBuffer.t.freq_count > tJobFreq)
-						tJobFreq = g_bargraphFreqCalcBuffer.t.freq_count;
+					if (g_bargraphFreqCalcBuffer.t.freq_count > g_tJobFreq)
+						g_tJobFreq = g_bargraphFreqCalcBuffer.t.freq_count;
 
-					tJobPeakMatch = NO;
+					g_tJobPeakMatch = NO;
 				}
 				else
 				{
-					tJobFreq = g_bargraphFreqCalcBuffer.t.freq_count;
+					g_tJobFreq = g_bargraphFreqCalcBuffer.t.freq_count;
 				}
 
-				tJobFreqFlag = NO;
+				g_tJobFreqFlag = NO;
 			}
 
 			// Reset count to 1 since we have a sample that's crossed zero boundary
@@ -986,15 +912,15 @@ uint8 CalculateBargraphData(void)
 		//=================================================
 		// End of Bar Interval
 		//=================================================
-		if (++gBarIntervalCnt >= (uint32)(trig_rec.bgrec.barInterval * trig_rec.trec.sample_rate))
+		if (++g_barIntervalCnt >= (uint32)(g_triggerRecord.bgrec.barInterval * g_triggerRecord.trec.sample_rate))
 		{
 			moveBarIntervalDataToFile();
 
 			//=================================================
 			// End of Summary Interval
 			//=================================================
-			if (++gSummaryIntervalCnt >=
-				(uint32)(trig_rec.bgrec.summaryInterval / trig_rec.bgrec.barInterval))
+			if (++g_summaryIntervalCnt >=
+				(uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
 			{
 				moveSummaryIntervalDataToFile();
 			}
@@ -1004,7 +930,7 @@ uint8 CalculateBargraphData(void)
 			MoveBargraphEventDataToFlash();
 #endif
 
-			if (help_rec.flash_wrapping == NO)
+			if (g_helpRecord.flash_wrapping == NO)
 			{
 				if (checkSpaceForBarSummaryInterval() == NO)
 				{
@@ -1017,7 +943,7 @@ uint8 CalculateBargraphData(void)
 
 	} // While != loop
 
-	if (gp_bg430DataWrite != gp_bg430DataRead)
+	if (g_bg430DataWritePtr != g_bg430DataReadPtr)
 	{
 		return (BG_BUFFER_NOT_EMPTY);
 	}
@@ -1030,7 +956,7 @@ uint8 CalculateBargraphData(void)
 #if 0 // ns7100
 //*****************************************************************************
 // Function: MoveBargraphEventDataToFlash(void)
-// Purpose : Move the data in the bargarpheventDataBufferer into flash. Copy
+// Purpose : Move the data in the bargarphg_eventDataBufferer into flash. Copy
 //				all the data from the buffer until the readPtr == writePtr.
 //*****************************************************************************
 void MoveBargraphEventDataToFlash(void)
@@ -1042,7 +968,7 @@ void MoveBargraphEventDataToFlash(void)
 #if 0 // ns7100
 		storeData(g_bargraphEventDataReadPtr, 1);
 #else // ns8100
-		fl_fwrite(g_bargraphEventDataReadPtr, 1, 2, gCurrentEventFileHandle);
+		fl_fwrite(g_bargraphEventDataReadPtr, 1, 2, g_currentEventFileHandle);
 #endif
 
 		g_bargraphEventDataReadPtr += 1;
@@ -1063,7 +989,7 @@ void MoveBargraphEventDataToFlash(void)
 void MoveStartOfBargraphEventRecordToFlash(void)
 {
 	// Check if we have a valid flash ptr.
-	if (gBargraphSummaryPtr == 0)
+	if (g_bargraphSummaryPtr == 0)
 	{	// If failed the ptr will be 0.
 		debug("Out of Ram Summary Entrys\n");
 	}
@@ -1075,7 +1001,7 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 	uint16* srcPtr;
 	EVT_RECORD* flashEventRecord;
 
-		flashEventRecord = (EVT_RECORD *)(gBargraphSummaryPtr->linkPtr);
+		flashEventRecord = (EVT_RECORD *)(g_bargraphSummaryPtr->linkPtr);
 
 		moveSizeInWords = (sizeof(EVT_RECORD))/2;
 		destPtr = (uint16*)(flashEventRecord);
@@ -1085,15 +1011,15 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 		byteSet((uint8*)&(g_RamEventRecord.summary.calculated), 0, sizeof(CALCULATED_DATA_STRUCT));
 #else // ns8100
 		// Get new file handle
-		gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+		g_currentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
 				
-		if (gCurrentEventFileHandle == NULL)
+		if (g_currentEventFileHandle == NULL)
 		{
 			debugErr("Failed to get a new file handle for the current Bargraph event!\n");
 		}			
 
 		// Write in the current but unfinished event record to provide an offset to start writing in the data
-		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
+		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 #endif
 	}
 
@@ -1112,7 +1038,7 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 #if 0 // ns7100
 	//uint16 checksumDex = 0;
 	uint32 moveSizeInWords;
-	EVT_RECORD* flashEventRecord = (EVT_RECORD*)gBargraphSummaryPtr->linkPtr;
+	EVT_RECORD* flashEventRecord = (EVT_RECORD*)g_bargraphSummaryPtr->linkPtr;
 	uint16* eventDataPtr;
 	uint16* destPtr;
 	uint16* srcPtr;
@@ -1120,7 +1046,7 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 #endif
 
 	// Check if we have a valid flash ptr.
-	if (gBargraphSummaryPtr == 0)
+	if (g_bargraphSummaryPtr == 0)
 	{	// If failed the ptr will be 0.
 		debug("Out of Ram Summary Entrys\n");
 	}
@@ -1192,12 +1118,12 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 
 #if 1 // ns8100
 		// Make sure at the beginning of the file
-		fl_fseek(gCurrentEventFileHandle, 0, SEEK_SET);
+		fl_fseek(g_currentEventFileHandle, 0, SEEK_SET);
 
 		// Rewrite the event record
-		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
+		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
-		fl_fclose(gCurrentEventFileHandle);
+		fl_fclose(g_currentEventFileHandle);
 		debug("Bargraph event file closed\n");
 #endif
 	}
@@ -1352,7 +1278,7 @@ BOOLEAN checkSpaceForBarSummaryInterval(void)
 
 	getFlashUsageStats(&flashStats);
 
-	barIntervalSize = (sizeof(CALCULATED_DATA_STRUCT) + (((trig_rec.bgrec.summaryInterval / trig_rec.bgrec.barInterval) + 1) * 8));
+	barIntervalSize = (sizeof(CALCULATED_DATA_STRUCT) + (((g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval) + 1) * 8));
 
 	if (flashStats.sizeFree > barIntervalSize)
 		spaceLeft = YES;

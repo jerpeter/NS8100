@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include "Common.h"
 #include "Uart.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Old_Board.h"
 #include "RemoteHandler.h"
 #include "RemoteCommon.h"
@@ -28,30 +28,18 @@
 #include "SoftTimer.h"
 
 ///----------------------------------------------------------------------------
+///	Defines
+///----------------------------------------------------------------------------
+
+///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern uint32 __autoDialoutTblKey;
-extern AUTODIALOUT_STRUCT __autoDialoutTbl;
-extern uint8 	g_CRLF;
-extern uint32 	g_XferCount;
-extern uint32 	g_xmitCRC;
-extern DEMx_XFER_STRUCT* gp_DemXferStruct;
-extern MODEM_SETUP_STRUCT modem_setup_rec;
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern uint32 g_rtcSoftTimerTickCount;
-extern MODEM_STATUS_STRUCT g_ModemStatus;
-extern uint8 g_BinaryXferFlag;
+#include "Globals.h"
 
-//==================================================
-// Globals
-//==================================================
-uint16 g_autoRetries = 0;
-uint8 g_autoDialoutState = AUTO_DIAL_IDLE;
-uint8 g_modemDataTransfered = NO;
-
-//==================================================
-// Functions
-//==================================================
+///----------------------------------------------------------------------------
+///	Local Scope Globals
+///----------------------------------------------------------------------------
+static uint16 s_autoRetries = 0;
 
 //==================================================
 //	Procedure: parseIncommingMsgHeader()
@@ -341,20 +329,20 @@ uint32 dataLengthStrToUint32(uint8* dataLengthStr)
 //--------------------------------------------------
 void writeCompressedData(uint8 compressedData)
 {
-	gp_DemXferStruct->xmitBuffer[gp_DemXferStruct->xmitSize] = compressedData;
-	gp_DemXferStruct->xmitSize++;
+	g_demXferStructPtr->xmitBuffer[g_demXferStructPtr->xmitSize] = compressedData;
+	g_demXferStructPtr->xmitSize++;
 
-	if (gp_DemXferStruct->xmitSize >= XMIT_SIZE_MONITORING)
+	if (g_demXferStructPtr->xmitSize >= XMIT_SIZE_MONITORING)
 	{
-		g_xmitCRC = CalcCCITT32((uint8*)gp_DemXferStruct->xmitBuffer, gp_DemXferStruct->xmitSize, g_xmitCRC);
+		g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
 
-		if (modem_puts((uint8*)gp_DemXferStruct->xmitBuffer, gp_DemXferStruct->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
+		if (modem_puts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
 		{
-			gp_DemXferStruct->errorStatus = MODEM_SEND_FAILED;
+			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
 		}
 
-		g_XferCount += gp_DemXferStruct->xmitSize;
-		gp_DemXferStruct->xmitSize = 0;
+		g_transferCount += g_demXferStructPtr->xmitSize;
+		g_demXferStructPtr->xmitSize = 0;
 	}
 }
 
@@ -387,13 +375,11 @@ void initAutoDialout(void)
 //--------------------------------------------------
 void checkAutoDialoutStatus(void)
 {
-#if 0 // fix_ns8100
 	if ((g_autoDialoutState == AUTO_DIAL_IDLE) && (READ_DCD == NO_CONNECTION) &&
-		(modem_setup_rec.modemStatus == YES) && strlen((char*)&(modem_setup_rec.dial[0])) != 0)
+		(g_modemSetupRecord.modemStatus == YES) && strlen((char*)&(g_modemSetupRecord.dial[0])) != 0)
 	{
 		raiseSystemEventFlag(AUTO_DIALOUT_EVENT);
 	}
-#endif
 }
 
 //==================================================
@@ -402,13 +388,11 @@ void checkAutoDialoutStatus(void)
 //--------------------------------------------------
 void startAutoDialoutProcess(void)
 {
-#if 0 // fix_ns8100
 	if (READ_DCD == NO_CONNECTION)
 	{
-		g_autoRetries = modem_setup_rec.retries;
+		s_autoRetries = g_modemSetupRecord.retries;
 		g_autoDialoutState = AUTO_DIAL_INIT;
 	}
-#endif
 }
 
 //==================================================
@@ -418,9 +402,7 @@ void startAutoDialoutProcess(void)
 void autoDialoutStateMachine(void)
 {
 	static uint32 timer = 0;
-#if 0 // fix_ns8100
 	CMD_BUFFER_STRUCT msg;
-#endif
 
 	switch (g_autoDialoutState)
 	{
@@ -429,11 +411,11 @@ void autoDialoutStateMachine(void)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_INIT:
 			// Issue dial command and dial string
-			if((modem_setup_rec.dial[0] >= '0') && (modem_setup_rec.dial[0] <= '9'))
+			if((g_modemSetupRecord.dial[0] >= '0') && (g_modemSetupRecord.dial[0] <= '9'))
 			{
 				uart_puts((char *)"ATDT", CRAFT_COM_PORT);
 			}
-			uart_puts((char *)(modem_setup_rec.dial), CRAFT_COM_PORT);
+			uart_puts((char *)(g_modemSetupRecord.dial), CRAFT_COM_PORT);
 			uart_puts((char *)&g_CRLF, CRAFT_COM_PORT);
 
 			// Update timer to current tick count
@@ -447,7 +429,6 @@ void autoDialoutStateMachine(void)
 		// Look for DCD
 		//----------------------------------------------------------------
 		case AUTO_DIAL_CONNECTING:
-#if 0 // fix_ns8100
 			// Check if a remote connection has been established
 			if (READ_DCD == CONNECTION_ESTABLISHED)
 			{
@@ -468,19 +449,17 @@ void autoDialoutStateMachine(void)
 				// Advance to Retry state
 				g_autoDialoutState = AUTO_DIAL_RETRY;
 			}
-#endif
 		break;
 
 		//----------------------------------------------------------------
 		// Send out GAD command
 		//----------------------------------------------------------------
 		case AUTO_DIAL_CONNECTED:
-#if 0 // fix_ns8100
 			// Check if the current connection has been established for 5 seconds
 			if ((g_rtcSoftTimerTickCount - timer) > (5 * TICKS_PER_SEC))
 			{
 				// Make sure transfer flag is set to ascii
-				g_BinaryXferFlag = NO_CONVERSION;
+				g_binaryXferFlag = NO_CONVERSION;
 
 				// Send out GAD command (includes serial number and auto dialout parameters)
 				handleGAD(&msg);
@@ -497,16 +476,14 @@ void autoDialoutStateMachine(void)
 				// Advance to Retry state
 				g_autoDialoutState = AUTO_DIAL_RETRY;
 			}
-#endif
 		break;
 
 		//----------------------------------------------------------------
 		// Look for system to be unlocked
 		//----------------------------------------------------------------
 		case AUTO_DIAL_RESPONSE:
-#if 0 // fix_ns8100
 			// Check if the system has been unlocked (thus successful receipt of an unlock command)
-			if (g_ModemStatus.systemIsLockedFlag == NO)
+			if (g_modemStatus.systemIsLockedFlag == NO)
 			{
 				// Update timer to current tick count
 				timer = g_rtcSoftTimerTickCount;
@@ -532,16 +509,14 @@ void autoDialoutStateMachine(void)
 				// Advance to Retry state
 				g_autoDialoutState = AUTO_DIAL_RETRY;
 			}
-#endif
 		break;
 
 		//----------------------------------------------------------------
 		// Wait for system to be unlocked (2nd attempt)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_WAIT:
-#if 0 // fix_ns8100
 			// Check if the system has been unlocked (thus successful receipt of an unlock command)
-			if (g_ModemStatus.systemIsLockedFlag == NO)
+			if (g_modemStatus.systemIsLockedFlag == NO)
 			{
 				// Update timer to current tick count
 				timer = g_rtcSoftTimerTickCount;
@@ -564,7 +539,6 @@ void autoDialoutStateMachine(void)
 				// Advance to Retry state
 				g_autoDialoutState = AUTO_DIAL_RETRY;
 			}
-#endif
 		break;
 
 		//----------------------------------------------------------------
@@ -572,7 +546,7 @@ void autoDialoutStateMachine(void)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_RETRY:
 			// Check if retries have been exhausted
-			if (g_autoRetries == 0)
+			if (s_autoRetries == 0)
 			{
 				// Advance to Finish state
 				g_autoDialoutState = AUTO_DIAL_FINISH;
@@ -580,7 +554,7 @@ void autoDialoutStateMachine(void)
 			else // Keep trying
 			{
 				// Decrement retry count
-				g_autoRetries--;
+				s_autoRetries--;
 
 				// Unable to successfully connect to remote end, start retry with modem reset
 				modemResetProcess();
@@ -598,7 +572,7 @@ void autoDialoutStateMachine(void)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_SLEEP:
 			// Check if the retry time has expired
-			if ((g_rtcSoftTimerTickCount - timer) > (modem_setup_rec.retryTime * TICKS_PER_MIN))
+			if ((g_rtcSoftTimerTickCount - timer) > (g_modemSetupRecord.retryTime * TICKS_PER_MIN))
 			{
 				// Update timer to current tick count
 				timer = g_rtcSoftTimerTickCount;
@@ -612,7 +586,6 @@ void autoDialoutStateMachine(void)
 		// Active connection
 		//----------------------------------------------------------------
 		case AUTO_DIAL_ACTIVE:
-#if 0 // fix_ns8100
 			// Check if modem data has been transfered (either sent or successful receipt of a message)
 			if (g_modemDataTransfered == YES)
 			{
@@ -636,7 +609,6 @@ void autoDialoutStateMachine(void)
 				// Advance to Finish state
 				g_autoDialoutState = AUTO_DIAL_FINISH;
 			}
-#endif
 		break;
 
 		//----------------------------------------------------------------

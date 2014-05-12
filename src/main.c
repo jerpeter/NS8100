@@ -1,17 +1,16 @@
 /********************************************************
  Name          : main.c
- Author        : Joseph Getz
- Copyright     : Your copyright notice
- Description   : EVK1100 template
+ Author        : JP
  **********************************************************/
 
-// Include Files
+///----------------------------------------------------------------------------
+///	Includes
+///----------------------------------------------------------------------------
 #include "board.h"
 #include "pm.h"
 #include "gpio.h"
 #include "sdramc.h"
 #include "intc.h"
-#include "utils.h"
 #include "usart.h"
 #include "print_funcs.h"
 #include "craft.h"
@@ -22,8 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Typedefs.h"
-#include "Mmc2114.h"
-#include "Mmc2114_InitVals.h"
 #include "Old_Board.h"
 #include "Common.h"
 #include "Display.h"
@@ -34,7 +31,7 @@
 #include "ProcessBargraph.h"
 #include "ProcessCombo.h"
 #include "SysEvents.h"
-#include "Rec.h"
+#include "Record.h"
 #include "InitDataBuffers.h"
 #include "PowerManagement.h"
 #include "SoftTimer.h"
@@ -54,34 +51,18 @@
 #include "FAT32_Disk.h"
 #include "FAT32_Access.h"
 #include "adc.h"
-
-///----------------------------------------------------------------------------
-///	Externs
-///----------------------------------------------------------------------------
-extern void initProcessor(void);
-extern SUMMARY_DATA *results_summtable_ptr;
-extern int8 g_kpadCheckForKeyFlag;				// Flag to indicate key stroke in the ISR
-extern uint32 g_kpadLookForKeyTickCount;		// Timer to count number of ticks for a key stroke.
-extern volatile uint32 g_keypadTimerTicks;		//
-extern POWER_MANAGEMENT_STRUCT powerManagement;	// Struct containing power management parameters
-extern REC_HELP_MN_STRUCT help_rec;				// Struct containing system parameters
-extern uint32 g_rtcSoftTimerTickCount;			// A global counter to count system ticks
-extern uint8 g_factorySetupSequence;			//
-extern uint32 isTriggered;
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
-extern uint8 g_autoDialoutState;
-extern void flashc_set_wait_state(unsigned int);
-extern void Setup_Soft_Timer_Tick_ISR(void);
-extern void Setup_EIC_Keypad_ISR(void);
-extern void Setup_EIC_System_ISR(void);
-extern int rtc_init(volatile avr32_rtc_t *rtc, unsigned char osc_type, unsigned char psel);
-extern void rtc_set_top_value(volatile avr32_rtc_t *rtc, unsigned long top);
-extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
-extern void rtc_enable(volatile avr32_rtc_t *rtc);
+#include "usb_task.h"
+#include "device_mass_storage_task.h"
+#include "usb_drv.h"
+#include "FAT32_FileLib.h"
+#include "srec.h"
+#include "flashc.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
+#define PBA_HZ         FOSC0
+
 #define NRD_SETUP     30 //10
 #define NRD_PULSE     30 //135
 #define NRD_CYCLE     75 //180
@@ -171,47 +152,20 @@ extern void rtc_enable(volatile avr32_rtc_t *rtc);
                            (TDF_OPTIM << AVR32_SMC_MODE0_TDF_MODE_OFFSET) | \
                            (PAGE_MODE << AVR32_SMC_MODE0_PMEN_OFFSET) | \
                            (PAGE_SIZE << AVR32_SMC_MODE0_PS_OFFSET); \
-  smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
+  g_smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
   }
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Externs
 ///----------------------------------------------------------------------------
-unsigned char smc_tab_cs_size[4];
+#include "Globals.h"
+extern int rtc_init(volatile avr32_rtc_t *rtc, unsigned char osc_type, unsigned char psel);
+extern void rtc_set_top_value(volatile avr32_rtc_t *rtc, unsigned long top);
+extern void rtc_enable(volatile avr32_rtc_t *rtc);
 
-// Sensor information and constants.
-SENSOR_PARAMETERS_STRUCT g_SensorInfoStruct;
-SENSOR_PARAMETERS_STRUCT* gp_SensorInfo = &g_SensorInfoStruct;
-
-// Contains the event record in ram.
-EVT_RECORD g_RamEventRecord;
-
-// Factory Setup record.
-FACTORY_SETUP_STRUCT factory_setup_rec;
-
-// Structure to contain system paramters and system settings.
-REC_EVENT_MN_STRUCT trig_rec;				// Contains trigger specific information.
-
-// Menu specific structures
-int active_menu;							// For active menu number/enum.
-MN_EVENT_STRUCT mn_event_flags;				// Menu event flags, for main loop processing.
-MN_TIMER_STRUCT mn_timer;					// Menu timer strucutre.
-
-// System Event Flags, for main loopo processing.
-SYS_EVENT_STRUCT SysEvents_flags;
-
-MODEM_SETUP_STRUCT modem_setup_rec;			// Record for user input data.
-MODEM_STATUS_STRUCT g_ModemStatus;			// Record for modem data processing.
-
-// Used as a circular buffer to continually caputer incomming data from the craft port.
-CMD_BUFFER_STRUCT isrMessageBufferStruct;
-CMD_BUFFER_STRUCT* gp_ISRMessageBuffer = &isrMessageBufferStruct;
-
-void (*menufunc_ptrs[TOTAL_NUMBER_OF_MENUS]) (INPUT_MSG_STRUCT) = {
-		mainMn, loadRecMn, summaryMn, monitorMn, resultsMn,
-		overWriteMn, batteryMn, dateTimeMn, lcdContrastMn, timerModeTimeMn,
-		timerModeDateMn, calSetupMn, userMn, monitorLogMn
-};
+///----------------------------------------------------------------------------
+///	Local Scope Globals
+///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -224,71 +178,16 @@ void MenuEventManager(void);
 void CraftManager(void);
 void MessageManager(void);
 void FactorySetupManager(void);
-
-#define PBA_HZ         FOSC0
-
-extern const char craft_logo[];
-
-//=============================================================================
-//
-//=============================================================================
-static void Write_Block_To_Display (unsigned char *mmap_ptr)
-{
-    unsigned char segment;
-    unsigned char *pixel_byte_ptr;
-    unsigned char col_index;
-    unsigned char row_index;
-    unsigned char data;
-
-	row_index = 0;
-    while(row_index < 8)
-	{
-	    col_index = 0;
-	    pixel_byte_ptr = (unsigned char *)(mmap_ptr + (row_index * 128));
-
-        segment = FIRST_HALF_DISPLAY;
-        Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + row_index, segment);
-        Write_display(COMMAND_REGISTER, COLUMN_ADDRESS_SET + col_index, segment);
-
-        while(col_index<128)
-        {
-            if(segment == FIRST_HALF_DISPLAY)
-            {
-                if( (col_index) > 63) /*NOTE: BORDER is 64 its zero based 0 - 63 */
-                {
-                    segment = SECOND_HALF_DISPLAY;
-                    Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + row_index, segment);
-                    Write_display(COMMAND_REGISTER, COLUMN_ADDRESS_SET + (col_index - 64), segment);
-                }
-            }
-            else
-            {
-                if( (col_index) > 128) /* NOTE SEG2 BORDER IS 128 0 - 127 */
-                {
-                    break; /* NO WORD WRAP */
-                }
-            }
-            data = *(pixel_byte_ptr + col_index);
-            Write_display( DATA_REGISTER, *(pixel_byte_ptr + col_index), segment);
-           col_index++;
-        }/* End Of while((col_index<SEGMENT_TWO_BLOCK_BORDER) */
-
-        row_index++;
-    }/*End Of while(row_index < 8) */
-}
-
-extern uint8 mmap[8][128];
-void Display_Craft_Logo()
-{
-	Write_display(COMMAND_REGISTER, START_LINE_SET, FIRST_HALF_DISPLAY);
-	Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET, FIRST_HALF_DISPLAY);
-	Write_display(COMMAND_REGISTER, COLUMN_ADDRESS_SET, FIRST_HALF_DISPLAY);
-	Write_Block_To_Display((unsigned char*)craft_logo);
-}
+void Setup_8100_EIC_Keypad_ISR(void);
+void Setup_8100_EIC_System_ISR(void);
+void Setup_8100_Soft_Timer_Tick_ISR(void);
+void Setup_8100_Data_Clock_ISR(uint32 sampleRate);
+void Setup_8100_Usart_RS232_ISR(void);
 
 //=============================================================================
 //
 //=============================================================================
+#if 1 // fix_ns8100
 void soft_delay(volatile unsigned long int counter)
 {
 	unsigned long int countdown = (counter << 2) + counter;
@@ -298,6 +197,7 @@ void soft_delay(volatile unsigned long int counter)
 		countdown--;
 	}
 }
+#endif
 
 //=============================================================================
 // SPI_init
@@ -422,6 +322,16 @@ void avr32_enable_muxed_pins(void)
 		{AVR32_TWI_SCL_0_0_PIN, AVR32_TWI_SCL_0_0_FUNCTION},
 #endif
 
+		// Usart 1 - RS232
+		{AVR32_USART1_RXD_0_0_PIN, AVR32_USART1_RXD_0_0_FUNCTION},
+		{AVR32_USART1_TXD_0_0_PIN, AVR32_USART1_TXD_0_0_FUNCTION},
+		{AVR32_USART1_RI_0_PIN, AVR32_USART1_RI_0_FUNCTION},
+		{AVR32_USART1_DTR_0_PIN, AVR32_USART1_DTR_0_FUNCTION},
+		{AVR32_USART1_DSR_0_PIN, AVR32_USART1_DSR_0_FUNCTION},
+		{AVR32_USART1_DCD_0_PIN, AVR32_USART1_DCD_0_FUNCTION},
+		{AVR32_USART1_RTS_0_0_PIN, AVR32_USART1_RTS_0_0_FUNCTION},
+		{AVR32_USART1_CTS_0_0_PIN, AVR32_USART1_CTS_0_0_FUNCTION},
+
 		// Voltage monitor pins
 		{AVR32_ADC_AD_2_PIN, AVR32_ADC_AD_2_FUNCTION},
 		{AVR32_ADC_AD_3_PIN, AVR32_ADC_AD_3_FUNCTION}
@@ -448,8 +358,16 @@ void avr32_chip_select_init(unsigned long hsb_hz)
 //=================================================================================================
 
 //=================================================================================================
-void _init_startup(void)   
+#define AVR32_WDT_KEY_VALUE_ASSERT		0x55000000
+#define AVR32_WDT_KEY_VALUE_DEASSERT	0xAA000000
+#define AVR32_WDT_DISABLE_VALUE			0x00000000
+
+void _init_startup(void)
 {   
+	// Disable watchdog if reset from bootloader
+	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_ASSERT | AVR32_WDT_DISABLE_VALUE);
+	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_DEASSERT | AVR32_WDT_DISABLE_VALUE);
+	
     // Switch the main clock to the external oscillator 0
     pm_switch_to_osc0(&AVR32_PM, FOSC0, OSC0_STARTUP);
 
@@ -475,6 +393,7 @@ void _init_startup(void)
 	
 	soft_delay(1000);
 }
+
 //=================================================================================================
 void InitKeypad(void)
 {
@@ -524,18 +443,20 @@ void InitKeypad(void)
 }
 
 //-----------------------------------------------------------------------------
-unsigned char input_buffer[120];
+uint8 craft_g_input_buffer[120];
+BOOLEAN processCraftCmd = NO;
 void craftTestMenuThruDebug(void)
 {
 	int count;
     int character;
     int reply=0;
 
-	if(usart_test_hit(&AVR32_USART1))
+	//if(usart_test_hit(&AVR32_USART1))
+	if (processCraftCmd == YES)
 	{
-		if(Get_User_Input(input_buffer) > 0)
+		if(Get_User_Input((uint8*)&g_input_buffer[0]) > 0)
 		{
-        	reply = atoi((char *)input_buffer);
+        	reply = atoi((char *)g_input_buffer);
 		}
 
 		if(reply < Menu_Items)
@@ -552,6 +473,8 @@ void craftTestMenuThruDebug(void)
     		character = Menu_String[count];
     	}
 		Command_Prompt();
+		
+		processCraftCmd = NO;
 	}
 }
 
@@ -574,6 +497,174 @@ void testKeypad(void)
 		tempTick = g_rtcSoftTimerTickCount;
 		while(tempTick == g_rtcSoftTimerTickCount) {}
 	}
+}
+
+//=================================================================================================
+//	Function:	UsbDeviceManager
+//=================================================================================================
+enum {
+	USB_INIT_DRIVER = 0,
+	USB_NOT_CONNECTED = 1,
+	USB_CONNECTED_AND_PROCESSING = 2
+};
+extern uint8 g_sampleProcessing;
+void UsbDeviceManager(void)
+{
+	static uint8 usbMassStorageState = USB_INIT_DRIVER;
+	INPUT_MSG_STRUCT mn_msg;
+	
+	// Check if the USB and Mass Storage Driver have never been initialized
+	if (usbMassStorageState == USB_INIT_DRIVER)
+	{
+		debug("Init USB Mass Storage Driver...\n");
+
+		// Init the USB and Mass Storage driver			
+		usb_task_init();
+		device_mass_storage_task_init();
+
+		// Set state to ready to process
+		usbMassStorageState = USB_NOT_CONNECTED;	
+	}
+
+	// Check if USB Cable is plugged in and not monitoring and not handling a trigger
+	if ((Is_usb_vbus_high()) && (g_sampleProcessing != SAMPLING_STATE) && (!getSystemEventState(TRIGGER_EVENT)))
+	{
+		// Check if USB and Mass Storage driver init needs to occur
+		if (usbMassStorageState == USB_NOT_CONNECTED)
+		{
+			overlayMessage("USB STATUS", "USB CABLE WAS CONNECTED", 2 * SOFT_SECS);
+
+			// Recall the current active menu to repaint the display
+			mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+			(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+						
+			debug("USB Mass Storage Driver Re-Init\n");
+			// Init the USB and Mass Storage driver
+			usb_task_init();
+			device_mass_storage_task_init();
+
+			// Set state to ready to process
+			usbMassStorageState = USB_CONNECTED_AND_PROCESSING;	
+		}
+
+		// Call Usb and Device Storage drivers if connected to check and handle incoming actions
+		usb_task();
+		device_mass_storage_task();
+	}
+	else // USB Cable is not plugged in
+	{
+		// Check if the USB was plugged in prior
+		if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+		{
+			if (g_sampleProcessing == SAMPLING_STATE)
+			{
+				overlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 2 * SOFT_SECS);
+			}
+			else
+			{
+				overlayMessage("USB STATUS", "USB CABLE WAS DISCONNECTED", 2 * SOFT_SECS);
+
+				// Recall the current active menu to repaint the display
+				mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+				(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+			}							
+
+			debug("USB Cable Unplugged\n");
+			Usb_disable();
+		}
+		
+		usbMassStorageState = USB_NOT_CONNECTED;
+	}	
+}
+
+//=================================================================================================
+//	Function:	BootLoadManager
+//=================================================================================================
+#define APPLICATION    (((void *)AVR32_EBI_CS1_ADDRESS) + 0x00700000)
+const char default_boot_name[] = {
+	"Boot.s\0"
+};
+
+uint8 quickBootEntryJump = NO;
+void BootLoadManager(void)
+{
+	int16 usart_status;
+	int craft_char;
+	char textBuffer[50];
+	static void (*func)(void);
+	func = (void(*)())APPLICATION;
+	FL_FILE* file;
+	uint32 i;
+
+	usart_status = USART_RX_EMPTY;
+	i = 0;
+
+	usart_status = usart_read_char(DBG_USART, &craft_char);
+
+#if 0
+	if (craft_char == CTRL_B)
+#else
+	if ((craft_char == CTRL_B) || (quickBootEntryJump == YES))
+#endif
+	{
+#if 1
+		if (quickBootEntryJump == YES)
+			overlayMessage("BOOTLOADER", "HIDDEN ENTRY...", 2 * SOFT_SECS);
+		else
+#endif
+		overlayMessage("BOOTLOADER", "FOUND CTRL_B...", 2 * SOFT_SECS);
+
+		sprintf(textBuffer,"C:\\System\\%s", default_boot_name);
+		file = fl_fopen(textBuffer, "r");
+
+		while (file == NULL)
+		{
+			//WriteLCD_smText( 0, 64, (unsigned char *)"Connect USB..", NORMAL_LCD);
+			overlayMessage("BOOTLOADER", "BOOT FILE NOT FOUND. CONNECT THE USB CABLE", 0);
+
+			usb_task_init();
+			device_mass_storage_task_init();
+
+			while(!Is_usb_vbus_high()) {}
+
+			overlayMessage("BOOTLOADER", "WRITE BOOT.S TO SYSTEM DIR (REMOVE CABLE WHEN DONE)", 0);
+
+			usb_task_init();
+			device_mass_storage_task_init();
+
+			while (Is_usb_vbus_high())
+			{
+				usb_task();
+				device_mass_storage_task();
+			}
+			
+			soft_usecWait(250 * SOFT_MSECS);
+			
+			file = fl_fopen(textBuffer, "r");
+		}
+
+		// Display initializing message
+		debug("Starting Boot..\n");
+
+		overlayMessage("BOOTLOADER", "STARTING BOOTLOADER...", 2 * SOFT_SECS);
+
+		clearLcdDisplay();
+
+		if (unpack_srec(file) == -1)
+		{
+			debugErr("SREC unpack unsuccessful!\n");
+		}
+
+		fl_fclose(file);
+
+		Disable_global_interrupt();
+
+		//Jump to boot application code
+		func();
+	}
+	
+	initCraftInterruptBuffers();
+	Setup_8100_Usart_RS232_ISR();
 }
 
 //=================================================================================================
@@ -624,11 +715,24 @@ void InitSystemHardware_NS8100(void)
     gpio_clr_gpio_pin(AVR32_PIN_PB09);
 
     // Setup debug serial port
+#if 0
     init_dbg_rs232(FOSC0);
+#else
+	usart_options_t usart_1_rs232_options =
+	{
+		.baudrate = 115200,
+		.charlength = 8,
+		.paritytype = USART_NO_PARITY,
+		.stopbits = USART_1_STOPBIT,
+		.channelmode = USART_NORMAL_CHMODE
+	};
+#endif
 
-	//-------------------------------------------------------------------------
-    // Initialize USB clock.
-    pm_configure_usb_clock();
+	// Initialize it in RS232 mode.
+	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
+
+	// Init signals for ready to send and terminal ready
+	SET_RTS; SET_DTR;
 
 	//-------------------------------------------------------------------------
 	// Init the SPI interface
@@ -678,15 +782,33 @@ void InitSystemHardware_NS8100(void)
 
 	SD_MMC_Power_On();
 
-	spi_selectChip(SDMMC_SPI, SD_MMC_SPI_NPCS);
-	sd_mmc_spi_internal_init();
-	spi_unselectChip(SDMMC_SPI, SD_MMC_SPI_NPCS);
+	// Check if SD Detect pin 
+	if (gpio_get_pin_value(AVR32_PIN_PA02) == ON)
+	{
+		spi_selectChip(SDMMC_SPI, SD_MMC_SPI_NPCS);
+		sd_mmc_spi_internal_init();
+		spi_unselectChip(SDMMC_SPI, SD_MMC_SPI_NPCS);
 
-    FAT32_InitDrive();
-    if (FAT32_InitFAT() == FALSE)
-    {
-        debugErr("FAT32 Initialization failed!\n\r");
-    }
+		FAT32_InitDrive();
+		if (FAT32_InitFAT() == FALSE)
+		{
+			debugErr("FAT32 Initialization failed!\n\r");
+		}
+	}
+	else
+	{
+		messageBox("ERROR", "SD CARD NOT DETECTED", MB_OK);		
+	}
+
+	//-------------------------------------------------------------------------
+    // Initialize USB clock.
+    pm_configure_usb_clock();
+
+#if 0
+	// Init USB and Mass Storage drivers
+    usb_task_init();
+    device_mass_storage_task_init();
+#endif
 
 	//-------------------------------------------------------------------------
 	//Display_Craft_Logo();
@@ -703,10 +825,14 @@ void InitInterrupts_NS8100(void)
     //Setup interrupt vectors
     INTC_init_interrupts();
 
-	Setup_Soft_Timer_Tick_ISR();
-	Setup_EIC_Keypad_ISR();
-	Setup_EIC_System_ISR();
+	Setup_8100_Soft_Timer_Tick_ISR();
+	Setup_8100_EIC_Keypad_ISR();
+	Setup_8100_EIC_System_ISR();
 
+	// Moved interrupt setup to the end of the BootloaderManager to allow for searching for Ctrl-B
+	//initCraftInterruptBuffers();
+	//Setup_8100_Usart_RS232_ISR();
+	
 	Enable_global_interrupt();
 }
 
@@ -717,28 +843,8 @@ void InitSoftwareSettings_NS8100(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	char buff[50];
-	//uint16 i = 0;
 
 	debug("Init Software Settings\n");
-
-#if 0 // fix_ns8100
-	GetParameterMemory((uint8*)&buff[0], 0, 50);
-	for (i=0;i<50;i++)
-	{
-		debug("Parameter Mem at: 0x%x is: 0x%x\n", i, buff[i]);
-	}
-	for (i=0;i<50;i++)
-	{
-		buff[i] = (char)(50 - i);
-	}
-	SaveParameterMemory((uint8*)&buff[0], 0, 50);
-	GetParameterMemory((uint8*)&buff[0], 0, 50);
-	for (i=0;i<50;i++)
-	{
-		debug("Parameter Mem at: 0x%x is: 0x%x\n", i, buff[i]);
-	}
-#endif
-
     debug("Init Version Strings...\n");
 
 	// Init version strings
@@ -810,16 +916,16 @@ void InitSoftwareSettings_NS8100(void)
 
 	debug("Jump to Main Menu\n");
 	// Jump to the true main menu
-	active_menu = MAIN_MENU;
+	g_activeMenu = MAIN_MENU;
 	ACTIVATE_MENU_MSG();
-	(*menufunc_ptrs[active_menu]) (mn_msg);
+	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 }
 
 //=================================================================================================
 //	Function:	Main
 //	Purpose:	Application starting point
 //=================================================================================================
-extern void Setup_Data_Clock_ISR(uint32 sampleRate);
+extern void Setup_8100_Data_Clock_ISR(uint32 sampleRate);
 extern void Start_Data_Clock(void);
 extern void AD_Init(void);
 int main(void)
@@ -827,6 +933,7 @@ int main(void)
     InitSystemHardware_NS8100();
 	InitInterrupts_NS8100();
 	InitSoftwareSettings_NS8100();
+	BootLoadManager();
 
 #if 1 // fix_ns8100
 	// Have to recall Keypad init otherwise interrupt hangs
@@ -835,6 +942,12 @@ int main(void)
 
 	//debug("Unit Type: %s\n", SUPERGRAPH_UNIT ? "Supergraph" : "Minigraph");
 	debug("--- System Init complete ---\n");
+
+	// Test
+	//void (*restart)(void) = 0x800000;
+	//restart();
+	//pm_switch_to_osc0(&AVR32_PM, FOSC0, 32);
+	//Long_call(0x80000000);
 
 	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;
 	Menu_Functions = (unsigned long *)Main_Menu_Functions;
@@ -846,7 +959,7 @@ int main(void)
 	while (1)
 	{
 		// Debug Test routines
-		craftTestMenuThruDebug();
+		//craftTestMenuThruDebug();
 
 		//debugRaw("k");
 		//testKeypad();
@@ -864,12 +977,15 @@ int main(void)
 		// Handle messages to be processed
 		MessageManager();
 
+		// Handle USB device
+		UsbDeviceManager();
+		
 		// Handle processing the factory setup
 		FactorySetupManager();
 #endif
-		// Check if no System Event and Lcd and Printer power are off
-		if ((SysEvents_flags.wrd == 0x0000) && !(powerManagement.reg & 0x60) &&
-			(g_ModemStatus.xferState == NOP_CMD))
+		// Check if no System Events and Lcd is off and Modem is not transfering
+		if ((g_systemEventFlags.wrd == 0x0000) && (getPowerControlState(LCD_POWER_ENABLE) == OFF) &&
+			(g_modemStatus.xferState == NOP_CMD))
 		{
 			// Sleep
 #if 0 // fix_ns8100

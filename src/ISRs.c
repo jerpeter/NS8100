@@ -14,11 +14,9 @@
 ///	Includes
 ///----------------------------------------------------------------------------
 #include "Typedefs.h"
-#include "Mmc2114_Registers.h"
-#include "Mmc2114_InitVals.h"
 #include "Ispi.h"
 #include "Common.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Menu.h"
 #include "InitDataBuffers.h"
 #include "ProcessBargraph.h"
@@ -58,38 +56,14 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;
-extern uint8* _SPIDR;
-extern uint8* _SPISR;
-extern uint16* tailOfPreTrigBuff;
-extern ISPI_STATE_E  _ISPI_State;
-extern uint16 manual_cal_flag;
-extern volatile uint32 g_keypadTimerTicks;
-extern volatile uint32 g_rtcCurrentTickCount;
-extern uint32 g_rtcSoftTimerTickCount;
-extern int8 g_kpadProcessingFlag;
-extern uint8 g_kpadLastKeyPressed;
-extern uint8 g_factorySetupSequence;
-extern REC_HELP_MN_STRUCT help_rec;
-extern REC_EVENT_MN_STRUCT trig_rec;
-extern uint8 g_monitorEscapeCheck;
-extern MN_TIMER_STRUCT mn_timer;
-extern CMD_BUFFER_STRUCT* gp_ISRMessageBuffer;		// Craft port receive buffer.
-extern MODEM_STATUS_STRUCT g_ModemStatus;			// Craft port status information flag.
+#include "Globals.h"
 extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
-extern int rtc_init(volatile avr32_rtc_t *rtc, unsigned char osc_type, unsigned char psel);
-extern void rtc_set_top_value(volatile avr32_rtc_t *rtc, unsigned long top);
 extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
-extern void rtc_enable(volatile avr32_rtc_t *rtc);
-extern uint16 manualCalSampleCount;
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-uint32 cyclicEventDelay = 0;
-uint8 g_sampleProcessing = IDLE_STATE;
-uint8 g_modemConnected = NO;
+static uint32 g_cyclicEventDelay = 0;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -128,7 +102,7 @@ extern  void __trace_exception(void);
 extern  void __breakpoint_exception(void);
 extern  void __unrecoverable_error(void);
 
-#if 0 // fix_ns8100
+#if 0 // ns7100
 
 // =================
 // Misaligned Access
@@ -259,7 +233,7 @@ void isr_unrecoverable_error(void)
 }
 #endif // big block
 
-#if 0 // fix_ns8100
+#if 0 // ns7100
 /*******************************************************************************
 * Function: isr_PowerOnKey
 * Purpose:
@@ -293,7 +267,7 @@ void isr_PowerOffKey(void)
 	if (g_sampleProcessing != SAMPLING_STATE)
 	{
 		// Check if timer mode is enabled and power off enable has been turned off
-		if ((help_rec.timer_mode == ENABLED) && (getPowerControlState(POWER_SHUTDOWN_ENABLE) == OFF))
+		if ((g_helpRecord.timer_mode == ENABLED) && (getPowerControlState(POWER_SHUTDOWN_ENABLE) == OFF))
 		{
 			// Signal a Power Off event
 			raiseSystemEventFlag(POWER_OFF_EVENT);
@@ -423,22 +397,22 @@ void isr_RTC(void)
 		{
 			GatherSampleData();
 
-			if (manual_cal_flag)
+			if (g_manualCalFlag)
 			{
 				ProcessManuelCalPulse();
 			}
-			else if (trig_rec.op_mode == WAVEFORM_MODE)
+			else if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 			{
 				ProcessWaveformData();
 			}
-			else //if (trig_rec.op_mode == BARGRAPH_MODE)
+			else //if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 			{
 				ProcessBargraphData();
 			}
 
 			// Check if a half seconds worth of samples have occurred
 			samplingCounter++;
-			if ((samplingCounter % (trig_rec.trec.sample_rate >> 1)) == 0)
+			if ((samplingCounter % (g_triggerRecord.trec.sample_rate >> 1)) == 0)
 			{
 				 samplingCounter = 0;
 
@@ -449,9 +423,9 @@ void isr_RTC(void)
 				raiseTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
 
 				// Every 8 ticks (4 secs) trigger the cyclic event flag
-				if (++cyclicEventDelay >= 8)
+				if (++g_cyclicEventDelay >= 8)
 				{
-					cyclicEventDelay = 0;
+					g_cyclicEventDelay = 0;
 					raiseSystemEventFlag(CYCLIC_EVENT);
 				}
 
@@ -474,9 +448,9 @@ void isr_RTC(void)
 			raiseTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
 
 			// Every 8 ticks (4 secs) trigger the cyclic event flag
-			if (++cyclicEventDelay >= 8)
+			if (++g_cyclicEventDelay >= 8)
 			{
-				cyclicEventDelay = 0;
+				g_cyclicEventDelay = 0;
 				raiseSystemEventFlag(CYCLIC_EVENT);
 			}
 
@@ -631,24 +605,24 @@ void isr_SCI1(void)
 		if (statusReg & MMC2114_SCI_SCISR1_OR)
 		{
 			// If the overrun bit is set for an error.
-			gp_ISRMessageBuffer->status = CMD_MSG_OVERFLOW_ERR;
+			g_isrMessageBufferPtr->status = CMD_MSG_OVERFLOW_ERR;
 		}
 		else
 		{
 			// Write the received data into the buffer (clears the interrupt as well)
-			*(gp_ISRMessageBuffer->writePtr) = dataReg;
+			*(g_isrMessageBufferPtr->writePtr) = dataReg;
 
-			gp_ISRMessageBuffer->writePtr++;
+			g_isrMessageBufferPtr->writePtr++;
 
 			// Check if buffer pointer goes beyond the end
-			if (gp_ISRMessageBuffer->writePtr >= (gp_ISRMessageBuffer->msg + CMD_BUFFER_SIZE))
+			if (g_isrMessageBufferPtr->writePtr >= (g_isrMessageBufferPtr->msg + CMD_BUFFER_SIZE))
 			{
 				// Reset the buffer pointer to the beginning of the buffer
-				gp_ISRMessageBuffer->writePtr = gp_ISRMessageBuffer->msg;
+				g_isrMessageBufferPtr->writePtr = g_isrMessageBufferPtr->msg;
 			}
 
 			// Raise the Craft Data flag
-			g_ModemStatus.craftPortRcvFlag = YES;
+			g_modemStatus.craftPortRcvFlag = YES;
 		}
 	}
 #endif
@@ -698,12 +672,12 @@ void isr_SPI_Transfer_Complete(void)
 //#pragma interrupt on
 void isr_MSP430WakeupMsg(void)
 {
-	extern uint32 gTotalSamples;
+	extern uint32 g_totalSamples;
 	static uint32 numOfSampleCnt = 0;
-	uint32 numBytes = (uint32)(gp_SensorInfo->numOfChannels * 2);
+	uint32 numBytes = (uint32)(g_sensorInfoPtr->numOfChannels * 2);
 	volatile uint8* spiDR = _SPIDR;
 	volatile uint8* spiSR = _SPISR;
-	ISPI_PACKET* rTailOfPreTrigBuff = (ISPI_PACKET*)tailOfPreTrigBuff;
+	ISPI_PACKET* rTailOfPreTrigBuff = (ISPI_PACKET*)g_tailOfPreTrigBuff;
 	uint32 i = 0;
 	uint32 j;
 	uint8 tempByte;
@@ -756,23 +730,23 @@ void isr_MSP430WakeupMsg(void)
 		while ((*spiSR & ISPI_IRQ_BIT) != ISPI_IRQ_BIT){;}
 		rTailOfPreTrigBuff->sampleByte[j] = *spiDR;
 
-		if (manual_cal_flag)
+		if (g_manualCalFlag)
 		{
 			ProcessManuelCalPulse();
 		}
 
-		else if (trig_rec.op_mode == WAVEFORM_MODE)
+		else if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 		{
 			ProcessWaveformData();
 		}
 
-		else // (trig_rec.op_mode == BARGRAPH_MODE)
+		else // (g_triggerRecord.op_mode == BARGRAPH_MODE)
 		{
 			ProcessBargraphData();
 		}
 
-		numOfSampleCnt = numOfSampleCnt + gp_SensorInfo->numOfChannels;
-		if (numOfSampleCnt >= gTotalSamples)
+		numOfSampleCnt = numOfSampleCnt + g_sensorInfoPtr->numOfChannels;
+		if (numOfSampleCnt >= g_totalSamples)
 		{
 			//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = 'I';
 			ISPI_SetISPI_State(ISPI_IDLE);
@@ -810,22 +784,22 @@ void isr_MSP430WakeupMsg(void)
 				rTailOfPreTrigBuff->sampleByte[i] = *spiDR;
 			}
 
-			if (manual_cal_flag)
+			if (g_manualCalFlag)
 			{
 				ProcessManuelCalPulse();
 			}
 
-			else if (trig_rec.op_mode == WAVEFORM_MODE)
+			else if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 			{
 				ProcessWaveformData();
 			}
 
-			else //if (trig_rec.op_mode == BARGRAPH_MODE)
+			else //if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 			{
 				ProcessBargraphData();
 			}
 
-			numOfSampleCnt = numOfSampleCnt + gp_SensorInfo->numOfChannels;
+			numOfSampleCnt = numOfSampleCnt + g_sensorInfoPtr->numOfChannels;
 			//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = 'R';
 			ISPI_SetISPI_State(ISPI_RECEIVE);
 		}
@@ -946,6 +920,142 @@ void eic_system_irq(void)
 }
 
 // ============================================================================
+// usart_1_irq
+// ============================================================================
+#include "usart.h"
+extern BOOLEAN processCraftCmd;
+extern uint8 craft_g_input_buffer[];
+__attribute__((__interrupt__))
+void usart_1_rs232_irq(void)
+{
+	// Test print to verify the interrupt is running
+	//debugRaw("`");
+
+	uint32 usart_1_status;
+	uint8 recieveData;
+
+#if 1	
+	usart_1_status = AVR32_USART1.csr;
+	recieveData = AVR32_USART1.rhr;
+
+	if (usart_1_status & AVR32_USART_CSR_RXRDY_MASK)
+	{
+#if 0 // Craft buffer fill
+static uint8 craftBufferCount = 0;
+
+		if (processCraftCmd == NO)
+		{
+			switch (recieveData)
+			{
+				case '\r':
+				case '\n':
+					g_input_buffer[craftBufferCount] = recieveData;
+					craftBufferCount = 0;
+					processCraftCmd = YES;
+					break;
+
+				default:
+					g_input_buffer[craftBufferCount++] = recieveData;
+					break;
+			}
+		}
+#endif
+		// Write the received data into the buffer
+		*(g_isrMessageBufferPtr->writePtr) = recieveData;
+
+		// Advance the buffer pointer
+		g_isrMessageBufferPtr->writePtr++;
+
+		// Check if buffer pointer goes beyond the end
+		if (g_isrMessageBufferPtr->writePtr >= (g_isrMessageBufferPtr->msg + CMD_BUFFER_SIZE))
+		{
+			// Reset the buffer pointer to the beginning of the buffer
+			g_isrMessageBufferPtr->writePtr = g_isrMessageBufferPtr->msg;
+		}
+
+		// Raise the Craft Data flag
+		g_modemStatus.craftPortRcvFlag = YES;
+	}
+	else if (usart_1_status & (AVR32_USART_CSR_OVRE_MASK | AVR32_USART_CSR_FRAME_MASK | AVR32_USART_CSR_PARE_MASK))
+	{
+		g_isrMessageBufferPtr->status = CMD_MSG_OVERFLOW_ERR;
+	}		
+	//else // USART_RX_EMPTY
+#endif
+
+#if 0 // Raw
+	// Check if USART_RX_ERROR
+	if (AVR32_USART1.csr & (AVR32_USART_CSR_OVRE_MASK | AVR32_USART_CSR_FRAME_MASK | AVR32_USART_CSR_PARE_MASK))
+		g_isrMessageBufferPtr->status = CMD_MSG_OVERFLOW_ERR;
+
+	// Check if we received a char
+	if ((AVR32_USART1.csr & AVR32_USART_CSR_RXRDY_MASK) != 0)
+	{
+		*(g_isrMessageBufferPtr->writePtr) = ((AVR32_USART1.rhr & AVR32_USART_RHR_RXCHR_MASK) >> AVR32_USART_RHR_RXCHR_OFFSET);
+	}
+	//else USART_RX_EMPTY;
+#endif
+
+#if 0
+	{
+		auto INPUT_MSG_STRUCT msg;
+		auto uint8 keyPress = 0;
+
+		switch(dataReg)
+		{
+			case 'u' : keyPress = KEY_UPARROW; break;
+			case 'd' : keyPress = KEY_DOWNARROW; break;
+			case 'e' : keyPress = KEY_ENTER; break;
+			case '-' : keyPress = KEY_MINUS; break;
+			case '+' : keyPress = KEY_PLUS; break;
+			case 'h' : keyPress = KEY_HELP; break;
+			case 'b' : keyPress = KEY_BACKLIGHT; break;
+			case 'x' : keyPress = KEY_ESCAPE; break;
+		}
+
+		if (messageBoxActiveFlag == YES)
+		{
+			messageBoxKeyInput = keyPress;
+		}
+		else
+		{
+			messageBoxKeyInput = 0;
+
+			if (dataReg == 'o')
+			{
+				g_factorySetupSequence = STAGE_1;
+			}
+			else if ((g_factorySetupSequence == STAGE_1) && (dataReg == 'u'))
+			{
+				g_factorySetupSequence = STAGE_2;
+			}
+			else if ((g_factorySetupSequence == STAGE_2) && (dataReg == 'd'))
+			{
+				// Check if actively in Monitor mode
+				if (g_sampleProcessing == SAMPLING_STATE)
+				{
+					// Don't allow access to the factory setup
+					g_factorySetupSequence = SEQ_NOT_STARTED;
+				}
+				else // Not in Monitor mode
+				{
+					// Allow access to factory setup
+					g_factorySetupSequence = ENTER_FACTORY_SETUP;
+				}
+			}
+			else
+			{
+				msg.length = 1;
+				msg.cmd = KEYPRESS_MENU_CMD;
+				msg.data[0] = keyPress;
+				sendInputMsg(&msg);
+			}
+		}
+	}
+#endif
+}
+
+// ============================================================================
 // soft_timer_tick_irq
 // ============================================================================
 __attribute__((__interrupt__))
@@ -961,9 +1071,9 @@ void soft_timer_tick_irq(void)
 	raiseTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
 
 	// Every 8 ticks (4 secs) trigger the cyclic event flag
-	if (++cyclicEventDelay >= 8)
+	if (++g_cyclicEventDelay >= 8)
 	{
-		cyclicEventDelay = 0;
+		g_cyclicEventDelay = 0;
 		raiseSystemEventFlag(CYCLIC_EVENT);
 	}
 
@@ -978,9 +1088,9 @@ void soft_timer_tick_irq(void)
 }
 
 // ============================================================================
-// Setup_EIC_Keypad_ISR
+// Setup_8100_EIC_Keypad_ISR
 // ============================================================================
-void Setup_EIC_Keypad_ISR(void)
+void Setup_8100_EIC_Keypad_ISR(void)
 {
 	// External Interrupt Controller setup
 	AVR32_EIC.IER.int5 = 1;
@@ -1011,9 +1121,9 @@ void Setup_EIC_Keypad_ISR(void)
 }
 
 // ============================================================================
-// Setup_EIC_System_ISR
+// Setup_8100_EIC_System_ISR
 // ============================================================================
-void Setup_EIC_System_ISR(void)
+void Setup_8100_EIC_System_ISR(void)
 {
 	// External Interrupt Controller setup
 	AVR32_EIC.IER.int4 = 1;
@@ -1030,36 +1140,43 @@ void Setup_EIC_System_ISR(void)
 	// Enable the interrupt
 	rtc_enable_interrupt(&AVR32_RTC);
 
-#if 0
-	// Test for int enable
+#if 0 // Test for int enable
 	if(AVR32_EIC.IMR.int4 == 0x01)
-	{
 		debug("\r\nSystem Interrupt Enabled\n");
-	}
 	else
-	{
 		debug("\r\nSystem Interrupt Not Enabled\n");
-	}
 #endif
 }
 
 // ============================================================================
-// Setup_Soft_Timer_Tick_ISR
+// Setup_8100_Usart_ISR
 // ============================================================================
-void Setup_Soft_Timer_Tick_ISR(void)
+void Setup_8100_Usart_RS232_ISR(void)
+{
+	INTC_register_interrupt(&usart_1_rs232_irq, AVR32_USART1_IRQ, 0);
+
+	// Enable Receive Ready, Overrun, Parity and Framing error interrupts
+	AVR32_USART1.ier = (AVR32_USART_IER_RXRDY_MASK | AVR32_USART_IER_OVRE_MASK |
+						AVR32_USART_IER_PARE_MASK | AVR32_USART_IER_FRAME_MASK);
+}
+
+// ============================================================================
+// Setup_8100_Soft_Timer_Tick_ISR
+// ============================================================================
+void Setup_8100_Soft_Timer_Tick_ISR(void)
 {
 	// Register the RTC interrupt handler to the interrupt controller.
 	INTC_register_interrupt(&soft_timer_tick_irq, AVR32_RTC_IRQ, 0);
 }
 
 // ============================================================================
-// Setup_Soft_Timer_Tick_ISR
+// Setup_8100_Data_Clock_ISR
 // ============================================================================
 __attribute__((__interrupt__))
 void tc_irq(void);
 
 #define FOSC0	66000000 // 66 MHz
-void Setup_Data_Clock_ISR(uint32 sampleRate)
+void Setup_8100_Data_Clock_ISR(uint32 sampleRate)
 {
 	volatile avr32_tc_t *tc = &AVR32_TC;
 
@@ -1141,10 +1258,11 @@ void Stop_Data_Clock(void)
 // tc_irq
 // ============================================================================
 #if 1
-extern uint16* startOfPreTrigBuff;
-extern uint16* tailOfPreTrigBuff;
-extern uint16* endOfPreTrigBuff;
+extern uint16* g_startOfPreTrigBuff;
+extern uint16* g_tailOfPreTrigBuff;
+extern uint16* g_endOfPreTrigBuff;
 extern OFFSET_DATA_STRUCT g_channelOffset;
+#define CONSECUTIVE_TRIGGERS_THRESHOLD 2
 #endif
 
 __attribute__((__interrupt__))
@@ -1155,6 +1273,7 @@ void tc_irq(void)
 
 	static uint32 sampleCount = 0;
 	static uint32 calSampleCount = 0;
+	static uint16 consecTriggerCount = 0;
 	static uint8 recording = NO;
 	static uint8 calPulse = NO;
 	static uint8 trigFound = NO;
@@ -1229,19 +1348,19 @@ void tc_irq(void)
 	t_chan_read -= g_channelOffset.t_12bit;
 	a_chan_read -= g_channelOffset.a_12bit;
 
-	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->r = r_chan_read;
-	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->v = v_chan_read;
-	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->t = t_chan_read;
-	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->a = a_chan_read;
+	((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->r = r_chan_read;
+	((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->v = v_chan_read;
+	((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->t = t_chan_read;
+	((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->a = a_chan_read;
 
 	//___Fill Pretrigger if necessary____________________________________________________________
 	// Check to see if collecting data to fill the pretrigger buffer
-	if ((g_sampleProcessing != SAMPLING_STATE) && (trig_rec.op_mode == WAVEFORM_MODE || trig_rec.op_mode == COMBO_MODE))
+	if ((g_sampleProcessing != SAMPLING_STATE) && (g_triggerRecord.op_mode == WAVEFORM_MODE || g_triggerRecord.op_mode == COMBO_MODE))
 	{
-		tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;
+		g_tailOfPreTrigBuff += g_sensorInfoPtr->numOfChannels;
 
 		// Check if the end of the PreTrigger buffer has been reached
-		if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
+		if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
 	}
 
 	//___Processing Data in real time____________________________________________________________
@@ -1273,42 +1392,42 @@ void tc_irq(void)
 		//debug("NS: %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
 
 		//___Not handling a manual Cal____________________________________________________________
-		if (manual_cal_flag == FALSE)
+		if (g_manualCalFlag == FALSE)
 		{
 #if 1
 			//___Start of Alarm section____________________________________________________________
 			// Collecting data for any mode (other than calibration), signal alarm if active
-			if (help_rec.alarm_one_mode != ALARM_MODE_OFF)
+			if (g_helpRecord.alarm_one_mode != ALARM_MODE_OFF)
 			{
 				// Check if seismic is enabled for Alarm 1
-				if ((help_rec.alarm_one_mode == ALARM_MODE_BOTH) || (help_rec.alarm_one_mode == ALARM_MODE_SEISMIC))
+				if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC))
 				{
-					if (r_chan_read > help_rec.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
-					if (v_chan_read > help_rec.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
-					if (t_chan_read > help_rec.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
+					if (r_chan_read > g_helpRecord.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
+					if (v_chan_read > g_helpRecord.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
+					if (t_chan_read > g_helpRecord.alarm_one_seismic_lvl) raiseSystemEventFlag(WARNING1_EVENT);
 				}
 
 				// Check if air is enabled for Alarm 1
-				if ((help_rec.alarm_one_mode == ALARM_MODE_BOTH) || (help_rec.alarm_one_mode == ALARM_MODE_AIR))
+				if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_AIR))
 				{
-					if (a_chan_read > help_rec.alarm_one_air_lvl) raiseSystemEventFlag(WARNING1_EVENT);
+					if (a_chan_read > g_helpRecord.alarm_one_air_lvl) raiseSystemEventFlag(WARNING1_EVENT);
 				}
 			}
 						
-			if (help_rec.alarm_two_mode != ALARM_MODE_OFF)
+			if (g_helpRecord.alarm_two_mode != ALARM_MODE_OFF)
 			{
 				// Check if seismic is enabled for Alarm 2
-				if ((help_rec.alarm_two_mode == ALARM_MODE_BOTH) || (help_rec.alarm_two_mode == ALARM_MODE_SEISMIC))
+				if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC))
 				{
-					if (r_chan_read > help_rec.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
-					if (v_chan_read > help_rec.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
-					if (t_chan_read > help_rec.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
+					if (r_chan_read > g_helpRecord.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
+					if (v_chan_read > g_helpRecord.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
+					if (t_chan_read > g_helpRecord.alarm_two_seismic_lvl) raiseSystemEventFlag(WARNING2_EVENT);
 				}
 
 				// Check if air is enabled for Alarm 2
-				if ((help_rec.alarm_two_mode == ALARM_MODE_BOTH) || (help_rec.alarm_two_mode == ALARM_MODE_AIR))
+				if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_AIR))
 				{
-					if (a_chan_read > help_rec.alarm_two_air_lvl) raiseSystemEventFlag(WARNING2_EVENT);
+					if (a_chan_read > g_helpRecord.alarm_two_air_lvl) raiseSystemEventFlag(WARNING2_EVENT);
 				}
 			}				
 			//___End of Alarm section______________________________________________________________
@@ -1316,46 +1435,31 @@ void tc_irq(void)
 			// Check if not recording an event and not handling a cal pulse
 			if ((recording == NO) && (calPulse == NO))
 			{
-				if (trig_rec.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
+				if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 				{
-					//debug("Testing Trigger by Seismic\n");
-
-					if (r_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
-					if (v_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
-					if (t_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
-					
-					if (trigFound == YES)
-					{
-						//debug("Trigger Found by Seismic\n");
-						//debug("NS: %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
-					}						
+					if (r_chan_read > g_triggerRecord.trec.seismicTriggerLevel) consecTriggerCount++;
+					if (v_chan_read > g_triggerRecord.trec.seismicTriggerLevel) consecTriggerCount++;
+					if (t_chan_read > g_triggerRecord.trec.seismicTriggerLevel) consecTriggerCount++;
 				}
 
-				if (trig_rec.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
+				if (g_triggerRecord.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
 				{
-					//debug("Testing Trigger by Air\n");
-					
-					if (a_chan_read > trig_rec.trec.soundTriggerLevel) trigFound = YES;
-
-					if (trigFound == YES)
-					{
-						debug("Trigger Found by Air\n");
-						debug("NS: %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
-					}						
+					if (a_chan_read > g_triggerRecord.trec.soundTriggerLevel) consecTriggerCount++;
 				}				
 
-				if ((trigFound == YES) && (recording == NO) && (calPulse == NO))
+				if ((consecTriggerCount >= CONSECUTIVE_TRIGGERS_THRESHOLD) && (recording == NO) && (calPulse == NO))
 				{
 					// Add command nibble to signal a tigger
-					*(tailOfPreTrigBuff + 0) |= TRIG_ONE;
-					*(tailOfPreTrigBuff + 1) |= TRIG_ONE;
-					*(tailOfPreTrigBuff + 2) |= TRIG_ONE;
-					*(tailOfPreTrigBuff + 3) |= TRIG_ONE;
+					*(g_tailOfPreTrigBuff + 0) |= TRIG_ONE;
+					*(g_tailOfPreTrigBuff + 1) |= TRIG_ONE;
+					*(g_tailOfPreTrigBuff + 2) |= TRIG_ONE;
+					*(g_tailOfPreTrigBuff + 3) |= TRIG_ONE;
 
 					debug("--> Trigger Found! %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
 					
+					consecTriggerCount = 0;
 					recording = YES;
-					sampleCount = trig_rec.trec.record_time * trig_rec.trec.sample_rate;
+					sampleCount = g_triggerRecord.trec.record_time * g_triggerRecord.trec.sample_rate;
 				}
 			}
 			// Else check if we are still recording
@@ -1371,23 +1475,23 @@ void tc_irq(void)
 				recording = NO;
 				trigFound = NO;
 				calPulse = YES;
-				calSampleCount = MAX_CAL_SAMPLES * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE);
+				calSampleCount = MAX_CAL_SAMPLES * (g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE);
 
 				// Start Cal
-				*(tailOfPreTrigBuff + 0) |= CAL_START;
-				*(tailOfPreTrigBuff + 1) |= CAL_START;
-				*(tailOfPreTrigBuff + 2) |= CAL_START;
-				*(tailOfPreTrigBuff + 3) |= CAL_START;
+				*(g_tailOfPreTrigBuff + 0) |= CAL_START;
+				*(g_tailOfPreTrigBuff + 1) |= CAL_START;
+				*(g_tailOfPreTrigBuff + 2) |= CAL_START;
+				*(g_tailOfPreTrigBuff + 3) |= CAL_START;
 
 				adSetCalSignalHigh();
 			}
 			// Else check if a cal pulse is enabled
 			else if ((calPulse == YES) && (calSampleCount))
 			{
-				if (calSampleCount == (50 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalHigh();
-				if (calSampleCount == (45 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalLow();
-				if (calSampleCount == (35 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalHigh();
-				if (calSampleCount == (30 * (trig_rec.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalOff();
+				if (calSampleCount == (50 * (g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalHigh();
+				if (calSampleCount == (45 * (g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalLow();
+				if (calSampleCount == (35 * (g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalHigh();
+				if (calSampleCount == (30 * (g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE))) adSetCalSignalOff();
 
 				calSampleCount--;
 			}
@@ -1398,42 +1502,42 @@ void tc_irq(void)
 				calPulse = NO;
 			}
 		}
-		else //manual_cal_flag == TRUE
+		else //g_manualCalFlag == TRUE
 		{
-			if (manualCalSampleCount == 0)
+			if (g_manualCalSampleCount == 0)
 			{
 				// Start Cal
-				*(tailOfPreTrigBuff + 0) |= CAL_START;
-				*(tailOfPreTrigBuff + 1) |= CAL_START;
-				*(tailOfPreTrigBuff + 2) |= CAL_START;
-				*(tailOfPreTrigBuff + 3) |= CAL_START;
+				*(g_tailOfPreTrigBuff + 0) |= CAL_START;
+				*(g_tailOfPreTrigBuff + 1) |= CAL_START;
+				*(g_tailOfPreTrigBuff + 2) |= CAL_START;
+				*(g_tailOfPreTrigBuff + 3) |= CAL_START;
 			}
 
-			if (manualCalSampleCount == 99)
+			if (g_manualCalSampleCount == 99)
 			{
 				// Stop Cal
-				*(tailOfPreTrigBuff + 0) |= CAL_END;
-				*(tailOfPreTrigBuff + 1) |= CAL_END;
-				*(tailOfPreTrigBuff + 2) |= CAL_END;
-				*(tailOfPreTrigBuff + 3) |= CAL_END;
+				*(g_tailOfPreTrigBuff + 0) |= CAL_END;
+				*(g_tailOfPreTrigBuff + 1) |= CAL_END;
+				*(g_tailOfPreTrigBuff + 2) |= CAL_END;
+				*(g_tailOfPreTrigBuff + 3) |= CAL_END;
 			}
 
-			manualCalSampleCount++;
+			g_manualCalSampleCount++;
 		}
 
-		if (manual_cal_flag)
+		if (g_manualCalFlag)
 		{
 			ProcessManuelCalPulse();
 		}
-		else if (trig_rec.op_mode == WAVEFORM_MODE)
+		else if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 		{
 			ProcessWaveformData();
 		}
-		else if (trig_rec.op_mode == BARGRAPH_MODE)
+		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 		{
 			ProcessBargraphData();
 		}
-		else if (trig_rec.op_mode == COMBO_MODE)
+		else if (g_triggerRecord.op_mode == COMBO_MODE)
 		{
 			ProcessComboData();
 		}

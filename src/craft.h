@@ -52,6 +52,9 @@ int Menu_Items;
 unsigned char *Menu_String;
 unsigned long *Menu_Functions;
 
+void Command_Prompt(void);
+int Get_User_Input(unsigned char *str);
+
 static const unsigned char Main_Menu_Text[] =
 {
 "\n\r"

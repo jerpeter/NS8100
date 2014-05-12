@@ -64,19 +64,19 @@ typedef struct
 #define ANY_MENU_EVENT		0xFFFF
 
 // System Event Macros
-#define raiseSystemEventFlag(x) (SysEvents_flags.wrd |= x)
-#define clearSystemEventFlag(x) (SysEvents_flags.wrd &= ~x)
-#define getSystemEventState(x)	(SysEvents_flags.wrd & x)
+#define raiseSystemEventFlag(x) (g_systemEventFlags.wrd |= x)
+#define clearSystemEventFlag(x) (g_systemEventFlags.wrd &= ~x)
+#define getSystemEventState(x)	(g_systemEventFlags.wrd & x)
 
 // Timer Event Macros
-#define raiseTimerEventFlag(x)	(mn_timer.wrd |= x)
-#define clearTimerEventFlag(x)	(mn_timer.wrd &= ~x)
-#define getTimerEventState(x)	(mn_timer.wrd & x)
+#define raiseTimerEventFlag(x)	(g_timerEventFlags.wrd |= x)
+#define clearTimerEventFlag(x)	(g_timerEventFlags.wrd &= ~x)
+#define getTimerEventState(x)	(g_timerEventFlags.wrd & x)
 
 // Menu Event Macros
-#define raiseMenuEventFlag(x)	(mn_event_flags.wrd |= x)
-#define clearMenuEventFlag(x)	(mn_event_flags.wrd &= ~x)
-#define getMenuEventState(x)	(mn_event_flags.wrd & x)
+#define raiseMenuEventFlag(x)	(g_menuEventFlags.wrd |= x)
+#define clearMenuEventFlag(x)	(g_menuEventFlags.wrd &= ~x)
+#define getMenuEventState(x)	(g_menuEventFlags.wrd & x)
 
 // Processing states
 enum {

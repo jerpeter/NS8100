@@ -30,20 +30,13 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern MONTH_TABLE_STRUCT monthTable[];
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-DATE_TIME_STRUCT  g_currentTime;
-SOFT_TIMER_STRUCT g_rtcTimerBank[NUM_OF_SOFT_TIMERS];
-uint32 g_rtcSoftTimerTickCount = 0;
-volatile uint32 g_rtcCurrentTickCount = 0;
-uint32 g_UpdateCounter = 0;
-uint8 autoCalDaysToWait = 0;
-
 // RTC Alarm Frequency table, 3 sets both ALM1 and ALM0 bits to a 1, 0 clears bits
-RTC_ALARM_FREQ_STRUCT rtcAlarmFreq[] = {
+static RTC_ALARM_FREQ_STRUCT s_rtcAlarmFreq[] = {
 {ONCE_PER_SECOND, 3, 3, 3, 3},
 {ONCE_PER_MINUTE_WHEN_SECONDS_MATCH, 0, 3, 3, 3},
 {ONCE_PER_HOUR_WHEN_MINUTES_AND_SECONDS_MATCH, 0, 0, 3, 3},
@@ -182,7 +175,7 @@ uint8 setRtcDate(DATE_TIME_STRUCT* time)
 	if ((time->year <= 99) && (time->month > 0) && (time->month <= TOTAL_MONTHS))
 	{
 		// Check is the days setting is valid for the month given that month setting has been validated
-		if ((time->day > 0) && (time->day <= monthTable[time->month].days))
+		if ((time->day > 0) && (time->day <= g_monthTable[time->month].days))
 		{
 			// Flag success since month, day and year settings are valid
 			status = PASSED;
@@ -253,7 +246,7 @@ DATE_TIME_STRUCT getRtcTime(void)
 	time.sec = (uint8)(translateTime.seconds.bit.oneSecond + (translateTime.seconds.bit.tenSecond * 10));
 
 	// Check for RTC reset
-	if ((time.year == 0) && (time.month == 0) && (time.day == 0))
+	if ((time.year == 0) || (time.month == 0) || (time.day == 0))
 	{
 		debug("RTC read from power loss, Date incorrect... applying default date\n");
 		time.year = 12;
@@ -407,8 +400,8 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 ****************************************/
 void SetAlarmFrequency(uint8 mode)
 {
-	RTC_DAY_ALARM.alarmBit.alarmMask = rtcAlarmFreq[mode].dayAlarmMask;
-	RTC_HOURS_ALARM.alarmBit.alarmMask = rtcAlarmFreq[mode].hoursAlarmMask;
-	RTC_MINUTES_ALARM.alarmBit.alarmMask = rtcAlarmFreq[mode].minutesAlarmMask;
-	RTC_SECONDS_ALARM.alarmBit.alarmMask = rtcAlarmFreq[mode].secondsAlarmMask;
+	RTC_DAY_ALARM.alarmBit.alarmMask = s_rtcAlarmFreq[mode].dayAlarmMask;
+	RTC_HOURS_ALARM.alarmBit.alarmMask = s_rtcAlarmFreq[mode].hoursAlarmMask;
+	RTC_MINUTES_ALARM.alarmBit.alarmMask = s_rtcAlarmFreq[mode].minutesAlarmMask;
+	RTC_SECONDS_ALARM.alarmBit.alarmMask = s_rtcAlarmFreq[mode].secondsAlarmMask;
 }

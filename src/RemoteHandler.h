@@ -40,7 +40,7 @@ void cmdMessageHandlerInit(void);
 void cmdMessageProcessing(void);
 void processCraftData(void);
 void craftInitStatusFlags(void);
-void initInterruptBuffers(void);
+void initCraftInterruptBuffers(void);
 
 #endif // _REMOTE_COMMON_H_
 

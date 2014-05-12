@@ -27,7 +27,7 @@
 #include "SysEvents.h"
 #include "Board.h"
 #include "PowerManagement.h"
-#include "Rec.h"
+#include "Record.h"
 #include "SoftTimer.h"
 #include "Keypad.h"
 #include "ProcessBargraph.h"
@@ -49,74 +49,16 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-// 430 structures and variables.
-extern volatile ISPI_STATE_E _ISPI_State;
-extern MSGS430_UNION msgs430;							// 430 Message structure.
-extern uint8 g_sampleProcessing;								// State of the 430 HW
-extern uint16* tailOfPreTrigBuff;						// End of the pre-Trigger buffer.
-extern uint32 isTriggered;
-extern uint32 processingCal;
-extern uint16 gCalTestExpected;
-extern uint8 g_doneTakingEvents;
-
-// System Parameter information.
-extern SYS_EVENT_STRUCT SysEvents_flags;				// System event flags.
-extern REC_HELP_MN_STRUCT help_rec;						
-extern REC_EVENT_MN_STRUCT trig_rec;
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;		// Sensor Information.
-extern MN_EVENT_STRUCT mn_event_flags;
-
-// Event data structures.
-extern EVT_RECORD g_RamEventRecord;						// Event record in Ram, for the current event.
-extern CALCULATED_DATA_STRUCT* g_bargraphSumIntervalWritePtr;	// To display bargraph summary information on the screen.
-
-// Printer structure information and printer flags.
-extern uint8 mmap[8][128];								// Print buffer.
-
-// Menu data structures.
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern int32 active_menu;
-extern USER_MENU_STRUCT modeMenu[];
-
-// Bargraph Impulse references
-extern uint16 aImpulsePeak;
-extern uint16 rImpulsePeak;
-extern uint16 vImpulsePeak;
-extern uint16 tImpulsePeak;
-extern uint32 vsImpulsePeak;
-extern uint16 impulseMenuCount;
-extern uint16 aJobPeak;
-extern uint16 aJobFreq;
-extern uint16 rJobPeak;
-extern uint16 rJobFreq;
-extern uint16 vJobPeak;
-extern uint16 vJobFreq;
-extern uint16 tJobPeak;
-extern uint16 tJobFreq;
-extern uint32 vsJobPeak;
-extern uint8 g_skipAutoCalInWaveformAfterMidnightCal;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-//uint32 gTotalSamples;
-//uint16 manual_cal_flag = FALSE;
-//uint16 manualCalSampleCount = 0;
-//uint8 g_bargraphForcedCal = NO;
-uint8 g_monitorOperationMode;
-uint8 g_waitForUser = FALSE;
-uint8 g_promtForLeavingMonitorMode = FALSE;
-uint8 g_promtForCancelingPrintJobs = FALSE;
-uint8 g_monitorModeActiveChoice = MB_FIRST_CHOICE;
-uint8 g_monitorEscapeCheck = YES;
-uint8 g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
-uint8 g_displayAlternateResultState = DEFAULT_RESULTS;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void monitorMn (INPUT_MSG_STRUCT);
+void monitorMn(INPUT_MSG_STRUCT);
 void monitorMnDsply(WND_LAYOUT_STRUCT *);
 void monitorMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 uint16 seisTriggerConvert(float);
@@ -133,10 +75,10 @@ void monitorMn(INPUT_MSG_STRUCT msg)
 
 	monitorMnProc(msg, &wnd_layout, &mn_layout);
 
-	if (active_menu == MONITOR_MENU)
+	if (g_activeMenu == MONITOR_MENU)
 	{
 		monitorMnDsply(&wnd_layout);
-		writeMapToLcd(mmap);
+		writeMapToLcd(g_mmap);
 	}
 }
 
@@ -149,8 +91,8 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 	WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	REC_EVENT_MN_STRUCT temp_trig_rec;
-	REC_HELP_MN_STRUCT temp_help_rec;
+	REC_EVENT_MN_STRUCT temp_g_triggerRecord;
+	REC_HELP_MN_STRUCT temp_g_helpRecord;
 	//uint8 mbChoice = 0;
 	FLASH_USAGE_STRUCT flashStats;
 	
@@ -166,12 +108,12 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 			mn_layout_ptr->curr_ln =       MONITOR_MN_TBL_START_LINE;
 			mn_layout_ptr->top_ln =        MONITOR_MN_TBL_START_LINE;
 
-			byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+			byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 			
 			g_monitorOperationMode = (uint8)msg.data[0];
 
 			// Check if flash wrapping is disabled and if there is space left in flash
-			if (help_rec.flash_wrapping == NO)
+			if (g_helpRecord.flash_wrapping == NO)
 			{
 				if (((g_monitorOperationMode == WAVEFORM_MODE) && (flashStats.waveEventsLeft == 0)) ||
 					((g_monitorOperationMode == BARGRAPH_MODE) && (flashStats.roomForBargraph == NO)) ||
@@ -183,9 +125,9 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					g_skipAutoCalInWaveformAfterMidnightCal = NO;
 
 					// Jump back to main menu
-					active_menu = MAIN_MENU;
+					g_activeMenu = MAIN_MENU;
 					ACTIVATE_MENU_MSG();
-					(*menufunc_ptrs[active_menu]) (mn_msg);
+					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 					
 					overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT MONITOR.", (5 * SOFT_SECS));
 					return;
@@ -193,92 +135,92 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 			}
 			
 			// Make sure the parameters are up to date based on the trigger setup information
-			initSensorParameters(factory_setup_rec.sensor_type, (uint8)trig_rec.srec.sensitivity);
+			initSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
 
 			switch(g_monitorOperationMode)
 			{
 				case WAVEFORM_MODE:
-					startMonitoring(trig_rec.trec, START_TRIGGER_CMD, trig_rec.op_mode);
+					startMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
 				break;   
 
 				case BARGRAPH_MODE: 
 					// fix_ns8100 - Look into the assignment, why does it exist since it should already be set?
 					// For bargraph mode these have to be set.
-					trig_rec.op_mode = BARGRAPH_MODE;
+					g_triggerRecord.op_mode = BARGRAPH_MODE;
 					
 					// Set the default display mode to be the summary interval results
 					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
 					
-					if(help_rec.vector_sum == DISABLED)
+					if(g_helpRecord.vector_sum == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 					
-					if(help_rec.report_displacement == DISABLED)
+					if(g_helpRecord.report_displacement == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 
 					// Check if the sample rate is not 1024
-					if (trig_rec.trec.sample_rate != 1024)
+					if (g_triggerRecord.trec.sample_rate != 1024)
 					{
-						trig_rec.trec.sample_rate = 1024;
+						g_triggerRecord.trec.sample_rate = 1024;
 					}	
 
-					aImpulsePeak = rImpulsePeak = vImpulsePeak = tImpulsePeak = 0;
-					aJobPeak = rJobPeak = vJobPeak = tJobPeak = 0;
-					aJobFreq = rJobFreq = vJobFreq = tJobFreq = 0;
-					vsImpulsePeak = vsJobPeak = 0;
+					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
+					g_aJobPeak = g_rJobPeak = g_vJobPeak = g_tJobPeak = 0;
+					g_aJobFreq = g_rJobFreq = g_vJobFreq = g_tJobFreq = 0;
+					g_vsImpulsePeak = g_vsJobPeak = 0;
 					
-					if ((trig_rec.berec.impulseMenuUpdateSecs < LCD_IMPULSE_TIME_MIN_VALUE) || 
-						(trig_rec.berec.impulseMenuUpdateSecs > LCD_IMPULSE_TIME_MAX_VALUE))
+					if ((g_triggerRecord.berec.impulseMenuUpdateSecs < LCD_IMPULSE_TIME_MIN_VALUE) || 
+						(g_triggerRecord.berec.impulseMenuUpdateSecs > LCD_IMPULSE_TIME_MAX_VALUE))
 					{
-						trig_rec.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
+						g_triggerRecord.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
 					}
 
-					startMonitoring(trig_rec.trec, START_TRIGGER_CMD, trig_rec.op_mode);
+					startMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
 				break;
 
 				case MANUAL_TRIGGER_MODE:
-					byteCpy((uint8*)&temp_trig_rec, &trig_rec, sizeof(REC_EVENT_MN_STRUCT));
-					temp_trig_rec.trec.seismicTriggerLevel = MANUAL_TRIGGER_CHAR;
-					temp_trig_rec.trec.soundTriggerLevel = MANUAL_TRIGGER_CHAR;
+					byteCpy((uint8*)&temp_g_triggerRecord, &g_triggerRecord, sizeof(REC_EVENT_MN_STRUCT));
+					temp_g_triggerRecord.trec.seismicTriggerLevel = MANUAL_TRIGGER_CHAR;
+					temp_g_triggerRecord.trec.soundTriggerLevel = MANUAL_TRIGGER_CHAR;
 
-					startMonitoring(temp_trig_rec.trec, START_TRIGGER_CMD, trig_rec.op_mode);
+					startMonitoring(temp_g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
 				break;
 
 				case COMBO_MODE:
 					// Set the default display mode to be the summary interval results
 					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
 					
-					if(help_rec.vector_sum == DISABLED)
+					if(g_helpRecord.vector_sum == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 					
-					if(help_rec.report_displacement == DISABLED)
+					if(g_helpRecord.report_displacement == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 
 					// Check if the sample rate is not 1024
-					if (trig_rec.trec.sample_rate != 1024)
+					if (g_triggerRecord.trec.sample_rate != 1024)
 					{
-						trig_rec.trec.sample_rate = 1024;
+						g_triggerRecord.trec.sample_rate = 1024;
 					}	
 
-					aImpulsePeak = rImpulsePeak = vImpulsePeak = tImpulsePeak = 0;
-					aJobPeak = rJobPeak = vJobPeak = tJobPeak = 0;
-					aJobFreq = rJobFreq = vJobFreq = tJobFreq = 0;
-					vsImpulsePeak = vsJobPeak = 0;
+					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
+					g_aJobPeak = g_rJobPeak = g_vJobPeak = g_tJobPeak = 0;
+					g_aJobFreq = g_rJobFreq = g_vJobFreq = g_tJobFreq = 0;
+					g_vsImpulsePeak = g_vsJobPeak = 0;
 					
-					if ((trig_rec.berec.impulseMenuUpdateSecs < LCD_IMPULSE_TIME_MIN_VALUE) || 
-						(trig_rec.berec.impulseMenuUpdateSecs > LCD_IMPULSE_TIME_MAX_VALUE))
+					if ((g_triggerRecord.berec.impulseMenuUpdateSecs < LCD_IMPULSE_TIME_MIN_VALUE) || 
+						(g_triggerRecord.berec.impulseMenuUpdateSecs > LCD_IMPULSE_TIME_MAX_VALUE))
 					{
-						trig_rec.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
+						g_triggerRecord.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
 					}
 
-					startMonitoring(trig_rec.trec, START_TRIGGER_CMD, trig_rec.op_mode);
+					startMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
 					break;
 
 				default:
@@ -319,12 +261,12 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 								stopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
 								// Restore the auto_print value just in case the user escaped from a printout
-								getRecData(&temp_help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-								help_rec.auto_print = temp_help_rec.auto_print;
+								getRecData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+								g_helpRecord.auto_print = temp_g_helpRecord.auto_print;
 
-								active_menu = MAIN_MENU;
+								g_activeMenu = MAIN_MENU;
 								ACTIVATE_MENU_MSG();
-								(*menufunc_ptrs[active_menu]) (mn_msg);
+								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							}
 
 							g_promtForLeavingMonitorMode = FALSE;
@@ -417,14 +359,14 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 						case DEFAULT_RESULTS:
 							if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 							{
-								if(help_rec.vector_sum == ENABLED)				
+								if(g_helpRecord.vector_sum == ENABLED)				
 									g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 							}
 							else
 							{
-								if(help_rec.report_displacement == ENABLED)
+								if(g_helpRecord.report_displacement == ENABLED)
 									g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
-								else if(help_rec.vector_sum == ENABLED)
+								else if(g_helpRecord.vector_sum == ENABLED)
 									g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 							}
 						break;
@@ -434,7 +376,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 						break;
 						
 						case PEAK_DISPLACEMENT_RESULTS:
-							if(help_rec.vector_sum == ENABLED)
+							if(g_helpRecord.vector_sum == ENABLED)
 								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 							else
 								g_displayAlternateResultState = DEFAULT_RESULTS;
@@ -446,9 +388,9 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					switch (g_displayAlternateResultState)
 					{
 						case DEFAULT_RESULTS: 
-							if(help_rec.vector_sum == ENABLED)
+							if(g_helpRecord.vector_sum == ENABLED)
 								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-							else if((help_rec.report_displacement == ENABLED) && (g_displayBargraphResultsMode != IMPULSE_RESULTS))
+							else if((g_helpRecord.report_displacement == ENABLED) && (g_displayBargraphResultsMode != IMPULSE_RESULTS))
 								g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
 						break;
 							
@@ -459,7 +401,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 							}
 							else
 							{
-								if(help_rec.report_displacement == ENABLED)
+								if(g_helpRecord.report_displacement == ENABLED)
 									g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
 								else
 									g_displayAlternateResultState = DEFAULT_RESULTS;
@@ -481,12 +423,12 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 			stopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
 			// Restore the auto_print value just in case the user escaped from a printout
-			getRecData(&temp_help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-			help_rec.auto_print = temp_help_rec.auto_print;
+			getRecData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+			g_helpRecord.auto_print = temp_g_helpRecord.auto_print;
 
-			active_menu = MAIN_MENU;
+			g_activeMenu = MAIN_MENU;
 			ACTIVATE_MENU_MSG();
-			(*menufunc_ptrs[active_menu]) (mn_msg);
+			(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 			
 			overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) MONITOR STOPPED.", (5 * SOFT_SECS));
 		break;
@@ -510,7 +452,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	float div, tempR, tempV, tempT, tempA, tempVS, tempPeakDisp, normalize_max_peak;
 	float rFreq, vFreq, tFreq, tempFreq;
 	uint8 arrowChar;
-	uint8 gainFactor = (uint8)((trig_rec.srec.sensitivity == LOW) ? 2 : 4);
+	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
 
 	DATE_TIME_STRUCT time;
 
@@ -519,7 +461,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wnd_layout_ptr->next_row =   wnd_layout_ptr->start_row;
 	wnd_layout_ptr->next_col =   wnd_layout_ptr->start_col;
 
-	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	//-----------------------------------------------------------------------
 	// PRINT MONITORING
@@ -541,7 +483,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	if (g_monitorOperationMode == WAVEFORM_MODE)
 	{
-		if (isTriggered)
+		if (g_isTriggered)
 		{
 			length = (uint8)sprintf((char*)buff, "%s%s (W)", getLangText(PROCESSING_TEXT), dotBuff);
 		}
@@ -645,10 +587,10 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			//-----------------------------------------------------------------------
 			byteSet(&buff[0], 0, sizeof(buff));	
 			length = (uint8)sprintf(buff," x%3x x%3x x%3x x%3x", 
-				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->r) & 0x0FFF),
-				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->v) & 0x0FFF),
-				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->t) & 0x0FFF),
-				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->a) & 0x0FFF));
+				((((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->r) & 0x0FFF),
+				((((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->v) & 0x0FFF),
+				((((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->t) & 0x0FFF),
+				((((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->a) & 0x0FFF));
 
 			wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
@@ -700,7 +642,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-		if (trig_rec.berec.barChannel != BAR_AIR_CHANNEL)
+		if (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL)
 		{
 			//-----------------------------------------------------------------------
 			// Max Results Header
@@ -719,8 +661,8 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			byteSet(&buff[0], 0, sizeof(buff));
 			byteSet(&displayFormat[0], 0, sizeof(displayFormat));
 
-			div = (float)(gp_SensorInfo->ADCResolution * gp_SensorInfo->sensorAccuracy * gainFactor) / 
-					(float)(factory_setup_rec.sensor_type);
+			div = (float)(g_sensorInfoPtr->ADCResolution * g_sensorInfoPtr->sensorAccuracy * gainFactor) / 
+					(float)(g_factorySetupRecord.sensor_type);
 
 			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
@@ -730,25 +672,25 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			}
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 			{
-				tempR = ((float)rJobPeak / (float)div);
-				tempT = ((float)tJobPeak / (float)div);
-				tempV = ((float)vJobPeak / (float)div);
+				tempR = ((float)g_rJobPeak / (float)div);
+				tempT = ((float)g_tJobPeak / (float)div);
+				tempV = ((float)g_vJobPeak / (float)div);
 			}
 			else // g_displayBargraphResultsMode == IMPULSE_RESULTS
 			{
-				tempR = ((float)rImpulsePeak / (float)div);
-				tempT = ((float)tImpulsePeak / (float)div);
-				tempV = ((float)vImpulsePeak / (float)div);
+				tempR = ((float)g_rImpulsePeak / (float)div);
+				tempT = ((float)g_tImpulsePeak / (float)div);
+				tempV = ((float)g_vImpulsePeak / (float)div);
 			}
 
-			if ((gp_SensorInfo->unitsFlag == IMPERIAL_TYPE) || (factory_setup_rec.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
 			{
-				if (factory_setup_rec.sensor_type == SENSOR_ACC)
+				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
 					strcpy(buff, "mg/s |");
 				else
 					strcpy(buff, "in/s |");
 			}
-			else // gp_SensorInfo->unitsFlag == METRIC_TYPE
+			else // g_sensorInfoPtr->unitsFlag == METRIC_TYPE
 			{
 				tempR *= (float)METRIC;
 				tempT *= (float)METRIC;
@@ -811,20 +753,20 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				}
 				else // g_displayBargraphResultsMode == JOB_PEAK_RESULTS
 				{
-					if (rJobFreq > 0)
+					if (g_rJobFreq > 0)
 					{
 						tempR = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
-								((float)((rJobFreq * 2) - 1)));
+								((float)((g_rJobFreq * 2) - 1)));
 					}
-					if (vJobFreq > 0)
+					if (g_vJobFreq > 0)
 					{
 						tempV = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
-								((float)((vJobFreq * 2) - 1)));
+								((float)((g_vJobFreq * 2) - 1)));
 					}
-					if (tJobFreq > 0)
+					if (g_tJobFreq > 0)
 					{
 						tempT = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
-								((float)((tJobFreq * 2) - 1)));
+								((float)((g_tJobFreq * 2) - 1)));
 					}
 				}
 
@@ -865,18 +807,18 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		tempA = (float)0.0;
 
 		// Check if displaying the vector sum and if the bar channel isn't just air
-		if ((g_displayAlternateResultState == VECTOR_SUM_RESULTS) && (trig_rec.berec.barChannel != BAR_AIR_CHANNEL))
+		if ((g_displayAlternateResultState == VECTOR_SUM_RESULTS) && (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL))
 		{
 			if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
-				tempVS = sqrtf((float)vsImpulsePeak) / (float)div;
+				tempVS = sqrtf((float)g_vsImpulsePeak) / (float)div;
 			else if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 				tempVS = sqrtf((float)g_bargraphSumIntervalWritePtr->vectorSumPeak) / (float)div;
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
-				tempVS = sqrtf((float)vsJobPeak) / (float)div;
+				tempVS = sqrtf((float)g_vsJobPeak) / (float)div;
 
-			if ((gp_SensorInfo->unitsFlag == IMPERIAL_TYPE) || (factory_setup_rec.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
 			{
-				if (factory_setup_rec.sensor_type == SENSOR_ACC)
+				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
 					strcpy(displayFormat, "mg/s");
 				else
 					strcpy(displayFormat, "in/s");
@@ -890,7 +832,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			sprintf(buff,"VS %.2f %s", tempVS, displayFormat);
 		}
-		else if ((g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS) && (trig_rec.berec.barChannel != BAR_AIR_CHANNEL))
+		else if ((g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS) && (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL))
 		{
 			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
@@ -907,16 +849,16 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			}
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 			{
-				tempR = rJobPeak;
-				tempV = vJobPeak;
-				tempT = tJobPeak;
+				tempR = g_rJobPeak;
+				tempV = g_vJobPeak;
+				tempT = g_tJobPeak;
 
 				rFreq = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
-						((float)((rJobFreq * 2) - 1)));
+						((float)((g_rJobFreq * 2) - 1)));
 				vFreq = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
-						((float)((vJobFreq * 2) - 1)));
+						((float)((g_vJobFreq * 2) - 1)));
 				tFreq = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
-						((float)((tJobFreq * 2) - 1)));
+						((float)((g_tJobFreq * 2) - 1)));
 			}
 
 			if (tempR > tempV)
@@ -952,9 +894,9 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			tempPeakDisp = (float)normalize_max_peak / ((float)2 * (float)PI * (float)tempFreq);
 
-			if ((gp_SensorInfo->unitsFlag == IMPERIAL_TYPE) || (factory_setup_rec.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
 			{
-				if (factory_setup_rec.sensor_type == SENSOR_ACC)
+				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
 					strcpy(displayFormat, "mg");
 				else
 					strcpy(displayFormat, "in");
@@ -968,14 +910,14 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			sprintf(buff,"PEAK DISP %6f %s", tempPeakDisp, displayFormat);
 		}
-		else // g_displayAlternateResultState == DEFAULT_RESULTS || trig_rec.berec.barChannel == BAR_AIR_CHANNEL
+		else // g_displayAlternateResultState == DEFAULT_RESULTS || g_triggerRecord.berec.barChannel == BAR_AIR_CHANNEL
 		{
 			// Check if the bar channel to display isn't just seismic
-			if (trig_rec.berec.barChannel != BAR_SEISMIC_CHANNEL)
+			if (g_triggerRecord.berec.barChannel != BAR_SEISMIC_CHANNEL)
 			{
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
-					sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), hexToDB(aImpulsePeak, DATA_NORMALIZED));
+					sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), hexToDB(g_aImpulsePeak, DATA_NORMALIZED));
 				}
 				else // (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS) || (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 				{
@@ -991,13 +933,13 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 					}
 					else // g_displayBargraphResultsMode == JOB_PEAK_RESULTS
 					{
-						if (aJobFreq > 0)
+						if (g_aJobFreq > 0)
 						{
 							tempA = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
-									((float)((aJobFreq * 2) - 1)));
+									((float)((g_aJobFreq * 2) - 1)));
 						}
 
-						sprintf(buff, "AIR %4.1f dB ", hexToDB(aJobPeak, DATA_NORMALIZED));
+						sprintf(buff, "AIR %4.1f dB ", hexToDB(g_aJobPeak, DATA_NORMALIZED));
 					}
 
 					if (tempA > 100)
@@ -1019,7 +961,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			byteSet(&buff[0], 0, sizeof(buff));
 		
-			length = (uint8)sprintf(buff, "(%d %s)", trig_rec.berec.impulseMenuUpdateSecs, (trig_rec.berec.impulseMenuUpdateSecs == 1) ?
+			length = (uint8)sprintf(buff, "(%d %s)", g_triggerRecord.berec.impulseMenuUpdateSecs, (g_triggerRecord.berec.impulseMenuUpdateSecs == 1) ?
 									getLangText(SECOND_TEXT) : getLangText(SECONDS_TEXT));
 
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
@@ -1030,7 +972,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 
 		// Keep impulse values refreshed based on LCD updates (every second)
-		impulseMenuCount++;
+		g_impulseMenuCount++;
 	}
 	
 	if (g_promtForCancelingPrintJobs == TRUE)

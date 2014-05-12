@@ -18,7 +18,6 @@
 #include <string.h>
 #include "Typedefs.h"
 #include "RealTimeClock.h"
-#include "MMC2114.h"
 #include "Menu.h"
 #include "SoftTimer.h"
 #include "Display.h"
@@ -40,32 +39,10 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern MN_TIMER_STRUCT mn_timer;
-extern uint8 g_doneTakingEvents;
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
-extern uint16 manual_cal_flag;
-extern uint16 g_autoRetries;
-extern MODEM_SETUP_STRUCT modem_setup_rec;
-extern uint8 g_autoDialoutState;
-extern SOFT_TIMER_STRUCT g_rtcTimerBank[NUM_OF_SOFT_TIMERS];
-extern uint32 g_rtcSoftTimerTickCount;
-extern int8 g_lcdBacklightFlag;
-extern int8 g_lcdPowerFlag;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern uint8 g_sampleProcessing;
-extern REC_HELP_MN_STRUCT help_rec;
-extern REC_EVENT_MN_STRUCT trig_rec;
-extern MODEM_STATUS_STRUCT g_ModemStatus;
-extern int32 active_menu;
-extern uint8 modemResetStage;
-extern uint8 autoCalDaysToWait;
-extern uint16 g_CRLF;
-extern uint8 enterMonitorModeAfterMidnightCal;
-extern REC_HELP_MN_STRUCT help_rec;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
 /****************************************
@@ -255,7 +232,7 @@ void menuUpdateTimerCallBack(void)
 	mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
 
 	// Recall the current active menu to repaint the display
-	(*menufunc_ptrs[active_menu]) (mn_msg);
+	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 
 	assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
 }
@@ -269,7 +246,7 @@ void powerOffTimerCallback(void)
 	debug("Power Off Timer callback: activated.\n");
 
 	// Handle stopping 430 communication and finishing any processing
-	stopMonitoring(trig_rec.op_mode, FINISH_PROCESSING);
+	stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 	overlayMessage(getLangText(TIMER_MODE_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 2 * SOFT_SECS);
 
@@ -288,8 +265,7 @@ void powerOffTimerCallback(void)
 ****************************************/
 void modemDelayTimerCallback(void)
 {
-#if 0 // fix_ns8100
-	if (YES == g_ModemStatus.modemAvailable)
+	if (YES == g_modemStatus.modemAvailable)
 	{
 		if ((READ_DSR == MODEM_CONNECTED) && (READ_DCD == NO_CONNECTION))
 		{
@@ -300,7 +276,6 @@ void modemDelayTimerCallback(void)
 			assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_DELAY, modemDelayTimerCallback);
 		}
 	}
-#endif
 }
 
 /****************************************
@@ -318,42 +293,41 @@ void autoCalInWaveformTimerCallback(void)
 ****************************************/
 void modemResetTimerCallback(void)
 {
-	if (modemResetStage == 0)
+	if (g_modemResetStage == 0)
 	{
 		// If for some reason this executes, make sure the timer is disabled
 		clearSoftTimer(MODEM_RESET_TIMER_NUM);
 	}
-	else if (modemResetStage == 1)
+	else if (g_modemResetStage == 1)
 	{
-#if 0 // fix_ns8100
 		SET_DTR;
-#endif
+
 		assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), modemResetTimerCallback);
-		modemResetStage = 2;
+		g_modemResetStage = 2;
 	}
-	else if (modemResetStage == 2)
+	else if (g_modemResetStage == 2)
 	{
 		uart_puts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT);
 		assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), modemResetTimerCallback);
-		modemResetStage = 3;
+		g_modemResetStage = 3;
 	}
-	else if (modemResetStage == 3)
+	else if (g_modemResetStage == 3)
 	{
 		uart_puts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT);
 		assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), modemResetTimerCallback);
-		modemResetStage = 4;
+		g_modemResetStage = 4;
 	}
-	else if (modemResetStage == 4)
+	else if (g_modemResetStage == 4)
 	{
 		uart_puts((char*)(ATH_CMD_STRING), CRAFT_COM_PORT);
 		uart_puts((char*)&g_CRLF, CRAFT_COM_PORT);
 		assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), modemResetTimerCallback);
-		modemResetStage = 5;
+		g_modemResetStage = 5;
 	}
-	else if (modemResetStage == 5)
+	else if (g_modemResetStage == 5)
 	{
 		modemInitProcess();
-		modemResetStage = 0;
+		g_modemResetStage = 0;
 	}
 }
 
@@ -374,9 +348,9 @@ void autoMonitorTimerCallBack(void)
 	if (g_sampleProcessing != SAMPLING_STATE)
 	{
 		// Enter monitor mode with the current mode
-		active_menu = MONITOR_MENU;
-		ACTIVATE_MENU_WITH_DATA_MSG(trig_rec.op_mode);
-		(*menufunc_ptrs[active_menu]) (mn_msg);
+		g_activeMenu = MONITOR_MENU;
+		ACTIVATE_MENU_WITH_DATA_MSG(g_triggerRecord.op_mode);
+		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 	}
 }
 
@@ -414,10 +388,10 @@ void procTimerEvents(void)
 		// Need to stop print jobs
 
 		// Voltage is low, turn printing off
-		help_rec.auto_print = OFF;
+		g_helpRecord.auto_print = OFF;
 
 		// Handle stopping 430 communication
-		stopMonitoring(trig_rec.op_mode, FINISH_PROCESSING);
+		stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 		// Clear and setup the message buffer
 		byteSet(&(msgBuffer[0]), 0, sizeof(msgBuffer));
@@ -427,9 +401,9 @@ void procTimerEvents(void)
 		overlayMessage(getLangText(WARNING_TEXT), msgBuffer, (2 * SOFT_SECS));
 
 		// Jump to the main menu
-		active_menu = MAIN_MENU;
+		g_activeMenu = MAIN_MENU;
 		ACTIVATE_MENU_MSG();
-		(*menufunc_ptrs[active_menu]) (mn_msg);
+		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 	}
 }
 
@@ -443,7 +417,7 @@ void handleMidnightEvent(void)
 	char message[50];
 	FLASH_USAGE_STRUCT flashStats;
 
-	if ((trig_rec.op_mode == BARGRAPH_MODE) && (g_sampleProcessing == SAMPLING_STATE))
+	if ((g_triggerRecord.op_mode == BARGRAPH_MODE) && (g_sampleProcessing == SAMPLING_STATE))
 	{
 		// Do not handle midnight calibration since a manual cal is forced at the beginning of Bargraph
 
@@ -453,49 +427,49 @@ void handleMidnightEvent(void)
 		overlayMessage(getLangText(STATUS_TEXT), message, 0);
 
 		// Handle stopping the current bargraph
-		stopMonitoring(trig_rec.op_mode, FINISH_PROCESSING);
+		stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 		// Start up a new Bargraph
-		active_menu = MONITOR_MENU;
-		ACTIVATE_MENU_WITH_DATA_MSG(trig_rec.op_mode);
-		(*menufunc_ptrs[active_menu]) (mn_msg);
+		g_activeMenu = MONITOR_MENU;
+		ACTIVATE_MENU_WITH_DATA_MSG(g_triggerRecord.op_mode);
+		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 	}
 	// Check if Auto Cal is active
-	else if (help_rec.auto_cal_mode != AUTO_NO_CAL_TIMEOUT)
+	else if (g_helpRecord.auto_cal_mode != AUTO_NO_CAL_TIMEOUT)
 	{
 		// Decrement days to wait
-		if (autoCalDaysToWait > 0) autoCalDaysToWait--;
+		if (g_autoCalDaysToWait > 0) g_autoCalDaysToWait--;
 
 		// Check if time to do Auto Calibration
-		if (autoCalDaysToWait == 0)
+		if (g_autoCalDaysToWait == 0)
 		{
 			// Perform Auto Cal logic
 
 			// Reset the days to wait count
-			switch (help_rec.auto_cal_mode)
+			switch (g_helpRecord.auto_cal_mode)
 			{
-				case AUTO_24_HOUR_TIMEOUT: autoCalDaysToWait = 1; break;
-				case AUTO_48_HOUR_TIMEOUT: autoCalDaysToWait = 2; break;
-				case AUTO_72_HOUR_TIMEOUT: autoCalDaysToWait = 3; break;
+				case AUTO_24_HOUR_TIMEOUT: g_autoCalDaysToWait = 1; break;
+				case AUTO_48_HOUR_TIMEOUT: g_autoCalDaysToWait = 2; break;
+				case AUTO_72_HOUR_TIMEOUT: g_autoCalDaysToWait = 3; break;
 			}
 
 			// Set flag to alert the Results menu which action to take after a cal pulse result is received
 			if (g_sampleProcessing == SAMPLING_STATE)
-				enterMonitorModeAfterMidnightCal = YES;
+				g_enterMonitorModeAfterMidnightCal = YES;
 
 			// Handle stopping 430 communication and finishing any processing
-			stopMonitoring(trig_rec.op_mode, FINISH_PROCESSING);
+			stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 			getFlashUsageStats(&flashStats);
 
-			if ((help_rec.flash_wrapping == NO) && (flashStats.manualCalsLeft == 0))
+			if ((g_helpRecord.flash_wrapping == NO) && (flashStats.manualCalsLeft == 0))
 			{
-				enterMonitorModeAfterMidnightCal = NO;
+				g_enterMonitorModeAfterMidnightCal = NO;
 
 				// Unable to store any more data in the selected mode
-				active_menu = MAIN_MENU;
+				g_activeMenu = MAIN_MENU;
 				ACTIVATE_MENU_MSG();
-				(*menufunc_ptrs[active_menu]) (mn_msg);
+				(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 
 				overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 			}
@@ -505,7 +479,7 @@ void handleMidnightEvent(void)
 				overlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), (2 * SOFT_SECS));
 
 				// Issue a Cal Pulse message
-	            startMonitoring(trig_rec.trec, MANUAL_CAL_PULSE_CMD, MANUAL_CAL_MODE);
+	            startMonitoring(g_triggerRecord.trec, MANUAL_CAL_PULSE_CMD, MANUAL_CAL_MODE);
 
 				// Wait until after the Cal Pulse has completed, 250ms to be safe (just less than 100 ms to complete)
 				soft_usecWait(250 * SOFT_MSECS);

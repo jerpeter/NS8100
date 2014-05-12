@@ -33,8 +33,6 @@
 #include "print_funcs.h"
 #include "usart.h"
 #include "gpio.h"
-#include "utils.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -130,7 +128,7 @@ unsigned long sram_size = ((AVR32_EBI_CS1_SIZE >> 4) - 0x00100000);
                            (TDF_OPTIM << AVR32_SMC_MODE0_TDF_MODE_OFFSET) | \
                            (PAGE_MODE << AVR32_SMC_MODE0_PMEN_OFFSET) | \
                            (PAGE_SIZE << AVR32_SMC_MODE0_PS_OFFSET); \
-  smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
+  g_smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
   }
 
 #if 0
@@ -215,7 +213,7 @@ static unsigned long int memPatter[] =
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 //void smc_enable_muxed_pins(void);
-//static unsigned char smc_tab_cs_size[6];
+//static unsigned char g_smc_tab_cs_size[6];
 
 #if 0
 void smc_init(unsigned long hsb_hz)
@@ -295,7 +293,7 @@ void smc_enable_muxed_pins(void)
 
 //static unsigned char smc_get_cs_size(unsigned char cs)
 //{
-//  return smc_tab_cs_size[cs];
+//  return g_smc_tab_cs_size[cs];
 //}
 
 void SRAM_Test_Menu(void)
@@ -370,7 +368,7 @@ void SRAM_Fill(void)
 {
    unsigned long  progress_inc, i, j;
    unsigned short data_word;
-   unsigned char  input_buffer[10];
+   unsigned char  g_input_buffer[10];
    int reply;
 
    progress_inc = (sram_size + 50) / 100;
@@ -378,30 +376,30 @@ void SRAM_Fill(void)
    print_dbg("Set fill pattern (");
    print_dbg_short_hex(0x1234);
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     data_word = (input_buffer[0] - 0x30);
+   	     data_word = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     data_word =  ((input_buffer[0] - 0x30) << 4);
-   	     data_word += (input_buffer[1] - 0x30);
+   	     data_word =  ((g_input_buffer[0] - 0x30) << 4);
+   	     data_word += (g_input_buffer[1] - 0x30);
    	  }
    	  if(reply == 3)
       {
-   	     data_word =  ((input_buffer[0] - 0x30) << 8);
-   	     data_word += ((input_buffer[1] - 0x30) << 4);
-   	     data_word += (input_buffer[2] - 0x30);
+   	     data_word =  ((g_input_buffer[0] - 0x30) << 8);
+   	     data_word += ((g_input_buffer[1] - 0x30) << 4);
+   	     data_word += (g_input_buffer[2] - 0x30);
    	  }
    	  if(reply == 4)
       {
-   	     data_word =  ((input_buffer[0] - 0x30) << 12);
-   	     data_word += ((input_buffer[1] - 0x30) << 8);
-   	     data_word += ((input_buffer[2] - 0x30) << 4);
-   	     data_word += (input_buffer[3] - 0x30);
+   	     data_word =  ((g_input_buffer[0] - 0x30) << 12);
+   	     data_word += ((g_input_buffer[1] - 0x30) << 8);
+   	     data_word += ((g_input_buffer[2] - 0x30) << 4);
+   	     data_word += (g_input_buffer[3] - 0x30);
    	  }
    }
    else

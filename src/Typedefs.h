@@ -48,7 +48,7 @@ typedef signed long int		int32;  		/* 32 bits */
 // This section is devoted to handling debug printing to the craft com port
 // ========================================================================
 
-// Global Debug Modes
+// Project Debug Modes
 #define ALL_DEBUG 			1
 #define WARNINGS_AND_ERRORS	2
 #define ERRORS				3
@@ -57,8 +57,8 @@ typedef signed long int		int32;  		/* 32 bits */
 // Debug levels
 enum debugModes {RAW, NORM, WARN, ERR};
 
-// Global Debug Mode
-#define GLOBAL_DEBUG_PRINT_ENABLED ALL_DEBUG
+// Define Project Debug Mode
+#define GLOBAL_DEBUG_PRINT_ENABLED NO_DEBUG
 
 // Print all debug statements
 #if (GLOBAL_DEBUG_PRINT_ENABLED == ALL_DEBUG)

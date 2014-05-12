@@ -17,7 +17,8 @@
 ///	Includes
 ///----------------------------------------------------------------------------
 #include "Typedefs.h" 
-#include "Mmc2114_InitVals.h"
+#include "Old_Board.h"
+#include "gpio.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -154,6 +155,7 @@ enum {
 #define UART_UOP_RTS			(0x01) /* Sets All Bits on OP Bit Set	*/
 #define UART_UOP0_RTS			(0x01) /* Clears All Bits on OP Bit Rst	*/
 
+#if 0 // ns7100
 // Clear by writting a 1 (inactive)
 #define CLEAR_DTR	(reg_TIM1PORT.reg |= 0x01)
 // Set by writting a 0 (active)
@@ -170,6 +172,21 @@ enum {
 #define READ_RI 	(reg_TIM2PORT.reg & 0x01)
 // Returns CTS signal, 0 = Active - Clear To Send, 1 = Inactive - Not Clear To Send
 #define READ_CTS 	((reg_TIM2PORT.reg >> 1) & 0x01)
+
+#else // ns8100
+
+#define CLEAR_DTR	(AVR32_USART1.cr = (1 << AVR32_USART_DTRDIS))
+#define SET_DTR		(AVR32_USART1.cr = (1 << AVR32_USART_DTREN))
+
+#define CLEAR_RTS	(AVR32_USART1.cr = (1 << AVR32_USART_RTSDIS))
+#define SET_RTS		(AVR32_USART1.cr = (1 << AVR32_USART_RTSEN))
+
+#define READ_DSR 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_DSR)) ? (uint8)1 : (uint8)0)
+#define READ_DCD 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_DCD)) ? (uint8)1 : (uint8)0)
+#define READ_RI 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_RI))  ? (uint8)1 : (uint8)0)
+#define READ_CTS 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_CTS)) ? (uint8)1 : (uint8)0)
+
+#endif
 
 enum {
 	DCD_ACTIVE = 0,

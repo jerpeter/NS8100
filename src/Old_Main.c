@@ -17,8 +17,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "Typedefs.h"
-#include "Mmc2114.h"
-#include "Mmc2114_InitVals.h"
 #include "Old_Board.h"
 #include "Common.h"
 #include "Display.h"
@@ -28,7 +26,7 @@
 #include "ProcessBargraph.h"
 #include "ProcessCombo.h"
 #include "SysEvents.h"
-#include "Rec.h"
+#include "Record.h"
 #include "InitDataBuffers.h"
 #include "PowerManagement.h"
 #include "SoftTimer.h"
@@ -45,86 +43,11 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern void initProcessor(void);
-extern SUMMARY_DATA *results_summtable_ptr;
-extern int8 g_kpadCheckForKeyFlag;				// Flag to indicate key stroke in the ISR
-extern uint32 g_kpadLookForKeyTickCount;		// Timer to count number of ticks for a key stroke.
-extern volatile uint32 g_keypadTimerTicks;		//
-extern POWER_MANAGEMENT_STRUCT powerManagement;	// Struct containing power management parameters
-extern REC_HELP_MN_STRUCT help_rec;				// Struct containing system parameters
-extern uint32 g_rtcSoftTimerTickCount;			// A global counter to count system ticks
-extern uint8 g_factorySetupSequence;			//
-extern uint32 isTriggered;
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
-extern uint8 g_autoDialoutState;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-// Sensor information and constants.
-#if 0
-SENSOR_PARAMETERS_STRUCT g_SensorInfoStruct;
-SENSOR_PARAMETERS_STRUCT* gp_SensorInfo = &g_SensorInfoStruct;
-
-// Contains the event record in ram.
-EVT_RECORD g_RamEventRecord;
-
-// Factory Setup record.
-FACTORY_SETUP_STRUCT factory_setup_rec;
-
-// Structure to contain system paramters and system settings.
-REC_EVENT_MN_STRUCT trig_rec;				// Contains trigger specific information.
-
-// Menu specific structures
-int active_menu;							// For active menu number/enum.
-MN_EVENT_STRUCT mn_event_flags;				// Menu event flags, for main loop processing.
-MN_TIMER_STRUCT mn_timer;					// Menu timer strucutre.
-
-// System Event Flags, for main loopo processing.
-SYS_EVENT_STRUCT SysEvents_flags;
-
-MODEM_SETUP_STRUCT modem_setup_rec;			// Record for user input data.
-MODEM_STATUS_STRUCT g_ModemStatus;			// Record for modem data processing.
-
-// Used as a circular buffer to continually caputer incomming data from the craft port.
-CMD_BUFFER_STRUCT isrMessageBufferStruct;
-CMD_BUFFER_STRUCT* gp_ISRMessageBuffer = &isrMessageBufferStruct;
-
-void (*menufunc_ptrs[TOTAL_NUMBER_OF_MENUS]) (INPUT_MSG_STRUCT) = {
-		mainMn, loadRecMn, summaryMn, monitorMn, resultsMn,
-		overWriteMn, batteryMn, dateTimeMn, lcdContrastMn, timerModeTimeMn,
-		timerModeDateMn, calSetupMn, userMn, monitorLogMn
-};
-#else
-extern SENSOR_PARAMETERS_STRUCT g_SensorInfoStruct;
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;
-
-// Contains the event record in ram.
-extern EVT_RECORD g_RamEventRecord;
-
-// Factory Setup record.
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-
-// Structure to contain system paramters and system settings.
-extern REC_EVENT_MN_STRUCT trig_rec;				// Contains trigger specific information.
-
-// Menu specific structures
-extern int active_menu;							// For active menu number/enum.
-extern MN_EVENT_STRUCT mn_event_flags;				// Menu event flags, for main loop processing.
-extern MN_TIMER_STRUCT mn_timer;					// Menu timer strucutre.
-
-// System Event Flags, for main loopo processing.
-extern SYS_EVENT_STRUCT SysEvents_flags;
-
-extern MODEM_SETUP_STRUCT modem_setup_rec;			// Record for user input data.
-extern MODEM_STATUS_STRUCT g_ModemStatus;			// Record for modem data processing.
-
-// Used as a circular buffer to continually caputer incomming data from the craft port.
-extern CMD_BUFFER_STRUCT isrMessageBufferStruct;
-extern CMD_BUFFER_STRUCT* gp_ISRMessageBuffer;
-
-extern void (*menufunc_ptrs[TOTAL_NUMBER_OF_MENUS]) (INPUT_MSG_STRUCT);
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -132,13 +55,6 @@ extern void (*menufunc_ptrs[TOTAL_NUMBER_OF_MENUS]) (INPUT_MSG_STRUCT);
 void InitSystemHardware(void);
 void InitInterrupts(void);
 void InitSoftwareSettings(void);
-#if 0
-static inline void SystemEventManager(void);
-static inline void MenuEventManager(void);
-static inline void CraftManager(void);
-static inline void MessageManager(void);
-static inline void FactorySetupManager(void);
-#endif
 
 /****************************************
 *	Function:	initSystem
@@ -189,9 +105,9 @@ void InitSystemHardware(void)
 ****************************************/
 void InitInterrupts(void)
 {
-#if 0 // fix_ns8100 // Old system
+#if 0 // ns7100
 	debug("Init Interrupt Buffers\n");
-	initInterruptBuffers();
+	initCraftInterruptBuffers();
 
 	debug("Enable Interrupts\n");
 	// Clear possible interrupt flags
@@ -235,58 +151,30 @@ void InitInterrupts(void)
 void InitSoftwareSettings(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	char buff[50];
-	//uint16 i = 0;
 
 	debug("Init Software Settings\n");
 
-#if 0 // fix_ns8100
-	GetParameterMemory((uint8*)&buff[0], 0, 50);
-	for (i=0;i<50;i++)
-	{
-		debug("Parameter Mem at: 0x%x is: 0x%x\n", i, buff[i]);
-	}
-	for (i=0;i<50;i++)
-	{
-		buff[i] = (char)(50 - i);
-	}
-	SaveParameterMemory((uint8*)&buff[0], 0, 50);
-	GetParameterMemory((uint8*)&buff[0], 0, 50);
-	for (i=0;i<50;i++)
-	{
-		debug("Parameter Mem at: 0x%x is: 0x%x\n", i, buff[i]);
-	}
-#endif
-
-    debug("Init Version Strings...\n");
-
 	// Init version strings
+    debug("Init Version Strings...\n");
 	initVersionStrings();
 
-    debug("Init Version Msg...\n");
-
 	// Init version msg
+    debug("Init Version Msg...\n");
 	initVersionMsg();
 
-    debug("Init Time Msg...\n");
-
 	// Init time msg
+    debug("Init Time Msg...\n");
 	initTimeMsg();
 
-    debug("Init Get Boot Function Addr...\n");
-
 	// Get the function address passed by the bootloader
+    debug("Init Get Boot Function Addr...\n");
 	getBootFunctionAddress();
 
-    debug("Init Setup Menu Defaults...\n");
-
-	debug("Setup Menu Defaults\n");
 	// Setup defaults, load records, init the language table
+    debug("Init Setup Menu Defaults...\n");
 	setupMnDef();
 
     debug("Init Timer Mode Check...\n");
-
-	debug("Check Timer Mode\n");
 	// Check for Timer mode activation
 	if (timerModeActiveCheck() == TRUE)
 	{
@@ -303,32 +191,28 @@ void InitSoftwareSettings(void)
 		debug("--- Normal Startup ---\n");
 	}
 
-    debug("Init Cmd Msg Handler...\n");
-
-	debug("Cmd/Craft Init\n");
 	// Init the cmd message handling buffers before initialization of the ports.
+    debug("Init Cmd Msg Handler...\n");
 	cmdMessageHandlerInit();
 
-    debug("Init Craft Init Status Flags...\n");
-
 	// Init the input buffers and status flags for input craft data.
+    debug("Init Craft Init Status Flags...\n");
 	craftInitStatusFlags();
 
-    debug("Init LCD Message...\n");
-
-	debug("LCD message\n");
+#if 0 // ns7100
 	// Overlay a message to alert the user that the system is checking the sensors
 	byteSet(&buff[0], 0, sizeof(buff));
 	sprintf((char*)buff, "%s %s", getLangText(SENSOR_CHECK_TEXT), getLangText(ZEROING_SENSORS_TEXT));
 	overlayMessage(getLangText(STATUS_TEXT), buff, 0);
+#endif
 
     debug("Init Jump to Main Menu...\n");
 
 	debug("Jump to Main Menu\n");
 	// Jump to the true main menu
-	active_menu = MAIN_MENU;
+	g_activeMenu = MAIN_MENU;
 	ACTIVATE_MENU_MSG();
-	(*menufunc_ptrs[active_menu]) (mn_msg);
+	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 }
 
 /****************************************
@@ -343,9 +227,9 @@ void SystemEventManager(void)
 	if (getSystemEventState(TRIGGER_EVENT))
 	{
 		debug("Trigger Event 1\n");
-		if (trig_rec.op_mode == WAVEFORM_MODE)
+		if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 			MoveWaveformEventToFlash();
-		else if (trig_rec.op_mode == COMBO_MODE)
+		else if (g_triggerRecord.op_mode == COMBO_MODE)
 			MoveComboWaveformEventToFile();
 	}
 
@@ -421,7 +305,7 @@ void SystemEventManager(void)
 		powerControl(ALARM_1_ENABLE, ON);
 #endif
 		// Assign soft timer to turn the Alarm 1 signal off
-		assignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(help_rec.alarm_one_time * 2), alarmOneOutputTimerCallback);
+		assignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarm_one_time * 2), alarmOneOutputTimerCallback);
 	}
 
 	if (getSystemEventState(WARNING2_EVENT))
@@ -436,7 +320,7 @@ void SystemEventManager(void)
 		powerControl(ALARM_2_ENABLE, ON);
 #endif
 		// Assign soft timer to turn the Alarm 2 signal off
-		assignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(help_rec.alarm_two_time * 2), alarmTwoOutputTimerCallback);
+		assignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarm_two_time * 2), alarmTwoOutputTimerCallback);
 	}
 
 	if (getSystemEventState(AUTO_DIALOUT_EVENT))
@@ -462,9 +346,9 @@ void MenuEventManager(void)
 	{
 		clearMenuEventFlag(RESULTS_MENU_EVENT);
 
-		active_menu = RESULTS_MENU;
+		g_activeMenu = RESULTS_MENU;
 
-		if (trig_rec.op_mode == MANUAL_CAL_MODE)
+		if (g_triggerRecord.op_mode == MANUAL_CAL_MODE)
 		{
 			RESULTS_MENU_MANUEL_CAL_MSG();
 		}
@@ -472,7 +356,7 @@ void MenuEventManager(void)
 		{
 			RESULTS_MENU_MONITORING_MSG();
 		}
-		(*menufunc_ptrs[active_menu]) (mn_msg);
+		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 	}
 
 	if (getTimerEventState(SOFT_TIMER_CHECK_EVENT))
@@ -488,9 +372,9 @@ void MenuEventManager(void)
 		clearTimerEventFlag(TIMER_MODE_TIMER_EVENT);
 
 		debug("Timer mode: Start monitoring...\n");
-		active_menu = MONITOR_MENU;
-		ACTIVATE_MENU_WITH_DATA_MSG(trig_rec.op_mode);
-		(*menufunc_ptrs[active_menu]) (mn_msg);
+		g_activeMenu = MONITOR_MENU;
+		ACTIVATE_MENU_WITH_DATA_MSG(g_triggerRecord.op_mode);
+		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 	}
 }
 
@@ -503,21 +387,20 @@ void CraftManager(void)
 {
 	//debug("Craft Manager called\n");
 
-#if 0 // fix_ns8100
 	// Check if there is an modem present and if the connection state is connected
-	if ((MODEM_CONNECTED == READ_DSR) && (CONNECTED == g_ModemStatus.connectionState))
+	if ((MODEM_CONNECTED == READ_DSR) && (CONNECTED == g_modemStatus.connectionState))
 	{
 		// Check if the connection has been lost
 		if (NO_CONNECTION == READ_DCD)
 		{
 			// Check if a ring indicator has been received
-			if ((g_ModemStatus.ringIndicator != READ_RI) && (READ_RI == RING))
+			if ((g_modemStatus.ringIndicator != READ_RI) && (READ_RI == RING))
 			{
 				// Check if nine rings have been received
-				if (g_ModemStatus.numberOfRings++ > 9)
+				if (g_modemStatus.numberOfRings++ > 9)
 				{
 					// Reset flag
-					g_ModemStatus.numberOfRings = 0;
+					g_modemStatus.numberOfRings = 0;
 
 					// Assign timer to process modem init
 					assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_QUICK_DELAY, modemDelayTimerCallback);
@@ -525,28 +408,28 @@ void CraftManager(void)
 			}
 
 			// Assign ring indicator to the status of the ring indicator line
-			g_ModemStatus.ringIndicator = (uint8)READ_RI;
+			g_modemStatus.ringIndicator = (uint8)READ_RI;
 
 			// Relock the system
-			g_ModemStatus.systemIsLockedFlag = YES;
+			g_modemStatus.systemIsLockedFlag = YES;
 
-			if (CONNECTED == g_ModemStatus.firstConnection)
+			if (CONNECTED == g_modemStatus.firstConnection)
 			{
-				g_ModemStatus.firstConnection = NOP_CMD;
+				g_modemStatus.firstConnection = NOP_CMD;
 				assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_QUICK_DELAY, modemDelayTimerCallback);
 			}
 		}
 		else
 		{
-			g_ModemStatus.firstConnection = CONNECTED;
+			g_modemStatus.firstConnection = CONNECTED;
 		}
 	}
 	else
 	{
-		if (	(YES == modem_setup_rec.modemStatus) && (CONNECTED == g_ModemStatus.connectionState))
+		if ((YES == g_modemSetupRecord.modemStatus) && (CONNECTED == g_modemStatus.connectionState))
 		{
-			g_ModemStatus.connectionState = NOP_CMD;
-			g_ModemStatus.systemIsLockedFlag = YES;
+			g_modemStatus.connectionState = NOP_CMD;
+			g_modemStatus.systemIsLockedFlag = YES;
 			assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_DELAY, modemDelayTimerCallback);
 		}
 	}
@@ -559,53 +442,50 @@ void CraftManager(void)
 	}
 
 	// Are we transfering data, if so process the correct command.
-	if (NOP_CMD != g_ModemStatus.xferState)
+	if (NOP_CMD != g_modemStatus.xferState)
 	{
-		if (DEMx_CMD == g_ModemStatus.xferState)
+		if (DEMx_CMD == g_modemStatus.xferState)
 		{
-			//debug("CraftManager:sendDEMData\n");
-			g_ModemStatus.xferState = sendDEMData();
+			g_modemStatus.xferState = sendDEMData();
 
-			if (NOP_CMD == g_ModemStatus.xferState)
+			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				help_rec.auto_print = g_ModemStatus.xferPrintState;
+				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
 			}
 		}
-		else if (DSMx_CMD == g_ModemStatus.xferState)
+		else if (DSMx_CMD == g_modemStatus.xferState)
 		{
-			//debug("CraftManager:sendDSMData\n");
-			g_ModemStatus.xferState = sendDSMData();
+			g_modemStatus.xferState = sendDSMData();
 
-			if (NOP_CMD == g_ModemStatus.xferState)
+			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				help_rec.auto_print = g_ModemStatus.xferPrintState;
+				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
 			}
 		}
-		else if (DQMx_CMD == g_ModemStatus.xferState)
+		else if (DQMx_CMD == g_modemStatus.xferState)
 		{
-			//debug("CraftManager:sendDQMData\n");
-			g_ModemStatus.xferState = sendDQMData();
+			g_modemStatus.xferState = sendDQMData();
 
-			if (NOP_CMD == g_ModemStatus.xferState)
+			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				help_rec.auto_print = g_ModemStatus.xferPrintState;
+				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
 			}
 		}
-		else if (VMLx_CMD == g_ModemStatus.xferState)
+		else if (VMLx_CMD == g_modemStatus.xferState)
 		{
 			sendVMLData();
 
-			if (NOP_CMD == g_ModemStatus.xferState)
+			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				help_rec.auto_print = g_ModemStatus.xferPrintState;
+				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
 			}
 		}
 	}
 
 	// Data from the craft port is independent of the modem.
-	if (YES == g_ModemStatus.craftPortRcvFlag)
+	if (YES == g_modemStatus.craftPortRcvFlag)
 	{
-		g_ModemStatus.craftPortRcvFlag = NO;
+		g_modemStatus.craftPortRcvFlag = NO;
 		processCraftData();
 	}
 
@@ -615,7 +495,6 @@ void CraftManager(void)
 		clearSystemEventFlag(CRAFT_PORT_EVENT);
 		cmdMessageProcessing();
 	}
-#endif
 }
 
 /****************************************
@@ -655,22 +534,23 @@ void FactorySetupManager(void)
 		keypressEventMgr();
 		messageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
 
-		active_menu = DATE_TIME_MENU;
+		g_activeMenu = DATE_TIME_MENU;
 		ACTIVATE_MENU_MSG();
-		(*menufunc_ptrs[active_menu]) (mn_msg);
+		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 	}
-	// fix_ns8100 (Added to work around On Key IRQ problem)
-	else if (factory_setup_rec.invalid && g_factorySetupSequence != PROCESS_FACTORY_SETUP)
+#if 0 // Added to work around On Key IRQ problem
+	else if (g_factorySetupRecord.invalid && g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 	{
 		g_factorySetupSequence = PROCESS_FACTORY_SETUP;
 
 		keypressEventMgr();
 		messageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
 
-		active_menu = DATE_TIME_MENU;
+		g_activeMenu = DATE_TIME_MENU;
 		ACTIVATE_MENU_MSG();
-		(*menufunc_ptrs[active_menu]) (mn_msg);
+		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 	}
+#endif
 }
 
 /****************************************
@@ -679,10 +559,10 @@ void FactorySetupManager(void)
 ****************************************/
 void handleSystemEvents(void)
 {
-	if (SysEvents_flags.wrd)
+	if (g_systemEventFlags.wrd)
 	    SystemEventManager();
 
-	if (mn_event_flags.wrd)
+	if (g_menuEventFlags.wrd)
 	    MenuEventManager();
 
 	MessageManager();
@@ -692,6 +572,7 @@ void handleSystemEvents(void)
 *	Function:	main
 *	Purpose:	Starting point for the application
 ****************************************/
+#if 0 // ns7100
 int old_main(void)
 {
 	InitSystemHardware();
@@ -723,8 +604,8 @@ int old_main(void)
 		FactorySetupManager();
 
 		// Check if no System Event and Lcd and Printer power are off
-		if ((SysEvents_flags.wrd == 0x0000) && !(powerManagement.reg & 0x60) &&
-			(g_ModemStatus.xferState == NOP_CMD))
+		if ((g_systemEventFlags.wrd == 0x0000) && !(powerManagement.reg & 0x60) &&
+			(g_modemStatus.xferState == NOP_CMD))
 		{
 			// Sleep
 			Wait();
@@ -733,4 +614,4 @@ int old_main(void)
 
 	return (0);
 }
-
+#endif

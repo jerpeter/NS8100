@@ -16,7 +16,7 @@
 ///----------------------------------------------------------------------------
 ///	Includes
 ///----------------------------------------------------------------------------
-#include "Rec.h"
+#include "Record.h"
 #include "RealTimeClock.h"
 #include "SoftTimer.h"
  
@@ -722,35 +722,32 @@ typedef enum {
 	mn_msg.data[0] = x;            
 
 #define ACTIVATE_USER_MENU_MSG(a, b) \
-	active_menu = USER_MENU;\
+	g_activeMenu = USER_MENU;\
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 4;\
 	mn_msg.data[0] = (uint32)a;\
 	mn_msg.data[1] = (uint32)b;
 
-// Extern the global to allow the references for the following 2 macros
-extern USER_MENU_CACHE_DATA userMenuCacheData;
-
 #define ACTIVATE_USER_MENU_FOR_FLOATS_MSG(a, b, c, d, e, f) \
-	active_menu = USER_MENU;\
+	g_activeMenu = USER_MENU;\
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 4;\
 	mn_msg.data[0] = (uint32)a;\
 	mn_msg.data[1] = (uint32)b;\
-	userMenuCacheData.floatDefault = (float)c;\
-	userMenuCacheData.floatIncrement = (float)d;\
-	userMenuCacheData.floatMinValue = (float)e;\
-	userMenuCacheData.floatMaxValue = (float)f;
+	g_userMenuCacheData.floatDefault = (float)c;\
+	g_userMenuCacheData.floatIncrement = (float)d;\
+	g_userMenuCacheData.floatMinValue = (float)e;\
+	g_userMenuCacheData.floatMaxValue = (float)f;
 
 #define ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(a, b, c, d, e) \
-	active_menu = USER_MENU;\
+	g_activeMenu = USER_MENU;\
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 4;\
 	mn_msg.data[0] = (uint32)a;\
 	mn_msg.data[1] = (uint32)b;\
-	userMenuCacheData.intDefault = (uint32)c;\
-	userMenuCacheData.intMinValue = (uint32)d;\
-	userMenuCacheData.intMaxValue = (uint32)e;
+	g_userMenuCacheData.intDefault = (uint32)c;\
+	g_userMenuCacheData.intMinValue = (uint32)d;\
+	g_userMenuCacheData.intMaxValue = (uint32)e;
 
 #define RESULTS_MENU_MONITORING_MSG() \
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\

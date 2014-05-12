@@ -26,7 +26,7 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 #include "compiler.h"
-#include "vartype.h"
+#include "Typedefs.h"
 #include "lcd.h"
 #include "M23018.h"
 #include "gpio.h"
@@ -45,7 +45,7 @@
 
 // Large Numbers(2 Lines)
 // LCD large numbers top lookup table
-const uint8_t LARGE_NUMBER_TOP[160] =
+const uint8 LARGE_NUMBER_TOP[160] =
 {
     0x1f,0x3f,0x70,0x60,0x60,0x61,0x62,0x74,0x3f,0x1f,  // 0
     0x00,0x00,0x18,0x38,0x7F,0x7F,0x00,0x00,0x00,0x00,  // 1
@@ -68,7 +68,7 @@ const uint8_t LARGE_NUMBER_TOP[160] =
 
 // Large Numbers (2 Lines)
 // LCD large numbers bottom lookup table
-const uint8_t LARGE_NUMBER_BOT[160] =
+const uint8 LARGE_NUMBER_BOT[160] =
 {
     0xF8,0xFC,0x2E,0x46,0x86,0x06,0x06,0x0E,0xFC,0xF8,  // 0
     0x00,0x00,0x06,0x06,0xFE,0xFE,0x06,0x06,0x00,0x00,  // 1
@@ -90,7 +90,7 @@ const uint8_t LARGE_NUMBER_BOT[160] =
 
 
 // LCD small letters lookup table
-const uint8_t SMALL_CHARACTERS[670] =
+const uint8 SMALL_CHARACTERS[670] =
 {
     0x00,0x00,0x00,0x00,0x00, // space
    0x00,0x00,0xF2,0x00,0x00, // !
@@ -370,29 +370,29 @@ const char craft_logo[] =
 '\x00','\x00','\x00','\x00','\x00','\x00','\x00','\x00'
 }; /* end of character *bitMap */
 
-uint16_t lcd_port_image = 0;
+uint16 lcd_port_image = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 // Local Function Prototypes                                                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void Display_small_char( uint8_t number,
-                         uint8_t position,
-                   uint8_t line,
-                   uint8_t polarity,
-                   uint8_t bConfig);
+void Display_small_char( uint8 number,
+                         uint8 position,
+                   uint8 line,
+                   uint8 polarity,
+                   uint8 bConfig);
 
-void Display_large_char( uint8_t number,
-                         uint8_t position,
-                   uint8_t line,
-                   uint8_t polarity);
+void Display_large_char( uint8 number,
+                         uint8 position,
+                   uint8 line,
+                   uint8 polarity);
 
-void Clear_line( uint8_t line );
+void Clear_line( uint8 line );
 
 void Clear_screen( void );
 
-uint8_t Bit_Swap( uint8_t data );
+uint8 Bit_Swap( uint8 data );
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -407,30 +407,30 @@ uint8_t Bit_Swap( uint8_t data );
 //                                                                            //
 // ARGUMENTS:                                                                 //
 //                                                                            //
-//     uint8_t x_pos - Column to start in from 0 to 127.                      //
+//     uint8 x_pos - Column to start in from 0 to 127.                      //
 //                                                                            //
-//     uint8_t y_pos1 - Row to start in from 0 to 64.                         //
+//     uint8 y_pos1 - Row to start in from 0 to 64.                         //
 //                                                                            //
-//     uint8_t y_pos2 - Row to end in from 0 to 64.                           //
+//     uint8 y_pos2 - Row to end in from 0 to 64.                           //
 //                                                                            //
-//     uint8_t bLineType - Normal, reversed or dotted line.                   //
+//     uint8 bLineType - Normal, reversed or dotted line.                   //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void WriteLCD_Vline( uint8_t x_pos,
-                     uint8_t y_pos1,
-                     uint8_t y_pos2,
-                     uint8_t bLineType)
+void WriteLCD_Vline( uint8 x_pos,
+                     uint8 y_pos1,
+                     uint8 y_pos2,
+                     uint8 bLineType)
 {
-//  uint8_t nHighColAddr;
-// uint8_t nLowColAddr;
-   uint8_t ColAddr;
-   uint8_t v_low;
-   uint8_t temp;
-   volatile uint8_t lcd_data;
-   uint8_t first_time;
-   uint8_t even = 0;
-   uint8_t iMask;
-   uint8_t display_half;
+//  uint8 nHighColAddr;
+// uint8 nLowColAddr;
+   uint8 ColAddr;
+   uint8 v_low;
+   uint8 temp;
+   volatile uint8 lcd_data;
+   uint8 first_time;
+   uint8 even = 0;
+   uint8 iMask;
+   uint8 display_half;
 
     if(x_pos < 64)
     {
@@ -562,26 +562,26 @@ void WriteLCD_Vline( uint8_t x_pos,
 //                                                                            //
 // ARGUMENTS:                                                                 //
 //                                                                            //
-//     uint8_t y_pos - Row to start in from 0 to 64.                          //
+//     uint8 y_pos - Row to start in from 0 to 64.                          //
 //                                                                            //
-//     uint8_t start - Column to start in from 0 to 127.                      //
+//     uint8 start - Column to start in from 0 to 127.                      //
 //                                                                            //
-//     uint8_t end - Column to end in from 0 to 127.                          //
+//     uint8 end - Column to end in from 0 to 127.                          //
 //                                                                            //
-//     uint8_t bLineType - Normal, reversed only. Dotted not available.       //
+//     uint8 bLineType - Normal, reversed only. Dotted not available.       //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void WriteLCD_Hline( uint8_t y_pos,
-                     uint8_t start,
-                uint8_t end,
-                uint8_t bLineType)
+void WriteLCD_Hline( uint8 y_pos,
+                     uint8 start,
+                uint8 end,
+                uint8 bLineType)
 {
-    uint8_t bTemp;
-   uint8_t v_low;
-    uint8_t horizontal;
-   uint8_t bLineMask;
-   volatile uint8_t bCurrValue;
-   uint8_t display_half;
+    uint8 bTemp;
+   uint8 v_low;
+    uint8 horizontal;
+   uint8 bLineMask;
+   volatile uint8 bCurrValue;
+   uint8 display_half;
 
     if(start < 64)
     {
@@ -664,36 +664,36 @@ void WriteLCD_Hline( uint8_t y_pos,
 //                                                                            //
 // ARGUMENTS:                                                                 //
 //                                                                            //
-//     uint8_t number - Character to be displayed.                            //
+//     uint8 number - Character to be displayed.                            //
 //                                                                            //
-//     uint8_t h_position - Column to start in from 0 to 123.                 //
+//     uint8 h_position - Column to start in from 0 to 123.                 //
 //                                                                            //
-//     uint8_t v_position - Row to start in from 0 to 56.                     //
+//     uint8 v_position - Row to start in from 0 to 56.                     //
 //                                                                            //
-//     uint8_t polarity - Reverse or Normal.                                  //
+//     uint8 polarity - Reverse or Normal.                                  //
 //                                                                            //
-//     uint8_t bConfig - ???                                                  //
+//     uint8 bConfig - ???                                                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void Display_small_char( uint8_t number,
-                         uint8_t h_position,
-                   uint8_t v_position,
-                   uint8_t polarity,
-                   uint8_t bConfig)
+void Display_small_char( uint8 number,
+                         uint8 h_position,
+                   uint8 v_position,
+                   uint8 polarity,
+                   uint8 bConfig)
 {
-    uint8_t bTemp;
-   uint8_t v_low;
-   uint8_t temp;
-   uint8_t lcd_data;
-   uint8_t offset;
-   uint8_t bDoingLeadingCol = FALSE;
-    uint8_t bBlankingError = FALSE;
-   uint8_t display_half;
-    int8_t  horizontal;
+    uint8 bTemp;
+   uint8 v_low;
+   uint8 temp;
+   uint8 lcd_data;
+   uint8 offset;
+   uint8 bDoingLeadingCol = FALSE;
+    uint8 bBlankingError = FALSE;
+   uint8 display_half;
+    char  horizontal;
 
-    uint16_t character;
-   uint16_t iCharacterIndex;
-    int16_t iLpCnt;
+    uint16 character;
+   uint16 iCharacterIndex;
+    int16 iLpCnt;
 
     horizontal = h_position;
     if(horizontal < 64)
@@ -760,7 +760,7 @@ void Display_small_char( uint8_t number,
 //          }
           if(bBlankingError == TRUE)
           {
-        	  if((uint8_t)(horizontal + iLpCnt) > 62)
+        	  if((uint8)(horizontal + iLpCnt) > 62)
         	  {
         		  display_half = SECOND_HALF_DISPLAY;
         		  Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low, display_half); // set the vertical postion
@@ -771,7 +771,7 @@ void Display_small_char( uint8_t number,
           }
           else
           {
-              if((uint8_t)(horizontal + iLpCnt) > 63)
+              if((uint8)(horizontal + iLpCnt) > 63)
               {
             	  display_half = SECOND_HALF_DISPLAY;
             	  Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low, display_half); // set the vertical postion
@@ -840,7 +840,7 @@ void Display_small_char( uint8_t number,
              }
                 if(bBlankingError == TRUE)
                 {
-               if((uint8_t)(horizontal + iLpCnt) > 62)
+               if((uint8)(horizontal + iLpCnt) > 62)
                  {
                      display_half = SECOND_HALF_DISPLAY;
                    Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low + 1, display_half); // set the vertical postion
@@ -852,7 +852,7 @@ void Display_small_char( uint8_t number,
                 }
                 else
                 {
-                    if((uint8_t)(horizontal + iLpCnt) > 63)
+                    if((uint8)(horizontal + iLpCnt) > 63)
                   {
                       display_half = SECOND_HALF_DISPLAY;
                     Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low + 1, display_half); // set the vertical postion
@@ -925,7 +925,7 @@ void Display_small_char( uint8_t number,
 
                 if(bBlankingError == TRUE)
                 {
-               if((uint8_t)(horizontal + iLpCnt) > 62)
+               if((uint8)(horizontal + iLpCnt) > 62)
                  {
                      display_half = SECOND_HALF_DISPLAY;
                   Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low, display_half); // set the vertical postion
@@ -937,7 +937,7 @@ void Display_small_char( uint8_t number,
                 }
                 else
                 {
-                    if((uint8_t)(horizontal + iLpCnt) > 63)
+                    if((uint8)(horizontal + iLpCnt) > 63)
                   {
                       display_half = SECOND_HALF_DISPLAY;
                   Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low, display_half); // set the vertical postion
@@ -975,23 +975,23 @@ void Display_small_char( uint8_t number,
 //                                                                            //
 // ARGUMENTS:                                                                 //
 //                                                                            //
-//     uint8_t line - Line to use between 2 and 8.                            //
+//     uint8 line - Line to use between 2 and 8.                            //
 //                                                                            //
-//     uint8_t position - Column to start in from 1 to 118.                   //
+//     uint8 position - Column to start in from 1 to 118.                   //
 //                                                                            //
-//     const uint8_t *lcd_data - Data to display.                             //
+//     const uint8 *lcd_data - Data to display.                             //
 //                                                                            //
-//     uint8_t polarity - Reverse or Normal.                                  //
+//     uint8 polarity - Reverse or Normal.                                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void WriteLCD_lgText( uint8_t       line,
-                      uint8_t       position,
-                 const uint8_t *lcd_data,
-                 uint8_t       polarity)
+void WriteLCD_lgText( uint8       line,
+                      uint8       position,
+                 const uint8 *lcd_data,
+                 uint8       polarity)
 {
 
-    uint8_t data_byte;
-   uint8_t col;
+    uint8 data_byte;
+   uint8 col;
 
     col = position;
    // now send out the data
@@ -1016,28 +1016,28 @@ void WriteLCD_lgText( uint8_t       line,
 //                                                                            //
 // ARGUMENTS:                                                                 //
 //                                                                            //
-//     uint8_t number - Character to be displayed.                            //
+//     uint8 number - Character to be displayed.                            //
 //                                                                            //
-//     uint8_t position - Column to start in from 1 to 118.                   //
+//     uint8 position - Column to start in from 1 to 118.                   //
 //                                                                            //
-//     uint8_t line - Line to display on 2-8. Each character requires two     //
+//     uint8 line - Line to display on 2-8. Each character requires two     //
 //                 lines of the normal font.                                  //
 //                                                                            //
-//     uint8_t polarity - Reverse or Normal.                                  //
+//     uint8 polarity - Reverse or Normal.                                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void Display_large_char( uint8_t number,
-                         uint8_t position,
-                   uint8_t line,
-                   uint8_t polarity)
+void Display_large_char( uint8 number,
+                         uint8 position,
+                   uint8 line,
+                   uint8 polarity)
 {
-    uint8_t index;
-// uint8_t high;
-   uint8_t low = 0;
-   uint8_t lcd_data;
-   uint8_t display_half;
-    uint16_t character;
-   uint16_t y;
+    uint8 index;
+// uint8 high;
+   uint8 low = 0;
+   uint8 lcd_data;
+   uint8 display_half;
+    uint16 character;
+   uint16 y;
 
     if(position < 64)
     {
@@ -1138,25 +1138,25 @@ void Display_large_char( uint8_t number,
 //                                                                            //
 // ARGUMENTS:                                                                 //
 //                                                                            //
-//     uint8_t x_pos - Character to be displayed.                             //
+//     uint8 x_pos - Character to be displayed.                             //
 //                                                                            //
-//     uint8_t y_pos - Column to start in from 1 to 118.                      //
+//     uint8 y_pos - Column to start in from 1 to 118.                      //
 //                                                                            //
-//     const uint8_t *lcd_data - Pointer to the data to display               //
+//     const uint8 *lcd_data - Pointer to the data to display               //
 //                 lines of the normal font.                                  //
 //                                                                            //
-//     uint8_t polarity - Reverse or Normal.                                  //
+//     uint8 polarity - Reverse or Normal.                                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void WriteLCD_smText( uint8_t x_pos,
-                      uint8_t y_pos,
-                 const uint8_t *lcd_data,
-                 uint8_t polarity)
+void WriteLCD_smText( uint8 x_pos,
+                      uint8 y_pos,
+                 const uint8 *lcd_data,
+                 uint8 polarity)
 {
-    uint8_t data_byte;
-   uint8_t xprint_pos;
-    uint8_t bPrintConfig = PF_FIRST_TIME;
-    const uint8_t *strPtr;
+    uint8 data_byte;
+   uint8 xprint_pos;
+    uint8 bPrintConfig = PF_FIRST_TIME;
+    const uint8 *strPtr;
 
    strPtr = lcd_data;
    xprint_pos = x_pos;
@@ -1217,7 +1217,7 @@ void WriteLCD_smText( uint8_t x_pos,
 ////////////////////////////////////////////////////////////////////////////////
 void ClearLCDscreen(void)
 {
-    uint8_t count;
+    uint8 count;
    for (count = 0; count < 8; count++)
    {
       Clear_line( count );
@@ -1240,10 +1240,10 @@ void ClearLCDscreen(void)
 //     byte line - Line to be cleared                                         //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void Clear_line( uint8_t line )
+void Clear_line( uint8 line )
 {
-    uint8_t column;
-//    volatile uint8_t lcd_data;
+    uint8 column;
+//    volatile uint8 lcd_data;
 
     Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + line, FIRST_HALF_DISPLAY);
     Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + line, SECOND_HALF_DISPLAY);
@@ -1286,9 +1286,9 @@ void Clear_line( uint8_t line )
 //                                                                            //
 // ARGUMENTS:                                                                 //
 //                                                                            //
-//     uint8_t lcd_data - Data to write to the display.                       //
+//     uint8 lcd_data - Data to write to the display.                       //
 //                                                                            //
-//     uint8_t lcd_register - Specifies the type opf data (command or data).  //
+//     uint8 lcd_register - Specifies the type opf data (command or data).  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1356,14 +1356,14 @@ void InitDisplay( void )
 //                                                                            //
 // ARGUMENTS:                                                                 //
 //                                                                            //
-//     uint8_t lcd_register - Specifies the type of data (command or data).   //
+//     uint8 lcd_register - Specifies the type of data (command or data).   //
 //                                                                            //
-//     uint8_t lcd_data - Data to write to the display.                       //
+//     uint8 lcd_data - Data to write to the display.                       //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 extern void soft_delay(volatile unsigned long int);
 
-void Write_display( uint8_t lcd_register, uint8_t lcd_data, uint8_t display_half )
+void Write_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half )
 {
 //    static unsigned short temp = 0;
     volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
@@ -1429,16 +1429,16 @@ void Write_display( uint8_t lcd_register, uint8_t lcd_data, uint8_t display_half
 //                                                                            //
 // ARGUMENTS:                                                                 //
 //                                                                            //
-//     uint8_t lcd_register - Specifies the type of data (command or data).   //
+//     uint8 lcd_register - Specifies the type of data (command or data).   //
 //                                                                            //
-//     uint8_t lcd_data - Data to write to the display.                       //
+//     uint8 lcd_data - Data to write to the display.                       //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-void Write_multi_display( uint8_t lcd_register, uint8_t lcd_data, uint8_t display_half )
+void Write_multi_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half )
 {
 #if 0
-    //uint8_t temp = 0;
-    uint8_t buffer[8];
+    //uint8 temp = 0;
+    uint8 buffer[8];
 
     //Write data
 //    write_mcp23018(IO_ADDRESS_LCD, OLATB, lcd_data);
@@ -1521,16 +1521,16 @@ void Write_multi_display( uint8_t lcd_register, uint8_t lcd_data, uint8_t displa
 //                                                                            //
 // RETURN:                                                                    //
 //                                                                            //
-//     uint8_t - Data read from display.                                      //
+//     uint8 - Data read from display.                                      //
 //                                                                            //
 // ARGUMENTS:                                                                 //
 //                                                                            //
-//     uint8_t command - Specifies the type of data (command or data).        //
+//     uint8 command - Specifies the type of data (command or data).        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-uint8_t Read_display( uint8_t lcd_register, uint8_t display_half )
+uint8 Read_display( uint8 lcd_register, uint8 display_half )
 {
-    uint16_t lcd_data;
+    uint16 lcd_data;
 
     volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
 
@@ -1574,7 +1574,7 @@ uint8_t Read_display( uint8_t lcd_register, uint8_t display_half )
    lcd_port_image |= (LCD_ENABLE | LCD_CS1 | LCD_CS2 | LCD_RS);
    *lcd = lcd_port_image;
 
-   return((uint8_t)(lcd_data & 0xFF));
+   return((uint8)(lcd_data & 0xFF));
 }// End of function
 
 void Backlight_On( void )
@@ -1621,10 +1621,10 @@ void Reset_Contrast( void )
     gpio_set_gpio_pin(AVR32_PIN_PB21); //adjust
 }
 
-void Set_Contrast( uint8_t level )
+void Set_Contrast( uint8 level )
 {
-    uint8_t counts = 0;
-    uint8_t i;
+    uint8 counts = 0;
+    uint8 i;
 
    Reset_Contrast();
 
@@ -1645,9 +1645,9 @@ void Set_Contrast( uint8_t level )
     }
 }
 
-uint8_t Bit_Swap( uint8_t data )
+uint8 Bit_Swap( uint8 data )
 {
-    uint8_t tempData = 0;
+    uint8 tempData = 0;
 
     if(data & 0x01)
     {

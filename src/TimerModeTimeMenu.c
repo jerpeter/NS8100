@@ -49,19 +49,13 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern MN_MEM_DATA_STRUCT mn_ptr[DEFAULT_MN_SIZE];
-extern int32 active_menu;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern uint32 num_speed;
-extern uint32 fixed_special_speed;
-extern REC_HELP_MN_STRUCT help_rec;
+#include "Globals.h"
 extern USER_MENU_STRUCT timerModeFreqMenu[];
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-int data_rec_current_item;
+static int s_dataRecordCurrentItem;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -93,10 +87,10 @@ void timerModeTimeMn (INPUT_MSG_STRUCT msg)
   
     timerModeTimeMnProc(msg, mn_rec, &wnd_layout, &mn_layout);           
 
-    if (active_menu == TIMER_MODE_TIME_MENU)
+    if (g_activeMenu == TIMER_MODE_TIME_MENU)
     {
         dsplyTimerModeTimeMn(mn_rec, &wnd_layout, &mn_layout);
-        writeMapToLcd(mmap);
+        writeMapToLcd(g_mmap);
     }
 }
 
@@ -151,12 +145,12 @@ void timerModeTimeMnProc(INPUT_MSG_STRUCT msg,
             {
                   
                case (ENTER_KEY):
-                     rec_ptr[data_rec_current_item].enterflag = FALSE;
+                     rec_ptr[s_dataRecordCurrentItem].enterflag = FALSE;
                      tmKeepTime(rec_ptr);
 
-                     active_menu = TIMER_MODE_DATE_MENU;
+                     g_activeMenu = TIMER_MODE_DATE_MENU;
                      ACTIVATE_MENU_MSG();
-                     (*menufunc_ptrs[active_menu]) (mn_msg);
+                     (*menufunc_ptrs[g_activeMenu]) (mn_msg);
                      break;      
                case (DOWN_ARROW_KEY):
                      if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
@@ -181,8 +175,8 @@ void timerModeTimeMnProc(INPUT_MSG_STRUCT msg,
                      rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
                      break;
                case (ESC_KEY):
-					ACTIVATE_USER_MENU_MSG(&timerModeFreqMenu, help_rec.timer_mode_freq);
-                     (*menufunc_ptrs[active_menu]) (mn_msg);
+					ACTIVATE_USER_MENU_MSG(&timerModeFreqMenu, g_helpRecord.timer_mode_freq);
+                     (*menufunc_ptrs[g_activeMenu]) (mn_msg);
                      break;
                default:
                      break;
@@ -264,7 +258,7 @@ void dsplyTimerModeTimeMn(REC_MN_STRUCT *rec_ptr,
 	uint8 menu_ln;
 	uint8 length = 0;
 
-	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	menu_ln = 0;
 	top = (uint8)mn_layout_ptr->top_ln;              
@@ -438,12 +432,12 @@ void tmKeepTime(void* src_ptr)
    
    rtemp = (REC_MN_STRUCT *)src_ptr;
    
-   help_rec.tm_start_time.hour = (char)rtemp[TMT_START_HOUR].numrec.tindex;
-   help_rec.tm_start_time.min = (char)rtemp[TMT_START_MIN].numrec.tindex;
+   g_helpRecord.tm_start_time.hour = (char)rtemp[TMT_START_HOUR].numrec.tindex;
+   g_helpRecord.tm_start_time.min = (char)rtemp[TMT_START_MIN].numrec.tindex;
 
-   help_rec.tm_stop_time.hour = (char)rtemp[TMT_STOP_HOUR].numrec.tindex;
-   help_rec.tm_stop_time.min = (char)rtemp[TMT_STOP_MIN].numrec.tindex;
+   g_helpRecord.tm_stop_time.hour = (char)rtemp[TMT_STOP_HOUR].numrec.tindex;
+   g_helpRecord.tm_stop_time.min = (char)rtemp[TMT_STOP_MIN].numrec.tindex;
 
-	debug("Timer Time: (Start) %d:%d -> (End) %d:%d\n", help_rec.tm_start_time.hour,
-			help_rec.tm_start_time.min, help_rec.tm_stop_time.hour, help_rec.tm_stop_time.min);
+	debug("Timer Time: (Start) %d:%d -> (End) %d:%d\n", g_helpRecord.tm_start_time.hour,
+			g_helpRecord.tm_start_time.min, g_helpRecord.tm_stop_time.hour, g_helpRecord.tm_stop_time.min);
 }

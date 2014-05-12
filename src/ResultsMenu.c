@@ -44,46 +44,13 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern MSGS430_UNION msgs430;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern int32 active_menu;
-extern uint8 mmap[8][128];
-extern REC_HELP_MN_STRUCT help_rec;
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern REC_EVENT_MN_STRUCT trig_rec;
-extern SUMMARY_DATA *results_summtable_ptr;
-extern SUMMARY_DATA* gLastCompDataSum;
-extern uint8 g_sampleProcessing;
-extern USER_MENU_STRUCT printOutMenu[];
-extern uint8 g_waitForUser;
-extern uint8 g_promtForLeavingMonitorMode;
-extern uint8 g_promtForCancelingPrintJobs;
-extern uint8 g_monitorModeActiveChoice;
-extern uint8 gPrinterOperational;
-extern uint8 g_monitorOperationMode;
-extern uint32 isTriggered;
-extern uint32 processingCal;
-extern uint8 g_doneTakingEvents;
-extern uint16 gCalTestExpected;
-extern uint16 g_currentEventNumber;
-extern uint8 g_monitorEscapeCheck;
-extern uint8 summaryListMenuActive;
-extern uint8 g_displayAlternateResultState;
-extern uint8 g_bargraphForcedCal;
-extern uint8 g_skipAutoCalInWaveformAfterMidnightCal;
-extern SUMMARY_DATA __ramFlashSummaryTbl[TOTAL_RAM_SUMMARIES];
-extern uint8 summaryListArrowChar;
-extern uint8 print_millibars;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-uint8 enterMonitorModeAfterMidnightCal = NO;
-// fix_ns8100 - Prefer to be a unit8, may cause a bounds issue
-uint32 updateResultsEventRecord = NO;
-uint16 monitorSessionFirstEvent = 0;
-uint16 monitorSessionLastEvent = 0;
+static uint16 s_monitorSessionFirstEvent = 0;
+static uint16 s_monitorSessionLastEvent = 0;
 
 /*******************************************************************************
 *  Function prototypes
@@ -102,10 +69,10 @@ void resultsMn(INPUT_MSG_STRUCT msg)
 
 	resultsMnProc(msg, &wnd_layout, &mn_layout);
 
-	if (active_menu == RESULTS_MENU)
+	if (g_activeMenu == RESULTS_MENU)
 	{
 		resultsMnDsply(&wnd_layout);
-		writeMapToLcd(mmap);
+		writeMapToLcd(g_mmap);
 	}
 }
 
@@ -118,7 +85,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
                   MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	REC_HELP_MN_STRUCT temp_help_rec;
+	REC_HELP_MN_STRUCT temp_g_helpRecord;
 	uint32 delay = 3 * TICKS_PER_SEC;
 
 	if (msg.cmd == ACTIVATE_MENU_CMD)
@@ -139,33 +106,33 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 		mn_layout_ptr->curr_ln =	RESULTS_MN_TBL_START_LINE;
 		mn_layout_ptr->top_ln =		RESULTS_MN_TBL_START_LINE;
 
-		results_summtable_ptr = gLastCompDataSum;
-		updateResultsEventRecord = YES;
+		g_resultsRamSummaryPtr = g_lastCompletedRamSummary;
+		g_updateResultsEventRecord = YES;
 		
-		monitorSessionFirstEvent = getStartingEventNumberForCurrentMonitorLog();
-		monitorSessionLastEvent = getUniqueEventNumber(results_summtable_ptr);
+		s_monitorSessionFirstEvent = getStartingEventNumberForCurrentMonitorLog();
+		s_monitorSessionLastEvent = getUniqueEventNumber(g_resultsRamSummaryPtr);
 
 		// Check if we have recorded enough events to wrap the ram summary table
-		if((monitorSessionLastEvent - monitorSessionFirstEvent) >= TOTAL_RAM_SUMMARIES)
+		if((s_monitorSessionLastEvent - s_monitorSessionFirstEvent) >= TOTAL_RAM_SUMMARIES)
 		{
 			// Set the first event number to the oldest ram summary entry reference event number
-			monitorSessionFirstEvent = (uint16)(monitorSessionLastEvent - TOTAL_RAM_SUMMARIES + 1);
+			s_monitorSessionFirstEvent = (uint16)(s_monitorSessionLastEvent - TOTAL_RAM_SUMMARIES + 1);
 		}
 
-		debug("gLastCompDataSum Event Number = %d\n", gLastCompDataSum->fileEventNum);
+		debug("g_lastCompletedRamSummary Event Number = %d\n", g_lastCompletedRamSummary->fileEventNum);
 
 		// Check if data corresponds to a Calibration Pulse
 		if (msg.data[0] == 13)
 		{
 			// If the unit was monitoring prior to the auto-cal, call soft timer to
 			// reenter monitor mode in the near future
-			if (enterMonitorModeAfterMidnightCal == YES)
+			if (g_enterMonitorModeAfterMidnightCal == YES)
 			{
 				// Reset flag
-				enterMonitorModeAfterMidnightCal = NO;
+				g_enterMonitorModeAfterMidnightCal = NO;
 
 				// Check if Auto Cal is enabled
-				if(help_rec.auto_cal_in_waveform == ENABLED)
+				if(g_helpRecord.auto_cal_in_waveform == ENABLED)
 				{
 					// Set flag to skip auto calibration at start of waveform
 					g_skipAutoCalInWaveformAfterMidnightCal = YES;
@@ -210,15 +177,15 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 					{
 						if (g_monitorModeActiveChoice == MB_FIRST_CHOICE)
 						{
-							stopMonitoring(trig_rec.op_mode, EVENT_PROCESSING);
+							stopMonitoring(g_triggerRecord.op_mode, EVENT_PROCESSING);
 
 							// Restore the auto_print just in case the user escaped from the printout
-							getRecData(&temp_help_rec, 0, REC_HELP_USER_MENU_TYPE);
-							help_rec.auto_print = temp_help_rec.auto_print;
+							getRecData(&temp_g_helpRecord, 0, REC_HELP_USER_MENU_TYPE);
+							g_helpRecord.auto_print = temp_g_helpRecord.auto_print;
 
-							active_menu = MAIN_MENU;
+							g_activeMenu = MAIN_MENU;
 							ACTIVATE_MENU_MSG();
-							(*menufunc_ptrs[active_menu]) (mn_msg);
+							(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 						}
 
 						g_promtForLeavingMonitorMode = FALSE;
@@ -253,12 +220,12 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 					{
 						if (SUPERGRAPH_UNIT)
 						{
-	 						if (summaryListMenuActive == YES)
+	 						if (g_summaryListMenuActive == YES)
 	 						{
 							}
 							else // User hit enter on waveform results that were processed in real time after leaving monitor mode
 							{
-								active_menu = MAIN_MENU;
+								g_activeMenu = MAIN_MENU;
 								ACTIVATE_MENU_MSG();
 							}
 						}
@@ -277,18 +244,18 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 					}
 					else // g_sampleProcessing != SAMPLING_STATE
 					{
- 						if (summaryListMenuActive == YES)
+ 						if (g_summaryListMenuActive == YES)
  						{
-	 						active_menu = SUMMARY_MENU;
+	 						g_activeMenu = SUMMARY_MENU;
 							ACTIVATE_MENU_MSG(); msg.data[0] = ESC_KEY;
 						}
 						else
 						{
-							active_menu = MAIN_MENU;
+							g_activeMenu = MAIN_MENU;
 							ACTIVATE_MENU_MSG();
 						}
 
-						(*menufunc_ptrs[active_menu]) (mn_msg);
+						(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 					}
 				break;
 
@@ -316,36 +283,36 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 					{
 						if(msg.data[0] == DOWN_ARROW_KEY)
 						{
-							if(getUniqueEventNumber(results_summtable_ptr) < monitorSessionLastEvent)
+							if(getUniqueEventNumber(g_resultsRamSummaryPtr) < s_monitorSessionLastEvent)
 							{
-								results_summtable_ptr++;
-								updateResultsEventRecord = YES;
+								g_resultsRamSummaryPtr++;
+								g_updateResultsEventRecord = YES;
 
-								if(results_summtable_ptr > &__ramFlashSummaryTbl[LAST_RAM_SUMMARY_INDEX])
+								if(g_resultsRamSummaryPtr > &__ramFlashSummaryTbl[LAST_RAM_SUMMARY_INDEX])
 								{
-									results_summtable_ptr = &__ramFlashSummaryTbl[0];
+									g_resultsRamSummaryPtr = &__ramFlashSummaryTbl[0];
 								}
 							}
 						}
 						else // msg.data[0] == UP_ARROW_KEY
 						{
-							if(getUniqueEventNumber(results_summtable_ptr) > monitorSessionFirstEvent)
+							if(getUniqueEventNumber(g_resultsRamSummaryPtr) > s_monitorSessionFirstEvent)
 							{
-								results_summtable_ptr--;
-								updateResultsEventRecord = YES;
+								g_resultsRamSummaryPtr--;
+								g_updateResultsEventRecord = YES;
 
-								if(results_summtable_ptr < &__ramFlashSummaryTbl[0])
+								if(g_resultsRamSummaryPtr < &__ramFlashSummaryTbl[0])
 								{
-									results_summtable_ptr = &__ramFlashSummaryTbl[LAST_RAM_SUMMARY_INDEX];
+									g_resultsRamSummaryPtr = &__ramFlashSummaryTbl[LAST_RAM_SUMMARY_INDEX];
 								}
 							}
 						}
 					}
 					else // MSP430_State != MSP430_SAMPLING
 					{
-						active_menu = SUMMARY_MENU;
+						g_activeMenu = SUMMARY_MENU;
 						ACTIVATE_MENU_MSG(); mn_msg.data[0] = ESC_KEY;
-						(*menufunc_ptrs[active_menu]) (mn_msg);
+						(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 
 						mn_msg.length = 1;
 						mn_msg.cmd = KEYPRESS_MENU_CMD;
@@ -389,16 +356,17 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	uint8 calResults = PASSED;
 
 #if 0 // ns7100
-	EVT_RECORD* eventRecord = (EVT_RECORD *)results_summtable_ptr->linkPtr;
+	EVT_RECORD* eventRecord = (EVT_RECORD *)g_resultsRamSummaryPtr->linkPtr;
 #else // ns8100
 	static EVT_RECORD resultsEventRecord;
 	EVT_RECORD* eventRecord = &resultsEventRecord;
 	
-	if ((updateResultsEventRecord == YES) || (g_bargraphForcedCal == YES))
+	if ((g_updateResultsEventRecord == YES) || (g_bargraphForcedCal == YES))
 	{
 		debug("Results menu: updating event record cache\n");
-		getEventFileInfo(results_summtable_ptr->fileEventNum, &(resultsEventRecord.header), &(resultsEventRecord.summary));
-		updateResultsEventRecord = NO;
+		//getEventFileInfo(g_resultsRamSummaryPtr->fileEventNum, &(resultsEventRecord.header), &(resultsEventRecord.summary), NO);
+		getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
+		g_updateResultsEventRecord = NO;
 	}
 #endif
 	debug("File stored peaks: a:%x r:%x v:%x t:%x\n", 
@@ -407,7 +375,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			eventRecord->summary.calculated.v.peak,
 			eventRecord->summary.calculated.t.peak);
 
-	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	if ((eventRecord->summary.parameters.channel[0].options & 0x01) == GAIN_SELECT_x2)
 		gainFactor = 2;
@@ -430,7 +398,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		if (g_monitorOperationMode == WAVEFORM_MODE)
 		{
-			if (isTriggered)
+			if (g_isTriggered)
 			{
 				length = (uint8)sprintf((char*)buff, "%s%s (W)", getLangText(PROCESSING_TEXT), dotBuff);
 			}
@@ -478,14 +446,14 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		if(g_monitorOperationMode == WAVEFORM_MODE)
 		{
-			if(getUniqueEventNumber(results_summtable_ptr) == monitorSessionFirstEvent)
+			if(getUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionFirstEvent)
 				arrowChar = DOWN_ARROW_CHAR;
-			else if(getUniqueEventNumber(results_summtable_ptr) == monitorSessionLastEvent)
+			else if(getUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionLastEvent)
 				arrowChar = UP_ARROW_CHAR;
 			else
 				arrowChar = BOTH_ARROWS_CHAR;
 
-			if(monitorSessionFirstEvent != monitorSessionLastEvent)
+			if(s_monitorSessionFirstEvent != s_monitorSessionLastEvent)
 			{
 				sprintf(buff, "%c", arrowChar);
 			    wnd_layout_ptr->curr_col = 120;
@@ -495,9 +463,9 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else // MSP430_State != MSP430_SAMPLING
 	{
-		if(summaryListMenuActive == YES)
+		if(g_summaryListMenuActive == YES)
 		{
-			sprintf(buff, "%c", summaryListArrowChar);
+			sprintf(buff, "%c", g_summaryListArrowChar);
 		    wnd_layout_ptr->curr_col = 120;
 		    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
@@ -540,7 +508,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     //-------------------------------------------------------------
     // Event number
     byteSet(&buff[0], 0, sizeof(buff));
-	sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), getUniqueEventNumber(results_summtable_ptr));
+	sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), getUniqueEventNumber(g_resultsRamSummaryPtr));
 
     wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
 
@@ -551,7 +519,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		sprintf(buff, "mg/s");
 	}
-	else if(gp_SensorInfo->unitsFlag == IMPERIAL)
+	else if(g_sensorInfoPtr->unitsFlag == IMPERIAL)
 	{
 		sprintf(buff, "in/s");
 	}
@@ -590,7 +558,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 
     if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) &&
-    	(help_rec.units_of_measure == METRIC_TYPE))
+    	(g_helpRecord.units_of_measure == METRIC_TYPE))
     {
     	normalize_max_peak *= (float)METRIC;
     }
@@ -618,7 +586,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 
     if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) &&
-    	(help_rec.units_of_measure == METRIC_TYPE))
+    	(g_helpRecord.units_of_measure == METRIC_TYPE))
     {
     	normalize_max_peak *= (float)METRIC;
 	}
@@ -646,7 +614,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 
     if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) &&
-    	(help_rec.units_of_measure == METRIC_TYPE))
+    	(g_helpRecord.units_of_measure == METRIC_TYPE))
     {
     	normalize_max_peak *= (float)METRIC;
 	}
@@ -694,7 +662,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		tempVS = sqrtf((float)eventRecord->summary.calculated.vectorSumPeak) / (float)div;
 
-		if ((gp_SensorInfo->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
+		if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
 		{
 			if (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
 				strcpy(displayFormat, "mg/s");
@@ -786,7 +754,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			tempPeakDisp = (float)normalize_max_peak / ((float)2 * (float)PI * (float)tempFreq);
 		}
 
-		if ((gp_SensorInfo->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
+		if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
 		{
 			if (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
 				strcpy(displayFormat, "mg");
@@ -818,7 +786,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    // Air
 	    byteSet(&buff[0], 0, sizeof(buff));
 
-		if(print_millibars == OFF)
+		if(g_printMillibars == OFF)
 		{
 		    sprintf(buff,"%0.1f dB",
 		    	hexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED) );

@@ -14,22 +14,24 @@
 ///	Includes
 ///----------------------------------------------------------------------------
 #include <string.h>
-#include "Rec.h"
+#include "Record.h"
 #include "Old_Board.h"
 #include "Uart.h"
 #include "RemoteModem.h"
 #include "SoftTimer.h"
 
-extern uint8 g_CRLF;
-extern uint8 g_disableDebugPrinting;
-extern MODEM_SETUP_STRUCT modem_setup_rec;
-extern MODEM_STATUS_STRUCT g_ModemStatus;
+///----------------------------------------------------------------------------
+///	Defines
+///----------------------------------------------------------------------------
 
-uint8 modemResetStage = 0;
+///----------------------------------------------------------------------------
+///	Externs
+///----------------------------------------------------------------------------
+#include "Globals.h"
 
-//==================================================
-// Modem commands
-//==================================================
+///----------------------------------------------------------------------------
+///	Local Scope Globals
+///----------------------------------------------------------------------------
 
 //==================================================
 //	Procedure: modemInitProcess()
@@ -38,37 +40,36 @@ uint8 modemResetStage = 0;
 //	Input: void
 //	Output: none
 //--------------------------------------------------
+#include "Menu.h"
 void modemInitProcess(void)
 {
-	if (g_ModemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
+	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
 
 	debug("modemInitProcess\n");
 
-#if 0 // fix_ns8100
 	if (READ_DCD == NO_CONNECTION)
 	{
-		if (strlen(modem_setup_rec.reset) != 0)
+		if (strlen(g_modemSetupRecord.reset) != 0)
 		{
-			uart_puts((char*)(modem_setup_rec.reset), CRAFT_COM_PORT);
+			uart_puts((char*)(g_modemSetupRecord.reset), CRAFT_COM_PORT);
 			uart_puts((char*)&g_CRLF, CRAFT_COM_PORT);
 
 			soft_usecWait(3 * SOFT_SECS);
 		}
 
-		if (strlen(modem_setup_rec.init) != 0)
+		if (strlen(g_modemSetupRecord.init) != 0)
 		{
-			uart_puts((char*)(modem_setup_rec.init), CRAFT_COM_PORT);
+			uart_puts((char*)(g_modemSetupRecord.init), CRAFT_COM_PORT);
 			uart_puts((char*)&g_CRLF, CRAFT_COM_PORT);
 		}
 	}
-#endif
 
 	// Assume connected.
-	g_ModemStatus.numberOfRings = 0;
-	g_ModemStatus.ringIndicator = 0;
+	g_modemStatus.numberOfRings = 0;
+	g_modemStatus.ringIndicator = 0;
 
-	g_ModemStatus.connectionState = CONNECTED;
-	g_ModemStatus.firstConnection = NOP_CMD;
+	g_modemStatus.connectionState = CONNECTED;
+	g_modemStatus.firstConnection = NOP_CMD;
 }
 
 //==================================================
@@ -80,15 +81,14 @@ void modemInitProcess(void)
 //--------------------------------------------------
 void modemResetProcess(void)
 {
-	if (g_ModemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
+	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
 	debug("handleMRC\n");
 
-	g_ModemStatus.systemIsLockedFlag = YES;
+	g_modemStatus.systemIsLockedFlag = YES;
 
-#if 0 // fix_ns8100
 	CLEAR_DTR;
-#endif
-	modemResetStage = 1;
+
+	g_modemResetStage = 1;
 	assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(15 * TICKS_PER_SEC), modemResetTimerCallback);
 }
 
@@ -103,9 +103,9 @@ void handleMRS(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 
-	g_ModemStatus.systemIsLockedFlag = YES;
+	g_modemStatus.systemIsLockedFlag = YES;
 
-	if (YES == modem_setup_rec.modemStatus)
+	if (YES == g_modemSetupRecord.modemStatus)
 	{
 		modemResetProcess();
 	}

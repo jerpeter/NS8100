@@ -19,15 +19,14 @@
 #include "InitDataBuffers.h"
 #include "Ispi.h"
 #include "Msgs430.h"
-#include "Mmc2114.h"
 #include "SysEvents.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Menu.h"
 #include "Summary.h"
 #include "Flash.h"
 #include "EventProcessing.h"
 #include "Board.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Uart.h"
 #include "RealTimeClock.h"
 #include "ProcessBargraph.h"
@@ -43,70 +42,11 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern uint16* endFlashSectorPtr;
-extern EVT_RECORD g_RamEventRecord;
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;
-extern REC_EVENT_MN_STRUCT trig_rec;
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-extern REC_HELP_MN_STRUCT help_rec;
-extern MN_EVENT_STRUCT mn_event_flags;
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern uint16 manual_cal_flag;
-extern uint16 manualCalSampleCount;
-extern uint8 print_out_mode;
-extern uint8 g_sampleProcessing;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-MSGS430_UNION msgs430;
-uint16 preTrigBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
-uint16* startOfPreTrigBuff;
-uint16* tailOfPreTrigBuff;
-uint16* endOfPreTrigBuff;
-uint16 gMaxEventBuffers;
-uint16 gCurrentEventNumber;
-FL_FILE* gCurrentEventFileHandle;
-FL_FILE* gComboDualCurrentEventFileHandle;
-uint16 gFreeEventBuffers;
-uint16 gCalTestExpected;
-uint32 gSamplesInBody;
-uint32 gSamplesInPre;
-uint32 gSamplesInCal;
-uint32 gSamplesInEvent;
-uint32 gWordSizeInPre;
-uint32 gWordSizeInBody;
-uint32 gWordSizeInCal;
-uint32 gWordSizeInEvent;
-uint16* g_startOfEventBufferPtr;
-uint16* gEventBufferPrePtr;
-uint16* gEventBufferBodyPtr;
-uint16* gEventBufferCalPtr;
-uint16* dgEventBufferCalPtr;
-uint16* ddgEventBufferCalPtr;
-//uint16* chaTwoEvtPrePtr;
-//uint16* chaTwoEvtBodyPtr;
-//uint16* chaTwoEvtCalPtr;
-//uint16* dChaTwoEvtCalPtr;
-//uint16* ddChaTwoEvtCalPtr;
-uint16* gCurrentEventSamplePtr;
-uint16* gCurrentEventStartPtr;
-uint16 gCurrentEventBuffer;
-SUMMARY_DATA summaryTable[MAX_RAM_SUMMARYS];
-SUMMARY_DATA* gLastCompDataSum;
-uint32 isTriggered = 0;
-uint32 processingCal = 0;
-uint16 eventsNotCompressed = 0; 
-uint16* gp_bg430DataStart;
-uint16* gp_bg430DataWrite;
-uint16* gp_bg430DataRead;
-uint16* gp_bg430DataEnd;
-uint8 g_powerNoiseFlag = PRINTER_OFF;
-uint8 g_doneTakingEvents = NO;
-// fix_ns8100 - No aligned correctly
-uint16 deadSpaceFix;
-uint16 eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 
 //*****************************************************************************
 // Function:	InitDataBuffs
@@ -124,60 +64,60 @@ void InitDataBuffs(uint8 op_mode)
 	}
 	else // Waveform, Bargraph, Combo
 	{
-		sampleRate = trig_rec.trec.sample_rate;
+		sampleRate = g_triggerRecord.trec.sample_rate;
 	}
 
 	initEventRecord(&g_RamEventRecord, op_mode);
 
 	// Setup the pre-trigger buffer pointers
-	startOfPreTrigBuff = &(preTrigBuff[0]);
-	tailOfPreTrigBuff = &(preTrigBuff[0]);
+	g_startOfPreTrigBuff = &(g_preTrigBuff[0]);
+	g_tailOfPreTrigBuff = &(g_preTrigBuff[0]);
 
 	// Set the PreTrigger size in words, 1/4 sec @ sample rate * number of channels, plus 1 sample
-	preTriggerSize = ((uint32)(sampleRate / 4) * gp_SensorInfo->numOfChannels) + gp_SensorInfo->numOfChannels;
+	preTriggerSize = ((uint32)(sampleRate / 4) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
 	// Set up the end of the pre trigger buffer
-	endOfPreTrigBuff = &(preTrigBuff[preTriggerSize]);
+	g_endOfPreTrigBuff = &(g_preTrigBuff[preTriggerSize]);
 
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE))
 	{
 		// Calculate samples for each section and total event
-		gSamplesInBody = (uint32)(sampleRate * trig_rec.trec.record_time);
-		gSamplesInPre  = (uint32)(sampleRate / 4);
-		gSamplesInCal  = (uint32)((sampleRate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES);
-		gSamplesInEvent  = gSamplesInPre + gSamplesInBody + gSamplesInCal;
+		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
+		g_samplesInPretrig  = (uint32)(sampleRate / 4);
+		g_samplesInCal  = (uint32)((sampleRate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES);
+		g_samplesInEvent  = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
 
 		// Calculate word size for each section and total event, since buffer is an array of words
-		gWordSizeInPre = gSamplesInPre * gp_SensorInfo->numOfChannels;
-		gWordSizeInBody = gSamplesInBody * gp_SensorInfo->numOfChannels;
-		gWordSizeInCal = gSamplesInCal * gp_SensorInfo->numOfChannels;
-		gWordSizeInEvent = gWordSizeInPre + gWordSizeInBody + gWordSizeInCal;
+		g_wordSizeInPretrig = g_samplesInPretrig * g_sensorInfoPtr->numOfChannels;
+		g_wordSizeInBody = g_samplesInBody * g_sensorInfoPtr->numOfChannels;
+		g_wordSizeInCal = g_samplesInCal * g_sensorInfoPtr->numOfChannels;
+		g_wordSizeInEvent = g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal;
 
 		// Calculate total event buffers available
-		gMaxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / (gWordSizeInPre + gWordSizeInBody + gWordSizeInCal));
-		gFreeEventBuffers = gMaxEventBuffers;
+		g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / (g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal));
+		g_freeEventBuffers = g_maxEventBuffers;
 
 		// Init starting event buffer pointers
-		g_startOfEventBufferPtr = &(eventDataBuffer[0]);
-		gCurrentEventStartPtr = gCurrentEventSamplePtr = g_startOfEventBufferPtr;
-		gCurrentEventBuffer = 0;
-		gCurrentEventNumber = 0;
+		g_startOfEventBufferPtr = &(g_eventDataBuffer[0]);
+		g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr;
+		g_currentEventBuffer = 0;
+		g_currentEventNumber = 0;
 
-		gEventBufferPrePtr = g_startOfEventBufferPtr;
-		gEventBufferBodyPtr = gEventBufferPrePtr + gWordSizeInPre;
-		gEventBufferCalPtr = gEventBufferPrePtr + gWordSizeInPre + gWordSizeInBody;
+		g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
+		g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
+		g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
 		// Init flags
-		isTriggered = 0;
-		processingCal = 0;
-		gCalTestExpected = 0;
+		g_isTriggered = 0;
+		g_processingCal = 0;
+		g_calTestExpected = 0;
 		g_doneTakingEvents = NO;
 	}
 	else if (op_mode == BARGRAPH_MODE)
 	{		
-		gp_bg430DataStart = &(eventDataBuffer[0]);
-		gp_bg430DataWrite = &(eventDataBuffer[0]);
-		gp_bg430DataRead = &(eventDataBuffer[0]);
-		gp_bg430DataEnd = &(eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS - 4]);
+		g_bg430DataStartPtr = &(g_eventDataBuffer[0]);
+		g_bg430DataWritePtr = &(g_eventDataBuffer[0]);
+		g_bg430DataReadPtr = &(g_eventDataBuffer[0]);
+		g_bg430DataEndPtr = &(g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS - 4]);
 
 		StartNewBargraph();
 	}
@@ -185,43 +125,43 @@ void InitDataBuffs(uint8 op_mode)
 	{		
 		// Waveform init
 		// Calculate samples for each section and total event
-		gSamplesInBody = (uint32)(sampleRate * trig_rec.trec.record_time);
-		gSamplesInPre  = (uint32)(sampleRate / 4);
-		gSamplesInCal  = (uint32)((sampleRate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES);
-		gSamplesInEvent  = gSamplesInPre + gSamplesInBody + gSamplesInCal;
+		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
+		g_samplesInPretrig  = (uint32)(sampleRate / 4);
+		g_samplesInCal  = (uint32)((sampleRate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES);
+		g_samplesInEvent  = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
 
 		// Calculate word size for each section and total event, since buffer is an array of words
-		gWordSizeInPre = gSamplesInPre * gp_SensorInfo->numOfChannels;
-		gWordSizeInBody = gSamplesInBody * gp_SensorInfo->numOfChannels;
-		gWordSizeInCal = gSamplesInCal * gp_SensorInfo->numOfChannels;
-		gWordSizeInEvent = gWordSizeInPre + gWordSizeInBody + gWordSizeInCal;
+		g_wordSizeInPretrig = g_samplesInPretrig * g_sensorInfoPtr->numOfChannels;
+		g_wordSizeInBody = g_samplesInBody * g_sensorInfoPtr->numOfChannels;
+		g_wordSizeInCal = g_samplesInCal * g_sensorInfoPtr->numOfChannels;
+		g_wordSizeInEvent = g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal;
 
 		// Calculate total event buffers available
-		gMaxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET) / 
-							(gWordSizeInPre + gWordSizeInBody + gWordSizeInCal));
-		gFreeEventBuffers = gMaxEventBuffers;
+		g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET) / 
+							(g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal));
+		g_freeEventBuffers = g_maxEventBuffers;
 
 		// Init starting event buffer pointers
-		g_startOfEventBufferPtr = &(eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET]);
-		gCurrentEventStartPtr = gCurrentEventSamplePtr = g_startOfEventBufferPtr; 
-		gCurrentEventBuffer = 0;
-		gCurrentEventNumber = 0;
+		g_startOfEventBufferPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET]);
+		g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr; 
+		g_currentEventBuffer = 0;
+		g_currentEventNumber = 0;
 
-		gEventBufferPrePtr = g_startOfEventBufferPtr;
-		gEventBufferBodyPtr = gEventBufferPrePtr + gWordSizeInPre;
-		gEventBufferCalPtr = gEventBufferPrePtr + gWordSizeInPre + gWordSizeInBody;
+		g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
+		g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
+		g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
 		// Init flags
-		isTriggered = 0;
-		processingCal = 0;
-		gCalTestExpected = 0;
+		g_isTriggered = 0;
+		g_processingCal = 0;
+		g_calTestExpected = 0;
 		g_doneTakingEvents = NO;
 
 		// Bargraph init
-		gp_bg430DataStart = &(eventDataBuffer[0]);
-		gp_bg430DataWrite = &(eventDataBuffer[0]);
-		gp_bg430DataRead = &(eventDataBuffer[0]);
-		gp_bg430DataEnd = &(eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET - 16]);
+		g_bg430DataStartPtr = &(g_eventDataBuffer[0]);
+		g_bg430DataWritePtr = &(g_eventDataBuffer[0]);
+		g_bg430DataReadPtr = &(g_eventDataBuffer[0]);
+		g_bg430DataEndPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET - 16]);
 
 		StartNewCombo();
 	}

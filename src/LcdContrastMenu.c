@@ -35,17 +35,13 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern int32 active_menu;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern REC_HELP_MN_STRUCT help_rec;
-extern uint8 contrast_value;
+#include "Globals.h"
 extern USER_MENU_STRUCT configMenu[];
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-TEMP_MENU_DATA_STRUCT lcd_contrast_mn_table_test [LCD_CONTRAST_MN_TABLE_SIZE] = {
+static TEMP_MENU_DATA_STRUCT s_lcdContrastTable [LCD_CONTRAST_MN_TABLE_SIZE] = {
 {TITLE_PRE_TAG, LCD_CONTRAST_TEXT, TITLE_POST_TAG},
 {ITEM_1, LIGHTER_TEXT, NO_TAG},
 {ITEM_2, DEFAULT_TEXT, NO_TAG},
@@ -74,11 +70,11 @@ void lcdContrastMn(INPUT_MSG_STRUCT msg)
 
     lcdContrastMnProc(msg, &wnd_layout, &mn_layout);
 
-    if (active_menu == LCD_CONTRAST_MENU)
+    if (g_activeMenu == LCD_CONTRAST_MENU)
     {
         dsplySelMn(&wnd_layout, &mn_layout, TITLE_CENTERED);
         addLcdContrastLevelDisplay(&wnd_layout);
-        writeMapToLcd(mmap);
+        writeMapToLcd(g_mmap);
     }
 }
 
@@ -105,7 +101,7 @@ void lcdContrastMnProc(INPUT_MSG_STRUCT msg,
 			mn_layout_ptr->top_ln = 1;
 			mn_layout_ptr->sub_ln = 0;
 
-			loadTempMenuTable(lcd_contrast_mn_table_test);
+			loadTempMenuTable(s_lcdContrastTable);
 			break;
 
 		case (KEYPRESS_MENU_CMD):
@@ -124,34 +120,34 @@ void lcdContrastMnProc(INPUT_MSG_STRUCT msg,
 					switch (mn_layout_ptr->curr_ln)
 					{
 						case (1): // Lighter
-							if ((contrast_value - CONTRAST_STEPPING) >= MIN_CONTRAST)
+							if ((g_contrast_value - CONTRAST_STEPPING) >= MIN_CONTRAST)
 							{
-								help_rec.lcd_contrast = contrast_value -= CONTRAST_STEPPING;
+								g_helpRecord.lcd_contrast = g_contrast_value -= CONTRAST_STEPPING;
 							}
 
-							setLcdContrast(contrast_value);
+							setLcdContrast(g_contrast_value);
 							break;
 
 						case (2): // Default
-							help_rec.lcd_contrast = contrast_value = DEFUALT_CONTRAST;
+							g_helpRecord.lcd_contrast = g_contrast_value = DEFUALT_CONTRAST;
 
-							setLcdContrast(contrast_value);
+							setLcdContrast(g_contrast_value);
 							break;
 
 						case (3): // Darker
-							if ((contrast_value + CONTRAST_STEPPING) <= MAX_CONTRAST)
+							if ((g_contrast_value + CONTRAST_STEPPING) <= MAX_CONTRAST)
 							{
-								help_rec.lcd_contrast  = contrast_value += CONTRAST_STEPPING;
+								g_helpRecord.lcd_contrast  = g_contrast_value += CONTRAST_STEPPING;
 							}
 
-							setLcdContrast(contrast_value);
+							setLcdContrast(g_contrast_value);
 							break;
 
 						case (4): // Save changes
-							saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+							saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 							ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
-							(*menufunc_ptrs[active_menu]) (mn_msg);
+							(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							break;
 
 						default:
@@ -166,7 +162,7 @@ void lcdContrastMnProc(INPUT_MSG_STRUCT msg,
 
 			case (ESC_KEY):
 				ACTIVATE_USER_MENU_MSG(&configMenu, LCD_CONTRAST);
-				(*menufunc_ptrs[active_menu]) (mn_msg);
+				(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 				break;
 
 			default:
@@ -212,7 +208,7 @@ void addLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     byteSet(&contrast_buff[0], 0, sizeof(contrast_buff));
     byteSet(&contrast_buff[0], ' ', (sizeof(contrast_buff) - 1));
 
-    clvl = contrast_value;
+    clvl = g_contrast_value;
 
 	// Creating a string to give the appearance of a contrast level. Using '=' as the bar
     for (x = 0; x < 10; x++)

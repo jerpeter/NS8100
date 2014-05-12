@@ -33,18 +33,14 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern MN_MEM_DATA_STRUCT mn_ptr[DEFAULT_MN_SIZE];
-extern int32 active_menu;
-extern REC_EVENT_MN_STRUCT trig_rec;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
+#include "Globals.h"
 extern USER_MENU_STRUCT modeMenu[];
 extern USER_MENU_STRUCT helpMenu[];
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-TEMP_MENU_DATA_STRUCT overwrite_mn_table_test[OVERWRITE_MN_TABLE_SIZE] = {
+static TEMP_MENU_DATA_STRUCT s_overwriteMenuTable[OVERWRITE_MN_TABLE_SIZE] = {
 {TITLE_PRE_TAG, OVERWRITE_SETTINGS_TEXT, TITLE_POST_TAG},
 {NO_TAG, DEFAULT_SELF_TRG_TEXT, NO_TAG},
 {NO_TAG, DEFAULT_BAR_TEXT, NO_TAG},
@@ -69,10 +65,10 @@ void overWriteMn(INPUT_MSG_STRUCT msg)
   
     overWriteMnProc(msg, &wnd_layout, &mn_layout);
 
-    if (active_menu == OVERWRITE_MENU)
+    if (g_activeMenu == OVERWRITE_MENU)
     {
         dsplySelMn(&wnd_layout, &mn_layout, TITLE_CENTERED);
-        writeMapToLcd(mmap);
+        writeMapToLcd(g_mmap);
     }
 }
 
@@ -100,7 +96,7 @@ void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 			mn_layout_ptr->curr_ln =    1;
 			mn_layout_ptr->top_ln =     1; 
 
-			loadTempMenuTable(overwrite_mn_table_test);
+			loadTempMenuTable(s_overwriteMenuTable);
 
 			for (i = 1; i <= MAX_NUM_OF_SAVED_SETUPS; i++)
 			{
@@ -125,11 +121,11 @@ void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 						break;
 				}
 
-				strcpy((char*)&(mn_ptr[i].data[0]), (char*)buff);
+				strcpy((char*)&(g_menuPtr[i].data[0]), (char*)buff);
 			}
 
 			// Add in the end string
-			strcpy((char*)&(mn_ptr[i].data[0]), ".end.");
+			strcpy((char*)&(g_menuPtr[i].data[0]), ".end.");
 		break;
 
 		case (KEYPRESS_MENU_CMD):
@@ -138,11 +134,11 @@ void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 			switch (input)
 			{
 				case (ENTER_KEY):
-					saveRecData(&trig_rec, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
+					saveRecData(&g_triggerRecord, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
 
-					updateModeMenuTitle(trig_rec.op_mode);
+					updateModeMenuTitle(g_triggerRecord.op_mode);
 					ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
-					(*menufunc_ptrs[active_menu]) (mn_msg);
+					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 					break;
 
 				case (DELETE_KEY):
@@ -160,7 +156,7 @@ void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 
 							saveRecData(&temp_rec, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
 
-							sprintf((char*)&(mn_ptr[mn_layout_ptr->curr_ln].data[0]), "<%s>", getLangText(EMPTY_TEXT));
+							sprintf((char*)&(g_menuPtr[mn_layout_ptr->curr_ln].data[0]), "<%s>", getLangText(EMPTY_TEXT));
 						}
 					}
 					break;
@@ -178,7 +174,7 @@ void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 
 				case (HELP_KEY):
 					ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
-					(*menufunc_ptrs[active_menu]) (mn_msg);
+					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 					break;
 
 				default:

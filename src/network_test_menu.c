@@ -33,7 +33,6 @@
 #include "print_funcs.h"
 #include "usart.h"
 #include "gpio.h"
-#include "utils.h"
 #include "cs8900.h"                              // Ethernet packet driver
 #include "tcpip.h"                               // TCP/IP stack
 
@@ -284,10 +283,10 @@ unsigned char HTTPStatus;                        // status byte
                            (TDF_OPTIM << AVR32_SMC_MODE0_TDF_MODE_OFFSET) | \
                            (PAGE_MODE << AVR32_SMC_MODE0_PMEN_OFFSET) | \
                            (PAGE_SIZE << AVR32_SMC_MODE0_PS_OFFSET); \
-  smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
+  g_smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
   }
 
-//unsigned char smc_tab_cs_size[6];
+//unsigned char g_smc_tab_cs_size[6];
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

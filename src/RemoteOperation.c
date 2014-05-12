@@ -26,20 +26,18 @@
 #include "PowerManagement.h"
 #include "Crc.h"
 
-/*******************************************************************************
-*  Extern
-*******************************************************************************/
-extern uint8 g_CRLF;
-extern uint8 g_BinaryXferFlag;
-extern uint8 g_disableDebugPrinting;
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-extern REC_EVENT_MN_STRUCT trig_rec;
-extern REC_HELP_MN_STRUCT help_rec;
-extern MSGS430_UNION msgs430;
-extern uint8 g_sampleProcessing;
-extern char appVersion[15];
-extern MODEM_SETUP_STRUCT modem_setup_rec;
-extern uint32 g_xmitCRC;
+///----------------------------------------------------------------------------
+///	Defines
+///----------------------------------------------------------------------------
+
+///----------------------------------------------------------------------------
+///	Externs
+///----------------------------------------------------------------------------
+#include "Globals.h"
+
+///----------------------------------------------------------------------------
+///	Local Scope Globals
+///----------------------------------------------------------------------------
 
 //==================================================
 // Function: handleAAA
@@ -78,105 +76,105 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	byteSet(&cfg, 0, sizeof(SYSTEM_CFG));
 
-	cfg.mode = trig_rec.op_mode;
+	cfg.mode = g_triggerRecord.op_mode;
 	cfg.monitorStatus = g_sampleProcessing; 
 	cfg.currentTime = getCurrentTime();
 	
-	cfg.eventCfg.distToSource = (uint32)(trig_rec.trec.dist_to_source * 100.0);
-	cfg.eventCfg.weightPerDelay = (uint32)(trig_rec.trec.weight_per_delay * 100.0);
-	cfg.eventCfg.sampleRate = (uint16)trig_rec.trec.sample_rate;
+	cfg.eventCfg.distToSource = (uint32)(g_triggerRecord.trec.dist_to_source * 100.0);
+	cfg.eventCfg.weightPerDelay = (uint32)(g_triggerRecord.trec.weight_per_delay * 100.0);
+	cfg.eventCfg.sampleRate = (uint16)g_triggerRecord.trec.sample_rate;
 	
 	// Scan for major and minor version from the app version string and store in the config
-	sscanf(&appVersion[0], "%d.%d", &majorVer, &minorVer);
+	sscanf(&g_appVersion[0], "%d.%d", &majorVer, &minorVer);
 	
 	cfg.eventCfg.appMajorVersion = (uint8)majorVer;
 	cfg.eventCfg.appMinorVersion = (uint8)minorVer;
 
 	// Waveform specific - Intitial conditions.
-	cfg.eventCfg.seismicTriggerLevel = trig_rec.trec.seismicTriggerLevel;
-	cfg.eventCfg.airTriggerLevel = trig_rec.trec.soundTriggerLevel;
-	cfg.eventCfg.recordTime = trig_rec.trec.record_time;
+	cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+	cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.soundTriggerLevel;
+	cfg.eventCfg.recordTime = g_triggerRecord.trec.record_time;
 
 	// static non changing.
-	cfg.eventCfg.seismicSensorType = (uint16)(factory_setup_rec.sensor_type);
+	cfg.eventCfg.seismicSensorType = (uint16)(g_factorySetupRecord.sensor_type);
 	cfg.eventCfg.airSensorType = (uint16)0x0;
 	cfg.eventCfg.bitAccuracy = 12;
 	cfg.eventCfg.numOfChannels = 4;
-	cfg.eventCfg.aWeighting = (uint8)factory_setup_rec.aweight_option;
+	cfg.eventCfg.aWeighting = (uint8)g_factorySetupRecord.aweight_option;
 
 	cfg.eventCfg.numOfSamples = 0;				// Not used for configuration settings
 	// Used for setting sesitivity
-	cfg.eventCfg.preBuffNumOfSamples = (uint16)trig_rec.srec.sensitivity;
-	cfg.eventCfg.calDataNumOfSamples = trig_rec.berec.barScale;
-	cfg.eventCfg.activeChannels = trig_rec.berec.barChannel;
+	cfg.eventCfg.preBuffNumOfSamples = (uint16)g_triggerRecord.srec.sensitivity;
+	cfg.eventCfg.calDataNumOfSamples = g_triggerRecord.berec.barScale;
+	cfg.eventCfg.activeChannels = g_triggerRecord.berec.barChannel;
 
 	// Bargraph specific - Intitial conditions.
-	cfg.eventCfg.barInterval = (uint16)trig_rec.bgrec.barInterval;
-	cfg.eventCfg.summaryInterval = (uint16)trig_rec.bgrec.summaryInterval;
+	cfg.eventCfg.barInterval = (uint16)g_triggerRecord.bgrec.barInterval;
+	cfg.eventCfg.summaryInterval = (uint16)g_triggerRecord.bgrec.summaryInterval;
 
-	byteCpy((uint8*)cfg.eventCfg.companyName, trig_rec.trec.client, COMPANY_NAME_STRING_SIZE - 2);
-	byteCpy((uint8*)cfg.eventCfg.seismicOperator, trig_rec.trec.oper, SEISMIC_OPERATOR_STRING_SIZE - 2);
-	byteCpy((uint8*)cfg.eventCfg.sessionLocation, trig_rec.trec.loc, SESSION_LOCATION_STRING_SIZE - 2);
-	byteCpy((uint8*)cfg.eventCfg.sessionComments, trig_rec.trec.comments, SESSION_COMMENTS_STRING_SIZE - 2);
+	byteCpy((uint8*)cfg.eventCfg.companyName, g_triggerRecord.trec.client, COMPANY_NAME_STRING_SIZE - 2);
+	byteCpy((uint8*)cfg.eventCfg.seismicOperator, g_triggerRecord.trec.oper, SEISMIC_OPERATOR_STRING_SIZE - 2);
+	byteCpy((uint8*)cfg.eventCfg.sessionLocation, g_triggerRecord.trec.loc, SESSION_LOCATION_STRING_SIZE - 2);
+	byteCpy((uint8*)cfg.eventCfg.sessionComments, g_triggerRecord.trec.comments, SESSION_COMMENTS_STRING_SIZE - 2);
 	
 	for (idex = 0; idex < 8; idex++)
 	{
-		cfg.eventCfg.channel[idex].type = msgs430.startMsg430.channel[idex].channel_type;
-		cfg.eventCfg.channel[idex].input = msgs430.startMsg430.channel[idex].channel_num;
-		cfg.eventCfg.channel[idex].group = msgs430.startMsg430.channel[idex].group_num;
-		cfg.eventCfg.channel[idex].options = msgs430.startMsg430.channel[idex].options;
+		cfg.eventCfg.channel[idex].type = g_msgs430.startMsg430.channel[idex].channel_type;
+		cfg.eventCfg.channel[idex].input = g_msgs430.startMsg430.channel[idex].channel_num;
+		cfg.eventCfg.channel[idex].group = g_msgs430.startMsg430.channel[idex].group_num;
+		cfg.eventCfg.channel[idex].options = g_msgs430.startMsg430.channel[idex].options;
 	}
 
-	cfg.autoCfg.auto_monitor_mode = help_rec.auto_monitor_mode;
-	cfg.autoCfg.auto_cal_mode = help_rec.auto_cal_mode;
+	cfg.autoCfg.auto_monitor_mode = g_helpRecord.auto_monitor_mode;
+	cfg.autoCfg.auto_cal_mode = g_helpRecord.auto_cal_mode;
 
-	cfg.printerCfg.auto_print = help_rec.auto_print;
-	cfg.printerCfg.lang_mode = help_rec.lang_mode;
-	cfg.printerCfg.vector_sum = help_rec.vector_sum;
-	cfg.printerCfg.units_of_measure = help_rec.units_of_measure;
-	cfg.printerCfg.freq_plot_mode = help_rec.freq_plot_mode;
-	cfg.printerCfg.freq_plot_type = help_rec.freq_plot_type;
+	cfg.printerCfg.auto_print = g_helpRecord.auto_print;
+	cfg.printerCfg.lang_mode = g_helpRecord.lang_mode;
+	cfg.printerCfg.vector_sum = g_helpRecord.vector_sum;
+	cfg.printerCfg.units_of_measure = g_helpRecord.units_of_measure;
+	cfg.printerCfg.freq_plot_mode = g_helpRecord.freq_plot_mode;
+	cfg.printerCfg.freq_plot_type = g_helpRecord.freq_plot_type;
 
-	cfg.alarmCfg.alarm_one_mode = help_rec.alarm_one_mode;
-	cfg.alarmCfg.alarm_two_mode = help_rec.alarm_two_mode;
-	cfg.alarmCfg.alarm_one_seismic_lvl = help_rec.alarm_one_seismic_lvl;
-	cfg.alarmCfg.alarm_one_seismic_min_lvl = help_rec.alarm_one_seismic_min_lvl;
-	cfg.alarmCfg.alarm_one_air_lvl = help_rec.alarm_one_air_lvl;
-	cfg.alarmCfg.alarm_one_air_min_lvl = help_rec.alarm_one_air_min_lvl;
-	cfg.alarmCfg.alarm_two_seismic_lvl = help_rec.alarm_two_seismic_lvl;
-	cfg.alarmCfg.alarm_two_seismic_min_lvl = help_rec.alarm_two_seismic_min_lvl;
-	cfg.alarmCfg.alarm_two_air_lvl = help_rec.alarm_two_air_lvl;
-	cfg.alarmCfg.alarm_two_air_min_lvl = help_rec.alarm_two_air_min_lvl;
-	cfg.alarmCfg.alarm_one_time = (uint32)(help_rec.alarm_one_time * (float)100.0);
-	cfg.alarmCfg.alarm_two_time = (uint32)(help_rec.alarm_two_time * (float)100.0);
+	cfg.alarmCfg.alarm_one_mode = g_helpRecord.alarm_one_mode;
+	cfg.alarmCfg.alarm_two_mode = g_helpRecord.alarm_two_mode;
+	cfg.alarmCfg.alarm_one_seismic_lvl = g_helpRecord.alarm_one_seismic_lvl;
+	cfg.alarmCfg.alarm_one_seismic_min_lvl = g_helpRecord.alarm_one_seismic_min_lvl;
+	cfg.alarmCfg.alarm_one_air_lvl = g_helpRecord.alarm_one_air_lvl;
+	cfg.alarmCfg.alarm_one_air_min_lvl = g_helpRecord.alarm_one_air_min_lvl;
+	cfg.alarmCfg.alarm_two_seismic_lvl = g_helpRecord.alarm_two_seismic_lvl;
+	cfg.alarmCfg.alarm_two_seismic_min_lvl = g_helpRecord.alarm_two_seismic_min_lvl;
+	cfg.alarmCfg.alarm_two_air_lvl = g_helpRecord.alarm_two_air_lvl;
+	cfg.alarmCfg.alarm_two_air_min_lvl = g_helpRecord.alarm_two_air_min_lvl;
+	cfg.alarmCfg.alarm_one_time = (uint32)(g_helpRecord.alarm_one_time * (float)100.0);
+	cfg.alarmCfg.alarm_two_time = (uint32)(g_helpRecord.alarm_two_time * (float)100.0);
 
-	cfg.timerCfg.timer_mode = help_rec.timer_mode;
-	cfg.timerCfg.timer_mode_freq = help_rec.timer_mode_freq;
-	cfg.timerCfg.timer_mode_active_minutes = help_rec.timer_mode_active_minutes;
+	cfg.timerCfg.timer_mode = g_helpRecord.timer_mode;
+	cfg.timerCfg.timer_mode_freq = g_helpRecord.timer_mode_freq;
+	cfg.timerCfg.timer_mode_active_minutes = g_helpRecord.timer_mode_active_minutes;
 
-	if (DISABLED == help_rec.timer_mode) 
+	if (DISABLED == g_helpRecord.timer_mode) 
 	{
 		cfg.timerCfg.timer_stop = cfg.timerCfg.timer_start = getCurrentTime();
 	}
 	else
 	{
-		cfg.timerCfg.timer_start.hour = help_rec.tm_start_time.hour;
-		cfg.timerCfg.timer_start.min = help_rec.tm_start_time.min;
-		cfg.timerCfg.timer_start.sec = help_rec.tm_start_time.sec;
-		cfg.timerCfg.timer_start.day = help_rec.tm_start_date.day;
-		cfg.timerCfg.timer_start.month = help_rec.tm_start_date.month;
-		cfg.timerCfg.timer_start.year = help_rec.tm_start_date.year;
+		cfg.timerCfg.timer_start.hour = g_helpRecord.tm_start_time.hour;
+		cfg.timerCfg.timer_start.min = g_helpRecord.tm_start_time.min;
+		cfg.timerCfg.timer_start.sec = g_helpRecord.tm_start_time.sec;
+		cfg.timerCfg.timer_start.day = g_helpRecord.tm_start_date.day;
+		cfg.timerCfg.timer_start.month = g_helpRecord.tm_start_date.month;
+		cfg.timerCfg.timer_start.year = g_helpRecord.tm_start_date.year;
 
-		cfg.timerCfg.timer_stop.hour = help_rec.tm_stop_time.hour;
-		cfg.timerCfg.timer_stop.min = help_rec.tm_stop_time.min;
-		cfg.timerCfg.timer_stop.sec = help_rec.tm_stop_time.sec;
-		cfg.timerCfg.timer_stop.day = help_rec.tm_stop_date.day;
-		cfg.timerCfg.timer_stop.month = help_rec.tm_stop_date.month;
-		cfg.timerCfg.timer_stop.year = help_rec.tm_stop_date.year;
+		cfg.timerCfg.timer_stop.hour = g_helpRecord.tm_stop_time.hour;
+		cfg.timerCfg.timer_stop.min = g_helpRecord.tm_stop_time.min;
+		cfg.timerCfg.timer_stop.sec = g_helpRecord.tm_stop_time.sec;
+		cfg.timerCfg.timer_stop.day = g_helpRecord.tm_stop_date.day;
+		cfg.timerCfg.timer_stop.month = g_helpRecord.tm_stop_date.month;
+		cfg.timerCfg.timer_stop.year = g_helpRecord.tm_stop_date.year;
 	}
 	
 	// Add in the flash wrapping option
-	cfg.flashWrapping = help_rec.flash_wrapping;
+	cfg.flashWrapping = g_helpRecord.flash_wrapping;
 
 	// Spare fields, just use as a data marker
 	cfg.unused[0] = 0x0A;
@@ -194,19 +192,19 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	// Calculate the CRC on the header
-	g_xmitCRC = CalcCCITT32((uint8*)&dcmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
+	g_transmitCRC = CalcCCITT32((uint8*)&dcmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
 
 	// Send Simple header
-	modem_puts((uint8*)dcmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, g_BinaryXferFlag);
+	modem_puts((uint8*)dcmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, g_binaryXferFlag);
 
 	// Calculate the CRC on the data
-	g_xmitCRC = CalcCCITT32((uint8*)&cfg, sizeof(SYSTEM_CFG), g_xmitCRC);		
+	g_transmitCRC = CalcCCITT32((uint8*)&cfg, sizeof(SYSTEM_CFG), g_transmitCRC);		
 
 	// Send the configuration data
-	modem_puts((uint8*)&cfg, sizeof(SYSTEM_CFG), g_BinaryXferFlag);
+	modem_puts((uint8*)&cfg, sizeof(SYSTEM_CFG), g_binaryXferFlag);
 
 	// Ending Footer
-	modem_puts((uint8*)&g_xmitCRC, 4, NO_CONVERSION);
+	modem_puts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
@@ -288,7 +286,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 				// Calculate the CRC on the header
-				g_xmitCRC = CalcCCITT32((uint8*)&ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
+				g_transmitCRC = CalcCCITT32((uint8*)&ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
 
 				// Send Simple header
 				modem_puts((uint8*)ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
@@ -309,7 +307,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case WAVEFORM_MODE: 
 			case BARGRAPH_MODE:
 			case COMBO_MODE:
-				trig_rec.op_mode = cfg.mode;
+				g_triggerRecord.op_mode = cfg.mode;
 				break;
 
 			case MANUAL_CAL_MODE:
@@ -344,7 +342,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			else
 			{
 				setRtcDate(&(cfg.currentTime));
-				help_rec.timer_mode = DISABLED;
+				g_helpRecord.timer_mode = DISABLED;
 				// Enable the Power Off key
 				powerControl(POWER_SHUTDOWN_ENABLE, ON);
 				
@@ -362,7 +360,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			else
 			{
 				setRtcTime(&(cfg.currentTime));
-				help_rec.timer_mode = DISABLED;
+				g_helpRecord.timer_mode = DISABLED;
 				
 				// Enable the Power Off key
 				powerControl(POWER_SHUTDOWN_ENABLE, ON);
@@ -382,7 +380,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 		else
 		{
-			trig_rec.trec.dist_to_source = (float)((float)cfg.eventCfg.distToSource / (float)100.0);
+			g_triggerRecord.trec.dist_to_source = (float)((float)cfg.eventCfg.distToSource / (float)100.0);
 		}
 
 		// Weight per delay check, cfg is in uint32 format not float.
@@ -392,20 +390,20 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 		else
 		{
-			trig_rec.trec.weight_per_delay = (float)((float)cfg.eventCfg.weightPerDelay / (float)100.0);
+			g_triggerRecord.trec.weight_per_delay = (float)((float)cfg.eventCfg.weightPerDelay / (float)100.0);
 		}
 
 		// Sample Rate check
 		if ((512 == cfg.eventCfg.sampleRate) || (1024 == cfg.eventCfg.sampleRate) || (2048 == cfg.eventCfg.sampleRate) ||
 			(4096 == cfg.eventCfg.sampleRate) || (8192 == cfg.eventCfg.sampleRate))
 		{
-			if ((BARGRAPH_MODE == trig_rec.op_mode) && (1024 != cfg.eventCfg.sampleRate))
+			if ((BARGRAPH_MODE == g_triggerRecord.op_mode) && (1024 != cfg.eventCfg.sampleRate))
 			{
 				returnCode = CFG_ERR_SAMPLE_RATE;
 			}
 			else
 			{
-				trig_rec.trec.sample_rate = (uint32)cfg.eventCfg.sampleRate;
+				g_triggerRecord.trec.sample_rate = (uint32)cfg.eventCfg.sampleRate;
 			}
 		}
 		else
@@ -419,9 +417,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			((cfg.eventCfg.seismicTriggerLevel >= SEISMIC_TRIGGER_MIN_VALUE) &&
 			  (cfg.eventCfg.seismicTriggerLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
 		{
-			trig_rec.trec.seismicTriggerLevel = cfg.eventCfg.seismicTriggerLevel;
-			help_rec.alarm_one_seismic_min_lvl = trig_rec.trec.seismicTriggerLevel;
-			help_rec.alarm_two_seismic_min_lvl = trig_rec.trec.seismicTriggerLevel;
+			g_triggerRecord.trec.seismicTriggerLevel = cfg.eventCfg.seismicTriggerLevel;
+			g_helpRecord.alarm_one_seismic_min_lvl = g_triggerRecord.trec.seismicTriggerLevel;
+			g_helpRecord.alarm_two_seismic_min_lvl = g_triggerRecord.trec.seismicTriggerLevel;
 		}
 		else
 		{
@@ -434,9 +432,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_VALUE) &&
 			(cfg.eventCfg.airTriggerLevel <= AIR_TRIGGER_MAX_VALUE)))
 		{
-			trig_rec.trec.soundTriggerLevel = cfg.eventCfg.airTriggerLevel;
-			help_rec.alarm_one_air_min_lvl = trig_rec.trec.soundTriggerLevel;
-			help_rec.alarm_two_air_min_lvl = trig_rec.trec.soundTriggerLevel;
+			g_triggerRecord.trec.soundTriggerLevel = cfg.eventCfg.airTriggerLevel;
+			g_helpRecord.alarm_one_air_min_lvl = g_triggerRecord.trec.soundTriggerLevel;
+			g_helpRecord.alarm_two_air_min_lvl = g_triggerRecord.trec.soundTriggerLevel;
 		}
 		else
 		{
@@ -448,14 +446,14 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		// divided by (sample rate * number of channels).
 		// Number of channels is hardcoded to 4 = NUMBER_OF_CHANNELS_DEFAULT 
 		maxRecordTime = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS - 
-			((trig_rec.trec.sample_rate / 4) * NUMBER_OF_CHANNELS_DEFAULT) - 
-				((trig_rec.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * NUMBER_OF_CHANNELS_DEFAULT)) / 
-					(trig_rec.trec.sample_rate * NUMBER_OF_CHANNELS_DEFAULT))));
+			((g_triggerRecord.trec.sample_rate / 4) * NUMBER_OF_CHANNELS_DEFAULT) - 
+				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * NUMBER_OF_CHANNELS_DEFAULT)) / 
+					(g_triggerRecord.trec.sample_rate * NUMBER_OF_CHANNELS_DEFAULT))));
 
 		if ((cfg.eventCfg.recordTime >= 1) &&
 			(cfg.eventCfg.recordTime <= maxRecordTime))
 		{
-			trig_rec.trec.record_time = cfg.eventCfg.recordTime;
+			g_triggerRecord.trec.record_time = cfg.eventCfg.recordTime;
 		}
 		else
 		{
@@ -477,7 +475,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case FOURTY_SEC_PRD:
 			case FIFTY_SEC_PRD:
 			case SIXTY_SEC_PRD:
-				trig_rec.bgrec.barInterval = (uint32)cfg.eventCfg.barInterval;
+				g_triggerRecord.bgrec.barInterval = (uint32)cfg.eventCfg.barInterval;
 				break;
 
 			default:
@@ -496,7 +494,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case FOUR_HOUR_INTVL:
 			case EIGHT_HOUR_INTVL:
 			case TWELVE_HOUR_INTVL:
-				trig_rec.bgrec.summaryInterval = (uint32)cfg.eventCfg.summaryInterval;
+				g_triggerRecord.bgrec.summaryInterval = (uint32)cfg.eventCfg.summaryInterval;
 				break;
 
 			default:
@@ -505,20 +503,20 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// No check, just do not copy over the end of the string length.
-		byteCpy((uint8*)trig_rec.trec.client, cfg.eventCfg.companyName, COMPANY_NAME_STRING_SIZE - 2);
-		byteCpy((uint8*)trig_rec.trec.oper, cfg.eventCfg.seismicOperator, SEISMIC_OPERATOR_STRING_SIZE - 2);
-		byteCpy((uint8*)trig_rec.trec.loc, cfg.eventCfg.sessionLocation, SESSION_LOCATION_STRING_SIZE - 2);
-		byteCpy((uint8*)trig_rec.trec.comments, cfg.eventCfg.sessionComments, SESSION_COMMENTS_STRING_SIZE - 2);
+		byteCpy((uint8*)g_triggerRecord.trec.client, cfg.eventCfg.companyName, COMPANY_NAME_STRING_SIZE - 2);
+		byteCpy((uint8*)g_triggerRecord.trec.oper, cfg.eventCfg.seismicOperator, SEISMIC_OPERATOR_STRING_SIZE - 2);
+		byteCpy((uint8*)g_triggerRecord.trec.loc, cfg.eventCfg.sessionLocation, SESSION_LOCATION_STRING_SIZE - 2);
+		byteCpy((uint8*)g_triggerRecord.trec.comments, cfg.eventCfg.sessionComments, SESSION_COMMENTS_STRING_SIZE - 2);
 
 		for (buffDex = 0; buffDex < 8; buffDex++)
 		{
 			// No check for the flag.
-			msgs430.startMsg430.channel[buffDex].options = cfg.eventCfg.channel[buffDex].options;
+			g_msgs430.startMsg430.channel[buffDex].options = cfg.eventCfg.channel[buffDex].options;
 		}
 
 		if ((LOW == cfg.eventCfg.preBuffNumOfSamples) || (HIGH == cfg.eventCfg.preBuffNumOfSamples))
 		{
-			trig_rec.srec.sensitivity = cfg.eventCfg.preBuffNumOfSamples;		// Sesitivity
+			g_triggerRecord.srec.sensitivity = cfg.eventCfg.preBuffNumOfSamples;		// Sesitivity
 		}
 		else
 		{
@@ -528,7 +526,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		if ((1 == cfg.eventCfg.calDataNumOfSamples) || (2 == cfg.eventCfg.calDataNumOfSamples) ||
 			(4 == cfg.eventCfg.calDataNumOfSamples) || (8 == cfg.eventCfg.calDataNumOfSamples))
 		{
-			trig_rec.berec.barScale = (uint8)cfg.eventCfg.calDataNumOfSamples;
+			g_triggerRecord.berec.barScale = (uint8)cfg.eventCfg.calDataNumOfSamples;
 		}
 		else
 		{
@@ -537,7 +535,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 		if (cfg.eventCfg.activeChannels <= BAR_AIR_CHANNEL) // Implied (cfg.eventCfg.activeChannels >= 0)
 		{
-			trig_rec.berec.barChannel = cfg.eventCfg.activeChannels;
+			g_triggerRecord.berec.barChannel = cfg.eventCfg.activeChannels;
 		}
 		else
 		{
@@ -551,7 +549,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case AUTO_THREE_MIN_TIMEOUT:
 			case AUTO_FOUR_MIN_TIMEOUT:
 			case AUTO_NO_TIMEOUT:
-				help_rec.auto_monitor_mode = cfg.autoCfg.auto_monitor_mode;
+				g_helpRecord.auto_monitor_mode = cfg.autoCfg.auto_monitor_mode;
 				break;
 				
 			default:
@@ -566,7 +564,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case AUTO_48_HOUR_TIMEOUT:
 			case AUTO_72_HOUR_TIMEOUT:
 			case AUTO_NO_CAL_TIMEOUT:
-				help_rec.auto_cal_mode = cfg.autoCfg.auto_cal_mode;
+				g_helpRecord.auto_cal_mode = cfg.autoCfg.auto_cal_mode;
 				break;
 				
 			default:
@@ -579,7 +577,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			if (SUPERGRAPH_UNIT)
 			{
-				help_rec.auto_print = cfg.printerCfg.auto_print;
+				g_helpRecord.auto_print = cfg.printerCfg.auto_print;
 			}
 		}
 		else
@@ -594,8 +592,8 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case FRENCH_LANG:
 			case ITALIAN_LANG:
 			case GERMAN_LANG:
-				help_rec.lang_mode = cfg.printerCfg.lang_mode;
-				buildLanguageLinkTable(help_rec.lang_mode);
+				g_helpRecord.lang_mode = cfg.printerCfg.lang_mode;
+				buildLanguageLinkTable(g_helpRecord.lang_mode);
 				break;
 					
 			default:
@@ -606,7 +604,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		// Vector Sum check
 		if ((YES == cfg.printerCfg.vector_sum) || (NO == cfg.printerCfg.vector_sum))
 		{
-			help_rec.vector_sum = cfg.printerCfg.vector_sum;
+			g_helpRecord.vector_sum = cfg.printerCfg.vector_sum;
 		}
 		else
 		{
@@ -617,7 +615,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		if ((IMPERIAL_TYPE == cfg.printerCfg.units_of_measure) || 
 			(METRIC_TYPE == cfg.printerCfg.units_of_measure))
 		{
-			help_rec.units_of_measure = cfg.printerCfg.units_of_measure;
+			g_helpRecord.units_of_measure = cfg.printerCfg.units_of_measure;
 		}
 		else
 		{
@@ -627,7 +625,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		// Frequency plot mode , Yes or No or On or Off
 		if ((YES == cfg.printerCfg.freq_plot_mode) || (NO == cfg.printerCfg.freq_plot_mode))
 		{
-			help_rec.freq_plot_mode = cfg.printerCfg.freq_plot_mode;
+			g_helpRecord.freq_plot_mode = cfg.printerCfg.freq_plot_mode;
 		}
 		else
 		{
@@ -643,7 +641,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case FREQ_PLOT_DIN_4150_STANDARD:
 			case FREQ_PLOT_BRITISH_7385_STANDARD:
 			case FREQ_PLOT_SPANISH_STANDARD:
-				help_rec.freq_plot_type = cfg.printerCfg.freq_plot_type;
+				g_helpRecord.freq_plot_type = cfg.printerCfg.freq_plot_type;
 				break;
 					
 			default:
@@ -653,7 +651,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 		if (ALARM_MODE_OFF == cfg.alarmCfg.alarm_one_mode)
 		{
-			help_rec.alarm_one_mode = ALARM_MODE_OFF;
+			g_helpRecord.alarm_one_mode = ALARM_MODE_OFF;
 		}
 		else
 		{
@@ -665,27 +663,27 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				case ALARM_MODE_SEISMIC:
 				case ALARM_MODE_AIR:
 				case ALARM_MODE_BOTH:
-					help_rec.alarm_one_mode = cfg.alarmCfg.alarm_one_mode;
+					g_helpRecord.alarm_one_mode = cfg.alarmCfg.alarm_one_mode;
 					break;
 						
 				default:
-					help_rec.alarm_one_mode = ALARM_MODE_OFF;
+					g_helpRecord.alarm_one_mode = ALARM_MODE_OFF;
 					returnCode = CFG_ERR_ALARM_ONE_MODE;
 					break;	
 			}
 
-			help_rec.alarm_one_seismic_lvl = NO_TRIGGER_CHAR;
-			help_rec.alarm_one_air_lvl = NO_TRIGGER_CHAR;
+			g_helpRecord.alarm_one_seismic_lvl = NO_TRIGGER_CHAR;
+			g_helpRecord.alarm_one_air_lvl = NO_TRIGGER_CHAR;
 
-			if ((ALARM_MODE_BOTH == help_rec.alarm_one_mode) ||
-				(ALARM_MODE_SEISMIC == help_rec.alarm_one_mode))    
+			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_one_mode) ||
+				(ALARM_MODE_SEISMIC == g_helpRecord.alarm_one_mode))    
 			{
 				// Alarm One Seismic trigger level check.
 				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_one_seismic_lvl) 	||
-					((cfg.alarmCfg.alarm_one_seismic_lvl >= trig_rec.trec.seismicTriggerLevel) &&
+					((cfg.alarmCfg.alarm_one_seismic_lvl >= g_triggerRecord.trec.seismicTriggerLevel) &&
 					  (cfg.alarmCfg.alarm_one_seismic_lvl <= SEISMIC_TRIGGER_MAX_VALUE)))
 				{
-					help_rec.alarm_one_seismic_lvl = cfg.alarmCfg.alarm_one_seismic_lvl;
+					g_helpRecord.alarm_one_seismic_lvl = cfg.alarmCfg.alarm_one_seismic_lvl;
 				}
 				else
 				{					
@@ -693,15 +691,15 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				}
 			}
 
-			if ((ALARM_MODE_BOTH == help_rec.alarm_one_mode) ||
-				(ALARM_MODE_AIR == help_rec.alarm_one_mode))    
+			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_one_mode) ||
+				(ALARM_MODE_AIR == g_helpRecord.alarm_one_mode))    
 			{
 				// Alarm One Air trigger level check.
 				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_one_air_lvl) 	||
-					((cfg.alarmCfg.alarm_one_air_lvl >= trig_rec.trec.soundTriggerLevel) &&
+					((cfg.alarmCfg.alarm_one_air_lvl >= g_triggerRecord.trec.soundTriggerLevel) &&
 					  (cfg.alarmCfg.alarm_one_air_lvl <= AIR_TRIGGER_MAX_VALUE)))
 				{
-					help_rec.alarm_one_air_lvl = cfg.alarmCfg.alarm_one_air_lvl;
+					g_helpRecord.alarm_one_air_lvl = cfg.alarmCfg.alarm_one_air_lvl;
 				}
 				else
 				{
@@ -718,7 +716,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				timeCheckFloat = (float)timeAlarmFloat - (float)timeCheck;
 				if ((timeCheckFloat == (float)0.0) || (timeCheckFloat == (float)0.5))
 				{
-					help_rec.alarm_one_time = (float)timeAlarmFloat;
+					g_helpRecord.alarm_one_time = (float)timeAlarmFloat;
 				}
 				else
 				{
@@ -735,7 +733,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 		if (ALARM_MODE_OFF == cfg.alarmCfg.alarm_two_mode)
 		{
-			help_rec.alarm_two_mode = ALARM_MODE_OFF;
+			g_helpRecord.alarm_two_mode = ALARM_MODE_OFF;
 		}
 		else
 		{
@@ -748,27 +746,27 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				case ALARM_MODE_SEISMIC:
 				case ALARM_MODE_AIR:
 				case ALARM_MODE_BOTH:
-					help_rec.alarm_two_mode = cfg.alarmCfg.alarm_two_mode;
+					g_helpRecord.alarm_two_mode = cfg.alarmCfg.alarm_two_mode;
 					break;
 						
 				default:
-					help_rec.alarm_two_mode = ALARM_MODE_OFF;
+					g_helpRecord.alarm_two_mode = ALARM_MODE_OFF;
 					returnCode = CFG_ERR_ALARM_TWO_MODE;
 					break;	
 			}
 
-			help_rec.alarm_two_seismic_lvl = NO_TRIGGER_CHAR;
-			help_rec.alarm_two_air_lvl = NO_TRIGGER_CHAR;
+			g_helpRecord.alarm_two_seismic_lvl = NO_TRIGGER_CHAR;
+			g_helpRecord.alarm_two_air_lvl = NO_TRIGGER_CHAR;
 
-			if ((ALARM_MODE_BOTH == help_rec.alarm_two_mode) ||
-				(ALARM_MODE_SEISMIC == help_rec.alarm_two_mode))    
+			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_two_mode) ||
+				(ALARM_MODE_SEISMIC == g_helpRecord.alarm_two_mode))    
 			{
 				// Alarm Two Seismic trigger level check.
 				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_two_seismic_lvl) 	||
-					((cfg.alarmCfg.alarm_two_seismic_lvl >= trig_rec.trec.seismicTriggerLevel) &&
+					((cfg.alarmCfg.alarm_two_seismic_lvl >= g_triggerRecord.trec.seismicTriggerLevel) &&
 					  (cfg.alarmCfg.alarm_two_seismic_lvl <= SEISMIC_TRIGGER_MAX_VALUE)))
 				{
-					help_rec.alarm_two_seismic_lvl = cfg.alarmCfg.alarm_two_seismic_lvl;
+					g_helpRecord.alarm_two_seismic_lvl = cfg.alarmCfg.alarm_two_seismic_lvl;
 				}
 				else
 				{
@@ -776,15 +774,15 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				}
 			}
 			
-			if ((ALARM_MODE_BOTH == help_rec.alarm_two_mode) ||
-				(ALARM_MODE_AIR == help_rec.alarm_two_mode))    
+			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_two_mode) ||
+				(ALARM_MODE_AIR == g_helpRecord.alarm_two_mode))    
 			{
 				// Alarm Two Air trigger level check.
 				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_two_air_lvl) 	||
-					((cfg.alarmCfg.alarm_two_air_lvl >= trig_rec.trec.soundTriggerLevel) &&
+					((cfg.alarmCfg.alarm_two_air_lvl >= g_triggerRecord.trec.soundTriggerLevel) &&
 					  (cfg.alarmCfg.alarm_two_air_lvl <= AIR_TRIGGER_MAX_VALUE)))
 				{
-					help_rec.alarm_two_air_lvl = cfg.alarmCfg.alarm_two_air_lvl;
+					g_helpRecord.alarm_two_air_lvl = cfg.alarmCfg.alarm_two_air_lvl;
 				}
 				else
 				{
@@ -801,7 +799,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				timeCheckFloat = (float)timeAlarmFloat - (float)timeCheck;
 				if ((timeCheckFloat == (float)0.0) || (timeCheckFloat == (float)0.5))
 				{
-					help_rec.alarm_two_time = timeAlarmFloat;
+					g_helpRecord.alarm_two_time = timeAlarmFloat;
 				}
 				else
 				{
@@ -814,7 +812,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			}
 		}
 
-		if (!((DISABLED == cfg.timerCfg.timer_mode) && (DISABLED == help_rec.timer_mode)))
+		if (!((DISABLED == cfg.timerCfg.timer_mode) && (DISABLED == g_helpRecord.timer_mode)))
 		{
 			timerModeModified = TRUE;
 			
@@ -858,26 +856,26 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				if ((CFG_ERR_START_TIME != returnCode) && (CFG_ERR_STOP_TIME != returnCode) &&
 					(CFG_ERR_TIMER_MODE_FREQ != returnCode))
 				{
-					help_rec.timer_mode_freq = cfg.timerCfg.timer_mode_freq;
-					help_rec.tm_stop_time.hour = cfg.timerCfg.timer_stop.hour;
-					help_rec.tm_stop_time.min = cfg.timerCfg.timer_stop.min;
-					help_rec.tm_stop_date.day = cfg.timerCfg.timer_stop.day;
-					help_rec.tm_stop_date.month = cfg.timerCfg.timer_stop.month;
-					help_rec.tm_stop_date.year = cfg.timerCfg.timer_stop.year;
+					g_helpRecord.timer_mode_freq = cfg.timerCfg.timer_mode_freq;
+					g_helpRecord.tm_stop_time.hour = cfg.timerCfg.timer_stop.hour;
+					g_helpRecord.tm_stop_time.min = cfg.timerCfg.timer_stop.min;
+					g_helpRecord.tm_stop_date.day = cfg.timerCfg.timer_stop.day;
+					g_helpRecord.tm_stop_date.month = cfg.timerCfg.timer_stop.month;
+					g_helpRecord.tm_stop_date.year = cfg.timerCfg.timer_stop.year;
 
-					help_rec.tm_start_time.hour = cfg.timerCfg.timer_start.hour;
-					help_rec.tm_start_time.min = cfg.timerCfg.timer_start.min;
-					help_rec.tm_start_date.day = cfg.timerCfg.timer_start.day;
-					help_rec.tm_start_date.month = cfg.timerCfg.timer_start.month;
-					help_rec.tm_start_date.year = cfg.timerCfg.timer_start.year;
+					g_helpRecord.tm_start_time.hour = cfg.timerCfg.timer_start.hour;
+					g_helpRecord.tm_start_time.min = cfg.timerCfg.timer_start.min;
+					g_helpRecord.tm_start_date.day = cfg.timerCfg.timer_start.day;
+					g_helpRecord.tm_start_date.month = cfg.timerCfg.timer_start.month;
+					g_helpRecord.tm_start_date.year = cfg.timerCfg.timer_start.year;
 
-					help_rec.timer_mode = cfg.timerCfg.timer_mode;	
+					g_helpRecord.timer_mode = cfg.timerCfg.timer_mode;	
 				}					
 			}
 			else if (DISABLED == cfg.timerCfg.timer_mode)
 			{
 				// Setting it to disabled, no error check needed.
-				help_rec.timer_mode = cfg.timerCfg.timer_mode;
+				g_helpRecord.timer_mode = cfg.timerCfg.timer_mode;
 			}
 			else
 			{	
@@ -891,7 +889,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			if ((cfg.flashWrapping == NO) || (cfg.flashWrapping == YES))
 			{			
-				help_rec.flash_wrapping = cfg.flashWrapping;
+				g_helpRecord.flash_wrapping = cfg.flashWrapping;
 			}
 			else
 			{
@@ -901,15 +899,15 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Check if it has all been verified and now save the data. Data in error is not saved.
-		saveRecData(&trig_rec, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
-		saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		saveRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 	}
 
 	if (TRUE == timerModeModified)
 	{
 		processTimerModeSettings(NO_PROMPT);
 		// If the user wants to enable, but it is now disable send an error.
-		if (DISABLED == help_rec.timer_mode)
+		if (DISABLED == g_helpRecord.timer_mode)
 		{
 			returnCode = CFG_ERR_TIMER_MODE;
 		}
@@ -926,13 +924,13 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	// Calculate the CRC on the header
-	g_xmitCRC = CalcCCITT32((uint8*)&ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
+	g_transmitCRC = CalcCCITT32((uint8*)&ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
 
 	// Send Simple header
 	modem_puts((uint8*)&ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
 
 	// Send Ending Footer
-	modem_puts((uint8*)&g_xmitCRC, 4, NO_CONVERSION);
+	modem_puts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	return;
@@ -952,7 +950,7 @@ void handleDMM(CMD_BUFFER_STRUCT* inCmd)
 
 	byteSet(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
 
-	byteCpy((uint8*)&modemCfg, &modem_setup_rec, sizeof(MODEM_SETUP_STRUCT));
+	byteCpy((uint8*)&modemCfg, &g_modemSetupRecord, sizeof(MODEM_SETUP_STRUCT));
 
 	sprintf((char*)msgTypeStr, "%02d", MSGTYPE_RESPONSE);
 	buildOutgoingSimpleHeaderBuffer((uint8*)dmmHdr, (uint8*)"DMMx", (uint8*)msgTypeStr, 
@@ -962,19 +960,19 @@ void handleDMM(CMD_BUFFER_STRUCT* inCmd)
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	// Calculate the CRC on the header
-	g_xmitCRC = CalcCCITT32((uint8*)&dmmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
+	g_transmitCRC = CalcCCITT32((uint8*)&dmmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
 
 	// Send Simple header
-	modem_puts((uint8*)dmmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, g_BinaryXferFlag);
+	modem_puts((uint8*)dmmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, g_binaryXferFlag);
 
 	// Calculate the CRC on the data
-	g_xmitCRC = CalcCCITT32((uint8*)&modemCfg, sizeof(MODEM_SETUP_STRUCT), g_xmitCRC);		
+	g_transmitCRC = CalcCCITT32((uint8*)&modemCfg, sizeof(MODEM_SETUP_STRUCT), g_transmitCRC);		
 
 	// Send the configuration data
-	modem_puts((uint8*)&modemCfg, sizeof(MODEM_SETUP_STRUCT), g_BinaryXferFlag);
+	modem_puts((uint8*)&modemCfg, sizeof(MODEM_SETUP_STRUCT), g_binaryXferFlag);
 
 	// Ending Footer
-	modem_puts((uint8*)&g_xmitCRC, 4, NO_CONVERSION);
+	modem_puts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
@@ -1053,9 +1051,9 @@ void handleUMM(CMD_BUFFER_STRUCT* inCmd)
 		
 		if (returnCode == CFG_ERR_NONE)
 		{
-			modem_setup_rec = modemCfg;
+			g_modemSetupRecord = modemCfg;
 
-			saveRecData(&modem_setup_rec, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
+			saveRecData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
 		}
 	}
 
@@ -1069,13 +1067,13 @@ void handleUMM(CMD_BUFFER_STRUCT* inCmd)
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	// Calculate the CRC on the header
-	g_xmitCRC = CalcCCITT32((uint8*)&ummHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
+	g_transmitCRC = CalcCCITT32((uint8*)&ummHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
 
 	// Send Simple header
 	modem_puts((uint8*)ummHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
 
 	// Send Ending Footer
-	modem_puts((uint8*)&g_xmitCRC, 4, NO_CONVERSION);
+	modem_puts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
 	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 

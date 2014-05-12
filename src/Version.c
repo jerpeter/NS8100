@@ -21,8 +21,8 @@ $Revision: 1.2 $
 // =====================================================
 // These global strings are automatically updated by CVS
 // ** DO NOT MODIFY **
-const char applicationVersion[] = "$Revision: 1.2 $";
-const char applicationDate[] = "$Date: 2012/04/26 01:10:04 $";
+const char applicationVersion[] = "$Revision: 0.9 $";
+const char applicationDate[] = "$Date: 2012/08/08 01:10:04 $";
 // =====================================================
 
 /*======================================================

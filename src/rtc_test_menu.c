@@ -34,7 +34,6 @@
 #include "usart.h"
 #include "gpio.h"
 #include "spi.h"
-#include "utils.h"
 #include "RealTimeClock.h"
 #include "twi.h"
 #include "m23018.h"
@@ -359,7 +358,7 @@ void RTC_Read_Time(void)
 
 void RTC_Set_Time(void)
 {
-   unsigned char input_buffer[10];
+   unsigned char g_input_buffer[10];
    unsigned short data[10];
    int reply;
    int read_hours, hours;
@@ -381,17 +380,17 @@ void RTC_Set_Time(void)
 	print_dbg_char(0x30 + ((data[2] >> 4) & 0x01));
 	print_dbg_char(0x30 + (data[2] & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     hours = (input_buffer[0] - 0x30);
+   	     hours = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     hours = ((input_buffer[0] - 0x30) << 4);
-   	     hours += (input_buffer[1] - 0x30);
+   	     hours = ((g_input_buffer[0] - 0x30) << 4);
+   	     hours += (g_input_buffer[1] - 0x30);
    	  }
    }
    else
@@ -403,17 +402,17 @@ void RTC_Set_Time(void)
 	print_dbg_char(0x30 + ((data[1] >> 4) & 0x07));
 	print_dbg_char(0x30 + (data[1] & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     minutes = (input_buffer[0] - 0x30);
+   	     minutes = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     minutes = ((input_buffer[0] - 0x30) << 4);
-   	     minutes += (input_buffer[1] - 0x30);
+   	     minutes = ((g_input_buffer[0] - 0x30) << 4);
+   	     minutes += (g_input_buffer[1] - 0x30);
    	  }
    }
    else
@@ -425,17 +424,17 @@ void RTC_Set_Time(void)
 	print_dbg_char(0x30 + ((data[0] >> 4) & 0x07));
 	print_dbg_char(0x30 + (data[0] & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     seconds = (input_buffer[0] - 0x30);
+   	     seconds = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     seconds = ((input_buffer[0] - 0x30) << 4);
-   	     seconds += (input_buffer[1] - 0x30);
+   	     seconds = ((g_input_buffer[0] - 0x30) << 4);
+   	     seconds += (g_input_buffer[1] - 0x30);
    	  }
    }
    else
@@ -483,7 +482,7 @@ void RTC_Read_Date(void)
 
 void RTC_Set_Date(void)
 {
-   unsigned char input_buffer[10];
+   unsigned char g_input_buffer[10];
    unsigned short data[10];
    int reply;
    int read_day, day;
@@ -505,17 +504,17 @@ void RTC_Set_Date(void)
 	print_dbg_char(0x30 + ((data[2] >> 4) & 0x01));
 	print_dbg_char(0x30 + (data[2] & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     month = (input_buffer[0] - 0x30);
+   	     month = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     month = ((input_buffer[0] - 0x30) << 4);
-   	     month += (input_buffer[1] - 0x30);
+   	     month = ((g_input_buffer[0] - 0x30) << 4);
+   	     month += (g_input_buffer[1] - 0x30);
    	  }
    }
    else
@@ -527,17 +526,17 @@ void RTC_Set_Date(void)
 	print_dbg_char(0x30 + ((data[0] >> 4) & 0x03));
 	print_dbg_char(0x30 + (data[0] & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     day = (input_buffer[0] - 0x30);
+   	     day = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     day = ((input_buffer[0] - 0x30) << 4);
-   	     day += (input_buffer[1] - 0x30);
+   	     day = ((g_input_buffer[0] - 0x30) << 4);
+   	     day += (g_input_buffer[1] - 0x30);
    	  }
    }
    else
@@ -549,17 +548,17 @@ void RTC_Set_Date(void)
 	print_dbg_char(0x30 + ((data[3] >> 4) & 0x0F));
 	print_dbg_char(0x30 + (data[3] & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     year = (input_buffer[0] - 0x30);
+   	     year = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     year = ((input_buffer[0] - 0x30) << 4);
-   	     year += (input_buffer[1] - 0x30);
+   	     year = ((g_input_buffer[0] - 0x30) << 4);
+   	     year += (g_input_buffer[1] - 0x30);
    	  }
    }
    else
@@ -601,7 +600,7 @@ void RTC_Read_Alarm_Time(void)
 }
 void RTC_Set_Alarm_Time(void)
 {
-   unsigned char input_buffer[10];
+   unsigned char g_input_buffer[10];
    unsigned short data[10];
    int reply;
    int read_hours, hours;
@@ -620,17 +619,17 @@ void RTC_Set_Alarm_Time(void)
    print_dbg_char(0x30 +((read_hours >> 4)& 0xF));
    print_dbg_char(0x30 + (read_hours & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     hours = (input_buffer[0] - 0x30);
+   	     hours = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     hours = ((input_buffer[0] - 0x30) << 4);
-   	     hours += (input_buffer[1] - 0x30);
+   	     hours = ((g_input_buffer[0] - 0x30) << 4);
+   	     hours += (g_input_buffer[1] - 0x30);
    	  }
    }
    else
@@ -642,17 +641,17 @@ void RTC_Set_Alarm_Time(void)
    print_dbg_char(0x30 +((read_minutes >> 4)& 0xF));
    print_dbg_char(0x30 + (read_minutes & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     minutes = (input_buffer[0] - 0x30);
+   	     minutes = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     minutes = ((input_buffer[0] - 0x30) << 4);
-   	     minutes += (input_buffer[1] - 0x30);
+   	     minutes = ((g_input_buffer[0] - 0x30) << 4);
+   	     minutes += (g_input_buffer[1] - 0x30);
    	  }
    }
    else
@@ -664,17 +663,17 @@ void RTC_Set_Alarm_Time(void)
    print_dbg_char(0x30 +((read_seconds >> 4)& 0xF));
    print_dbg_char(0x30 + (read_seconds & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     seconds = (input_buffer[0] - 0x30);
+   	     seconds = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     seconds = ((input_buffer[0] - 0x30) << 4);
-   	     seconds += (input_buffer[1] - 0x30);
+   	     seconds = ((g_input_buffer[0] - 0x30) << 4);
+   	     seconds += (g_input_buffer[1] - 0x30);
    	  }
    }
    else
@@ -716,7 +715,7 @@ void RTC_Read_Alarm_Date(void)
 }
 void RTC_Set_Alarm_Date(void)
 {
-   unsigned char input_buffer[10];
+   unsigned char g_input_buffer[10];
    unsigned short data[10];
    int reply;
    int read_date, date;
@@ -732,17 +731,17 @@ void RTC_Set_Alarm_Date(void)
    print_dbg_char(0x30 +((read_month >> 4)& 0xF));
    print_dbg_char(0x30 + (read_month & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     month = (input_buffer[0] - 0x30);
+   	     month = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     month = ((input_buffer[0] - 0x30) << 4);
-   	     month += (input_buffer[1] - 0x30);
+   	     month = ((g_input_buffer[0] - 0x30) << 4);
+   	     month += (g_input_buffer[1] - 0x30);
    	  }
    }
    else
@@ -754,17 +753,17 @@ void RTC_Set_Alarm_Date(void)
    print_dbg_char(0x30 +((read_date >> 4)& 0xF));
    print_dbg_char(0x30 + (read_date & 0x0F));
    print_dbg("): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
    	  if(reply == 1)
       {
-   	     date = (input_buffer[0] - 0x30);
+   	     date = (g_input_buffer[0] - 0x30);
    	  }
    	  if(reply == 2)
       {
-   	     date = ((input_buffer[0] - 0x30) << 4);
-   	     date += (input_buffer[1] - 0x30);
+   	     date = ((g_input_buffer[0] - 0x30) << 4);
+   	     date += (g_input_buffer[1] - 0x30);
    	  }
    }
    else

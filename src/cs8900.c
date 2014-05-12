@@ -18,7 +18,7 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 #include "cs8900.h"
-#include "vartype.h"
+#include "Typedefs.h"
 #include "board.h"
 #include "cycle_counter.h"
 #include "intc.h"

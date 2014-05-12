@@ -15,7 +15,7 @@
 ///----------------------------------------------------------------------------
 #include "Keypad.h"
 #include "Menu.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Common.h"
 #include "Typedefs.h"
 #include "Old_Board.h"
@@ -38,61 +38,13 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern uint8 contrast_value;
-extern uint8 g_sampleProcessing;
-extern REC_HELP_MN_STRUCT help_rec;
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern int active_menu;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern uint8 g_disableDebugPrinting;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-#if SUPERGRAPH_UNIT // keypad key layout
-uint8 keyTbl[8][8] = {
-/*R0*/ {KEY_NONE, 	KEY_NONE,  	KEY_NONE, 	KEY_NONE,      	KEY_NONE,    	KEY_NONE,   KEY_NONE, 		KEY_NONE},
-/*R1*/ {KEY_ENTER,	KEY_PLUS, 	KEY_MINUS, 	KEY_DOWNARROW, 	KEY_UPARROW, 	KEY_ESCAPE, KEY_HELP, 		KEY_BACKLIGHT},
-/*R2*/ {'8',		'7', 		'6', 		'5', 			'4', 			'3', 		'2', 			'1'},
-/*R3*/ {'0',		'9', 		'Y', 		'T', 			'R',			'E', 		'W', 			'Q'},
-/*R4*/ {'P', 		'O', 		'I', 		'U', 			'F', 			'D', 		'S', 			'A'},
-/*R5*/ {KEY_RETURN,	'L', 		'K', 		'J', 			'H', 			'G', 		'Z', 			KEY_SHIFT},
-/*R6*/ {KEY_DELETE,	'.', 		'M', 		'N', 			'B', 			'V', 		'C',			'X'},
-/*R7*/ {' ', 		KEY_NONE, 	KEY_NONE, 	KEY_NONE, 		KEY_NONE, 		KEY_NONE, 	KEY_PAPERFEED, 	KEY_CTRL}
-};
-#else // MINI keypad key layout
-uint8 keyTbl[8][8] = {
-//{KEY_BACKLIGHT, KEY_HELP, KEY_ESCAPE, KEY_UPARROW, KEY_DOWNARROW, KEY_MINUS, KEY_PLUS, KEY_ENTER}
-{KEY_BACKLIGHT, KEY_HELP, KEY_ESCAPE, KEY_UPARROW, KEY_DOWNARROW, KEY_MINUS, KEY_PLUS, KEY_ENTER}
-};
-#endif
-
-#if 0
-uint8 keyTbl[8][8] = {
-/*R0*/ {KEY_NONE,		KEY_NONE,	 KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE},
-/*R1*/ {KEY_BACKLIGHT,	KEY_HELP, 	 KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE},
-/*R2*/ {KEY_ESCAPE, 	KEY_UPARROW, KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE},
-/*R3*/ {KEY_DOWNARROW,	KEY_MINUS, 	 KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE, 	KEY_NONE},
-/*R4*/ {KEY_PLUS,		KEY_ENTER,	 KEY_NONE, 	KEY_NONE, 	KEY_NONE,	KEY_NONE, 	KEY_NONE, 	KEY_NONE},
-/*R5*/ {KEY_NONE,		KEY_NONE,	 KEY_NONE, 	KEY_NONE, 	KEY_NONE,	KEY_NONE, 	KEY_NONE, 	KEY_NONE},
-/*R6*/ {KEY_NONE,		KEY_NONE,	 KEY_NONE, 	KEY_NONE, 	KEY_NONE,	KEY_NONE, 	KEY_NONE, 	KEY_NONE},
-/*R7*/ {KEY_NONE,		KEY_NONE,	 KEY_NONE, 	KEY_NONE, 	KEY_NONE,	KEY_NONE, 	KEY_NONE, 	KEY_NONE}
-};
-#endif
-
-uint32 num_speed = 1;
-uint32 specialKey;
-uint32 fixed_special_speed;
-uint8 g_lcdBacklightFlag  = ENABLED;
-uint8 g_lcdPowerFlag = ENABLED;
-uint8 g_kpadProcessingFlag = DEACTIVATED;
-uint8 g_kpadCheckForKeyFlag = DEACTIVATED;
-uint8 g_factorySetupSequence = SEQ_NOT_STARTED;
-uint8 g_kpadLastKeyPressed = 0;
-volatile uint32 g_keypadTimerTicks = 0;
-uint32 g_kpadKeyRepeatCount = 0;
-uint32 g_kpadLookForKeyTickCount = 0;
-uint8 keyMap[8];
+static uint32 s_fixedSpecialSpeed;
+static uint8 s_keyMap[8];
 
 /****************************************
 *	Function:	isr_keypad
@@ -128,59 +80,64 @@ BOOLEAN keypad(void)
 		soft_usecWait(3 * SOFT_MSECS);
 	}
 
+#if 0 // ns7100
 	// Start the PIT timer
 	if (checkPitTimer(KEYPAD_TIMER) == DISABLED)
 		startPitTimer(KEYPAD_TIMER);
+#else // ns8100
+	// fix_ns8100
+#endif
 
 	// Read the keys
-	//keyMap[0] = (uint8)(~(*keypadAddress));
+#if 0 // ns7100
+	s_keyMap[0] = (uint8)(~(*keypadAddress));
+#else // ns8100
+	s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+#endif
 
-	// fix_ns8100
-	keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-
-	debug("Key Pressed: %x\n", keyMap[0]);
+	debug("Key Pressed: %x\n", s_keyMap[0]);
 
 	// Re-read keys and mask in to catch signal bouncing
-	//keyMap[0] &= *keypadAddress;
+	//s_keyMap[0] &= *keypadAddress;
 
 	if (SUPERGRAPH_UNIT)
 	{
 		// Check for ctrl key, row 7 column 7 (zero based)
-		if (keyMap[7] & 0x80)
+		if (s_keyMap[7] & 0x80)
 		{
 			ctrlKeyPressed = YES;
 			numKeysPressed++;
 
 			// Clear the ctrl key from the map
-			keyMap[7] &= ~0x80;
+			s_keyMap[7] &= ~0x80;
 		}
 
 		// Check for shift key, row 5 column 7 (zero based)
-		if (keyMap[5] & 0x80)
+		if (s_keyMap[5] & 0x80)
 		{
 			shiftKeyPressed = YES;
 			numKeysPressed++;
 
 			// Clear the shift key from the map
-			keyMap[5] &= ~0x80;
+			s_keyMap[5] &= ~0x80;
 		}
 	}
 
 	// Find keys by locating the 1's in the map
 	for (rowMask = 0x01, i = 0; i < TOTAL_KEYPAD_KEYS; i++)
 	{
-		if (keyMap[0] & rowMask)
+		if (s_keyMap[0] & rowMask)
 		{
-			//debug("Key Found: Row:%d, value is 0x%x\n", i, keyTbl[0][i]);
+			//debug("Key Found: Row:%d, value is 0x%x\n", i, g_keypadTable[0][i]);
 
-			keyPressed = keyTbl[0][i];
+			keyPressed = g_keypadTable[0][i];
 			numKeysPressed++;
 		}
 
 		rowMask <<= 1;
 	}
 
-	keyMap[0] = 0x00;
+	s_keyMap[0] = 0x00;
 
 	// Check if we found any keys
 	if (numKeysPressed == 0)
@@ -189,8 +146,12 @@ BOOLEAN keypad(void)
 		g_kpadCheckForKeyFlag = DEACTIVATED;
 		g_kpadProcessingFlag = DEACTIVATED;
 
-		// Done looking fort keys, disable the PIT timer
+#if 0 // ns7100
+		// Done looking for keys, disable the PIT timer
 		stopPitTimer(KEYPAD_TIMER);
+#else // ns8100
+		// fix_ns8100
+#endif
 
 		return(PASSED);
 	}
@@ -248,17 +209,17 @@ BOOLEAN keypad(void)
 		g_kpadLookForKeyTickCount = REPEAT_DELAY + g_keypadTimerTicks;
 
 		// The following determines the scrolling adjustment magnitude
-		// which is determined by multiplying adjustment by num_speed.
+		// which is determined by multiplying adjustment by g_keypadNumberSpeed.
 		g_kpadKeyRepeatCount++;
 
-		if (g_kpadKeyRepeatCount < 10)      { num_speed = 1; }
-		else if (g_kpadKeyRepeatCount < 20) { num_speed = 10; }
-		else if (g_kpadKeyRepeatCount < 30) { num_speed = 50; }
-		else if (g_kpadKeyRepeatCount < 40) { num_speed = 100; }
-		else if (g_kpadKeyRepeatCount < 50) { num_speed = 1000; }
+		if (g_kpadKeyRepeatCount < 10)      { g_keypadNumberSpeed = 1; }
+		else if (g_kpadKeyRepeatCount < 20) { g_keypadNumberSpeed = 10; }
+		else if (g_kpadKeyRepeatCount < 30) { g_keypadNumberSpeed = 50; }
+		else if (g_kpadKeyRepeatCount < 40) { g_keypadNumberSpeed = 100; }
+		else if (g_kpadKeyRepeatCount < 50) { g_keypadNumberSpeed = 1000; }
 		else
 		{
-			fixed_special_speed = 10000;
+			s_fixedSpecialSpeed = 10000;
 		}
 
 		if (SUPERGRAPH_UNIT)
@@ -308,9 +269,9 @@ BOOLEAN keypad(void)
 		g_kpadLastKeyPressed = keyPressed;
 
 		// Reset variables
-		num_speed = 1;
+		g_keypadNumberSpeed = 1;
 		g_kpadKeyRepeatCount = 0;
-		fixed_special_speed = 0;
+		s_fixedSpecialSpeed = 0;
 
 		if (SUPERGRAPH_UNIT)
 		{
@@ -407,23 +368,36 @@ BOOLEAN keypad(void)
 			}
 			else
 			{
-#if 0 // fix_ns8100
 				// Check if the ON key is currently being pressed at the same time the enter key was detected
+#if 0 // ns7100
 				if ((reg_EPPDR.bit.EPPD0 == 0x00) && (keyPressed == ENTER_KEY))
+#else // ns8100
+				if (read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0x04)
+#endif
 				{
 					// Reset the factory setup process
 					g_factorySetupSequence = SEQ_NOT_STARTED;
 
-					// Issue a Ctrl-C for Manual Calibration
-					p_msg->cmd = CTRL_CMD;
-					p_msg->data[0] = 'C';
+					if (keyPressed == ENTER_KEY)
+					{
+						// Issue a Ctrl-C for Manual Calibration
+						p_msg->cmd = CTRL_CMD;
+						p_msg->data[0] = 'C';
+					}
+					else if (keyPressed == ESC_KEY)
+					{
+extern uint8 quickBootEntryJump;
+extern void BootLoadManager(void);
+						quickBootEntryJump = YES;
+						BootLoadManager();
+					}
 				}
 				else if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 				{
 					// Reset the sequence
 					g_factorySetupSequence = SEQ_NOT_STARTED;
 				}
-#endif
+
 				// Enqueue the message
 				sendInputMsg(p_msg);
 			}
@@ -445,10 +419,10 @@ void keypressEventMgr(void)
 	{
 		g_lcdPowerFlag = ENABLED;
 		raiseSystemEventFlag(UPDATE_MENU_EVENT);
-		setLcdContrast(contrast_value);
+		setLcdContrast(g_contrast_value);
 		powerControl(LCD_POWER_ENABLE, ON);
 		initLcdDisplay();					// Setup LCD segments and clear display buffer
-		assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(help_rec.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+		assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 
 		// Check if the unit is monitoring, if so, reassign the monitor update timer
 		if (g_sampleProcessing == SAMPLING_STATE)
@@ -459,7 +433,7 @@ void keypressEventMgr(void)
 	}
 	else // Reassign the LCD Power countdown timer
 	{
-		assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(help_rec.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+		assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 	}
 
 	// Check if the LCD Backlight was turned off
@@ -475,9 +449,9 @@ void keypressEventMgr(void)
 	}
 
 	// Check if Auto Monitor is active and not in monitor mode
-	if ((help_rec.auto_monitor_mode != AUTO_NO_TIMEOUT) && (g_sampleProcessing != SAMPLING_STATE))
+	if ((g_helpRecord.auto_monitor_mode != AUTO_NO_TIMEOUT) && (g_sampleProcessing != SAMPLING_STATE))
 	{
-		assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(help_rec.auto_monitor_mode * TICKS_PER_MIN), autoMonitorTimerCallBack);
+		assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.auto_monitor_mode * TICKS_PER_MIN), autoMonitorTimerCallBack);
 	}
 }
 
@@ -616,7 +590,7 @@ uint8 getKeypadKey(uint8 mode)
 	soft_usecWait(1000);
 
 	// Reassign the LCD Power countdown timer
-	assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(help_rec.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+	assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 
 	// Reassign the LCD Backlight countdown timer
 	assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
@@ -633,7 +607,6 @@ uint8 getKeypadKey(uint8 mode)
 *	Function:	scanKeypad
 *	Purpose:	Returns the active key on the keypad
 ****************************************/
-#include "Mmc2114_Registers.h"
 uint8 messageBoxKeyInput = 0;
 extern uint8 messageBoxActiveFlag;
 uint8 scanKeypad(void)
@@ -644,17 +617,17 @@ uint8 scanKeypad(void)
 	uint8 keyPressed = KEY_NONE;
 	uint8 i = 0;
 
-	//keyMap[0] = (uint8)(~(*keypadAddress));
-	keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	//s_keyMap[0] = (uint8)(~(*keypadAddress));
+	s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 
-	debug("Scan Keypad: Key: %x\n", keyMap[0]);
+	debug("Scan Keypad: Key: %x\n", s_keyMap[0]);
 
 	// Find keys by locating the 1's in the map
 	for (rowMask = 0x01, i = 0; i < TOTAL_KEYPAD_KEYS; i++)
 	{
-		if (keyMap[0] & rowMask)
+		if (s_keyMap[0] & rowMask)
 		{
-			keyPressed = keyTbl[0][i];
+			keyPressed = g_keypadTable[0][i];
 		}
 
 		rowMask <<= 1;

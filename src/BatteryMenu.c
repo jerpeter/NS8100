@@ -37,13 +37,11 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern int32 active_menu;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
+#include "Globals.h"
 extern USER_MENU_STRUCT configMenu[];
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
@@ -64,10 +62,10 @@ void batteryMn(INPUT_MSG_STRUCT msg)
 
     batteryMnProc(msg, &wnd_layout, &mn_layout);
 
-    if (active_menu == BATTERY_MENU)
+    if (g_activeMenu == BATTERY_MENU)
     {
         batteryMnDsply(&wnd_layout);
-        writeMapToLcd(mmap);
+        writeMapToLcd(g_mmap);
     }
 }
 
@@ -103,7 +101,7 @@ void batteryMnProc(INPUT_MSG_STRUCT msg,
             {
               case (ENTER_KEY):
 					ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
-                     (*menufunc_ptrs[active_menu]) (mn_msg);
+                     (*menufunc_ptrs[g_activeMenu]) (mn_msg);
                      break;
                case (DOWN_ARROW_KEY):
                      break;
@@ -113,7 +111,7 @@ void batteryMnProc(INPUT_MSG_STRUCT msg,
                case (PLUS_KEY): adjustLcdContrast(LIGHTER); break;
                case (ESC_KEY):
 					ACTIVATE_USER_MENU_MSG(&configMenu, BATTERY);
-                     (*menufunc_ptrs[active_menu]) (mn_msg);
+                     (*menufunc_ptrs[g_activeMenu]) (mn_msg);
                      break;
                default:
                      break;
@@ -140,7 +138,7 @@ void batteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     float batt_rng;
     uint8 length;
 
-    byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+    byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Add in a title for the menu
 	byteSet(&buff[0], 0, sizeof(buff));

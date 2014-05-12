@@ -18,8 +18,6 @@
 ///	Includes
 ///----------------------------------------------------------------------------
 #include "Typedefs.h"
-#include "Mmc2114.h"
-#include "Mmc2114_registers.h"
 #include "Common.h"
 #include "Uart.h"
 

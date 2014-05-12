@@ -52,24 +52,13 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern MN_MEM_DATA_STRUCT mn_ptr[DEFAULT_MN_SIZE];
-extern int32 active_menu;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern uint32 num_speed;
-extern uint32 fixed_special_speed;
-extern uint8 g_factorySetupSequence;
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-extern USER_MENU_STRUCT configMenu[];
+#include "Globals.h"
 extern USER_MENU_STRUCT serialNumberMenu[];
-extern REC_HELP_MN_STRUCT help_rec;
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
-extern MONTH_TABLE_STRUCT monthTable[];
+extern USER_MENU_STRUCT configMenu[];
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-uint32 leap_num = 0;
-uint32 num_month  = 0;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -99,10 +88,10 @@ void dateTimeMn (INPUT_MSG_STRUCT msg)
 
 	dateTimeMnProc(msg, mn_rec, &wnd_layout, &mn_layout);
 
-	if (active_menu == DATE_TIME_MENU)
+	if (g_activeMenu == DATE_TIME_MENU)
 	{
 		dsplyDateTimeMn(mn_rec, &wnd_layout, &mn_layout);
-		writeMapToLcd(mmap);
+		writeMapToLcd(g_mmap);
 	}
 }
 
@@ -162,12 +151,12 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 							time.hour, time.min, time.sec, time.hundredths);
 
 					// Check if Timer mode is enabled
-					if (help_rec.timer_mode == ENABLED)
+					if (g_helpRecord.timer_mode == ENABLED)
 					{
 						// Cancel Timer mode
 						messageBox(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), MB_OK);
 
-						help_rec.timer_mode = DISABLED;
+						g_helpRecord.timer_mode = DISABLED;
 
 						// Enable the Power Off key
 						powerControl(POWER_SHUTDOWN_ENABLE, ON);
@@ -175,13 +164,13 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 						// Disable the Power Off timer if it's set
 						clearSoftTimer(POWER_OFF_TIMER_NUM);
 
-						saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+						saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 					}
 
 					if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
 					{
-						if (!factory_setup_rec.invalid)
-							tempPtr = &factory_setup_rec.serial_num;
+						if (!g_factorySetupRecord.invalid)
+							tempPtr = &g_factorySetupRecord.serial_num;
 
 						ACTIVATE_USER_MENU_MSG(&serialNumberMenu, tempPtr);
 					}
@@ -190,7 +179,7 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 						ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 					}
 
-					(*menufunc_ptrs[active_menu]) (mn_msg);
+					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 					break;
 
 				case (DOWN_ARROW_KEY):
@@ -220,8 +209,8 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 					{
 						if (messageBox(getLangText(WARNING_TEXT), getLangText(PROCEED_WITHOUT_SETTING_DATE_AND_TIME_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 						{
-							if (!factory_setup_rec.invalid)
-								tempPtr = &factory_setup_rec.serial_num;
+							if (!g_factorySetupRecord.invalid)
+								tempPtr = &g_factorySetupRecord.serial_num;
 
 							ACTIVATE_USER_MENU_MSG(&serialNumberMenu, tempPtr);
 						}
@@ -236,7 +225,7 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 						ACTIVATE_USER_MENU_MSG(&configMenu, DATE_TIME);
 					}
 
-					(*menufunc_ptrs[active_menu]) (mn_msg);
+					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 					break;
 				default:
 					break;
@@ -314,7 +303,7 @@ void dsplyDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 	uint8 menu_ln;
 	uint8 length = 0;
 
-	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 	byteSet(&sbuff[0], 0, sizeof(sbuff));
 
 	menu_ln = 0;
@@ -391,7 +380,7 @@ void dsplyDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the month text
-	sprintf((char*)sbuff, "%s", (char*)&(monthTable[(uint8)(rec_ptr[DTM_MONTH].numrec.tindex)].name[0]));
+	sprintf((char*)sbuff, "%s", (char*)&(g_monthTable[(uint8)(rec_ptr[DTM_MONTH].numrec.tindex)].name[0]));
 	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_MONTH) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 

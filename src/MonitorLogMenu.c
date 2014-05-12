@@ -11,24 +11,24 @@
 *  $Revision: 1.2 $
 *******************************************************************************/
 
-/*******************************************************************************
-*  Includes
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Includes
+///----------------------------------------------------------------------------
 #include <stdio.h>
 #include <string.h>
 #include "Typedefs.h"
 #include "Menu.h"
 #include "Display.h"
 #include "Board.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Uart.h"
 #include "Display.h"
 #include "Keypad.h"
 #include "TextTypes.h"
 
-/*******************************************************************************
-*  Defines
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Defines
+///----------------------------------------------------------------------------
 #define MONITOR_LOG_MN_TABLE_SIZE 8
 #define MONITOR_LOG_WND_STARTING_COL 6
 #define MONITOR_LOG_WND_END_COL 127
@@ -36,30 +36,22 @@
 #define MONITOR_LOG_WND_END_ROW 55
 #define MONITOR_LOG_MN_TBL_START_LINE 0
 
-/*******************************************************************************
-*  Externs
-*******************************************************************************/
-extern int32 active_menu;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern USER_MENU_STRUCT configMenu[];
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
-extern uint32 __monitorLogTblKey;
-extern uint16 __monitorLogTblIndex;
-extern uint16 __monitorLogUniqueEntryId;
-extern MONITOR_LOG_ENTRY_STRUCT __monitorLogTbl[TOTAL_MONITOR_LOG_ENTRIES];
+///----------------------------------------------------------------------------
+///	Externs
+///----------------------------------------------------------------------------
+#include "Globals.h"
 extern USER_MENU_STRUCT monitorLogMenu[];
-extern REC_HELP_MN_STRUCT help_rec;
 
-/*******************************************************************************
-*  Globals
-*******************************************************************************/
-int16 monitorMnCurrentLogIndex = 0;
-uint16 monitorMnLastLogIndex = 0;
-uint16 monitorMnStartLogIndex = 0;
+///----------------------------------------------------------------------------
+///	Local Scope Globals
+///----------------------------------------------------------------------------
+static int16 s_monitorMnCurrentLogIndex = 0;
+static uint16 s_monitorMnLastLogIndex = 0;
+static uint16 s_monitorMnStartLogIndex = 0;
 
-/*******************************************************************************
-*  Prototypes
-*******************************************************************************/
+///----------------------------------------------------------------------------
+///	Prototypes
+///----------------------------------------------------------------------------
 void monitorLogMn(INPUT_MSG_STRUCT);
 void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *, MN_LAYOUT_STRUCT *);
 void monitorLogMnDsply(WND_LAYOUT_STRUCT *);
@@ -75,10 +67,10 @@ void monitorLogMn(INPUT_MSG_STRUCT msg)
 
     monitorLogMnProc(msg, &wnd_layout, &mn_layout);
 
-    if(active_menu == VIEW_MONITOR_LOG_MENU)
+    if(g_activeMenu == VIEW_MONITOR_LOG_MENU)
     {
         monitorLogMnDsply(&wnd_layout);
-        writeMapToLcd(mmap);
+        writeMapToLcd(g_mmap);
     }
 }
 
@@ -103,23 +95,23 @@ void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 			mn_layout_ptr->top_ln =     1;
 			mn_layout_ptr->sub_ln =     0;
 
-			monitorMnCurrentLogIndex = (int16)getStartingMonitorLogTableIndex();
-			monitorMnLastLogIndex = __monitorLogTblIndex;
+			s_monitorMnCurrentLogIndex = (int16)getStartingMonitorLogTableIndex();
+			s_monitorMnLastLogIndex = __monitorLogTblIndex;
 
-			while((__monitorLogTbl[monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY) &&
-					(monitorMnCurrentLogIndex != monitorMnLastLogIndex))
+			while((__monitorLogTbl[s_monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY) &&
+					(s_monitorMnCurrentLogIndex != s_monitorMnLastLogIndex))
 			{
-				monitorMnCurrentLogIndex++;
+				s_monitorMnCurrentLogIndex++;
 
-				if(monitorMnCurrentLogIndex >= TOTAL_MONITOR_LOG_ENTRIES)
-					monitorMnCurrentLogIndex = 0;
+				if(s_monitorMnCurrentLogIndex >= TOTAL_MONITOR_LOG_ENTRIES)
+					s_monitorMnCurrentLogIndex = 0;
 			}
 
-			monitorMnStartLogIndex = (uint16)monitorMnCurrentLogIndex;
+			s_monitorMnStartLogIndex = (uint16)s_monitorMnCurrentLogIndex;
 
-			if((monitorMnCurrentLogIndex == monitorMnLastLogIndex) && (__monitorLogTbl[monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY))
+			if((s_monitorMnCurrentLogIndex == s_monitorMnLastLogIndex) && (__monitorLogTbl[s_monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY))
 			{
-				monitorMnCurrentLogIndex = -1;
+				s_monitorMnCurrentLogIndex = -1;
 			}
 		break;
 
@@ -132,39 +124,39 @@ void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 				break;
 
 				case (DOWN_ARROW_KEY):
-					if((monitorMnCurrentLogIndex != monitorMnLastLogIndex) && (monitorMnCurrentLogIndex >= 0))
+					if((s_monitorMnCurrentLogIndex != s_monitorMnLastLogIndex) && (s_monitorMnCurrentLogIndex >= 0))
 					{
-						monitorMnCurrentLogIndex++;
+						s_monitorMnCurrentLogIndex++;
 
-						if(monitorMnCurrentLogIndex >= TOTAL_MONITOR_LOG_ENTRIES)
-							monitorMnCurrentLogIndex = 0;
+						if(s_monitorMnCurrentLogIndex >= TOTAL_MONITOR_LOG_ENTRIES)
+							s_monitorMnCurrentLogIndex = 0;
 
-						while((__monitorLogTbl[monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY) &&
-								(monitorMnCurrentLogIndex != monitorMnLastLogIndex))
+						while((__monitorLogTbl[s_monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY) &&
+								(s_monitorMnCurrentLogIndex != s_monitorMnLastLogIndex))
 						{
-							monitorMnCurrentLogIndex++;
+							s_monitorMnCurrentLogIndex++;
 
-							if(monitorMnCurrentLogIndex >= TOTAL_MONITOR_LOG_ENTRIES)
-								monitorMnCurrentLogIndex = 0;
+							if(s_monitorMnCurrentLogIndex >= TOTAL_MONITOR_LOG_ENTRIES)
+								s_monitorMnCurrentLogIndex = 0;
 						}
 					}
 				break;
 
 				case (UP_ARROW_KEY):
-					if((monitorMnCurrentLogIndex != monitorMnStartLogIndex) && (monitorMnCurrentLogIndex >= 0))
+					if((s_monitorMnCurrentLogIndex != s_monitorMnStartLogIndex) && (s_monitorMnCurrentLogIndex >= 0))
 					{
-						monitorMnCurrentLogIndex--;
+						s_monitorMnCurrentLogIndex--;
 
-						if(monitorMnCurrentLogIndex < 0)
-							monitorMnCurrentLogIndex = TOTAL_MONITOR_LOG_ENTRIES - 1;
+						if(s_monitorMnCurrentLogIndex < 0)
+							s_monitorMnCurrentLogIndex = TOTAL_MONITOR_LOG_ENTRIES - 1;
 
-						while((__monitorLogTbl[monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY) &&
-								(monitorMnCurrentLogIndex != monitorMnStartLogIndex))
+						while((__monitorLogTbl[s_monitorMnCurrentLogIndex].status != COMPLETED_LOG_ENTRY) &&
+								(s_monitorMnCurrentLogIndex != s_monitorMnStartLogIndex))
 						{
-							monitorMnCurrentLogIndex--;
+							s_monitorMnCurrentLogIndex--;
 
-							if(monitorMnCurrentLogIndex < 0)
-								monitorMnCurrentLogIndex = TOTAL_MONITOR_LOG_ENTRIES - 1;
+							if(s_monitorMnCurrentLogIndex < 0)
+								s_monitorMnCurrentLogIndex = TOTAL_MONITOR_LOG_ENTRIES - 1;
 						}
 					}
 				break;
@@ -174,7 +166,7 @@ void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 
 				case (ESC_KEY):
 					ACTIVATE_USER_MENU_MSG(&monitorLogMenu, DEFAULT_ITEM_1);
-					(*menufunc_ptrs[active_menu]) (mn_msg);
+					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 				break;
 
 				default:
@@ -196,7 +188,7 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     uint8 buff[25];
     uint8 length;
 
-    byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+    byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Add in a title for the menu
 	byteSet(&buff[0], 0, sizeof(buff));
@@ -206,11 +198,11 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-	if(monitorMnCurrentLogIndex != -1)
+	if(s_monitorMnCurrentLogIndex != -1)
 	{
 		// Display Mode text
 		byteSet(&buff[0], 0, sizeof(buff));
-		switch(__monitorLogTbl[monitorMnCurrentLogIndex].mode)
+		switch(__monitorLogTbl[s_monitorMnCurrentLogIndex].mode)
 		{
 			case WAVEFORM_MODE:   length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(WAVEFORM_MODE_TEXT)); break;
 			case BARGRAPH_MODE:	  length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(BARGRAPH_MODE_TEXT)); break;
@@ -223,7 +215,7 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		// Display Start Time text
 		byteSet(&buff[0], 0, sizeof(buff));
-		convertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[monitorMnCurrentLogIndex].startTime, REC_DATE_TIME_TYPE);
+		convertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[s_monitorMnCurrentLogIndex].startTime, REC_DATE_TIME_TYPE);
 		length = (uint8)strlen((char*)(&buff[0]));
 
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
@@ -232,7 +224,7 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		// Display Stop Time text
 		byteSet(&buff[0], 0, sizeof(buff));
-		convertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[monitorMnCurrentLogIndex].stopTime, REC_DATE_TIME_TYPE);
+		convertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[s_monitorMnCurrentLogIndex].stopTime, REC_DATE_TIME_TYPE);
 		length = (uint8)strlen((char*)(&buff[0]));
 
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
@@ -240,7 +232,7 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 		// Display Number of Events recorded text
-		if(__monitorLogTbl[monitorMnCurrentLogIndex].eventsRecorded == 0)
+		if(__monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded == 0)
 		{
 			length = (uint8)sprintf((char*)(&buff[0]), "%s %s", getLangText(NO_TEXT), getLangText(EVENTS_RECORDED_TEXT));
 
@@ -250,20 +242,20 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 		else
 		{
-			length = (uint8)sprintf((char*)(&buff[0]), "%s: %d", getLangText(EVENTS_RECORDED_TEXT), __monitorLogTbl[monitorMnCurrentLogIndex].eventsRecorded);
+			length = (uint8)sprintf((char*)(&buff[0]), "%s: %d", getLangText(EVENTS_RECORDED_TEXT), __monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded);
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-			if(__monitorLogTbl[monitorMnCurrentLogIndex].eventsRecorded == 1)
+			if(__monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded == 1)
 			{
-				length = (uint8)sprintf((char*)(&buff[0]), "EVENT #s: %d", __monitorLogTbl[monitorMnCurrentLogIndex].startEventNumber);
+				length = (uint8)sprintf((char*)(&buff[0]), "EVENT #s: %d", __monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber);
 			}
 			else
 			{
-				length = (uint8)sprintf((char*)(&buff[0]), "EVENT #s: %d-%d", __monitorLogTbl[monitorMnCurrentLogIndex].startEventNumber,
-										(__monitorLogTbl[monitorMnCurrentLogIndex].startEventNumber + __monitorLogTbl[monitorMnCurrentLogIndex].eventsRecorded - 1));
+				length = (uint8)sprintf((char*)(&buff[0]), "EVENT #s: %d-%d", __monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber,
+										(__monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber + __monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded - 1));
 			}
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
@@ -271,7 +263,7 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
 
-		if(monitorMnCurrentLogIndex == monitorMnStartLogIndex)
+		if(s_monitorMnCurrentLogIndex == s_monitorMnStartLogIndex)
 		{
 			// Display Start of Log
 			byteSet(&buff[0], 0, sizeof(buff));
@@ -281,7 +273,7 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
-		else if(monitorMnCurrentLogIndex == monitorMnLastLogIndex)
+		else if(s_monitorMnCurrentLogIndex == s_monitorMnLastLogIndex)
 		{
 			// Display End of Log
 			byteSet(&buff[0], 0, sizeof(buff));

@@ -17,7 +17,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include "Typedefs.h"
-#include "Mmc2114_Registers.h"
 #include "Old_Board.h"
 #include "Uart.h"
 #include "Menu.h"
@@ -31,20 +30,17 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern MODEM_STATUS_STRUCT g_ModemStatus;
-extern uint8 g_disableDebugPrinting;
-extern uint32 g_rtcSoftTimerTickCount;
-extern uint8 g_modemDataTransfered;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-char g_buf[256];
-uint8 g_disableDebugPrinting;
+static char s_uartBuffer[256];
 
 /********************************************************************
                       Uart Autobaud
  ********************************************************************/
+#if 0 // ns7100
 uint16 auto_baud(int32 channel)
 {
 	volatile MMC2114_IMM *imm = mmc2114_get_immp();
@@ -79,10 +75,12 @@ uint16 auto_baud(int32 channel)
 
 	return (baud);
 }
+#endif
 
 /********************************************************************
                       Uart Initialization
  ********************************************************************/
+#if 0
 void uart_init(uint32 baudrate, int32 channel)
 {
 	volatile MMC2114_IMM *imm = mmc2114_get_immp();
@@ -142,10 +140,12 @@ void uart_init(uint32 baudrate, int32 channel)
 		imm->Sci2.SCICR2 = (MMC2114_SCI_SCICR2_RE | MMC2114_SCI_SCICR2_RIE); // added in RIE
 	}
 }
+#endif
 
 /********************************************************************
                       Uart Initialization
  ********************************************************************/
+#if 0
 void uartControl(uint8 control, int8 channel)
 {
 	volatile MMC2114_IMM *imm = mmc2114_get_immp();
@@ -202,8 +202,7 @@ void uartControl(uint8 control, int8 channel)
 		}
 	}
 }
-
-
+#endif
 
 /****************************************
 *	Function:	btoa
@@ -236,7 +235,6 @@ uint8 nibbleToA(uint8 hexData)
 uint8 modem_putc(uint8 byteData, uint8 convertAsciiFlag)
 {
 	uint8 status = MODEM_SEND_FAILED;
-#if 0 // fix_ns8100
 	uint8 hexData;
 	uint8 asciiData;
 	volatile uint32 timeout = g_rtcSoftTimerTickCount + (25 * 2); //Set timeout to 25 secs
@@ -284,7 +282,7 @@ uint8 modem_putc(uint8 byteData, uint8 convertAsciiFlag)
 			status = MODEM_SEND_SUCCESS;
 		}
 	}
-#endif
+
 	return (status);
 }
 
@@ -318,18 +316,16 @@ uint8 modem_puts(uint8* byteData, uint32 dataLength, uint8 convertAsciiFlag)
 extern int usart_putchar(volatile avr32_usart_t *usart, int c);
 void uart_putc(uint8 c, int32 channel)
 {
+#if 0 // ns7100
 	volatile MMC2114_IMM *imm = mmc2114_get_immp();
 
 	if (channel == CRAFT_COM_PORT)
 	{
-#if 0 // fix_ns8100
 		// Wait until transmission complete flag is cleared
 		while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {}
 
 		// Send the data
 		imm->Sci1.SCIDRL = c;
-#endif
-		usart_putchar(DBG_USART, c);
 	}
 	else if (channel == RS485_COM_PORT)
 	{
@@ -339,6 +335,16 @@ void uart_putc(uint8 c, int32 channel)
 		// Send the data
 		imm->Sci2.SCIDRL = c;
 	}
+#else // ns8100
+	if (channel == CRAFT_COM_PORT)
+	{
+		usart_putchar(DBG_USART, c);
+	}
+	else if (channel == RS485_COM_PORT)
+	{
+		// fix_ns8100
+	}
+#endif
 }
 
 /********************************************************************
@@ -375,6 +381,7 @@ void uart_puts(char* s, int32 channel)
 /********************************************************************
                       Uart Character Check
  ********************************************************************/
+#if 0
 BOOLEAN uart_char_waiting(int32 channel)
 {
     BOOLEAN charWaiting = FALSE;
@@ -392,10 +399,12 @@ BOOLEAN uart_char_waiting(int32 channel)
 
 	return (charWaiting);
 }
+#endif
 
 /********************************************************************
                       Uart Get Character
  ********************************************************************/
+#if 0
 uint8 uart_getc(int32 channel, uint8 mode)
 {
     volatile MMC2114_IMM *imm = mmc2114_get_immp();
@@ -424,6 +433,7 @@ uint8 uart_getc(int32 channel, uint8 mode)
 
 	return (0);
 }
+#endif
 
 /********************************************************************
                       Uart Get Character String
@@ -514,7 +524,7 @@ short craft(char* fmt, ...)
 	va_end(arg_ptr);
 
 	// Check if the current string to be printed was different than the last
-	if (strncmp(buf, g_buf, l))
+	if (strncmp(buf, s_uartBuffer, l))
 	{
 		// Check if the previous string repeated at all
 		if (repeatingBuf > 0)
@@ -528,7 +538,7 @@ short craft(char* fmt, ...)
 		}
 
 		// Copy the new string into the global buffer
-		strncpy(g_buf, buf, l);
+		strncpy(s_uartBuffer, buf, l);
 
 		// Print the new string
     	uart_write(buf, l, CRAFT_COM_PORT);
@@ -604,7 +614,7 @@ short debugPrint(uint8 mode, char* fmt, ...)
     	uart_write(buf, length, CRAFT_COM_PORT);
 	}
 	// Check if the current string to be printed was different than the last
-	else if (strncmp(buf, g_buf, length))
+	else if (strncmp(buf, s_uartBuffer, length))
 	{
 		// Check if the previous string repeated at all
 		if (repeatingBuf > 0)
@@ -627,7 +637,7 @@ short debugPrint(uint8 mode, char* fmt, ...)
 		}
 
 		// Copy the new string into the global buffer
-		strncpy(g_buf, buf, length);
+		strncpy(s_uartBuffer, buf, length);
 
 		tempTime = g_rtcSoftTimerTickCount >> 1;
 

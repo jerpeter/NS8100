@@ -4,35 +4,55 @@
  Copyright     : Your copyright notice
  Description   : MCP23018 drivers
  **********************************************************/
+
+///----------------------------------------------------------------------------
+///	Includes
+///----------------------------------------------------------------------------
 #include "board.h"
 #include "twi.h"
 #include "m23018.h"
 #include "Typedefs.h"
 #include "Uart.h"
 
-U8 twi_data[10];
-#define  TWI_DATA_LENGTH        (sizeof(twi_data)/sizeof(U8))
+///----------------------------------------------------------------------------
+///	Defines
+///----------------------------------------------------------------------------
+#define  TWI_DATA_LENGTH        (sizeof(s_twiData)/sizeof(U8))
 
-twi_package_t packet, packet_received;
+///----------------------------------------------------------------------------
+///	Externs
+///----------------------------------------------------------------------------
 
+///----------------------------------------------------------------------------
+///	Local Scope Globals
+///----------------------------------------------------------------------------
+static uint8 s_twiData[10];
+static twi_package_t s_twiPacket;
+
+///----------------------------------------------------------------------------
+/// write_mcp23018
+///----------------------------------------------------------------------------
 void write_mcp23018(unsigned char chip, unsigned char address, unsigned char data)
 {
 	  //Set output latch a with 00
-	  twi_data[0] = data;
+	  s_twiData[0] = data;
 	  // TWI chip address to communicate with
-	  packet.chip = chip;
+	  s_twiPacket.chip = chip;
 	  // TWI address/commands to issue to the other chip (node)
-	  packet.addr = address;
+	  s_twiPacket.addr = address;
 	  // Length of the TWI data address segment (1-3 bytes)
-	  packet.addr_length = IO_ADDR_LGT;
+	  s_twiPacket.addr_length = IO_ADDR_LGT;
 	  // Where to find the data to be written
-	  packet.buffer = (void*) twi_data;
+	  s_twiPacket.buffer = (void*) s_twiData;
 	  // How many bytes do we want to write
-	  packet.length = 1;
+	  s_twiPacket.length = 1;
 	  // perform a write access
-	  twi_master_write(&AVR32_TWI, &packet);
+	  twi_master_write(&AVR32_TWI, &s_twiPacket);
 }
 
+///----------------------------------------------------------------------------
+/// write_mcp23018_bytes
+///----------------------------------------------------------------------------
 void write_mcp23018_bytes(unsigned char chip, unsigned char address,  unsigned char *data, unsigned char length)
 {
     unsigned char count;
@@ -40,47 +60,54 @@ void write_mcp23018_bytes(unsigned char chip, unsigned char address,  unsigned c
 	//Set output latch a with 00
 	for(count=0;count<=length;count++)
 	{
-	    twi_data[count] = data[count];
+	    s_twiData[count] = data[count];
 	}
 	// TWI chip address to communicate with
-	packet.chip = chip;
+	s_twiPacket.chip = chip;
 	// TWI address/commands to issue to the other chip (node)
-	packet.addr = address;
+	s_twiPacket.addr = address;
 	// Length of the TWI data address segment (1-3 bytes)
-	packet.addr_length = IO_ADDR_LGT;
+	s_twiPacket.addr_length = IO_ADDR_LGT;
 	// Where to find the data to be written
-	packet.buffer = (void*) twi_data;
+	s_twiPacket.buffer = (void*) s_twiData;
 	// How many bytes do we want to write
-	packet.length = length;
+	s_twiPacket.length = length;
 	// perform a write access
-	if(twi_master_write(&AVR32_TWI, &packet) != TWI_SUCCESS)
+	if(twi_master_write(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
 	{
 		debugErr("TWI: Failure to write to MCP23018\n");
 	}
 }
+
+///----------------------------------------------------------------------------
+/// read_mcp23018
+///----------------------------------------------------------------------------
 unsigned char read_mcp23018(unsigned char chip, unsigned char address)
 {
 	//Set output latch a with 00
-	twi_data[0] = 0;
+	s_twiData[0] = 0;
 	// TWI chip address to communicate with
-	packet.chip = chip;
+	s_twiPacket.chip = chip;
 	// TWI address/commands to issue to the other chip (node)
-	packet.addr = address;
+	s_twiPacket.addr = address;
 	// Length of the TWI data address segment (1-3 bytes)
-	packet.addr_length = IO_ADDR_LGT;
+	s_twiPacket.addr_length = IO_ADDR_LGT;
 	// Where to find the data to be written
-	packet.buffer = (void*) twi_data;
+	s_twiPacket.buffer = (void*) s_twiData;
 	// How many bytes do we want to write
-	packet.length = 1;
+	s_twiPacket.length = 1;
 	// perform a write access
-	if(twi_master_read(&AVR32_TWI, &packet) != TWI_SUCCESS)
+	if(twi_master_read(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
 	{
 		debugErr("TWI: Failure to write to MCP23018\n");
 	}
 
-	return(twi_data[0]);
+	return(s_twiData[0]);
 }
 
+///----------------------------------------------------------------------------
+/// init_mcp23018
+///----------------------------------------------------------------------------
 void init_mcp23018(unsigned char chip)
 {
 	// I/O Config

@@ -131,7 +131,7 @@ void setLcdOrigin (uint8,uint8,uint8);
 uint8 clockDataFromLcd(uint8);
 void clockDataToLcd(uint8, uint8);
 void writeStringToLcd (uint8*, uint8, uint8, uint8 (*table_ptr)[2][10]);
-void writeMapToLcd (uint8 (*mmap_ptr)[128]);
+void writeMapToLcd (uint8 (*g_mmap_ptr)[128]);
 void initLcdDisplay(void);
 void clearLcdDisplay(void);
 void fillLcdDisplay(void);

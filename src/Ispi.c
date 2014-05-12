@@ -15,31 +15,30 @@
 ///----------------------------------------------------------------------------
 #include "Ispi.h"
 #include "Msgs430.h"
-#include "MMC2114.h"
-#include "Mmc2114_InitVals.h"
 #include "SysEvents.h"
 #include "Uart.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
+#define ISPI_GetISPI_State() s_ISPI_State
 
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-volatile ISPI_STATE_E  _ISPI_State;
-volatile uint8* _SPICR1  = (uint8*)SPI_CONTROL_ONE_REG_ADDR;
-volatile uint8* _SPICR2  = (uint8*)SPI_CONTROL_TWO_REG_ADDR;
-volatile uint8* _SPIBR   = (uint8*)SPI_BAUD_RATE_REG_ADDR;
-volatile uint8* _SPISR   = (uint8*)SPI_STATUS_REG_ADDR;
-volatile uint8* _SPIDR   = (uint8*)SPI_DATA_REG_ADDR;
-volatile uint8* _SPIPURD = (uint8*)SPI_PULLUP_REDUCED_DRV_REG_ADDR;
-volatile uint8* _SPIPORT = (uint8*)SPI_PORT_DATA_REG_ADDR;
-volatile uint8* _SPIDDR  = (uint8*)SPI_PORT_DATA_DIR_REG_ADDR;
+volatile ISPI_STATE_E  s_ISPI_State;
+volatile uint8* s_SPICR1  = (uint8*)SPI_CONTROL_ONE_REG_ADDR;
+volatile uint8* s_SPICR2  = (uint8*)SPI_CONTROL_TWO_REG_ADDR;
+volatile uint8* s_SPIBR   = (uint8*)SPI_BAUD_RATE_REG_ADDR;
+volatile uint8* s_SPISR   = (uint8*)SPI_STATUS_REG_ADDR;
+volatile uint8* s_SPIDR   = (uint8*)SPI_DATA_REG_ADDR;
+volatile uint8* s_SPIPURD = (uint8*)SPI_PULLUP_REDUCED_DRV_REG_ADDR;
+volatile uint8* s_SPIPORT = (uint8*)SPI_PORT_DATA_REG_ADDR;
+volatile uint8* s_SPIDDR  = (uint8*)SPI_PORT_DATA_DIR_REG_ADDR;
 
 ///----------------------------------------------------------------------------
 ///	Function:	ISPI_PollIRQ_Flag
@@ -47,7 +46,7 @@ volatile uint8* _SPIDDR  = (uint8*)SPI_PORT_DATA_DIR_REG_ADDR;
 ///----------------------------------------------------------------------------
 void ISPI_PollIRQ_Flag(void)
 {
-	while ((*_SPISR & ISPI_IRQ_BIT) != ISPI_IRQ_BIT) {}
+	while ((*s_SPISR & ISPI_IRQ_BIT) != ISPI_IRQ_BIT) {}
 }
 
 ///----------------------------------------------------------------------------
@@ -56,7 +55,7 @@ void ISPI_PollIRQ_Flag(void)
 ///----------------------------------------------------------------------------
 void ISPI_WriteISPI(uint8 data_)
 {
-	*_SPIDR = data_;
+	*s_SPIDR = data_;
 }
 
 ///----------------------------------------------------------------------------
@@ -65,7 +64,7 @@ void ISPI_WriteISPI(uint8 data_)
 ///----------------------------------------------------------------------------
 uint16 ISPI_ReadISPI(void)
 {
-	return ((uint16)*_SPIDR);
+	return ((uint16)*s_SPIDR);
 }
 
 ///----------------------------------------------------------------------------
@@ -85,12 +84,12 @@ inline void ISPI_SystemEnable(bool enable_)
 {
 	if (enable_ == TRUE)
 	{
-		*_SPICR1 |= ISPI_SYSTEM_ENABLE_BIT;
-		*_SPIDDR = 0xFF;
+		*s_SPICR1 |= ISPI_SYSTEM_ENABLE_BIT;
+		*s_SPIDDR = 0xFF;
 	}
 	else
 	{
-		*_SPICR1 &= ~ISPI_SYSTEM_ENABLE_BIT;
+		*s_SPICR1 &= ~ISPI_SYSTEM_ENABLE_BIT;
 	}
 }
 
@@ -102,11 +101,11 @@ void ISPI_IRQEnable(bool enabled_)
 {
 	if (enabled_ == TRUE)
 	{
-		*_SPICR1 |= ISPI_IRQ_ENABLE_BIT;
+		*s_SPICR1 |= ISPI_IRQ_ENABLE_BIT;
 	}
 	else
 	{
-		*_SPICR1 &= ~ISPI_IRQ_ENABLE_BIT;
+		*s_SPICR1 &= ~ISPI_IRQ_ENABLE_BIT;
 	}
 }
 
@@ -118,11 +117,11 @@ void ISPI_StopInDozeMode(bool enable_)
 {
 	if (enable_ == TRUE)
 	{
-		*_SPICR2 |= ISPI_STOP_IN_DOZE_BIT;
+		*s_SPICR2 |= ISPI_STOP_IN_DOZE_BIT;
 	}
 	else
 	{
-		*_SPICR2 &= ~ISPI_STOP_IN_DOZE_BIT;
+		*s_SPICR2 &= ~ISPI_STOP_IN_DOZE_BIT;
 	}
 }
 
@@ -134,11 +133,11 @@ void ISPI_OperationalMode(OPERATIONAL_MODE_E mode_)
 { 
 	if (mode_ == ISPI_SLAVE_MODE)
 	{
-		*_SPICR1 &= ~ISPI_MASTER_BIT;
+		*s_SPICR1 &= ~ISPI_MASTER_BIT;
 	}
 	else
 	{
-		*_SPICR1 |= ISPI_MASTER_BIT;
+		*s_SPICR1 |= ISPI_MASTER_BIT;
 	}
 }
 
@@ -148,7 +147,7 @@ void ISPI_OperationalMode(OPERATIONAL_MODE_E mode_)
 ///----------------------------------------------------------------------------
 void ISPI_BaudRate(uint8 baud_)
 {
-	*_SPIBR = baud_;
+	*s_SPIBR = baud_;
 }
 
 ///----------------------------------------------------------------------------
@@ -159,7 +158,7 @@ void ISPI_ClearIRQ_Flag(void)
 {
 	uint8 temp;
 
-	temp = *_SPISR;
+	temp = *s_SPISR;
 	temp = (uint8)ISPI_ReadISPI();
 }
 
@@ -171,11 +170,11 @@ void ISPI_BitXmitFirstMode(BIT_XMIT_FIRST_MODE_E mode_)
 {
 	if (mode_ == ISPI_LSB_FIRST)
 	{
-		*_SPICR1 |= ISPI_LSB_FIRST_ENABLE_BIT;
+		*s_SPICR1 |= ISPI_LSB_FIRST_ENABLE_BIT;
 	}
 	else
 	{
-		*_SPICR1 &= ~ISPI_LSB_FIRST_ENABLE_BIT;
+		*s_SPICR1 &= ~ISPI_LSB_FIRST_ENABLE_BIT;
 	}
 }
 
@@ -185,7 +184,7 @@ void ISPI_BitXmitFirstMode(BIT_XMIT_FIRST_MODE_E mode_)
 ///----------------------------------------------------------------------------
 void ISPI_SetISPI_State(ISPI_STATE_E state_)
 {
-	_ISPI_State = state_;
+	s_ISPI_State = state_;
 }
 
 ///----------------------------------------------------------------------------
@@ -197,23 +196,23 @@ void ISPI_SlaveSelectOutputMode(SLAVE_SELECT_OUTPUT_MODE_E slaveSelectOutputMode
 	switch (slaveSelectOutputMode_)
 	{
 		case ISPI_MODE_FAULT_INPUT:
-			*_SPICR1 &= ~ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
-			*_SPIDDR &= ~ISPI_DDRSP3_BIT;
+			*s_SPICR1 &= ~ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
+			*s_SPIDDR &= ~ISPI_DDRSP3_BIT;
 		break;
 
 		case ISPI_GENERAL_PURPOSE_INPUT:
-			*_SPICR1 |= ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
-			*_SPIDDR &= ~ISPI_DDRSP3_BIT;
+			*s_SPICR1 |= ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
+			*s_SPIDDR &= ~ISPI_DDRSP3_BIT;
 		break;
 
 		case ISPI_GENERAL_PURPOSE_OUTPUT:
-			*_SPICR1 &= ~ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
-			*_SPIDDR |= ~ISPI_DDRSP3_BIT;
+			*s_SPICR1 &= ~ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
+			*s_SPIDDR |= ~ISPI_DDRSP3_BIT;
 		break;
 
 		case ISPI_SLAVE_SELECT_OUTPUT:
-			*_SPICR1 |= ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
-			*_SPIDDR |= ~ISPI_DDRSP3_BIT;
+			*s_SPICR1 |= ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
+			*s_SPIDDR |= ~ISPI_DDRSP3_BIT;
 		break;
 
 		default:
@@ -226,6 +225,7 @@ void ISPI_SlaveSelectOutputMode(SLAVE_SELECT_OUTPUT_MODE_E slaveSelectOutputMode
 ///	Function:	ISPI_Init
 ///	Purpose:	
 ///----------------------------------------------------------------------------
+#if 0 // ns7100
 void ISPI_Init(void)
 {
 	OPERATIONAL_MODE_E operMode_ = ISPI_MASTER_MODE;
@@ -242,42 +242,42 @@ void ISPI_Init(void)
 	bool pinDriveOpenDrain_ = FALSE;
 	bool serialPinBidirectional_ = FALSE;
 
-	_ISPI_State = ISPI_IDLE;
+	s_ISPI_State = ISPI_IDLE;
 
-	// Start off by disabling the SPI (in case it was configured or used in the bootloader)
-	*_SPICR1 &= ~(ISPI_SYSTEM_ENABLE_BIT);
+	// Start off by disabling the SPI (in case it was configured or used in boot)
+	*s_SPICR1 &= ~(ISPI_SYSTEM_ENABLE_BIT);
 
 	//-------------------------------------------------------------
-	//*_SPIDDR = 0xFF;
+	//*s_SPIDDR = 0xFF;
 
 	//-------------------------------------------------------------
 	if(bitXmitMode_ == ISPI_LSB_FIRST)
-		*_SPICR1 |= ISPI_LSB_FIRST_ENABLE_BIT;
+		*s_SPICR1 |= ISPI_LSB_FIRST_ENABLE_BIT;
 	else
-		*_SPICR1 &= ~(ISPI_LSB_FIRST_ENABLE_BIT);
+		*s_SPICR1 &= ~(ISPI_LSB_FIRST_ENABLE_BIT);
 
 	//-------------------------------------------------------------
 	switch(slaveSelectOutputMode_)
 	{
 		case ISPI_MODE_FAULT_INPUT:
-			*_SPICR1 &= ~(ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT);
-			*_SPIDDR &= ~(ISPI_DDRSP3_BIT);
+			*s_SPICR1 &= ~(ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT);
+			*s_SPIDDR &= ~(ISPI_DDRSP3_BIT);
 		break;
 
 		case ISPI_GENERAL_PURPOSE_INPUT:
-			*_SPICR1 |= ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
-			*_SPIDDR &= ~(ISPI_DDRSP3_BIT);
+			*s_SPICR1 |= ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
+			*s_SPIDDR &= ~(ISPI_DDRSP3_BIT);
 		break;
 
 		case ISPI_GENERAL_PURPOSE_OUTPUT:
-			*_SPICR1 &= ~(ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT);
-			*_SPIDDR = 0x0E;
-			*_SPIPORT = 0x08;
+			*s_SPICR1 &= ~(ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT);
+			*s_SPIDDR = 0x0E;
+			*s_SPIPORT = 0x08;
 		break;
 
 		case ISPI_SLAVE_SELECT_OUTPUT:
-			*_SPICR1 |= ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
-			*_SPIDDR |= ~(ISPI_DDRSP3_BIT);
+			*s_SPICR1 |= ISPI_SLAVE_SELECT_OUTPUT_ENA_BIT;
+			*s_SPIDDR |= ~(ISPI_DDRSP3_BIT);
 		break;
 
 		default:
@@ -287,76 +287,75 @@ void ISPI_Init(void)
 
 	//-------------------------------------------------------------
 	if(clkPhaseOpposite_ == TRUE)
-		*_SPICR1 |= ISPI_CLOCK_PHASE_BIT;
+		*s_SPICR1 |= ISPI_CLOCK_PHASE_BIT;
 	else
-		*_SPICR1 &= ~(ISPI_CLOCK_PHASE_BIT);
+		*s_SPICR1 &= ~(ISPI_CLOCK_PHASE_BIT);
 
 	//-------------------------------------------------------------
 	if(clkPolarityInverted_ == TRUE)
-		*_SPICR1 |= ISPI_CLOCK_POLARITY_BIT;
+		*s_SPICR1 |= ISPI_CLOCK_POLARITY_BIT;
 	else
-		*_SPICR1 &= ~(ISPI_CLOCK_POLARITY_BIT);
+		*s_SPICR1 &= ~(ISPI_CLOCK_POLARITY_BIT);
 
 	//-------------------------------------------------------------
 	if(operMode_ == ISPI_MASTER_MODE)
-		*_SPICR1 |= ISPI_MASTER_BIT;
+		*s_SPICR1 |= ISPI_MASTER_BIT;
 	else
-		*_SPICR1 &= ~(ISPI_MASTER_BIT);
+		*s_SPICR1 &= ~(ISPI_MASTER_BIT);
 
 	//-------------------------------------------------------------
 	if(pinDriveOpenDrain_ == TRUE)
-		*_SPICR1 |= ISPI_WIRED_OR_MODE_BIT;
+		*s_SPICR1 |= ISPI_WIRED_OR_MODE_BIT;
 	else
-		*_SPICR1 &= ~(ISPI_WIRED_OR_MODE_BIT);
+		*s_SPICR1 &= ~(ISPI_WIRED_OR_MODE_BIT);
 
 	//-------------------------------------------------------------
 	if(irqEnable_ == TRUE)
-		*_SPICR1 |= ISPI_IRQ_ENABLE_BIT;
+		*s_SPICR1 |= ISPI_IRQ_ENABLE_BIT;
 	else
-		*_SPICR1 &= ~(ISPI_IRQ_ENABLE_BIT);
+		*s_SPICR1 &= ~(ISPI_IRQ_ENABLE_BIT);
 
 	//-------------------------------------------------------------
 	if(stopInDozeMode_ == TRUE)
-		*_SPICR2 |= ISPI_STOP_IN_DOZE_BIT;
+		*s_SPICR2 |= ISPI_STOP_IN_DOZE_BIT;
 	else
-		*_SPICR2 &= ~(ISPI_STOP_IN_DOZE_BIT);
+		*s_SPICR2 &= ~(ISPI_STOP_IN_DOZE_BIT);
 
 	//-------------------------------------------------------------
 	if(serialPinBidirectional_ == TRUE)
-		*_SPICR2 |= ISPI_SERIAL_PIN_CONTROL_BIT; 
+		*s_SPICR2 |= ISPI_SERIAL_PIN_CONTROL_BIT; 
 	else
-		*_SPICR2 &= ~(ISPI_SERIAL_PIN_CONTROL_BIT);
+		*s_SPICR2 &= ~(ISPI_SERIAL_PIN_CONTROL_BIT);
 
 	//-------------------------------------------------------------
-	*_SPIBR = baud_;
+	*s_SPIBR = baud_;
 
 	//-------------------------------------------------------------
 	if(reducedDriveEnabled_ == TRUE)
-		*_SPIPURD |= ISPI_REDUCED_DRIVE_CAPABILITY_BIT;
+		*s_SPIPURD |= ISPI_REDUCED_DRIVE_CAPABILITY_BIT;
 	else
-		*_SPIPURD &= ~(ISPI_REDUCED_DRIVE_CAPABILITY_BIT);
+		*s_SPIPURD &= ~(ISPI_REDUCED_DRIVE_CAPABILITY_BIT);
 
 	//-------------------------------------------------------------
 	if(pullupDevicesEnabled_ == TRUE)
-		*_SPIPURD |= ISPI_PULLUP_DEVICES_ENABLE_BIT;
+		*s_SPIPURD |= ISPI_PULLUP_DEVICES_ENABLE_BIT;
 	else
-		*_SPIPURD &= ~(ISPI_PULLUP_DEVICES_ENABLE_BIT);
+		*s_SPIPURD &= ~(ISPI_PULLUP_DEVICES_ENABLE_BIT);
 
 	//-------------------------------------------------------------
 	if(systemEnable_ == TRUE)
-		*_SPICR1 |= ISPI_SYSTEM_ENABLE_BIT;
+		*s_SPICR1 |= ISPI_SYSTEM_ENABLE_BIT;
 	else
-		*_SPICR1 &= ~(ISPI_SYSTEM_ENABLE_BIT);
+		*s_SPICR1 &= ~(ISPI_SYSTEM_ENABLE_BIT);
 
 	//-------------------------------------------------------------
 	// Dummy read
-#if 0 // fix_ns8100
 	uint8 data;
 
 	data = reg_SPISR.reg;
 	data = reg_SPIDR;
-#endif
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function:	RetriveISPI_Data
@@ -364,8 +363,8 @@ void ISPI_Init(void)
 ///----------------------------------------------------------------------------
 uint8 RetriveISPI_Data(uint16* data_)
 {
-	extern MSGS430_UNION msgs430;
-	static uint16* msgPtr = (uint16*)&msgs430;
+	extern MSGS430_UNION g_msgs430;
+	static uint16* msgPtr = (uint16*)&g_msgs430;
 	static uint8 LSB = TRUE;
 	uint8 emptyFlag;
 
@@ -388,7 +387,7 @@ uint8 RetriveISPI_Data(uint16* data_)
 	{
 		LSB = TRUE;
 		*data_ = IDLE_DATA;
-		msgPtr = (uint16*)&msgs430;
+		msgPtr = (uint16*)&g_msgs430;
 		emptyFlag = TRUE;
 	}
 
@@ -401,7 +400,7 @@ uint8 RetriveISPI_Data(uint16* data_)
 ///----------------------------------------------------------------------------
 uint32 ISPI_SendMsg(uint8 cmdId)  
 {
-	extern MSGS430_UNION msgs430;
+	extern MSGS430_UNION g_msgs430;
 	WORD_BYTE_UNION* msgPtr;
 	uint8 scratch;
 
@@ -410,7 +409,7 @@ uint32 ISPI_SendMsg(uint8 cmdId)
 		switch (cmdId)
 		{
 			case START_TRIGGER_CMD:
-				msgPtr = (WORD_BYTE_UNION*)&msgs430;
+				msgPtr = (WORD_BYTE_UNION*)&g_msgs430;
 
 				while (msgPtr->wordData != 0xFFFF)
 				{

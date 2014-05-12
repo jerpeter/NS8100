@@ -20,7 +20,7 @@
 #include "Old_Board.h"
 #include "Uart.h"
 #include "RealTimeClock.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Menu.h"
 #include "ProcessBargraph.h"
 #include "ProcessCombo.h"
@@ -37,118 +37,11 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-//extern uint16* endFlashSectorPtr;
-extern EVT_RECORD g_RamEventRecord;				// The event record in Ram, being filled for the current event.
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;// Sensor information, calculated when sensor parameters change.
-extern REC_EVENT_MN_STRUCT trig_rec;		// Current trigger record structure in ram.
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-extern REC_HELP_MN_STRUCT help_rec;
-extern MN_EVENT_STRUCT mn_event_flags;		// Event flags to indicate current calling menu
-extern SYS_EVENT_STRUCT SysEvents_flags;	// System flags for main loop processing.
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-
-// Print flag to indicate printing attempt or skip printing.
-extern uint8 print_out_mode;
-extern uint16* gp_bg430DataStart;
-extern uint16* gp_bg430DataWrite;
-extern uint16* gp_bg430DataRead;
-extern uint16* gp_bg430DataEnd;
-
-extern uint16* startOfPreTrigBuff;
-extern uint16* tailOfPreTrigBuff;
-extern uint16* endOfPreTrigBuff;
-extern uint16 preTrigBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
-extern uint16 gMaxEventBuffers;
-extern uint16 gCurrentEventNumber;
-extern uint16 gFreeEventBuffers;
-extern uint16 gCalTestExpected;
-extern uint32 gSamplesInBody;
-extern uint32 gSamplesInPre;
-extern uint32 gSamplesInCal;
-extern uint32 gSamplesInEvent;
-extern uint32 gWordSizeInPre;
-extern uint32 gWordSizeInBody;
-extern uint32 gWordSizeInCal;
-extern uint32 gWordSizeInEvent;
-extern uint16* g_startOfEventBufferPtr;
-extern uint16* gEventBufferPrePtr;
-extern uint16* gEventBufferBodyPtr;
-extern uint16* gEventBufferCalPtr;
-extern uint16* dgEventBufferCalPtr;
-extern uint16* ddgEventBufferCalPtr;
-extern uint16* gCurrentEventSamplePtr;
-extern uint16 gCurrentEventBuffer;
-extern SUMMARY_DATA summaryTable[MAX_RAM_SUMMARYS];
-extern SUMMARY_DATA* gLastCompDataSum;
-extern uint32 isTriggered;
-extern uint32 processingCal;
-extern uint16 eventsNotCompressed;
-extern uint8 g_doneTakingEvents;
-extern uint16  eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
-extern uint8 g_sampleProcessing;
-
-// For combo processing, defined in ProcessBargraph
-extern uint8 gOneMinuteCount;
-extern uint32 gOneSecondCnt;
-extern uint32 gBarIntervalCnt;
-extern uint32 gTotalBarIntervalCnt;
-extern uint32 gSummaryIntervalCnt;
-extern uint16 gSummaryCnt;
-
-// For combo processing, defined in ProcessBargraph
-extern uint16 aImpulsePeak;
-extern uint16 rImpulsePeak;
-extern uint16 vImpulsePeak;
-extern uint16 tImpulsePeak;
-extern uint32 vsImpulsePeak;
-extern uint16 impulseMenuCount;
-extern uint16 aJobPeak;
-extern uint16 aJobFreq;
-extern uint16 rJobPeak;
-extern uint16 rJobFreq;
-extern uint16 vJobPeak;
-extern uint16 vJobFreq;
-extern uint16 tJobPeak;
-extern uint16 tJobFreq;
-extern uint32 vsJobPeak;
-
-// ns8100
-extern FL_FILE* gCurrentEventFileHandle;
-extern uint16 g_currentEventNumber;
-extern FL_FILE* gComboDualCurrentEventFileHandle;
-extern uint16* gCurrentEventStartPtr;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-// This ptr points to the current/in use (ram) summary table entry. It is
-// used to access the linkPtr which is really the flash event record Ptr.
-// And the record ptr is the location in ram. i.e.
-SUMMARY_DATA* gComboSummaryPtr = 0;
-BARGRAPH_FREQ_CALC_BUFFER g_comboFreqCalcBuffer;
-
-// A queue of buffers containing summary Interval data, so the
-// summary interval data can be printed outside of the ISR context.
-CALCULATED_DATA_STRUCT g_comboSummaryInterval[NUM_OF_SUM_INTERVAL_BUFFERS];
-CALCULATED_DATA_STRUCT* g_comboSumIntervalWritePtr = &(g_comboSummaryInterval[0]);
-CALCULATED_DATA_STRUCT* g_comboSumIntervalReadPtr = &(g_comboSummaryInterval[0]);
-CALCULATED_DATA_STRUCT* g_comboSumIntervalEndPtr = &(g_comboSummaryInterval[NUM_OF_SUM_INTERVAL_BUFFERS-1]);
-
-// A queue of buffers containing bar Interval data, so the
-// bar interval data can be printed outside of the ISR context.
-BARGRAPH_BAR_INTERVAL_DATA g_comboBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS];
-BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalWritePtr = &(g_comboBarInterval[0]);
-BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalReadPtr = &(g_comboBarInterval[0]);
-BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalEndPtr = &(g_comboBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS - 1]);
-
-// The following are the Event Data ram buffer pointers.
-#if 0 // Unused
-uint16* g_comboEventDataBuffer;
-uint16* g_comboEventDataStartPtr;
-uint16* g_comboEventDataWritePtr;
-uint16* g_comboEventDataReadPtr;
-uint16* g_comboEventDataEndPtr;
-#endif
 
 //*****************************************************************************
 // Function:	StartNewCombo
@@ -156,10 +49,10 @@ uint16* g_comboEventDataEndPtr;
 //*****************************************************************************
 void StartNewCombo(void)
 {
-	gComboSummaryPtr = NULL;
+	g_comboSummaryPtr = NULL;
 
 	// Get the address and empty Ram summary
-	if (GetRamSummaryEntry(&gComboSummaryPtr) == FALSE)
+	if (GetRamSummaryEntry(&g_comboSummaryPtr) == FALSE)
 	{
 		debug("Out of Ram Summary Entrys\n");
 		return;
@@ -172,21 +65,21 @@ void StartNewCombo(void)
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
 	byteSet(&g_comboFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
 
-	gSummaryCnt = 0;
-	gOneSecondCnt = 0;			// Count the secs so that we can increment the sum capture rate.
-	gOneMinuteCount = 0;		// Flag to mark the end of a summary sample in terms of time.
-	gBarIntervalCnt = 0;		// Count the number of samples that make up a bar interval.
-	gSummaryIntervalCnt = 0;	// Count the number of bars that make up a summary interval.
-	gTotalBarIntervalCnt = 0;
+	g_summaryCount = 0;
+	g_oneSecondCnt = 0;			// Count the secs so that we can increment the sum capture rate.
+	g_oneMinuteCount = 0;		// Flag to mark the end of a summary sample in terms of time.
+	g_barIntervalCnt = 0;		// Count the number of samples that make up a bar interval.
+	g_summaryIntervalCnt = 0;	// Count the number of bars that make up a summary interval.
+	g_totalBarIntervalCnt = 0;
 
 #if 0 // Unused
 	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
-	byteSet(&(g_comboeventDataBufferer[0]), 0, (sizeof(uint16) * BG_DATA_BUFFER_SIZE));
+	byteSet(&(g_combog_eventDataBufferer[0]), 0, (sizeof(uint16) * BG_DATA_BUFFER_SIZE));
 
-	g_comboEventDataStartPtr = &(g_comboeventDataBufferer[0]);
-	g_comboEventDataWritePtr = &(g_comboeventDataBufferer[0]);
-	g_comboEventDataReadPtr = &(g_comboeventDataBufferer[0]);
-	g_comboEventDataEndPtr = &(g_comboeventDataBufferer[BG_DATA_BUFFER_SIZE - 1]);
+	g_comboEventDataStartPtr = &(g_combog_eventDataBufferer[0]);
+	g_comboEventDataWritePtr = &(g_combog_eventDataBufferer[0]);
+	g_comboEventDataReadPtr = &(g_combog_eventDataBufferer[0]);
+	g_comboEventDataEndPtr = &(g_combog_eventDataBufferer[BG_DATA_BUFFER_SIZE - 1]);
 #endif
 
 	g_comboBarIntervalWritePtr = &(g_comboBarInterval[0]);
@@ -202,8 +95,8 @@ void StartNewCombo(void)
 	MoveStartOfComboEventRecordToFile();
 
 	g_RamEventRecord.summary.captured.batteryLevel = (uint32)((float)100.0 * (float)convertedBatteryLevel(BATTERY_VOLTAGE));
-	g_RamEventRecord.summary.captured.printerStatus = (uint8)(help_rec.auto_print);
-	g_RamEventRecord.summary.captured.calDate = factory_setup_rec.cal_date;
+	g_RamEventRecord.summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
+	g_RamEventRecord.summary.captured.calDate = g_factorySetupRecord.cal_date;
 
 	// Get the time
 	g_RamEventRecord.summary.captured.eventTime =
@@ -227,7 +120,7 @@ void EndCombo(void)
 	barIntervalsStored = moveComboBarIntervalDataToFile();
 
 	// Check if bar intervals were stored or a summery interval is present
-	if ((barIntervalsStored) || (gSummaryIntervalCnt))
+	if ((barIntervalsStored) || (g_summaryIntervalCnt))
 	{
 		moveComboSummaryIntervalDataToFile();
 	}
@@ -248,7 +141,7 @@ void ProcessComboData(void)
 
 	// Handle preTriggerBuf pointer for circular buffer after processing both individual modes,
 	//	neither of which advanced the pointer
-	if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
+	if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
 }
 
 /*****************************************************************************
@@ -258,32 +151,32 @@ void ProcessComboData(void)
 void ProcessComboBargraphData(void)
 {
 	// Check to see if we have a chunk of ram buffer to write, otherwise check for data wrapping.
-	if ((gp_bg430DataEnd - gp_bg430DataWrite) >= 4)
+	if ((g_bg430DataEndPtr - g_bg430DataWritePtr) >= 4)
 	{
 		// Move from the pre-trigger buffer to our large ram buffer.
-		*gp_bg430DataWrite++ = *(tailOfPreTrigBuff + 0);
-		*gp_bg430DataWrite++ = *(tailOfPreTrigBuff + 1);
-		*gp_bg430DataWrite++ = *(tailOfPreTrigBuff + 2);
-		*gp_bg430DataWrite++ = *(tailOfPreTrigBuff + 3);
+		*g_bg430DataWritePtr++ = *(g_tailOfPreTrigBuff + 0);
+		*g_bg430DataWritePtr++ = *(g_tailOfPreTrigBuff + 1);
+		*g_bg430DataWritePtr++ = *(g_tailOfPreTrigBuff + 2);
+		*g_bg430DataWritePtr++ = *(g_tailOfPreTrigBuff + 3);
 
 		// Check for the end and if so go to the top
-		if (gp_bg430DataWrite > gp_bg430DataEnd) gp_bg430DataWrite = gp_bg430DataStart;
+		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 
 	}
 	else
 	{
 		// Move from the pre-trigger buffer to our large ram buffer, but check for data wrapping.
-		*gp_bg430DataWrite++ = *(tailOfPreTrigBuff + 0);
-		if (gp_bg430DataWrite > gp_bg430DataEnd) gp_bg430DataWrite = gp_bg430DataStart;
+		*g_bg430DataWritePtr++ = *(g_tailOfPreTrigBuff + 0);
+		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 
-		*gp_bg430DataWrite++ = *(tailOfPreTrigBuff + 1);
-		if (gp_bg430DataWrite > gp_bg430DataEnd) gp_bg430DataWrite = gp_bg430DataStart;
+		*g_bg430DataWritePtr++ = *(g_tailOfPreTrigBuff + 1);
+		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 
-		*gp_bg430DataWrite++ = *(tailOfPreTrigBuff + 2);
-		if (gp_bg430DataWrite > gp_bg430DataEnd) gp_bg430DataWrite = gp_bg430DataStart;
+		*g_bg430DataWritePtr++ = *(g_tailOfPreTrigBuff + 2);
+		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 
-		*gp_bg430DataWrite++ = *(tailOfPreTrigBuff + 3);
-		if (gp_bg430DataWrite > gp_bg430DataEnd) gp_bg430DataWrite = gp_bg430DataStart;
+		*g_bg430DataWritePtr++ = *(g_tailOfPreTrigBuff + 3);
+		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
 	}
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
@@ -301,56 +194,56 @@ void ProcessComboSampleData(void)
 	uint16 commandNibble;
 
 	// Store the command nibble for the first channel of data
-	commandNibble = (uint16)(*(tailOfPreTrigBuff) & EMBEDDED_CMD);
+	commandNibble = (uint16)(*(g_tailOfPreTrigBuff) & EMBEDDED_CMD);
 
 	// Check if still waiting for an event
-	if (isTriggered == NO)
+	if (g_isTriggered == NO)
 	{
 		// Check if not processing a cal pulse
-		if (processingCal == NO)
+		if (g_processingCal == NO)
 		{
 			// Check the Command Nibble on the first channel (Acoustic)
 			switch (commandNibble)
 			{
 				case TRIG_ONE:
 					// Check if there are still free event containers and we are still taking new events
-					if ((gFreeEventBuffers != 0) && (g_doneTakingEvents == NO))
+					if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
 					{
 						// Store the exact time we received the trigger data sample
 						g_RamEventRecord.summary.captured.eventTime = getCurrentTime();
 
 						// Set loop counter to 1 minus the total samples to be recieved in the event body (minus the trigger data sample)
-						isTriggered = gSamplesInBody - 1;
+						g_isTriggered = g_samplesInBody - 1;
 
 #if 0 // ns7100
 						// Save the link to the beginning of the pretrigger data
-						summaryTable[gCurrentEventNumber].linkPtr = gEventBufferPrePtr;
+						g_summaryTable[g_currentEventNumber].linkPtr = g_eventBufferPretrigPtr;
 #endif
 						// Copy PreTrigger data over to the Event body buffer
-						*(gEventBufferBodyPtr + 0) = *(tailOfPreTrigBuff + 0);
-						*(gEventBufferBodyPtr + 1) = *(tailOfPreTrigBuff + 1);
-						*(gEventBufferBodyPtr + 2) = *(tailOfPreTrigBuff + 2);
-						*(gEventBufferBodyPtr + 3) = *(tailOfPreTrigBuff + 3);
+						*(g_eventBufferBodyPtr + 0) = *(g_tailOfPreTrigBuff + 0);
+						*(g_eventBufferBodyPtr + 1) = *(g_tailOfPreTrigBuff + 1);
+						*(g_eventBufferBodyPtr + 2) = *(g_tailOfPreTrigBuff + 2);
+						*(g_eventBufferBodyPtr + 3) = *(g_tailOfPreTrigBuff + 3);
 
 						// Advance the pointers
-						gEventBufferBodyPtr += 4;
+						g_eventBufferBodyPtr += 4;
 						// Now handled outside of routine
-						//tailOfPreTrigBuff += 4;
+						//g_tailOfPreTrigBuff += 4;
 
 						// Check if the number of Active channels is less than or equal to 4 (one seismic sensor)
-						if (gp_SensorInfo->numOfChannels <= 4)
+						if (g_sensorInfoPtr->numOfChannels <= 4)
 						{
 							// Check if the end of the PreTrigger buffer has been reached
-							if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
+							if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
 
 							// Copy PreTrigger data over to the Event PreTrigger buffer
-							*(gEventBufferPrePtr + 0) = (uint16)((*(tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_START);
-							*(gEventBufferPrePtr + 1) = (uint16)((*(tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_START);
-							*(gEventBufferPrePtr + 2) = (uint16)((*(tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_START);
-							*(gEventBufferPrePtr + 3) = (uint16)((*(tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_START);
+							*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_START);
+							*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_START);
+							*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_START);
+							*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_START);
 
-							// Advance the pointer (Don't advance tailOfPreTrigBuff since just reading pretrigger data)
-							gEventBufferPrePtr += 4;
+							// Advance the pointer (Don't advance g_tailOfPreTrigBuff since just reading pretrigger data)
+							g_eventBufferPretrigPtr += 4;
 						}
 					}
 					else
@@ -361,63 +254,63 @@ void ProcessComboSampleData(void)
 
 				case CAL_START:
 					// Set loop counter to 1 minus the total cal samples to be recieved (minus the cal start sample)
-					processingCal = gSamplesInCal - 1;
+					g_processingCal = g_samplesInCal - 1;
 
-					switch (gCalTestExpected)
+					switch (g_calTestExpected)
 					{
 						// Received a Cal pulse after the event
 						case 1:
 							// Copy PreTrigger data over to the Event Cal buffer
-							*(gEventBufferCalPtr + 0) = (uint16)((*(tailOfPreTrigBuff + 0) & DATA_MASK) | CAL_START);
-							*(gEventBufferCalPtr + 1) = (uint16)((*(tailOfPreTrigBuff + 1) & DATA_MASK) | CAL_START);
-							*(gEventBufferCalPtr + 2) = (uint16)((*(tailOfPreTrigBuff + 2) & DATA_MASK) | CAL_START);
-							*(gEventBufferCalPtr + 3) = (uint16)((*(tailOfPreTrigBuff + 3) & DATA_MASK) | CAL_START);
+							*(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | CAL_START);
+							*(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | CAL_START);
+							*(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfPreTrigBuff + 2) & DATA_MASK) | CAL_START);
+							*(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfPreTrigBuff + 3) & DATA_MASK) | CAL_START);
 
 							// Advance the pointers
-							gEventBufferCalPtr += 4;
+							g_eventBufferCalPtr += 4;
 							// Now handled outside of routine
-							//tailOfPreTrigBuff += 4;
+							//g_tailOfPreTrigBuff += 4;
 
 							break;
 
 						// Received a Cal pulse which was delayed once (use/copy the cal for both events)
 						case 2:
 							// Set the pointer to the second event Cal buffer
-							dgEventBufferCalPtr = gEventBufferCalPtr + gWordSizeInEvent;
+							g_delayedOneEventBufferCalPtr = g_eventBufferCalPtr + g_wordSizeInEvent;
 
 							// Copy PreTrigger data over to the Event Cal buffers
-							*(dgEventBufferCalPtr + 0) = *(gEventBufferCalPtr + 0) = (uint16)((*(tailOfPreTrigBuff + 0) & DATA_MASK) | CAL_START);
-							*(dgEventBufferCalPtr + 1) = *(gEventBufferCalPtr + 1) = (uint16)((*(tailOfPreTrigBuff + 1) & DATA_MASK) | CAL_START);
-							*(dgEventBufferCalPtr + 2) = *(gEventBufferCalPtr + 2) = (uint16)((*(tailOfPreTrigBuff + 2) & DATA_MASK) | CAL_START);
-							*(dgEventBufferCalPtr + 3) = *(gEventBufferCalPtr + 3) = (uint16)((*(tailOfPreTrigBuff + 3) & DATA_MASK) | CAL_START);
+							*(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | CAL_START);
+							*(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | CAL_START);
+							*(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfPreTrigBuff + 2) & DATA_MASK) | CAL_START);
+							*(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfPreTrigBuff + 3) & DATA_MASK) | CAL_START);
 
 							// Advance the pointers
-							dgEventBufferCalPtr += 4;
-							gEventBufferCalPtr += 4;
+							g_delayedOneEventBufferCalPtr += 4;
+							g_eventBufferCalPtr += 4;
 							// Now handled outside of routine
-							//tailOfPreTrigBuff += 4;
+							//g_tailOfPreTrigBuff += 4;
 							break;
 
 						// Received a Cal pulse which was delayed twice (use/copy the cal for all three events)
 						case 3:
 							// Set the pointer to the second event Cal buffer
-							dgEventBufferCalPtr = gEventBufferCalPtr + gWordSizeInEvent;
+							g_delayedOneEventBufferCalPtr = g_eventBufferCalPtr + g_wordSizeInEvent;
 
 							// Set the pointer to the third event Cal buffer
-							ddgEventBufferCalPtr = dgEventBufferCalPtr + gWordSizeInEvent;
+							g_delayedTwoEventBufferCalPtr = g_delayedOneEventBufferCalPtr + g_wordSizeInEvent;
 
 							// Copy PreTrigger data over to the Event Cal buffers
-							*(ddgEventBufferCalPtr + 0) = *(dgEventBufferCalPtr + 0) = *(gEventBufferCalPtr + 0) = (uint16)((*(tailOfPreTrigBuff + 0) & DATA_MASK) | CAL_START);
-							*(ddgEventBufferCalPtr + 1) = *(dgEventBufferCalPtr + 1) = *(gEventBufferCalPtr + 1) = (uint16)((*(tailOfPreTrigBuff + 1) & DATA_MASK) | CAL_START);
-							*(ddgEventBufferCalPtr + 2) = *(dgEventBufferCalPtr + 2) = *(gEventBufferCalPtr + 2) = (uint16)((*(tailOfPreTrigBuff + 2) & DATA_MASK) | CAL_START);
-							*(ddgEventBufferCalPtr + 3) = *(dgEventBufferCalPtr + 3) = *(gEventBufferCalPtr + 3) = (uint16)((*(tailOfPreTrigBuff + 3) & DATA_MASK) | CAL_START);
+							*(g_delayedTwoEventBufferCalPtr + 0) = *(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | CAL_START);
+							*(g_delayedTwoEventBufferCalPtr + 1) = *(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | CAL_START);
+							*(g_delayedTwoEventBufferCalPtr + 2) = *(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfPreTrigBuff + 2) & DATA_MASK) | CAL_START);
+							*(g_delayedTwoEventBufferCalPtr + 3) = *(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfPreTrigBuff + 3) & DATA_MASK) | CAL_START);
 
 							// Advance the pointers
-							ddgEventBufferCalPtr += 4;
-							dgEventBufferCalPtr += 4;
-							gEventBufferCalPtr += 4;
+							g_delayedTwoEventBufferCalPtr += 4;
+							g_delayedOneEventBufferCalPtr += 4;
+							g_eventBufferCalPtr += 4;
 							// Now handled outside of routine
-							//tailOfPreTrigBuff += 4;
+							//g_tailOfPreTrigBuff += 4;
 							break;
 					}
 					break;
@@ -425,181 +318,181 @@ void ProcessComboSampleData(void)
 				default:
 					// Advance the PreTrigger buffer the number of active channels
 					// Now handled outside of this routine
-					//tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;
+					//g_tailOfPreTrigBuff += g_sensorInfoPtr->numOfChannels;
 					break;
 			}
 		}
-		else // processingCal != 0
+		else // g_processingCal != 0
 		{
 			// Received another data sample, decrement the count
-			processingCal--;
+			g_processingCal--;
 
-			switch (gCalTestExpected)
+			switch (g_calTestExpected)
 			{
 				case 1:
 					// Copy PreTrigger data over to the Event Cal buffer
-					*(gEventBufferCalPtr + 0) = *(tailOfPreTrigBuff + 0);
-					*(gEventBufferCalPtr + 1) = *(tailOfPreTrigBuff + 1);
-					*(gEventBufferCalPtr + 2) = *(tailOfPreTrigBuff + 2);
-					*(gEventBufferCalPtr + 3) = *(tailOfPreTrigBuff + 3);
+					*(g_eventBufferCalPtr + 0) = *(g_tailOfPreTrigBuff + 0);
+					*(g_eventBufferCalPtr + 1) = *(g_tailOfPreTrigBuff + 1);
+					*(g_eventBufferCalPtr + 2) = *(g_tailOfPreTrigBuff + 2);
+					*(g_eventBufferCalPtr + 3) = *(g_tailOfPreTrigBuff + 3);
 
 					// Advance the pointers
-					gEventBufferCalPtr += 4;
+					g_eventBufferCalPtr += 4;
 					// Now handled outside of routine
-					//tailOfPreTrigBuff += 4;
+					//g_tailOfPreTrigBuff += 4;
 
-					if (processingCal == 0)
+					if (g_processingCal == 0)
 					{
 						// Temp - Add CAL_END command flag
-						*(gEventBufferCalPtr - 4) |= CAL_END;
-						*(gEventBufferCalPtr - 3) |= CAL_END;
-						*(gEventBufferCalPtr - 2) |= CAL_END;
-						*(gEventBufferCalPtr - 1) |= CAL_END;
+						*(g_eventBufferCalPtr - 4) |= CAL_END;
+						*(g_eventBufferCalPtr - 3) |= CAL_END;
+						*(g_eventBufferCalPtr - 2) |= CAL_END;
+						*(g_eventBufferCalPtr - 1) |= CAL_END;
 
-						gEventBufferCalPtr = gEventBufferPrePtr + gWordSizeInPre + gWordSizeInBody;
+						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
 						//debugRaw("TE\n");
 						raiseSystemEventFlag(TRIGGER_EVENT);
-						gCalTestExpected = 0;
+						g_calTestExpected = 0;
 					}
 					break;
 
 				case 2:
-					*(dgEventBufferCalPtr + 0) = *(gEventBufferCalPtr + 0) = *(tailOfPreTrigBuff + 0);
-					*(dgEventBufferCalPtr + 1) = *(gEventBufferCalPtr + 1) = *(tailOfPreTrigBuff + 1);
-					*(dgEventBufferCalPtr + 2) = *(gEventBufferCalPtr + 2) = *(tailOfPreTrigBuff + 2);
-					*(dgEventBufferCalPtr + 3) = *(gEventBufferCalPtr + 3) = *(tailOfPreTrigBuff + 3);
+					*(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = *(g_tailOfPreTrigBuff + 0);
+					*(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = *(g_tailOfPreTrigBuff + 1);
+					*(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = *(g_tailOfPreTrigBuff + 2);
+					*(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = *(g_tailOfPreTrigBuff + 3);
 
 					// Advance the pointers
-					dgEventBufferCalPtr += 4;
-					gEventBufferCalPtr += 4;
+					g_delayedOneEventBufferCalPtr += 4;
+					g_eventBufferCalPtr += 4;
 					// Now handled outside of routine
-					//tailOfPreTrigBuff += 4;
+					//g_tailOfPreTrigBuff += 4;
 
-					if (processingCal == 0)
+					if (g_processingCal == 0)
 					{
 						// Temp - Add CAL_END command flag
-						*(gEventBufferCalPtr - 4) |= CAL_END;
-						*(gEventBufferCalPtr - 3) |= CAL_END;
-						*(gEventBufferCalPtr - 2) |= CAL_END;
-						*(gEventBufferCalPtr - 1) |= CAL_END;
+						*(g_eventBufferCalPtr - 4) |= CAL_END;
+						*(g_eventBufferCalPtr - 3) |= CAL_END;
+						*(g_eventBufferCalPtr - 2) |= CAL_END;
+						*(g_eventBufferCalPtr - 1) |= CAL_END;
 
-						gEventBufferCalPtr = gEventBufferPrePtr + gWordSizeInPre + gWordSizeInBody;
+						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
 						//debugRaw("TE\n");
 						raiseSystemEventFlag(TRIGGER_EVENT);
-						gCalTestExpected = 0;
+						g_calTestExpected = 0;
 					}
 					break;
 
 				case 3:
-					*(ddgEventBufferCalPtr + 0) = *(dgEventBufferCalPtr + 0) = *(gEventBufferCalPtr + 0) = *(tailOfPreTrigBuff + 0);
-					*(ddgEventBufferCalPtr + 1) = *(dgEventBufferCalPtr + 1) = *(gEventBufferCalPtr + 1) = *(tailOfPreTrigBuff + 1);
-					*(ddgEventBufferCalPtr + 2) = *(dgEventBufferCalPtr + 2) = *(gEventBufferCalPtr + 2) = *(tailOfPreTrigBuff + 2);
-					*(ddgEventBufferCalPtr + 3) = *(dgEventBufferCalPtr + 3) = *(gEventBufferCalPtr + 3) = *(tailOfPreTrigBuff + 3);
+					*(g_delayedTwoEventBufferCalPtr + 0) = *(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = *(g_tailOfPreTrigBuff + 0);
+					*(g_delayedTwoEventBufferCalPtr + 1) = *(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = *(g_tailOfPreTrigBuff + 1);
+					*(g_delayedTwoEventBufferCalPtr + 2) = *(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = *(g_tailOfPreTrigBuff + 2);
+					*(g_delayedTwoEventBufferCalPtr + 3) = *(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = *(g_tailOfPreTrigBuff + 3);
 
 					// Advance the pointers
-					ddgEventBufferCalPtr += 4;
-					dgEventBufferCalPtr += 4;
-					gEventBufferCalPtr += 4;
+					g_delayedTwoEventBufferCalPtr += 4;
+					g_delayedOneEventBufferCalPtr += 4;
+					g_eventBufferCalPtr += 4;
 					// Now handled outside of routine
-					//tailOfPreTrigBuff += 4;
+					//g_tailOfPreTrigBuff += 4;
 
-					if (processingCal == 0)
+					if (g_processingCal == 0)
 					{
 						// Temp - Add CAL_END command flag
-						*(gEventBufferCalPtr - 4) |= CAL_END;
-						*(gEventBufferCalPtr - 3) |= CAL_END;
-						*(gEventBufferCalPtr - 2) |= CAL_END;
-						*(gEventBufferCalPtr - 1) |= CAL_END;
+						*(g_eventBufferCalPtr - 4) |= CAL_END;
+						*(g_eventBufferCalPtr - 3) |= CAL_END;
+						*(g_eventBufferCalPtr - 2) |= CAL_END;
+						*(g_eventBufferCalPtr - 1) |= CAL_END;
 
-						gEventBufferCalPtr = gEventBufferPrePtr + gWordSizeInPre + gWordSizeInBody;
+						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
 						//debugRaw("TE\n");
 						raiseSystemEventFlag(TRIGGER_EVENT);
-						gCalTestExpected = 0;
+						g_calTestExpected = 0;
 					}
 					break;
 			}
 		}
 	}
-	else // isTriggered != 0
+	else // g_isTriggered != 0
 	{
 		// Check if this is the last sample of the triggered event
-		if ((isTriggered - 1) == 0)
+		if ((g_isTriggered - 1) == 0)
 		{
 			// Copy the channel data over from the pretrigger to the buffer
 			// Strip off the command nibble and mark the end of the event
-			*(gEventBufferBodyPtr + 0) = (uint16)((*(tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_END);
-			*(gEventBufferBodyPtr + 1) = (uint16)((*(tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_END);
-			*(gEventBufferBodyPtr + 2) = (uint16)((*(tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_END);
-			*(gEventBufferBodyPtr + 3) = (uint16)((*(tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferBodyPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferBodyPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferBodyPtr + 2) = (uint16)((*(g_tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferBodyPtr + 3) = (uint16)((*(g_tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_END);
 
 			// Advance the pointers
-			gEventBufferBodyPtr += 4;
+			g_eventBufferBodyPtr += 4;
 			// Now handled outside of routine
-			//tailOfPreTrigBuff += 4;
+			//g_tailOfPreTrigBuff += 4;
 		}
 		else // Normal samples in the triggered event
 		{
 			// Copy the channel data over from the pretrigger to the buffer
-			*(gEventBufferBodyPtr + 0) = *(tailOfPreTrigBuff + 0);
-			*(gEventBufferBodyPtr + 1) = *(tailOfPreTrigBuff + 1);
-			*(gEventBufferBodyPtr + 2) = *(tailOfPreTrigBuff + 2);
-			*(gEventBufferBodyPtr + 3) = *(tailOfPreTrigBuff + 3);
+			*(g_eventBufferBodyPtr + 0) = *(g_tailOfPreTrigBuff + 0);
+			*(g_eventBufferBodyPtr + 1) = *(g_tailOfPreTrigBuff + 1);
+			*(g_eventBufferBodyPtr + 2) = *(g_tailOfPreTrigBuff + 2);
+			*(g_eventBufferBodyPtr + 3) = *(g_tailOfPreTrigBuff + 3);
 
 			// Advance the pointers
-			gEventBufferBodyPtr += 4;
+			g_eventBufferBodyPtr += 4;
 			// Now handled outside of routine
-			//tailOfPreTrigBuff += 4;
+			//g_tailOfPreTrigBuff += 4;
 		}
 
 		// Check if the number of Active channels is less than or equal to 4 (one seismic sensor)
-		if (gp_SensorInfo->numOfChannels <= 4)
+		if (g_sensorInfoPtr->numOfChannels <= 4)
 		{
 			// Check if there are still PreTrigger data samples in the PreTrigger buffer
-			if ((gSamplesInBody - isTriggered) < gSamplesInPre)
+			if ((g_samplesInBody - g_isTriggered) < g_samplesInPretrig)
 			{
 				// Check if the end of the PreTrigger buffer has been reached
-				if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
+				if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
 
 				// Copy the PreTrigger data samples over to the PreTrigger data buffer
-				*(gEventBufferPrePtr + 0) = *(tailOfPreTrigBuff + 0);
-				*(gEventBufferPrePtr + 1) = *(tailOfPreTrigBuff + 1);
-				*(gEventBufferPrePtr + 2) = *(tailOfPreTrigBuff + 2);
-				*(gEventBufferPrePtr + 3) = *(tailOfPreTrigBuff + 3);
+				*(g_eventBufferPretrigPtr + 0) = *(g_tailOfPreTrigBuff + 0);
+				*(g_eventBufferPretrigPtr + 1) = *(g_tailOfPreTrigBuff + 1);
+				*(g_eventBufferPretrigPtr + 2) = *(g_tailOfPreTrigBuff + 2);
+				*(g_eventBufferPretrigPtr + 3) = *(g_tailOfPreTrigBuff + 3);
 
-				// Advance the pointer (Don't advance tailOfPreTrigBuff since just reading pretrigger data)
-				gEventBufferPrePtr += 4;
+				// Advance the pointer (Don't advance g_tailOfPreTrigBuff since just reading pretrigger data)
+				g_eventBufferPretrigPtr += 4;
 			}
 		}
 
-		// Deincrement isTriggered since another event sample has been stored
-		isTriggered--;
+		// Deincrement g_isTriggered since another event sample has been stored
+		g_isTriggered--;
 
 		// Check if all the event data from the PreTrigger buffer has been moved into the event buffer
-		if (isTriggered == 0)
+		if (g_isTriggered == 0)
 		{
-			gFreeEventBuffers--;
-			gCurrentEventNumber++;
-			gCalTestExpected++;
+			g_freeEventBuffers--;
+			g_currentEventNumber++;
+			g_calTestExpected++;
 
-			if (gCurrentEventNumber < gMaxEventBuffers)
+			if (g_currentEventNumber < g_maxEventBuffers)
 			{
-				gEventBufferPrePtr = gEventBufferBodyPtr + gWordSizeInCal;
-				gEventBufferBodyPtr = gEventBufferPrePtr + gWordSizeInPre;
+				g_eventBufferPretrigPtr = g_eventBufferBodyPtr + g_wordSizeInCal;
+				g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
 			}
 			else
 			{
-				gCurrentEventNumber = 0;
-				gEventBufferPrePtr = g_startOfEventBufferPtr;
-				gEventBufferBodyPtr = g_startOfEventBufferPtr + gWordSizeInPre;
+				g_currentEventNumber = 0;
+				g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
+				g_eventBufferBodyPtr = g_startOfEventBufferPtr + g_wordSizeInPretrig;
 			}
 		}
 	}
 
 	// Check if the end of the PreTrigger buffer has been reached
-	if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
+	if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
 }
 
 //*****************************************************************************
@@ -608,15 +501,15 @@ void ProcessComboSampleData(void)
 //*****************************************************************************
 uint32 moveComboBarIntervalDataToFile(void)
 {
-	uint32 accumulatedBarIntervalCount = gBarIntervalCnt;
+	uint32 accumulatedBarIntervalCount = g_barIntervalCnt;
 
 	// If Bar Intervals have been cached
-	if (gBarIntervalCnt > 0)
+	if (g_barIntervalCnt > 0)
 	{
 		// Reset the bar interval count
-		gBarIntervalCnt = 0;
+		g_barIntervalCnt = 0;
 
-		fl_fwrite(g_comboBarIntervalWritePtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, gComboDualCurrentEventFileHandle);		
+		fl_fwrite(g_comboBarIntervalWritePtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, g_comboDualCurrentEventFileHandle);		
 
 		// Advance the Bar Interval global buffer pointer
 		advanceBarIntervalBufPtr(WRITE_PTR);
@@ -640,9 +533,9 @@ void moveComboSummaryIntervalDataToFile(void)
 {
 	float rFreq, vFreq, tFreq;
 
-	rFreq = (float)((float)trig_rec.trec.sample_rate / (float)((g_comboSumIntervalWritePtr->r.frequency * 2) - 1));
-	vFreq = (float)((float)trig_rec.trec.sample_rate / (float)((g_comboSumIntervalWritePtr->v.frequency * 2) - 1));
-	tFreq = (float)((float)trig_rec.trec.sample_rate / (float)((g_comboSumIntervalWritePtr->t.frequency * 2) - 1));
+	rFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_comboSumIntervalWritePtr->r.frequency * 2) - 1));
+	vFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_comboSumIntervalWritePtr->v.frequency * 2) - 1));
+	tFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_comboSumIntervalWritePtr->t.frequency * 2) - 1));
 
 	// Calculate the Peak Displacement
 	g_comboSumIntervalWritePtr->a.displacement = 0;
@@ -651,17 +544,17 @@ void moveComboSummaryIntervalDataToFile(void)
 	g_comboSumIntervalWritePtr->t.displacement = (uint32)(g_comboSumIntervalWritePtr->t.peak * 1000000 / 2 / PI / tFreq);
 
 	// Store timestamp for the end of the summary interval
-	gSummaryCnt++;
-	g_comboSumIntervalWritePtr->summariesCaptured = gSummaryCnt;
+	g_summaryCount++;
+	g_comboSumIntervalWritePtr->summariesCaptured = g_summaryCount;
 	g_comboSumIntervalWritePtr->intervalEnd_Time = getCurrentTime();
 	g_comboSumIntervalWritePtr->batteryLevel =
 		(uint32)(100.0 * convertedBatteryLevel(BATTERY_VOLTAGE));
 	g_comboSumIntervalWritePtr->calcStructEndFlag = 0xEECCCCEE;	// End structure flag
 
 	// Reset summary interval count
-	gSummaryIntervalCnt = 0;
+	g_summaryIntervalCnt = 0;
 
-	fl_fwrite(g_comboSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT), 1, gComboDualCurrentEventFileHandle);		
+	fl_fwrite(g_comboSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT), 1, g_comboDualCurrentEventFileHandle);		
 
 	// Move update the job totals.
 	UpdateComboJobTotals(g_comboSumIntervalWritePtr);
@@ -686,73 +579,73 @@ uint8 CalculateComboData(void)
 	static uint32 vsTemp;
 	static uint16 aTempNorm, rTempNorm, vTempNorm, tTempNorm;
 	static DATE_TIME_STRUCT aTempTime, rTempTime, vTempTime, tTempTime;
-	static uint8 aJobFreqFlag = NO, rJobFreqFlag = NO, vJobFreqFlag = NO, tJobFreqFlag = NO;
-	static uint8 aJobPeakMatch = NO, rJobPeakMatch = NO, vJobPeakMatch = NO, tJobPeakMatch = NO;
+	static uint8 g_aJobFreqFlag = NO, g_rJobFreqFlag = NO, g_vJobFreqFlag = NO, g_tJobFreqFlag = NO;
+	static uint8 g_aJobPeakMatch = NO, g_rJobPeakMatch = NO, g_vJobPeakMatch = NO, g_tJobPeakMatch = NO;
 
 	uint8 gotDataFlag = NO;
 	int32 processingCount = 500;
 	uint16* dataReadStart;
 
-	while ((gp_bg430DataRead != gp_bg430DataWrite) && (processingCount-- > 0))
+	while ((g_bg430DataReadPtr != g_bg430DataWritePtr) && (processingCount-- > 0))
 	{
 
 		if (processingCount == 1)
 		{
-			if (gp_bg430DataWrite < gp_bg430DataRead)
+			if (g_bg430DataWritePtr < g_bg430DataReadPtr)
 			{
-				if (((gp_bg430DataWrite - gp_bg430DataStart) +
-					 (gp_bg430DataEnd - gp_bg430DataRead)) > 500)
+				if (((g_bg430DataWritePtr - g_bg430DataStartPtr) +
+					 (g_bg430DataEndPtr - g_bg430DataReadPtr)) > 500)
 					processingCount = 500;
 			}
 			else
 			{
-				if ((gp_bg430DataWrite - gp_bg430DataRead) > 500)
+				if ((g_bg430DataWritePtr - g_bg430DataReadPtr) > 500)
 					processingCount = 500;
 			}
 		}
 
-		dataReadStart = gp_bg430DataRead;
+		dataReadStart = g_bg430DataReadPtr;
 
 		// Make sure that we will not catch up to writing the data, almost impossible.
-		if (gp_bg430DataRead == gp_bg430DataWrite)
+		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
 		{
 			debug("ERROR 1a - Reading ptr equal to writing ptr.");
-			gp_bg430DataRead = dataReadStart;
+			g_bg430DataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
 		// Move from the pre-trigger buffer to our large ram buffer, but check for data wrapping.
-		aTemp = (uint16)((*gp_bg430DataRead++) & DATA_MASK);
-		if (gp_bg430DataRead > gp_bg430DataEnd) gp_bg430DataRead = gp_bg430DataStart;
+		aTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
 
 		// We have caught up to the end of the write with out it being completed.
-		if (gp_bg430DataRead == gp_bg430DataWrite)
+		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
 		{
 			debug("ERROR 1b - Reading ptr equal to writing ptr.");
-			gp_bg430DataRead = dataReadStart;
+			g_bg430DataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		rTemp = (uint16)((*gp_bg430DataRead++) & DATA_MASK);
-		if (gp_bg430DataRead > gp_bg430DataEnd) gp_bg430DataRead = gp_bg430DataStart;
-		if (gp_bg430DataRead == gp_bg430DataWrite)
+		rTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
+		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
 		{
 			debug("ERROR 1c - Reading ptr equal to writing ptr.");
-			gp_bg430DataRead = dataReadStart;
+			g_bg430DataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		vTemp = (uint16)((*gp_bg430DataRead++) & DATA_MASK);
-		if (gp_bg430DataRead > gp_bg430DataEnd) gp_bg430DataRead = gp_bg430DataStart;
-		if (gp_bg430DataRead == gp_bg430DataWrite)
+		vTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
+		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
 		{
 			debug("ERROR 1d - Reading ptr equal to writing ptr.");
-			gp_bg430DataRead = dataReadStart;
+			g_bg430DataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		tTemp = (uint16)((*gp_bg430DataRead++) & DATA_MASK);
-		if (gp_bg430DataRead > gp_bg430DataEnd) gp_bg430DataRead = gp_bg430DataStart;
+		tTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
 
 		// If here we got data;
 		gotDataFlag = YES;
@@ -771,22 +664,22 @@ uint8 CalculateComboData(void)
 		//=================================================
 		// Impulse Interval
 		//=================================================
-		if (impulseMenuCount >= trig_rec.berec.impulseMenuUpdateSecs)
+		if (g_impulseMenuCount >= g_triggerRecord.berec.impulseMenuUpdateSecs)
 		{
-			impulseMenuCount = 0;
-			aImpulsePeak = rImpulsePeak = vImpulsePeak = tImpulsePeak = 0;
-			vsImpulsePeak = 0;
+			g_impulseMenuCount = 0;
+			g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
+			g_vsImpulsePeak = 0;
 		}
 
 		// ---------------------------------
 		// A, R, V, T channel and Vector Sum
 		// ---------------------------------
 		// Store the max A, R, V or T normalized value if a new max was found
-		if (aTempNorm > aImpulsePeak) aImpulsePeak = aTempNorm;
-		if (rTempNorm > rImpulsePeak) rImpulsePeak = rTempNorm;
-		if (vTempNorm > vImpulsePeak) vImpulsePeak = vTempNorm;
-		if (tTempNorm > tImpulsePeak) tImpulsePeak = tTempNorm;
-		if (vsTemp > vsImpulsePeak) vsImpulsePeak = vsTemp;
+		if (aTempNorm > g_aImpulsePeak) g_aImpulsePeak = aTempNorm;
+		if (rTempNorm > g_rImpulsePeak) g_rImpulsePeak = rTempNorm;
+		if (vTempNorm > g_vImpulsePeak) g_vImpulsePeak = vTempNorm;
+		if (tTempNorm > g_tImpulsePeak) g_tImpulsePeak = tTempNorm;
+		if (vsTemp > g_vsImpulsePeak) g_vsImpulsePeak = vsTemp;
 
 		//=================================================
 		// Bar Interval
@@ -845,17 +738,17 @@ uint8 CalculateComboData(void)
 				g_comboFreqCalcBuffer.a.matchFlag = FALSE;
 			}
 
-			if (aTempNorm >= aJobPeak)
+			if (aTempNorm >= g_aJobPeak)
 			{
-				if (aTempNorm == aJobPeak)
-					aJobPeakMatch = YES;
+				if (aTempNorm == g_aJobPeak)
+					g_aJobPeakMatch = YES;
 				else
 				{
-					aJobPeak = aTempNorm;
-					aJobPeakMatch = NO;
+					g_aJobPeak = aTempNorm;
+					g_aJobPeakMatch = NO;
 				}
 
-				aJobFreqFlag = YES;
+				g_aJobFreqFlag = YES;
 			}
 
 			// Set update flag since we have either a matched or a new max
@@ -886,17 +779,17 @@ uint8 CalculateComboData(void)
 				g_comboFreqCalcBuffer.r.matchFlag = FALSE;
 			}
 
-			if (rTempNorm >= rJobPeak)
+			if (rTempNorm >= g_rJobPeak)
 			{
-				if (rTempNorm == rJobPeak)
-					rJobPeakMatch = YES;
+				if (rTempNorm == g_rJobPeak)
+					g_rJobPeakMatch = YES;
 				else
 				{
-					rJobPeak = rTempNorm;
-					rJobPeakMatch = NO;
+					g_rJobPeak = rTempNorm;
+					g_rJobPeakMatch = NO;
 				}
 
-				rJobFreqFlag = YES;
+				g_rJobFreqFlag = YES;
 			}
 
 			// Set update flag since we have either a matched or a new max
@@ -927,17 +820,17 @@ uint8 CalculateComboData(void)
 				g_comboFreqCalcBuffer.v.matchFlag = FALSE;
 			}
 
-			if (vTempNorm >= vJobPeak)
+			if (vTempNorm >= g_vJobPeak)
 			{
-				if (vTempNorm == vJobPeak)
-					vJobPeakMatch = YES;
+				if (vTempNorm == g_vJobPeak)
+					g_vJobPeakMatch = YES;
 				else
 				{
-					vJobPeak = vTempNorm;
-					vJobPeakMatch = NO;
+					g_vJobPeak = vTempNorm;
+					g_vJobPeakMatch = NO;
 				}
 
-				vJobFreqFlag = YES;
+				g_vJobFreqFlag = YES;
 			}
 
 			// Set update flag since we have either a matched or a new max
@@ -968,17 +861,17 @@ uint8 CalculateComboData(void)
 				g_comboFreqCalcBuffer.t.matchFlag = FALSE;
 			}
 
-			if (tTempNorm >= tJobPeak)
+			if (tTempNorm >= g_tJobPeak)
 			{
-				if (tTempNorm == tJobPeak)
-					tJobPeakMatch = YES;
+				if (tTempNorm == g_tJobPeak)
+					g_tJobPeakMatch = YES;
 				else
 				{
-					tJobPeak = tTempNorm;
-					tJobPeakMatch = NO;
+					g_tJobPeak = tTempNorm;
+					g_tJobPeakMatch = NO;
 				}
 
-				tJobFreqFlag = YES;
+				g_tJobFreqFlag = YES;
 			}
 
 			// Set update flag since we have either a matched or a new max
@@ -996,9 +889,9 @@ uint8 CalculateComboData(void)
 			// Store timestamp
 			g_comboSumIntervalWritePtr->vs_Time = getCurrentTime();
 
-			if (vsTemp > vsJobPeak)
+			if (vsTemp > g_vsJobPeak)
 			{
-				vsJobPeak = vsTemp;
+				g_vsJobPeak = vsTemp;
 			}
 		}
 
@@ -1040,21 +933,21 @@ uint8 CalculateComboData(void)
 				g_comboFreqCalcBuffer.a.matchFlag = FALSE;
 			}
 
-			if (aJobFreqFlag == YES)
+			if (g_aJobFreqFlag == YES)
 			{
-				if (aJobPeakMatch == YES)
+				if (g_aJobPeakMatch == YES)
 				{
-					if (g_comboFreqCalcBuffer.a.freq_count > aJobFreq)
-						aJobFreq = g_comboFreqCalcBuffer.a.freq_count;
+					if (g_comboFreqCalcBuffer.a.freq_count > g_aJobFreq)
+						g_aJobFreq = g_comboFreqCalcBuffer.a.freq_count;
 
-					aJobPeakMatch = NO;
+					g_aJobPeakMatch = NO;
 				}
 				else
 				{
-					aJobFreq = g_comboFreqCalcBuffer.a.freq_count;
+					g_aJobFreq = g_comboFreqCalcBuffer.a.freq_count;
 				}
 
-				aJobFreqFlag = NO;
+				g_aJobFreqFlag = NO;
 			}
 
 			// Reset count to 1 since we have a sample that's crossed zero boundary
@@ -1101,21 +994,21 @@ uint8 CalculateComboData(void)
 				g_comboFreqCalcBuffer.r.matchFlag = FALSE;
 			}
 
-			if (rJobFreqFlag == YES)
+			if (g_rJobFreqFlag == YES)
 			{
-				if (rJobPeakMatch == YES)
+				if (g_rJobPeakMatch == YES)
 				{
-					if (g_comboFreqCalcBuffer.r.freq_count > rJobFreq)
-						rJobFreq = g_comboFreqCalcBuffer.r.freq_count;
+					if (g_comboFreqCalcBuffer.r.freq_count > g_rJobFreq)
+						g_rJobFreq = g_comboFreqCalcBuffer.r.freq_count;
 
-					rJobPeakMatch = NO;
+					g_rJobPeakMatch = NO;
 				}
 				else
 				{
-					rJobFreq = g_comboFreqCalcBuffer.r.freq_count;
+					g_rJobFreq = g_comboFreqCalcBuffer.r.freq_count;
 				}
 
-				rJobFreqFlag = NO;
+				g_rJobFreqFlag = NO;
 			}
 
 			// Reset count to 1 since we have a sample that's crossed zero boundary
@@ -1162,21 +1055,21 @@ uint8 CalculateComboData(void)
 				g_comboFreqCalcBuffer.v.matchFlag = FALSE;
 			}
 
-			if (vJobFreqFlag == YES)
+			if (g_vJobFreqFlag == YES)
 			{
-				if (vJobPeakMatch == YES)
+				if (g_vJobPeakMatch == YES)
 				{
-					if (g_comboFreqCalcBuffer.v.freq_count > vJobFreq)
-						vJobFreq = g_comboFreqCalcBuffer.v.freq_count;
+					if (g_comboFreqCalcBuffer.v.freq_count > g_vJobFreq)
+						g_vJobFreq = g_comboFreqCalcBuffer.v.freq_count;
 
-					vJobPeakMatch = NO;
+					g_vJobPeakMatch = NO;
 				}
 				else
 				{
-					vJobFreq = g_comboFreqCalcBuffer.v.freq_count;
+					g_vJobFreq = g_comboFreqCalcBuffer.v.freq_count;
 				}
 
-				vJobFreqFlag = NO;
+				g_vJobFreqFlag = NO;
 			}
 
 			// Reset count to 1 since we have a sample that's crossed zero boundary
@@ -1223,21 +1116,21 @@ uint8 CalculateComboData(void)
 				g_comboFreqCalcBuffer.t.matchFlag = FALSE;
 			}
 
-			if (tJobFreqFlag == YES)
+			if (g_tJobFreqFlag == YES)
 			{
-				if (tJobPeakMatch == YES)
+				if (g_tJobPeakMatch == YES)
 				{
-					if (g_comboFreqCalcBuffer.t.freq_count > tJobFreq)
-						tJobFreq = g_comboFreqCalcBuffer.t.freq_count;
+					if (g_comboFreqCalcBuffer.t.freq_count > g_tJobFreq)
+						g_tJobFreq = g_comboFreqCalcBuffer.t.freq_count;
 
-					tJobPeakMatch = NO;
+					g_tJobPeakMatch = NO;
 				}
 				else
 				{
-					tJobFreq = g_comboFreqCalcBuffer.t.freq_count;
+					g_tJobFreq = g_comboFreqCalcBuffer.t.freq_count;
 				}
 
-				tJobFreqFlag = NO;
+				g_tJobFreqFlag = NO;
 			}
 
 			// Reset count to 1 since we have a sample that's crossed zero boundary
@@ -1252,15 +1145,15 @@ uint8 CalculateComboData(void)
 		//=================================================
 		// End of Bar Interval
 		//=================================================
-		if (++gBarIntervalCnt >= (uint32)(trig_rec.bgrec.barInterval * trig_rec.trec.sample_rate))
+		if (++g_barIntervalCnt >= (uint32)(g_triggerRecord.bgrec.barInterval * g_triggerRecord.trec.sample_rate))
 		{
 			moveComboBarIntervalDataToFile();
 
 			//=================================================
 			// End of Summary Interval
 			//=================================================
-			if (++gSummaryIntervalCnt >=
-				(uint32)(trig_rec.bgrec.summaryInterval / trig_rec.bgrec.barInterval))
+			if (++g_summaryIntervalCnt >=
+				(uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
 			{
 				moveComboSummaryIntervalDataToFile();
 			}
@@ -1268,7 +1161,7 @@ uint8 CalculateComboData(void)
 
 	} // While != loop
 
-	if (gp_bg430DataWrite != gp_bg430DataRead)
+	if (g_bg430DataWritePtr != g_bg430DataReadPtr)
 	{
 		return (BG_BUFFER_NOT_EMPTY);
 	}
@@ -1285,13 +1178,13 @@ uint8 CalculateComboData(void)
 void MoveStartOfComboEventRecordToFile(void)
 {
 	// Get new file handle
-	gComboDualCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+	g_comboDualCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
 				
-	if (gComboDualCurrentEventFileHandle == NULL)
+	if (g_comboDualCurrentEventFileHandle == NULL)
 		debugErr("Failed to get a new file handle for the current Combo - Bargraph event!\n");
 
 	// Write in the current but unfinished event record to provide an offset to start writing in the data
-	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gComboDualCurrentEventFileHandle);
+	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_comboDualCurrentEventFileHandle);
 
 	// ns8100 - *NOTE* With Combo and keeping consistant with event numbers, save now instead of at the end of bargraph
 	// Combo - Bargraph event created, inc event number for potential Combo - Waveform events
@@ -1312,12 +1205,12 @@ void MoveEndOfComboEventRecordToFile(void)
 	g_RamEventRecord.summary.captured.endTime = getCurrentTime();
 
 	// Make sure at the beginning of the file
-	fl_fseek(gComboDualCurrentEventFileHandle, 0, SEEK_SET);
+	fl_fseek(g_comboDualCurrentEventFileHandle, 0, SEEK_SET);
 
 	// Rewrite the event record
-	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gComboDualCurrentEventFileHandle);
+	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_comboDualCurrentEventFileHandle);
 
-	fl_fclose(gComboDualCurrentEventFileHandle);
+	fl_fclose(g_comboDualCurrentEventFileHandle);
 	debug("Bargraph event file closed\n");
 
 #if 0 // ns8100 - *NOTE* With Combo and keeping consistant with event numbers, save moved to start instead of at the end of bargraph
@@ -1471,7 +1364,7 @@ BOOLEAN checkSpaceForComboBarSummaryInterval(void)
 	
 	getFlashUsageStats(&flashStats);
 
-	barIntervalSize = (sizeof(CALCULATED_DATA_STRUCT) + (((trig_rec.bgrec.summaryInterval / trig_rec.bgrec.barInterval) + 1) * 8));
+	barIntervalSize = (sizeof(CALCULATED_DATA_STRUCT) + (((g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval) + 1) * 8));
 
 	if (flashStats.sizeFree > barIntervalSize)
 		spaceLeft = YES;
@@ -1502,7 +1395,7 @@ void MoveComboWaveformEventToFile(void)
 	FLASH_USAGE_STRUCT flashStats;
 	INPUT_MSG_STRUCT msg;
 
-	if (gFreeEventBuffers < gMaxEventBuffers)
+	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
 		switch (flashMovState)
 		{
@@ -1512,7 +1405,7 @@ void MoveComboWaveformEventToFile(void)
 					debugErr("Out of Ram Summary Entrys\n");
 				}
 
-				sumEntry = &summaryTable[gCurrentEventBuffer];
+				sumEntry = &g_summaryTable[g_currentEventBuffer];
 				sumEntry->mode = WAVEFORM_MODE;
 
 				// Initialize the freq data counts.
@@ -1524,89 +1417,89 @@ void MoveComboWaveformEventToFile(void)
 				break;
 
 			case FLASH_PRE:
-				for (i = (uint16)gSamplesInPre; i != 0; i--)
+				for (i = (uint16)g_samplesInPretrig; i != 0; i--)
 				{
 					// Store entire sample
-					//storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-					gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
+					//storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 				flashMovState = FLASH_BODY_INT;
 				break;
 
 			case FLASH_BODY_INT:
-				sampGrpsLeft = (int)(gSamplesInBody - 1);
+				sampGrpsLeft = (int)(g_samplesInBody - 1);
 
 				// A channel
-				sample = *(gCurrentEventSamplePtr + 0);
+				sample = *(g_currentEventSamplePtr + 0);
 				sumEntry->waveShapeData.a.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
-				sumEntry->waveShapeData.a.peakPtr = (gCurrentEventSamplePtr + 0);
+				sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + 0);
 
 				// R channel
-				sample = *(gCurrentEventSamplePtr + 1);
+				sample = *(g_currentEventSamplePtr + 1);
 				tempPeak = sumEntry->waveShapeData.r.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				vectorSum = (uint32)(tempPeak * tempPeak);
-				sumEntry->waveShapeData.r.peakPtr = (gCurrentEventSamplePtr + 1);
+				sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + 1);
 
 				// V channel
-				sample = *(gCurrentEventSamplePtr + 2);
+				sample = *(g_currentEventSamplePtr + 2);
 				tempPeak = sumEntry->waveShapeData.v.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				vectorSum += (uint32)(tempPeak * tempPeak);
-				sumEntry->waveShapeData.v.peakPtr = (gCurrentEventSamplePtr + 2);
+				sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + 2);
 
 				// T channel
-				sample = *(gCurrentEventSamplePtr + 3);
+				sample = *(g_currentEventSamplePtr + 3);
 				tempPeak = sumEntry->waveShapeData.t.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				vectorSum += (uint32)(tempPeak * tempPeak);
-				sumEntry->waveShapeData.t.peakPtr = (gCurrentEventSamplePtr + 3);
+				sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + 3);
 
 				vectorSumTotal = (uint32)vectorSum;
 
-				gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
+				g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
 				flashMovState = FLASH_BODY;
 				break;
 
 			case FLASH_BODY:
-				for (i = 0; ((i < trig_rec.trec.sample_rate) && (sampGrpsLeft != 0)); i++)
+				for (i = 0; ((i < g_triggerRecord.trec.sample_rate) && (sampGrpsLeft != 0)); i++)
 				{
 					sampGrpsLeft--;
 
 					// A channel
-					sample = *(gCurrentEventSamplePtr + 0);
+					sample = *(g_currentEventSamplePtr + 0);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.a.peak)
 					{
 						sumEntry->waveShapeData.a.peak = normalizedData;
-						sumEntry->waveShapeData.a.peakPtr = (gCurrentEventSamplePtr + 0);
+						sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + 0);
 					}
 
 					// R channel
-					sample = *(gCurrentEventSamplePtr + 1);
+					sample = *(g_currentEventSamplePtr + 1);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.r.peak)
 					{
 						sumEntry->waveShapeData.r.peak = normalizedData;
-						sumEntry->waveShapeData.r.peakPtr = (gCurrentEventSamplePtr + 1);
+						sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + 1);
 					}
 					vectorSum = (uint32)(normalizedData * normalizedData);
 
 					// V channel
-					sample = *(gCurrentEventSamplePtr + 2);
+					sample = *(g_currentEventSamplePtr + 2);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.v.peak)
 					{
 						sumEntry->waveShapeData.v.peak = normalizedData;
-						sumEntry->waveShapeData.v.peakPtr = (gCurrentEventSamplePtr + 2);
+						sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + 2);
 					}
 					vectorSum += (normalizedData * normalizedData);
 
 					// T channel
-					sample = *(gCurrentEventSamplePtr + 3);
+					sample = *(g_currentEventSamplePtr + 3);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.t.peak)
 					{
 						sumEntry->waveShapeData.t.peak = normalizedData;
-						sumEntry->waveShapeData.t.peakPtr = (gCurrentEventSamplePtr + 3);
+						sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + 3);
 					}
 					vectorSum += (normalizedData * normalizedData);
 
@@ -1616,7 +1509,7 @@ void MoveComboWaveformEventToFile(void)
 						vectorSumTotal = (uint32)vectorSum;
 					}
 
-					gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
+					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
 				if (sampGrpsLeft == 0)
@@ -1630,37 +1523,37 @@ void MoveComboWaveformEventToFile(void)
 			case FLASH_CAL:
 #if 0 // Does nothing
 				// Loop 100 times
-				for (i = (uint16)(gSamplesInCal / (trig_rec.trec.sample_rate / 1024)); i != 0; i--)
+				for (i = (uint16)(g_samplesInCal / (g_triggerRecord.trec.sample_rate / 1024)); i != 0; i--)
 				{
 					// Advance the pointer using sample rate ratio to act as a filter to always scale down to a 1024 rate
-					gCurrentEventSamplePtr += ((trig_rec.trec.sample_rate/1024) * gp_SensorInfo->numOfChannels);
+					g_currentEventSamplePtr += ((g_triggerRecord.trec.sample_rate/1024) * g_sensorInfoPtr->numOfChannels);
 				}
 #endif
 
-				sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, (uint16)trig_rec.trec.sample_rate);
-				sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, (uint16)trig_rec.trec.sample_rate);
-				sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, (uint16)trig_rec.trec.sample_rate);
-				sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, (uint16)trig_rec.trec.sample_rate);
+				sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
+				sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
+				sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
+				sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
 
 				completeRamEventSummary(ramSummaryEntry, sumEntry);
 
 				// Get new event file handle
-				gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+				g_currentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
 
-				if (gCurrentEventFileHandle == NULL)
+				if (g_currentEventFileHandle == NULL)
 				{
 					debugErr("Failed to get a new file handle for the current Combo - Waveform event!\n");
 				}					
 				else // Write the file event to the SD card
 				{
 					// Write the event record header and summary
-					fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
+					fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
 					// Write the event data, containing the pretrigger, event and cal
-					fl_fwrite(gCurrentEventStartPtr, gWordSizeInEvent, 2, gCurrentEventFileHandle);
+					fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, g_currentEventFileHandle);
 
 					// Done writing the event file, close the file handle
-					fl_fclose(gCurrentEventFileHandle);
+					fl_fclose(g_currentEventFileHandle);
 					debug("Event file closed\n");
 
 					updateMonitorLogEntry();
@@ -1673,38 +1566,38 @@ void MoveComboWaveformEventToFile(void)
 				}
 
 				// Update event buffer count and pointers
-				if (++gCurrentEventBuffer == gMaxEventBuffers)
+				if (++g_currentEventBuffer == g_maxEventBuffers)
 				{
-					gCurrentEventBuffer = 0;
-					gCurrentEventStartPtr = gCurrentEventSamplePtr = g_startOfEventBufferPtr;
+					g_currentEventBuffer = 0;
+					g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr;
 				}
 				else
 				{
-					gCurrentEventStartPtr = gCurrentEventSamplePtr = g_startOfEventBufferPtr + (gCurrentEventBuffer * gWordSizeInEvent);
+					g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_currentEventBuffer * g_wordSizeInEvent);
 				}
 
-				if (gFreeEventBuffers == gMaxEventBuffers)
+				if (g_freeEventBuffers == g_maxEventBuffers)
 				{
 					clearSystemEventFlag(TRIGGER_EVENT);
 				}
 
-				gLastCompDataSum = ramSummaryEntry;
+				g_lastCompletedRamSummary = ramSummaryEntry;
 
-				print_out_mode = WAVEFORM_MODE;
+				g_printOutMode = WAVEFORM_MODE;
 				raiseMenuEventFlag(RESULTS_MENU_EVENT);
 
 				//debug("DataBuffs: Changing flash move state: %s\n", "FLASH_IDLE");
 				flashMovState = FLASH_IDLE;
-				gFreeEventBuffers++;
+				g_freeEventBuffers++;
 
 				if (getPowerControlState(LCD_POWER_ENABLE) == OFF)
 				{
 					assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
-					assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(help_rec.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+					assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 				}
 
 				// Check to see if there is room for another event, if not send a signal to stop monitoring
-				if (help_rec.flash_wrapping == NO)
+				if (g_helpRecord.flash_wrapping == NO)
 				{
 					getFlashUsageStats(&flashStats);
 

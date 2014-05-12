@@ -44,32 +44,13 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern REC_EVENT_MN_STRUCT trig_rec;
-extern REC_HELP_MN_STRUCT help_rec;
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern MN_EVENT_STRUCT mn_event_flags;
-extern int32 active_menu;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern uint8 g_kpadProcessingFlag;
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
+#include "Globals.h"
 extern USER_MENU_STRUCT modeMenu[];
-extern USER_MENU_CACHE_STRUCT* userMenuCachePtr;
-extern MODEM_SETUP_STRUCT modem_setup_rec;
-extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
-extern MN_MEM_DATA_STRUCT mn_ptr[DEFAULT_MN_SIZE];
-extern MONTH_TABLE_STRUCT monthTable[];
-extern char appVersion[];
-extern char appDate[];
-extern char appTime[];
-extern AUTODIALOUT_STRUCT __autoDialoutTbl;
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-MN_MEM_DATA_STRUCT mn_ptr[DEFAULT_MN_SIZE];
-
-MB_CHOICE messageChoices[MB_TOTAL_CHOICES] =
+static MB_CHOICE s_messageChoices[MB_TOTAL_CHOICES] =
 {
 	//{Num Choices,		1st/Single,	2nd Choice,	}
 	//{MB_ONE_CHOICE,	"OK\0",		"\0"		},
@@ -78,30 +59,7 @@ MB_CHOICE messageChoices[MB_TOTAL_CHOICES] =
 	{MB_ONE_CHOICE,		OK_TEXT,	NULL_TEXT	},
 	{MB_TWO_CHOICES,	YES_TEXT,	NO_TEXT		},
 	{MB_TWO_CHOICES,	OK_TEXT,	CANCEL_TEXT	}
-	// Add new messageChoices entry for new choices aboove this line
-};
-
-USER_MENU_TAGS_STRUCT menuTags[TOTAL_TAGS] = {
-	{"",	NO_TAG},
-	{"1. ",	ITEM_1},
-	{"2. ",	ITEM_2},
-	{"3. ",	ITEM_3},
-	{"4. ",	ITEM_4},
-	{"5. ",	ITEM_5},
-	{"6. ",	ITEM_6},
-	{"7. ",	ITEM_7},
-	{"8. ",	ITEM_8},
-	{"9. ",	ITEM_9},
-	{"-=",	MAIN_PRE_TAG},
-	{"=-",	MAIN_POST_TAG},
-	{"-",	TITLE_PRE_TAG},
-	{"-",	TITLE_POST_TAG},
-	{"",	LOW_SENSITIVITY_MAX_TAG},
-	{"",	HIGH_SENSITIVITY_MAX_TAG},
-	{"",	BAR_SCALE_FULL_TAG},
-	{"",	BAR_SCALE_HALF_TAG},
-	{"",	BAR_SCALE_QUARTER_TAG},
-	{"",	BAR_SCALE_EIGHTH_TAG}
+	// Add new s_messageChoices entry for new choices aboove this line
 };
 
 /****************************************
@@ -121,39 +79,39 @@ void setupMnDef(void)
 
 	// Load Trig Record 0 to get the last settings
 	debug("Trigger Record: Loading stored settings into cache\n");
-	getRecData(&trig_rec, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
+	getRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
     debug("Init Trig Rec Defaults...\n");
 
 	// Check if the Default Trig Record is uninitialized
-	if ((trig_rec.op_mode != WAVEFORM_MODE) && (trig_rec.op_mode != BARGRAPH_MODE) &&
-		(trig_rec.op_mode != COMBO_MODE))
+	if ((g_triggerRecord.op_mode != WAVEFORM_MODE) && (g_triggerRecord.op_mode != BARGRAPH_MODE) &&
+		(g_triggerRecord.op_mode != COMBO_MODE))
 	{
 		debugWarn("Trigger Record: Operation Mode not set\n");
 		debug("Trigger Record: Loading defaults and setting mode to Waveform\n");
-		loadTrigRecordDefaults((REC_EVENT_MN_STRUCT*)&trig_rec, WAVEFORM_MODE);
+		loadTrigRecordDefaults((REC_EVENT_MN_STRUCT*)&g_triggerRecord, WAVEFORM_MODE);
 	}
 	else
 	{
 		// Make sure record is marked valid
-		trig_rec.validRecord = YES;
+		g_triggerRecord.validRecord = YES;
 	}
 
     debug("Init Load Help Rec...\n");
 
 	// Load the Help Record
-	getRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	getRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
     debug("Init Help Rec Defaults...\n");
 
 	// Check if the Help Record is uninitialized
-	if (help_rec.encode_ln != 0xA5A5)
+	if (g_helpRecord.encode_ln != 0xA5A5)
 	{
 		// Set defaults in Help Record
 		debugWarn("Help record: Not found.\n");
 		debug("Loading Help Menu Defaults\n");
-		loadHelpRecordDefaults((REC_HELP_MN_STRUCT*)&help_rec);
-		saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		loadHelpRecordDefaults((REC_HELP_MN_STRUCT*)&g_helpRecord);
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 	}
 	else
 	{
@@ -162,11 +120,11 @@ void setupMnDef(void)
 
 #if 0 // fix_ns8100
 		// Set the baud rate to the user stored baud rate setting (initialized to 38400)
-		if (help_rec.baud_rate == BAUD_RATE_19200)
+		if (g_helpRecord.baud_rate == BAUD_RATE_19200)
 		{
 			uart_init(19200, CRAFT_COM_PORT);
 		}
-		else if (help_rec.baud_rate == BAUD_RATE_9600)
+		else if (g_helpRecord.baud_rate == BAUD_RATE_9600)
 		{
 			uart_init(9600, CRAFT_COM_PORT);
 		}
@@ -176,7 +134,7 @@ void setupMnDef(void)
     debug("Init Build Language Table...\n");
 
 	// Build the language table based on the user's last language choice
-	buildLanguageLinkTable(help_rec.lang_mode);
+	buildLanguageLinkTable(g_helpRecord.lang_mode);
 
     debug("Init Activate Help Rec Options...\n");
 
@@ -187,8 +145,6 @@ void setupMnDef(void)
 	// Wait 1/2 second for the LCD power to settle
 	soft_usecWait(500 * SOFT_MSECS);
 
-    debug("Init Display Splash Screen...\n");
-
 	debug("Display Splash screen\n");
 	// Display the Splash screen
 	displaySplashScreen();
@@ -197,31 +153,31 @@ void setupMnDef(void)
 	soft_usecWait(3 * SOFT_SECS);
 
 	// Check if the unit is set for Mini and auto print is enabled
-	if ((MINIGRAPH_UNIT) && (help_rec.auto_print == YES))
+	if ((MINIGRAPH_UNIT) && (g_helpRecord.auto_print == YES))
 	{
 		// Disable Auto printing
-		help_rec.auto_print = NO;
-		saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		g_helpRecord.auto_print = NO;
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 	}
 
     debug("Init Load Factory Setup Rec...\n");
 
 	debug("Load Factory setup record\n");
 	// Load the Factory Setup Record
-	getRecData(&factory_setup_rec, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+	getRecData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 
 	// Check if the Factory Setup Record is valid
-	if (!factory_setup_rec.invalid)
+	if (!g_factorySetupRecord.invalid)
 	{
 		// Print the Factory Setup Record to the console
 		byteSet(&buff[0], 0, sizeof(buff));
-		convertTimeStampToString(buff, &factory_setup_rec.cal_date, REC_DATE_TIME_TYPE);
+		convertTimeStampToString(buff, &g_factorySetupRecord.cal_date, REC_DATE_TIME_TYPE);
 
-		debug("Factory Setup: Serial #: %s\n", factory_setup_rec.serial_num);
+		debug("Factory Setup: Serial #: %s\n", g_factorySetupRecord.serial_num);
 		debug("Factory Setup: Cal Date: %s\n", buff);
-		debug("Factory Setup: Sensor Type: %d %s\n", (factory_setup_rec.sensor_type),
-				((factory_setup_rec.sensor_type == SENSOR_ACC) ? "(Acc)" : ""));
-		debug("Factory Setup: A-Weighting: %s\n", (factory_setup_rec.aweight_option == YES) ? "Enabled" : "Disabled");
+		debug("Factory Setup: Sensor Type: %d %s\n", (g_factorySetupRecord.sensor_type),
+				((g_factorySetupRecord.sensor_type == SENSOR_ACC) ? "(Acc)" : ""));
+		debug("Factory Setup: A-Weighting: %s\n", (g_factorySetupRecord.aweight_option == YES) ? "Enabled" : "Disabled");
 	}
 	else // Factory Setup Record is not found or invalid
 	{
@@ -234,10 +190,10 @@ void setupMnDef(void)
 
 	debug("Load Modem Setup record\n");
 	// Load the Modem Setup Record
-	getRecData(&modem_setup_rec, 0, REC_MODEM_SETUP_TYPE);
+	getRecData(&g_modemSetupRecord, 0, REC_MODEM_SETUP_TYPE);
 
 	// Check if the Modem Setup Record is invalid
-	if (modem_setup_rec.invalid)
+	if (g_modemSetupRecord.invalid)
 	{
 		// Warn the user
 		debugWarn("Modem setup record not found.\n");
@@ -246,7 +202,7 @@ void setupMnDef(void)
 		loadModemSetupRecordDefaults();
 
 		// Save the Modem Setup Record
-		saveRecData(&modem_setup_rec, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
+		saveRecData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
 	}
 	else
 	{
@@ -275,7 +231,7 @@ void setupMnDef(void)
 
     debug("Init Sensor Parameters...\n");
 
-	initSensorParameters(factory_setup_rec.sensor_type, (uint8)trig_rec.srec.sensitivity);
+	initSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
 }
 
 /****************************************
@@ -288,38 +244,38 @@ void initSensorParameters(uint16 sensor_type, uint8 sensitivity)
 	uint8 gainFactor = (uint8)((sensitivity == LOW) ? 2 : 4);
 
 	// Sensor type information
-	gp_SensorInfo->numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;		// The number of channels from a sensor.
-	gp_SensorInfo->unitsFlag = help_rec.units_of_measure;			// 0 = SAE; 1 = Metric
+	g_sensorInfoPtr->numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;		// The number of channels from a sensor.
+	g_sensorInfoPtr->unitsFlag = g_helpRecord.units_of_measure;			// 0 = SAE; 1 = Metric
 
-	gp_SensorInfo->sensorAccuracy = SENSOR_ACCURACY_DEFAULT;		// 100, sensor values are X 100 for accuaracy.
-	gp_SensorInfo->ADCResolution = ADC_RESOLUTION;				// Raw data Input Range, unless ADC is changed
+	g_sensorInfoPtr->sensorAccuracy = SENSOR_ACCURACY_DEFAULT;		// 100, sensor values are X 100 for accuaracy.
+	g_sensorInfoPtr->ADCResolution = ADC_RESOLUTION;				// Raw data Input Range, unless ADC is changed
 
 	// Get the shift value
-	gp_SensorInfo->shiftVal = 1;
+	g_sensorInfoPtr->shiftVal = 1;
 	while( (sensorTestVal != sensor_type) && (sensorTestVal >= (uint16)MIN_NORMALIZED_SENSOR) )
 	{
 		sensorTestVal = (uint16)(sensorTestVal >> 1);
-		gp_SensorInfo->shiftVal <<= 1;
+		g_sensorInfoPtr->shiftVal <<= 1;
 	}
 
-	gp_SensorInfo->sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_DEFAULT);
+	g_sensorInfoPtr->sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_DEFAULT);
 
-	if((IMPERIAL_TYPE == help_rec.units_of_measure) || (sensor_type == SENSOR_ACC))
+	if((IMPERIAL_TYPE == g_helpRecord.units_of_measure) || (sensor_type == SENSOR_ACC))
 	{
-		gp_SensorInfo->measurementRatio = (float)IMPERIAL; 				// 1 = SAE; 25.4 = Metric
+		g_sensorInfoPtr->measurementRatio = (float)IMPERIAL; 				// 1 = SAE; 25.4 = Metric
 	}
 	else
 	{
-		gp_SensorInfo->measurementRatio = (float)METRIC; 				// 1 = SAE; 25.4 = Metric
+		g_sensorInfoPtr->measurementRatio = (float)METRIC; 				// 1 = SAE; 25.4 = Metric
 	}
 
 	// Get the sensor type in terms of the measurement units.
-	gp_SensorInfo->sensorTypeNormalized = (float)(gp_SensorInfo->sensorTypeNormalized) * (float)(gp_SensorInfo->measurementRatio);
+	g_sensorInfoPtr->sensorTypeNormalized = (float)(g_sensorInfoPtr->sensorTypeNormalized) * (float)(g_sensorInfoPtr->measurementRatio);
 
 	// the conversion is length(in or mm) = hexValue * (sensor scale/ADC Max Value)
-	gp_SensorInfo->hexToLengthConversion = (float)( (float)ADC_RESOLUTION / (float)gp_SensorInfo->sensorTypeNormalized );
+	g_sensorInfoPtr->hexToLengthConversion = (float)( (float)ADC_RESOLUTION / (float)g_sensorInfoPtr->sensorTypeNormalized );
 
-	gp_SensorInfo->sensorValue = (uint16)(factory_setup_rec.sensor_type / gainFactor); // sensor value X 100.
+	g_sensorInfoPtr->sensorValue = (uint16)(g_factorySetupRecord.sensor_type / gainFactor); // sensor value X 100.
 }
 
 /****************************************
@@ -332,12 +288,12 @@ void loadTempMenuTable(TEMP_MENU_DATA_STRUCT* currentMenu)
 
 	while (currentMenu[i].textEntry != TOTAL_TEXT_STRINGS)
 	{
-		sprintf((char*)mn_ptr[i].data, "%s%s%s", menuTags[currentMenu[i].preTag].text,
-				getLangText(currentMenu[i].textEntry), menuTags[currentMenu[i].postTag].text);
+		sprintf((char*)g_menuPtr[i].data, "%s%s%s", g_menuTags[currentMenu[i].preTag].text,
+				getLangText(currentMenu[i].textEntry), g_menuTags[currentMenu[i].postTag].text);
 		i++;
 	}
 
-	strcpy((char*)mn_ptr[i].data, ".end.");
+	strcpy((char*)g_menuPtr[i].data, ".end.");
 }
 
 /****************************************
@@ -348,7 +304,7 @@ void mnScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
 	uint8 buff[50];
 
-	strcpy((char*)buff, (char*)(mn_ptr + mn_layout_ptr->curr_ln + 1)->data);
+	strcpy((char*)buff, (char*)(g_menuPtr + mn_layout_ptr->curr_ln + 1)->data);
 
 	switch (direction)
 	{
@@ -393,7 +349,7 @@ void userMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout
 {
 	char buff[50];
 
-	strcpy(buff, (userMenuCachePtr + mn_layout_ptr->curr_ln + 1)->text);
+	strcpy(buff, (g_userMenuCachePtr + mn_layout_ptr->curr_ln + 1)->text);
 
 	switch (direction)
 	{
@@ -437,11 +393,11 @@ void dsplySelMn(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_p
    uint8 menu_ln;
    uint32 length;
 
-   byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+   byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
    menu_ln = 0;
    top = 0;
-   strcpy((char*)buff, (char*)(mn_ptr + top + menu_ln)->data);
+   strcpy((char*)buff, (char*)(g_menuPtr + top + menu_ln)->data);
    length = strlen((char*)buff);
    wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 
@@ -465,7 +421,7 @@ void dsplySelMn(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_p
 
    while (wnd_layout_ptr->curr_row <= wnd_layout_ptr->end_row)
    {
-      strcpy((char*)buff, (char*)(mn_ptr + top + menu_ln)->data);
+      strcpy((char*)buff, (char*)(g_menuPtr + top + menu_ln)->data);
       if (strcmp((char*)buff, ".end."))
       {
          if (menu_ln == (mn_layout_ptr->curr_ln - mn_layout_ptr->top_ln))
@@ -505,14 +461,14 @@ void displayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_lay
 	uint32 length;
 
 	// Clear out LCD map buffer
-	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Init var's
 	menu_ln = 0;
 	top = 0;
 
 	// Copy Menu Title into buffer
-	strcpy((char*)(&buff[0]), (userMenuCachePtr + top + menu_ln)->text);
+	strcpy((char*)(&buff[0]), (g_userMenuCachePtr + top + menu_ln)->text);
 
 	// Get length of title
 	length = strlen((char*)(&buff[0]));
@@ -547,7 +503,7 @@ void displayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_lay
 	while (wnd_layout_ptr->curr_row <= wnd_layout_ptr->end_row)
 	{
 		// Copy the next menu text into the buffer
-		strcpy((char*)(&buff[0]), (userMenuCachePtr + top + menu_ln)->text);
+		strcpy((char*)(&buff[0]), (g_userMenuCachePtr + top + menu_ln)->text);
 
 		// Check if we have reached the end of the menu text
 		if (strcmp((char*)(&buff[0]), ".end."))
@@ -657,7 +613,7 @@ void wndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
 				if ((ln_type == REG_LN) || (ln_type == CURSOR_CHAR))
 				{
 					// Get the font table bitmap for each column
-					mmap[mmcurr_row + row][mmcurr_col + col] |= fmap_ptr[buff[index]][col] << (wnd_layout->curr_row %8);
+					g_mmap[mmcurr_row + row][mmcurr_col + col] |= fmap_ptr[buff[index]][col] << (wnd_layout->curr_row %8);
 				}
 				else if (ln_type == CURSOR_LN)
 				{
@@ -665,17 +621,17 @@ void wndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
 					temp1 = (uint8)~(fmap_ptr[buff[index]][col]);
 
 					// Write the inverse bitmap into the buffer
-					mmap[mmcurr_row + row][mmcurr_col + col] |= temp1 << (wnd_layout->curr_row %8);
+					g_mmap[mmcurr_row + row][mmcurr_col + col] |= temp1 << (wnd_layout->curr_row %8);
 					// Write the last pixel highlighted (reversed) in each column for the previous row
-					mmap[mmcurr_row + row -1][mmcurr_col + col] |= 0x80;
+					g_mmap[mmcurr_row + row -1][mmcurr_col + col] |= 0x80;
 
 					// Check if this is the first char
 					if (first_column == 0)
 					{
 						// pre-highlight (reverse) the column just before the first char
-						mmap[mmcurr_row + row][mmcurr_col + col -1] |= 0xFF;
+						g_mmap[mmcurr_row + row][mmcurr_col + col -1] |= 0xFF;
 						// pre-highlight (reverse) the last pixel in the column for the previous row
-						mmap[mmcurr_row + row -1][mmcurr_col + col -1] |= 0x80;
+						g_mmap[mmcurr_row + row -1][mmcurr_col + col -1] |= 0x80;
 
 						// Increment to prevent accessing this code again
 						first_column++;
@@ -701,17 +657,17 @@ void wndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
 					if (((col + mmcurr_col) <= mmend_col) && ((row + mmcurr_row) <= mmend_row))
 					{
 						temp1  = (uint8)((fmap_ptr[buff[index]][col] >> (8 - (wnd_layout->curr_row %8))));
-						mmap[mmcurr_row + row + 1][mmcurr_col + col] = temp1;
+						g_mmap[mmcurr_row + row + 1][mmcurr_col + col] = temp1;
 					}
 				}
 				else if (ln_type == CURSOR_LN)
 				{
 					if (((col + mmcurr_col) <= mmend_col) && ((row + mmcurr_row) <= mmend_row))
 					{
-						mmap[mmcurr_row + row + 1][mmcurr_col + col] = (uint8)(temp1 & (0xff >> (cbit_size - (cbit_size - bits_wrtn))));
+						g_mmap[mmcurr_row + row + 1][mmcurr_col + col] = (uint8)(temp1 & (0xff >> (cbit_size - (cbit_size - bits_wrtn))));
 
 						temp1  = (uint8)((fmap_ptr[buff[index]][col] >> (8 - (wnd_layout->curr_row %8))));
-						mmap[mmcurr_row + row + 1][mmcurr_col + col] = temp1;
+						g_mmap[mmcurr_row + row + 1][mmcurr_col + col] = temp1;
 					}
 				}
 			}
@@ -730,9 +686,9 @@ void wndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
 		if ((mmcurr_col > 0) && (mmcurr_row > 0))
 		{
 			// Set the column before the char reversed
-			mmap[mmcurr_row][mmcurr_col - 1] |= 0xff;
+			g_mmap[mmcurr_row][mmcurr_col - 1] |= 0xff;
 			// Set the previous row last pixel before the char reversed
-			mmap[mmcurr_row - 1][mmcurr_col - 1] |= 0x80;
+			g_mmap[mmcurr_row - 1][mmcurr_col - 1] |= 0x80;
 		}
 
 		// Loop through the pixel width (columns) of the cursor char
@@ -741,15 +697,15 @@ void wndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
 			// Check that the column and row are within range
 			if (((col + mmcurr_col) <= mmend_col) && ((row + mmcurr_row) <= mmend_row))
 			{
-				temp1 = (uint8)~mmap[mmcurr_row + row][mmcurr_col + col];
+				temp1 = (uint8)~g_mmap[mmcurr_row + row][mmcurr_col + col];
 
 				// Get the font table bitmap for each column
-				mmap[mmcurr_row + row][mmcurr_col + col] = temp1;
+				g_mmap[mmcurr_row + row][mmcurr_col + col] = temp1;
 
 				if ((mmcurr_row + row - 1) >= 0)
 				{
 					// Write the last pixel highlighted (reversed) in each column for the previous row
-					mmap[mmcurr_row + row - 1][mmcurr_col + col] |= 0x80;
+					g_mmap[mmcurr_row + row - 1][mmcurr_col + col] |= 0x80;
 				}
 			}
 		}
@@ -770,35 +726,35 @@ void messageBorder(void)
 	// Top and bottom horizontal bars
 	for (i = 12; i < 116; i++)
 	{
-		mmap[0][i] |= 0xe0;
-		mmap[7][i] |= 0x07;
+		g_mmap[0][i] |= 0xe0;
+		g_mmap[7][i] |= 0x07;
 	}
 
 	// Left and right vertical bars
 	for (i = 1; i < 7; i++)
 	{
-		mmap[i][9] = 0xff;
-		mmap[i][10] = 0xff;
-		mmap[i][11] = 0xff;
-		mmap[i][116] = 0xff;
-		mmap[i][117] = 0xff;
-		mmap[i][118] = 0xff;
+		g_mmap[i][9] = 0xff;
+		g_mmap[i][10] = 0xff;
+		g_mmap[i][11] = 0xff;
+		g_mmap[i][116] = 0xff;
+		g_mmap[i][117] = 0xff;
+		g_mmap[i][118] = 0xff;
 	}
 
 	// Rounded ends
-	mmap[0][9] |= 0x80;		mmap[0][10] |= 0xc0;	mmap[0][11] |= 0xe0;
-	mmap[0][116] |= 0xe0;	mmap[0][117] |= 0xc0;	mmap[0][118] |= 0x80;
-	mmap[7][9] |= 0x01;		mmap[7][10] |= 0x03;	mmap[7][11] |= 0x07;
-	mmap[7][116] |= 0x07;	mmap[7][117] |= 0x03;	mmap[7][118] |= 0x01;
+	g_mmap[0][9] |= 0x80;		g_mmap[0][10] |= 0xc0;	g_mmap[0][11] |= 0xe0;
+	g_mmap[0][116] |= 0xe0;	g_mmap[0][117] |= 0xc0;	g_mmap[0][118] |= 0x80;
+	g_mmap[7][9] |= 0x01;		g_mmap[7][10] |= 0x03;	g_mmap[7][11] |= 0x07;
+	g_mmap[7][116] |= 0x07;	g_mmap[7][117] |= 0x03;	g_mmap[7][118] |= 0x01;
 
 	// Clear inside message box area minus title area (highlighted)
 	for (i = 12; i < 116; i++)
 	{
-		mmap[2][i] = 0x00;
-		mmap[3][i] = 0x00;
-		mmap[4][i] = 0x00;
-		mmap[5][i] = 0x00;
-		mmap[6][i] = 0x00;
+		g_mmap[2][i] = 0x00;
+		g_mmap[3][i] = 0x00;
+		g_mmap[4][i] = 0x00;
+		g_mmap[5][i] = 0x00;
+		g_mmap[6][i] = 0x00;
 	}
 }
 
@@ -821,19 +777,19 @@ void messageTitle(char* titleString)
 
 	// Reverse fill up to the beginning of the title
 	for (i = 12; i < textPosition; i++)
-		mmap[1][i] = 0xff;
+		g_mmap[1][i] = 0xff;
 
 	// Write the title (highlighted)
 	i = 0;
 	while ((titleString[i] != '\0') && (textPosition < 116))
 	{
-		mmap[1][textPosition++] = (uint8)~font_table_68[(uint8)(titleString[i])][j++];
+		g_mmap[1][textPosition++] = (uint8)~font_table_68[(uint8)(titleString[i])][j++];
 		if (j == 6) {i++; j = 0;}
 	}
 
 	// Reverse fill from title to end of row
 	for (i = textPosition; i < 116; i++)
-		mmap[1][i] = 0xff;
+		g_mmap[1][i] = 0xff;
 }
 
 //=============================================================================
@@ -875,7 +831,7 @@ void messageText(char* textString)
 	// Write in the number of characters that will fit on the 1st line
 	for (i = 0, j = 0; i < subLength;)
 	{
-		mmap[2][textPosition++] = font_table_68[(uint8)(textString[i])][j++];
+		g_mmap[2][textPosition++] = font_table_68[(uint8)(textString[i])][j++];
 		// When 6 pixel columns have been written, advance to the next character
 		if (j == 6) {i++; j = 0;}
 	}
@@ -911,7 +867,7 @@ void messageText(char* textString)
 	// Write in the number of characters that will fit on the 2nd line
 	for (j = 0; i < subLength;)
 	{
-		mmap[3][textPosition++] = font_table_68[(uint8)(textString[i])][j++];
+		g_mmap[3][textPosition++] = font_table_68[(uint8)(textString[i])][j++];
 		// When 6 pixel columns have been written, advance to the next character
 		if (j == 6) {i++; j = 0;}
 	}
@@ -947,7 +903,7 @@ void messageText(char* textString)
 	// Write in the number of characters that will fit on the 3rd line
 	for (j = 0; i < subLength;)
 	{
-		mmap[4][textPosition++] = font_table_68[(uint8)(textString[i])][j++];
+		g_mmap[4][textPosition++] = font_table_68[(uint8)(textString[i])][j++];
 		// When 6 pixel columns have been written, advance to the next character
 		if (j == 6) {i++; j = 0;}
 	}
@@ -966,7 +922,7 @@ void messageText(char* textString)
 	textPosition = 13; // Shifted by one pixel since 2 extra pixel rows
 	for (j = 0; i < subLength;)
 	{
-		mmap[5][textPosition++] = font_table_68[(uint8)(textString[i])][j++];
+		g_mmap[5][textPosition++] = font_table_68[(uint8)(textString[i])][j++];
 		// When 6 pixel columns have been written, advance to the next character
 		if (j == 6) {i++; j = 0;}
 	}
@@ -984,8 +940,8 @@ void messageChoice(MB_CHOICE_TYPE choiceType)
 	char firstChoiceText[18];
 	char secondChoiceText[18];
 
-	strcpy((char*)firstChoiceText, getLangText(messageChoices[choiceType].firstTextEntry));
-	strcpy((char*)secondChoiceText, getLangText(messageChoices[choiceType].secondTextEntry));
+	strcpy((char*)firstChoiceText, getLangText(s_messageChoices[choiceType].firstTextEntry));
+	strcpy((char*)secondChoiceText, getLangText(s_messageChoices[choiceType].secondTextEntry));
 
 	// 64 = half screen, char len * 3 = char width*6(pixel width)/2(half)
 	text1Position = (uint8)(64 - strlen((char*)firstChoiceText) * 3);
@@ -994,25 +950,25 @@ void messageChoice(MB_CHOICE_TYPE choiceType)
 	// Find starting pixel position with extra char space, 6 = extra char space in pixel width
 	startPosition = (uint8)((text1Position < text2Position ? text1Position : text2Position) - 6);
 
-	if (messageChoices[choiceType].numChoices == MB_ONE_CHOICE)
+	if (s_messageChoices[choiceType].numChoices == MB_ONE_CHOICE)
 		startRow = 6;
-	else // messageChoices[choiceType].numChoices == MB_TWO_CHOICES
+	else // s_messageChoices[choiceType].numChoices == MB_TWO_CHOICES
 		startRow = 5;
 
 	// Clear out unused portion of first choice row in case message text ran long
 	for (i = 12; i < startPosition; i++)
 	{
-		mmap[startRow][i] = 0x00;
-		mmap[startRow][127-i] = 0x00;
+		g_mmap[startRow][i] = 0x00;
+		g_mmap[startRow][127-i] = 0x00;
 	}
 
 	// Highlight extra char space before and after text
 	for (i = startPosition; i < text1Position; i++)
 	{
-		mmap[startRow-1][i] |= 0x80;
-		mmap[startRow][i] = 0xff;
-		mmap[startRow-1][127-i] |= 0x80;
-		mmap[startRow][127-i] = 0xff;
+		g_mmap[startRow-1][i] |= 0x80;
+		g_mmap[startRow][i] = 0xff;
+		g_mmap[startRow-1][127-i] |= 0x80;
+		g_mmap[startRow][127-i] = 0xff;
 	}
 
 	// Display first choice
@@ -1020,27 +976,27 @@ void messageChoice(MB_CHOICE_TYPE choiceType)
 	while ((firstChoiceText[i] != '\0') && (text1Position < 116))
 	{
 		// Steal pixel line for active (reversed) choice
-		mmap[startRow-1][text1Position] |= 0x80;
+		g_mmap[startRow-1][text1Position] |= 0x80;
 		// Write in text (highlighted)
-		mmap[startRow][text1Position++] = (uint8)~font_table_68[(uint8)(firstChoiceText[i])][j++];
+		g_mmap[startRow][text1Position++] = (uint8)~font_table_68[(uint8)(firstChoiceText[i])][j++];
 		// When 6 pixel columns have been written, advance to the next character
 		if (j == 6) {i++; j = 0;}
 	}
 
 	// Add active choice round ends
-	mmap[startRow][startPosition - 2] = 0x3e;
-	mmap[startRow][startPosition - 1] = 0x7f;
-	mmap[startRow][128 - startPosition] = 0x7f;
-	mmap[startRow][128 - startPosition + 1] = 0x3e;
+	g_mmap[startRow][startPosition - 2] = 0x3e;
+	g_mmap[startRow][startPosition - 1] = 0x7f;
+	g_mmap[startRow][128 - startPosition] = 0x7f;
+	g_mmap[startRow][128 - startPosition + 1] = 0x3e;
 
-	if (messageChoices[choiceType].numChoices == MB_TWO_CHOICES)
+	if (s_messageChoices[choiceType].numChoices == MB_TWO_CHOICES)
 	{
 		// Display second choice
 		i = 0;
 		while ((secondChoiceText[i] != '\0') && (text2Position < 116))
 		{
 			// Write in the text (plain)
-			mmap[6][text2Position++] = font_table_68[(uint8)(secondChoiceText[i])][j++];
+			g_mmap[6][text2Position++] = font_table_68[(uint8)(secondChoiceText[i])][j++];
 			// When 6 pixel columns have been written, advance to the next character
 			if (j == 6) {i++; j = 0;}
 		}
@@ -1058,8 +1014,8 @@ void messageChoiceActiveSwap(MB_CHOICE_TYPE choiceType)
 	char firstChoiceText[18];
 	char secondChoiceText[18];
 
-	strcpy((char*)firstChoiceText, getLangText(messageChoices[choiceType].firstTextEntry));
-	strcpy((char*)secondChoiceText, getLangText(messageChoices[choiceType].secondTextEntry));
+	strcpy((char*)firstChoiceText, getLangText(s_messageChoices[choiceType].firstTextEntry));
+	strcpy((char*)secondChoiceText, getLangText(s_messageChoices[choiceType].secondTextEntry));
 
 	// 64 = half screen, char len * 3 = char width*6(pixel width)/2(half)
 	text1Position = (uint8)(64 - strlen((char*)firstChoiceText) * 3);
@@ -1071,22 +1027,22 @@ void messageChoiceActiveSwap(MB_CHOICE_TYPE choiceType)
 	for (i = startPosition; i < (128-startPosition); i++)
 	{
 		// Toggle bottom pixel line of 4th row
-		mmap[4][i] ^= 0x80;
+		g_mmap[4][i] ^= 0x80;
 		// Inverse the row/text leaving the bottom pixel row active (highlighted)
-		mmap[5][i] = (uint8)(~mmap[5][i] | 0x80);
+		g_mmap[5][i] = (uint8)(~g_mmap[5][i] | 0x80);
 		// Inverse the row/text
-		mmap[6][i] = (uint8)~mmap[6][i];
+		g_mmap[6][i] = (uint8)~g_mmap[6][i];
 	}
 
 	// Xor the round ends of the choices to invert them
-	mmap[5][startPosition-2] ^= 0x3e;
-	mmap[5][startPosition-1] ^= 0x7f;
-	mmap[5][128-startPosition] ^= 0x7f;
-	mmap[5][128-startPosition+1] ^= 0x3e;
-	mmap[6][startPosition-2] ^= 0x3e;
-	mmap[6][startPosition-1] ^= 0x7f;
-	mmap[6][128-startPosition] ^= 0x7f;
-	mmap[6][128-startPosition+1] ^= 0x3e;
+	g_mmap[5][startPosition-2] ^= 0x3e;
+	g_mmap[5][startPosition-1] ^= 0x7f;
+	g_mmap[5][128-startPosition] ^= 0x7f;
+	g_mmap[5][128-startPosition+1] ^= 0x3e;
+	g_mmap[6][startPosition-2] ^= 0x3e;
+	g_mmap[6][startPosition-1] ^= 0x7f;
+	g_mmap[6][128-startPosition] ^= 0x7f;
+	g_mmap[6][128-startPosition+1] ^= 0x3e;
 }
 
 //=============================================================================
@@ -1104,13 +1060,13 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 	//messageBoxActiveFlag = YES;
 	// End of temp code
 
-	// Build MessageBox into mmap with the following calls
+	// Build MessageBox into g_mmap with the following calls
 	messageBorder();
 	messageTitle(titleString);
 	messageText(textString);
 	messageChoice(choiceType);
 
-	writeMapToLcd(mmap);
+	writeMapToLcd(g_mmap);
 
 	// Loop forever unitl an enter or escape key is found
 	while ((key != ENTER_KEY) && (key != ESC_KEY))
@@ -1119,7 +1075,7 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 		key = getKeypadKey(WAIT_FOR_KEY);
 
 		// Check if there are two choices
-		if (messageChoices[choiceType].numChoices == MB_TWO_CHOICES)
+		if (s_messageChoices[choiceType].numChoices == MB_TWO_CHOICES)
 		{
 			switch (key)
 			{
@@ -1129,7 +1085,7 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 					{
 						// Swap the active choice
 						messageChoiceActiveSwap(choiceType);
-						writeMapToLcd(mmap);
+						writeMapToLcd(g_mmap);
 
 						activeChoice = MB_FIRST_CHOICE;
 					}
@@ -1140,7 +1096,7 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 					{
 						// Swap the active choice
 						messageChoiceActiveSwap(choiceType);
-						writeMapToLcd(mmap);
+						writeMapToLcd(g_mmap);
 
 						activeChoice = MB_SECOND_CHOICE;
 					}
@@ -1150,8 +1106,8 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 	}
 
 	// Clear LCD map buffer to remove message from showing up
-	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
-	writeMapToLcd(mmap);
+	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	writeMapToLcd(g_mmap);
 
 	// Temp flag for key processing from serial port
 	messageBoxActiveFlag = NO;
@@ -1173,7 +1129,7 @@ void overlayMessage(char* titleString, char* textString, uint32 displayTime)
 	messageTitle(titleString);
 	messageText(textString);
 
-	writeMapToLcd(mmap);
+	writeMapToLcd(g_mmap);
 	soft_usecWait(displayTime);
 }
 
@@ -1203,18 +1159,19 @@ void updateModeMenuTitle(uint8 mode)
 *	Function:	displaySplashScreen
 *	Purpose:
 ****************************************/
+uint8 testg_mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
+
 void displaySplashScreen(void)
 {
 	WND_LAYOUT_STRUCT wnd_layout;
 	uint8 buff[50];
 	uint8 length;
 
+	wnd_layout.end_row = DEFAULT_END_ROW;
 	wnd_layout.end_col = DEFAULT_END_COL;
 
 	// Clear cached LCD memory map
-	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
-
-    debug("Init Write LCD Strings to Map...\n");
+	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	//----------------------------------------------------------------------------------------
 	// Add in a title for the menu
@@ -1223,55 +1180,55 @@ void displaySplashScreen(void)
 
 	if (SUPERGRAPH_UNIT)
 	{
-		sprintf((char*)buff, "%s", "SUPERGRAPH");
+		sprintf((char*)(&buff[0]), "%s", "SUPERGRAPH");
 	}
 	else // Minigraph
 	{
-		sprintf((char*)buff, "%s", "MINI SUPERGRAPH");
+		sprintf((char*)(&buff[0]), "%s", "NOMIS 8100 GRAPH");
 	}
-	length = (uint8)strlen((char*)buff);
+	length = (uint8)strlen((char*)(&buff[0]));
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_ONE;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(buff, &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
+	wndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
 
 	//----------------------------------------------------------------------------------------
 	// Add in Software Version
 	//----------------------------------------------------------------------------------------
 	byteSet(&buff[0], 0, sizeof(buff));
-	sprintf((char*)buff, "%s %s", getLangText(SOFTWARE_VER_TEXT), appVersion);
-	length = (uint8)strlen((char*)buff);
+	sprintf((char*)(&buff[0]), "%s %s", getLangText(SOFTWARE_VER_TEXT), g_appVersion);
+	length = (uint8)strlen((char*)(&buff[0]));
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_THREE;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(buff, &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
+	wndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
 
 	//----------------------------------------------------------------------------------------
 	// Add in Software Date and Time
 	//----------------------------------------------------------------------------------------
 	byteSet(&buff[0], 0, sizeof(buff));
-	sprintf((char*)buff, "%s", appDate);
+	sprintf((char*)(&buff[0]), "%s", g_appDate);
 	length = (uint8)strlen((char*)buff);
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_FOUR;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(buff, &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
+	wndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
 
 	//----------------------------------------------------------------------------------------
 	// Add in Battery Voltage
 	//----------------------------------------------------------------------------------------
 	byteSet(&buff[0], 0, sizeof(buff));
-	sprintf((char*)buff, "%s: %.2f", getLangText(BATT_VOLTAGE_TEXT), convertedBatteryLevel(BATTERY_VOLTAGE));
-	length = (uint8)strlen((char*)buff);
+	sprintf((char*)(&buff[0]), "%s: %.2f", getLangText(BATT_VOLTAGE_TEXT), convertedBatteryLevel(BATTERY_VOLTAGE));
+	length = (uint8)strlen((char*)(&buff[0]));
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_SIX;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(buff, &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
+	wndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
 
-    debug("Init Write Slash Screen to LCD...\n");
+    debug("Init Write Splash Screen to LCD...\n");
 
 	// Write the map to the LCD
-	writeMapToLcd(mmap);
+	writeMapToLcd(g_mmap);
 }
 
 //=============================================================================
@@ -1283,11 +1240,11 @@ void displayCalDate(void)
 	char dateString[35];
 	char mesage[75];
 
-	if (!factory_setup_rec.invalid)
+	if (!g_factorySetupRecord.invalid)
 	{
 		byteSet(&dateString[0], 0, sizeof(dateString));
 		byteSet(&mesage[0], 0, sizeof(mesage));
-		convertTimeStampToString(dateString, &factory_setup_rec.cal_date, REC_DATE_TIME_TYPE);
+		convertTimeStampToString(dateString, &g_factorySetupRecord.cal_date, REC_DATE_TIME_TYPE);
 
 		sprintf((char*)mesage, "%s: %s", getLangText(CALIBRATION_DATE_TEXT), (char*)dateString);
 		messageBox(getLangText(STATUS_TEXT), (char*)mesage, MB_OK);
@@ -1307,10 +1264,10 @@ void displaySensorType(void)
 	uint16 sensorType = NULL_TEXT;
 	char message[75];
 
-	if (!factory_setup_rec.invalid)
+	if (!g_factorySetupRecord.invalid)
 	{
 		byteSet(&message[0], 0, sizeof(message));
-		switch (factory_setup_rec.sensor_type)
+		switch (g_factorySetupRecord.sensor_type)
 		{
 			case SENSOR_20_IN	: sensorType = X1_20_IPS_TEXT; break;
 			case SENSOR_10_IN	: sensorType = X2_10_IPS_TEXT; break;
@@ -1336,10 +1293,10 @@ void displaySerialNumber(void)
 {
 	char message[75];
 
-	if (!factory_setup_rec.invalid)
+	if (!g_factorySetupRecord.invalid)
 	{
 		byteSet(&message[0], 0, sizeof(message));
-		sprintf((char*)message, "%s: %s", getLangText(SERIAL_NUMBER_TEXT), (char*)factory_setup_rec.serial_num);
+		sprintf((char*)message, "%s: %s", getLangText(SERIAL_NUMBER_TEXT), (char*)g_factorySetupRecord.serial_num);
 		messageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
 	}
 	else
@@ -1363,10 +1320,10 @@ void displayTimerModeSettings(void)
 	byteSet(&activeTime[0], 0, sizeof(activeTime));
 	byteSet(&activeDates[0], 0, sizeof(activeDates));
 
-	sprintf((char*)activeTime, "%02d:%02d -> %02d:%02d", help_rec.tm_start_time.hour, help_rec.tm_start_time.min,
-			help_rec.tm_stop_time.hour, help_rec.tm_stop_time.min);
+	sprintf((char*)activeTime, "%02d:%02d -> %02d:%02d", g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min,
+			g_helpRecord.tm_stop_time.hour, g_helpRecord.tm_stop_time.min);
 
-	switch (help_rec.timer_mode_freq)
+	switch (g_helpRecord.timer_mode_freq)
 	{
 		case TIMER_MODE_ONE_TIME: 	activeModeTextType = ONE_TIME_TEXT; 		break;
 		case TIMER_MODE_DAILY: 		activeModeTextType = DAILY_EVERY_DAY_TEXT; 	break;
@@ -1375,10 +1332,10 @@ void displayTimerModeSettings(void)
 		case TIMER_MODE_MONTHLY: 	activeModeTextType = MONTHLY_TEXT; 			break;
 	}
 
-	sprintf((char*)activeDates, "%02d-%s-%02d -> %02d-%s-%02d", help_rec.tm_start_date.day,
-			(char*)&(monthTable[(uint8)(help_rec.tm_start_date.month)].name[0]), help_rec.tm_start_date.year,
-			help_rec.tm_stop_date.day, (char*)&(monthTable[(uint8)(help_rec.tm_stop_date.month)].name[0]),
-			help_rec.tm_stop_date.year);
+	sprintf((char*)activeDates, "%02d-%s-%02d -> %02d-%s-%02d", g_helpRecord.tm_start_date.day,
+			(char*)&(g_monthTable[(uint8)(g_helpRecord.tm_start_date.month)].name[0]), g_helpRecord.tm_start_date.year,
+			g_helpRecord.tm_stop_date.day, (char*)&(g_monthTable[(uint8)(g_helpRecord.tm_stop_date.month)].name[0]),
+			g_helpRecord.tm_stop_date.year);
 
 	// Display SAVED SETTINGS, ACTIVE TIME PERIOD HH:MM -> HH:MM
 	sprintf((char*)message, "%s, %s: %s", getLangText(SAVED_SETTINGS_TEXT),
@@ -1421,7 +1378,7 @@ void displayFlashUsageStats(void)
 
 	messageBox("FLASH USAGE STATS", (char*)message, MB_OK);
 
-	if (help_rec.flash_wrapping == NO)
+	if (g_helpRecord.flash_wrapping == NO)
 		sprintf(&message[0], "SPACE REMAINING (CURR. SETTINGS) WAVEFORMS: %d, BAR HOURS: ~%d",
 				usage.waveEventsLeft, usage.barHoursLeft);
 	else // Wrapping is on

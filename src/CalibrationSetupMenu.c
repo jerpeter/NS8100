@@ -26,7 +26,7 @@
 #include "SysEvents.h"
 #include "Board.h"
 #include "PowerManagement.h"
-#include "Rec.h"
+#include "Record.h"
 #include "SoftTimer.h"
 #include "Keypad.h"
 #include "TextTypes.h"
@@ -45,31 +45,14 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern volatile ISPI_STATE_E _ISPI_State;
-extern MSGS430_UNION msgs430;
-extern uint8 g_sampleProcessing;
-extern uint16* tailOfPreTrigBuff;
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern REC_HELP_MN_STRUCT help_rec;
-extern REC_EVENT_MN_STRUCT trig_rec;
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;
-extern uint8 mmap[8][128];
-extern uint32 gTotalSamples;
-extern uint32 g_rtcSoftTimerTickCount;
-extern uint16* tailOfPreTrigBuff;
-extern uint16* startOfPreTrigBuff;
-extern uint8 g_factorySetupSequence;
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-extern int32 active_menu;
+#include "Globals.h"
 extern USER_MENU_STRUCT helpMenu[];
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
-uint32 g_calSetupOperationMode;
-uint8 calDisplayScreen = 0;
-union {
+static uint8 s_calDisplayScreen = 0;
+static union {
 	int16 chan[4];
 	struct {
 		int16 a;
@@ -77,7 +60,7 @@ union {
 		int16 v;
 		int16 t;
 	};
-} preTrigData[256];
+} s_calPreTrigData[256];
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -101,17 +84,17 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 	volatile uint32 key = 0;
 	uint8 mbChoice = 0;
 	INPUT_MSG_STRUCT mn_msg;
-	uint8 previousMode = trig_rec.op_mode;
+	uint8 previousMode = g_triggerRecord.op_mode;
 
 	uint8 choice = messageBox(getLangText(VERIFY_TEXT), "START CAL DIAGNOSTICS?", MB_YESNO);
 
 	if (choice == MB_FIRST_CHOICE)
 	{
 		calSetupMnProc(msg, &wnd_layout, &mn_layout);
-		calDisplayScreen = 0;
+		s_calDisplayScreen = 0;
 	}
 
-	if (active_menu == CAL_SETUP_MENU)
+	if (g_activeMenu == CAL_SETUP_MENU)
 	{
 		if (choice == MB_FIRST_CHOICE)
 		{
@@ -126,7 +109,7 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 					// Create the Cal Setup menu
 					calSetupMnDsply(&wnd_layout);
 
-					writeMapToLcd(mmap);
+					writeMapToLcd(g_mmap);
 
 					// Set to current half second
 					tempTicks = g_rtcSoftTimerTickCount;
@@ -137,10 +120,10 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 				switch (key)
 				{
 					case UP_ARROW_KEY:
-						calDisplayScreen = 0;
+						s_calDisplayScreen = 0;
 						break;
 					case DOWN_ARROW_KEY:
-						calDisplayScreen = 1;
+						s_calDisplayScreen = 1;
 						break;
 					case ENTER_KEY :
 					case ESC_KEY :
@@ -160,22 +143,22 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 			if (messageBox(getLangText(CONFIRM_TEXT), getLangText(DO_YOU_WANT_TO_SAVE_THE_CAL_DATE_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 			{
 				// Store Calibration Date
-				factory_setup_rec.cal_date = getCurrentTime();
+				g_factorySetupRecord.cal_date = getCurrentTime();
 			}
 		}
 
-		saveRecData(&factory_setup_rec, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+		saveRecData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 
 		g_factorySetupSequence = SEQ_NOT_STARTED;
 
 		messageBox(getLangText(STATUS_TEXT), getLangText(FACTORY_SETUP_COMPLETE_TEXT), MB_OK);
 
 		// Restore the previous mode
-		trig_rec.op_mode = previousMode;
+		g_triggerRecord.op_mode = previousMode;
 
-		active_menu = MAIN_MENU;
+		g_activeMenu = MAIN_MENU;
 		ACTIVATE_MENU_MSG();
-		(*menufunc_ptrs[active_menu]) (mn_msg);
+		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 	}
 }
 
@@ -227,7 +210,7 @@ void calSetupMnProc(INPUT_MSG_STRUCT msg,
 					}
 
 					ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
-					(*menufunc_ptrs[active_menu]) (mn_msg);
+					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 					break;
 
 				default:
@@ -262,18 +245,22 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
 	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
-	byteSet(&(mmap[0][0]), 0, sizeof(mmap));
+	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	if (g_sampleProcessing == SAMPLING_STATE)
 	{
+#if 0 // ns7100
 		// If IDLE, wait for IDLE state to finish
 		while (ISPI_GetISPI_State() == ISPI_IDLE){ /*spinBar();*/ }
 
 		// If not IDLE, wait for 430 data processing to finish before moving on
 		while (ISPI_GetISPI_State() != ISPI_IDLE){ /*spinBar();*/ }
+#else // fix_ns8100
+
+#endif
 	}
 
-	memcpy(&preTrigData[0], &startOfPreTrigBuff[0], (256 * 4 * 2));
+	memcpy(&s_calPreTrigData[0], &g_startOfPreTrigBuff[0], (256 * 4 * 2));
 
 	// Zero the Med
 	memset(&chanMed[0][0], 0, sizeof(chanMed));
@@ -291,14 +278,14 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		for (j = 0; j < 4; j++)
 		{
-			if (preTrigData[i].chan[j] < chanMin[j]) chanMin[j] = preTrigData[i].chan[j];
-			if (preTrigData[i].chan[j] > chanMax[j]) chanMax[j] = preTrigData[i].chan[j];
-			chanAvg[j] += preTrigData[i].chan[j];
+			if (s_calPreTrigData[i].chan[j] < chanMin[j]) chanMin[j] = s_calPreTrigData[i].chan[j];
+			if (s_calPreTrigData[i].chan[j] > chanMax[j]) chanMax[j] = s_calPreTrigData[i].chan[j];
+			chanAvg[j] += s_calPreTrigData[i].chan[j];
 
-			if ((preTrigData[i].chan[j] >= 0x7FA) && (preTrigData[i].chan[j] <= 0x806))
+			if ((s_calPreTrigData[i].chan[j] >= 0x7FA) && (s_calPreTrigData[i].chan[j] <= 0x806))
 			{
-				if (chanMed[j][(preTrigData[i].chan[j] - 0x7FA)] < 255)
-					chanMed[j][(preTrigData[i].chan[j] - 0x7FA)]++;
+				if (chanMed[j][(s_calPreTrigData[i].chan[j] - 0x7FA)] < 255)
+					chanMed[j][(s_calPreTrigData[i].chan[j] - 0x7FA)]++;
 			}
 		}
 	}
@@ -318,7 +305,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 	}
 
-	if (calDisplayScreen == 0)
+	if (s_calDisplayScreen == 0)
 	{
 		// PRINT CAL_SETUP
 		byteSet(&buff[0], 0, sizeof(buff));
@@ -445,63 +432,64 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 ****************************************/
 void mnStartCal(void)
 {
+	g_totalSamples = (uint32)((SAMPLE_BUF_SIZE / g_sensorInfoPtr->numOfChannels) * g_sensorInfoPtr->numOfChannels);
+
+#if 0 // fix_ns8100
 	uint8 i = 0;
-
-	gTotalSamples = (uint32)((SAMPLE_BUF_SIZE / gp_SensorInfo->numOfChannels) * gp_SensorInfo->numOfChannels);
-
-	msgs430.startMsg430.cmd_id = START_TRIGGER_CMD;
+	g_msgs430.startMsg430.cmd_id = START_TRIGGER_CMD;
 
 	// All channels
 	for (i = 0; i < 8; i++)
 	{
-		msgs430.startMsg430.channel[i].options = GAIN_SELECT_x2;
-		msgs430.startMsg430.channel[i].trig_lvl_1 = BYTE_SWAPPED_NO_TRIGGER_CHAR;
-		msgs430.startMsg430.channel[i].trig_lvl_2 = BYTE_SWAPPED_NO_TRIGGER_CHAR;
-		msgs430.startMsg430.channel[i].trig_lvl_3 = BYTE_SWAPPED_NO_TRIGGER_CHAR;
+		g_msgs430.startMsg430.channel[i].options = GAIN_SELECT_x2;
+		g_msgs430.startMsg430.channel[i].trig_lvl_1 = BYTE_SWAPPED_NO_TRIGGER_CHAR;
+		g_msgs430.startMsg430.channel[i].trig_lvl_2 = BYTE_SWAPPED_NO_TRIGGER_CHAR;
+		g_msgs430.startMsg430.channel[i].trig_lvl_3 = BYTE_SWAPPED_NO_TRIGGER_CHAR;
 	}
 
 	// Channel 1
-	msgs430.startMsg430.channel[0].channel_num = MSP430_CHANNEL_1_INPUT;
-	msgs430.startMsg430.channel[0].channel_type = RADIAL_CHANNEL_TYPE;
-	msgs430.startMsg430.channel[0].group_num = SEISMIC_GROUP_1;
+	g_msgs430.startMsg430.channel[0].channel_num = MSP430_CHANNEL_1_INPUT;
+	g_msgs430.startMsg430.channel[0].channel_type = RADIAL_CHANNEL_TYPE;
+	g_msgs430.startMsg430.channel[0].group_num = SEISMIC_GROUP_1;
 
 	// Channel 2
-	msgs430.startMsg430.channel[1].channel_num = MSP430_CHANNEL_2_INPUT;
-	msgs430.startMsg430.channel[1].channel_type = VERTICAL_CHANNEL_TYPE;
-	msgs430.startMsg430.channel[1].group_num = SEISMIC_GROUP_1;
+	g_msgs430.startMsg430.channel[1].channel_num = MSP430_CHANNEL_2_INPUT;
+	g_msgs430.startMsg430.channel[1].channel_type = VERTICAL_CHANNEL_TYPE;
+	g_msgs430.startMsg430.channel[1].group_num = SEISMIC_GROUP_1;
 
 	// Channel 3
-	msgs430.startMsg430.channel[2].channel_num = MSP430_CHANNEL_3_INPUT;
-	msgs430.startMsg430.channel[2].channel_type = TRANSVERSE_CHANNEL_TYPE;
-	msgs430.startMsg430.channel[2].group_num = SEISMIC_GROUP_1;
+	g_msgs430.startMsg430.channel[2].channel_num = MSP430_CHANNEL_3_INPUT;
+	g_msgs430.startMsg430.channel[2].channel_type = TRANSVERSE_CHANNEL_TYPE;
+	g_msgs430.startMsg430.channel[2].group_num = SEISMIC_GROUP_1;
 
 	// Channel 4
-	msgs430.startMsg430.channel[3].channel_num = MSP430_CHANNEL_8_INPUT;
-	msgs430.startMsg430.channel[3].channel_type = ACOUSTIC_CHANNEL_TYPE;
-	msgs430.startMsg430.channel[3].group_num = SEISMIC_GROUP_1;
+	g_msgs430.startMsg430.channel[3].channel_num = MSP430_CHANNEL_8_INPUT;
+	g_msgs430.startMsg430.channel[3].channel_type = ACOUSTIC_CHANNEL_TYPE;
+	g_msgs430.startMsg430.channel[3].group_num = SEISMIC_GROUP_1;
 
 	// Channels 5-8
 	for (i = 4; i < 8; i++)
 	{
-		msgs430.startMsg430.channel[i].channel_num = DISABLED;
-		msgs430.startMsg430.channel[i].channel_type = 0;
-		msgs430.startMsg430.channel[i].group_num = SEISMIC_GROUP_2;
+		g_msgs430.startMsg430.channel[i].channel_num = DISABLED;
+		g_msgs430.startMsg430.channel[i].channel_type = 0;
+		g_msgs430.startMsg430.channel[i].group_num = SEISMIC_GROUP_2;
 	}
 
 	// Fake a waveform mode to just collect data in the pretrigger buffer
-	trig_rec.op_mode = WAVEFORM_MODE;
+	g_triggerRecord.op_mode = WAVEFORM_MODE;
 
-	msgs430.startMsg430.capture_mode = trig_rec.op_mode;
-	msgs430.startMsg430.bg_sample_interval = 0;
-	msgs430.startMsg430.sample_per_second = swapInt(1024);
-	msgs430.startMsg430.total_record_time = 1;
-	msgs430.startMsg430.end_mark = 0xffff;
+	g_msgs430.startMsg430.capture_mode = g_triggerRecord.op_mode;
+	g_msgs430.startMsg430.bg_sample_interval = 0;
+	g_msgs430.startMsg430.sample_per_second = swapInt(1024);
+	g_msgs430.startMsg430.total_record_time = 1;
+	g_msgs430.startMsg430.end_mark = 0xffff;
 
-	InitDataBuffs(msgs430.startMsg430.capture_mode);
+	InitDataBuffs(g_msgs430.startMsg430.capture_mode);
 
 	g_sampleProcessing = SAMPLING_STATE;
 
-	ISPI_SendMsg(msgs430.startMsg430.cmd_id);
+	ISPI_SendMsg(g_msgs430.startMsg430.cmd_id);
+#endif
 }
 
 /****************************************
@@ -512,11 +500,15 @@ void mnStopCal(void)
 {
 	if (g_sampleProcessing == SAMPLING_STATE)
 	{
+#if 0 // ns7100
 		// If IDLE, wait for IDLE state to finish
 		while (ISPI_GetISPI_State() == ISPI_IDLE){ /*spinBar()*/;}
 
 		// If not IDLE, wait for 430 data processing to finish before moving on
 		while (ISPI_GetISPI_State() != ISPI_IDLE){ /*spinBar()*/;}
+#else // fix_ns8100
+
+#endif
 	}
 
 	while (ISPI_SendMsg(STOP_TRIGGER_CMD)){;}

@@ -243,6 +243,7 @@ FL_FILE* fl_fopen(char *path, char *mode)
 			create = TRUE;
 			break;
 		case 'a':
+			read = TRUE;
 			write = TRUE;
 			append = TRUE;
 			create = TRUE;

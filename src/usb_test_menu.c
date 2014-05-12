@@ -192,7 +192,33 @@ void USB_Info(void)
 			count++;
 			character = USB_Info_Text[count];
 		}
+		
+	if (Is_usb_vbus_high())
+		print_dbg("Test for USB Cable (vbus high): Found.\n");
+	else
+		print_dbg("Test for USB Cable (vbus high): Not plugged in.\n");
+			
+	if (Is_usb_vbus_enabled())
+		print_dbg("Test for USB Cable (vbus enabled): Found.\n");
+	else
+		print_dbg("Test for USB Cable (vbus enabled): Not plugged in.\n");
+
+	if (Is_host_device_connection())
+		print_dbg("Test for USB Cable (dev_con): Found.\n");
+	else
+		print_dbg("Test for USB Cable (dev_con): Not plugged in.\n");
+
+	if (Is_host_hwup())
+		print_dbg("Test for USB Cable (host wake): Found.\n");
+	else
+		print_dbg("Test for USB Cable (host wake): Not plugged in.\n");
+
+	if (Is_host_remote_wakeup())
+		print_dbg("Test for USB Cable (host rem wake): Found.\n");
+	else
+		print_dbg("Test for USB Cable (host rem wake): Not plugged in.\n");
 }
+
 void USB_On_Mass_Storage_Test(void)
 {
     int *uart_rx_character = 0;

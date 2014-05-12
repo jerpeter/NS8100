@@ -19,15 +19,14 @@
 #include "InitDataBuffers.h"
 #include "Ispi.h"
 #include "Msgs430.h"
-#include "Mmc2114.h"
 #include "SysEvents.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Menu.h"
 #include "Summary.h"
 #include "Flash.h"
 #include "EventProcessing.h"
 #include "Board.h"
-#include "Rec.h"
+#include "Record.h"
 #include "Uart.h"
 #include "RealTimeClock.h"
 #include "ProcessBargraph.h"
@@ -42,67 +41,10 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern uint16* endFlashSectorPtr;
-extern EVT_RECORD g_RamEventRecord;
-extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;
-extern REC_EVENT_MN_STRUCT trig_rec;
-extern FACTORY_SETUP_STRUCT factory_setup_rec;
-extern REC_HELP_MN_STRUCT help_rec;
-extern MN_EVENT_STRUCT mn_event_flags;
-extern SYS_EVENT_STRUCT SysEvents_flags;
-extern uint16 manual_cal_flag;
-extern uint16 manualCalSampleCount;
-extern uint8 print_out_mode;
-extern uint8 g_sampleProcessing;
-extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
-
-extern uint16* startOfPreTrigBuff;
-extern uint16* tailOfPreTrigBuff;
-extern uint16* endOfPreTrigBuff;
-extern uint16 preTrigBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
-extern uint16 gMaxEventBuffers;
-extern uint16 gCurrentEventNumber;
-extern uint16 gFreeEventBuffers;
-extern uint16 gCalTestExpected;
-extern uint32 gSamplesInBody;
-extern uint32 gSamplesInPre;
-extern uint32 gSamplesInCal;
-extern uint32 gSamplesInEvent;
-extern uint32 gWordSizeInPre;
-extern uint32 gWordSizeInBody;
-extern uint32 gWordSizeInCal;
-extern uint32 gWordSizeInEvent;
-extern uint16* g_startOfEventBufferPtr;
-extern uint16* gEventBufferPrePtr;
-//extern uint16* chaTwoEvtPrePtr;
-extern uint16* gEventBufferBodyPtr;
-//extern uint16* chaTwoEvtBodyPtr;
-extern uint16* gEventBufferCalPtr;
-//extern uint16* chaTwoEvtCalPtr;
-extern uint16* dgEventBufferCalPtr;
-//extern uint16* dChaTwoEvtCalPtr;
-extern uint16* ddgEventBufferCalPtr;
-//extern uint16* ddChaTwoEvtCalPtr;
-extern uint16* gCurrentEventSamplePtr;
-extern uint16 gCurrentEventBuffer;
-extern SUMMARY_DATA summaryTable[MAX_RAM_SUMMARYS];
-extern SUMMARY_DATA* gLastCompDataSum;
-extern uint32 isTriggered;
-extern uint32 processingCal;
-extern uint16 eventsNotCompressed; 
-extern uint8 g_doneTakingEvents;
-extern uint16  eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
-extern uint16* gp_bg430DataStart;
-extern uint16* gp_bg430DataWrite;
-extern uint16* gp_bg430DataRead;
-extern uint16* gp_bg430DataEnd;
-
-// ns8100
-extern FL_FILE* gCurrentEventFileHandle;
-extern uint16 g_currentEventNumber;
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
 //*****************************************************************************
@@ -116,79 +58,79 @@ void ProcessManuelCalPulse(void)
 
 	static uint8 manuelCalInProgess = FALSE;
 
-	switch (*tailOfPreTrigBuff & EMBEDDED_CMD)
+	switch (*g_tailOfPreTrigBuff & EMBEDDED_CMD)
 	{
 		case CAL_START:
 			manuelCalInProgess = TRUE;
-			if (gFreeEventBuffers != 0)
+			if (g_freeEventBuffers != 0)
 			{
 				g_RamEventRecord.summary.captured.eventTime = triggerTimeStamp = getCurrentTime();
 #if 0 // ns7100
-				summaryTable[gCurrentEventNumber].linkPtr = gEventBufferPrePtr;
+				g_summaryTable[g_currentEventNumber].linkPtr = g_eventBufferPretrigPtr;
 #endif
-				*(gEventBufferPrePtr + 0) = (uint16)((*(tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_START);
-				*(gEventBufferPrePtr + 1) = (uint16)((*(tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_START);
-				*(gEventBufferPrePtr + 2) = (uint16)((*(tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_START);
-				*(gEventBufferPrePtr + 3) = (uint16)((*(tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_START);
+				*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_START);
+				*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_START);
+				*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_START);
+				*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_START);
 
-				gEventBufferPrePtr += 4;
-				tailOfPreTrigBuff += 4;
+				g_eventBufferPretrigPtr += 4;
+				g_tailOfPreTrigBuff += 4;
 			}
 			break;
 
 		case CAL_END:
 			manuelCalInProgess = FALSE;
 
-			*(gEventBufferPrePtr + 0) = (uint16)((*(tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_END);
-			*(gEventBufferPrePtr + 1) = (uint16)((*(tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_END);
-			*(gEventBufferPrePtr + 2) = (uint16)((*(tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_END);
-			*(gEventBufferPrePtr + 3) = (uint16)((*(tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_END);
 
-			gEventBufferPrePtr += 4;
-			tailOfPreTrigBuff += 4;
+			g_eventBufferPretrigPtr += 4;
+			g_tailOfPreTrigBuff += 4;
 			
 			raiseSystemEventFlag(MANUEL_CAL_EVENT);
-			manual_cal_flag = FALSE;
-			manualCalSampleCount = 0;
+			g_manualCalFlag = FALSE;
+			g_manualCalSampleCount = 0;
 			break;
 
 		default:
 			if (manuelCalInProgess == TRUE)
 			{
-				*(gEventBufferPrePtr + 0) = *(tailOfPreTrigBuff + 0);
-				*(gEventBufferPrePtr + 1) = *(tailOfPreTrigBuff + 1);
-				*(gEventBufferPrePtr + 2) = *(tailOfPreTrigBuff + 2);
-				*(gEventBufferPrePtr + 3) = *(tailOfPreTrigBuff + 3);
+				*(g_eventBufferPretrigPtr + 0) = *(g_tailOfPreTrigBuff + 0);
+				*(g_eventBufferPretrigPtr + 1) = *(g_tailOfPreTrigBuff + 1);
+				*(g_eventBufferPretrigPtr + 2) = *(g_tailOfPreTrigBuff + 2);
+				*(g_eventBufferPretrigPtr + 3) = *(g_tailOfPreTrigBuff + 3);
 
-				gEventBufferPrePtr += 4;
-				tailOfPreTrigBuff += 4;
+				g_eventBufferPretrigPtr += 4;
+				g_tailOfPreTrigBuff += 4;
 			}
 			else
 			{
-				tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;
+				g_tailOfPreTrigBuff += g_sensorInfoPtr->numOfChannels;
 			}
 			break;
 	}
   
-	if (manual_cal_flag == FALSE)
+	if (g_manualCalFlag == FALSE)
 	{
-		gFreeEventBuffers--;
-		gCurrentEventNumber++;
-		if (gCurrentEventNumber < gMaxEventBuffers)
+		g_freeEventBuffers--;
+		g_currentEventNumber++;
+		if (g_currentEventNumber < g_maxEventBuffers)
 		{
-				gEventBufferPrePtr = gEventBufferBodyPtr + gWordSizeInCal;
-				gEventBufferBodyPtr = gEventBufferPrePtr + gWordSizeInPre;
+				g_eventBufferPretrigPtr = g_eventBufferBodyPtr + g_wordSizeInCal;
+				g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
 		}
 		else
 		{
-			gCurrentEventNumber = 0;
-			gEventBufferPrePtr = g_startOfEventBufferPtr;
-			gEventBufferBodyPtr = g_startOfEventBufferPtr + gWordSizeInPre;
+			g_currentEventNumber = 0;
+			g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
+			g_eventBufferBodyPtr = g_startOfEventBufferPtr + g_wordSizeInPretrig;
 		}
 	}  
 
 	// Check if the end of the PreTrigger buffer has been reached
-	if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
+	if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
 }
 
 //*****************************************************************************
@@ -205,7 +147,7 @@ void MoveManuelCalToFlash(void)
 	uint16 hiA = 0, hiR = 0, hiV = 0, hiT = 0;
 	uint16 lowA = 0xFFF, lowR = 0xFFF, lowV = 0xFFF, lowT = 0xFFF;
 
-	if (gFreeEventBuffers < gMaxEventBuffers)
+	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
 		if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 		{
@@ -219,16 +161,16 @@ void MoveManuelCalToFlash(void)
 
 #if 1 // ns8100
 		// Get new file handle
-		gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+		g_currentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
 				
-		if (gCurrentEventFileHandle == NULL)
+		if (g_currentEventFileHandle == NULL)
 			debugErr("Failed to get a new file handle for the current Waveform event!\n");
 
 		// Seek to beginning of where data will be stored in event
-		fl_fseek(gCurrentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
+		fl_fseek(g_currentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
 #endif
 
-		sumEntry = &summaryTable[gCurrentEventBuffer];
+		sumEntry = &g_summaryTable[g_currentEventBuffer];
 		sumEntry->mode = MANUAL_CAL_MODE;
 
 		// Initialize the freq data counts.
@@ -237,11 +179,11 @@ void MoveManuelCalToFlash(void)
 		sumEntry->waveShapeData.v.freq = 0;
 		sumEntry->waveShapeData.t.freq = 0;
 
-		for (i = (uint16)gSamplesInCal; i != 0; i--)
+		for (i = (uint16)g_samplesInCal; i != 0; i--)
 		{
 			//=========================================================
 			// First channel - A
-			sample = (uint16)((*(gCurrentEventSamplePtr + 0)) & DATA_MASK);
+			sample = (uint16)((*(g_currentEventSamplePtr + 0)) & DATA_MASK);
 
 			if (sample > hiA) hiA = sample;
 			if (sample < lowA) lowA = sample;
@@ -251,12 +193,12 @@ void MoveManuelCalToFlash(void)
 			if (normalizedData > sumEntry->waveShapeData.a.peak)
 			{
 				sumEntry->waveShapeData.a.peak = normalizedData;
-				sumEntry->waveShapeData.a.peakPtr = (gCurrentEventSamplePtr + 0);
+				sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + 0);
 			}
 
 			//=========================================================
 			// Second channel - R
-			sample = (uint16)((*(gCurrentEventSamplePtr + 1)) & DATA_MASK);
+			sample = (uint16)((*(g_currentEventSamplePtr + 1)) & DATA_MASK);
 
 			if (sample > hiR) hiR = sample;
 			if (sample < lowR) lowR = sample;
@@ -266,12 +208,12 @@ void MoveManuelCalToFlash(void)
 			if (normalizedData > sumEntry->waveShapeData.r.peak)
 			{
 				sumEntry->waveShapeData.r.peak = normalizedData;
-				sumEntry->waveShapeData.r.peakPtr = (gCurrentEventSamplePtr + 1);
+				sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + 1);
 			}
 
 			//=========================================================
 			// Third channel - V
-			sample = (uint16)((*(gCurrentEventSamplePtr + 2)) & DATA_MASK);
+			sample = (uint16)((*(g_currentEventSamplePtr + 2)) & DATA_MASK);
 
 			if (sample > hiV) hiV = sample;
 			if (sample < lowV) lowV = sample;
@@ -281,12 +223,12 @@ void MoveManuelCalToFlash(void)
 			if (normalizedData > sumEntry->waveShapeData.v.peak)
 			{
 				sumEntry->waveShapeData.v.peak = normalizedData;
-				sumEntry->waveShapeData.v.peakPtr = (gCurrentEventSamplePtr + 2);
+				sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + 2);
 			}
 
 			//=========================================================
 			// Fourth channel - T
-			sample = (uint16)((*(gCurrentEventSamplePtr + 3)) & DATA_MASK);
+			sample = (uint16)((*(g_currentEventSamplePtr + 3)) & DATA_MASK);
 
 			if (sample > hiT) hiT = sample;
 			if (sample < lowT) lowT = sample;
@@ -296,27 +238,27 @@ void MoveManuelCalToFlash(void)
 			if (normalizedData > sumEntry->waveShapeData.t.peak)
 			{
 				sumEntry->waveShapeData.t.peak = normalizedData;
-				sumEntry->waveShapeData.t.peakPtr = (gCurrentEventSamplePtr + 3);
+				sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + 3);
 			}
 
 			// Store entire sample
 #if 0 // ns7100
-			storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+			storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 #else // ns8100
-			fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
+			fl_fwrite(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, g_currentEventFileHandle);
 #endif
 			
-			gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
+			g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 		}
 
-		if (++gCurrentEventBuffer == gMaxEventBuffers)
+		if (++g_currentEventBuffer == g_maxEventBuffers)
 		{
-			gCurrentEventBuffer = 0;
-			gCurrentEventSamplePtr = g_startOfEventBufferPtr;
+			g_currentEventBuffer = 0;
+			g_currentEventSamplePtr = g_startOfEventBufferPtr;
 		}
 		else
 		{
-			gCurrentEventSamplePtr = g_startOfEventBufferPtr + (gCurrentEventBuffer * gWordSizeInEvent);
+			g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_currentEventBuffer * g_wordSizeInEvent);
 		}
 
 		sumEntry->waveShapeData.a.peak = (uint16)(hiA - lowA + 1);
@@ -333,13 +275,13 @@ void MoveManuelCalToFlash(void)
 
 		clearSystemEventFlag(MANUEL_CAL_EVENT);
 
-		gLastCompDataSum = ramSummaryEntry;
+		g_lastCompletedRamSummary = ramSummaryEntry;
 
 		// Set printout mode to allow the results menu processing to know this is a manual cal pulse
-		print_out_mode = MANUAL_CAL_MODE;
+		g_printOutMode = MANUAL_CAL_MODE;
 		raiseMenuEventFlag(RESULTS_MENU_EVENT);
 
-		gFreeEventBuffers++;
+		g_freeEventBuffers++;
 	}
 	else
 	{

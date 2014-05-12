@@ -18,7 +18,7 @@
 ///----------------------------------------------------------------------------
 #include "Common.h"
 #include "Summary.h"
-#include "Rec.h"
+#include "Record.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -269,10 +269,10 @@ typedef struct
 	uint16	size;			// Size of msg with data and CRLF.
 	uint8	status;			// Status of buffer.
 
-	uint8	* readPtr;		// Start of data in msg.
-	uint8 	* writePtr;		// Element in array to be written.
+	uint8*	readPtr;		// Start of data in msg.
+	uint8*	writePtr;		// Element in array to be written.
 	uint8	msg[CMD_BUFFER_SIZE];
-	uint16 	overRunCheck;
+	uint16	overRunCheck;
 } CMD_BUFFER_STRUCT;
 
 #pragma pack(1)

@@ -34,8 +34,6 @@
 #include "usart.h"
 #include "gpio.h"
 #include "lcd.h"
-#include "utils.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -128,10 +126,10 @@
                            (TDF_OPTIM << AVR32_SMC_MODE0_TDF_MODE_OFFSET) | \
                            (PAGE_MODE << AVR32_SMC_MODE0_PMEN_OFFSET) | \
                            (PAGE_SIZE << AVR32_SMC_MODE0_PS_OFFSET); \
-  smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
+  g_smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
   }
 
-unsigned char smc_tab_cs_size[6];
+unsigned char g_smc_tab_cs_size[6];
 
 static int contrast_level = 0;
 
@@ -217,7 +215,7 @@ static void smc_enable_muxed_pins(void)
 }
 #endif
 
-static void Write_Block_To_Display (unsigned char *mmap_ptr)
+static void Write_Block_To_Display (unsigned char *g_mmap_ptr)
 {
     unsigned char segment;
     unsigned char *pixel_byte_ptr;
@@ -229,7 +227,7 @@ static void Write_Block_To_Display (unsigned char *mmap_ptr)
     while(row_index < 8)
 	{
 	    col_index = 0;
-	    pixel_byte_ptr = (unsigned char *)(mmap_ptr + (row_index * 128));
+	    pixel_byte_ptr = (unsigned char *)(g_mmap_ptr + (row_index * 128));
 
         segment = FIRST_HALF_DISPLAY;
         Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + row_index, segment);
@@ -319,43 +317,43 @@ void LCD_Info(void)
 
 void LCD_Write_Character(void)
 {
-   unsigned char input_buffer[10];
+   unsigned char g_input_buffer[10];
    int reply;
 
    print_dbg("Character to write ( ):");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
-   	  input_buffer[reply] = 0x00;
+   	  g_input_buffer[reply] = 0x00;
    }
    else
    {
-   	  input_buffer[0] = 0x00;
+   	  g_input_buffer[0] = 0x00;
    }
-   WriteLCD_smText( 4, 4, input_buffer, NORMAL_LCD);
+   WriteLCD_smText( 4, 4, g_input_buffer, NORMAL_LCD);
    print_dbg("\n\rCharacter [");
-   print_dbg_char(input_buffer[0]);
+   print_dbg_char(g_input_buffer[0]);
    print_dbg("] written to LCD\n\r");
 }
 
 void LCD_Write_String(void)
 {
-   unsigned char input_buffer[40];
+   unsigned char g_input_buffer[40];
    int reply;
 
    print_dbg("String to write ( ):");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
-   	  input_buffer[reply] = 0x00;
+   	  g_input_buffer[reply] = 0x00;
    }
    else
    {
-   	  input_buffer[0] = 0x00;
+   	  g_input_buffer[0] = 0x00;
    }
-   WriteLCD_smText( 0, 1, input_buffer, NORMAL_LCD);
+   WriteLCD_smText( 0, 1, g_input_buffer, NORMAL_LCD);
    print_dbg("\n\rString [");
-   print_dbg((char*)input_buffer);
+   print_dbg((char*)g_input_buffer);
    print_dbg("] written to LCD\n\r");
 
 }
@@ -371,7 +369,7 @@ void LCD_Draw_Horizontal_Line(void)
 
 void LCD_Power_On_Off(void)
 {
-    static uint8_t power_state = 0;
+    static uint8 power_state = 0;
 
     if(power_state == 0)
     {
@@ -393,7 +391,7 @@ void LCD_Power_On_Off(void)
 
 void LCD_Backlight_On_Off_Low_High(void)
 {
-    static uint8_t light_state = 0;
+    static uint8 light_state = 0;
 
     if(light_state == 0)
     {
@@ -427,14 +425,14 @@ void LCD_Clear(void)
 }
 void LCD_Set_Contrast(void)
 {
-   unsigned char input_buffer[40];
+   unsigned char g_input_buffer[40];
    int reply;
 
    print_dbg("Contrast level (0 to 32): ");
-   reply = Get_User_Input(input_buffer);
+   reply = Get_User_Input(g_input_buffer);
    if( reply > 0)
    {
-	   contrast_level = atoi((char*)input_buffer);
+	   contrast_level = atoi((char*)g_input_buffer);
 	   Set_Contrast(contrast_level);
 	   print_dbg("\n\rContrast level [");
 	   print_dbg_ulong(contrast_level);

@@ -15,8 +15,6 @@
 ///----------------------------------------------------------------------------
 #include "Typedefs.h"
 #include "Board.h"
-#include "Mmc2114.h"
-#include "Mmc2114_registers.h"
 #include "Sensor.h"
 #include "Uart.h"
 #include "Crc.h"
@@ -30,7 +28,7 @@
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
-///	Globals
+///	Local Scope Globals
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
@@ -52,6 +50,7 @@ void OneWireInit(void)
 ///	Function:	OneWireReset
 ///	Purpose:	Send a reset on the bus
 ///----------------------------------------------------------------------------
+#if 0
 uint8 OneWireReset(uint8 sensor)
 {
 	//    500  30 110 (us)
@@ -62,7 +61,6 @@ uint8 OneWireReset(uint8 sensor)
 
 	uint8 presenceDetect = NO;
 
-#if 0 // fix_ns8100
 	// Set data direction to output to drive a 0
 	//reg_DDRE.reg |= sensor;
 	reg_PORTE.reg &= ~sensor;
@@ -87,17 +85,18 @@ uint8 OneWireReset(uint8 sensor)
 	// Wait 100us make sure device is not driving the line
 	//soft_usecWait(80);
 	soft_usecWait(100);
-#endif
+
 	return (presenceDetect);
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function:	OneWireWriteByte
 ///	Purpose:	Write a byte on the OneWire bus
 ///----------------------------------------------------------------------------
+#if 0
 void OneWireWriteByte(uint8 sensor, uint8 data)
 {
-#if 0 // fix_ns8100
 	uint8 i;
 
 	// Loop through all the bits starting with LSB
@@ -140,17 +139,17 @@ void OneWireWriteByte(uint8 sensor, uint8 data)
 		// Shift the data over 1 bit
 		data >>= 1;
 	}
-#endif
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function:	OneWireReadByte
 ///	Purpose:	Read a byte on the OneWire bus
 ///----------------------------------------------------------------------------
+#if 0
 uint8 OneWireReadByte(uint8 sensor)
 {
 	uint8 data = 0;
-#if 0 // fix_ns8100
 	uint8 i;
 
 	// Loop through all the bits starting with LSB
@@ -191,9 +190,10 @@ uint8 OneWireReadByte(uint8 sensor)
 		//soft_usecWait(48);
 		soft_usecWait(60);
 	}
-#endif
+
 	return (data);
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function:	OneWireTest
