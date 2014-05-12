@@ -100,7 +100,7 @@ void init_mcp23018(unsigned char chip)
     write_mcp23018(chip, DEFVALB, 0x00);
 
 	// Interrupt on Change Compare
-	write_mcp23018(chip, INTCONA, 0x00);
+	write_mcp23018(chip, INTCONA, 0x0F);
 	write_mcp23018(chip, INTCONB, 0x00);
 
 	// I/O Config

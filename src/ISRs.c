@@ -876,12 +876,12 @@ void eic_keypad_irq(void)
 	uint8 keyScan;
 	keyScan = read_mcp23018(IO_ADDRESS_KPD, INTFB);
 	{
-		debug("IRQ: Interrupt Flags: %x\n", keyScan);
+		debug("Keypad IRQ: Interrupt Flags: %x\n", keyScan);
 	}
 
 	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	{
-		debug("IRQ: Key Pressed: %x\n", keyScan);
+		debug("Kaypad IRQ: Key Pressed: %x\n", keyScan);
 	}
 #endif
 
@@ -890,6 +890,45 @@ void eic_keypad_irq(void)
 
 	// clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int5 = 1;
+}
+
+// ============================================================================
+// eic_keypad_irq
+// ============================================================================
+__attribute__((__interrupt__))
+void eic_system_irq(void)
+{
+	// Print test for verification of operation
+	debugRaw("&");
+
+#if 0
+	if (g_kpadProcessingFlag == DEACTIVATED)
+	{
+		raiseSystemEventFlag(KEYPAD_EVENT);
+
+		// Found a new key, reset last stored key
+		g_kpadLastKeyPressed = 0;
+	}
+#endif
+
+#if 1
+	uint8 keyScan;
+	keyScan = read_mcp23018(IO_ADDRESS_KPD, INTFA);
+	{
+		debug("System IRQ: Interrupt Flags: %x\n", keyScan);
+	}
+
+	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	{
+		debug("System IRQ: Key Pressed: %x\n", keyScan);
+	}
+#endif
+
+	read_mcp23018(IO_ADDRESS_KPD, INTFA);
+	read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+
+	// clear the interrupt flag in the processor
+	AVR32_EIC.ICR.int4 = 1;
 }
 
 // ============================================================================
@@ -927,22 +966,32 @@ void soft_timer_tick_irq(void)
 // ============================================================================
 // tc_irq
 // ============================================================================
+#if 1
+extern uint16* startOfPreTrigBuff;
+extern uint16* tailOfPreTrigBuff;
+extern uint16* endOfPreTrigBuff;
+#endif
+
 __attribute__((__interrupt__))
 void tc_irq(void)
 {
 	static uint16 r_chan_read, v_chan_read, t_chan_read, a_chan_read;
 	static uint16 temp_chan_read, configReadBack;
-	static uint8 trigFound = NO, alarm1Found = NO, alarm2Found = NO;
+
+#if 1
 	static uint32 sampleCount = 0;
 	static uint32 calSampleCount = 0;
 	static uint8 recording = NO;
 	static uint8 calPulse = NO;
+	//static uint8 calPulseDelay = 0;
+	static uint8 trigFound = NO, alarm1Found = NO, alarm2Found = NO;
+#endif
 
 	// Sample Output with return config words
 	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp:  dbe (b6d0)
 
 	// Data time!
-    // Chan 0
+    // Chan 0 - R
 	spi_selectChip(AD_SPI, AD_SPI_NPCS);
     spi_write(AD_SPI, 0x0000);
     spi_read(AD_SPI, &r_chan_read);
@@ -952,27 +1001,27 @@ void tc_irq(void)
 	if(configReadBack != 0xe0d0) debugErr("AD Channel Sync Error!\n");
     //debugRaw("R: %4x (%4x)", r_chan_read, configReadBack);
 
-    // Chan 1
-    spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &v_chan_read);
-    spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &configReadBack);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(configReadBack != 0xe2d0) debugErr("AD Channel Sync Error!\n");
-    //debugRaw(" | V: %4x (%4x)", v_chan_read, configReadBack);
-
-    // Chan 2
+    // Chan 1 - T
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
     spi_write(AD_SPI, 0x0000);
     spi_read(AD_SPI, &t_chan_read);
     spi_write(AD_SPI, 0x0000);
     spi_read(AD_SPI, &configReadBack);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+	if(configReadBack != 0xe2d0) debugErr("AD Channel Sync Error!\n");
+    //debugRaw(" | V: %4x (%4x)", v_chan_read, configReadBack);
+
+    // Chan 2 - V
+    spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &v_chan_read);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &configReadBack);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
 	if(configReadBack != 0xe4d0) debugErr("AD Channel Sync Error!\n");
     //debugRaw(" | T: %4x (%4x)", t_chan_read, configReadBack);
 
-    // Chan 3
+    // Chan 3 - A
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
     spi_write(AD_SPI, 0x0000);
     spi_read(AD_SPI, &a_chan_read);
@@ -997,183 +1046,223 @@ void tc_irq(void)
 	// Store Data in Pretrigger
 	// Check for Triggers and Alarms
 	
+	// Fit into legacy design
 	r_chan_read >>= 4;
 	v_chan_read >>= 4;
 	t_chan_read >>= 4;
 	a_chan_read >>= 4;
 	
+#if 1
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->r = r_chan_read;
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->v = v_chan_read;
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->t = t_chan_read;
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->a = a_chan_read;
+#else
+	*(tailOfPreTrigBuff + 0) = r_chan_read;
+	*(tailOfPreTrigBuff + 1) = v_chan_read;
+	*(tailOfPreTrigBuff + 2) = t_chan_read;
+	*(tailOfPreTrigBuff + 3) = a_chan_read;
+#endif
 
-	// Normalize
-	if(r_chan_read > 0x800) r_chan_read = r_chan_read - 0x800; 
-	else r_chan_read = 0x800 - r_chan_read;
+	// Check to see if collecting data for processing or filling the pretrigger buffer
+	if (g_sampleProcessing != SAMPLING_STATE)
+	{
+		tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;
 
-	if(v_chan_read > 0x800) v_chan_read = v_chan_read - 0x800; 
-	else v_chan_read = 0x800 - v_chan_read;
+		// Check if the end of the PreTrigger buffer has been reached
+		if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
+	}
+	else // g_sampleProcessing == SAMPLING_STATE
+	{
+#if 1
+		// Normalize
+		if(r_chan_read > 0x800) r_chan_read = r_chan_read - 0x800; 
+		else r_chan_read = 0x800 - r_chan_read;
 
-	if(t_chan_read > 0x800) t_chan_read = t_chan_read - 0x800; 
-	else t_chan_read = 0x800 - t_chan_read;
+		if(v_chan_read > 0x800) v_chan_read = v_chan_read - 0x800; 
+		else v_chan_read = 0x800 - v_chan_read;
 
-	if(a_chan_read > 0x800) a_chan_read = a_chan_read - 0x800; 
-	else a_chan_read = 0x800 - a_chan_read;
+		if(t_chan_read > 0x800) t_chan_read = t_chan_read - 0x800; 
+		else t_chan_read = 0x800 - t_chan_read;
+
+		if(a_chan_read > 0x800) a_chan_read = a_chan_read - 0x800; 
+		else a_chan_read = 0x800 - a_chan_read;
 	
-	// Check if handling a manual calibration
-	if (manual_cal_flag == FALSE)
-	{
-		// Check if not recording an event and not handling a cal pulse
-		if ((recording == NO) && (calPulse == NO))
+		// Check if handling a manual calibration
+		if (manual_cal_flag == FALSE)
 		{
-			if (r_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
-			if (v_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
-			if (t_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
-			if (a_chan_read > trig_rec.trec.soundTriggerLevel) trigFound = YES;
-
-			if ((trigFound == YES) && (recording == NO) && (calPulse == NO))
+			// Check if not recording an event and not handling a cal pulse
+			if ((recording == NO) && (calPulse == NO))
 			{
-				// Add command nibble to signal a tigger
-				*(tailOfPreTrigBuff + 0) |= TRIG_ONE;
-				*(tailOfPreTrigBuff + 1) |= TRIG_ONE;
-				*(tailOfPreTrigBuff + 2) |= TRIG_ONE;
-				*(tailOfPreTrigBuff + 3) |= TRIG_ONE;
+				if (trig_rec.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
+				{
+					if (r_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
+					if (v_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
+					if (t_chan_read > trig_rec.trec.seismicTriggerLevel) trigFound = YES;
+				}
 
-				recording = YES;
-				sampleCount = trig_rec.trec.record_time * trig_rec.trec.sample_rate;
+				if (trig_rec.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
+					if (a_chan_read > trig_rec.trec.soundTriggerLevel) trigFound = YES;
+
+				if ((trigFound == YES) && (recording == NO) && (calPulse == NO))
+				{
+					// Add command nibble to signal a tigger
+					*(tailOfPreTrigBuff + 0) |= TRIG_ONE;
+					*(tailOfPreTrigBuff + 1) |= TRIG_ONE;
+					*(tailOfPreTrigBuff + 2) |= TRIG_ONE;
+					*(tailOfPreTrigBuff + 3) |= TRIG_ONE;
+
+					debug("--> Trigger Found! %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
+					recording = YES;
+					sampleCount = trig_rec.trec.record_time * trig_rec.trec.sample_rate;
+				}
 			}
-		}
-		// Else check if we are still recording
-		else if ((recording == YES) && (sampleCount))
-		{
-			sampleCount--;
-
-			// Check if seismic is enabled for Alarm 1
-			if ((help_rec.alarm_one_mode == ALARM_MODE_BOTH) || (help_rec.alarm_one_mode == ALARM_MODE_SEISMIC))
+			// Else check if we are still recording
+			else if ((recording == YES) && (sampleCount))
 			{
-				if (r_chan_read > help_rec.alarm_one_seismic_lvl) alarm1Found = YES;
-				if (v_chan_read > help_rec.alarm_one_seismic_lvl) alarm1Found = YES;
-				if (t_chan_read > help_rec.alarm_one_seismic_lvl) alarm1Found = YES;
+				sampleCount--;
+
+				// Check if seismic is enabled for Alarm 1
+				if ((help_rec.alarm_one_mode == ALARM_MODE_BOTH) || (help_rec.alarm_one_mode == ALARM_MODE_SEISMIC))
+				{
+					if (r_chan_read > help_rec.alarm_one_seismic_lvl) alarm1Found = YES;
+					if (v_chan_read > help_rec.alarm_one_seismic_lvl) alarm1Found = YES;
+					if (t_chan_read > help_rec.alarm_one_seismic_lvl) alarm1Found = YES;
+				}
+
+				// Check if air is enabled for Alarm 1
+				if ((help_rec.alarm_one_mode == ALARM_MODE_BOTH) || (help_rec.alarm_one_mode == ALARM_MODE_AIR))
+				{
+					if (a_chan_read > help_rec.alarm_one_air_lvl) alarm1Found = YES;
+				}
+
+				// Check if seismic is enabled for Alarm 2
+				if ((help_rec.alarm_two_mode == ALARM_MODE_BOTH) || (help_rec.alarm_two_mode == ALARM_MODE_SEISMIC))
+				{
+					if (r_chan_read > help_rec.alarm_two_seismic_lvl) alarm2Found = YES;
+					if (v_chan_read > help_rec.alarm_two_seismic_lvl) alarm2Found = YES;
+					if (t_chan_read > help_rec.alarm_two_seismic_lvl) alarm2Found = YES;
+				}
+
+				// Check if air is enabled for Alarm 2
+				if ((help_rec.alarm_two_mode == ALARM_MODE_BOTH) || (help_rec.alarm_two_mode == ALARM_MODE_SEISMIC))
+				{
+					if (a_chan_read > help_rec.alarm_two_air_lvl) alarm2Found = YES;
+				}
+
+				// Check if Alarm 2 condition was met (Alarm 2 overrides Alarm 1)
+				if (alarm2Found == YES)
+				{
+					// Add command nibble to signal a tigger
+					*(tailOfPreTrigBuff + 0) |= TRIG_THREE;
+					*(tailOfPreTrigBuff + 1) |= TRIG_THREE;
+					*(tailOfPreTrigBuff + 2) |= TRIG_THREE;
+					*(tailOfPreTrigBuff + 3) |= TRIG_THREE;
+				}
+				// Else check if Alarm 1 condition was met
+				else if (alarm1Found == YES)
+				{
+					// Add command nibble to signal a tigger
+					*(tailOfPreTrigBuff + 0) |= TRIG_TWO;
+					*(tailOfPreTrigBuff + 1) |= TRIG_TWO;
+					*(tailOfPreTrigBuff + 2) |= TRIG_TWO;
+					*(tailOfPreTrigBuff + 3) |= TRIG_TWO;
+				}
 			}
-
-			// Check if air is enabled for Alarm 1
-			if ((help_rec.alarm_one_mode == ALARM_MODE_BOTH) || (help_rec.alarm_one_mode == ALARM_MODE_AIR))
+			// Else check if we are still recording but handling the last sample
+			else if ((recording == YES) && (sampleCount == 0))
 			{
-				if (a_chan_read > help_rec.alarm_one_air_lvl) alarm1Found = YES;
-			}
+				debug("--> Recording done!\n");
 
-			// Check if seismic is enabled for Alarm 2
-			if ((help_rec.alarm_two_mode == ALARM_MODE_BOTH) || (help_rec.alarm_two_mode == ALARM_MODE_SEISMIC))
-			{
-				if (r_chan_read > help_rec.alarm_two_seismic_lvl) alarm2Found = YES;
-				if (v_chan_read > help_rec.alarm_two_seismic_lvl) alarm2Found = YES;
-				if (t_chan_read > help_rec.alarm_two_seismic_lvl) alarm2Found = YES;
-			}
+				recording = NO;
+				trigFound = NO;
+				calPulse = YES;
+				calSampleCount = 100 * (trig_rec.trec.sample_rate / 1024);
 
-			// Check if air is enabled for Alarm 2
-			if ((help_rec.alarm_two_mode == ALARM_MODE_BOTH) || (help_rec.alarm_two_mode == ALARM_MODE_SEISMIC))
-			{
-				if (a_chan_read > help_rec.alarm_two_air_lvl) alarm2Found = YES;
-			}
+				// Start Cal
+				*(tailOfPreTrigBuff + 0) |= CAL_START;
+				*(tailOfPreTrigBuff + 1) |= CAL_START;
+				*(tailOfPreTrigBuff + 2) |= CAL_START;
+				*(tailOfPreTrigBuff + 3) |= CAL_START;
 
-			// Check if Alarm 2 condition was met (Alarm 2 overrides Alarm 1)
-			if (alarm2Found == YES)
-			{
-				// Add command nibble to signal a tigger
-				*(tailOfPreTrigBuff + 0) |= TRIG_THREE;
-				*(tailOfPreTrigBuff + 1) |= TRIG_THREE;
-				*(tailOfPreTrigBuff + 2) |= TRIG_THREE;
-				*(tailOfPreTrigBuff + 3) |= TRIG_THREE;
-			}
-			// Else check if Alarm 1 condition was met
-			else if (alarm1Found == YES)
-			{
-				// Add command nibble to signal a tigger
-				*(tailOfPreTrigBuff + 0) |= TRIG_TWO;
-				*(tailOfPreTrigBuff + 1) |= TRIG_TWO;
-				*(tailOfPreTrigBuff + 2) |= TRIG_TWO;
-				*(tailOfPreTrigBuff + 3) |= TRIG_TWO;
-			}
-		}
-		// Else check if we are still recording but handling the last sample
-		else if ((recording == YES) && (sampleCount == 0))
-		{
-			recording = NO;
-			calPulse = YES;
-			calSampleCount = 100 * (trig_rec.trec.sample_rate / 1024);
-
-			// Start Cal
-			*(tailOfPreTrigBuff + 0) |= CAL_START;
-			*(tailOfPreTrigBuff + 1) |= CAL_START;
-			*(tailOfPreTrigBuff + 2) |= CAL_START;
-			*(tailOfPreTrigBuff + 3) |= CAL_START;
-
-			SetCalSignalEnable(ON);
-		}
-		// Else check if a cal pulse is enabled
-		else if ((calPulse == YES) && (calSampleCount))
-		{
-			if (calSampleCount == (100 * (trig_rec.trec.sample_rate / 1024)))
-			{
 				SetCalSignalEnable(ON);
-				SetCalSignal(ON);
+			}
+			// Else check if a cal pulse is enabled
+			else if ((calPulse == YES) && (calSampleCount))
+			{
+				if (calSampleCount == (100 * (trig_rec.trec.sample_rate / 1024)))
+				{
+					SetCalSignalEnable(ON);
+					SetCalSignal(ON);
+				}
+
+				if (calSampleCount == (91 * (trig_rec.trec.sample_rate / 1024)))
+					SetCalSignal(OFF);
+
+				if (calSampleCount == (73 * (trig_rec.trec.sample_rate / 1024)))
+					SetCalSignal(ON);
+
+				if (calSampleCount == (64 * (trig_rec.trec.sample_rate / 1024)))
+					SetCalSignalEnable(OFF);
+
+				calSampleCount--;
+			}
+			else if ((calPulse == YES) && (calSampleCount == 0))
+			{
+				debug("--> Cal done!\n");
+
+				calPulse = NO;
+			}
+		}
+		else //manual_cal_flag == TRUE
+		{
+			if (manualCalSampleCount == 0)
+			{
+				// Start Cal
+				*(tailOfPreTrigBuff + 0) |= CAL_START;
+				*(tailOfPreTrigBuff + 1) |= CAL_START;
+				*(tailOfPreTrigBuff + 2) |= CAL_START;
+				*(tailOfPreTrigBuff + 3) |= CAL_START;
 			}
 
-			if (calSampleCount == (91 * (trig_rec.trec.sample_rate / 1024)))
-				SetCalSignal(OFF);
+			if (manualCalSampleCount == 99)
+			{
+				// Stop Cal
+				*(tailOfPreTrigBuff + 0) |= CAL_END;
+				*(tailOfPreTrigBuff + 1) |= CAL_END;
+				*(tailOfPreTrigBuff + 2) |= CAL_END;
+				*(tailOfPreTrigBuff + 3) |= CAL_END;
+			}
 
-			if (calSampleCount == (73 * (trig_rec.trec.sample_rate / 1024)))
-				SetCalSignal(ON);
-
-			if (calSampleCount == (64 * (trig_rec.trec.sample_rate / 1024)))
-				SetCalSignalEnable(OFF);
-
-			calSampleCount--;
+			manualCalSampleCount++;
 		}
-		else if ((calPulse == YES) && (calSampleCount == 0))
+
+#if 1
+		if (manual_cal_flag)
 		{
-			calPulse = NO;
+			ProcessManuelCalPulse();
 		}
-	}
-	else //manual_cal_flag == TRUE
-	{
-		if (manualCalSampleCount == 0)
+		else if (trig_rec.op_mode == WAVEFORM_MODE)
 		{
-			// Start Cal
-			*(tailOfPreTrigBuff + 0) |= CAL_START;
-			*(tailOfPreTrigBuff + 1) |= CAL_START;
-			*(tailOfPreTrigBuff + 2) |= CAL_START;
-			*(tailOfPreTrigBuff + 3) |= CAL_START;
+			ProcessWaveformData();
 		}
-
-		if (manualCalSampleCount == 99)
+		else if (trig_rec.op_mode == BARGRAPH_MODE)
 		{
-			// Stop Cal
-			*(tailOfPreTrigBuff + 0) |= CAL_END;
-			*(tailOfPreTrigBuff + 1) |= CAL_END;
-			*(tailOfPreTrigBuff + 2) |= CAL_END;
-			*(tailOfPreTrigBuff + 3) |= CAL_END;
+			ProcessBargraphData();
 		}
+		else if (trig_rec.op_mode == COMBO_MODE)
+		{
+			ProcessComboData();
+		}
+#else
+		tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;
 
-		manualCalSampleCount++;
-	}
+		// Check if the end of the PreTrigger buffer has been reached
+		if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
+#endif
 
-	if (manual_cal_flag)
-	{
-		ProcessManuelCalPulse();
-	}
-	else if (trig_rec.op_mode == WAVEFORM_MODE)
-	{
-		ProcessWaveformData();
-	}
-	else if (trig_rec.op_mode == BARGRAPH_MODE)
-	{
-		ProcessBargraphData();
-	}
-	else if (trig_rec.op_mode == COMBO_MODE)
-	{
-		ProcessComboData();
-	}
+#endif
+	}	
 #endif
 
 	// clear the interrupt flag
@@ -1222,6 +1311,39 @@ void Setup_EIC_Keypad_ISR(void)
 	else
 	{
 		print_dbg("\r\nKeypad Interrupt Not Enabled\n");
+	}
+#endif
+}
+
+// ============================================================================
+// Setup_EIC_System_ISR
+// ============================================================================
+void Setup_EIC_System_ISR(void)
+{
+	// External Interrupt Controller setup
+	AVR32_EIC.IER.int4 = 1;
+	AVR32_EIC.MODE.int4 = 0;
+	AVR32_EIC.EDGE.int4 = 0;
+	AVR32_EIC.LEVEL.int4 = 0;
+	AVR32_EIC.FILTER.int4 = 0;
+	AVR32_EIC.ASYNC.int4 = 1;
+	AVR32_EIC.EN.int4 = 1;
+
+	// Register the RTC interrupt handler to the interrupt controller.
+	INTC_register_interrupt(&eic_system_irq, AVR32_EIC_IRQ_4, 0);
+
+	// Enable the interrupt
+	rtc_enable_interrupt(&AVR32_RTC);
+
+#if 0
+	// Test for int enable
+	if(AVR32_EIC.IMR.int4 == 0x01)
+	{
+		debug("\r\nSystem Interrupt Enabled\n");
+	}
+	else
+	{
+		debug("\r\nSystem Interrupt Not Enabled\n");
 	}
 #endif
 }
@@ -1289,8 +1411,9 @@ void Setup_Data_Clock_ISR(uint32 sampleRate)
 	// Remember TC counter is 16-bits, so counting second is not possible.
 	// We configure it to count ms.
 	// We want: (1/(FOSC0/4)) * RC = 1000 Hz => RC = (FOSC0/4) / 1000 = 3000 to get an interrupt every 1ms
-	tc_write_rc(tc, TC_CHANNEL, (FOSC0/2)/1000);  // Set RC value.
-
+	//tc_write_rc(tc, TC_CHANNEL, (FOSC0/2)/1000);  // Set RC value.
+	tc_write_rc(tc, TC_CHANNEL, (32227 / (sampleRate / 1024)));
+	
 	tc_configure_interrupts(tc, TC_CHANNEL, &TC_INTERRUPT);
 }
 

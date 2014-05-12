@@ -458,20 +458,22 @@ static void HTTPServer(void)
 
 void Network_Test_Menu(void)
 {
-    gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
+    // Set Strobe Byte High Enable
+	gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
+
     //turn off lansleep
     gpio_set_gpio_pin(AVR32_PIN_PB27);
 
-    //toggle sbhe
+    // Toggle Strobe Byte High Enable
     gpio_clr_gpio_pin(AVR32_EBI_NWE1_0_PIN);
     gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
 
     // Initialize network driver resources.
     //smc_init(FOSC0);
 
-    gpio_clr_gpio_pin(AVR32_EBI_NCS_2_PIN);
+    //gpio_clr_gpio_pin(AVR32_EBI_NCS_2_PIN);
 
-    TCPLowLevelInit(); //after TCPLowLevelInit()
+    //TCPLowLevelInit(); //after TCPLowLevelInit()
     HTTPStatus = 0;                                // clear HTTP-server's flag register
     TCPLocalPort = TCP_PORT_HTTP;                  // set port we want to listen to
 

@@ -647,7 +647,7 @@ uint8 scanKeypad(void)
 	//keyMap[0] = (uint8)(~(*keypadAddress));
 	keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 
-	//debug("Scan Keypad: Key: %x\n", keyMap[0]);
+	debug("Scan Keypad: Key: %x\n", keyMap[0]);
 
 	// Find keys by locating the 1's in the map
 	for (rowMask = 0x01, i = 0; i < TOTAL_KEYPAD_KEYS; i++)

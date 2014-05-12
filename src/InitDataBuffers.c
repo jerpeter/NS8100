@@ -60,8 +60,7 @@ extern void (*menufunc_ptrs[]) (INPUT_MSG_STRUCT);
 ///	Globals
 ///----------------------------------------------------------------------------
 MSGS430_UNION msgs430;
-//uint16 preTrigBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
-uint16 preTrigBuff[1024];
+uint16 preTrigBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
 uint16* startOfPreTrigBuff;
 uint16* tailOfPreTrigBuff;
 uint16* endOfPreTrigBuff;
@@ -79,14 +78,14 @@ uint32 gWordSizeInCal;
 uint32 gWordSizeInEvent;
 uint16* startOfEventBufferPtr;
 uint16* gEventBufferPrePtr;
-//uint16* chaTwoEvtPrePtr;
 uint16* gEventBufferBodyPtr;
-//uint16* chaTwoEvtBodyPtr;
 uint16* gEventBufferCalPtr;
-//uint16* chaTwoEvtCalPtr;
 uint16* dgEventBufferCalPtr;
-//uint16* dChaTwoEvtCalPtr;
 uint16* ddgEventBufferCalPtr;
+//uint16* chaTwoEvtPrePtr;
+//uint16* chaTwoEvtBodyPtr;
+//uint16* chaTwoEvtCalPtr;
+//uint16* dChaTwoEvtCalPtr;
 //uint16* ddChaTwoEvtCalPtr;
 uint16* gCurrentEventSamplePtr;
 uint16 gCurrentEventBuffer;
@@ -96,8 +95,7 @@ uint32 isTriggered = 0;
 uint32 processingCal = 0;
 uint16 eventsNotCompressed = 0; 
 uint8 g_doneTakingEvents = NO;
-//uint16  eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
-uint16  eventDataBuffer[8192];
+uint16  eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 uint16* gp_bg430DataStart;
 uint16* gp_bg430DataWrite;
 uint16* gp_bg430DataRead;
@@ -111,7 +109,7 @@ uint8 g_powerNoiseFlag = PRINTER_OFF;
 void InitDataBuffs(uint8 op_mode)
 { 
 	uint32 preTriggerSize;
-	uint16 sampleRate;
+	uint32 sampleRate;
 	
 	if (op_mode == MANUAL_CAL_MODE)
 	{
@@ -120,9 +118,9 @@ void InitDataBuffs(uint8 op_mode)
 	}
 	else // Waveform, Bargraph, Combo
 	{
-		sampleRate = (uint16)trig_rec.trec.sample_rate;
+		sampleRate = trig_rec.trec.sample_rate;
 	}
-	
+
 	initEventRecord(&g_RamEventRecord, op_mode);
 
 	// Setup the pre-trigger buffer pointers

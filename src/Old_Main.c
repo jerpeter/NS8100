@@ -343,7 +343,7 @@ void SystemEventManager(void)
 	if (getSystemEventState(TRIGGER_EVENT))
 	{
 		debug("Trigger Event 1\n");
-#if 0 // fix_ns8100
+#if 1 // fix_ns8100
 		if (trig_rec.op_mode == WAVEFORM_MODE)
 			MoveWaveformEventToFlash();
 		else if (trig_rec.op_mode == COMBO_MODE)
@@ -649,6 +649,18 @@ void FactorySetupManager(void)
 	INPUT_MSG_STRUCT mn_msg;
 
 	if (g_factorySetupSequence == ENTER_FACTORY_SETUP)
+	{
+		g_factorySetupSequence = PROCESS_FACTORY_SETUP;
+
+		keypressEventMgr();
+		messageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
+
+		active_menu = DATE_TIME_MENU;
+		ACTIVATE_MENU_MSG();
+		(*menufunc_ptrs[active_menu]) (mn_msg);
+	}
+	// fix_ns8100 (Added to work around On Key IRQ problem)
+	else if (factory_setup_rec.invalid && g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 	{
 		g_factorySetupSequence = PROCESS_FACTORY_SETUP;
 

@@ -24,6 +24,11 @@
 #include "PowerManagement.h"
 #include "Uart.h"
 #include "Menu.h"
+#include "rtc.h"
+#include "tc.h"
+#include "twi.h"
+#include "spi.h"
+#include "ad_test_menu.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -71,6 +76,48 @@ OFFSET_DATA_STRUCT g_channelOffset;
 ///----------------------------------------------------------------------------
 void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 {
+	uint16 trash;
+#if 1
+	spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &(dataPtr->r));
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &trash);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+
+    // Chan 1
+    spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &(dataPtr->v));
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &trash);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+
+    // Chan 2
+    spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &(dataPtr->t));
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &trash);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+
+    // Chan 3
+    spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &(dataPtr->a));
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &trash);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+
+    // Temp
+    spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &trash);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &trash);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+#endif
+
 #if 0 // fix_ns8100
 	uint8 delay = 0;
 

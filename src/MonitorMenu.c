@@ -144,6 +144,7 @@ void monitorMn(INPUT_MSG_STRUCT msg)
 *	Function:	monitorMnProc
 *	Purpose:
 ****************************************/
+uint8 g_showRVTA = NO;
 void monitorMnProc(INPUT_MSG_STRUCT msg,
 	WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
@@ -328,6 +329,9 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 				break;     
 				
 				case (DOWN_ARROW_KEY):
+#if 1
+						g_showRVTA = YES;
+#endif					
 					if (g_monitorOperationMode == BARGRAPH_MODE)
 					{
 						// Check if at the Impulse Results screen
@@ -346,6 +350,9 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 				break;
 					
 				case (UP_ARROW_KEY):
+#if 1
+						g_showRVTA = NO;
+#endif					
 					if (g_monitorOperationMode == BARGRAPH_MODE)
 					{
 						// Check if at the Job Peak Results screen
@@ -591,6 +598,31 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//-----------------------------------------------------------------------
 		wndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+
+#if 1
+		if (g_showRVTA == YES)
+		{
+			//-----------------------------------------------------------------------
+			// Show RTVA
+			//-----------------------------------------------------------------------
+			byteSet(&buff[0], 0, sizeof(buff));	
+			length = (uint8)sprintf(buff," x%3x x%3x x%3x x%3x", 
+#if 1
+				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->r) & 0x0FFF),
+				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->v) & 0x0FFF),
+				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->t) & 0x0FFF),
+				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->a) & 0x0FFF));
+#else
+				(*(tailOfPreTrigBuff) & 0x0FFF),
+				(*(tailOfPreTrigBuff + 1) & 0x0FFF),
+				(*(tailOfPreTrigBuff + 2) & 0x0FFF),
+				(*(tailOfPreTrigBuff + 3) & 0x0FFF));
+#endif
+			wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+
+			wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		}
+#endif
 	}
 	else if (g_monitorOperationMode == BARGRAPH_MODE)
 	{
@@ -1075,7 +1107,7 @@ void mnStartTrigger(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mo
 	if (op_mode == WAVEFORM_MODE)
 	{
 		debug("--- Waveform Mode Settings ---\n");
-		debug("\tRecord Time: %d, Sample Rate: %d\n", trig_rec.trec.record_time, trig_mn.sample_rate);
+		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\n", trig_rec.trec.record_time, trig_mn.sample_rate, gp_SensorInfo->numOfChannels);
 		debug("\tSeismic Trigger Count: 0x%x, Air Trigger Level: 0x%x db\n", trig_mn.seismicTriggerLevel, trig_mn.soundTriggerLevel);
 	}
 	else if (op_mode == BARGRAPH_MODE)
@@ -1152,21 +1184,11 @@ void mnStartTrigger(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mo
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
 
-	// Enable the A/D
-	debug("Enable the A/D\n");
-	powerControl(ANALOG_SLEEP_ENABLE, OFF);		
 
-	// Get current A/D offsets for normalization
-	debug("Get Channel offsets\n");
-	GetChannelOffsets();
-
-	// Gather 1/4 second worth of data before comparing samples to the trigger
-	//LoadPretrigger();
-
+#if 1
 	// Adjust the RTC Periodic interrupt rate to fire at the sample rate
 	debug("Adjust RTC Periodic interrupt based on sample rate\n");
 
-#if 1
 	switch(trig_rec.trec.sample_rate)
 	{
 		case 1024: SetPeriodicInterruptFrequency(PULSE_1K_PER_SEC); break;
@@ -1178,21 +1200,37 @@ void mnStartTrigger(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mo
 	}
 #endif
 
-	// Set flag to Sampling, we are about to begin to sample.
-	debug("Raise signal to start sampling\n");
-	g_sampleProcessing = SAMPLING_STATE;
+	// Enable the A/D
+	debug("Enable the A/D\n");
+	powerControl(ANALOG_SLEEP_ENABLE, OFF);		
 
-	// Send message to 430
-	//ISPI_SendMsg(msgs430.startMsg430.cmd_id);
 #if 1
 extern void Setup_Data_Clock_ISR(uint32 sampleRate);
 extern void Start_Data_Clock(void);
 extern void AD_Init(void);
 #endif
+	// Initialize the A/D
 	AD_Init();
 	
-	Setup_Data_Clock_ISR(0);
+	// Get current A/D offsets for normalization
+	debug("Getting Channel offsets\n");
+	GetChannelOffsets();
+
+	// Setup ISR to clock the data sampling
+	Setup_Data_Clock_ISR(trig_rec.trec.sample_rate);
+
+	// Start the timer for collecting data
 	Start_Data_Clock();
+
+	// Gather 1/4 second worth of data before comparing samples to the trigger
+	soft_usecWait(1 * SOFT_SECS);
+
+	// Change state to start processing the samples
+	debug("Raise signal to start sampling\n");
+	g_sampleProcessing = SAMPLING_STATE;
+
+	// Send message to 430
+	//ISPI_SendMsg(msgs430.startMsg430.cmd_id);
 }
 
 /****************************************
@@ -1246,6 +1284,8 @@ void waitForEventProcessingToFinish(void)
 
 	if (isTriggered || processingCal || gCalTestExpected)
 	{
+		debug("IsTriggered: %d, ProcCal: %d, CalTestExp: %d", isTriggered, processingCal, gCalTestExpected);
+		
 		overlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
 
 		while (isTriggered || processingCal || gCalTestExpected)

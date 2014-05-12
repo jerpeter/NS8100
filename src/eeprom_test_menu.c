@@ -431,15 +431,15 @@ void EEPROM_Test_Write(void)
 {
 	unsigned short int i = 0;
 	unsigned char tempData;
-	
+
 	for (i=0; i<88; i++)
 	{
-		tempData = 0x80 + i;
-		// Sr, Addr, Size
+		tempData = (uint8)i;
+		// Dest, Addr, Size
 		SaveParameterMemory(&tempData, 7500 + i, 1);
-		
-		soft_usecWait(5 * SOFT_MSECS);
 	}
+		
+	soft_usecWait(5 * SOFT_MSECS);
 }
 #endif
 

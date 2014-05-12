@@ -120,6 +120,8 @@ void ProcessWaveformData(void)
 				case TRIG_THREE:
 				case TRIG_TWO:
 				case TRIG_ONE:
+					debugRaw("\nEvtBeg\n");
+					
 					// Check if the command is a trigger two, which is the 1st warning event
 					if (commandNibble == TRIG_TWO)
 					{
@@ -237,7 +239,7 @@ void ProcessWaveformData(void)
 
 				default:
 					// Advance the PreTrigger buffer the number of active channels
-					tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;   
+					tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;
 					break;
 			}
 		}
@@ -398,6 +400,8 @@ void ProcessWaveformData(void)
 		// Check if all the event data from the PreTrigger buffer has been moved into the event buffer
 		if (isTriggered == 0)
 		{
+			debugRaw("\nEvtEnd\n");
+			
 			gFreeEventBuffers--;
 			gCurrentEventNumber++;
 			gCalTestExpected++;
@@ -445,6 +449,7 @@ void MoveWaveformEventToFlash(void)
 		switch (flashMovState)
 		{
 			case FLASH_IDLE:
+#if 0 // fix_ns8100
 				if (help_rec.flash_wrapping == NO)
 				{
 					flashStats = getFlashUsageStats();
@@ -458,7 +463,7 @@ void MoveWaveformEventToFlash(void)
 						return;
 					}
 				}
-
+#endif
 				if (GetFlashSumEntry(&flashSumEntry) == FALSE)
 				{
 					debugErr("Out of Flash Summary Entrys\n");
@@ -482,6 +487,7 @@ void MoveWaveformEventToFlash(void)
 				for (i = (uint16)gSamplesInPre; i != 0; i--)
 				{
 					// Store entire sample
+					//debugRaw("\nEvent Pretrigger --> ");
 					storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 					gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
@@ -517,6 +523,7 @@ void MoveWaveformEventToFlash(void)
 				vectorSumTotal = (uint32)vectorSum;
 
 				// Store entire sample
+				//debugRaw("\nEvent Data --> ");
 				storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 				gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
@@ -574,6 +581,7 @@ void MoveWaveformEventToFlash(void)
 					}
 
 					// Store entire sample
+					//debugRaw("\nEvent Data --> ");
 					storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 					gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
@@ -591,6 +599,7 @@ void MoveWaveformEventToFlash(void)
 				for (i = (uint16)(gSamplesInCal / (trig_rec.trec.sample_rate / 1024)); i != 0; i--)
 				{
 					// Store entire sample
+					//debugRaw("\nEvent Cal --> ");
 					storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 
 					// Advance the pointer using sample rate ratio to act as a filter to always scale down to a 1024 rate

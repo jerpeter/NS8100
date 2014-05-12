@@ -69,6 +69,7 @@ extern uint8 g_autoDialoutState;
 extern void flashc_set_wait_state(unsigned int);
 extern void Setup_Soft_Timer_Tick_ISR(void);
 extern void Setup_EIC_Keypad_ISR(void);
+extern void Setup_EIC_System_ISR(void);
 extern int rtc_init(volatile avr32_rtc_t *rtc, unsigned char osc_type, unsigned char psel);
 extern void rtc_set_top_value(volatile avr32_rtc_t *rtc, unsigned long top);
 extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
@@ -77,18 +78,19 @@ extern void rtc_enable(volatile avr32_rtc_t *rtc);
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define NCS_RD_SETUP  10
-#define NRD_SETUP     10
-#define NCS_WR_SETUP  20
-#define NWE_SETUP     20
+#define NRD_SETUP     30 //10
+#define NRD_PULSE     30 //135
+#define NRD_CYCLE     75 //180
 
-#define NCS_RD_PULSE  250
-#define NRD_PULSE     135
-#define NCS_WR_PULSE  230
-#define NWE_PULSE     110
+#define NCS_RD_SETUP  0 //10
+#define NCS_RD_PULSE  55 //250
 
-#define NRD_CYCLE     180
-#define NWE_CYCLE     150
+#define NWE_SETUP     0 //20
+#define NWE_PULSE     40 //110
+#define NWE_CYCLE     55 //150
+
+#define NCS_WR_SETUP  0 //20
+#define NCS_WR_PULSE  45 //230
 
 #define EXT_SM_SIZE             16
 #define NCS_CONTROLLED_READ     FALSE
@@ -456,6 +458,7 @@ void _init_startup(void)
 }
 //=================================================================================================
 void InitKeypad(void)
+
 {
 	static const gpio_map_t EIC_GPIO_MAP =
 	{
@@ -581,6 +584,14 @@ void InitSystemHardware_NS8100(void)
 	gpio_set_gpio_pin(AVR32_PIN_PB18);
 
 	//-------------------------------------------------------------------------
+	// Set LAN to Sleep
+    gpio_clr_gpio_pin(AVR32_PIN_PB27);
+	
+	// Set LAN and LAN Mem CS High
+	gpio_set_gpio_pin(AVR32_EBI_NCS_2_PIN);
+	gpio_set_gpio_pin(AVR32_EBI_NCS_3_PIN);	
+
+	//-------------------------------------------------------------------------
     // Turn on rs232 driver and receiver on NS8100 board ?
     gpio_clr_gpio_pin(AVR32_PIN_PB08);
     gpio_clr_gpio_pin(AVR32_PIN_PB09);
@@ -649,6 +660,7 @@ void InitInterrupts_NS8100(void)
 
 	Setup_Soft_Timer_Tick_ISR();
 	Setup_EIC_Keypad_ISR();
+	Setup_EIC_System_ISR();
 
 	Enable_global_interrupt();
 }
@@ -696,6 +708,9 @@ void InitSoftwareSettings_NS8100(void)
 
 	// Init time msg
 	initTimeMsg();
+
+	// Load current time into cache
+	updateCurrentTime();
 
     debug("Init Get Boot Function Addr...\n");
 
@@ -768,10 +783,34 @@ int main(void)
 	InitInterrupts_NS8100();
 	InitSoftwareSettings_NS8100();
 
+#if 0 // test
+    debug("Init Load Help Rec...\n");
+
+	// Load the Help Record
+	getRecData(&help_rec, 0, REC_HELP_USER_MENU_TYPE);
+
+    debug("Init Help Rec Defaults...\n");
+
+	// Check if the Help Record is uninitialized
+	if (help_rec.encode_ln != 0xA5A5)
+	{
+		// Set defaults in Help Record
+		debugWarn("Help record: Not found.\n");
+		debug("Loading Help Menu Defaults\n");
+		loadHelpRecordDefaults((REC_HELP_MN_STRUCT*)&help_rec);
+		saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	}
+	else
+	{
+		// Help Record is valid
+		debug("Help record: Found.\n");
+	}		
+#endif
+
 	// Have to recall Keypad init otherwise interrupt hangs
 	InitKeypad();
 
-	debug("Unit Type: %s\n", SUPERGRAPH_UNIT ? "Supergraph" : "Minigraph");
+	//debug("Unit Type: %s\n", SUPERGRAPH_UNIT ? "Supergraph" : "Minigraph");
 	debug("--- System Init complete ---\n");
 
 	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;

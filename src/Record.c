@@ -609,15 +609,17 @@ void GetParameterMemory(uint8* dataDest, uint16 startAddr, uint16 dataLength)
 // Fcuntion:	
 // Purpose:		
 //-----------------------------------------------------------------------------
-#define EEPROM_PAGE_SIZE	4
+#define EEPROM_PAGE_SIZE	32
 void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 {
 	uint16 tempData;
-	uint16 pageSize;
+	uint16 writeLength;
+	uint8 checkForPartialFirstPage = YES;
+	uint8 lengthToPageBoundary = 0;
 	
 	while(dataLength)
 	{
-		debugRaw("\nSPM: Addr: %x Len: %d -> ", startAddr, dataLength);
+		debug("SPM: Addr: %x Len: %04d -> ", startAddr, dataLength);
 
 		// Activate write enable
 		spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
@@ -630,20 +632,40 @@ void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 		spi_write(EEPROM_SPI, (startAddr >> 8) & 0xFF);
 		spi_write(EEPROM_SPI, startAddr & 0xFF);
 
-		// Check if current data length is less than 32 and can be finished in a page
-		if(dataLength <= EEPROM_PAGE_SIZE)
+		// Adjust for page boundaries
+		if(checkForPartialFirstPage == YES)
 		{
-			pageSize = dataLength;
+			checkForPartialFirstPage = NO;
+			
+			lengthToPageBoundary = (EEPROM_PAGE_SIZE - (startAddr % 32));
+			
+			// Check data length against remaining length of 32 page boundary
+			if(dataLength <= lengthToPageBoundary)
+			{
+				// Complete data storage within first/partial page
+				writeLength = dataLength;
+				dataLength = 0;
+			}
+			else // Data length goes beyond first page boundary
+			{
+				writeLength = lengthToPageBoundary;
+				dataLength -= lengthToPageBoundary;
+				startAddr += lengthToPageBoundary;
+			}
+		}
+		else if(dataLength <= EEPROM_PAGE_SIZE) // Check if the rest of the data fits into the next page
+		{
+			writeLength = dataLength;
 			dataLength = 0;
 		}
-		else // While loop will run again
+		else // Already aligned to a page boundary, and more than 1 page of data to write
 		{
-			pageSize = EEPROM_PAGE_SIZE;
+			writeLength = EEPROM_PAGE_SIZE;
 			dataLength -= EEPROM_PAGE_SIZE;	
 			startAddr += EEPROM_PAGE_SIZE;
 		}			
 			
-		while(pageSize--)
+		while(writeLength--)
 		{
 			debugRaw("%02x ", *dataSrc);
 

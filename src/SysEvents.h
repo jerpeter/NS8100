@@ -78,9 +78,11 @@ typedef struct
 #define clearMenuEventFlag(x)	(mn_event_flags.wrd &= ~x)
 #define getMenuEventState(x)	(mn_event_flags.wrd & x)
 
-// Defines
-#define IDLE_STATE     0x10
-#define SAMPLING_STATE 0x20
+// Processing states
+enum {
+	IDLE_STATE     = 0x10,
+	SAMPLING_STATE = 0x20
+};
 
 #define START_TRIGGER_CMD 20
 #define STOP_TRIGGER_CMD 30

@@ -381,8 +381,6 @@ void autoMonitorTimerCallBack(void)
 ****************************************/
 void procTimerEvents(void)
 {
-	INPUT_MSG_STRUCT mn_msg;
-	char msgBuffer[25];
 	DATE_TIME_STRUCT currentTime = getCurrentTime();
 	static uint8 processingMidnight = NO;
 
@@ -400,6 +398,11 @@ void procTimerEvents(void)
 		}
 	}
 
+#if 0
+	INPUT_MSG_STRUCT mn_msg;
+	char msgBuffer[25];
+
+	// fix_ns8100 - Battery voltage not reading correctly
 	// Check if the unit is in monitor mode and the battery voltage has dropped below 5 volts
 	if ((g_sampleProcessing == SAMPLING_STATE) && (convertedBatteryLevel(BATTERY_VOLTAGE) < 5.0))
 	{
@@ -426,6 +429,7 @@ void procTimerEvents(void)
 		ACTIVATE_MENU_MSG();
 		(*menufunc_ptrs[active_menu]) (mn_msg);
 	}
+#endif
 }
 
 /****************************************

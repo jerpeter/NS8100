@@ -1065,6 +1065,7 @@ void checkFlashDataPointer(void)
 *******************************************************************************/
 void storeData(uint16* dataPtr, uint16 dataWords)
 {
+#if 0 // fix_ns8100
 	uint8 i = 0;
 
 	for (i = 0; i < dataWords; i++)
@@ -1072,6 +1073,15 @@ void storeData(uint16* dataPtr, uint16 dataWords)
 		checkFlashDataPointer();
 		programWord(sFlashDataPtr++, *(dataPtr + i));
 	}
+#endif
+
+#if 0
+	debugRaw("R: %4x V: %4x T: %4x A: %4x ", 
+				((SAMPLE_DATA_STRUCT*)dataPtr)->r,
+				((SAMPLE_DATA_STRUCT*)dataPtr)->v,
+				((SAMPLE_DATA_STRUCT*)dataPtr)->t,
+				((SAMPLE_DATA_STRUCT*)dataPtr)->a);
+#endif
 }
 
 /*******************************************************************************
