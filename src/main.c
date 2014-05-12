@@ -271,6 +271,7 @@ void MenuEventManager(void);
 void CraftManager(void);
 void MessageManager(void);
 void FactorySetupManager(void);
+void Setup_8100_EIC_External_RTC_ISR(void);
 void Setup_8100_EIC_Keypad_ISR(void);
 void Setup_8100_EIC_System_ISR(void);
 void Setup_8100_Soft_Timer_Tick_ISR(void);
@@ -443,6 +444,11 @@ void avr32_enable_muxed_pins(void)
 		{AVR32_TWI_SCL_0_0_PIN, AVR32_TWI_SCL_0_0_FUNCTION},
 #endif
 
+#if EXTERNAL_SAMPLING_SOURCE
+		// USB_VBOF - reassigned to External RTC interrupt
+		{AVR32_EIC_EXTINT_1_PIN, AVR32_EIC_EXTINT_1_FUNCTION},
+#endif
+
 		// Usart 1 - RS232
 		{AVR32_USART1_RXD_0_0_PIN, AVR32_USART1_RXD_0_0_FUNCTION},
 		{AVR32_USART1_TXD_0_0_PIN, AVR32_USART1_TXD_0_0_FUNCTION},
@@ -479,7 +485,11 @@ void initProcessorNoConnectPins(void)
 	gpio_clr_gpio_pin(AVR32_EBI_SDWE_0_PIN);
 	gpio_clr_gpio_pin(AVR32_EBI_SDCS_0_PIN);
 	gpio_clr_gpio_pin(AVR32_EBI_NWAIT_0_PIN);
+
+#if INTERNAL_SAMPLING_SOURCE
+	// This pin is unused if the internal sampling source is configured. Set pin as an output to prevent it from floating
 	gpio_clr_gpio_pin(AVR32_PIN_PA22); // USB_VBOF
+#endif
 }
 //=================================================================================================
 
@@ -887,7 +897,7 @@ void InitSystemHardware_NS8100(void)
 	SPI_0_Init();
 	SPI_1_Init();
 	
-	// Test to make sure inputs aren't floating
+	// Make sure SPI 0 and 1 inputs aren't floating
 	gpio_enable_pin_pull_up(AVR32_SPI0_MISO_0_0_PIN);
 	gpio_enable_pin_pull_up(AVR32_SPI1_MISO_0_0_PIN);
 
@@ -1130,6 +1140,24 @@ extern void ToggleLedOff8900(void);
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
 
 	//-------------------------------------------------------------------------
+	// Init External RTC Interrupt for interrupt source
+	//-------------------------------------------------------------------------
+#if 0 // Place at startup to prevent driving the line
+	gpio_map_t EIC_GPIO_MAP =
+	{
+		{AVR32_EIC_EXTINT_1_PIN, AVR32_EIC_EXTINT_1_FUNCTION}
+	};
+
+	// Enable External Interrupt for MCP23018
+	gpio_enable_module(EIC_GPIO_MAP, sizeof(EIC_GPIO_MAP) / sizeof(EIC_GPIO_MAP[0]));
+#endif
+
+#if EXTERNAL_SAMPLING_SOURCE
+	// The internal pull up for this pin needs to be enables to bring the line high, otherwise the clock out will only reach half level
+	gpio_enable_pin_pull_up(AVR32_EIC_EXTINT_1_PIN);
+#endif
+
+	//-------------------------------------------------------------------------
 	//Display_Craft_Logo();
 	//soft_usecWait(3 * SOFT_SECS);
 	
@@ -1265,9 +1293,11 @@ extern void SetupADChannelConfig(uint32 sampleRate);
 	LcdClearPortReg();
 	powerControl(LCD_POWER_ENABLE, OFF);
 
+	gpio_clr_gpio_pin(AVR32_PIN_PB20);
+
 	//SLEEP(AVR32_PM_SMODE_IDLE);
 	SLEEP(AVR32_PM_SMODE_STOP);
-	
+	//SLEEP(AVR32_PM_SMODE_STANDBY);
 	while (1) {}
 #endif	
 }
@@ -1900,6 +1930,25 @@ int main(void)
 
 	debug("--- System Init complete (Version %d.%d.%c) ---\n", majorVer, minorVer, buildVer);
 
+#if 0 // External sampling source
+extern void startExternalRTCClock(uint16 sampleRate);
+	g_updateCounter = 1;
+	startExternalRTCClock(TEST_SAMPLE_RATE);
+
+	while (1==1)
+	{
+		g_updateCounter++;
+		
+		if (g_updateCounter % TEST_SAMPLE_RATE == 0)
+		{
+			debug("Tick tock (%d, %d)\n", TEST_SAMPLE_RATE, g_updateCounter / TEST_SAMPLE_RATE);
+		}
+		
+		while (!usart_tx_empty(DBG_USART)) {;}
+		SLEEP(AVR32_PM_SMODE_IDLE);
+	}
+#endif
+
 	// Test code
 	testSnippetsAfterInit();
 
@@ -1944,14 +1993,19 @@ int main(void)
 #if 0 // Normal
 			SLEEP(AVR32_IDLE_MODE);
 #else // Test
-			if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING) { SLEEP(AVR32_IDLE_MODE); }
-			else
+			// Check if USB is connected
+			if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+			{
+				// Can't operate the USB is the sleep mode is deeper than IDLE (due to HSB)
+				SLEEP(AVR32_IDLE_MODE);
+			}
+			else // USB is not connected and a deeper sleep mode can be used
 			{
 				// Disable rs232 driver and receiver (Active low controls)
 				gpio_set_gpio_pin(AVR32_PIN_PB08);
 				gpio_set_gpio_pin(AVR32_PIN_PB09);
 
-				SLEEP(AVR32_PM_SMODE_FROZEN);
+				SLEEP(AVR32_PM_SMODE_STANDBY);
 
 				// Enable rs232 driver and receiver (Active low controls)
 				gpio_clr_gpio_pin(AVR32_PIN_PB08);

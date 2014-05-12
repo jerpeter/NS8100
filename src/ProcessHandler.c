@@ -30,6 +30,7 @@
 #include "Analog.h"
 #include "M23018.h"
 #include "Globals.h"
+#include "RealTimeClock.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -243,6 +244,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 extern void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel);
 extern void Start_Data_Clock(TC_CHANNEL_NUM channel);
 extern void SetupADChannelConfig(uint32 sampleRate);
+extern void Setup_8100_EIC_External_RTC_ISR(void);
 #endif
 /****************************************
 *	Function:	 startDataCollection
@@ -268,15 +270,23 @@ void startDataCollection(uint32 sampleRate)
 	debug("Setup TC clocks...\n");
 	// Setup ISR to clock the data sampling
 
+#if INTERNAL_SAMPLING_SOURCE
 	Setup_8100_TC_Clock_ISR(sampleRate, TC_SAMPLE_TIMER_CHANNEL);
 	Setup_8100_TC_Clock_ISR(CAL_PULSE_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+	Setup_8100_EIC_External_RTC_ISR();
+#endif
 
 	// Init a few key values for data collection
 	dataIsrInit();
 
 	debug("Start sampling...\n");
 	// Start the timer for collecting data
+#if INTERNAL_SAMPLING_SOURCE
 	Start_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+	startExternalRTCClock(sampleRate);
+#endif
 
 	// Change state to start processing the samples
 	debug("Raise signal to start sampling\n");
@@ -389,7 +399,11 @@ void stopDataCollection(void)
 {
 	g_sampleProcessing = IDLE_STATE;
 
+#if INTERNAL_SAMPLING_SOURCE
 	Stop_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+	stopExternalRTCClock();
+#endif
 
 	powerControl(ANALOG_SLEEP_ENABLE, ON);		
 
@@ -416,7 +430,11 @@ void stopDataClock(void)
 {
 	g_sampleProcessing = IDLE_STATE;
 
+#if INTERNAL_SAMPLING_SOURCE
 	Stop_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+	stopExternalRTCClock();
+#endif
 
 	powerControl(ANALOG_SLEEP_ENABLE, ON);		
 }

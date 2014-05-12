@@ -257,7 +257,7 @@ DATE_TIME_STRUCT  g_currentTime;
 SOFT_TIMER_STRUCT g_rtcTimerBank[NUM_OF_SOFT_TIMERS];
 uint32 g_rtcSoftTimerTickCount = 0;
 volatile uint32 g_rtcCurrentTickCount = 0;
-uint32 g_UpdateCounter = 0;
+uint32 g_updateCounter = 0;
 REC_HELP_MN_STRUCT g_helpRecord;
 uint8 g_disableDebugPrinting;
 uint8 g_autoCalDaysToWait = 0;

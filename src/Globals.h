@@ -8,6 +8,8 @@
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
 
+// Global Includes ---------------------------------------------------------------------
+
 #include "Typedefs.h"
 #include "Analog.h"
 #include "Summary.h"
@@ -25,6 +27,15 @@
 #include "ProcessBargraph.h"
 #include "Uart.h"
 #include "TextTypes.h"
+
+// Global Defines ---------------------------------------------------------------------
+#define INTERNAL_SAMPLING_SOURCE	0
+
+#if (INTERNAL_SAMPLING_SOURCE)
+#define EXTERNAL_SAMPLING_SOURCE	0
+#else
+#define EXTERNAL_SAMPLING_SOURCE	1
+#endif
 
 // Global Externs ---------------------------------------------------------------------
 
@@ -208,7 +219,7 @@ extern DATE_TIME_STRUCT g_currentTime;
 extern SOFT_TIMER_STRUCT g_rtcTimerBank[NUM_OF_SOFT_TIMERS];
 extern uint32 g_rtcSoftTimerTickCount;
 extern volatile uint32 g_rtcCurrentTickCount;
-extern uint32 g_UpdateCounter;
+extern uint32 g_updateCounter;
 extern uint8 g_autoCalDaysToWait;
 extern REC_HELP_MN_STRUCT g_helpRecord;
 extern uint8 g_autoDialoutState;

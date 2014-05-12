@@ -251,6 +251,28 @@ void isr_SCI1(void)
 #endif
 
 // ============================================================================
+// eic_external_rtc_irq
+// ============================================================================
+__attribute__((__interrupt__))
+void eic_external_rtc_irq(void)
+{
+	static uint32 updateCounter = 0;
+
+	// Print test for verification of operation
+	//debugRaw("`");
+
+	updateCounter++;
+	
+	if (updateCounter % 1024 == 0)
+	{
+		debugRaw("#");
+	}
+
+	// clear the interrupt flag in the processor
+	AVR32_EIC.ICR.int1 = 1;
+}
+
+// ============================================================================
 // eic_keypad_irq
 // ============================================================================
 __attribute__((__interrupt__))
@@ -612,6 +634,34 @@ void Setup_8100_EIC_System_ISR(void)
 	// Test for int enable
 	if(AVR32_EIC.IMR.int4 == 0x01) debug("\nSystem Interrupt Enabled\n");
 	else debug("\nSystem Interrupt Not Enabled\n");
+#endif
+}
+
+// ============================================================================
+// Setup_8100_EIC_External_RTC_ISR
+// ============================================================================
+void Setup_8100_EIC_External_RTC_ISR(void)
+{
+	// External Interrupt Controller setup
+	AVR32_EIC.IER.int1 = 1;
+	AVR32_EIC.MODE.int1 = 0;
+	AVR32_EIC.EDGE.int1 = 0;
+	AVR32_EIC.LEVEL.int1 = 0;
+	AVR32_EIC.FILTER.int1 = 0;
+	AVR32_EIC.ASYNC.int1 = 1;
+	AVR32_EIC.EN.int1 = 1;
+
+	// Register the RTC interrupt handler to the interrupt controller.
+#if 0 // Test
+	INTC_register_interrupt(&eic_external_rtc_irq, AVR32_EIC_IRQ_1, 0);
+#else // Hook in the External RTC interrupt to the actual sample processing interrupt handler
+	INTC_register_interrupt(&tc_sample_irq, AVR32_EIC_IRQ_1, 0);
+#endif
+
+#if 1
+	// Test for int enable
+	if(AVR32_EIC.IMR.int1 == 0x01) { debug("External RTC Interrupt Enabled\n"); }
+	else { debug("External RTC Interrupt Not Enabled\n"); }
 #endif
 }
 
@@ -1140,9 +1190,14 @@ void processAndMoveWaveformData(void)
 				if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
 
 				// Swap to alternate timer/counter for default 1024 sample rate for Cal
+#if INTERNAL_SAMPLING_SOURCE
 				DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
 				tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 				tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+				startExternalRTCClock(SAMPLE_RATE_1K);
+				AVR32_EIC.ICR.int1 = 1;
+#endif
 
 				s_calSampleCount = MAX_CAL_SAMPLES;
 			}
@@ -1221,9 +1276,14 @@ void processAndMoveWaveformData(void)
 					if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
 
 					// Swap back to original sampling rate
+#if INTERNAL_SAMPLING_SOURCE
 					DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
 					tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
 					tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+					startExternalRTCClock(g_triggerRecord.trec.sample_rate);
+					AVR32_EIC.ICR.int1 = 1;
+#endif
 
 					// Invalidate the Pretrigger buffer until it's filled again
 					s_pretriggerFull = NO;
@@ -1460,9 +1520,14 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
 
 				// Swap to alternate timer/counter for default 1024 sample rate for Cal
+#if INTERNAL_SAMPLING_SOURCE
 				DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
 				tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 				tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+				startExternalRTCClock(SAMPLE_RATE_1K);
+				AVR32_EIC.ICR.int1 = 1;
+#endif
 
 				s_calSampleCount = MAX_CAL_SAMPLES;
 			}
@@ -1525,9 +1590,14 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 					if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
 
 					// Swap back to original sampling rate
+#if INTERNAL_SAMPLING_SOURCE
 					DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
 					tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
 					tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+					startExternalRTCClock(g_triggerRecord.trec.sample_rate);
+					AVR32_EIC.ICR.int1 = 1;
+#endif
 
 					// Invalidate the Pretrigger buffer until it's filled again
 					s_pretriggerFull = NO;
@@ -1773,6 +1843,24 @@ void dataIsrInit(void)
 __attribute__((__interrupt__))
 void tc_sample_irq(void)
 {
+#if EXTERNAL_SAMPLING_SOURCE
+	static uint8 skipProcessingFor512 = 0;
+	
+	//___________________________________________________________________________________________
+	//___Test timing (throw away at some point)
+	if (g_triggerRecord.trec.sample_rate == 512)
+	{
+		// Toggle the bit to toss away half the samples for a 512 sample rate clocked at 1024
+		skipProcessingFor512 ^= 1;
+		
+		if (skipProcessingFor512 == 0)
+		{
+			AVR32_EIC.ICR.int1 = 1;
+			return;
+		}
+	}
+#endif
+
 	//___________________________________________________________________________________________
 	//___Test timing (throw away at some point)
 	g_sampleCount++;
@@ -1790,8 +1878,12 @@ void tc_sample_irq(void)
 			handleChannelSyncError_ISR_Inline();
 
 			// clear the interrupt flags and bail
+#if INTERNAL_SAMPLING_SOURCE
 			DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
 			DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+#elif EXTERNAL_SAMPLING_SOURCE
+			AVR32_EIC.ICR.int1 = 1;
+#endif
 			return;
 		}
 
@@ -1865,6 +1957,10 @@ void tc_sample_irq(void)
 	if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
 
 	// clear the interrupt flag
+#if INTERNAL_SAMPLING_SOURCE
 	DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
 	DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+#elif EXTERNAL_SAMPLING_SOURCE
+	AVR32_EIC.ICR.int1 = 1;
+#endif
 }

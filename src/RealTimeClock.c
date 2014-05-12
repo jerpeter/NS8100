@@ -110,7 +110,51 @@ BOOLEAN InitExternalRtc(void)
 		setRtcDate(&g_currentTime);
 	}
 
+	// Set the clock out control to turn off any clock interrupt generation
+	rtcMap.clock_out_control = (0x07);
+	rtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
+
 	return (TRUE);
+}
+
+//=======================================================
+// startExternalRTCClock
+//=======================================================
+void startExternalRTCClock(uint16 sampleRate)
+{
+	RTC_MEM_MAP_STRUCT rtcMap;
+	uint8 clockRate;
+
+	debug("Starting External RTC Interrupt (%d ticks/sec)...\n", sampleRate);
+
+	switch (sampleRate)
+	{
+		case 32768	: clockRate = 0x00; break;
+		case 16384	: clockRate = 0x01; break;
+		case 8192	: clockRate = 0x02; break;
+		case 4096	: clockRate = 0x03; break;
+		case 2048	: clockRate = 0x04; break;
+		case 1024	: clockRate = 0x05; break;
+		case 512	: clockRate = 0x05; break;
+		case 1		: clockRate = 0x06; break;
+	}
+
+	rtcMap.clock_out_control = (clockRate);
+	rtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
+}
+
+//=======================================================
+// stopExternalRTCClock
+//=======================================================
+void stopExternalRTCClock(void)
+{
+	RTC_MEM_MAP_STRUCT rtcMap;
+
+	debug("Stoping External RTC Interrupt\n");
+
+	// Set the clock out control to turn off any clock interrupt generation
+	rtcMap.clock_out_control = (0x07);
+	rtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
 }
 
 /****************************************

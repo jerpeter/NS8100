@@ -24,6 +24,7 @@
 #include "Keypad.h"
 #include "TextTypes.h"
 #include "Analog.h"
+#include "RealTimeClock.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -156,7 +157,11 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 						if (s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY)
 						{
 							// Stop A/D data collection clock
+#if INTERNAL_SAMPLING_SOURCE
 							Stop_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+							stopExternalRTCClock();
+#endif
 							
 							// Alert the system operator that the unit is calibrating
 							overlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), 0);
@@ -165,7 +170,11 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 							GetChannelOffsets(CALIBRATION_FIXED_SAMPLE_RATE);
 							
 							// Restart the data collection clock
+#if INTERNAL_SAMPLING_SOURCE
 							Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+							startExternalRTCClock(SAMPLE_RATE_1K);
+#endif
 							
 							// Clear the Pretrigger buffer
 							soft_usecWait(250 * SOFT_MSECS);
@@ -539,11 +548,15 @@ void mnStartCal(void)
 	GetChannelOffsets(CALIBRATION_FIXED_SAMPLE_RATE);
 #endif
 
+#if INTERNAL_SAMPLING_SOURCE
 	// Setup ISR to clock the data sampling
 	Setup_8100_TC_Clock_ISR(CALIBRATION_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
 
 	// Start the timer for collecting data
 	Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+	startExternalRTCClock(SAMPLE_RATE_1K);
+#endif
 }
 
 /****************************************
@@ -552,7 +565,11 @@ void mnStartCal(void)
 ****************************************/
 void mnStopCal(void)
 {
+#if INTERNAL_SAMPLING_SOURCE
 	Stop_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+	stopExternalRTCClock();
+#endif
 
 	powerControl(ANALOG_SLEEP_ENABLE, ON);		
 }

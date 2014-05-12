@@ -1209,5 +1209,7 @@ void convertCurrentTimeForFat(uint8* fatTimeField);
 void convertCurrentDateForFat(uint8* fatTimeDate);
 void rtcWrite(uint8 register_address, int length, uint8* data);
 void rtcRead(uint8 register_address, int length, uint8* data);
+void startExternalRTCClock(uint16 sampleRate);
+void stopExternalRTCClock(void);
 
 #endif // _RTC_H_
