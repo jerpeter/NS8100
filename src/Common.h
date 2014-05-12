@@ -221,7 +221,7 @@ uint16 swapInt(uint16);
 float hexToDB(uint16, uint8);
 float hexToMillBars(uint16, uint8);
 float hexToPsi(uint16, uint8);
-float dbToHex(float);
+uint16 dbToHex(float);
 
 // PIT timers
 void startPitTimer(PIT_TIMER timer);

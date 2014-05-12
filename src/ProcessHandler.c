@@ -446,7 +446,7 @@ uint16 airTriggerConvert(uint32 airTriggerLevel)
 	if ((airTriggerLevel != NO_TRIGGER_CHAR) && (airTriggerLevel != MANUAL_TRIGGER_CHAR))
 	{
 		// Convert the float db to an offset from 0 to 2048
-		airTriggerLevel = (uint32)dbToHex((float)airTriggerLevel);
+		airTriggerLevel = dbToHex((float)airTriggerLevel);
 	}
 
 	// Swap the air trigger level so that the 430 can read the word value

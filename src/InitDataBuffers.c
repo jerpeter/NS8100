@@ -99,14 +99,6 @@ void InitDataBuffs(uint8 op_mode)
 		g_wordSizeInCal = g_samplesInCal * g_sensorInfoPtr->numOfChannels;
 		g_wordSizeInEvent = g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal;
 
-#if 0 // Test
-		// Waveform data init
-		g_waveformDataStartPtr = g_startOfQuarterSecBuff;
-		g_waveformDataWritePtr = g_startOfQuarterSecBuff;
-		g_waveformDataReadPtr = g_startOfQuarterSecBuff;
-		g_waveformDataEndPtr = g_endOfQuarterSecBuff;
-#endif
-
 		if (op_mode == COMBO_MODE)
 		{
 			// Calculate total event buffers available (partial event buffer size)

@@ -463,7 +463,7 @@ float hexToPsi(uint16 data, uint8 dataNormalizedFlag)
 ///	Function:	dbToHex
 ///	Purpose:	Convert the db value to a raw hex number between 0 and 2048
 ///----------------------------------------------------------------------------
-float dbToHex(float db)
+uint16 dbToHex(float db)
 {
 	// This is the inverse log of base 10.
 	double dbValue = (double)pow((double)10, ((double)db/(double)20.0));
@@ -474,7 +474,11 @@ float dbToHex(float db)
 	// Do the conversion. millibar conversion 400 = 10000/25
 	dbValue = (double)dbValue * (double)400.0;
 
-	return ((float)dbValue);
+#if 1 // ns8100 - Convert to 16-bit
+	dbValue *= 16;	
+#endif
+
+	return (ceil(dbValue));
 }
 
 ///----------------------------------------------------------------------------

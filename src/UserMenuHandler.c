@@ -780,7 +780,7 @@ void copyMenuToCache(USER_MENU_STRUCT* currentMenu)
 		{
 			// Copy the pre tag, pre num, text entry and post tag to the text of the current user menu display line
 			sprintf(g_userMenuCachePtr[i].text, "%s%d %s%s", g_menuTags[currentMenu[i].preTag].text,
-					currentMenu[i].preNum, getLangText(currentMenu[i].textEntry), 
+					(uint16)currentMenu[i].preNum, getLangText(currentMenu[i].textEntry), 
 					g_menuTags[currentMenu[i].postTag].text);
 		}
 

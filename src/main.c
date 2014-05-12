@@ -1094,10 +1094,10 @@ int main(void)
 			(g_modemStatus.xferState == NOP_CMD))
 		{
 			// Sleep
-#if 0 // fix_ns8100
+#if 0 // ns7100
 			Wait();
 #else // ns8100
-			//SLEEP(AVR32_PM_SMODE_IDLE);
+			SLEEP(AVR32_PM_SMODE_IDLE);
 #endif
 		}
 	}    

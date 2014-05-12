@@ -258,7 +258,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 
 					// Call Alarm One Seismic Level
 #if 1 // fix_ns8100 - Down convert to 12-bit adjustment
-			g_helpRecord.alarm_one_seismic_lvl /= 16;
+					g_helpRecord.alarm_one_seismic_lvl /= 16;
 #endif
 
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
@@ -298,10 +298,6 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Call Alarm One Air Level
-#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
-			g_helpRecord.alarm_one_air_lvl /= 16;
-#endif
-
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
 						g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
 				}
@@ -359,7 +355,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 
 					// Call Alarm One Seismic Level
 #if 1 // fix_ns8100 - Down convert to 12-bit adjustment
-			g_helpRecord.alarm_one_seismic_lvl /= 16;
+					g_helpRecord.alarm_one_seismic_lvl /= 16;
 #endif
 
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
@@ -463,7 +459,7 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 
 					// Call Alarm Two Seismic Level
 #if 1 // fix_ns8100 - Down convert to 12-bit adjustment
-			g_helpRecord.alarm_two_seismic_lvl /= 16;
+					g_helpRecord.alarm_two_seismic_lvl /= 16;
 #endif
 
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
@@ -503,10 +499,6 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Call Alarm One Air Level
-#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
-			g_helpRecord.alarm_two_air_lvl /= 16;
-#endif
-
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
 						g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
 				}
@@ -564,7 +556,7 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 
 					// Call Alarm Two Seismic Level
 #if 1 // fix_ns8100 - Down convert to 12-bit adjustment
-			g_helpRecord.alarm_two_seismic_lvl /= 16;
+					g_helpRecord.alarm_two_seismic_lvl /= 16;
 #endif
 
 					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
@@ -959,12 +951,17 @@ void barResultMenuHandler(uint8 keyPressed, void* data)
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
 			}
 
-#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
-			g_triggerRecord.trec.seismicTriggerLevel /= 16;
+#if 1 // ns8100 - Down convert to current bit accuracy setting
+			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
+			{
+				g_triggerRecord.trec.seismicTriggerLevel /= (SEISMIC_TRIGGER_MAX_VALUE / g_currentBitAccuracyScale);
+			}		
 #endif
 
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
-				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
+				(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_currentBitAccuracyScale)),
+				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_currentBitAccuracyScale)),
+				g_currentBitAccuracyScale);
 		}
 		else if ((g_helpRecord.alarm_one_mode == ALARM_MODE_OFF) && (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF))
 		{
@@ -2268,12 +2265,17 @@ void sensitivityMenuHandler(uint8 keyPressed, void* data)
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
 			}
 
-#if 1 // fix_ns8100 - Down convert to 12-bit adjustment
-			g_triggerRecord.trec.seismicTriggerLevel /= 16;
+#if 1 // ns8100 - Down convert to current bit accuracy setting
+			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
+			{
+				g_triggerRecord.trec.seismicTriggerLevel /= (SEISMIC_TRIGGER_MAX_VALUE / g_currentBitAccuracyScale);
+			}		
 #endif
 
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
-				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
+				(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_currentBitAccuracyScale)),
+				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_currentBitAccuracyScale)),
+				g_currentBitAccuracyScale);
 		}
 		else if ((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 		{

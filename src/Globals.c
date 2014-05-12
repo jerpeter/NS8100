@@ -39,7 +39,7 @@
 ///----------------------------------------------------------------------------
 
 ANALOG_CONTROL_STRUCT g_analogControl;
-/*volatile*/ OFFSET_DATA_STRUCT g_channelOffset;
+OFFSET_DATA_STRUCT g_channelOffset;
 INPUT_MSG_STRUCT g_input_buffer[INPUT_BUFFER_SIZE];
 char g_appVersion[16];
 char g_appDate[16];
@@ -74,30 +74,31 @@ uint32 __ramFlashSummaryTblKey;
 SUMMARY_DATA __ramFlashSummaryTbl[TOTAL_RAM_SUMMARIES];
 //uint16 g_quarterSecBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
 uint16 g_quarterSecBuff[(16384 * 4)];
-/*volatile*/ uint16* g_startOfQuarterSecBuff;
-/*volatile*/ uint16* g_tailOfQuarterSecBuff;
-/*volatile*/ uint16* g_endOfQuarterSecBuff;
-/*volatile*/ uint16 g_maxEventBuffers;
+uint16* g_startOfQuarterSecBuff;
+uint16* g_tailOfQuarterSecBuff;
+uint16* g_endOfQuarterSecBuff;
+//uint16* g_readQuarterSecBuff;
+uint16 g_maxEventBuffers;
 uint16 g_nextEventNumberToUse;
 FL_FILE* g_currentEventFileHandle;
 FL_FILE* g_comboDualCurrentEventFileHandle;
-/*volatile*/ uint16 g_freeEventBuffers;
+uint16 g_freeEventBuffers;
 uint16 g_calTestExpected;
-/*volatile*/ uint32 g_samplesInBody;
-/*volatile*/ uint32 g_samplesInPretrig;
+uint32 g_samplesInBody;
+uint32 g_samplesInPretrig;
 uint32 g_samplesInCal;
 uint32 g_samplesInEvent;
-/*volatile*/ uint32 g_wordSizeInPretrig;
-/*volatile*/ uint32 g_wordSizeInBody;
+uint32 g_wordSizeInPretrig;
+uint32 g_wordSizeInBody;
 uint32 g_wordSizeInCal;
-/*volatile*/ uint32 g_wordSizeInEvent;
-/*volatile*/ uint16* g_startOfEventBufferPtr;
+uint32 g_wordSizeInEvent;
+uint16* g_startOfEventBufferPtr;
 uint16* g_eventBufferPretrigPtr;
 uint16* g_eventBufferBodyPtr;
 uint16* g_eventBufferCalPtr;
 uint16* g_delayedOneEventBufferCalPtr;
 uint16* g_delayedTwoEventBufferCalPtr;
-/*volatile*/ uint16* g_currentEventSamplePtr;
+uint16* g_currentEventSamplePtr;
 uint16* g_currentEventStartPtr;
 uint16 g_eventBufferReadIndex;
 SUMMARY_DATA g_summaryTable[MAX_RAM_SUMMARYS];
@@ -105,18 +106,14 @@ SUMMARY_DATA* g_lastCompletedRamSummaryIndex;
 uint32 g_isTriggered = 0;
 uint32 g_processingCal = 0;
 uint16 g_eventsNotCompressed = 0; 
-/*volatile*/ uint16* g_bargraphDataStartPtr;
-/*volatile*/ uint16* g_bargraphDataWritePtr;
+uint16* g_bargraphDataStartPtr;
+uint16* g_bargraphDataWritePtr;
 uint16* g_bargraphDataReadPtr;
-/*volatile*/ uint16* g_waveformDataEndPtr;
-/*volatile*/ uint16* g_waveformDataStartPtr;
-/*volatile*/ uint16* g_waveformDataWritePtr;
-uint16* g_waveformDataReadPtr;
-/*volatile*/ uint16* g_bargraphDataEndPtr;
+uint16* g_bargraphDataEndPtr;
 uint8 g_powerNoiseFlag = PRINTER_OFF;
-/*volatile*/ uint8 g_doneTakingEvents = NO;
-/*volatile*/ uint8 g_busyProcessingEvent = NO;
-/*volatile*/ uint8 g_sampleProcessing = IDLE_STATE;
+uint8 g_doneTakingEvents = NO;
+uint8 g_busyProcessingEvent = NO;
+uint8 g_sampleProcessing = IDLE_STATE;
 uint8 g_modemConnected = NO;
 uint8 g_lcdBacklightFlag  = ENABLED;
 uint8 g_lcdPowerFlag = ENABLED;
@@ -135,7 +132,7 @@ uint8 g_keypadTable[8][8] = {
 uint8 g_smc_tab_cs_size[4];
 // Sensor information and constants.
 SENSOR_PARAMETERS_STRUCT g_SensorInfoStruct;
-/*volatile*/ SENSOR_PARAMETERS_STRUCT* g_sensorInfoPtr = &g_SensorInfoStruct;
+SENSOR_PARAMETERS_STRUCT* g_sensorInfoPtr = &g_SensorInfoStruct;
 // Contains the event record in ram.
 EVT_RECORD g_pendingEventRecord;
 EVT_RECORD g_pendingBargraphRecord;
@@ -144,13 +141,13 @@ uint16 g_resultsCacheIndex = 0;
 // Factory Setup record.
 FACTORY_SETUP_STRUCT g_factorySetupRecord;
 // Structure to contain system paramters and system settings.
-/*volatile*/ REC_EVENT_MN_STRUCT g_triggerRecord;				// Contains trigger specific information.
+REC_EVENT_MN_STRUCT g_triggerRecord;				// Contains trigger specific information.
 // Menu specific structures
 uint16 g_activeMenu;							// For active menu number/enum.
 MN_EVENT_STRUCT g_menuEventFlags;				// Menu event flags, for main loop processing.
-/*volatile*/ MN_TIMER_STRUCT g_timerEventFlags;					// Menu timer strucutre.
+MN_TIMER_STRUCT g_timerEventFlags;					// Menu timer strucutre.
 // System Event Flags, for main loopo processing.
-/*volatile*/ SYS_EVENT_STRUCT g_systemEventFlags;
+SYS_EVENT_STRUCT g_systemEventFlags;
 MODEM_SETUP_STRUCT g_modemSetupRecord;			// Record for user input data.
 MODEM_STATUS_STRUCT g_modemStatus;			// Record for modem data processing.
 // Used as a circular buffer to continually caputer incomming data from the craft port.
@@ -213,7 +210,8 @@ BARGRAPH_BAR_INTERVAL_DATA g_bargraphBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS];
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalWritePtr = &(g_bargraphBarInterval[0]);
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalReadPtr = &(g_bargraphBarInterval[0]);
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalEndPtr = &(g_bargraphBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS - 1]);
-/*volatile*/ uint16 g_sampleDataMidpoint = 0x8000;
+uint16 g_sampleDataMidpoint = 0x8000;
+uint16 g_currentBitAccuracyScale = 0x8000;
 uint16 g_aImpulsePeak;
 uint16 g_rImpulsePeak;
 uint16 g_vImpulsePeak;
@@ -246,8 +244,8 @@ BARGRAPH_BAR_INTERVAL_DATA g_comboBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS];
 BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalWritePtr = &(g_comboBarInterval[0]);
 BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalReadPtr = &(g_comboBarInterval[0]);
 BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalEndPtr = &(g_comboBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS - 1]);
-/*volatile*/ uint16 g_manualCalFlag = FALSE;
-/*volatile*/ uint16 g_manualCalSampleCount = 0;
+uint16 g_manualCalFlag = FALSE;
+uint16 g_manualCalSampleCount = 0;
 uint8 g_bargraphForcedCal = NO;
 uint8 g_skipAutoCalInWaveformAfterMidnightCal = NO;
 DATE_TIME_STRUCT  g_currentTime;
@@ -255,7 +253,7 @@ SOFT_TIMER_STRUCT g_rtcTimerBank[NUM_OF_SOFT_TIMERS];
 uint32 g_rtcSoftTimerTickCount = 0;
 volatile uint32 g_rtcCurrentTickCount = 0;
 uint32 g_UpdateCounter = 0;
-/*volatile*/ REC_HELP_MN_STRUCT g_helpRecord;
+REC_HELP_MN_STRUCT g_helpRecord;
 uint8 g_autoCalDaysToWait = 0;
 uint8 g_printMillibars = OFF;
 uint8 g_autoDialoutState = AUTO_DIAL_IDLE;
@@ -291,11 +289,11 @@ USER_MENU_CACHE_STRUCT		g_userMenuCache[36];
 USER_MENU_CACHE_STRUCT* 	g_userMenuCachePtr = &g_userMenuCache[0];
 USER_MENU_CACHE_DATA g_userMenuCacheData;
 void (*g_userMenuHandler)(uint8, void*);
-/*volatile*/ uint16 g_eventBufferWriteIndex;
+uint16 g_eventBufferWriteIndex;
 uint8 g_tcSampleTimerActive = NO;
 uint8 g_tcTypematicTimerActive = NO;
 char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
-/*volatile*/ uint16 g_testTrigger = NO;
+uint16 g_testTrigger = NO;
 char g_languageTable[8192];
 uint8 g_spareBuffer[8192];
 uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];

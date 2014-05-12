@@ -241,10 +241,11 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	uint8 buff[50];
 	uint8 length;
 	uint16 i = 0, j = 0;
-	uint16 chanMin[4];
-	uint16 chanMax[4];
-	uint32 chanAvg[4];
-	uint16 chanMed[4][13];
+	int32 chanMin[4];
+	int32 chanMax[4];
+	int32 chanAvg[4];
+	int16 chanMed[4][13];
+	uint16 sampleDataMidpoint = 0x8000;
 
 	DATE_TIME_STRUCT time;
 
@@ -290,21 +291,21 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			if (s_calPreTrigData[i].chan[j] > chanMax[j]) chanMax[j] = s_calPreTrigData[i].chan[j];
 			chanAvg[j] += s_calPreTrigData[i].chan[j];
 
-			if ((s_calPreTrigData[i].chan[j] >= (g_sampleDataMidpoint - 6)) && (s_calPreTrigData[i].chan[j] <= (g_sampleDataMidpoint + 6)))
+			if ((s_calPreTrigData[i].chan[j] >= (sampleDataMidpoint - 6)) && (s_calPreTrigData[i].chan[j] <= (sampleDataMidpoint + 6)))
 			{
-				if (chanMed[j][(s_calPreTrigData[i].chan[j] - (g_sampleDataMidpoint - 6))] < 255)
-					chanMed[j][(s_calPreTrigData[i].chan[j] - (g_sampleDataMidpoint - 6))]++;
+				if (chanMed[j][(s_calPreTrigData[i].chan[j] - (sampleDataMidpoint - 6))] < 255)
+					chanMed[j][(s_calPreTrigData[i].chan[j] - (sampleDataMidpoint - 6))]++;
 			}
 		}
 	}
 
 	for (i = 0; i < 4; i++)
 	{
-		chanMin[i] -= g_sampleDataMidpoint;
-		chanMax[i] -= g_sampleDataMidpoint;
+		chanMin[i] -= sampleDataMidpoint;
+		chanMax[i] -= sampleDataMidpoint;
 
 		chanAvg[i] /= 256;
-		chanAvg[i] -= g_sampleDataMidpoint;
+		chanAvg[i] -= sampleDataMidpoint;
 
 		for (j = 0; j < 13; j++)
 		{
@@ -346,28 +347,28 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		// PRINT Table header
 		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "Chan| Min| Max| Avg|");
+		sprintf((char*)buff, "C|  Min|  Max|  Avg|");
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
 		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 
 		// PRINT R,V,T,A last sample value, .1 sec avg, .25 sec avg
 		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "Rad |%+4d|%+4d|%+4d|", chanMin[1], chanMax[1], (int)chanAvg[1]);
+		sprintf((char*)buff, "R|%+5ld|%+5ld|%+5ld|", chanMin[1], chanMax[1], chanAvg[1]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
 		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "Vert|%+4d|%+4d|%+4d|", chanMin[2], chanMax[2], (int)chanAvg[2]);
+		sprintf((char*)buff, "V|%+5ld|%+5ld|%+5ld|", chanMin[2], chanMax[2], chanAvg[2]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
 		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "Tran|%+4d|%+4d|%+4d|", chanMin[3], chanMax[3], (int)chanAvg[3]);
+		sprintf((char*)buff, "T|%+5ld|%+5ld|%+5ld|", chanMin[3], chanMax[3], chanAvg[3]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
 		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "Air |%+4d|%+4d|%+4d|", chanMin[0], chanMax[0], (int)chanAvg[0]);
+		sprintf((char*)buff, "A|%+5ld|%+5ld|%+5ld|", chanMin[0], chanMax[0], chanAvg[0]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 		wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	}

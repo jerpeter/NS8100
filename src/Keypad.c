@@ -344,14 +344,18 @@ BOOLEAN keypad(void)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
-#if 1 // Test
-				g_triggerRecord.trec.sample_rate += 1024;
-
+#if 0 // Test
 				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					g_testTrigger = YES;
-				}					
+				}
+				else
+				{
+					g_triggerRecord.trec.sample_rate += 1024;
 
+					debug("New sample rate: %d\n", g_triggerRecord.trec.sample_rate);
+				}
+				
 				p_msg->cmd = 0;
 				p_msg->length = 0;
 #else
