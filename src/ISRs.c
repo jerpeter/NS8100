@@ -79,6 +79,7 @@ static uint32 s_quarterSecCount = 0;
 static uint16 s_consecSeismicTriggerCount = 0;
 static uint16 s_consecAirTriggerCount = 0;
 static uint8 s_quarterSecFull = NO;
+static uint8 s_checkTempDrift = NO;
 static uint8 s_seismicTriggerSample = NO;
 static uint8 s_airTriggerSample = NO;
 static uint8 s_recordingEvent = NO;
@@ -770,6 +771,15 @@ static inline void fillQuarterSecBuffer_ISR_Inline(void)
 	{ 
 		s_quarterSecFull = YES;
 		s_quarterSecCount = 0;
+		
+		// Save the current temperature
+		g_storedTempReading = g_currentTempReading;
+
+		// Check if setup to monitor temp drift and not 16K sample rate
+		if ((g_triggerRecord.trec.adjustForTempDrift == YES) && (g_triggerRecord.trec.sample_rate != SAMPLE_RATE_16K))
+		{
+			s_checkTempDrift = YES;
+		}
 	}					
 }
 
@@ -1547,17 +1557,29 @@ static inline void moveBargraphData_ISR_Inline(void)
 // ============================================================================
 static inline void checkForTemperatureDrift_ISR_Inline(void)
 {
-	if ((g_storedTempReading > g_currentTempReading) && ((g_storedTempReading - g_currentTempReading) > AD_TEMP_COUNT_FOR_ADJUSTMENT))
+	// Check if the stored temp reading is higher than the current reading
+	if (g_storedTempReading > g_currentTempReading)
 	{
-		// Updated stored temp reading for future comparison
-		g_storedTempReading = g_currentTempReading;
+		// Check if the delta is less than the margin of change required to signal an adjustment
+		if ((g_storedTempReading - g_currentTempReading) > AD_TEMP_COUNT_FOR_ADJUSTMENT)
+		{
+			// Updated stored temp reading for future comparison
+			g_storedTempReading = g_currentTempReading;
 
-		raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
+			// Re-init the update to get new offsets
+			g_updateOffsetCount = 0;
+
+			raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
+		}
 	}
+	// The current temp reading is equal or higher than the stored (result needs to be positive)
 	else if ((g_currentTempReading - g_storedTempReading) > AD_TEMP_COUNT_FOR_ADJUSTMENT)
 	{
 		// Updated stored temp reading for future comparison
 		g_storedTempReading = g_currentTempReading;
+
+		// Re-init the update to get new offsets
+		g_updateOffsetCount = 0;
 
 		raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
 	}
@@ -1715,6 +1737,15 @@ static inline void handleChannelSyncError_ISR_Inline(void)
 }
 
 // ============================================================================
+// dataIsrInit
+// ============================================================================
+void dataIsrInit(void)
+{
+	s_quarterSecFull = NO;
+	s_checkTempDrift = NO;
+}
+
+// ============================================================================
 // tc_sample_irq
 // ============================================================================
 __attribute__((__interrupt__))
@@ -1743,14 +1774,14 @@ void tc_sample_irq(void)
 		}
 
 		//___________________________________________________________________________________________
-		//___Check for temperature drift
-		if (g_triggerRecord.trec.adjustForTempDrift == YES)
+		//___Check for temperature drift (only will start after quarter sec buffer is full initially)
+		if (s_checkTempDrift == YES)
 		{
 			checkForTemperatureDrift_ISR_Inline();
 		}
 	}		
 	//___________________________________________________________________________________________
-	//___AD raw data read all 4 channels without config readback and no temp
+	//___AD raw data read all 4 channels without config read back and no temp
 	else
 	{
 		getChannelDataWithoutReadbackCheck_ISR_Inline();

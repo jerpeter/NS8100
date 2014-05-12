@@ -384,10 +384,12 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Sample Rate check
-		if ((512 == cfg.eventCfg.sampleRate) || (1024 == cfg.eventCfg.sampleRate) || (2048 == cfg.eventCfg.sampleRate) ||
-			(4096 == cfg.eventCfg.sampleRate) || (8192 == cfg.eventCfg.sampleRate))
+		if ((SAMPLE_RATE_512 == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_1K == cfg.eventCfg.sampleRate) || 
+			(SAMPLE_RATE_2K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_4K == cfg.eventCfg.sampleRate) || 
+			(SAMPLE_RATE_8K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_16K == cfg.eventCfg.sampleRate))
 		{
-			if ((BARGRAPH_MODE == g_triggerRecord.op_mode) && (1024 != cfg.eventCfg.sampleRate))
+			if (((BARGRAPH_MODE == g_triggerRecord.op_mode) || (COMBO_MODE == g_triggerRecord.op_mode)) && 
+				(cfg.eventCfg.sampleRate > SAMPLE_RATE_4K))
 			{
 				returnCode = CFG_ERR_SAMPLE_RATE;
 			}

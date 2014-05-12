@@ -55,6 +55,8 @@ extern void SetupADChannelConfig(uint32 sampleRate);
 ///----------------------------------------------------------------------------
 static uint8 s_calDisplayScreen = 0;
 static uint32 s_calSavedSampleRate = 0;
+
+#if 0
 static union {
 	uint16 chan[4];
 	struct {
@@ -64,6 +66,13 @@ static union {
 		uint16 t;
 	};
 } s_calPreTrigData[256];
+#endif
+
+typedef struct {
+	uint16 chan[4];
+} CALIBRATION_DATA;
+
+static CALIBRATION_DATA* s_calibrationData;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -191,10 +200,12 @@ void calSetupMnProc(INPUT_MSG_STRUCT msg,
 
 			// Fool ISR into filling up quarter sec buffer
 			s_calSavedSampleRate = g_triggerRecord.trec.sample_rate;
-			g_triggerRecord.trec.sample_rate = 1024;
+			g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
 			InitDataBuffs(WAVEFORM_MODE);
 
+#if 0 // ns7100
 			mnStopCal();
+#endif
 			mnStartCal();
 			// Allow pre-trigger buffer to fill up
 			soft_usecWait(250 * SOFT_MSECS);
@@ -256,12 +267,8 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
-	if (g_sampleProcessing == ACTIVE_STATE)
-	{
-		// Necessary?
-	}
-
-	memcpy(&s_calPreTrigData[0], &g_startOfQuarterSecBuff[0], (256 * 4 * 2));
+	//memcpy(&s_calPreTrigData[0], &g_startOfQuarterSecBuff[0], (256 * 4 * 2));
+	s_calibrationData = (CALIBRATION_DATA*)g_startOfQuarterSecBuff;
 
 	// Zero the Med
 	memset(&chanMed[0][0], 0, sizeof(chanMed));
@@ -279,14 +286,14 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		for (j = 0; j < 4; j++)
 		{
-			if (s_calPreTrigData[i].chan[j] < chanMin[j]) chanMin[j] = s_calPreTrigData[i].chan[j];
-			if (s_calPreTrigData[i].chan[j] > chanMax[j]) chanMax[j] = s_calPreTrigData[i].chan[j];
-			chanAvg[j] += s_calPreTrigData[i].chan[j];
+			if (s_calibrationData[i].chan[j] < chanMin[j]) chanMin[j] = s_calibrationData[i].chan[j];
+			if (s_calibrationData[i].chan[j] > chanMax[j]) chanMax[j] = s_calibrationData[i].chan[j];
+			chanAvg[j] += s_calibrationData[i].chan[j];
 
-			if ((s_calPreTrigData[i].chan[j] >= (sampleDataMidpoint - 6)) && (s_calPreTrigData[i].chan[j] <= (sampleDataMidpoint + 6)))
+			if ((s_calibrationData[i].chan[j] >= (sampleDataMidpoint - 6)) && (s_calibrationData[i].chan[j] <= (sampleDataMidpoint + 6)))
 			{
-				if (chanMed[j][(s_calPreTrigData[i].chan[j] - (sampleDataMidpoint - 6))] < 255)
-					chanMed[j][(s_calPreTrigData[i].chan[j] - (sampleDataMidpoint - 6))]++;
+				if (chanMed[j][(s_calibrationData[i].chan[j] - (sampleDataMidpoint - 6))] < 255)
+					chanMed[j][(s_calibrationData[i].chan[j] - (sampleDataMidpoint - 6))]++;
 			}
 		}
 	}
@@ -368,7 +375,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		// R
 		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "R |%2d|%2d|%2d|%2d|%2d|%2d",
+		sprintf((char*)buff, "R%%|%2d|%2d|%2d|%2d|%2d|%2d",
 				chanMed[1][5], chanMed[1][4], chanMed[1][3],
 				chanMed[1][2], chanMed[1][1], chanMed[1][0]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
@@ -383,7 +390,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		// V
 		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "V |%2d|%2d|%2d|%2d|%2d|%2d",
+		sprintf((char*)buff, "V%%|%2d|%2d|%2d|%2d|%2d|%2d",
 				chanMed[2][5], chanMed[2][4], chanMed[2][3],
 				chanMed[2][2], chanMed[2][1], chanMed[2][0]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
@@ -398,7 +405,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		// T
 		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "T |%2d|%2d|%2d|%2d|%2d|%2d",
+		sprintf((char*)buff, "T%%|%2d|%2d|%2d|%2d|%2d|%2d",
 				chanMed[3][5], chanMed[3][4], chanMed[3][3],
 				chanMed[3][2], chanMed[3][1], chanMed[3][0]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
@@ -413,7 +420,7 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		// A
 		byteSet(&buff[0], 0, sizeof(buff));
-		sprintf((char*)buff, "A |%2d|%2d|%2d|%2d|%2d|%2d",
+		sprintf((char*)buff, "A%%|%2d|%2d|%2d|%2d|%2d|%2d",
 				chanMed[0][5], chanMed[0][4], chanMed[0][3],
 				chanMed[0][2], chanMed[0][1], chanMed[0][0]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
@@ -440,15 +447,26 @@ void mnStartCal(void)
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
 
-	// fix_ns8100
-	// Need to power on AD
+#if 0 // Necessary? Probably need 1 sec for changes, however 1 sec worth of samples thrown away with getting channel offsets 
+	// Delay for Analog cutoff and gain select changes to propagate
+	soft_usecWait(50 * SOFT_MSECS);
+#endif
+
+	// Enable the A/D
+	debug("Enable the A/D\n");
+	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+
+	// Delay to allow AD to power up/stabilize
+	soft_usecWait(50 * SOFT_MSECS);
 
 	// Setup AD Channel config
-	SetupADChannelConfig(CAL_PULSE_FIXED_SAMPLE_RATE);
-	GetChannelOffsets(CAL_PULSE_FIXED_SAMPLE_RATE);
+	SetupADChannelConfig(CALIBRATION_FIXED_SAMPLE_RATE);
+
+	// Get channel offsets
+	GetChannelOffsets(CALIBRATION_FIXED_SAMPLE_RATE);
 
 	// Setup ISR to clock the data sampling
-	Setup_8100_TC_Clock_ISR(CAL_PULSE_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
+	Setup_8100_TC_Clock_ISR(CALIBRATION_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
 
 	// Start the timer for collecting data
 	Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
@@ -462,6 +480,5 @@ void mnStopCal(void)
 {
 	Stop_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
 
-	// fix_ns8100
-	// Need to power down AD
+	powerControl(ANALOG_SLEEP_ENABLE, ON);		
 }

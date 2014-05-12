@@ -591,6 +591,7 @@ void processTimerModeSettings(uint8 mode)
 		// fix_ns8100
 #endif
 
+		// Init start day based on the start date provided by the user
 		startDay = g_helpRecord.tm_start_date.day;
 
 		// Check if in progress, requiring extra logic to determine alarm settings
@@ -748,10 +749,10 @@ void processTimerModeSettings(uint8 mode)
 			// Make sure timeout value is not zero
 			if (minutesLeft == 0) minutesLeft = 1;
 
-			debug("Timer Mode: In progress, minutes left before power off: %d\n", minutesLeft);
+			debug("Timer Mode: In progress, minutes left before power off: %d (Expired secs this min: %d)\n", minutesLeft, currentTime.sec);
 
 			// Setup soft timer to turn system off when timer mode is finished for the day
-			assignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)(minutesLeft * 60 * 2), powerOffTimerCallback);
+			assignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)((minutesLeft * 60 * 2) - (currentTime.sec	* 2)), powerOffTimerCallback);
 		}
 	}
 }

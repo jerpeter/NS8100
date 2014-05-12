@@ -106,7 +106,20 @@ BOOLEAN keypad(void)
 #if 0 // ns7100
 	s_keyMap[0] = (uint8)(~(*keypadAddress));
 #else // ns8100
-	s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+
+#if 0 // Test - 3 reads to filter out debounce
+	s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	s_keyMap[3] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	
+	s_keyMap[0] = (s_keyMap[1] & s_keyMap[2] & s_keyMap[3]);
+#else // Test - 2 reads to filter out debounce (seems to work as effective as 3 reads)
+	s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	
+	s_keyMap[0] = (s_keyMap[1] & s_keyMap[2]);
+#endif
+
 #endif
 
 	if (s_keyMap[0]) 

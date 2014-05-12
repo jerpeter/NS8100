@@ -427,7 +427,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if (g_triggerRecord.trec.sample_rate == 512)
 			sprintf((char*)srBuff, ".5K");
 		else
-			sprintf((char*)srBuff, "%dK", (int)(g_triggerRecord.trec.sample_rate / 1024));
+			sprintf((char*)srBuff, "%dK", (int)(g_triggerRecord.trec.sample_rate / SAMPLE_RATE_1K));
 
 		if (g_monitorOperationMode == WAVEFORM_MODE)
 		{

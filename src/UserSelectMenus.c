@@ -73,6 +73,7 @@ extern USER_MENU_STRUCT monitorLogMenu[];
 extern USER_MENU_STRUCT operatorMenu[];
 extern USER_MENU_STRUCT printerEnableMenu[];
 extern USER_MENU_STRUCT printMonitorLogMenu[];
+extern USER_MENU_STRUCT recalibrateMenu[];
 extern USER_MENU_STRUCT recordTimeMenu[];
 extern USER_MENU_STRUCT saveRecordMenu[];
 extern USER_MENU_STRUCT saveSetupMenu[];
@@ -1096,7 +1097,15 @@ void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
 			default: { g_bitAccuracyMidpoint = ACCURACY_16_BIT_MIDPOINT; } break;
 		}
 
-		ACTIVATE_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
+		// Check if sample rate is 16K which can not process temp readings
+		if (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K)
+		{
+			ACTIVATE_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
+		}
+		else // All other sample rates
+		{
+			ACTIVATE_USER_MENU_MSG(&recalibrateMenu, g_triggerRecord.trec.adjustForTempDrift);
+		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
@@ -2079,6 +2088,45 @@ void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
+// Recalibrate Menu
+//=============================================================================
+//*****************************************************************************
+#define RECALIBRATE_MENU_ENTRIES 4
+USER_MENU_STRUCT recalibrateMenu[RECALIBRATE_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, RECALIBRATE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, RECALIBRATE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, ON_TEMP_CHANGE_TEXT,	NO_TAG, {YES}},
+{ITEM_2, 0, NO_TEXT,					NO_TAG, {NO}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&recalibrateMenuHandler}}
+};
+
+//--------------------------------
+// Recalibrate Menu Handler
+//--------------------------------
+void recalibrateMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_triggerRecord.trec.adjustForTempDrift = (uint8)recalibrateMenu[newItemIndex].data;
+
+		// Save the current trig record into the default location
+		saveRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
+
+		ACTIVATE_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		ACTIVATE_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
+	}
+
+	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+}
+
+//*****************************************************************************
+//=============================================================================
 // Sample Rate Menu
 //=============================================================================
 //*****************************************************************************
@@ -2086,12 +2134,12 @@ void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT sampleRateMenu[SAMPLE_RATE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, SAMPLE_RATE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, SAMPLE_RATE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
-{ITEM_1, 512, NULL_TEXT, NO_TAG, {MIN_SAMPLE_RATE}}, // 512
-{ITEM_2, 1024, NULL_TEXT, NO_TAG, {1024}},
-{ITEM_3, 2048, NULL_TEXT, NO_TAG, {2048}},
-{ITEM_4, 4096, NULL_TEXT, NO_TAG, {4096}},
-{ITEM_5, 8192, NULL_TEXT, NO_TAG, {8192}},
-{ITEM_6, 16384, NULL_TEXT, NO_TAG, {16384}},
+{ITEM_1, SAMPLE_RATE_512, NULL_TEXT, NO_TAG, {MIN_SAMPLE_RATE}}, // 512
+{ITEM_2, SAMPLE_RATE_1K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_1K}},
+{ITEM_3, SAMPLE_RATE_2K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_2K}},
+{ITEM_4, SAMPLE_RATE_4K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_4K}},
+{ITEM_5, SAMPLE_RATE_8K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_8K}},
+{ITEM_6, SAMPLE_RATE_16K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_16K}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&sampleRateMenuHandler}}
 };
 
@@ -2244,6 +2292,7 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 
 	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 }
+
 //*****************************************************************************
 //=============================================================================
 // Sensitivity Menu
@@ -2452,8 +2501,8 @@ void timerModeFreqMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
 		{
-			overlayMessage("TIMER MODE", "FOR HOURLY MODE THE HOURS AND MINUTES FIELDS ARE INDEPENDENT", MB_OK);
-			overlayMessage("TIMER MODE HOURLY", "HOURS = ACTIVE HOURS, MINS = ACTIVE MIN RANGE EACH HOUR", MB_OK);
+			messageBox("TIMER MODE", "FOR HOURLY MODE THE HOURS AND MINUTES FIELDS ARE INDEPENDENT", MB_OK);
+			messageBox("TIMER MODE HOURLY", "HOURS = ACTIVE HOURS, MINS = ACTIVE MIN RANGE EACH HOUR", MB_OK);
 		}
 		
 		g_activeMenu = TIMER_MODE_TIME_MENU;

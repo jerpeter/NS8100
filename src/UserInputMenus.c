@@ -59,6 +59,7 @@ extern USER_MENU_STRUCT modemRetryTimeMenu[];
 extern USER_MENU_STRUCT modeMenu[];
 extern USER_MENU_STRUCT notesMenu[];
 extern USER_MENU_STRUCT operatorMenu[];
+extern USER_MENU_STRUCT recalibrateMenu[];
 extern USER_MENU_STRUCT recordTimeMenu[];
 extern USER_MENU_STRUCT sampleRateMenu[];
 extern USER_MENU_STRUCT saveSetupMenu[];
@@ -536,7 +537,14 @@ void companyMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
+		if (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K)
+		{
+			ACTIVATE_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
+		}
+		else // All other sample rates
+		{
+			ACTIVATE_USER_MENU_MSG(&recalibrateMenu, g_triggerRecord.trec.adjustForTempDrift);
+		}
 	}
 
 	(*menufunc_ptrs[g_activeMenu]) (mn_msg);

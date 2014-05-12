@@ -155,15 +155,15 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 
 #if 0 // ns7100
 					// Check if the sample rate is not 1024
-					if (g_triggerRecord.trec.sample_rate != 1024)
+					if (g_triggerRecord.trec.sample_rate != SAMPLE_RATE_1K)
 					{
-						g_triggerRecord.trec.sample_rate = 1024;
+						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
 					}	
 #else // ns8100
 					// Check if the sample rate is greater than max working sample rate
-					if (g_triggerRecord.trec.sample_rate > 4096)
+					if (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_4K)
 					{
-						g_triggerRecord.trec.sample_rate = 1024;
+						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
 					}	
 #endif
 					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
@@ -204,15 +204,15 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 
 #if 0 // ns7100
 					// Check if the sample rate is not 1024
-					if (g_triggerRecord.trec.sample_rate != 1024)
+					if (g_triggerRecord.trec.sample_rate != SAMPLE_RATE_1K)
 					{
-						g_triggerRecord.trec.sample_rate = 1024;
+						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
 					}	
 #else // ns8100
 					// Check if the sample rate is greater than max working sample rate
-					if (g_triggerRecord.trec.sample_rate > 4096)
+					if (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_4K)
 					{
-						g_triggerRecord.trec.sample_rate = 1024;
+						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
 					}	
 #endif
 					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
@@ -491,7 +491,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	if (g_triggerRecord.trec.sample_rate == 512)
 		sprintf((char*)srBuff, ".5K");
 	else
-		sprintf((char*)srBuff, "%dK", (int)(g_triggerRecord.trec.sample_rate / 1024));
+		sprintf((char*)srBuff, "%dK", (int)(g_triggerRecord.trec.sample_rate / SAMPLE_RATE_1K));
 
 	if (g_monitorOperationMode == WAVEFORM_MODE)
 	{

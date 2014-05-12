@@ -23,6 +23,14 @@
 ///----------------------------------------------------------------------------
 #define MIN_SAMPLE_RATE				512
 #define MAX_SAMPLE_RATE				8192 // fix_ns8100
+
+#define SAMPLE_RATE_512		512
+#define SAMPLE_RATE_1K		1024
+#define SAMPLE_RATE_2K		2048
+#define SAMPLE_RATE_4K		4096
+#define SAMPLE_RATE_8K		8192
+#define SAMPLE_RATE_16K		16384
+
 #define MAX_NUM_OF_CHANNELS			4
 #define CHANNEL_DATA_IN_BYTES		2
 #define MAX_CAL_SAMPLES				100

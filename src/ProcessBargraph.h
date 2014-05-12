@@ -17,6 +17,7 @@
 ///	Includes
 ///----------------------------------------------------------------------------
 #include "Summary.h"
+#include "InitDataBuffers.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -30,7 +31,7 @@
 #define SUMMARY_INTERVAL_SIZE_IN_BYTES 	sizeof(CALCULATED_DATA_STRUCT)
 #define SUMMARY_INTERVAL_SIZE_IN_WORDS 	((SUMMARY_INTERVAL_SIZE_IN_BYTES + 1) / 2)
 
-#define BG_DATA_BUFFER_SIZE 			8192 * 4 * 60
+#define BG_DATA_BUFFER_SIZE 			SAMPLE_RATE_8K * 4 * 60
 
 #define COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET	(((NUM_OF_BAR_INTERVAL_BUFFERS + NUM_OF_SUM_INTERVAL_BUFFERS) * sizeof(CALCULATED_DATA_STRUCT)) + BG_DATA_BUFFER_SIZE)
 #define COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS	(((COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET / sizeof(SAMPLE_DATA_STRUCT)) * sizeof(SAMPLE_DATA_STRUCT)) / 2)

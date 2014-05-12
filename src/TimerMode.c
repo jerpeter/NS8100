@@ -69,7 +69,20 @@ BOOLEAN timerModeActiveCheck(void)
 			else if ((g_helpRecord.tm_start_time.hour == time.hour) && 
 					((((g_helpRecord.tm_start_time.min + 1) == 60) && (time.min == 0)) || ((g_helpRecord.tm_start_time.min + 1) == time.min)))
 			{
-				debug("Timer Mode Check: Matched Timer settings (long startup) ...\n");
+				debug("Timer Mode Check: Matched Timer settings (long startup)...\n");
+				status = TRUE;
+			}
+			// Check specialty hourly mode and if current minute matches and the current hour is within range
+			else if ((g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY) && (g_helpRecord.tm_start_time.min == time.min) &&
+					// Check if the start and stop hours match meaning hourly mode runs every hour
+					((g_helpRecord.tm_start_time.hour == g_helpRecord.tm_stop_time.hour) ||
+					// OR Check if hourly mode does not cross a 24 hour boundary and the current hour is within range
+					((g_helpRecord.tm_start_time.hour < g_helpRecord.tm_stop_time.hour) && (time.hour >= g_helpRecord.tm_start_time.hour) &&
+					(time.hour <= g_helpRecord.tm_stop_time.hour)) ||
+					// OR Check if the current hour is within range with an hourly mode that does cross a 24 hour boundary
+					((time.hour >= g_helpRecord.tm_start_time.hour) || (time.hour <= g_helpRecord.tm_stop_time.hour))))
+			{
+				debug("Timer Mode Check: Matched Timer settings (hourly)...\n");
 				status = TRUE;
 			}
 			else
@@ -103,7 +116,7 @@ BOOLEAN timerModeActiveCheck(void)
 	}
 
 #if 0 // ns7100
-	// Might as well clear flag reguardless of state
+	// Might as well clear flag regardless of state
 	RTC_FLAGS.reg = RTC_FLAGS.reg;
 #else // ns8100
 	// fix_ns8100
@@ -225,8 +238,8 @@ void processTimerMode(void)
 
 	raiseTimerEventFlag(TIMER_MODE_TIMER_EVENT);
 
-	// Setup soft timer to turn system off when timer mode is finished for the day
-	assignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)(g_helpRecord.timer_mode_active_minutes * 60 * 2), powerOffTimerCallback);
+	// Setup soft timer to turn system off when timer mode is finished for the day (minus the expired secs in the current minute
+	assignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)((g_helpRecord.timer_mode_active_minutes * 60 * 2) - (currTime.sec * 2)), powerOffTimerCallback);
 
 	debug("Timer mode: running...\n");
 }
@@ -304,7 +317,7 @@ void resetTimeOfDayAlarm(void)
 	{
 #if 1 // Normal
 		// Get the current day and add one
-		startDay = (uint8)(currTime.day + 1);
+		startDay = (currTime.day + 1);
 
 		// Check if the start day is beyond the total days in the current month
 		if (startDay > g_monthTable[currTime.month].days)
@@ -346,6 +359,7 @@ void resetTimeOfDayAlarm(void)
 	//___TIMER_MODE_HOURLY
 	else if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
 	{
+		// Establish most common value for the start day
 		startDay = currTime.day;
 		
 		// Check if another hour time slot to run again today
@@ -360,7 +374,7 @@ void resetTimeOfDayAlarm(void)
 				startHour = 0;
 
 				// Get the current day and add one
-				startDay = (uint8)(currTime.day + 1);
+				startDay = (currTime.day + 1);
 
 				// Check if the start day is beyond the total days in the current month
 				if (startDay > g_monthTable[currTime.month].days)
@@ -372,9 +386,10 @@ void resetTimeOfDayAlarm(void)
 		}
 		else // Last hour time slot to run today, set alarm for next hour grouping
 		{
+			// Establish the most common value for the start hour
 			startHour = g_helpRecord.tm_start_time.hour;
 
-			// Check if the setup time did not cross the midnight boundary (else the startDay remains today)
+			// Check if the setup time did not cross the midnight boundary
 			if (g_helpRecord.tm_start_time.hour < g_helpRecord.tm_stop_time.hour)
 			{
 				// Set to the following day
@@ -386,7 +401,31 @@ void resetTimeOfDayAlarm(void)
 					// Set the start day to the first of next month
 					startDay = 1;
 				}
-			} 
+			}
+			// Check if start and stop hour are the same meaning hourly mode runs every hour of every day
+			else if (g_helpRecord.tm_start_time.hour == g_helpRecord.tm_stop_time.hour)
+			{
+				// Current hour matches start and stop, need to set start hour to the following hour slot
+				startHour = (currTime.hour + 1);
+				
+				// Check if start hour is into tomorrow
+				if (startHour > 23)
+				{
+					// Set start hour to the first hour
+					startHour = 0;
+					
+					// Set to the following day
+					startDay++;
+
+					// Check if the start day is beyond the total days in the current month
+					if (startDay > g_monthTable[currTime.month].days)
+					{
+						// Set the start day to the first of next month
+						startDay = 1;
+					}
+				}
+			}
+			// else the startDay remains today (start day is today, start hour is timer mode start hour)
 		}
 
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",

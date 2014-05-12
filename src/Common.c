@@ -701,11 +701,11 @@ void build_languageLinkTable(uint8 languageSelection)
 
 		byteSet(&g_languageTable, '\0', sizeof(g_languageTable));
 
-		if (languageFile->filelength > 8192)
+		if (languageFile->filelength > LANGUAGE_TABLE_MAX_SIZE)
 		{
 			// Todo: Clean up error case
 			// Error case - Read the maximum buffer size and pray
-			fl_fread(languageFile, (uint8*)&g_languageTable[0], 8192);
+			fl_fread(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
 		}
 		else
 		{
@@ -713,7 +713,7 @@ void build_languageLinkTable(uint8 languageSelection)
 		}
 
 		// Loop and convert all line feeds and carriage returns to nulls, and leaving the last char element as a null
-		for (i = 1; i < (8192 - 1); i++)
+		for (i = 1; i < (LANGUAGE_TABLE_MAX_SIZE - 1); i++)
 		{
 			if ((g_languageTable[i] == '\r') || (g_languageTable[i] == '\n'))
 			{

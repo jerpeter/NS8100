@@ -255,10 +255,10 @@ void MoveManuelCalToFlash(void)
 		sumEntry->waveShapeData.v.peak = (uint16)(hiV - lowV + 1);
 		sumEntry->waveShapeData.t.peak = (uint16)(hiT - lowT + 1);
 
-		sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, 1024, startOfEventPtr, endOfEventDataPtr);
-		sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, 1024, startOfEventPtr, endOfEventDataPtr);   
-		sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, 1024, startOfEventPtr, endOfEventDataPtr);   
-		sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, 1024, startOfEventPtr, endOfEventDataPtr);       
+		sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
+		sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);   
+		sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);   
+		sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);       
 
 		completeRamEventSummary(ramSummaryEntry, sumEntry);
 		cacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);

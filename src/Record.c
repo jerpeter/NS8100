@@ -391,7 +391,7 @@ void loadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 	// General components
 	rec_ptr->validRecord = YES;
 	rec_ptr->op_mode = op_mode;
-	rec_ptr->trec.sample_rate = 1024;
+	rec_ptr->trec.sample_rate = SAMPLE_RATE_1K;
 	rec_ptr->srec.sensitivity = LOW;
 	rec_ptr->trec.dist_to_source = 0;
 	rec_ptr->trec.weight_per_delay = 0;

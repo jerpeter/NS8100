@@ -324,6 +324,7 @@ enum {
 #define SEISMIC_TRIGGER_INCREMENT		1
 #define SEISMIC_TRIGGER_MIN_VALUE		64		//3
 #define SEISMIC_TRIGGER_MAX_VALUE		0x8000	//0x0800
+#define SEISMIC_TRIGGER_ADJUST_FILTER	(SEISMIC_TRIGGER_MIN_VALUE * 32)
 
 // Unlock Code stuff
 #define UNLOCK_CODE_DEFAULT_VALUE	0
@@ -496,7 +497,7 @@ enum {
 #define MANUAL_TRIGGER_CHAR 			0x2FFF
 
 // Manual Cal default rate
-#define MANUAL_CAL_DEFAULT_SAMPLE_RATE	1024
+#define MANUAL_CAL_DEFAULT_SAMPLE_RATE	SAMPLE_RATE_1K
 
 // Old Menu layout stuff
 #define DEFAULT_MN_SIZE 		20
@@ -819,6 +820,7 @@ void monitorLogMenuHandler(uint8 key, void* data);
 void printerEnableMenuHandler(uint8 key, void* data);
 void printOutMenuHandler(uint8 key, void* data);
 void printMonitorLogMenuHandler(uint8 keyPressed, void* data);
+void recalibrateMenuHandler(uint8 key, void* data);
 void sampleRateMenuHandler(uint8 key, void* data);
 void saveSetupMenuHandler(uint8 key, void* data);
 void sensitivityMenuHandler(uint8 key, void* data);

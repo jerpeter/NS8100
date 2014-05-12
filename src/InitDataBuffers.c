@@ -60,7 +60,7 @@ void InitDataBuffs(uint8 op_mode)
 #if 0 // ns7100
 		// Set sample rate to 1024 since it's fixed in the 430 for manual calibrations
 #endif
-		sampleRate = 1024;
+		sampleRate = SAMPLE_RATE_1K;
 	}
 	else // Waveform, Bargraph, Combo
 	{

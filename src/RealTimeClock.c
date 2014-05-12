@@ -91,8 +91,8 @@ BOOLEAN InitExternalRtc(void)
 		debug("Ext RTC: Clock running and intergrity validated\n");
 	}
 
-#if 0 // Normal
-	// Clear flags (write 0's) and disable interrupt generation for timestamp pin (currently not functioning as expected)
+#if 1 // Normal
+	// Clear all flags (write 0's) and disable interrupt generation for all but timestamp pin
 	rtcMap.control_2 = (RTC_ALARM_INT_ENABLE);
 	rtcWrite(RTC_CONTROL_2_ADDR, 1, &rtcMap.control_2);
 #else // Test
@@ -373,6 +373,8 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 
 	// Clear the Alarm flag
 	rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+	
+	debug("Enable RTC Alarm with Day: %d, Hour: %d, Minute: %d and Second: %d\n", day, hour, minute, second);
 }
 #else // Test
 /****************************************

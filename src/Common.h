@@ -120,6 +120,8 @@ typedef struct
 
 #define PI	3.14159
 
+#define LANGUAGE_TABLE_MAX_SIZE		8192
+
 // To eliminate C warning when the variable is not used.
 #define UNUSED(p) ((void)p)
 
@@ -143,7 +145,8 @@ enum {
 #define TRANSVERSE_CHANNEL_TYPE 12
 #define ACOUSTIC_CHANNEL_TYPE 	13
 
-#define CAL_PULSE_FIXED_SAMPLE_RATE	1024
+#define CAL_PULSE_FIXED_SAMPLE_RATE		SAMPLE_RATE_1K
+#define CALIBRATION_FIXED_SAMPLE_RATE	SAMPLE_RATE_1K
 
 typedef enum {
 	TC_SAMPLE_TIMER_CHANNEL = 0,

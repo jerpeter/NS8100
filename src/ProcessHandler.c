@@ -34,6 +34,7 @@
 #include "EventProcessing.h"
 #include "Analog.h"
 #include "M23018.h"
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -42,7 +43,7 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-#include "Globals.h"
+extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -53,6 +54,7 @@
 ///----------------------------------------------------------------------------
 uint16 seisTriggerConvert(float);
 uint16 airTriggerConvert(uint16 airTriggerLevel);
+void dataIsrInit(void);
 void startDataCollection(uint32 sampleRate);
 
 /****************************************
@@ -199,13 +201,13 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	// Set the cutoff frequency based on sample rate
 	switch (trig_mn.sample_rate)
 	{
-		case 512: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW); break;
-		case 1024: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1); break;
-		case 2048: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_2); break;
-		case 4096: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_3); break;
+		case SAMPLE_RATE_512: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW); break;
+		case SAMPLE_RATE_1K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1); break;
+		case SAMPLE_RATE_2K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_2); break;
+		case SAMPLE_RATE_4K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_3); break;
 
 		// Handle 8K, 16K and 32K the same
-		case 8192: case 16384: case 32768: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_4); break;
+		case SAMPLE_RATE_8K: case SAMPLE_RATE_16K: case 32768: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_4); break;
 			
 		// Default just in case it's a custom frequency
 		default: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1); break;
@@ -217,6 +219,11 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	
 	if (g_factorySetupRecord.aweight_option == DISABLED) { SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL); }
 	else { SetAcousticGainSelect(ACOUSTIC_GAIN_A_WEIGHTED);	}
+
+#if 0 // Necessary? Probably need 1 sec for changes, however 1 sec worth of samples thrown away with getting channel offsets 
+	// Delay for Analog cutoff and gain select changes to propagate
+	soft_usecWait(500 * SOFT_MSECS);
+#endif
 
 	// Monitor some data.. oh yeah
 	startDataCollection(trig_mn.sample_rate);
@@ -245,6 +252,7 @@ void startDataCollection(uint32 sampleRate)
 	
 	// Get current A/D offsets for normalization
 	debug("Getting channel offsets...\n");
+	//overlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), 0);
 	GetChannelOffsets(sampleRate);
 
 	debug("Setup TC clocks...\n");
@@ -252,6 +260,9 @@ void startDataCollection(uint32 sampleRate)
 
 	Setup_8100_TC_Clock_ISR(sampleRate, TC_SAMPLE_TIMER_CHANNEL);
 	Setup_8100_TC_Clock_ISR(CAL_PULSE_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
+
+	// Init a few key values for data collection
+	dataIsrInit();
 
 	debug("Start sampling...\n");
 	// Start the timer for collecting data
@@ -271,7 +282,7 @@ void startDataCollection(uint32 sampleRate)
 ****************************************/
 void stopMonitoring(uint8 mode, uint8 operation)
 {
-	overlayMessage("STATUS", "CLOSING MONITOR SESSION...", 0);
+	overlayMessage(getLangText(STATUS_TEXT), "CLOSING MONITOR SESSION...", 0);
 
 	// Check if the unit is currently monitoring
 	if (g_sampleProcessing == ACTIVE_STATE)
@@ -364,7 +375,6 @@ void stopMonitoring(uint8 mode, uint8 operation)
 *	Function:	 stopDataCollection
 *	Purpose:
 ****************************************/
-extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 void stopDataCollection(void)
 {
 	g_sampleProcessing = IDLE_STATE;
@@ -379,7 +389,7 @@ void stopDataCollection(void)
 	//clearSoftTimer(KEYPAD_LED_TIMER_NUM);
 #endif
 
-	// Check if not in Timer Mode and if the Power Off key is disabled
+	// Check if not in Timer Mode and if the Power Off protection is enabled
 	if ((g_helpRecord.timer_mode != ENABLED) && (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
 	{
 		// Disable power off protection
