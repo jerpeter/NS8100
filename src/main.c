@@ -657,6 +657,16 @@ void SleepManager(void)
 	if ((g_systemEventFlags.wrd == 0x0000) && (getPowerControlState(LCD_POWER_ENABLE) == OFF) &&
 	(g_modemStatus.xferState == NOP_CMD))
 	{
+#if 1 // Test
+		debug("Going to lunch and I'll be gone forever...\n");
+		stopExternalRTCClock();
+extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
+extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
+		rtc_disable_interrupt(&AVR32_RTC);
+		rtc_clear_interrupt(&AVR32_RTC);
+		//while (1) {	; }
+#endif
+
 		// Sleepy time
 #if 0 // Normal
 		SLEEP(AVR32_PM_SMODE_IDLE);
@@ -670,14 +680,81 @@ void SleepManager(void)
 		else // USB is not connected and a deeper sleep mode can be used
 		{
 			// Disable rs232 driver and receiver (Active low controls)
-			gpio_set_gpio_pin(AVR32_PIN_PB08);
-			gpio_set_gpio_pin(AVR32_PIN_PB09);
+			//gpio_set_gpio_pin(AVR32_PIN_PB08);
+			//gpio_set_gpio_pin(AVR32_PIN_PB09);
 
-			SLEEP(AVR32_PM_SMODE_STANDBY);
+#if 0 // Test
+extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
+extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
+			rtc_disable_interrupt(&AVR32_RTC);
+			rtc_clear_interrupt(&AVR32_RTC);
+#endif
+
+#if 1
+/*
+void gpio_enable_pin_pull_up(unsigned int pin)
+{
+	volatile avr32_gpio_port_t *gpio_port = &GPIO.port[pin >> 5];
+	gpio_port->puers = 1 << (pin & 0x1F);
+}
+*/
+			AVR32_GPIO.port[2].puers = 0xFC00; // 1111 1100 0000 0000
+			AVR32_GPIO.port[3].puers = 0x03FF; // 0000 0011 1111 1111
+/*
+			gpio_enable_pin_pull_up(AVR32_PIN_PX00); // 100 - shift 4
+			gpio_enable_pin_pull_up(AVR32_PIN_PX01); // 99 - shift 3
+			gpio_enable_pin_pull_up(AVR32_PIN_PX02); // 98 - shift 2
+			gpio_enable_pin_pull_up(AVR32_PIN_PX03); // 97 - shift 1
+			gpio_enable_pin_pull_up(AVR32_PIN_PX04); // 96 - shift 0
+			gpio_enable_pin_pull_up(AVR32_PIN_PX05); // 95 - shift 31
+			gpio_enable_pin_pull_up(AVR32_PIN_PX06); // 94 - shift 30
+			gpio_enable_pin_pull_up(AVR32_PIN_PX07); // 93 - shift 29
+			gpio_enable_pin_pull_up(AVR32_PIN_PX08); // 92 - shift 28
+			gpio_enable_pin_pull_up(AVR32_PIN_PX09); // 91 - shift 27
+			gpio_enable_pin_pull_up(AVR32_PIN_PX10); // 90 - shift 26
+			gpio_enable_pin_pull_up(AVR32_PIN_PX35); // 105 - shift 9
+			gpio_enable_pin_pull_up(AVR32_PIN_PX36); // 104 - shift 8
+			gpio_enable_pin_pull_up(AVR32_PIN_PX37); // 103 - shift 7
+			gpio_enable_pin_pull_up(AVR32_PIN_PX38); // 102 - shift 6
+			gpio_enable_pin_pull_up(AVR32_PIN_PX39); // 101 - shift 5
+*/
+#endif
+
+			if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { SLEEP(AVR32_PM_SMODE_STANDBY); }
+			else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { SLEEP(AVR32_PM_SMODE_FROZEN); }
+			else if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { SLEEP(AVR32_PM_SMODE_IDLE); }
+
+#if 1
+			AVR32_GPIO.port[2].puerc = 0xFC00; // 1111 1100 0000 0000
+			AVR32_GPIO.port[3].puerc = 0x03FF; // 0000 0011 1111 1111
+/*
+			gpio_disable_pin_pull_up(AVR32_PIN_PX00);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX01);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX02);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX03);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX04);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX05);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX06);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX07);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX08);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX09);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX10);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX35);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX36);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX37);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX38);
+			gpio_disable_pin_pull_up(AVR32_PIN_PX39);
+*/
+#endif
+
+#if 0 // Test
+extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
+			rtc_enable_interrupt(&AVR32_RTC);
+#endif
 
 			// Enable rs232 driver and receiver (Active low controls)
-			gpio_clr_gpio_pin(AVR32_PIN_PB08);
-			gpio_clr_gpio_pin(AVR32_PIN_PB09);
+			//gpio_clr_gpio_pin(AVR32_PIN_PB08);
+			//gpio_clr_gpio_pin(AVR32_PIN_PB09);
 		}
 #endif
 	}
@@ -725,6 +802,119 @@ extern void startExternalRTCClock(uint16 sampleRate);
 ///----------------------------------------------------------------------------
 int main(void)
 {
+#if 0 // Test
+	gpio_enable_pin_pull_up(AVR32_PIN_PX00);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX01);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX02);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX03);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX04);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX05);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX06);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX07);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX08);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX09);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX10);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX11);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX12);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX13);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX14);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX15);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX16);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX17);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX18);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX19);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX20);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX21);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX22);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX23);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX24);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX25);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX26);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX27);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX28);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX29);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX30);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX31);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX32);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX33);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX34);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX35);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX36);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX37);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX38);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX39);
+
+	gpio_enable_pin_pull_up(AVR32_PIN_PA00);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA01);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA02);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA03);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA04);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA05);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA06);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA07);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA08);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA09);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA10);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA11);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA12);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA13);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA14);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA15);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA16);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA17);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA18);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA19);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA20);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA21);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA22);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA23);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA24);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA25);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA26);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA27);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA28);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA29);
+	gpio_enable_pin_pull_up(AVR32_PIN_PA30);
+
+	gpio_enable_pin_pull_up(AVR32_PIN_PB00);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB01);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB02);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB03);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB04);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB05);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB06);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB07);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB08);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB09);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB10);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB11);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB12);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB13);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB14);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB15);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB16);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB17);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB18);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB19);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB20);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB21);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB22);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB23);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB24);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB25);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB26);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB27);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB28);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB29);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB30);
+	gpio_enable_pin_pull_up(AVR32_PIN_PB31);
+
+	InitSystemHardware_NS8100();
+
+	while (1) {;}
+#endif
+
+#if 1
     // Initialize the system
 	InitSystemHardware_NS8100();
 	InitInterrupts_NS8100();
@@ -732,6 +922,12 @@ int main(void)
 
 	BootLoadManager();
 	DisplayVersionToCraft();
+
+#if 1 // Test
+	// Disable rs232 driver and receiver (Active low controls)
+	gpio_set_gpio_pin(AVR32_PIN_PB08);
+	gpio_set_gpio_pin(AVR32_PIN_PB09);
+#endif
 
  	// ==============
 	// Executive loop
@@ -766,4 +962,5 @@ int main(void)
 
 	// End of the world
 	return (0);
+#endif
 }

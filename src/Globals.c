@@ -299,6 +299,7 @@ uint16 g_eventBufferWriteIndex;
 uint8 g_timerModeLastRun = NO;
 uint8 g_tcSampleTimerActive = NO;
 uint8 g_tcTypematicTimerActive = NO;
+uint32 g_sleepModeState = AVR32_PM_SMODE_STANDBY;
 char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
 uint16 g_storedTempReading;
 uint16 g_currentTempReading;

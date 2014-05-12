@@ -44,7 +44,11 @@
 #define SOFT_TIME     		"08:35pm"
 
 // Define core clock rate
+#if 1 // Normal
 #define FOSC0	66000000
+#else
+#define FOSC0	12000000
+#endif
 
 typedef enum
 {

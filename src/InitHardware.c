@@ -1012,6 +1012,16 @@ void TestPowerDownAndStop(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void KillClocksToModules(void)
+{
+	AVR32_PM.hsbmask = 0x0047;
+	AVR32_PM.pbamask = 0x04FB;
+	AVR32_PM.pbbmask = 0x0015;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void InitSystemHardware_NS8100(void)
 {
 	//-------------------------------------------------------------------------
@@ -1179,6 +1189,8 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init and configure the A/D to prevent the unit from burning current charging internal reference (default config)
 	InitExternalAD();
+
+	KillClocksToModules();
 
 #if 0
 	//-------------------------------------------------------------------------
