@@ -508,9 +508,6 @@
     <Compile Include="src\EventProcessing.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\FakeMemory.c">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\FAT32_Access.c">
       <SubType>compile</SubType>
     </Compile>

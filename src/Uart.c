@@ -240,7 +240,7 @@ uint8 modem_putc(uint8 byteData, uint8 convertAsciiFlag)
 		// Check clear to send and check if the timeout has been exceeded
 		while ((NOT_READY_TO_SEND == READ_CTS) && (timeout > g_rtcSoftTimerTickCount))
 		{
-			// Check if the conneciton has been lost
+			// Check if the connection has been lost
 			if (READ_DCD == NO_CONNECTION)
 			{
 				// Return immediately

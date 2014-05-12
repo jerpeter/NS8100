@@ -306,7 +306,7 @@ void handleVML(CMD_BUFFER_STRUCT* inCmd)
 	// Save the last downloaded unique entry ID
 	s_vmlXferStruct.lastDlUniqueEntryId = *dataPtr;
 
-	// Init the start and temp monitor log table indicies
+	// Init the start and temp monitor log table indices
 	s_vmlXferStruct.startMonitorLogTableIndex = getStartingMonitorLogTableIndex();
 	s_vmlXferStruct.tempMonitorLogTableIndex = TOTAL_MONITOR_LOG_ENTRIES;
 
@@ -337,7 +337,7 @@ void sendVMLData(void)
 	// Check if handling the header
 	if (s_vmlXferStruct.xferStateFlag == HEADER_XFER_STATE)
 	{
-		// Transmit a carrige return line feed
+		// Transmit a carriage return line feed
 		if (modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION) == MODEM_SEND_FAILED)
 		{
 			// There was an error, so reset all global transfer and status fields

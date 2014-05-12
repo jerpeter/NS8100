@@ -121,7 +121,7 @@ void clearMonitorLogEntry(void)
 ///----------------------------------------------------------------------------
 void newMonitorLogEntry(uint8 mode)
 {
-	char spareBuffer[40];
+	//char spareBuffer[40];
 
 	// Advance to the next log entry
 	advanceMonitorLogIndex();
@@ -184,8 +184,9 @@ void newMonitorLogEntry(uint8 mode)
 	__monitorLogTbl[__monitorLogTblIndex].sensor_type = g_factorySetupRecord.sensor_type;
 	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
 
-	byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
-	convertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
+	//byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
+	//convertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
+	//debug("\tStart Time: %s\n", (char*)&spareBuffer[0]);
 }
 
 ///----------------------------------------------------------------------------
@@ -199,8 +200,7 @@ void updateMonitorLogEntry()
 
 	if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
 	{
-		// Set the elements to close the current log entry
-		//__monitorLogTbl[__monitorLogTblIndex].endEventNumber = g_nextEventNumberToUse;
+		// Set the number of events recorded
 		__monitorLogTbl[__monitorLogTblIndex].eventsRecorded = (uint16)(g_nextEventNumberToUse - __monitorLogTbl[__monitorLogTblIndex].startEventNumber + 1);
 	}
 }
@@ -211,7 +211,7 @@ void updateMonitorLogEntry()
 ///----------------------------------------------------------------------------
 void closeMonitorLogEntry()
 {
-	char spareBuffer[40];
+	//char spareBuffer[40];
 
 	//debug("Closing entry at Monitor Log table index: %d, total recorded: %d\n", __monitorLogTblIndex, __monitorLogTbl[__monitorLogTblIndex].eventsRecorded);
 
@@ -225,8 +225,8 @@ void closeMonitorLogEntry()
 
 		appendMonitorLogEntryFile();
 
-		byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
-		convertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
+		//byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
+		//convertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
 		//debug("\tStop Time: %s\n", (char*)&spareBuffer[0]);
 	}
 }
@@ -390,7 +390,7 @@ uint8 getNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, M
 {
 	uint8 found = NO;
 
-	// Loop while a new entry has not been found and the temp index does not equal the start (wrapped & finsished)
+	// Loop while a new entry has not been found and the temp index does not equal the start (wrapped & finished)
 	while ((found == NO) && ((*tempIndex) != startIndex))
 	{
 		// Check if initial condition
@@ -516,12 +516,14 @@ void initMonitorLogTableFromLogFile(void)
 			{
 				debug("Found Valid Monitor Log Entry with ID: %d\n", monitorLogEntry.uniqueEntryId);
 
-#if 0 // Test
+#if 1 // Test
 				debug("(ID: %03d) Mode: %d, Start Event #: %d, Status: %d, Seis Trig: 0x%x, Air Trig: 0x%x, Bit Acc: %d, Temp Adj: %d, Sensor Type: %d, Gain: %d\n",
 						monitorLogEntry.uniqueEntryId, monitorLogEntry.mode, monitorLogEntry. startEventNumber, monitorLogEntry.status, 
 						monitorLogEntry.seismicTriggerLevel, monitorLogEntry.airTriggerLevel, monitorLogEntry.bitAccuracy, monitorLogEntry.adjustForTempDrift,
 						monitorLogEntry.sensor_type, monitorLogEntry.sensitivity);
 /*
+typedef struct
+{
 	uint16				uniqueEntryId;
 	uint8				status;
 	uint8				mode;
@@ -529,18 +531,19 @@ void initMonitorLogTableFromLogFile(void)
 	DATE_TIME_STRUCT	stopTime;
 	uint16				eventsRecorded;
 	uint16				startEventNumber;
-	#if 1 // Updated (Port lost change)
 	uint32				seismicTriggerLevel;
 	uint32				airTriggerLevel;
-	int32				sensor_type;
-	int32				sensitivity;
-	#endif
+	uint8				bitAccuracy;
+	uint8				adjustForTempDrift;
+	uint16				sensor_type;
+	uint32				sensitivity;
+} MONITOR_LOG_ENTRY_STRUCT;
+
 	__monitorLogTbl[__monitorLogTblIndex].startTime = getCurrentTime();
 	__monitorLogTbl[__monitorLogTblIndex].startTime.valid = TRUE;
 	__monitorLogTbl[__monitorLogTblIndex].mode = mode;
 	__monitorLogTbl[__monitorLogTblIndex].startEventNumber = g_nextEventNumberToUse;
 	__monitorLogTbl[__monitorLogTblIndex].status = PARTIAL_LOG_ENTRY;
-	
 	__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
 	__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
 	__monitorLogTbl[__monitorLogTblIndex].sensor_type =  g_factorySetupRecord.sensor_type;

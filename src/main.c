@@ -824,6 +824,26 @@ void BootLoadManager(void)
 void InitSystemHardware_NS8100(void)
 {
 	//-------------------------------------------------------------------------
+	// Enable internal pull ups on the floating data lines
+	//-------------------------------------------------------------------------
+	gpio_enable_pin_pull_up(AVR32_PIN_PX00);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX01);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX02);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX03);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX04);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX05);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX06);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX07);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX08);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX09);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX10);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX35);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX36);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX37);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX38);
+	gpio_enable_pin_pull_up(AVR32_PIN_PX39);
+
+	//-------------------------------------------------------------------------
 	// Clock and chip selects setup in custom _init_startup
 	//-------------------------------------------------------------------------
 	initProcessorNoConnectPins();
@@ -850,8 +870,9 @@ void InitSystemHardware_NS8100(void)
 	gpio_clr_gpio_pin(AVR32_PIN_PB28);
 
 	//-------------------------------------------------------------------------
-    // Smart Sensor data in
+	// Smart Sensor data in (Hardware pull up on signal)
 	//-------------------------------------------------------------------------
+	// Nothing needs to be done. Pin should default to an input on power up
 	//gpio_enable_gpio_pin(AVR32_PIN_PB01)
 
 	//-------------------------------------------------------------------------
@@ -866,6 +887,10 @@ void InitSystemHardware_NS8100(void)
 	SPI_0_Init();
 	SPI_1_Init();
 	
+	// Test to make sure inputs aren't floating
+	gpio_enable_pin_pull_up(AVR32_SPI0_MISO_0_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_SPI1_MISO_0_0_PIN);
+
 	//-------------------------------------------------------------------------
 	// Turn on rs485 driver and receiver
 	//-------------------------------------------------------------------------
@@ -1479,6 +1504,13 @@ void testSnippetsBeforeInit(void)
 //=================================================================================================
 void testSnippetsAfterInit(void)
 {
+
+#if 0
+	CMD_BUFFER_STRUCT inCmd;
+	inCmd.msg[MESSAGE_HEADER_SIMPLE_LENGTH] = 0;
+	handleVML(&inCmd);
+#endif
+
 #if 0 // Craft Test
 	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;
 	Menu_Functions = (unsigned long *)Main_Menu_Functions;
@@ -1869,7 +1901,7 @@ int main(void)
 	debug("--- System Init complete (Version %d.%d.%c) ---\n", majorVer, minorVer, buildVer);
 
 	// Test code
-	//testSnippetsAfterInit();
+	testSnippetsAfterInit();
 
 #if 1 // Normal
  	// ==============
@@ -1913,7 +1945,18 @@ int main(void)
 			SLEEP(AVR32_IDLE_MODE);
 #else // Test
 			if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING) { SLEEP(AVR32_IDLE_MODE); }
-			else { SLEEP(AVR32_PM_SMODE_FROZEN); }
+			else
+			{
+				// Disable rs232 driver and receiver (Active low controls)
+				gpio_set_gpio_pin(AVR32_PIN_PB08);
+				gpio_set_gpio_pin(AVR32_PIN_PB09);
+
+				SLEEP(AVR32_PM_SMODE_FROZEN);
+
+				// Enable rs232 driver and receiver (Active low controls)
+				gpio_clr_gpio_pin(AVR32_PIN_PB08);
+				gpio_clr_gpio_pin(AVR32_PIN_PB09);
+			}
 #endif
 		}
 	}    
