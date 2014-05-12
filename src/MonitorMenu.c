@@ -160,7 +160,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					}	
 #else // ns8100
 					// Check if the sample rate is greater than max working sample rate
-					if (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_4K)
+					if (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_8K)
 					{
 						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
 					}	
@@ -995,13 +995,13 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
-					if (g_helpRecord.units_of_air == NO)
-					{
-						sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), hexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
-					}
-					else // Report Air in Millibars
+					if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
 					{
 						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), hexToMillBars(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+					}
+					else // Report Air in DB
+					{
+						sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), hexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 					}
 				}
 				else // (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS) || (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
@@ -1016,13 +1016,13 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-							if (g_helpRecord.units_of_air == NO)
-							{
-								sprintf(buff, "AIR %4.1f dB ", hexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
-							}
-							else // Report Air in Millibars
+							if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
 							{
 								sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							}
+							else // Report Air in DB
+							{
+								sprintf(buff, "AIR %4.1f dB ", hexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
 						}
 						else if (g_triggerRecord.op_mode == COMBO_MODE)
@@ -1033,13 +1033,13 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_comboSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-							if (g_helpRecord.units_of_air == NO)
-							{
-								sprintf(buff, "AIR %4.1f dB ", hexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
-							}
-							else // Report Air in Millibars
+							if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
 							{
 								sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							}
+							else // Report Air in DB
+							{
+								sprintf(buff, "AIR %4.1f dB ", hexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
 						}
 					}
@@ -1051,13 +1051,13 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 									((float)((g_aJobFreq * 2) - 1)));
 						}
 
-						if (g_helpRecord.units_of_air == NO)
-						{
-							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
-						}
-						else // Report Air in Millibars
+						if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
 						{
 							sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+						}
+						else // Report Air in DB
+						{
+							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 						}
 					}
 

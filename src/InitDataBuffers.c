@@ -156,7 +156,7 @@ void InitDataBuffs(uint8 op_mode)
 			g_bargraphDataStartPtr = &(g_eventDataBuffer[0]);
 			g_bargraphDataWritePtr = &(g_eventDataBuffer[0]);
 			g_bargraphDataReadPtr = &(g_eventDataBuffer[0]);
-			g_bargraphDataEndPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS - 4]);
+			g_bargraphDataEndPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS]);
 
 			// Start the total off with zero (incremented when bar and summary intervals are stored)
 			g_pendingBargraphRecord.header.dataLength = 0;
@@ -169,7 +169,7 @@ void InitDataBuffs(uint8 op_mode)
 		g_bargraphDataStartPtr = &(g_eventDataBuffer[0]);
 		g_bargraphDataWritePtr = &(g_eventDataBuffer[0]);
 		g_bargraphDataReadPtr = &(g_eventDataBuffer[0]);
-		g_bargraphDataEndPtr = &(g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS - 4]);
+		g_bargraphDataEndPtr = &(g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS]);
 
 		// Start the total off with zero (incremented when bar and summary intervals are stored)
 		g_pendingBargraphRecord.header.dataLength = 0;

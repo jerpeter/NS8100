@@ -140,7 +140,9 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	cfg.timerCfg.timer_mode = g_helpRecord.timer_mode;
 	cfg.timerCfg.timer_mode_freq = g_helpRecord.timer_mode_freq;
-	cfg.timerCfg.timer_mode_active_minutes = g_helpRecord.timer_mode_active_minutes;
+#if 1 // fix_ns8100 - Size changed to uint32 however this field isn't needed
+	cfg.timerCfg.timer_mode_active_minutes = (uint16)g_helpRecord.timer_mode_active_minutes;
+#endif
 
 	if (DISABLED == g_helpRecord.timer_mode) 
 	{
@@ -608,6 +610,19 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_UNITS_OF_MEASURE;
 		}
 		
+#if 0 // fix_ns8100
+		// Units of Air check
+		if ((DECIBEL_TYPE == cfg.printerCfg.units_of_measure) || 
+			(MILLIBAR_TYPE == cfg.printerCfg.units_of_measure))
+		{
+			g_helpRecord.units_of_air = cfg.printerCfg.units_of_air;
+		}
+		else
+		{
+			returnCode = CFG_ERR_UNITS_OF_AIR;
+		}
+#endif
+
 		// Frequency plot mode , Yes or No or On or Off
 		if ((YES == cfg.printerCfg.freq_plot_mode) || (NO == cfg.printerCfg.freq_plot_mode))
 		{

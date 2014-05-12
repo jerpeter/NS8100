@@ -48,6 +48,7 @@ static USER_TYPE_STRUCT unitTypes[TOTAL_TYPES] = {
 {"kg", KG_TYPE, (float)0.45454},
 {"dB", DB_TYPE, 1},
 {"dBa", DBA_TYPE, 1},
+{"mb", MB_TYPE, 1},
 {"secs", SECS_TYPE, 1},
 {"mins", MINS_TYPE, 1},
 {"mg", MG_TYPE, 1}
@@ -1241,7 +1242,7 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				else
 					sprintf(g_userMenuCachePtr[tempRow].text, "%.0f", g_userMenuCacheData.floatData);
 			}
-			// The following auto adjusts the formats based on the incrememnt value
+			// The following auto adjusts the formats based on the increment value
 			else if (g_userMenuCacheData.floatIncrement >= (float)(1.0))
 			{
 				sprintf(g_userMenuCachePtr[FLOAT_RANGE].text, "%s: %.0f-%.0f %s", getLangText(RANGE_TEXT),

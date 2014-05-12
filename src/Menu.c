@@ -1198,7 +1198,7 @@ void displaySplashScreen(void)
 	// Add in Software Version
 	//----------------------------------------------------------------------------------------
 	byteSet(&buff[0], 0, sizeof(buff));
-	sprintf((char*)(&buff[0]), "%s %s", getLangText(SOFTWARE_VER_TEXT), g_appVersion);
+	sprintf((char*)(&buff[0]), "%s %s", getLangText(SOFTWARE_VER_TEXT), (char*)g_buildVersion);
 	length = (uint8)strlen((char*)(&buff[0]));
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_THREE;
@@ -1209,7 +1209,7 @@ void displaySplashScreen(void)
 	// Add in Software Date and Time
 	//----------------------------------------------------------------------------------------
 	byteSet(&buff[0], 0, sizeof(buff));
-	sprintf((char*)(&buff[0]), "%s", g_appDate);
+	sprintf((char*)(&buff[0]), "%s", (char*)g_buildDate);
 	length = (uint8)strlen((char*)buff);
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_FOUR;

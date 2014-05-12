@@ -415,7 +415,9 @@ typedef struct
 {
 	uint8 	timer_mode;
 	uint8 	timer_mode_freq;
+#if 1 // fix_ns8100 - Size changed to uint32, however this field isn't needed
 	uint16 	timer_mode_active_minutes;
+#endif
 	DATE_TIME_STRUCT  timer_start;
 	DATE_TIME_STRUCT  timer_stop;
 } TIMER_CFG;

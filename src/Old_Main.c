@@ -153,9 +153,11 @@ void InitSoftwareSettings(void)
 
 	debug("Init Software Settings\n");
 
+#if 0 // ns7100
 	// Init version strings
     debug("Init Version Strings...\n");
 	initVersionStrings();
+#endif
 
 	// Init version msg
     debug("Init Version Msg...\n");
@@ -272,13 +274,35 @@ void SystemEventManager(void)
 		debug("Cyclic Event\n");
 		clearSystemEventFlag(CYCLIC_EVENT);
 
-#if 1 // Test
+#if 1 // Test (ISR/Exec Cycles)
 		//sprintf((char*)&g_spareBuffer[0], "%d (%s) %d", (int)g_execCycles, ((g_channelSyncError == YES) ? "YES" : "NO"), (int)(g_sampleCount / 4));
 		//overlayMessage("EXEC CYCLES", (char*)&g_spareBuffer[0], 500 * SOFT_MSECS);
 		debugRaw("ISR Ticks/sec: %d (E:%s), Exec: %d\n", (g_sampleCountHold / 4), ((g_channelSyncError == YES) ? "YES" : "NO"), g_execCycles);
 		g_sampleCountHold = 0;
 		g_execCycles = 0;
 		g_channelSyncError = NO;
+#endif
+		
+#if 0 // Test (Bargraph buffer)
+		uint32 bgDataBufferSize = (g_bargraphDataEndPtr - g_bargraphDataStartPtr);
+		float bgUsed;
+		float bgLocation;
+		
+		if (((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)) && (g_sampleProcessing == ACTIVE_STATE))
+		{
+			if (g_bargraphDataWritePtr >= g_bargraphDataReadPtr)
+			{
+				bgUsed = (((float)100 * (float)(g_bargraphDataWritePtr - g_bargraphDataReadPtr)) / (float)bgDataBufferSize);
+			}
+			else
+			{
+				bgUsed = (((float)100 * (float)(bgDataBufferSize + g_bargraphDataWritePtr - g_bargraphDataReadPtr)) / (float)bgDataBufferSize);
+			}
+
+			bgLocation = (((float)100 * (float)(g_bargraphDataWritePtr - g_bargraphDataStartPtr)) / (float)bgDataBufferSize);
+
+			debugRaw("Bargraph Data Buffer Used: %3.2f%%, Free: %3.2f%%, Location: %3.2f%%\n", bgUsed, (float)(100 - bgUsed), bgLocation);
+		}
 #endif
 
 		procTimerEvents();

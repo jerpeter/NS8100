@@ -203,11 +203,16 @@ void processTimerMode(void)
 	{
 		// Disable alarm output generation
 		debug("Timer Mode: Activated on end date...\n");
+#if 0 // ns7100
 		debug("Timer Mode: Disabling...\n");
 		g_helpRecord.timer_mode = DISABLED;
 
 		// Save help record
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+#else // ns8100
+		// Signal the timer mode end of session timer to stop timer mode due to this being the last run
+		g_timerModeLastRun = YES;
+#endif
 
 	    // Deactivate alarm interrupts
 	    DisableRtcAlarm();
@@ -219,19 +224,35 @@ void processTimerMode(void)
 	{
 		// Disable alarm output generation
 		debug("Timer Mode: Activated on end date...\n");
+#if 0 // ns7100
 		debug("Timer Mode: Disabling...\n");
 		g_helpRecord.timer_mode = DISABLED;
 
 		// Save help record
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+#else // ns8100
+		// Signal the timer mode end of session timer to stop timer mode due to this being the last run
+		g_timerModeLastRun = YES;
+#endif
 
 	    // Deactivate alarm interrupts
 	    DisableRtcAlarm();
 	}
 	else // Timer mode started during the active dates on a day it's supposed to run
 	{
-		// Reset the Time of Day Alarm to wake the unit up again
-		resetTimeOfDayAlarm();
+		if (g_helpRecord.timer_mode_freq == TIMER_MODE_ONE_TIME)
+		{
+			// Signal the timer mode end of session timer to stop timer mode due to this being the last run
+			g_timerModeLastRun = YES;
+
+			// Deactivate alarm interrupts
+			DisableRtcAlarm();
+		}
+		else // All other timer modes
+		{
+			// Reset the Time of Day Alarm to wake the unit up again
+			resetTimeOfDayAlarm();
+		}
 	}
 
 	overlayMessage(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_NOW_ACTIVE_TEXT), (2 * SOFT_SECS));
@@ -239,7 +260,7 @@ void processTimerMode(void)
 	raiseTimerEventFlag(TIMER_MODE_TIMER_EVENT);
 
 	// Setup soft timer to turn system off when timer mode is finished for the day (minus the expired secs in the current minute
-	assignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)((g_helpRecord.timer_mode_active_minutes * 60 * 2) - (currTime.sec * 2)), powerOffTimerCallback);
+	assignSoftTimer(POWER_OFF_TIMER_NUM, ((g_helpRecord.timer_mode_active_minutes * 60 * 2) - (currTime.sec * 2)), powerOffTimerCallback);
 
 	debug("Timer mode: running...\n");
 }

@@ -598,6 +598,7 @@ void configPitTimer(PIT_TIMER timer, uint16 clockDivider, uint16 modulus)
 ///	Function:	initVersionStrings
 ///	Purpose:
 ///----------------------------------------------------------------------------
+#if 0 // ns7100
 void initVersionStrings(void)
 {
 	uint8 length = 0;
@@ -634,6 +635,7 @@ void initVersionStrings(void)
 	// Copy over the Year
 	strncpy((char*)&(g_appDate[7]), (char*)&(tempDate[0]), 4);
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function:	initVersionMsg
@@ -641,11 +643,18 @@ void initVersionStrings(void)
 ///----------------------------------------------------------------------------
 void initVersionMsg(void)
 {
+#if 0 // ns7100
 	debugRaw("\n\n");
 	debugRaw("  Software Version: %s\n", g_appVersion);
 	debugRaw("  Software Date:    %s\n", g_appDate);
 	debugRaw("  Software Time:    %s\n", g_appTime);
 	debugRaw("\n");
+#else
+	debugRaw("\n\n");
+	debugRaw("  Software Version    : %s\n", g_buildVersion);
+	debugRaw("  Software Date & Time: %s\n", g_buildDate);
+	debugRaw("\n");
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -925,6 +934,51 @@ uint8 getDayOfWeek(uint8 year, uint8 month, uint8 day)
 	dayOfWeek--;
 
 	return (dayOfWeek);
+}
+
+///----------------------------------------------------------------------------
+///	Function:	getTotalDaysFromReference
+///	Purpose:
+///----------------------------------------------------------------------------
+uint16 getTotalDaysFromReference(TM_DATE_STRUCT date)
+{
+	uint16 numOfDaysPassed = 0;
+
+	// Reference Date: Saturday, Jan 1st, 2000
+	// Dates before 01-01-2000 not meant to be calculated
+
+	// Calculate days in years passed
+	numOfDaysPassed = (uint16)((date.year) * 365);
+
+	// Calculate leap days of years passed
+	numOfDaysPassed += (date.year + 3) / 4;
+
+	// Add in days passed of current month offset by 1 due to day 1 as a reference
+	numOfDaysPassed += date.day - 1;
+
+	// For each month passed in the current year, add in number of days passed for the specific month
+	while (--date.month > 0)
+	{
+		switch (date.month)
+		{
+			case JAN: case MAR: case MAY: case JUL: case AUG: case OCT:
+				numOfDaysPassed += 31;
+				break;
+
+			case APR: case JUN: case SEP: case NOV:
+				numOfDaysPassed += 30;
+				break;
+
+			case FEB:
+				// If this was a leap year, add a day
+				if ((date.year % 4) == 0)
+					numOfDaysPassed += 1;
+				numOfDaysPassed += 28;
+				break;
+		}
+	}
+
+	return (numOfDaysPassed);
 }
 
 ///----------------------------------------------------------------------------

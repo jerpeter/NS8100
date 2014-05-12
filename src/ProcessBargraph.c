@@ -238,93 +238,38 @@ void moveSummaryIntervalDataToFile(void)
 uint8 CalculateBargraphData(void)
 {
 	// Temp variables, assigned as static to prevent storing on stack
-	static uint16 aTemp, rTemp, vTemp, tTemp;
 	static uint32 vsTemp;
 	static uint16 aTempNorm, rTempNorm, vTempNorm, tTempNorm;
 	static DATE_TIME_STRUCT aTempTime, rTempTime, vTempTime, tTempTime;
 	static uint8 g_aJobFreqFlag = NO, g_rJobFreqFlag = NO, g_vJobFreqFlag = NO, g_tJobFreqFlag = NO;
 	static uint8 g_aJobPeakMatch = NO, g_rJobPeakMatch = NO, g_vJobPeakMatch = NO, g_tJobPeakMatch = NO;
 
-	uint8 gotDataFlag = NO;
-	int32 processingCount = 500;
-	uint16* dataReadStart;
+	int32 falloutCounter = SAMPLE_RATE_512;
+	SAMPLE_DATA_STRUCT currentDataSample;
 
-	while ((g_bargraphDataReadPtr != g_bargraphDataWritePtr) && (processingCount-- > 0))
+	// While the bargraph data read pointer has not caught up with the write pointer and the fallout counter hasn't reached zero
+	while ((g_bargraphDataReadPtr != g_bargraphDataWritePtr) && (--falloutCounter > 0))
 	{
+		// Read the next data sample set to be processed
+		currentDataSample = *(SAMPLE_DATA_STRUCT*)g_bargraphDataReadPtr;
 
-		if (processingCount == 1)
-		{
-			if (g_bargraphDataWritePtr < g_bargraphDataReadPtr)
-			{
-				if (((g_bargraphDataWritePtr - g_bargraphDataStartPtr) +
-					 (g_bargraphDataEndPtr - g_bargraphDataReadPtr)) > 500)
-					processingCount = 500;
-			}
-			else
-			{
-				if ((g_bargraphDataWritePtr - g_bargraphDataReadPtr) > 500)
-					processingCount = 500;
-			}
-		}
-
-		dataReadStart = g_bargraphDataReadPtr;
-
-		// Make sure that we will not catch up to writing the data, almost impossible.
-		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
-		{
-			debugErr("1a - Reading ptr equal to writing ptr.");
-			g_bargraphDataReadPtr = dataReadStart;
-			return (BG_BUFFER_NOT_EMPTY);
-		}
-
-		aTemp = *g_bargraphDataReadPtr++;
-		aTemp >>= g_bitShiftForAccuracy;
+		// Increment to the next data sample set
+		g_bargraphDataReadPtr += NUMBER_OF_CHANNELS_DEFAULT;
 		
-		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
+		// Wrap the data read pointer if at or beyond the end of the buffer
+		if (g_bargraphDataReadPtr >= g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 
-		// We have caught up to the end of the write with out it being completed.
-		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
-		{
-			debugErr("1b - Reading ptr equal to writing ptr.");
-			g_bargraphDataReadPtr = dataReadStart;
-			return (BG_BUFFER_NOT_EMPTY);
-		}
-
-		rTemp = *g_bargraphDataReadPtr++;
-		rTemp >>= g_bitShiftForAccuracy;
-		
-		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
-		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
-		{
-			debugErr("1c - Reading ptr equal to writing ptr.");
-			g_bargraphDataReadPtr = dataReadStart;
-			return (BG_BUFFER_NOT_EMPTY);
-		}
-
-		vTemp = *g_bargraphDataReadPtr++;
-		vTemp >>= g_bitShiftForAccuracy;
-		
-		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
-		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
-		{
-			debugErr("1d - Reading ptr equal to writing ptr.");
-			g_bargraphDataReadPtr = dataReadStart;
-			return (BG_BUFFER_NOT_EMPTY);
-		}
-
-		tTemp = *g_bargraphDataReadPtr++;
-		tTemp >>= g_bitShiftForAccuracy;
-		
-		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
-
-		// If here we got data;
-		gotDataFlag = YES;
+		// Adjust for the correct bit accuracy
+		currentDataSample.a >>= g_bitShiftForAccuracy;
+		currentDataSample.r >>= g_bitShiftForAccuracy;
+		currentDataSample.v >>= g_bitShiftForAccuracy;
+		currentDataSample.t >>= g_bitShiftForAccuracy;
 
 		// Normalize the raw data without the message bits
-		aTempNorm = FixDataToZero(aTemp);
-		rTempNorm = FixDataToZero(rTemp);
-		vTempNorm = FixDataToZero(vTemp);
-		tTempNorm = FixDataToZero(tTemp);
+		aTempNorm = FixDataToZero(currentDataSample.a);
+		rTempNorm = FixDataToZero(currentDataSample.r);
+		vTempNorm = FixDataToZero(currentDataSample.v);
+		tTempNorm = FixDataToZero(currentDataSample.t);
 
 		// Find the vector sum of the current sample
 		vsTemp =((uint32)rTempNorm * (uint32)rTempNorm) +
@@ -572,10 +517,10 @@ uint8 CalculateBargraphData(void)
 		// A channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.a.sign ^ (aTemp & g_bitAccuracyMidpoint))
+		if (g_bargraphFreqCalcBuffer.a.sign ^ (currentDataSample.a & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.a.sign = (uint16)(aTemp & g_bitAccuracyMidpoint);
+			g_bargraphFreqCalcBuffer.a.sign = (uint16)(currentDataSample.a & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_bargraphFreqCalcBuffer.a.updateFlag == TRUE)
@@ -633,10 +578,10 @@ uint8 CalculateBargraphData(void)
 		// R channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.r.sign ^ (rTemp & g_bitAccuracyMidpoint))
+		if (g_bargraphFreqCalcBuffer.r.sign ^ (currentDataSample.r & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.r.sign = (uint16)(rTemp & g_bitAccuracyMidpoint);
+			g_bargraphFreqCalcBuffer.r.sign = (uint16)(currentDataSample.r & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_bargraphFreqCalcBuffer.r.updateFlag == TRUE)
@@ -694,10 +639,10 @@ uint8 CalculateBargraphData(void)
 		// V channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.v.sign ^ (vTemp & g_bitAccuracyMidpoint))
+		if (g_bargraphFreqCalcBuffer.v.sign ^ (currentDataSample.v & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.v.sign = (uint16)(vTemp & g_bitAccuracyMidpoint);
+			g_bargraphFreqCalcBuffer.v.sign = (uint16)(currentDataSample.v & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_bargraphFreqCalcBuffer.v.updateFlag == TRUE)
@@ -755,10 +700,10 @@ uint8 CalculateBargraphData(void)
 		// T channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.t.sign ^ (tTemp & g_bitAccuracyMidpoint))
+		if (g_bargraphFreqCalcBuffer.t.sign ^ (currentDataSample.t & g_bitAccuracyMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.t.sign = (uint16)(tTemp & g_bitAccuracyMidpoint);
+			g_bargraphFreqCalcBuffer.t.sign = (uint16)(currentDataSample.t & g_bitAccuracyMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_bargraphFreqCalcBuffer.t.updateFlag == TRUE)
@@ -822,8 +767,7 @@ uint8 CalculateBargraphData(void)
 			//=================================================
 			// End of Summary Interval
 			//=================================================
-			if (++g_summaryIntervalCnt >=
-				(uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
+			if (++g_summaryIntervalCnt >= (uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
 			{
 				moveSummaryIntervalDataToFile();
 			}

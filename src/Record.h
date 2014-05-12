@@ -213,23 +213,14 @@ typedef struct
 
 typedef struct
 {
-	char hour;
-	char min;
-	char sec;
-} TM_TIME_STRUCT;
-
-typedef struct
-{
-	char day;
-	char month;
-	char year;
-} TM_DATE_STRUCT;
-
-typedef struct
-{
 	uint16 encode_ln;
-	uint8 unused[6];
+	uint8 baud_rate;
 	uint8 unused1;
+	uint8 unused2;
+	uint8 unused3;
+	uint8 unused4;
+	uint8 unused5;
+	uint8 vector_sum;
 	uint8 auto_cal_in_waveform;
 	uint8 report_peak_acceleration;
 	uint8 report_displacement;
@@ -248,6 +239,7 @@ typedef struct
 	uint8 alarm_one_mode;
 	uint8 alarm_two_mode;
 	uint8 print_monitor_log;
+	uint8 unused6;
 	uint32 alarm_one_seismic_lvl;
 	uint32 alarm_one_seismic_min_lvl;
 	uint32 alarm_one_air_lvl;
@@ -258,11 +250,9 @@ typedef struct
 	uint32 alarm_two_air_min_lvl;
 	float alarm_one_time;
 	float alarm_two_time;
-	uint8 baud_rate;
-	uint8 vector_sum;
+	uint32 timer_mode_active_minutes;
 	uint8 timer_mode;
 	uint8 timer_mode_freq;
-	uint16 timer_mode_active_minutes;
 	TM_TIME_STRUCT  tm_start_time;
 	TM_TIME_STRUCT  tm_stop_time;
 	TM_DATE_STRUCT  tm_start_date;

@@ -834,13 +834,13 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    // Air
 	    byteSet(&buff[0], 0, sizeof(buff));
 
-		if (g_helpRecord.units_of_air == OFF)
-		{
-		    sprintf(buff,"%0.1f dB", hexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
-		}
-		else // Report Air in Millibars
+		if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
 		{
 		    sprintf(buff,"%0.3f mb", hexToMillBars(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+		}
+		else // Report Air in DB
+		{
+		    sprintf(buff,"%0.1f dB", hexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}
 
 	    adjust = (uint8)strlen(buff);

@@ -61,7 +61,6 @@ extern USER_MENU_STRUCT notesMenu[];
 extern USER_MENU_STRUCT operatorMenu[];
 extern USER_MENU_STRUCT recalibrateMenu[];
 extern USER_MENU_STRUCT recordTimeMenu[];
-extern USER_MENU_STRUCT sampleRateMenu[];
 extern USER_MENU_STRUCT saveSetupMenu[];
 extern USER_MENU_STRUCT seismicTriggerMenu[];
 extern USER_MENU_STRUCT seismicLocationMenu[];

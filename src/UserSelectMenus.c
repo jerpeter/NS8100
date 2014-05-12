@@ -77,6 +77,8 @@ extern USER_MENU_STRUCT recordTimeMenu[];
 extern USER_MENU_STRUCT saveRecordMenu[];
 extern USER_MENU_STRUCT saveSetupMenu[];
 extern USER_MENU_STRUCT sampleRateMenu[];
+extern USER_MENU_STRUCT sampleRateBargraphMenu[];
+extern USER_MENU_STRUCT sampleRateComboMenu[];
 extern USER_MENU_STRUCT seismicTriggerMenu[];
 extern USER_MENU_STRUCT sensitivityMenu[];
 extern USER_MENU_STRUCT sensorTypeMenu[];
@@ -1113,7 +1115,18 @@ void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
+		if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+		{
+			SETUP_USER_MENU_MSG(&sampleRateBargraphMenu, g_triggerRecord.trec.sample_rate);
+		}		
+		else if (g_triggerRecord.op_mode == COMBO_MODE)
+		{
+			SETUP_USER_MENU_MSG(&sampleRateComboMenu, g_triggerRecord.trec.sample_rate);
+		}			
+		else
+		{
+			SETUP_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
+		}			
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -1124,7 +1137,11 @@ void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
+#if 0 // ns7100
 #define CONFIG_MENU_ENTRIES 31
+#else
+#define CONFIG_MENU_ENTRIES 27
+#endif
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1135,19 +1152,25 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, BATTERY_TEXT,				NO_TAG, {BATTERY}},
 {NO_TAG, 0, BAUD_RATE_TEXT,				NO_TAG, {BAUD_RATE}},
 {NO_TAG, 0, CALIBRATION_DATE_TEXT,		NO_TAG, {CALIBRATION_DATE}},
+#if 0 // ns7100
 {NO_TAG, 0, COPIES_TEXT,				NO_TAG, {COPIES}},
+#endif
 {NO_TAG, 0, DATE_TIME_TEXT,				NO_TAG, {DATE_TIME}},
 {NO_TAG, 0, ERASE_MEMORY_TEXT,			NO_TAG, {ERASE_FLASH}},
 {NO_TAG, 0, FLASH_WRAPPING_TEXT,		NO_TAG, {FLASH_WRAPPING}},
 {NO_TAG, 0, FLASH_STATS_TEXT,			NO_TAG, {FLASH_STATS}},
+#if 0 // ns7100
 {NO_TAG, 0, FREQUENCY_PLOT_TEXT,		NO_TAG, {FREQUENCY_PLOT}},
+#endif
 {NO_TAG, 0, LANGUAGE_TEXT,				NO_TAG, {LANGUAGE}},
 {NO_TAG, 0, LCD_CONTRAST_TEXT,			NO_TAG, {LCD_CONTRAST}},
 {NO_TAG, 0, LCD_TIMEOUT_TEXT,			NO_TAG, {LCD_TIMEOUT}},
 {NO_TAG, 0, MODEM_SETUP_TEXT,			NO_TAG, {MODEM_SETUP}},
 {NO_TAG, 0, MONITOR_LOG_TEXT,			NO_TAG, {MONITOR_LOG}},
+#if 0 // ns7100
 {NO_TAG, 0, PRINTER_TEXT,				NO_TAG, {PRINTER}},
 {NO_TAG, 0, PRINT_MONITOR_LOG_TEXT,		NO_TAG, {PRINT_MONITOR_LOG}},
+#endif
 {NO_TAG, 0, REPORT_DISPLACEMENT_TEXT,	NO_TAG, {REPORT_DISPLACEMENT}},
 {NO_TAG, 0, SENSOR_GAIN_TYPE_TEXT,		NO_TAG, {SENSOR_GAIN_TYPE}},
 {NO_TAG, 0, SERIAL_NUMBER_TEXT,			NO_TAG, {SERIAL_NUMBER}},
@@ -1679,6 +1702,8 @@ void helpMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
+	//char *buildString = "App Version: " "2.0.8" " " __DATE__ " " __TIME__;
+	char buildString[50];
 
 	if (keyPressed == ENTER_KEY)
 	{
@@ -1688,7 +1713,12 @@ void helpMenuHandler(uint8 keyPressed, void* data)
 		}
 		else
 		{
+#if 0 // ns7100
 			messageBox(getLangText(STATUS_TEXT), getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT), MB_OK);
+#else
+			sprintf(buildString, "%s %s %s", getLangText(SOFTWARE_VER_TEXT), (char*)g_buildVersion, (char*)g_buildDate);
+			messageBox(getLangText(STATUS_TEXT), buildString, MB_OK);
+#endif
 
 			// Don't call menu for now, since it's empty
 			//SETUP_USER_MENU_MSG(&infoMenu, DEFAULT_ITEM_1);
@@ -1820,7 +1850,18 @@ void modeMenuHandler(uint8 keyPressed, void* data)
 		}
 		else // Mode is EDIT
 		{
-			SETUP_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
+			if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+			{
+				SETUP_USER_MENU_MSG(&sampleRateBargraphMenu, g_triggerRecord.trec.sample_rate);
+			}		
+			else if (g_triggerRecord.op_mode == COMBO_MODE)
+			{
+				SETUP_USER_MENU_MSG(&sampleRateComboMenu, g_triggerRecord.trec.sample_rate);
+			}			
+			else
+			{
+				SETUP_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
+			}			
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -2110,6 +2151,29 @@ USER_MENU_STRUCT sampleRateMenu[SAMPLE_RATE_MENU_ENTRIES] = {
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&sampleRateMenuHandler}}
 };
 
+#define SAMPLE_RATE_BARGRAPH_MENU_ENTRIES 7
+USER_MENU_STRUCT sampleRateBargraphMenu[SAMPLE_RATE_BARGRAPH_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, SAMPLE_RATE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, SAMPLE_RATE_BARGRAPH_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
+{ITEM_1, SAMPLE_RATE_512, NULL_TEXT, NO_TAG, {MIN_SAMPLE_RATE}}, // 512
+{ITEM_2, SAMPLE_RATE_1K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_1K}},
+{ITEM_3, SAMPLE_RATE_2K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_2K}},
+{ITEM_4, SAMPLE_RATE_4K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_4K}},
+{ITEM_5, SAMPLE_RATE_8K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_8K}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&sampleRateMenuHandler}}
+};
+
+#define SAMPLE_RATE_COMBO_MENU_ENTRIES 6
+USER_MENU_STRUCT sampleRateComboMenu[SAMPLE_RATE_COMBO_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, SAMPLE_RATE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, SAMPLE_RATE_COMBO_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
+{ITEM_1, SAMPLE_RATE_512, NULL_TEXT, NO_TAG, {MIN_SAMPLE_RATE}}, // 512
+{ITEM_2, SAMPLE_RATE_1K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_1K}},
+{ITEM_3, SAMPLE_RATE_2K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_2K}},
+{ITEM_4, SAMPLE_RATE_4K, NULL_TEXT, NO_TAG, {SAMPLE_RATE_4K}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&sampleRateMenuHandler}}
+};
+
 //-------------------------
 // Sample Rate Menu Handler
 //-------------------------
@@ -2123,8 +2187,8 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((sampleRateMenu[newItemIndex].data < sampleRateMenu[ITEM_1].data) || 
 			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_6].data) ||
-			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && 
-			((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))))
+			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_5].data) && (g_triggerRecord.op_mode == BARGRAPH_MODE)) ||
+			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && (g_triggerRecord.op_mode == COMBO_MODE)))
 		{
 			byteSet(&message[0], 0, sizeof(message));
 			sprintf((char*)message, "%lu %s", sampleRateMenu[newItemIndex].data,
@@ -2535,9 +2599,9 @@ void unitsOfMeasureMenuHandler(uint8 keyPressed, void* data)
 #define UNITS_OF_AIR_MENU_ENTRIES 4
 USER_MENU_STRUCT unitsOfAirMenu[UNITS_OF_AIR_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, UNITS_OF_AIR_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, UNITS_OF_AIR_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
-{ITEM_1, 0, YES_TEXT,	NO_TAG, {YES}},
-{ITEM_2, 0, NO_TEXT,	NO_TAG, {NO}},
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, UNITS_OF_AIR_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, DECIBEL_TEXT,	NO_TAG, {DECIBEL_TYPE}},
+{ITEM_2, 0, MILLIBAR_TEXT,	NO_TAG, {MILLIBAR_TYPE}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&unitsOfAirMenuHandler}}
 };
 

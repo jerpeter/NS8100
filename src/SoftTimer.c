@@ -359,6 +359,15 @@ void powerOffTimerCallback(void)
 	// Handle and finish any processing
 	stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
+	if (g_timerModeLastRun == YES)
+	{
+		debug("Timer Mode: Ending last session, now disabling...\n");
+		g_helpRecord.timer_mode = DISABLED;
+
+		// Save help record
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	}
+		
 	overlayMessage(getLangText(TIMER_MODE_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 3 * SOFT_SECS);
 
 	// Disable Power Off Protection

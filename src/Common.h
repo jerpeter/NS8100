@@ -108,6 +108,20 @@ typedef struct
 	uint32 data[6];
 } INPUT_MSG_STRUCT;
 
+typedef struct
+{
+	uint8 hour;
+	uint8 min;
+	uint8 sec;
+} TM_TIME_STRUCT;
+
+typedef struct
+{
+	uint8 day;
+	uint8 month;
+	uint8 year;
+} TM_DATE_STRUCT;
+
 #define TEN_MSEC				1					// # of counts per msec
 #define SECND 					(10 * TEN_MSEC)		// # of ten_msec per second
 
@@ -240,7 +254,7 @@ void configPitTimer(PIT_TIMER timer, uint16 clockDivider, uint16 modulus);
 void build_languageLinkTable(uint8 languageSelection);
 
 // Version routine
-void initVersionStrings(void);
+//void initVersionStrings(void);
 void initVersionMsg(void);
 
 // Bootloader Function
@@ -254,6 +268,7 @@ void handleSystemEvents(void);
 
 // Time routines
 uint8 getDayOfWeek(uint8 year, uint8 month, uint8 day);
+uint16 getTotalDaysFromReference(TM_DATE_STRUCT date);
 void getDateString(char*, uint8, uint8);
 uint8 getDaysPerMonth(uint8, uint16);
 void initTimeMsg(void);

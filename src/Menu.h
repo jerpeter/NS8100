@@ -132,6 +132,9 @@ enum {
 #define USER_MENU_DISPLAY_ITEMS(menu)	(menu[MENU_INFO].byteData[TOTAL_MENU_ITEMS] - 1)
 #define USER_MENU_ACTIVE_ITEMS(menu)	(menu[MENU_INFO].byteData[TOTAL_MENU_ITEMS] - 2)
 
+// Max number of menu entries for any single menu. The config menu currently has the most. 
+#define MAX_MENU_ENTRIES   40
+
 // User Menu types
 enum {
 	SELECT_TYPE = 1,

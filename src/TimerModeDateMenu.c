@@ -437,7 +437,7 @@ void timerModeActiveMinutes(void)
 {
 	// Find the Time mode active time period in minutes
 
-	// First check for specialty case hourly
+	// Check for specialty case hourly
 	if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
 	{
 		// Check if the stop min is greater than the start min
@@ -461,12 +461,28 @@ void timerModeActiveMinutes(void)
 		// Set active minutes as the difference in the stop and start times
 		g_helpRecord.timer_mode_active_minutes = (uint16)(((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min) -
 												((g_helpRecord.tm_start_time.hour * 60) + g_helpRecord.tm_start_time.min));
+
+		// Check for specialty case one time
+		if (g_helpRecord.timer_mode_freq == TIMER_MODE_ONE_TIME)
+		{
+			// Calculate the number of days to run consecutively (Days * Hours in a day * Minutes in an hour) and add to the active minutes
+			g_helpRecord.timer_mode_active_minutes += (24 * 60 * (getTotalDaysFromReference(g_helpRecord.tm_stop_date) - 
+														getTotalDaysFromReference(g_helpRecord.tm_start_date)));
+		}
 	}
 	else // The timer mode active period will see midnight, thus running 2 consecutive days
 	{
 		// Set active minutes as the difference from midnight and the start time, plus the stop time the next day
 		g_helpRecord.timer_mode_active_minutes = (uint16)((24 * 60) - ((g_helpRecord.tm_start_time.hour * 60) + g_helpRecord.tm_start_time.min) +
 												((g_helpRecord.tm_stop_time.hour * 60) + g_helpRecord.tm_stop_time.min));
+
+		// Check for specialty case one time
+		if (g_helpRecord.timer_mode_freq == TIMER_MODE_ONE_TIME)
+		{
+			// Calculate the number of days to run consecutively (Days * Hours in a day * Minutes in an hour) minus crossover day and add to the active minutes
+			g_helpRecord.timer_mode_active_minutes += (24 * 60 * (getTotalDaysFromReference(g_helpRecord.tm_stop_date) - 
+														getTotalDaysFromReference(g_helpRecord.tm_start_date) - 1));
+		}
 	}
 
 	debug("Timer Active Minutes: %d\n", g_helpRecord.timer_mode_active_minutes);

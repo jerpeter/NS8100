@@ -239,6 +239,7 @@ extern uint8 g_enterMonitorModeAfterMidnightCal;
 extern void (*g_userMenuHandler)(uint8, void*);
 extern uint16 g_eventBufferWriteIndex;
 extern uint8 g_spareBuffer[];
+extern uint8 g_timerModeLastRun;
 extern uint8 g_tcSampleTimerActive;
 extern uint8 g_tcTypematicTimerActive;
 extern char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
@@ -253,6 +254,10 @@ extern uint32 g_updateOffsetCount;
 extern uint16 g_storedTempReading;
 extern uint16 g_currentTempReading;
 extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
+
+// Version
+extern const char g_buildVersion[];
+extern const char g_buildDate[];
 
 // Test
 extern uint32 g_execCycles;
