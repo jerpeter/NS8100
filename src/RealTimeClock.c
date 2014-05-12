@@ -134,7 +134,7 @@ uint8 setRtcTime(DATE_TIME_STRUCT* time)
 	uint8 hours;
 	uint8 minutes;
 	uint8 seconds;
-	uint8 newTime[3];
+	uint16 newTime[3];
 
 	if ((time->hour < 24) && (time->min < 60) && (time->sec < 60))
 	{
@@ -229,7 +229,8 @@ uint8 setRtcDate(DATE_TIME_STRUCT* time)
 DATE_TIME_STRUCT getRtcTime(void)
 {
 	DATE_TIME_STRUCT time;
-	RTC_DATE_TIME_STRUCT currentDateTime;
+	RTC_DATE_TIME_STRUCT translateTime;
+	uint16 currentDateTime[7];
 	
 	byteSet(&time, 0, sizeof(DATE_TIME_STRUCT));
 
@@ -237,13 +238,21 @@ DATE_TIME_STRUCT getRtcTime(void)
 
 	//RTC_FREEZE_UPDATES;
 
-	time.year = (uint8)(currentDateTime.years.bit.oneYear + (currentDateTime.years.bit.tenYear * 10));
-	time.month = (uint8)(currentDateTime.months.bit.oneMonth + (currentDateTime.months.bit.tenMonth * 10));
-	time.weekday = (uint8)(currentDateTime.weekdays.bit.weekday);
-	time.day = (uint8)(currentDateTime.days.bit.oneDay + (currentDateTime.days.bit.tenDay * 10));
-	time.hour = (uint8)(currentDateTime.hours.bit.oneHour + (currentDateTime.hours.bit.tenHour * 10));
-	time.min = (uint8)(currentDateTime.minutes.bit.oneMinute + (currentDateTime.minutes.bit.tenMinute * 10));
-	time.sec = (uint8)(currentDateTime.seconds.bit.oneSecond + (currentDateTime.seconds.bit.tenSecond * 10));
+	translateTime.seconds.reg = currentDateTime[0];
+	translateTime.minutes.reg = currentDateTime[1];
+	translateTime.hours.reg = currentDateTime[2];
+	translateTime.days.reg = currentDateTime[3];
+	translateTime.weekdays.reg = currentDateTime[4];
+	translateTime.months.reg = currentDateTime[5];
+	translateTime.years.reg = currentDateTime[6];
+
+	time.year = (uint8)(translateTime.years.bit.oneYear + (translateTime.years.bit.tenYear * 10));
+	time.month = (uint8)(translateTime.months.bit.oneMonth + (translateTime.months.bit.tenMonth * 10));
+	time.weekday = (uint8)(translateTime.weekdays.bit.weekday);
+	time.day = (uint8)(translateTime.days.bit.oneDay + (translateTime.days.bit.tenDay * 10));
+	time.hour = (uint8)(translateTime.hours.bit.oneHour + (translateTime.hours.bit.tenHour * 10));
+	time.min = (uint8)(translateTime.minutes.bit.oneMinute + (translateTime.minutes.bit.tenMinute * 10));
+	time.sec = (uint8)(translateTime.seconds.bit.oneSecond + (translateTime.seconds.bit.tenSecond * 10));
 
 	//RTC_UNFREEZE_UPDATES;
 

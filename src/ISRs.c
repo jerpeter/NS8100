@@ -31,6 +31,15 @@
 #include "RemoteHandler.h"
 #include "PowerManagement.h"
 #include "Analog.h"
+#include "gpio.h"
+#include "intc.h"
+#include "SysEvents.h"
+#include "M23018.h"
+#include "rtc.h"
+#include "tc.h"
+#include "twi.h"
+#include "spi.h"
+#include "ad_test_menu.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -42,6 +51,8 @@
 #define ESC_KEY_ROW			0x04
 #define ESC_KEY_POSITION	0x01
 #endif
+
+#define TC_CHANNEL 0
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -65,6 +76,11 @@ extern uint8 g_monitorEscapeCheck;
 extern MN_TIMER_STRUCT mn_timer;
 extern CMD_BUFFER_STRUCT* gp_ISRMessageBuffer;		// Craft port receive buffer.
 extern MODEM_STATUS_STRUCT g_ModemStatus;			// Craft port status information flag.
+extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
+extern int rtc_init(volatile avr32_rtc_t *rtc, unsigned char osc_type, unsigned char psel);
+extern void rtc_set_top_value(volatile avr32_rtc_t *rtc, unsigned long top);
+extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
+extern void rtc_enable(volatile avr32_rtc_t *rtc);
 
 ///----------------------------------------------------------------------------
 ///	Globals
@@ -834,3 +850,260 @@ void isr_MSP430WakeupMsg(void)
 //#pragma fast_interrupt off
 //#pragma interrupt off
 #endif // huge block
+
+// ============================================================================
+// eic_keypad_irq
+// ============================================================================
+__attribute__((__interrupt__))
+void eic_keypad_irq(void)
+{
+	// Print test for verification of operation
+	//debugRaw("^");
+
+#if 1
+	if (g_kpadProcessingFlag == DEACTIVATED)
+	{
+		raiseSystemEventFlag(KEYPAD_EVENT);
+
+		// Found a new key, reset last stored key
+		g_kpadLastKeyPressed = 0;
+	}
+#endif
+
+#if 0
+	uint8 keyScan;
+	keyScan = read_mcp23018(IO_ADDRESS_KPD, INTFB);
+	{
+		debug("IRQ: Interrupt Flags: %x\n", keyScan);
+	}
+
+	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	{
+		debug("IRQ: Key Pressed: %x\n", keyScan);
+	}
+#endif
+
+	read_mcp23018(IO_ADDRESS_KPD, INTFB);
+	read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+
+	// clear the interrupt flag in the processor
+	AVR32_EIC.ICR.int5 = 1;
+}
+
+// ============================================================================
+// soft_timer_tick_irq
+// ============================================================================
+__attribute__((__interrupt__))
+void soft_timer_tick_irq(void)
+{
+	// Test print to verify the interrupt is running
+	//debugRaw("`");
+
+	// Increment the lifetime soft timer tick count
+	g_rtcSoftTimerTickCount++;
+
+	// Every tick raise the flag to check soft timers
+	raiseTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
+
+	// Every 8 ticks (4 secs) trigger the cyclic event flag
+	if (++cyclicEventDelay >= 8)
+	{
+		cyclicEventDelay = 0;
+		raiseSystemEventFlag(CYCLIC_EVENT);
+	}
+
+	// Every 60 ticks (30 secs) get the rtc time.
+	if (++g_rtcCurrentTickCount >= 60)
+	{
+		raiseSystemEventFlag(UPDATE_TIME_EVENT);
+	}
+
+	// clear the interrupt flag
+	rtc_clear_interrupt(&AVR32_RTC);
+}
+
+// ============================================================================
+// tc_irq
+// ============================================================================
+volatile uint32 testCounterDataClock = 0;
+volatile uint32 r_chan_read, v_chan_read, t_chan_read, a_chan_read;
+__attribute__((__interrupt__))
+void tc_irq(void)
+{
+	uint16 temp, temp1;
+	// Increment the ms seconds counter
+	testCounterDataClock++;
+
+	// Data time!
+    // Chan 0
+	spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &temp);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &temp1);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+    debugRaw("R: %x %x", temp, temp1 >> 2);
+
+    // Chan 1
+    spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &temp);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &temp1);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+    debugRaw(" | V: %x %x", temp, temp1 >> 2);
+
+    // Chan 2
+    spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &temp);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &temp1);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+    debugRaw(" | T: %x %x", temp, temp1 >> 2);
+
+    // Chan 3
+    spi_selectChip(AD_SPI, AD_SPI_NPCS);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &temp);
+    spi_write(AD_SPI, 0x0000);
+    spi_read(AD_SPI, &temp1);
+    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+    debugRaw(" | A: %x %x\n", temp, temp1 >> 2);
+	// End Data Time!
+
+
+	// clear the interrupt flag
+	AVR32_TC.channel[TC_CHANNEL].sr;
+
+#if 0
+	// specify that an interrupt has been raised
+	if(testCounterDataClock % 1000 == 0)
+	{
+		debugRaw("*");
+	}
+#endif
+}
+
+// ============================================================================
+// Setup_EIC_Keypad_ISR
+// ============================================================================
+void Setup_EIC_Keypad_ISR(void)
+{
+	// External Interrupt Controller setup
+	AVR32_EIC.IER.int5 = 1;
+	AVR32_EIC.MODE.int5 = 0;
+	AVR32_EIC.EDGE.int5 = 0;
+	AVR32_EIC.LEVEL.int5 = 0;
+	AVR32_EIC.FILTER.int5 = 0;
+	AVR32_EIC.ASYNC.int5 = 1;
+	AVR32_EIC.EN.int5 = 1;
+
+	// Register the RTC interrupt handler to the interrupt controller.
+	INTC_register_interrupt(&eic_keypad_irq, AVR32_EIC_IRQ_5, 0);
+
+	// Enable the interrupt
+	rtc_enable_interrupt(&AVR32_RTC);
+
+#if 0 
+	// Test for int enable
+	if(AVR32_EIC.IMR.int5 == 0x01)
+	{
+		print_dbg("\r\nKeypad Interrupt Enabled\n");
+	}
+	else
+	{
+		print_dbg("\r\nKeypad Interrupt Not Enabled\n");
+	}
+#endif
+}
+
+// ============================================================================
+// Setup_Soft_Timer_Tick_ISR
+// ============================================================================
+void Setup_Soft_Timer_Tick_ISR(void)
+{
+	// Register the RTC interrupt handler to the interrupt controller.
+	INTC_register_interrupt(&soft_timer_tick_irq, AVR32_RTC_IRQ, 0);
+}
+
+// ============================================================================
+// Setup_Soft_Timer_Tick_ISR
+// ============================================================================
+#define FOSC0	66000000 // 66 MHz
+void Setup_Data_Clock_ISR(uint32 sampleRate)
+{
+	volatile avr32_tc_t *tc = &AVR32_TC;
+
+	// Options for waveform generation.
+	tc_waveform_opt_t WAVEFORM_OPT =
+	{
+		.channel  = TC_CHANNEL,                        // Channel selection.
+		.bswtrg   = TC_EVT_EFFECT_NOOP,                // Software trigger effect on TIOB.
+		.beevt    = TC_EVT_EFFECT_NOOP,                // External event effect on TIOB.
+		.bcpc     = TC_EVT_EFFECT_NOOP,                // RC compare effect on TIOB.
+		.bcpb     = TC_EVT_EFFECT_NOOP,                // RB compare effect on TIOB.
+		.aswtrg   = TC_EVT_EFFECT_NOOP,                // Software trigger effect on TIOA.
+		.aeevt    = TC_EVT_EFFECT_NOOP,                // External event effect on TIOA.
+		.acpc     = TC_EVT_EFFECT_NOOP,                // RC compare effect on TIOA: toggle.
+		.acpa     = TC_EVT_EFFECT_NOOP,                // RA compare effect on TIOA: toggle (other possibilities are none, set and clear).
+		.wavsel   = TC_WAVEFORM_SEL_UP_MODE_RC_TRIGGER,// Waveform selection: Up mode with automatic trigger(reset) on RC compare.
+		.enetrg   = FALSE,                             // External event trigger enable.
+		.eevt     = 0,                                 // External event selection.
+		.eevtedg  = TC_SEL_NO_EDGE,                    // External event edge selection.
+		.cpcdis   = FALSE,                             // Counter disable when RC compare.
+		.cpcstop  = FALSE,                             // Counter clock stopped with RC compare.
+		.burst    = FALSE,                             // Burst signal selection.
+		.clki     = FALSE,                             // Clock inversion.
+		.tcclks   = TC_CLOCK_SOURCE_TC2                // Internal source clock 2 - connected to PBA/4
+	};
+
+	// Options for interrupt
+	tc_interrupt_t TC_INTERRUPT =
+	{
+		.etrgs = 0,
+		.ldrbs = 0,
+		.ldras = 0,
+		.cpcs  = 1,
+		.cpbs  = 0,
+		.cpas  = 0,
+		.lovrs = 0,
+		.covfs = 0
+	};
+
+	// Register the RTC interrupt handler to the interrupt controller.
+	INTC_register_interrupt(&tc_irq, AVR32_TC_IRQ0, 0);
+
+	// Initialize the timer/counter.
+	tc_init_waveform(tc, &WAVEFORM_OPT);         // Initialize the timer/counter waveform.
+
+	// Set the compare triggers.
+	// Remember TC counter is 16-bits, so counting second is not possible.
+	// We configure it to count ms.
+	// We want: (1/(FOSC0/4)) * RC = 1000 Hz => RC = (FOSC0/4) / 1000 = 3000 to get an interrupt every 1ms
+	tc_write_rc(tc, TC_CHANNEL, (FOSC0/2)/1000);  // Set RC value.
+
+	tc_configure_interrupts(tc, TC_CHANNEL, &TC_INTERRUPT);
+}
+
+// ============================================================================
+// Start_Data_Clock
+// ============================================================================
+void Start_Data_Clock(void)
+{
+	volatile avr32_tc_t *tc = &AVR32_TC;
+
+	// Start the timer/counter.
+	tc_start(tc, TC_CHANNEL);                    // And start the timer/counter.
+}	
+
+// ============================================================================
+// Stop_Data_Clock
+// ============================================================================
+void Stop_Data_Clock(void)
+{
+	volatile avr32_tc_t *tc = &AVR32_TC;
+
+	// Stop the timer/counter.
+	tc_stop(tc, TC_CHANNEL);                    // And start the timer/counter.
+}	

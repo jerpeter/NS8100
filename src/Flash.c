@@ -39,6 +39,7 @@
  */
 int16 chipErase(void)
 {
+#if 0 // fix_ns8100
 	//uint16* addr = NULL;
 	//uint32 i = 0;
 	//uint16* flashPtr = (uint16*)FLASH_BASE_ADDR;
@@ -94,6 +95,7 @@ int16 chipErase(void)
 	}
 #endif
 
+#endif
 	return (FLASH_OP_SUCCESS);
 }
 
@@ -106,6 +108,7 @@ int16 chipErase(void)
  */
 int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 {
+#if 0 // fix_ns8100
 	//uint16* addr = NULL;
 	uint32 i = 0;
 	uint16* flashPtr = NULL;
@@ -246,6 +249,7 @@ int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 		sectorAddr += sectorSize;
 	}
 
+#endif
 	return (FLASH_OP_SUCCESS);
 }
 
@@ -255,6 +259,7 @@ int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 *******************************************************************************/
 int16 flashWrite(uint16* dest, uint16* src, uint32 length)
 {
+#if 0 // fix_ns8100
 	uint32 x;
 
 	for (x = 0; x < length; x++)
@@ -262,7 +267,7 @@ int16 flashWrite(uint16* dest, uint16* src, uint32 length)
 		if (programWord((uint16*)(dest + x), src[x]) == FLASH_OP_ERROR)
 			return (FLASH_OP_ERROR);
 	}
-
+#endif
 	return (FLASH_OP_SUCCESS);
 }
 
@@ -274,6 +279,7 @@ int16 flashWrite(uint16* dest, uint16* src, uint32 length)
  */
 int16 programWord(uint16* destAddr, uint16 data)
 {
+#if 0 // fix_ns8100
 	//uint16* addr = NULL;
 	uint16 currData = *destAddr;
 
@@ -332,6 +338,7 @@ int16 programWord(uint16* destAddr, uint16 data)
 	waitWhileFlashOperationBusy();
 #endif
 
+#endif
 	return (FLASH_OP_SUCCESS);
 }
 
@@ -343,6 +350,7 @@ int16 programWord(uint16* destAddr, uint16 data)
  */
 int16 programByte(uint8* destAddr, uint8 data)
 {
+#if 0 // fix_ns8100
 	//uint16* addr = NULL;
 	uint16* wordAddr;
 	uint16 wordData;
@@ -428,6 +436,7 @@ int16 programByte(uint8* destAddr, uint8 data)
 	waitWhileFlashOperationBusy();
 #endif
 
+#endif
 	return (FLASH_OP_SUCCESS);
 }
 
@@ -439,10 +448,12 @@ int16 programByte(uint8* destAddr, uint8 data)
  */
 void issueReset(void)
 {
+#if 0 // fix_ns8100
 	uint16* addr;
 
 	addr = (uint16*)(FLASH_BASE_ADDR);
 	*addr = 0x00F0;
+#endif
 }
 
 /*==================================================
@@ -453,6 +464,7 @@ void issueReset(void)
  */
 void waitWhileFlashOperationBusy(void)
 {
+#if 0 // fix_ns8100
 	volatile uint16* addr = (volatile uint16*)FLASH_BASE_ADDR;
 
 	// Write 70 to any location for status register select
@@ -466,8 +478,7 @@ void waitWhileFlashOperationBusy(void)
 
 	// Return to read state
 	*addr = 0x00FF;
-
-	return;
+#endif
 }
 
 /*==================================================
@@ -478,6 +489,7 @@ void waitWhileFlashOperationBusy(void)
  */
 int16 flashCmdCompletePolling(volatile uint16* addr)
 {
+#if 0 // fix_ns8100
 	uint16 savedVal;
 	uint16 currentVal;
 	uint32 counter = 0;
@@ -526,6 +538,7 @@ int16 flashCmdCompletePolling(volatile uint16* addr)
 		debugErr("Flash CmdComplete: Timed out\n");
 		return (FLASH_OP_ERROR);
 	}
+#endif
 
 	return (FLASH_OP_SUCCESS);
 }
@@ -538,6 +551,7 @@ int16 flashCmdCompletePolling(volatile uint16* addr)
  */
 int16 flashDataPolling(volatile uint16* addr, uint16 data)
 {
+#if 0 // fix_ns8100
 	int32 counter = 0;
 	int32 currentVal = 0;
 	uint16 flashVal;
@@ -573,6 +587,7 @@ int16 flashDataPolling(volatile uint16* addr, uint16 data)
 	// Check if we maxed the counter while implies we timed out
 	if (counter >= FLASH_TIMEOUT)
 		return (FLASH_OP_ERROR);
+#endif
 
 	return (FLASH_OP_SUCCESS);
 }
@@ -585,11 +600,15 @@ int16 flashDataPolling(volatile uint16* addr, uint16 data)
  */
 int16 verifyFlashAddr(uint16* addr)
 {
+#if 0 // fix_ns8100
 	if (((uint32)addr >= FLASH_BASE_ADDR) &&
 		((uint32)addr < FLASH_END_ADDR))
 		return (FLASH_OP_SUCCESS);
 	else
 		return (FLASH_OP_ERROR);
+#else
+	return (FLASH_OP_SUCCESS);
+#endif
 }
 
 /*==================================================
@@ -600,6 +619,7 @@ int16 verifyFlashAddr(uint16* addr)
  */
 int16 verifyFlashDevice(uint8 printResults)
 {
+#if 0 // fix_ns8100
 	volatile uint16* addr = (uint16*)FLASH_BASE_ADDR;
 	uint16 manfId;
 	uint16 deviceCode;
@@ -668,6 +688,9 @@ int16 verifyFlashDevice(uint8 printResults)
 		return (FLASH_OP_SUCCESS);
 	else
 		return (FLASH_OP_ERROR);
+#else
+	return (FLASH_OP_SUCCESS);
+#endif
 }
 
 /*==================================================
@@ -678,6 +701,7 @@ int16 verifyFlashDevice(uint8 printResults)
  */
 uint8 verifyAtmelFlashDevice(void)
 {
+#if 0 // fix_ns8100
 	volatile uint16* addr = (uint16*)FLASH_BASE_ADDR;
 	uint8 atmelFlashPart = NO;
 
@@ -697,5 +721,8 @@ uint8 verifyAtmelFlashDevice(void)
 	*addr = 0x00F0;
 
 	return (atmelFlashPart);
+#else
+	return(0);
+#endif
 }
 

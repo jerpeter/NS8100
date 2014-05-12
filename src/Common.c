@@ -835,7 +835,8 @@ uint8 getDayOfWeek(uint8 year, uint8 month, uint8 day)
 void initTimeMsg(void)
 {
 #if (GLOBAL_DEBUG_PRINT_ENABLED == ALL_DEBUG)
-	DATE_TIME_STRUCT time = getCurrentTime();
+	//DATE_TIME_STRUCT time = getCurrentTime();
+	DATE_TIME_STRUCT time = getRtcTime();
 #endif
 
 	debug("RTC: Current Date: %s %02d, %4d\n", monthTable[time.month].name,	time.day, (time.year + 2000));

@@ -1184,6 +1184,15 @@ void mnStartTrigger(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mo
 
 	// Send message to 430
 	//ISPI_SendMsg(msgs430.startMsg430.cmd_id);
+#if 1
+extern void Setup_Data_Clock_ISR(uint32 sampleRate);
+extern void Start_Data_Clock(void);
+extern void AD_Init(void);
+#endif
+	AD_Init();
+	
+	Setup_Data_Clock_ISR(0);
+	Start_Data_Clock();
 }
 
 /****************************************
@@ -1193,6 +1202,11 @@ void mnStartTrigger(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mo
 void mnStopTrigger(void)
 {
 	g_sampleProcessing = IDLE_STATE;
+
+#if 1
+extern void Stop_Data_Clock(void);
+#endif
+	Stop_Data_Clock();
 
 	SetPeriodicInterruptFrequency(PULSE_2_PER_SEC);
 

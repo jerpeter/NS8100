@@ -187,8 +187,6 @@ void InitSystemHardware(void)
 *	Function:	initInterrupts
 *	Purpose:	Initialize the system interrupts to be used
 ****************************************/
-extern void Setup_Soft_Timer_Tick(void);
-extern void Setup_EIC_Keypad_ISR(void);
 void InitInterrupts(void)
 {
 #if 0 // fix_ns8100 // Old system
@@ -228,9 +226,6 @@ void InitInterrupts(void)
 	// Enable interrupts at the core processor level
     EnableAllInterrupts;
 #endif
-
-	Setup_Soft_Timer_Tick();
-	//Setup_EIC_Keypad_ISR();
 }
 
 /****************************************

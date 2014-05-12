@@ -469,7 +469,7 @@ static void AD_config_write(unsigned int config_word)
 	spi_unselectChip(AD_SPI, AD_SPI_NPCS);
 }
 
-static void AD_Init(void)
+void AD_Init(void)
 {
     int temp;
 

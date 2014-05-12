@@ -48,7 +48,8 @@
 #include "usb_test_menu.h"
 #include "sd_mmc_test_menu.h"
 #include "eeprom_test_menu.h"
-// End of NS7100 includes
+#include "twi.h"
+#include "M23018.h"
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -66,6 +67,12 @@ extern uint32 isTriggered;
 extern uint8 mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 extern uint8 g_autoDialoutState;
 extern void flashc_set_wait_state(unsigned int);
+extern void Setup_Soft_Timer_Tick_ISR(void);
+extern void Setup_EIC_Keypad_ISR(void);
+extern int rtc_init(volatile avr32_rtc_t *rtc, unsigned char osc_type, unsigned char psel);
+extern void rtc_set_top_value(volatile avr32_rtc_t *rtc, unsigned long top);
+extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
+extern void rtc_enable(volatile avr32_rtc_t *rtc);
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -263,7 +270,7 @@ static void Write_Block_To_Display (unsigned char *mmap_ptr)
 }
 
 extern uint8 mmap[8][128];
-static void Display_Craft_Logo()
+void Display_Craft_Logo()
 {
 	Write_display(COMMAND_REGISTER, START_LINE_SET, FIRST_HALF_DISPLAY);
 	Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET, FIRST_HALF_DISPLAY);
@@ -446,16 +453,22 @@ void _init_startup(void)
 	soft_delay(1000);
 }
 //=================================================================================================
-#include "twi.h"
-#include "M23018.h"
 void InitKeypad(void)
 {
-	// Init the Keypad
-	gpio_map_t TWI_GPIO_MAP =
+	static const gpio_map_t EIC_GPIO_MAP =
+	{
+		{AVR32_EIC_EXTINT_5_PIN, AVR32_EIC_EXTINT_5_FUNCTION}
+	};
+
+	// GPIO pins used for TWI interface
+	static const gpio_map_t TWI_GPIO_MAP =
 	{
 		{AVR32_TWI_SDA_0_0_PIN, AVR32_TWI_SDA_0_0_FUNCTION},
 		{AVR32_TWI_SCL_0_0_PIN, AVR32_TWI_SCL_0_0_FUNCTION}
 	};
+
+	// Enable External Interrupt for MCP23018
+	gpio_enable_module(EIC_GPIO_MAP, sizeof(EIC_GPIO_MAP) / sizeof(EIC_GPIO_MAP[0]));
 
 	// TWI options.
 	twi_options_t opt;
@@ -471,40 +484,71 @@ void InitKeypad(void)
 	// initialize TWI driver with options
 	twi_master_init(&AVR32_TWI, &opt);
 
-	//soft_usecWait(5000);
+	soft_usecWait(250 * SOFT_MSECS);
 
 	init_mcp23018(IO_ADDRESS_KPD);
+
+	soft_usecWait(250 * SOFT_MSECS);
 }
-		
-#define CRAFT_TEST 1
-//=================================================================================================
-//	Function:	Main
-//	Purpose:	Application starting point
-//=================================================================================================
-#include "M23018.h"
-volatile uint32 tempTick = 0;
-extern void Setup_EIC_Keypad_ISR(void);
-int main(void) 
+
+//-----------------------------------------------------------------------------
+unsigned char input_buffer[120];
+void craftTestMenuThruDebug(void)
 {
-#if CRAFT_TEST
-    unsigned char input_buffer[81];
 	int count;
     int character;
     int reply=0;
 
-	//Menu_Items = sizeof(NONE);
-	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;
-	Menu_Functions = (unsigned long *)Main_Menu_Functions;
-	Menu_String = (unsigned char *)&Main_Menu_Text;
-#endif
+	if(usart_test_hit(&AVR32_USART1))
+	{
+		if(Get_User_Input(input_buffer) > 0)
+		{
+        	reply = atoi((char *)input_buffer);
+		}
 
-    Disable_global_interrupt();
+		if(reply < Menu_Items)
+		{
+        	((void(*)())*(Menu_Functions + reply))();
+		}
 
-    //Setup interrupt vectors
-    INTC_init_interrupts();
+    	count = 0;
+    	character = Menu_String[count];
+    	while(character != 0)
+    	{
+    		print_dbg_char(character);
+    		count++;
+    		character = Menu_String[count];
+    	}
+		Command_Prompt();
+	}
+}
 
-	Enable_global_interrupt();
+//-----------------------------------------------------------------------------
+volatile uint32 tempTick;
+void testKeypad(void)
+{
+	uint8 keyScan;
 
+	//InitKeypad();
+
+	//print_dbg("\r\nAttempting to read the Keypad... ");
+	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	if(keyScan)
+	{
+		debug("Found character: %c", keyScan);
+			
+		keypad();
+
+		tempTick = g_rtcSoftTimerTickCount;
+		while(tempTick == g_rtcSoftTimerTickCount) {}
+	}
+}
+
+//=================================================================================================
+//	Function:	InitSystemHardware_NS8100
+//=================================================================================================
+void InitSystemHardware_NS8100(void)
+{
 #if 0 // Now handled in _init_startup
 	// Logic to change the clock source to PLL 0
     // Switch the main clock to the external oscillator 0
@@ -530,34 +574,54 @@ int main(void)
     //smc_init(FOSC0);
 #endif
 
-    //turn on rs232 driver and receiver on NS8100 board ?
-    //gpio_set_gpio_pin(AVR32_PIN_PB08);
-    //gpio_set_gpio_pin(AVR32_PIN_PB09);
-    gpio_clr_gpio_pin(AVR32_PIN_PB08);
-    gpio_clr_gpio_pin(AVR32_PIN_PB09);
-
+	//-------------------------------------------------------------------------
 	// Set RTC Timestamp pin high
 	gpio_set_gpio_pin(AVR32_PIN_PB18);
 
-    //Setup debug serial port
+	//-------------------------------------------------------------------------
+    // Turn on rs232 driver and receiver on NS8100 board ?
+    gpio_clr_gpio_pin(AVR32_PIN_PB08);
+    gpio_clr_gpio_pin(AVR32_PIN_PB09);
+
+    // Setup debug serial port
     init_dbg_rs232(FOSC0);
 
+	//-------------------------------------------------------------------------
     // Initialize USB clock.
     pm_configure_usb_clock();
 
+	//-------------------------------------------------------------------------
 	// Init the SPI interface
 	SPI_init();
 
+	//-------------------------------------------------------------------------
     // Turn on display
     gpio_set_gpio_pin(AVR32_PIN_PB21);
 
+	// LCD Init
     Backlight_On();
     Backlight_High();
     Set_Contrast(24);
     InitDisplay();
 
+	//-------------------------------------------------------------------------
+	// Initialize the Real Time Counter
+	if (!rtc_init(&AVR32_RTC, 1, 0))
+	{
+		debugErr("Error initializing the RTC\n");
+		while(1);
+	}
+
+	// Set top value to 0 to generate an interrupt every second */
+	rtc_set_top_value(&AVR32_RTC, 8192);
+
+	// Enable the RTC
+	rtc_enable(&AVR32_RTC);
+
+	//-------------------------------------------------------------------------
+	// Init Keypad
 	InitKeypad();
-	Setup_EIC_Keypad_ISR();
+	
 	// Primer read
 	uint8 keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	if(keyScan)
@@ -565,75 +629,172 @@ int main(void)
 		debugWarn("Keypad key being pressed, likely a bug. Key: %x", keyScan);
 	}
 	
+	//-------------------------------------------------------------------------
 	Display_Craft_Logo();
-	
 	soft_delay(3 * SOFT_SECS);
 
-	//overlayMessage("Test", "Starting NS7100_Port Init", 1000);
+}
 
-#if 1
-	// Start of old NS7100 Main Start
-    InitSystemHardware();
+//=================================================================================================
+//	Function:	InitInterrupts_NS8100
+//=================================================================================================
+void InitInterrupts_NS8100(void)
+{
+    Disable_global_interrupt();
 
-	InitInterrupts();
+    //Setup interrupt vectors
+    INTC_init_interrupts();
 
-	InitSoftwareSettings();
+	Setup_Soft_Timer_Tick_ISR();
+	Setup_EIC_Keypad_ISR();
 
+	Enable_global_interrupt();
+}
+
+//=================================================================================================
+//	Function:	InitSoftwareSettings_NS8100
+//=================================================================================================
+void InitSoftwareSettings_NS8100(void)
+{
+	INPUT_MSG_STRUCT mn_msg;
+	char buff[50];
+	//uint16 i = 0;
+
+	debug("Init Software Settings\n");
+
+#if 0 // fix_ns8100
+	GetParameterMemory((uint8*)&buff[0], 0, 50);
+	for (i=0;i<50;i++)
+	{
+		debug("Parameter Mem at: 0x%x is: 0x%x\n", i, buff[i]);
+	}
+	for (i=0;i<50;i++)
+	{
+		buff[i] = (char)(50 - i);
+	}
+	SaveParameterMemory((uint8*)&buff[0], 0, 50);
+	GetParameterMemory((uint8*)&buff[0], 0, 50);
+	for (i=0;i<50;i++)
+	{
+		debug("Parameter Mem at: 0x%x is: 0x%x\n", i, buff[i]);
+	}
 #endif
 
-	//overlayMessage("Test", "After NS7100_Port Exec Loop", 1000);
+    debug("Init Version Strings...\n");
+
+	// Init version strings
+	initVersionStrings();
+
+    debug("Init Version Msg...\n");
+
+	// Init version msg
+	initVersionMsg();
+
+    debug("Init Time Msg...\n");
+
+	// Init time msg
+	initTimeMsg();
+
+    debug("Init Get Boot Function Addr...\n");
+
+	// Get the function address passed by the bootloader
+	getBootFunctionAddress();
+
+    debug("Init Setup Menu Defaults...\n");
+
+	debug("Setup Menu Defaults\n");
+	// Setup defaults, load records, init the language table
+	setupMnDef();
+
+    debug("Init Timer Mode Check...\n");
+
+	debug("Check Timer Mode\n");
+	// Check for Timer mode activation
+	if (timerModeActiveCheck() == TRUE)
+	{
+		debug("--- Timer Mode Startup ---\n");
+		processTimerMode();
+
+		// If here, the unit is in Timer mode, but did not power itself off yet
+		// Disable the Power Off key
+		debug("Timer Mode: Disabling Power Off key\n");
+		powerControl(POWER_SHUTDOWN_ENABLE, OFF);
+	}
+	else
+	{
+		debug("--- Normal Startup ---\n");
+	}
+
+    debug("Init Cmd Msg Handler...\n");
+
+	debug("Cmd/Craft Init\n");
+	// Init the cmd message handling buffers before initialization of the ports.
+	cmdMessageHandlerInit();
+
+    debug("Init Craft Init Status Flags...\n");
+
+	// Init the input buffers and status flags for input craft data.
+	craftInitStatusFlags();
+
+    debug("Init LCD Message...\n");
+
+	debug("LCD message\n");
+	// Overlay a message to alert the user that the system is checking the sensors
+	byteSet(&buff[0], 0, sizeof(buff));
+	sprintf((char*)buff, "%s %s", getLangText(SENSOR_CHECK_TEXT), getLangText(ZEROING_SENSORS_TEXT));
+	overlayMessage(getLangText(STATUS_TEXT), buff, 0);
+
+    debug("Init Jump to Main Menu...\n");
+
+	debug("Jump to Main Menu\n");
+	// Jump to the true main menu
+	active_menu = MAIN_MENU;
+	ACTIVATE_MENU_MSG();
+	(*menufunc_ptrs[active_menu]) (mn_msg);
+}
+
+//=================================================================================================
+//	Function:	Main
+//	Purpose:	Application starting point
+//=================================================================================================
+extern void Setup_Data_Clock_ISR(uint32 sampleRate);
+extern void Start_Data_Clock(void);
+extern void AD_Init(void);
+int main(void)
+{
+    InitSystemHardware_NS8100();
+	InitInterrupts_NS8100();
+	InitSoftwareSettings_NS8100();
+
+	// Have to recall Keypad init otherwise interrupt hangs
+	InitKeypad();
+
+#if 0
+	AD_Init();
+	Setup_Data_Clock_ISR(0);
+	Start_Data_Clock();
+#endif
 
 	debug("Unit Type: %s\n", SUPERGRAPH_UNIT ? "Supergraph" : "Minigraph");
 	debug("--- System Init complete ---\n");
+
+	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;
+	Menu_Functions = (unsigned long *)Main_Menu_Functions;
+	Menu_String = (unsigned char *)&Main_Menu_Text;
 
  	// ==============
 	// Executive loop
 	// ==============
 	while (1)
 	{
+		// Debug Test routines
+		//debugRaw("c");
+		craftTestMenuThruDebug();
 
-#if CRAFT_TEST
-		//while(1)
-		if(usart_test_hit(&AVR32_USART1))
-		{
-			if(Get_User_Input(input_buffer) > 0)
-			{
-        		reply = atoi((char *)input_buffer);
-			}
-
-			if(reply < Menu_Items)
-			{
-        		((void(*)())*(Menu_Functions + reply))();
-			}
-
-    		count = 0;
-    		character = Menu_String[count];
-    		while(character != 0)
-    		{
-    			print_dbg_char(character);
-    			count++;
-    			character = Menu_String[count];
-    		}
-			Command_Prompt();
-		}
-#endif
+		//debugRaw("k");
+		//testKeypad();
 
 #if 0
-		//InitKeypad();
-		//print_dbg("\r\nAttempting to read the Keypad... ");
-		uint8 keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-		if(keyScan)
-		{
-		    debug("Found character: %c", keyScan);
-			
-			keypad();
-
-			tempTick = g_rtcSoftTimerTickCount;
-			while(tempTick == g_rtcSoftTimerTickCount) {}
-		}
-#endif
-
-#if 1
 		// Handle system events
 	    SystemEventManager();
 
@@ -648,19 +809,16 @@ int main(void)
 
 		// Handle processing the factory setup
 		FactorySetupManager();
-
-#if 0 // fix_ns8100
+#endif
 		// Check if no System Event and Lcd and Printer power are off
 		if ((SysEvents_flags.wrd == 0x0000) && !(powerManagement.reg & 0x60) &&
 			(g_ModemStatus.xferState == NOP_CMD))
 		{
 			// Sleep
+#if 0 // fix_ns8100
 			Wait();
+#endif
 		}
-#endif
-
-#endif
-
 	}    
 	// End of NS7100 Main
 
