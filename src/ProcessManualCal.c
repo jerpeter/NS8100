@@ -207,8 +207,10 @@ void MoveManuelCalToFlash(void)
 			debugErr("Out of Flash Summary Entrys\n");
 		}
 
+#if 0 // fix_ns8100
 		// Set our flash event data pointer to the start of the flash event
 		advFlashDataPtrToEventData(flashSumEntry);
+#endif
 
 		sumEntry = &summaryTable[gCurrentEventBuffer];
 		sumEntry->mode = MANUAL_CAL_MODE;
@@ -312,7 +314,7 @@ void MoveManuelCalToFlash(void)
 
 		gLastCompDataSum = flashSumEntry;
 
-		// Set printout mode to allow the results menu processing to know this is a manuel cal pulse
+		// Set printout mode to allow the results menu processing to know this is a manual cal pulse
 		print_out_mode = MANUAL_CAL_MODE;
 		raiseMenuEventFlag(RESULTS_MENU_EVENT);
 

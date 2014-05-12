@@ -1042,7 +1042,6 @@ void tc_irq(void)
     //debugRaw(" | Temp: %4x (%4x)\n", temp_chan_read, configReadBack);
 	// End Data Time!
 
-#if 1
 	// Store Data in Pretrigger
 	// Check for Triggers and Alarms
 	
@@ -1052,29 +1051,23 @@ void tc_irq(void)
 	t_chan_read >>= 4;
 	a_chan_read >>= 4;
 	
-#if 1
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->r = r_chan_read;
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->v = v_chan_read;
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->t = t_chan_read;
 	((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->a = a_chan_read;
-#else
-	*(tailOfPreTrigBuff + 0) = r_chan_read;
-	*(tailOfPreTrigBuff + 1) = v_chan_read;
-	*(tailOfPreTrigBuff + 2) = t_chan_read;
-	*(tailOfPreTrigBuff + 3) = a_chan_read;
-#endif
 
-	// Check to see if collecting data for processing or filling the pretrigger buffer
-	if (g_sampleProcessing != SAMPLING_STATE)
+	// Check to see if collecting data to fill the pretrigger buffer
+	if ((g_sampleProcessing != SAMPLING_STATE) && (trig_rec.op_mode == WAVEFORM_MODE || trig_rec.op_mode == COMBO_MODE))
 	{
 		tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;
 
 		// Check if the end of the PreTrigger buffer has been reached
 		if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
 	}
-	else // g_sampleProcessing == SAMPLING_STATE
+
+	// Processing Data in real time
+	if (g_sampleProcessing == SAMPLING_STATE)
 	{
-#if 1
 		// Normalize
 		if(r_chan_read > 0x800) r_chan_read = r_chan_read - 0x800; 
 		else r_chan_read = 0x800 - r_chan_read;
@@ -1237,7 +1230,6 @@ void tc_irq(void)
 			manualCalSampleCount++;
 		}
 
-#if 1
 		if (manual_cal_flag)
 		{
 			ProcessManuelCalPulse();
@@ -1254,16 +1246,13 @@ void tc_irq(void)
 		{
 			ProcessComboData();
 		}
-#else
+#if 0 // Temp code used to fill pretrigger buffer if not processing
 		tailOfPreTrigBuff += gp_SensorInfo->numOfChannels;
 
 		// Check if the end of the PreTrigger buffer has been reached
 		if (tailOfPreTrigBuff >= endOfPreTrigBuff) tailOfPreTrigBuff = startOfPreTrigBuff;
 #endif
-
-#endif
 	}	
-#endif
 
 	// clear the interrupt flag
 	AVR32_TC.channel[TC_CHANNEL].sr;
@@ -1412,7 +1401,7 @@ void Setup_Data_Clock_ISR(uint32 sampleRate)
 	// We configure it to count ms.
 	// We want: (1/(FOSC0/4)) * RC = 1000 Hz => RC = (FOSC0/4) / 1000 = 3000 to get an interrupt every 1ms
 	//tc_write_rc(tc, TC_CHANNEL, (FOSC0/2)/1000);  // Set RC value.
-	tc_write_rc(tc, TC_CHANNEL, (32227 / (sampleRate / 1024)));
+	tc_write_rc(tc, TC_CHANNEL, (FOSC0 / (sampleRate * 2)));
 	
 	tc_configure_interrupts(tc, TC_CHANNEL, &TC_INTERRUPT);
 }

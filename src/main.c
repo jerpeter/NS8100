@@ -783,32 +783,10 @@ int main(void)
 	InitInterrupts_NS8100();
 	InitSoftwareSettings_NS8100();
 
-#if 0 // test
-    debug("Init Load Help Rec...\n");
-
-	// Load the Help Record
-	getRecData(&help_rec, 0, REC_HELP_USER_MENU_TYPE);
-
-    debug("Init Help Rec Defaults...\n");
-
-	// Check if the Help Record is uninitialized
-	if (help_rec.encode_ln != 0xA5A5)
-	{
-		// Set defaults in Help Record
-		debugWarn("Help record: Not found.\n");
-		debug("Loading Help Menu Defaults\n");
-		loadHelpRecordDefaults((REC_HELP_MN_STRUCT*)&help_rec);
-		saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-	}
-	else
-	{
-		// Help Record is valid
-		debug("Help record: Found.\n");
-	}		
-#endif
-
+#if 1 // fix_ns8100
 	// Have to recall Keypad init otherwise interrupt hangs
 	InitKeypad();
+#endif
 
 	//debug("Unit Type: %s\n", SUPERGRAPH_UNIT ? "Supergraph" : "Minigraph");
 	debug("--- System Init complete ---\n");
@@ -817,26 +795,17 @@ int main(void)
 	Menu_Functions = (unsigned long *)Main_Menu_Functions;
 	Menu_String = (unsigned char *)&Main_Menu_Text;
 
-#if 0
-	AD_Init();
-	Setup_Data_Clock_ISR(0);
-	Start_Data_Clock();
-	debugRaw("\n\n");
-#endif
-
  	// ==============
 	// Executive loop
 	// ==============
 	while (1)
 	{
 		// Debug Test routines
-		//debugRaw("c");
 		craftTestMenuThruDebug();
 
 		//debugRaw("k");
 		//testKeypad();
 
-#if 1
 		// Handle system events
 	    SystemEventManager();
 
@@ -851,7 +820,7 @@ int main(void)
 
 		// Handle processing the factory setup
 		FactorySetupManager();
-#endif
+
 		// Check if no System Event and Lcd and Printer power are off
 		if ((SysEvents_flags.wrd == 0x0000) && !(powerManagement.reg & 0x60) &&
 			(g_ModemStatus.xferState == NOP_CMD))

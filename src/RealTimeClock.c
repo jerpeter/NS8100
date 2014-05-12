@@ -405,14 +405,3 @@ void SetAlarmFrequency(uint8 mode)
 	RTC_MINUTES_ALARM.alarmBit.alarmMask = rtcAlarmFreq[mode].minutesAlarmMask;
 	RTC_SECONDS_ALARM.alarmBit.alarmMask = rtcAlarmFreq[mode].secondsAlarmMask;
 }
-
-/****************************************
-*	Function:    SetPeriodicInterruptFrequency
-*	Purpose:
-****************************************/
-void SetPeriodicInterruptFrequency(uint8 frequency)
-{
-#if 0 //fix_ns8100
-	RTC_RATES.bit.periodicIntRate = frequency;
-#endif
-}

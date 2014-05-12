@@ -119,6 +119,7 @@ void StartNewBargraph(void)
 {
 	gBargraphSummaryPtr = NULL;
 
+#if 0 // fix_ns8100
 	// Get the address of an empty Ram summary
 	if (GetFlashSumEntry(&gBargraphSummaryPtr) == FALSE)
 	{
@@ -130,6 +131,7 @@ void StartNewBargraph(void)
 		// Setup location of the event data in flash. True for bargraph and waveform.
 		advFlashDataPtrToEventData(gBargraphSummaryPtr);
 	}
+#endif
 
 	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
 	byteSet(&(g_bargraphBarInterval[0]), 0, (sizeof(BARGRAPH_BAR_INTERVAL_DATA) * NUM_OF_BAR_INTERVAL_BUFFERS));
@@ -164,8 +166,10 @@ void StartNewBargraph(void)
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
 	byteSet(g_bargraphSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
 
+#if 0 // fix_ns8100
 	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
 	MoveStartOfBargraphEventRecordToFlash();
+#endif
 
 	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
 	// Save the captured event after the the preliminary ram event record.
@@ -430,7 +434,7 @@ uint8 CalculateBargraphData(void)
 		// Make sure that we will not catch up to writing the data, almost impossible.
 		if (gp_bg430DataRead == gp_bg430DataWrite)
 		{
-			debug("ERROR 1a - Reading ptr equal to writing ptr.");
+			debugErr("1a - Reading ptr equal to writing ptr.");
 			gp_bg430DataRead = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
@@ -442,7 +446,7 @@ uint8 CalculateBargraphData(void)
 		// We have caught up to the end of the write with out it being completed.
 		if (gp_bg430DataRead == gp_bg430DataWrite)
 		{
-			debug("ERROR 1b - Reading ptr equal to writing ptr.");
+			debugErr("1b - Reading ptr equal to writing ptr.");
 			gp_bg430DataRead = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
@@ -451,7 +455,7 @@ uint8 CalculateBargraphData(void)
 		if (gp_bg430DataRead > gp_bg430DataEnd) gp_bg430DataRead = gp_bg430DataStart;
 		if (gp_bg430DataRead == gp_bg430DataWrite)
 		{
-			debug("ERROR 1c - Reading ptr equal to writing ptr.");
+			debugErr("1c - Reading ptr equal to writing ptr.");
 			gp_bg430DataRead = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
@@ -460,7 +464,7 @@ uint8 CalculateBargraphData(void)
 		if (gp_bg430DataRead > gp_bg430DataEnd) gp_bg430DataRead = gp_bg430DataStart;
 		if (gp_bg430DataRead == gp_bg430DataWrite)
 		{
-			debug("ERROR 1d - Reading ptr equal to writing ptr.");
+			debugErr("1d - Reading ptr equal to writing ptr.");
 			gp_bg430DataRead = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}

@@ -1077,6 +1077,5 @@ DATE_TIME_STRUCT getCurrentTime(void);
 void DisableRtcAlarm(void);
 void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second);
 void SetAlarmFrequency(uint8 mode);
-void SetPeriodicInterruptFrequency(uint8 frequency);
 
 #endif // _RTC_H_

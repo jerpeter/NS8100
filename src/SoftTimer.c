@@ -503,14 +503,14 @@ void handleMidnightEvent(void)
 				// Overlay a message that calibration is taking place
 				overlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), (2 * SOFT_SECS));
 
-				// Issue a Cal Pulse message to the 430
-	            mnStartTrigger(trig_rec.trec, MANUAL_CAL_PULSE_CMD, MANUAL_CAL_MODE);
+				// Issue a Cal Pulse message
+	            startMonitoring(trig_rec.trec, MANUAL_CAL_PULSE_CMD, MANUAL_CAL_MODE);
 
 				// Wait until after the Cal Pulse has completed, 250ms to be safe (just less than 100 ms to complete)
 				soft_usecWait(250 * SOFT_MSECS);
 
 				// Stop data transfer
-	            mnStopTrigger();
+	            stopDataCollection();
 
 				// Done processing Auto Cal logic at this point, just return
 				// Results menu will pick up the Cal event and re-enter monitor mode

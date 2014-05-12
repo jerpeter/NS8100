@@ -493,6 +493,9 @@ enum {
 #define EXTERNAL_TRIGGER_CHAR			0x1FFF
 #define MANUAL_TRIGGER_CHAR 			0x2FFF
 
+// Manual Cal default rate
+#define MANUAL_CAL_DEFAULT_SAMPLE_RATE	1024
+
 // Old Menu layout stuff
 #define DEFAULT_MN_SIZE 		20
 #define MAX_CHAR_PER_LN 		25 
@@ -883,9 +886,9 @@ void mnScroll(char, char, MN_LAYOUT_STRUCT*);
 void userMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr);
 void displayUserMenu(WND_LAYOUT_STRUCT* wnd_layout_ptr, MN_LAYOUT_STRUCT* mn_layout_ptr, uint8 titlePosition);
 void dsplySelMn(WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*, uint8 titlePosition);
-void mnStopTrigger(void);
-void stopDataTransfer(void);
-void mnStartTrigger(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mode);
+void stopDataCollection(void);
+void stopDataClock(void);
+void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mode);
 void stopMonitoring(uint8 mode, uint8 operation);
 void handleManualCalibration(void);
 void bargraphForcedCalibration(void);

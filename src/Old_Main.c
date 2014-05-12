@@ -354,7 +354,7 @@ void SystemEventManager(void)
 	if (getSystemEventState(MANUEL_CAL_EVENT))
 	{
 	    debug("Cal Pulse Event\n");
-#if 0 // fix_ns8100
+#if 1 // fix_ns8100
 	    MoveManuelCalToFlash();
 #endif
 	}
