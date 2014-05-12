@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved 
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: RemoteOperation.c,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:09:59 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/RemoteOperation.c,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
@@ -498,7 +493,6 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_RECORD_TIME;
 		}
 		
-
 		// Contains the bargraph scale range
 		// cfg.eventCfg.calDataNumOfSamples;
 
@@ -622,6 +616,16 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 #endif
 
+		if ((cfg.eventCfg.bitAccuracy == ACCURACY_10_BIT) || (cfg.eventCfg.bitAccuracy == ACCURACY_12_BIT) || 
+			(cfg.eventCfg.bitAccuracy == ACCURACY_14_BIT) || (cfg.eventCfg.bitAccuracy == ACCURACY_16_BIT))
+		{
+			g_triggerRecord.trec.bitAccuracy = cfg.eventCfg.bitAccuracy;
+		}
+		else
+		{
+			returnCode = CFG_ERR_BIT_ACCURACY;
+		}
+		
 		// Auto Monitor Mode check
 		switch (cfg.autoCfg.auto_monitor_mode)
 		{

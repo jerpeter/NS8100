@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: Common.h,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:09:46 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/Common.h,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 #ifndef _COMMON_H_
@@ -212,9 +207,13 @@ enum {
 
 enum {
 	KEYPAD_LED_STATE_UNKNOWN = 0,
-	KEYPAD_LED_STATE_GREEN_ON,
-	KEYPAD_LED_STATE_RED_ON,
-	KEYPAD_LED_STATE_BOTH_OFF
+	KEYPAD_LED_STATE_BOTH_OFF,
+	KEYPAD_LED_STATE_IDLE_GREEN_ON,
+	KEYPAD_LED_STATE_CHARGE_RED_ON,
+	KEYPAD_LED_STATE_ACTIVE_GREEN_ON,
+	KEYPAD_LED_STATE_ACTIVE_GREEN_OFF,
+	KEYPAD_LED_STATE_ACTIVE_CHARGE_GREEN_ON,
+	KEYPAD_LED_STATE_ACTIVE_CHARGE_RED_ON
 };
 
 ///----------------------------------------------------------------------------

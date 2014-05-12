@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved 
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: ProcessBargraph.h,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:09:56 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/ProcessBargraph.h,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 #ifndef _PROCESS_BARGRAPH_H_

@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: Typedefs.h,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:10:02 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/Typedefs.h,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
@@ -58,7 +53,7 @@ typedef signed long int		int32;  		/* 32 bits */
 enum debugModes {RAW, NORM, WARN, ERR};
 
 // Define Project Debug Mode
-#define GLOBAL_DEBUG_PRINT_ENABLED	ALL_DEBUG
+#define GLOBAL_DEBUG_PRINT_ENABLED	NO_DEBUG
 
 // Print all debug statements
 #if (GLOBAL_DEBUG_PRINT_ENABLED == ALL_DEBUG)

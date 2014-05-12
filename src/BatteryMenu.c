@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: BatteryMenu.c,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:09:46 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/BatteryMenu.c,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
@@ -220,7 +215,7 @@ void batteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	curr_batt_volts = getExternalVoltageLevelAveraged(EXT_CHARGE_VOLTAGE);
 
 	// Check if the external charge voltage is above 0.5 volts indicating that it's active
-	if (curr_batt_volts < 0.5)
+	if (curr_batt_volts < 3.5)
 	{
 		curr_batt_volts = 0;
 	}

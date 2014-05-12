@@ -1,7 +1,9 @@
-/********************************************************
- Name          : main.c
- Author        : JP
- **********************************************************/
+///----------------------------------------------------------------------------
+///	Nomis Seismograph, Inc.
+///	Copyright 2003-2014, All Rights Reserved
+///
+///	Author: Jeremy Peterson
+///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
 ///	Includes
@@ -1030,8 +1032,10 @@ extern void ToggleLedOff8900(void);
 	adc_configure(&AVR32_ADC);
 
 	// Enable the A/D channels.
-	adc_enable(&AVR32_ADC, VBAT_CHANNEL);
-	adc_enable(&AVR32_ADC, VIN_CHANNEL);
+	// Can't use the driver enable because it's a single channel enable only and a write only register
+	//adc_enable(&AVR32_ADC, VBAT_CHANNEL);
+	//adc_enable(&AVR32_ADC, VIN_CHANNEL);
+	AVR32_ADC.cher = 0x0C; // Directly enable
 
 	//-------------------------------------------------------------------------
 	// Power on the SD Card and init the file system
@@ -1898,7 +1902,7 @@ int main(void)
 		// Handle processing the factory setup
 		FactorySetupManager();
 #endif
-		// Check if no System Events and Lcd is off and Modem is not transferring
+		// Check if no System Events and LCD is off and Modem is not transferring
 		if ((g_systemEventFlags.wrd == 0x0000) && (getPowerControlState(LCD_POWER_ENABLE) == OFF) &&
 			(g_modemStatus.xferState == NOP_CMD))
 		{
@@ -1906,7 +1910,7 @@ int main(void)
 #if 0 // Normal
 			SLEEP(AVR32_IDLE_MODE);
 #else // Test
-			SLEEP(AVR32_PM_SMODE_STANDBY);
+			SLEEP(AVR32_PM_SMODE_FROZEN);
 #endif
 		}
 	}    

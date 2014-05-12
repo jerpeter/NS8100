@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved 
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: TextTypes.h,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:10:01 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/TextTypes.h,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 #ifndef _TEXT_TYPES_H_

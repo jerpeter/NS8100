@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved 
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: Font_Four_by_Six_table.h,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:09:48 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/Font_Four_by_Six_table.h,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 #if 0

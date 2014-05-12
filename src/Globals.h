@@ -1,9 +1,9 @@
-/*
- * Globals.h
- *
- * Created: 8/18/2012 8:42:34 PM
- *  Author: Jeremy
- */ 
+///----------------------------------------------------------------------------
+///	Nomis Seismograph, Inc.
+///	Copyright 2003-2014, All Rights Reserved
+///
+///	Author: Jeremy Peterson
+///----------------------------------------------------------------------------
 
 #ifndef GLOBALS_H_
 #define GLOBALS_H_

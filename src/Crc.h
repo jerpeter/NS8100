@@ -1,16 +1,10 @@
-/*******************************************************************************
- *	File Name:			Crc.h										           *
- *	Company:			WischSystems										   *
- *	Compiler:			Metrowerks CodeWarrior for M-CORE   Version 2.0		   *
- *	Target CPU:			MMC2114												   *
- *	First Release:															   *
- *	Last Edit Date:															   *
- *	Update History:															   *
- *	Rev         Date           Author         Description					   *
- *	------      -------        -------        ----------------------		   *
- *	0.1			02/04/04       JRG            Made Stub file				   *
- *																			   *
- *******************************************************************************/
+///----------------------------------------------------------------------------
+///	Nomis Seismograph, Inc.
+///	Copyright 2003-2014, All Rights Reserved
+///
+///	Author: Jeremy Peterson
+///----------------------------------------------------------------------------
+
 #ifndef _CRC_H_
 #define _CRC_H_
 

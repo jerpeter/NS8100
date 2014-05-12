@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: RemoteCommon.h,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:09:58 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/RemoteCommon.h,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 #ifndef _REMOTE_COMMON_H_
@@ -174,7 +169,8 @@ enum {
 	CFG_ERR_BAD_CRC,				// 43
 	CFG_ERR_MODEM_CONFIG,			// 44
 	CFG_ERR_PRETRIG_BUFFER_DIV,		// 45
-	CFG_ERR_END						// 46
+	CFG_ERR_BIT_ACCURACY,			// 46
+	CFG_ERR_END						// 47
 };
 
 enum {

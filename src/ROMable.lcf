@@ -1,3 +1,12 @@
+/*
+///----------------------------------------------------------------------------
+///	Nomis Seismograph, Inc.
+///	Copyright 2003-2014, All Rights Reserved
+///
+///	Author: Jeremy Peterson
+///----------------------------------------------------------------------------
+*/
+
 /* FORCE_ACTIVE {__SGFM_configuration_field}  // Prevents deadstripping of SGFM config fld */
 
 #if 0

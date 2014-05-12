@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: UserSelectMenus.c,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:10:03 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/UserSelectMenus.c,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
@@ -1794,7 +1789,7 @@ void freqPlotStandardMenuHandler(uint8 keyPressed, void* data)
 // Help Menu
 //=============================================================================
 //*****************************************************************************
-#if 0 // Normal
+#if 1 // Normal
 #define HELP_MENU_ENTRIES 4
 USER_MENU_STRUCT helpMenu[HELP_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, HELP_MENU_TEXT, TITLE_POST_TAG,
@@ -1830,7 +1825,7 @@ void helpMenuHandler(uint8 keyPressed, void* data)
 		{
 			SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 		}
-#if 1 // Test
+#if 0 // Test
 		else if (helpMenu[newItemIndex].data == TEST_OPTION)
 		{
 extern void PowerDownAndHalt(void);

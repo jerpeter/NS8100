@@ -39,7 +39,7 @@
     <avrtoolinterface>JTAG</avrtoolinterface>
     <ToolchainName>com.Atmel.AVRGCC32.C</ToolchainName>
     <ToolchainFlavour>Native</ToolchainFlavour>
-    <Name>ns7100_Port</Name>
+    <Name>NS8100</Name>
     <AsfFrameworkConfig>
       <framework-data>
         <options />

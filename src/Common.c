@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: Common.c,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:09:46 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/Common.c,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
@@ -106,8 +101,18 @@ float getExternalVoltageLevelAveraged(uint8 type)
 	
 	adVoltageLevel /= (AD_VOLTAGE_READ_LOOP_COUNT - 2);
 		
-	// Converted A/D value / 1024 * 3.3 * 3
-	adVoltageLevel *= (REFERENCE_VOLTAGE * VOLTAGE_RATIO);
+	// Converted A/D value / 1024 * 3.3 * RATIO
+	switch (type)
+	{
+		case EXT_CHARGE_VOLTAGE:
+			adVoltageLevel *= (REFERENCE_VOLTAGE * VOLTAGE_RATIO_EXT_CHARGE);
+			break;
+
+		case BATTERY_VOLTAGE:
+			adVoltageLevel *= (REFERENCE_VOLTAGE * VOLTAGE_RATIO_BATT);
+			break;
+	}
+	
 	adVoltageLevel /= BATT_RESOLUTION;
 
 	return (adVoltageLevel);
@@ -122,22 +127,30 @@ BOOLEAN checkExternalChargeVoltagePresent(void)
 	float adVoltageLevel = (float)0.0;
 	BOOLEAN	externalChargePresent = NO;
 
+#if 1
+	uint32 adVoltageReadValue = 0;
+
 	adc_start(&AVR32_ADC);
 
 #if 1 // Normal operation
-	adVoltageLevel = (float)adc_get_value(&AVR32_ADC, VIN_CHANNEL);
+	adVoltageReadValue = adc_get_value(&AVR32_ADC, VIN_CHANNEL);
 #else // Test with battery
-	adVoltageLevel = (float)adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
+	adVoltageReadValue = adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
 #endif
 					
-	// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
+	// Only need a delay if doing multiple reads within this routine to prevent a lockup, EOC check inside adc_get_value appears not working as intended
 	//soft_usecWait(4);
 
-	//debug("Ext Charge Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
-		
 	// Converted A/D value / 1024 * 3.3 * 3
-	adVoltageLevel *= (REFERENCE_VOLTAGE * VOLTAGE_RATIO);
+	adVoltageLevel = adVoltageReadValue * (REFERENCE_VOLTAGE * VOLTAGE_RATIO_EXT_CHARGE);
 	adVoltageLevel /= BATT_RESOLUTION;
+
+	//debug("Ext Charge Voltage A/D Reading: 0x%x, Value: %f\n", adVoltageReadValue, adVoltageLevel);
+#else
+	adVoltageLevel = getExternalVoltageLevelAveraged(VIN_CHANNEL);
+
+	//debug("Ext Charge Voltage A/D: %03.2f\n", adVoltageLevel);
+#endif
 
 	if (adVoltageLevel > 5.0)
 		externalChargePresent = YES;

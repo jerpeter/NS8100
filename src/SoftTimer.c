@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: SoftTimer.c,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:10:00 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/SoftTimer.c,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 ///----------------------------------------------------------------------------
@@ -263,8 +258,8 @@ void keypadLedUpdateTimerCallBack(void)
 
 	// States
 	// 1) Init complete, not monitoring, not charging --> Static Green
-	// 2) Init complete, monitoring, not charging --> Flashing Green (state transition)
-	// 3) Init complete, not monitoring, charging --> Static Red
+	// 2) Init complete, not monitoring, charging --> Static Red
+	// 3) Init complete, monitoring, not charging --> Flashing Green (state transition)
 	// 4) Init complete, monitoring, charging --> Alternate Flashing Green/Red (state transition)
 
 	// Hold the last state
@@ -272,32 +267,40 @@ void keypadLedUpdateTimerCallBack(void)
 
 	if ((g_sampleProcessing == IDLE_STATE) && (externalChargePresent == FALSE))
 	{
-		ledState = KEYPAD_LED_STATE_GREEN_ON;
+		//debug("Keypad LED: State 1\n");
+		
+		ledState = KEYPAD_LED_STATE_IDLE_GREEN_ON;
+	}
+	else if ((g_sampleProcessing == IDLE_STATE) && (externalChargePresent == TRUE))
+	{
+		//debug("Keypad LED: State 2\n");
+
+		ledState = KEYPAD_LED_STATE_CHARGE_RED_ON;
 	}
 	else if ((g_sampleProcessing == ACTIVE_STATE) && (externalChargePresent == FALSE))
 	{
-		if(ledState == KEYPAD_LED_STATE_GREEN_ON)
+		//debug("Keypad LED: State 3\n");
+
+		if (ledState == KEYPAD_LED_STATE_ACTIVE_GREEN_ON)
 		{
-			ledState = KEYPAD_LED_STATE_BOTH_OFF;
+			ledState = KEYPAD_LED_STATE_ACTIVE_GREEN_OFF;
 		}
 		else
 		{
-			ledState = KEYPAD_LED_STATE_GREEN_ON;
+			ledState = KEYPAD_LED_STATE_ACTIVE_GREEN_ON;
 		}
 	}		
-	else if ((g_sampleProcessing == IDLE_STATE) && (externalChargePresent == TRUE))
-	{
-		ledState = KEYPAD_LED_STATE_RED_ON;
-	}
 	else // ((g_sampleProcessing == ACTIVE_STATE) && (externalChargePresent == TRUE))
 	{
-		if(ledState == KEYPAD_LED_STATE_RED_ON)
+		//debug("Keypad LED: State 4\n");
+
+		if (ledState == KEYPAD_LED_STATE_ACTIVE_CHARGE_GREEN_ON)
 		{
-			ledState = KEYPAD_LED_STATE_GREEN_ON;
+			ledState = KEYPAD_LED_STATE_ACTIVE_CHARGE_RED_ON;
 		}
 		else
 		{
-			ledState = KEYPAD_LED_STATE_RED_ON;
+			ledState = KEYPAD_LED_STATE_ACTIVE_CHARGE_GREEN_ON;
 		}
 	}
 	
@@ -319,26 +322,34 @@ void keypadLedUpdateTimerCallBack(void)
 	}
 #endif
 
-	// Check if the 
+	// Check if the state changed
+#if 1 // fix_ns8100
 	if (ledState != lastLedState)
+#else
+	if (1)
+#endif
 	{
 		config = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 		
 		switch (ledState)
 		{
 			case KEYPAD_LED_STATE_BOTH_OFF:
+			case KEYPAD_LED_STATE_ACTIVE_GREEN_OFF:
 				config &= ~RED_LED_PIN;
 				config &= ~GREEN_LED_PIN;
 				break;
 				
-			case KEYPAD_LED_STATE_GREEN_ON:
+			case KEYPAD_LED_STATE_IDLE_GREEN_ON:
+			case KEYPAD_LED_STATE_ACTIVE_GREEN_ON:
+			case KEYPAD_LED_STATE_ACTIVE_CHARGE_GREEN_ON:
 				config &= ~RED_LED_PIN;
 				config |= GREEN_LED_PIN;
 				break;
 				
-			case KEYPAD_LED_STATE_RED_ON:
-				config |= RED_LED_PIN;
+			case KEYPAD_LED_STATE_CHARGE_RED_ON:
+			case KEYPAD_LED_STATE_ACTIVE_CHARGE_RED_ON:
 				config &= ~GREEN_LED_PIN;
+				config |= RED_LED_PIN;
 				break;
 		}
 

@@ -1,13 +1,8 @@
 ///----------------------------------------------------------------------------
 ///	Nomis Seismograph, Inc.
-///	Copyright 2002-2007, All Rights Reserved 
+///	Copyright 2003-2014, All Rights Reserved
 ///
-///	$RCSfile: Record.h,v $
-///	$Author: jgetz $
-///	$Date: 2012/04/26 01:09:57 $
-///
-///	$Source: /Nomis_NS8100/ns7100_Port/src/Record.h,v $
-///	$Revision: 1.2 $
+///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
 #ifndef _REC_H_
