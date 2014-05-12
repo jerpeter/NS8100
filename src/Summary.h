@@ -122,7 +122,7 @@ typedef struct
 	DATE_TIME_STRUCT	eventTime;			// Waveform and bargraph start information. 
 	DATE_TIME_STRUCT	endTime;			// Bargraph specific
 
-	uint8				unused[UNUSED_CAPTURE_SIZE];		// Space for expansion, currently 18
+	uint8				unused[UNUSED_CAPTURE_SIZE];		// Space for expansion
 } CAPTURE_INFO_STRUCT;
 #pragma pack()
 
@@ -191,6 +191,15 @@ typedef struct
 	int16 v_offset;
 	int16 t_offset;
 } OFFSET_DATA_STRUCT;
+
+typedef struct
+{
+	uint16 aConfigReadback;
+	uint16 rConfigReadback;
+	uint16 vConfigReadback;
+	uint16 tConfigReadback;
+	uint16 tempConfigReadback;
+} SAMPLE_CONFIG_READBACK_STRUCT;
 
 // Bargraph Event struct - This is the grouping of the event data 
 // for a bargraph event. We store the vectorsum data (squared), and

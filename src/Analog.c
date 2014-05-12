@@ -69,6 +69,70 @@ static uint32 s_aCount;
 //--------------------------------------------------------------
 // Processor Pin| A2 |	   A1	  |
 
+/*
+Config readback reference for different reference configs
+
+(Debug |      0s) Setup A/D config and channels (External Ref, Temp On) (Channel config: 0x39D4)
+Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Config: 0xe750, Temp Config: 0xb750
+
+(Debug |      0s) Setup A/D config and channels (External Ref, Internal Buffer, Temp On) (Channel config: 0x39DC)
+Chan 0 Config: 0xe170, Chan 1 Config: 0xe370, Chan 2 Config: 0xe570, Chan 3 Config: 0xe770, Temp Config: 0xb770
+
+(Debug |      0s) Setup A/D config and channels (External Ref, Temp Off) (Channel config: 0x39F4)
+Chan 0 Config: 0xe1d0, Chan 1 Config: 0xe3d0, Chan 2 Config: 0xe5d0, Chan 3 Config: 0xe7d0, Temp Config: 0xb7d0
+
+(Debug |      0s) Setup A/D config and channels (External Ref, Internal Buffer, Temp Off) (Channel config: 0x39FC)
+Chan 0 Config: 0xe1f0, Chan 1 Config: 0xe3f0, Chan 2 Config: 0xe5f0, Chan 3 Config: 0xe7f0, Temp Config: 0xb7f0
+*/
+
+///----------------------------------------------------------------------------
+///	Function:	GetAnalogConfigReadback
+///	Purpose:
+///----------------------------------------------------------------------------
+void GetAnalogConfigReadback(void)
+{
+	SAMPLE_DATA_STRUCT dummyData;
+	uint16 channelConfigReadback;
+
+	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_AND_TEMP)
+	{
+		// Chan 0
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dummyData.r));
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		debugRaw("\nChan 0 Config: 0x%x, ", channelConfigReadback);
+
+		// Chan 1
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dummyData.t));
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		debugRaw("Chan 1 Config: 0x%x, ", channelConfigReadback);
+
+		// Chan 2
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dummyData.v));
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		debugRaw("Chan 2 Config: 0x%x, ", channelConfigReadback);
+
+		// Chan 3
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dummyData.a));
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		debugRaw("Chan 3 Config: 0x%x, ", channelConfigReadback);
+
+		// Temp
+		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &g_currentTempReading);
+		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		debugRaw("Temp Config: 0x%x", channelConfigReadback);
+	}
+}
+
 ///----------------------------------------------------------------------------
 ///	Function:	ReadAnalogData
 ///	Purpose:
@@ -78,6 +142,10 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 	uint16 channelConfigReadback;
 	uint8 configError = NO;
 
+/* 
+Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Config: 0xe750, Temp Config: 0xb750
+*/
+
 #if 1
 	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_AND_TEMP)
 	{
@@ -86,35 +154,40 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-		if(channelConfigReadback != 0xe0d0) { configError = YES; }
+		//if(channelConfigReadback != 0xe0d0) { configError = YES; debug("Chan 0 Config: 0x%x\n", channelConfigReadback);}
+		if(channelConfigReadback != 0xe150) { configError = YES; }
 
 		// Chan 1
 		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->t));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-		if(channelConfigReadback != 0xe2d0) { configError = YES; }
+		//if(channelConfigReadback != 0xe2d0) { configError = YES; debug("Chan 1 Config: 0x%x\n", channelConfigReadback);}
+		if(channelConfigReadback != 0xe350) { configError = YES; }
 
 		// Chan 2
 		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-		if(channelConfigReadback != 0xe4d0) { configError = YES; }
+		//if(channelConfigReadback != 0xe4d0) { configError = YES; debug("Chan 2 Config: 0x%x\n", channelConfigReadback);}
+		if(channelConfigReadback != 0xe550) { configError = YES; }
 
 		// Chan 3
 		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->a));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-		if(channelConfigReadback != 0xe6d0) { configError = YES; }
+		//if(channelConfigReadback != 0xe6d0) { configError = YES; debug("Chan 3 Config: 0x%x\n", channelConfigReadback);}
+		if(channelConfigReadback != 0xe750) { configError = YES; }
 
 		// Temp
 		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &g_currentTempReading);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-		if(channelConfigReadback != 0xb6d0) { configError = YES; }
+		//if(channelConfigReadback != 0xb6d0) { configError = YES; debug("Temp Config: 0x%x\n", channelConfigReadback);}
+		if(channelConfigReadback != 0xb750) { configError = YES; }
 			
 		if (configError == YES)
 		{
@@ -224,18 +297,33 @@ void WriteADConfig(unsigned int config)
 ///----------------------------------------------------------------------------
 void SetupADChannelConfig(uint32 sampleRate)
 {
+	// AD config all channels w/ temp
+	// Overwrite, Unipolar, INx referenced to COM = GND ± 0.1 V, Stop after Channel 3 (0 bias), Full BW, 
+	//	External reference, temperature enabled (assumed internal buffer disabled), Scan IN0 to IN3 then read temp, Read back the CFG register
+	// 00 1 110 011 1 010 10 0
+	// 0011 1001 1101 0100 - 0x39D4
+	
+	// AD config all channels w/no temp, no readback
+	// Overwrite, Unipolar, INx referenced to COM = GND ± 0.1 V, Stop after Channel 3 (0 bias), Full BW,
+	//	External reference, temperature disabled (assumed internal buffer disabled), Scan IN0 to IN3 only, Do not read back the CFG register
+	// 00 1 110 011 1 110 11 1
+	// 0011 1001 1111 0111 - 0x39F7
+
+
 	// For any sample rate 8K and below
 	if (sampleRate <= SAMPLE_RATE_8K)
 	{
-		// Setup config for 4 Chan + Temp + Read back config + others
-		WriteADConfig(0x39B4);
+		// Setup config for 4 Chan + Temp, Read back config
+		//WriteADConfig(0x39B4); // Old config
+		WriteADConfig(0x39D4); // New config
 		
 		g_adChannelConfig = FOUR_AD_CHANNELS_WITH_READBACK_AND_TEMP;
 	}
 	else // Sample rates above 8192 take too long to read back config and temp, so skip them
 	{
 		// Setup config for 4 Chan, No Temp, No read back
-		WriteADConfig(0x39FF);
+		//WriteADConfig(0x39FF); // Old config
+		WriteADConfig(0x39F7); // New config
 
 		g_adChannelConfig = FOUR_AD_CHANNELS_NO_READBACK_NO_TEMP;
 	}
@@ -617,7 +705,7 @@ void GetChannelOffsets(uint32 sampleRate)
 	}
 #endif
 
-	// If we had to power on the A/D, then power it off
+	// If we had to power on the A/D here locally, then power it off
 	if (powerAnalogDown == YES)
 	{
 		powerControl(ANALOG_SLEEP_ENABLE, ON);

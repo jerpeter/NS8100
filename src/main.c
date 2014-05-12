@@ -329,7 +329,7 @@ void SPI_1_Init(void)
 		{AVR32_SPI1_SCK_0_0_PIN, AVR32_SPI1_SCK_0_0_FUNCTION },		// SPI Clock.
 		{AVR32_SPI1_MISO_0_0_PIN, AVR32_SPI1_MISO_0_0_FUNCTION},	// MISO.
 		{AVR32_SPI1_MOSI_0_0_PIN, AVR32_SPI1_MOSI_0_0_FUNCTION},	// MOSI.
-		{AVR32_SPI1_NPCS_3_PIN,	AVR32_SPI1_NPCS_3_FUNCTION},		// AD Chip Select NPCS.
+		{AVR32_SPI1_NPCS_3_PIN,	AVR32_SPI1_NPCS_3_FUNCTION},		// AD Control Chip Select NPCS.
 		{AVR32_SPI1_NPCS_0_0_PIN, AVR32_SPI1_NPCS_0_0_FUNCTION},	// EEprom Chip Select NPCS.
 		{AVR32_SPI1_NPCS_1_0_PIN, AVR32_SPI1_NPCS_1_0_FUNCTION},	// RTC Chip Select NPCS.
 		{AVR32_SPI1_NPCS_2_0_PIN, AVR32_SPI1_NPCS_2_0_FUNCTION},	// SDMMC Chip Select NPCS.
@@ -508,10 +508,10 @@ void _init_startup(void)
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_ASSERT | AVR32_WDT_DISABLE_VALUE);
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_DEASSERT | AVR32_WDT_DISABLE_VALUE);
 	
-    // Switch the main clock to the external oscillator 0
+    // Switch the main clock to the external oscillator 0 (12 MHz)
     pm_switch_to_osc0(&AVR32_PM, FOSC0, OSC0_STARTUP);
 
-#if 1 // Normal
+#if 1 // Normal (Set clock to 66 MHz)
 	// Logic to change the clock source to PLL 0
     // PLL = 0, Multiplier = 10 (actual 11), Divider = 1 (actually 1), OSC = 0, 16 clocks to stabilize
 	pm_pll_setup(&AVR32_PM, 0, 10, 1, 0, 16);
@@ -536,7 +536,7 @@ void _init_startup(void)
     gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
 #endif
 
-#if 1 // Test (Network Active low SBHE - Hardware mod connecting pin GPIO 51 to network part)
+#if 0 // Test (Network Active low SBHE - Hardware mod connecting pin GPIO 51 to network part)
     gpio_clr_gpio_pin(AVR32_PIN_PB19);
     //gpio_set_gpio_pin(AVR32_PIN_PB19);
     //gpio_clr_gpio_pin(AVR32_PIN_PB19);
@@ -566,6 +566,7 @@ void InitKeypad(void)
 {
 	static const gpio_map_t EIC_GPIO_MAP =
 	{
+		{AVR32_EIC_EXTINT_4_PIN, AVR32_EIC_EXTINT_4_FUNCTION},
 		{AVR32_EIC_EXTINT_5_PIN, AVR32_EIC_EXTINT_5_FUNCTION}
 	};
 
@@ -826,42 +827,40 @@ void InitSystemHardware_NS8100(void)
 	gpio_set_gpio_pin(AVR32_PIN_PB18);
 
 	//-------------------------------------------------------------------------
+	// Set Alarm 1 and Alarm 2 low (Active high signal)
+	//-------------------------------------------------------------------------
+	gpio_clr_gpio_pin(AVR32_PIN_PB06);
+	gpio_clr_gpio_pin(AVR32_PIN_PB07);
+
+	//-------------------------------------------------------------------------
 	// Set Trigger Out low (Active high signal)
 	//-------------------------------------------------------------------------
 	gpio_clr_gpio_pin(AVR32_PIN_PB05);
 
 	//-------------------------------------------------------------------------
-    // Turn on rs232 driver and receiver (Active low controls)
+	// Set USB LED Output low (Active high signal)
 	//-------------------------------------------------------------------------
-    gpio_clr_gpio_pin(AVR32_PIN_PB08);
-    gpio_clr_gpio_pin(AVR32_PIN_PB09);
-
-    // Setup debug serial port
-	usart_options_t usart_1_rs232_options =
-	{
-#if 1 // Normal
-		.baudrate = 115200,
-#else // Test (12Mhz)
-		.baudrate = 38400,
-#endif
-		.charlength = 8,
-		.paritytype = USART_NO_PARITY,
-		.stopbits = USART_1_STOPBIT,
-		.channelmode = USART_NORMAL_CHMODE
-	};
-
-	// Initialize it in RS232 mode.
-#if 1 // Normal
-	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
-#else // Test (12Mhz)
-	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, 12000000);
-#endif
-
-	// Init signals for ready to send and terminal ready
-	SET_RTS; SET_DTR;
+	gpio_clr_gpio_pin(AVR32_PIN_PB28);
 
 	//-------------------------------------------------------------------------
-    // Turn on rs485 driver and receiver
+    // Smart Sensor data in
+	//-------------------------------------------------------------------------
+	//gpio_enable_gpio_pin(AVR32_PIN_PB01)
+
+	//-------------------------------------------------------------------------
+    // Set SDATA and ADATA low
+	//-------------------------------------------------------------------------
+	gpio_set_gpio_pin(AVR32_PIN_PB02);
+    gpio_set_gpio_pin(AVR32_PIN_PB03);
+
+	//-------------------------------------------------------------------------
+	// Init the SPI interfaces
+	//-------------------------------------------------------------------------
+	SPI_0_Init();
+	SPI_1_Init();
+	
+	//-------------------------------------------------------------------------
+	// Turn on rs485 driver and receiver
 	//-------------------------------------------------------------------------
 	// Options for debug USART.
 	usart_options_t usart_3_rs485_usart_options =
@@ -875,6 +874,54 @@ void InitSystemHardware_NS8100(void)
 
 	// Initialize it in RS485 mode.
 	usart_init_rs485(&AVR32_USART3, &usart_3_rs485_usart_options, FOSC0);
+
+	//-------------------------------------------------------------------------
+	// Turn on rs232 driver and receiver (Active low controls)
+	//-------------------------------------------------------------------------
+	gpio_clr_gpio_pin(AVR32_PIN_PB08);
+	gpio_clr_gpio_pin(AVR32_PIN_PB09);
+
+	// Setup debug serial port
+	usart_options_t usart_1_rs232_options =
+	{
+		#if 1 // Normal
+		.baudrate = 115200,
+		#else // Test (12Mhz)
+		.baudrate = 38400,
+		#endif
+		.charlength = 8,
+		.paritytype = USART_NO_PARITY,
+		.stopbits = USART_1_STOPBIT,
+		.channelmode = USART_NORMAL_CHMODE
+	};
+
+	// Load the Help Record to get the stored Baud rate. Only dependency should be SPI
+	getRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+
+	// Check if the Help Record is valid
+	if (g_helpRecord.encode_ln == 0xA5A5)
+	{
+		// Set the baud rate to the user stored baud rate setting (initialized to 115200)
+		switch (g_helpRecord.baud_rate)
+		{
+			case BAUD_RATE_57600: usart_1_rs232_options.baudrate = 57600; break;
+			case BAUD_RATE_38400: usart_1_rs232_options.baudrate = 38400; break;
+			case BAUD_RATE_19200: usart_1_rs232_options.baudrate = 19200; break;
+			case BAUD_RATE_9600: usart_1_rs232_options.baudrate = 9600; break;
+		}
+	}
+
+	// Initialize it in RS232 mode.
+	#if 1 // Normal
+	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
+	#else // Test (12Mhz)
+	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, 12000000);
+	#endif
+
+	//-------------------------------------------------------------------------
+	// Initialize the external RTC
+	//-------------------------------------------------------------------------
+	InitExternalRtc();
 
 #if 1 // Normal
 extern void Sleep8900(void);
@@ -927,19 +974,27 @@ extern void Sleep8900_LedOn(void);
 #endif
 
 	//Sleep8900();
-	Sleep8900_LedOn();
-#endif
+extern void ToggleLedOn8900(void);
+extern void ToggleLedOff8900(void);
 
-	//-------------------------------------------------------------------------
-	// Init the SPI interfaces
-	//-------------------------------------------------------------------------
-	SPI_0_Init();
-	SPI_1_Init();
+	ToggleLedOn8900();
+	soft_usecWait(250 * SOFT_MSECS);
+	ToggleLedOff8900();
+	soft_usecWait(250 * SOFT_MSECS);
+
+	ToggleLedOn8900();
+	soft_usecWait(250 * SOFT_MSECS);
+	ToggleLedOff8900();
+	soft_usecWait(250 * SOFT_MSECS);
 	
-	//-------------------------------------------------------------------------
-	// Initialize the external RTC
-	//-------------------------------------------------------------------------
-	InitExternalRtc();
+	ToggleLedOn8900();
+	soft_usecWait(250 * SOFT_MSECS);
+	ToggleLedOff8900();
+	soft_usecWait(250 * SOFT_MSECS);
+
+	Sleep8900_LedOn();
+	//Sleep8900();
+#endif
 
 	//-------------------------------------------------------------------------
 	// Initialize the AD Control
@@ -949,6 +1004,7 @@ extern void Sleep8900_LedOn(void);
 	//-------------------------------------------------------------------------
     // Turn on display
 	//-------------------------------------------------------------------------
+    gpio_set_gpio_pin(AVR32_PIN_PB22);
     gpio_set_gpio_pin(AVR32_PIN_PB21);
 
 	// LCD Init
@@ -962,7 +1018,7 @@ extern void Sleep8900_LedOn(void);
 	//-------------------------------------------------------------------------
 	rtc_init(&AVR32_RTC, 1, 0);
 
-	// Set top value to generate an interrupt every 1/2 second */
+	// Set top value to generate an interrupt every 1/2 second
 	rtc_set_top_value(&AVR32_RTC, 8192);
 
 	// Enable the Internal RTC
@@ -985,7 +1041,7 @@ extern void Sleep8900_LedOn(void);
 	//gpio_enable_gpio_pin(AVR32_PIN_PB15);
 	
 	// Necessary ?
-	// Set SD Write Protect pin as GPIO
+	// Set SD Write Protect pin as GPIO (Active low signal)
 	gpio_enable_gpio_pin(AVR32_PIN_PA07);
 	
 	// Necessary ?
@@ -1046,16 +1102,125 @@ extern void Sleep8900_LedOn(void);
 	//Display_Craft_Logo();
 	//soft_usecWait(3 * SOFT_SECS);
 	
+#if 1
+	//-------------------------------------------------------------------------
+	// Pre-configure the A/D to prevent the unit from burning current charging internal reference (default config)
+	// Enable the A/D
+	debug("Enable the A/D\n");
+	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+
+	// Delay to allow AD to power up/stabilize
+	soft_usecWait(50 * SOFT_MSECS);
+
+	// Setup the A/D Channel configuration
+	debug("Setup A/D config and channels (External Ref, Temp On)\n");
+extern void SetupADChannelConfig(uint32 sampleRate);
+	SetupADChannelConfig(SAMPLE_RATE_DEFAULT);
+
 #if 0 // Test
+	//g_triggerRecord.trec.sample_rate = SAMPLE_RATE_DEFAULT;
+	//GetChannelOffsets(SAMPLE_RATE_DEFAULT);
+#endif
+
+#if 0
+	SAMPLE_DATA_STRUCT dummySample;
+
+	//------------------------------Loop 1----------------------------------------------
+	debug("Setup A/D config and channels (External Ref, Temp On)\n");
+	SetupADChannelConfig(0x39D4);
+	soft_usecWait(50 * SOFT_MSECS);
+	GetAnalogConfigReadback();
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
+
+	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp On)\n");
+	SetupADChannelConfig(0x39DC);
+	soft_usecWait(50 * SOFT_MSECS);
+	GetAnalogConfigReadback();
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
+
+	debug("Setup A/D config and channels (External Ref, Temp Off)\n");
+	SetupADChannelConfig(0x39F4);
+	soft_usecWait(50 * SOFT_MSECS);
+	GetAnalogConfigReadback();
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
+
+	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp Off)\n");
+	SetupADChannelConfig(0x39FC);
+	soft_usecWait(50 * SOFT_MSECS);
+	GetAnalogConfigReadback();
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
+	//----------------------------------------------------------------------------------
+	
+	//------------------------------Loop 2----------------------------------------------
+	debug("Setup A/D config and channels (External Ref, Temp On)\n");
+	SetupADChannelConfig(0x39D4);
+	soft_usecWait(50 * SOFT_MSECS);
+	GetAnalogConfigReadback();
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
+
+	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp On)\n");
+	SetupADChannelConfig(0x39DC);
+	soft_usecWait(50 * SOFT_MSECS);
+	GetAnalogConfigReadback();
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
+
+	debug("Setup A/D config and channels (External Ref, Temp Off)\n");
+	SetupADChannelConfig(0x39F4);
+	soft_usecWait(50 * SOFT_MSECS);
+	GetAnalogConfigReadback();
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
+
+	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp Off)\n");
+	SetupADChannelConfig(0x39FC);
+	soft_usecWait(50 * SOFT_MSECS);
+	GetAnalogConfigReadback();
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
+	//----------------------------------------------------------------------------------
+#endif
+
+	debug("Disable the A/D\n");
+	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+#endif
+
+#if 0
+	//-------------------------------------------------------------------------
+	// Test full power down and halt
+	spi_reset(&AVR32_SPI1);
+
+	gpio_clr_gpio_pin(AVR32_SPI1_MISO_0_0_PIN);
+	gpio_clr_gpio_pin(AVR32_SPI1_MOSI_0_0_PIN);
+	gpio_clr_gpio_pin(AVR32_SPI1_NPCS_3_PIN);
+
 	debug("\nClosing up shop.\n\n");
 
+    // Disable rs232 driver and receiver (Active low controls)
     gpio_set_gpio_pin(AVR32_PIN_PB08);
     gpio_set_gpio_pin(AVR32_PIN_PB09);
 	
-    // SDATA and ADATA low
-	gpio_clr_gpio_pin(AVR32_PIN_PB02);
-    gpio_clr_gpio_pin(AVR32_PIN_PB03);
-
 	//displayTimerCallBack();
 	setLcdBacklightState(BACKLIGHT_OFF);
 
@@ -1063,6 +1228,7 @@ extern void Sleep8900_LedOn(void);
 	powerControl(LCD_CONTRAST_ENABLE, OFF);
 	clearLcdDisplay();
 	clearControlLinesLcdDisplay();
+	LcdClearPortReg();
 	powerControl(LCD_POWER_ENABLE, OFF);
 
 	//SLEEP(AVR32_PM_SMODE_IDLE);
@@ -1070,6 +1236,54 @@ extern void Sleep8900_LedOn(void);
 	
 	while (1) {}
 #endif	
+}
+
+//=================================================================================================
+//	Function:	PowerDownAndHalt
+//=================================================================================================
+void PowerDownAndHalt(void)
+{
+	// Enable the A/D
+	debug("Enable the A/D\n");
+	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+
+	// Delay to allow AD to power up/stabilize
+	soft_usecWait(50 * SOFT_MSECS);
+
+	debug("Setup A/D config and channels\n");
+	// Setup the A/D Channel configuration
+	extern void SetupADChannelConfig(uint32 sampleRate);
+	SetupADChannelConfig(1024);
+
+	debug("Disable the A/D\n");
+	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+
+	spi_reset(&AVR32_SPI1);
+
+	gpio_clr_gpio_pin(AVR32_SPI1_MISO_0_0_PIN);
+	gpio_clr_gpio_pin(AVR32_SPI1_MOSI_0_0_PIN);
+	gpio_clr_gpio_pin(AVR32_SPI1_NPCS_3_PIN);
+
+	debug("\nClosing up shop.\n\n");
+
+	// Disable rs232 driver and receiver (Active low controls)
+	gpio_set_gpio_pin(AVR32_PIN_PB08);
+	gpio_set_gpio_pin(AVR32_PIN_PB09);
+	
+	//displayTimerCallBack();
+	setLcdBacklightState(BACKLIGHT_OFF);
+
+	//lcdPwTimerCallBack();
+	powerControl(LCD_CONTRAST_ENABLE, OFF);
+	clearLcdDisplay();
+	clearControlLinesLcdDisplay();
+	LcdClearPortReg();
+	powerControl(LCD_POWER_ENABLE, OFF);
+
+	//SLEEP(AVR32_PM_SMODE_IDLE);
+	SLEEP(AVR32_PM_SMODE_STOP);
+	
+	while (1) {}
 }
 
 //=================================================================================================
@@ -1188,6 +1402,11 @@ void InitSoftwareSettings_NS8100(void)
 	sprintf((char*)buff, "%s %s", getLangText(SENSOR_CHECK_TEXT), getLangText(ZEROING_SENSORS_TEXT));
 	overlayMessage(getLangText(STATUS_TEXT), buff, 0);
 #endif
+
+	//-------------------------------------------------------------------------
+	// Signal remote end that RS232 Comm is available
+	//-------------------------------------------------------------------------
+	SET_RTS; SET_DTR; // Init signals for ready to send and terminal ready
 
 	//-------------------------------------------------------------------------
 	// Reset LCD timers

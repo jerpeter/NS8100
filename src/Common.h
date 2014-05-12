@@ -169,6 +169,7 @@ typedef enum {
 	TC_TYPEMATIC_TIMER_CHANNEL = 2
 } TC_CHANNEL_NUM;
 
+#if 0 // ns7100
 // 430 Channel Input Number
 enum {
 	MSP430_CHANNEL_1_INPUT = 1,
@@ -180,6 +181,7 @@ enum {
 	MSP430_CHANNEL_7_INPUT,
 	MSP430_CHANNEL_8_INPUT
 };
+#endif
 
 enum {
 	SEISMIC_GROUP_1 = 1,
@@ -206,13 +208,14 @@ enum {
 #define VIN_CHANNEL     2
 #define VBAT_CHANNEL    3
 
+#define LOW_VOLTAGE_THRESHOLD	5.0
+
 enum {
 	KEYPAD_LED_STATE_UNKNOWN = 0,
 	KEYPAD_LED_STATE_GREEN_ON,
 	KEYPAD_LED_STATE_RED_ON,
 	KEYPAD_LED_STATE_BOTH_OFF
 };
-
 
 ///----------------------------------------------------------------------------
 ///	Prototypes

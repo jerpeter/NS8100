@@ -22,6 +22,7 @@
 #include "PowerManagement.h"
 #include "Uart.h"
 #include "Record.h"
+#include "lcd.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -76,14 +77,23 @@ void LcdResetPulse(void)
 }
 
 /****************************************
+*	Function:	LcdClearPortReg
+*	Purpose:
+****************************************/
+void LcdClearPortReg(void)
+{
+	volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
+
+	*lcd = 0x0000;
+}
+
+/****************************************
 *	Function:	LcdWrite
 *	Purpose:	
 ****************************************/
 void LcdWrite(uint8 mode, uint8 data, uint8 segment)
 {
-
 #if	1
-#include "lcd.h"
 extern uint16 lcd_port_image;
 
     volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);

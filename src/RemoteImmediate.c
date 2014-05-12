@@ -658,6 +658,7 @@ void handleDQM(CMD_BUFFER_STRUCT* inCmd)
 	}
 
 	// Must have at least 1 record to signal the end of the data transmit.
+	// (Incorrect: 1 additional record is added as an end marker, filled with 0xCC's)
 	g_dqmXferStructPtr->numOfRecs++;
 
 	// 4 is for the numOfRecs field.

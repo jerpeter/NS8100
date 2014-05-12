@@ -313,7 +313,10 @@ uint8 modem_puts(uint8* byteData, uint32 dataLength, uint8 convertAsciiFlag)
                       Uart Put Character
  ********************************************************************/
 #include "print_funcs.h"
+#include "usart.h"
 extern int usart_putchar(volatile avr32_usart_t *usart, int c);
+extern int usart_write_char(volatile avr32_usart_t *usart, int c);
+
 void uart_putc(uint8 c, int32 channel)
 {
 #if 0 // ns7100
@@ -336,9 +339,22 @@ void uart_putc(uint8 c, int32 channel)
 		imm->Sci2.SCIDRL = c;
 	}
 #else // ns8100
+	uint32 retries = USART_DEFAULT_TIMEOUT;
+	int status;
+
 	if (channel == CRAFT_COM_PORT)
 	{
+#if 0 // Can't use this function without screwing up the craft since CRLF is being turned into CRCRLF
 		usart_putchar(DBG_USART, c);
+#else // Localized version with retries
+		status = usart_write_char(DBG_USART, c);
+		
+		while ((status == USART_TX_BUSY) && (retries))
+		{
+			retries--;
+			status = usart_write_char(DBG_USART, c);
+		}
+#endif
 	}
 	else if (channel == RS485_COM_PORT)
 	{

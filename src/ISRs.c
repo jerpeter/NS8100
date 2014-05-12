@@ -1616,32 +1616,11 @@ static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 	s_T_channelReading -= g_channelOffset.t_offset;
 	s_A_channelReading -= g_channelOffset.a_offset;
 
-#if 1
 	// Store the raw A/D data (adjusted for zero offset) into the quarter sec buffer
 	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = s_R_channelReading;
 	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = s_V_channelReading;
 	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = s_T_channelReading;
 	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = s_A_channelReading;
-#else // Test
-	static uint16 crap = 0;
-
-	if (s_calPulse == YES)
-	{
-		// Fake data
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = crap--;
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = crap--;
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = crap--;
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = crap--;
-	}
-	else
-	{
-		// Fake data
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = crap++;
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = crap++;
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = crap++;
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = crap++;
-	}
-#endif
 }
 
 // ============================================================================
@@ -1658,35 +1637,40 @@ static inline void getChannelDataWithReadbackCheck_ISR_Inline(void)
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
+	//if(s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
+	if(s_channelConfigReadBack != 0xe150) { s_channelSyncError = YES; }
 
     // Chan 1 - T
     spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
+	//if(s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
+	if(s_channelConfigReadBack != 0xe350) { s_channelSyncError = YES; }
 
     // Chan 2 - V
     spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
+	//if(s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
+	if(s_channelConfigReadBack != 0xe550) { s_channelSyncError = YES; }
 
     // Chan 3 - A
     spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
+	//if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
+	if(s_channelConfigReadBack != 0xe750) { s_channelSyncError = YES; }
 
     // Temperature
     spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &g_currentTempReading);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
+	//if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
+	if(s_channelConfigReadBack != 0xb750) { s_channelSyncError = YES; }
 }
 
 // ============================================================================
@@ -1734,11 +1718,19 @@ static inline void handleChannelSyncError_ISR_Inline(void)
 		
 	switch (s_channelConfigReadBack)
 	{
+#if 0 // Old channel config
 		case 0xe0d0: s_channelReadsToSync = 4; break; // R Chan
 		case 0xe2d0: s_channelReadsToSync = 3; break; // T Chan
 		case 0xe4d0: s_channelReadsToSync = 2; break; // V Chan
 		case 0xe6d0: s_channelReadsToSync = 1; break; // A Chan
 		case 0xb6d0: s_channelReadsToSync = 0; break; // Temp Chan
+#else
+		case 0xe150: s_channelReadsToSync = 4; break; // R Chan
+		case 0xe350: s_channelReadsToSync = 3; break; // T Chan
+		case 0xe550: s_channelReadsToSync = 2; break; // V Chan
+		case 0xe750: s_channelReadsToSync = 1; break; // A Chan
+		case 0xb750: s_channelReadsToSync = 0; break; // Temp Chan
+#endif
 
 		default: 
 			s_channelReadsToSync = 0; // Houston, we have a problem... all channels read and unable to match

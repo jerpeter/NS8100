@@ -329,6 +329,7 @@ typedef struct
 	uint8	serialNumber[SERIAL_NUMBER_STRING_SIZE];
 	DATE_TIME_STRUCT	eventTime;
 	uint8	endFlag;			// EE
+	uint8 spare[3];				// Added spacing to match the NS7100
 } DQMx_DATA_STRUCT;
 #pragma pack()
 

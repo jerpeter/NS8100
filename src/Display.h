@@ -123,6 +123,7 @@ void waitForLcdReady (uint8);
 void LcdResetPulse(void);
 uint8 readLcdData (uint8);
 void writeLcdData (uint8,uint8);
+void LcdClearPortReg(void);
 void setLcdStartLine (uint8, uint8);
 void setLcdXPosition (uint8, uint8);
 void setLcdYPosition (uint8, uint8);

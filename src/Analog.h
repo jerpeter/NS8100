@@ -101,6 +101,7 @@ typedef union
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
+void GetAnalogConfigReadback(void);
 void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr);
 void InitAnalogControl(void);
 void WriteAnalogControl(uint16 data);

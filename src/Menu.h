@@ -383,10 +383,18 @@ enum {
 };
 
 // Help Menu types
+#if 0 // Normal
 enum {
 	CONFIG = 1,
 	INFORMATION
 };
+#else
+enum {
+	CONFIG = 1,
+	INFORMATION,
+	TEST_OPTION
+};
+#endif
 
 // Config Menu types
 enum {
@@ -451,7 +459,6 @@ enum {
 #define FOUR_HOUR_INTVL				14400
 #define EIGHT_HOUR_INTVL			28800
 #define TWELVE_HOUR_INTVL			43200
-#define TWENTY_FOUR_HOUR_INTVL		86400
 
 // Alternate Results
 enum {

@@ -70,8 +70,10 @@ static MB_CHOICE s_messageChoices[MB_TOTAL_CHOICES] =
 void setupMnDef(void)
 {
 	char buff[50];
+#if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
 	usart_options_t rs232Options = 
 		{ .charlength = 8, .paritytype = USART_NO_PARITY, .stopbits = USART_1_STOPBIT, .channelmode = USART_NORMAL_CHMODE };
+#endif
 
     debug("Init Power on LCD...\n");
 
@@ -121,6 +123,7 @@ void setupMnDef(void)
 		// Help Record is valid
 		debug("Help record: Found.\n");
 
+#if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
 		// Set the baud rate to the user stored baud rate setting (initialized to 115200)
 		switch (g_helpRecord.baud_rate)
 		{
@@ -135,6 +138,7 @@ void setupMnDef(void)
 			// Re-Initialize the RS232 with the stored baud rate
 			usart_init_rs232(&AVR32_USART1, &rs232Options, FOSC0);
 		}
+#endif
 	}
 
     debug("Init Build Language Table...\n");

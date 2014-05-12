@@ -117,14 +117,14 @@ void ToggleLedOn8900(void)
 {
    Write8900(ADD_PORT, PP_SelfCTL);
    Write8900(DATA_PORT, 0x5000);          // Sleep the Ethernet-Controller
-	debug("Lan data port: 0x%x\n", Read8900(DATA_PORT));
+	//debug("Lan data port: 0x%x\n", Read8900(DATA_PORT));
 }
 
 void ToggleLedOff8900(void)
 {
    Write8900(ADD_PORT, PP_SelfCTL);
    Write8900(DATA_PORT, 0x4000);          // Sleep the Ethernet-Controller
-	debug("Lan data port: 0x%x\n", Read8900(DATA_PORT));
+	//debug("Lan data port: 0x%x\n", Read8900(DATA_PORT));
 }
 
 void ReadId8900(void)

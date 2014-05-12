@@ -498,8 +498,8 @@ void procTimerEvents(void)
 		}
 	}
 
-	// Check if the unit is in monitor mode and the battery voltage has dropped below 5 volts
-	if ((g_sampleProcessing == ACTIVE_STATE) && (getExternalVoltageLevelAveraged(BATTERY_VOLTAGE) < 5.0))
+	// Check if the unit is in monitor mode and if battery voltage has dropped below a certain voltage
+	if ((g_sampleProcessing == ACTIVE_STATE) && (getExternalVoltageLevelAveraged(BATTERY_VOLTAGE) < LOW_VOLTAGE_THRESHOLD))
 	{
 		// Disable the monitor menu update timer
 		clearSoftTimer(MENU_UPDATE_TIMER_NUM);
