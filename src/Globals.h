@@ -210,7 +210,6 @@ extern uint32 g_rtcCurrentTickCount;
 extern uint32 g_UpdateCounter;
 extern uint8 g_autoCalDaysToWait;
 extern REC_HELP_MN_STRUCT g_helpRecord;
-extern uint8 g_printMillibars;
 extern uint8 g_autoDialoutState;
 extern uint8 g_modemDataTransfered;
 extern uint16 g_CRLF;

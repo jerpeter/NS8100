@@ -146,8 +146,8 @@ void lcdContrastMnProc(INPUT_MSG_STRUCT msg,
 						case (4): // Save changes
 							saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-							ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
-							(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+							SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+							JUMP_TO_ACTIVE_MENU();
 							break;
 
 						default:
@@ -161,8 +161,8 @@ void lcdContrastMnProc(INPUT_MSG_STRUCT msg,
 			case (PLUS_KEY): { adjustLcdContrast(LIGHTER); break; }
 
 			case (ESC_KEY):
-				ACTIVATE_USER_MENU_MSG(&configMenu, LCD_CONTRAST);
-				(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+				SETUP_USER_MENU_MSG(&configMenu, LCD_CONTRAST);
+				JUMP_TO_ACTIVE_MENU();
 				break;
 
 			default:

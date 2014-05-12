@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef SD_MMC_TEST_MENU_H_
 #define SD_MMC_TEST_MENU_H_
 
@@ -81,3 +84,5 @@ void SD_MMC_Copy_Test_File(void);
 void SD_MMC_Inc_Buffer_Size_Test_File(void);
 
 #endif //SD_MMC_TEST_MENU_H_
+
+#endif

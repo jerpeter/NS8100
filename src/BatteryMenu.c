@@ -100,9 +100,9 @@ void batteryMnProc(INPUT_MSG_STRUCT msg,
             switch (input)
             {
               case (ENTER_KEY):
-					ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
-                     (*menufunc_ptrs[g_activeMenu]) (mn_msg);
-                     break;
+					SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+					JUMP_TO_ACTIVE_MENU();
+					break;
                case (DOWN_ARROW_KEY):
                      break;
                case (UP_ARROW_KEY):
@@ -110,9 +110,9 @@ void batteryMnProc(INPUT_MSG_STRUCT msg,
                case (MINUS_KEY): adjustLcdContrast(DARKER); break;
                case (PLUS_KEY): adjustLcdContrast(LIGHTER); break;
                case (ESC_KEY):
-					ACTIVATE_USER_MENU_MSG(&configMenu, BATTERY);
-                     (*menufunc_ptrs[g_activeMenu]) (mn_msg);
-                     break;
+					SETUP_USER_MENU_MSG(&configMenu, BATTERY);
+					JUMP_TO_ACTIVE_MENU();
+					break;
                default:
                      break;
             }

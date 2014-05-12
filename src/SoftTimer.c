@@ -245,7 +245,7 @@ void menuUpdateTimerCallBack(void)
 	mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
 
 	// Recall the current active menu to repaint the display
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 
 	assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
 }
@@ -459,9 +459,8 @@ void autoMonitorTimerCallBack(void)
 	if (g_sampleProcessing != ACTIVE_STATE)
 	{
 		// Enter monitor mode with the current mode
-		g_activeMenu = MONITOR_MENU;
-		ACTIVATE_MENU_WITH_DATA_MSG(g_triggerRecord.op_mode);
-		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+		JUMP_TO_ACTIVE_MENU();
 	}
 }
 
@@ -512,9 +511,8 @@ void procTimerEvents(void)
 		overlayMessage(getLangText(WARNING_TEXT), msgBuffer, (2 * SOFT_SECS));
 
 		// Jump to the main menu
-		g_activeMenu = MAIN_MENU;
-		ACTIVATE_MENU_MSG();
-		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+		SETUP_MENU_MSG(MAIN_MENU);
+		JUMP_TO_ACTIVE_MENU();
 	}
 }
 
@@ -541,9 +539,8 @@ void handleMidnightEvent(void)
 		stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 		// Start up a new Bargraph
-		g_activeMenu = MONITOR_MENU;
-		ACTIVATE_MENU_WITH_DATA_MSG(g_triggerRecord.op_mode);
-		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+		JUMP_TO_ACTIVE_MENU();
 	}
 	// Check if Auto Cal is active
 	else if (g_helpRecord.auto_cal_mode != AUTO_NO_CAL_TIMEOUT)
@@ -578,9 +575,8 @@ void handleMidnightEvent(void)
 				g_enterMonitorModeAfterMidnightCal = NO;
 
 				// Unable to store any more data in the selected mode
-				g_activeMenu = MAIN_MENU;
-				ACTIVATE_MENU_MSG();
-				(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+				SETUP_MENU_MSG(MAIN_MENU);
+				JUMP_TO_ACTIVE_MENU();
 
 				overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 			}

@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef RTC_TEST_MENU_H_
 #define RTC_TEST_MENU_H_
 
@@ -91,3 +94,5 @@ void rtc_write(uint8 register_address, int length, uint16* data);
 void rtc_read(uint8 register_address, int length, uint16* data);
 
 #endif //RTC_TEST_MENU_H_
+
+#endif

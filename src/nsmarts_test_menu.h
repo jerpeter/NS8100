@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef NSMARTS_TEST_MENU_H_
 #define NSMARTS_TEST_MENU_H_
 
@@ -172,3 +175,5 @@ static void (*NSMARTS_Air_Menu_Functions[])(void) =
 		NSMARTS_Air_Test_Read_Write
 };
 #endif //NSMARTS_TEST_MENU_H_
+
+#endif

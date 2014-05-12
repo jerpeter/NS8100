@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef USB_TEST_MENU_H_
 #define USB_TEST_MENU_H_
 
@@ -44,3 +47,5 @@ void USB_On_Mass_Storage_Test(void);
 void USB_Off_Mass_Storage_Test(void);
 
 #endif //USB_TEST_MENU_H_
+
+#endif

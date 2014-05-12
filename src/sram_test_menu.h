@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef SRAM_TEST_MENU_H_
 #define SRAM_TEST_MENU_H_
 
@@ -116,3 +119,5 @@ static void (*SRAM_Test_Menu_Functions[])(void) =
 };
 
 #endif //SRAM_TEST_MENU_H_
+
+#endif

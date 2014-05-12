@@ -137,8 +137,8 @@ void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					saveRecData(&g_triggerRecord, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
 
 					updateModeMenuTitle(g_triggerRecord.op_mode);
-					ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
+					JUMP_TO_ACTIVE_MENU();
 					break;
 
 				case (DELETE_KEY):
@@ -173,8 +173,8 @@ void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					break;
 
 				case (HELP_KEY):
-					ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
+					JUMP_TO_ACTIVE_MENU();
 					break;
 
 				default:

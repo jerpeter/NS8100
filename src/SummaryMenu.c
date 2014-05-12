@@ -149,9 +149,8 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 						case MANUAL_CAL_MODE:
 						case BARGRAPH_MODE: 
 						case COMBO_MODE:
-							g_activeMenu = RESULTS_MENU;
-							ACTIVATE_MENU_MSG();
-							(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+							SETUP_MENU_MSG(RESULTS_MENU);
+							JUMP_TO_ACTIVE_MENU();
 							break;   
 
 						case MANUAL_TRIGGER_MODE:
@@ -197,8 +196,8 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 					// Reset the cached entries since the temp space used can be overwritten
 					cacheEntries = 0;
 
-					ACTIVATE_USER_MENU_MSG(&configMenu, SUMMARIES_EVENTS);
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_USER_MENU_MSG(&configMenu, SUMMARIES_EVENTS);
+					JUMP_TO_ACTIVE_MENU();
 				}
 				break;
 			default:

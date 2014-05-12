@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef KEYPAD_TEST_MENU_H_
 #define KEYPAD_TEST_MENU_H_
 
@@ -99,3 +102,5 @@ static void (*Keypad_Test_Menu_Functions[])(void) =
 
 
 #endif //KEYPAD_TEST_MENU_H_
+
+#endif

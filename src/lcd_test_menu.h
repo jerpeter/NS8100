@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef LCD_TEST_MENU_H_
 #define LCD_TEST_MENU_H_
 
@@ -236,3 +239,5 @@ const char sign_on_logo[] =
 }; /* ed of chr *bitMap */
 
 #endif //LCD_TEST_MENU_H_
+
+#endif

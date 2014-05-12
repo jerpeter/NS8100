@@ -174,8 +174,8 @@ void loadRecMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_L
 					}
 
 					updateModeMenuTitle(g_triggerRecord.op_mode);
-					ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
+					JUMP_TO_ACTIVE_MENU();
 					break;      
 
 				case (DELETE_KEY):
@@ -215,13 +215,12 @@ void loadRecMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_L
 					mnScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (ESC_KEY):
-					g_activeMenu = MAIN_MENU;
-					ACTIVATE_MENU_MSG(); mn_msg.data[0] = ESC_KEY;
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_MENU_MSG(MAIN_MENU); mn_msg.data[0] = ESC_KEY;
+					JUMP_TO_ACTIVE_MENU();
 					break;
 				case (HELP_KEY):
-					ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
+					JUMP_TO_ACTIVE_MENU();
 					break;
 				default:
 				      break;

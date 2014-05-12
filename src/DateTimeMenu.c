@@ -172,14 +172,14 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 						if (!g_factorySetupRecord.invalid)
 							tempPtr = &g_factorySetupRecord.serial_num;
 
-						ACTIVATE_USER_MENU_MSG(&serialNumberMenu, tempPtr);
+						SETUP_USER_MENU_MSG(&serialNumberMenu, tempPtr);
 					}
 					else
 					{
-						ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+						SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 					}
 
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					JUMP_TO_ACTIVE_MENU();
 					break;
 
 				case (DOWN_ARROW_KEY):
@@ -212,7 +212,7 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 							if (!g_factorySetupRecord.invalid)
 								tempPtr = &g_factorySetupRecord.serial_num;
 
-							ACTIVATE_USER_MENU_MSG(&serialNumberMenu, tempPtr);
+							SETUP_USER_MENU_MSG(&serialNumberMenu, tempPtr);
 						}
 						else
 						{
@@ -222,10 +222,10 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 					}
 					else
 					{
-						ACTIVATE_USER_MENU_MSG(&configMenu, DATE_TIME);
+						SETUP_USER_MENU_MSG(&configMenu, DATE_TIME);
 					}
 
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					JUMP_TO_ACTIVE_MENU();
 					break;
 				default:
 					break;

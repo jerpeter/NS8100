@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef ON_OFF_CIRCUIT_TEST_MENU_H_
 #define ON_OFF_CIRCUIT_TEST_MENU_H_
 
@@ -105,3 +108,5 @@ static void (*On_Off_Circuit_Test_Menu_Functions[])(void) =
 };
 
 #endif //ON_OFF_CIRCUIT_TEST_MENU_H_
+
+#endif

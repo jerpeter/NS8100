@@ -60,9 +60,20 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define PBA_HZ         FOSC0
+#define AVR32_IDLE_MODE		AVR32_PM_SMODE_IDLE
+#define PBA_HZ				FOSC0
 #define ONE_MS_RESOLUTION	1000
 
+#define EEPROM_SPI_CS_NUM			0
+#define RTC_SPI_CS_NUM				1
+#define SDMMC_SPI_CS_NUM			2
+#define AD_CTL_SPI_CS_NUM			3
+#define EEPROM_SPI_MAX_SPEED		500000 //2100000 // Speed should be safe up to 2.1 MHz, needs to be tested
+#define RTC_SPI_MAX_SPEED			1000000 // 1000000 // Speed should be safe up to 3.5 MHz, needs to be tested
+#define SDMMC_SPI_MAX_SPEED			12000000 // Speed should be safe up to 12 MHz (150 KHz * 80x)
+#define AD_CTL_SPI_MAX_SPEED		4000000 // Speed should be safe up to 10 MHz, needs to be tested
+
+// Chip select defines
 #define NRD_SETUP     30 //10
 #define NRD_PULSE     30 //135
 #define NRD_CYCLE     75 //180
@@ -315,13 +326,13 @@ void SPI_1_Init(void)
 	// SPI 1 MAP Pin select	
 	const gpio_map_t spi1Map =
 	{
-		{AVR32_SPI1_SCK_0_0_PIN,  AVR32_SPI1_SCK_0_0_FUNCTION },	// SPI Clock.
+		{AVR32_SPI1_SCK_0_0_PIN, AVR32_SPI1_SCK_0_0_FUNCTION },		// SPI Clock.
 		{AVR32_SPI1_MISO_0_0_PIN, AVR32_SPI1_MISO_0_0_FUNCTION},	// MISO.
 		{AVR32_SPI1_MOSI_0_0_PIN, AVR32_SPI1_MOSI_0_0_FUNCTION},	// MOSI.
-		{AD_CTL_SPI_NPCS_PIN, AD_CTL_SPI_NPCS_FUNCTION},			// AD Chip Select NPCS.
-		{EEPROM_SPI_NPCS_PIN, EEPROM_SPI_NPCS_FUNCTION},			// EEprom Chip Select NPCS.
-		{RTC_SPI_NPCS_PIN, RTC_SPI_NPCS_FUNCTION},					// RTC Chip Select NPCS.
-		{SDMMC_SPI_NPCS_PIN, SDMMC_SPI_NPCS_FUNCTION},				// SDMMC Chip Select NPCS.
+		{AVR32_SPI1_NPCS_3_PIN,	AVR32_SPI1_NPCS_3_FUNCTION},		// AD Chip Select NPCS.
+		{AVR32_SPI1_NPCS_0_0_PIN, AVR32_SPI1_NPCS_0_0_FUNCTION},	// EEprom Chip Select NPCS.
+		{AVR32_SPI1_NPCS_1_0_PIN, AVR32_SPI1_NPCS_1_0_FUNCTION},	// RTC Chip Select NPCS.
+		{AVR32_SPI1_NPCS_2_0_PIN, AVR32_SPI1_NPCS_2_0_FUNCTION},	// SDMMC Chip Select NPCS.
 	};
 
 	// Generic SPI options
@@ -347,20 +358,20 @@ void SPI_1_Init(void)
 	// Enable SPI module.
 	spi_enable(&AVR32_SPI1);
 
-	spiOptions.reg = AD_CTL_SPI_NPCS; // 3
-	spiOptions.baudrate = AD_CTL_SPI_MASTER_SPEED; // 4 MHz
+	spiOptions.reg = AD_CTL_SPI_CS_NUM; // 3
+	spiOptions.baudrate = AD_CTL_SPI_MAX_SPEED; // 4 MHz
 	spi_setupChipReg(&AVR32_SPI1, &spiOptions, FOSC0);
 
-	spiOptions.reg = EEPROM_SPI_NPCS; // 0
-	spiOptions.baudrate = EEPROM_SPI_MASTER_SPEED; // 2.1 MHz
+	spiOptions.reg = EEPROM_SPI_CS_NUM; // 0
+	spiOptions.baudrate = EEPROM_SPI_MAX_SPEED; // 2.1 MHz
 	spi_setupChipReg(&AVR32_SPI1, &spiOptions, FOSC0);
 
-	spiOptions.reg = RTC_SPI_NPCS; // 1
-	spiOptions.baudrate = RTC_SPI_MASTER_SPEED; // 1 MHz
+	spiOptions.reg = RTC_SPI_CS_NUM; // 1
+	spiOptions.baudrate = RTC_SPI_MAX_SPEED; // 1 MHz
 	spi_setupChipReg(&AVR32_SPI1, &spiOptions, FOSC0);
 
-	spiOptions.reg = SDMMC_SPI_NPCS; // 2
-	spiOptions.baudrate = SDMMC_SPI_MASTER_SPEED; // 12 MHz
+	spiOptions.reg = SDMMC_SPI_CS_NUM; // 2
+	spiOptions.baudrate = SDMMC_SPI_MAX_SPEED; // 12 MHz
 	spi_setupChipReg(&AVR32_SPI1, &spiOptions, FOSC0);
 }
 
@@ -685,7 +696,7 @@ void UsbDeviceManager(void)
 
 			// Recall the current active menu to repaint the display
 			mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
-			(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+			JUMP_TO_ACTIVE_MENU();
 						
 			debug("USB Mass Storage Driver Re-Init\n");
 			// Init the USB and Mass Storage driver
@@ -719,7 +730,7 @@ void UsbDeviceManager(void)
 
 				// Recall the current active menu to repaint the display
 				mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
-				(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+				JUMP_TO_ACTIVE_MENU();
 			}							
 
 			debug("USB Cable Unplugged\n");
@@ -831,12 +842,17 @@ void InitSystemHardware_NS8100(void)
 	initProcessorNoConnectPins();
 	
 	//-------------------------------------------------------------------------
-	// Set RTC Timestamp pin high
+	// Set RTC Timestamp pin high (Active low signal)
 	//-------------------------------------------------------------------------
 	gpio_set_gpio_pin(AVR32_PIN_PB18);
 
 	//-------------------------------------------------------------------------
-    // Turn on rs232 driver and receiver
+	// Set Trigger Out low (Active high signal)
+	//-------------------------------------------------------------------------
+	gpio_clr_gpio_pin(AVR32_PIN_PB05);
+
+	//-------------------------------------------------------------------------
+    // Turn on rs232 driver and receiver (Active low controls)
 	//-------------------------------------------------------------------------
     gpio_clr_gpio_pin(AVR32_PIN_PB08);
     gpio_clr_gpio_pin(AVR32_PIN_PB09);
@@ -884,25 +900,13 @@ void InitSystemHardware_NS8100(void)
 #if 1 // Normal
 extern void Sleep8900(void);
 extern void Sleep8900_LedOn(void);
-extern void ReadId8900(void);
-extern void BlindReadId8900(void);
-extern void ToggleLedOn8900(void);
-extern void ToggleLedOff8900(void);
 	//-------------------------------------------------------------------------
 	// Set LAN to Sleep
 	//-------------------------------------------------------------------------
-    gpio_clr_gpio_pin(AVR32_PIN_PB27); // Clear LAN Sleep pin (active low)
+    gpio_clr_gpio_pin(AVR32_PIN_PB27); // Clear LAN Sleep pin (active low control)
 	soft_usecWait(10 * SOFT_MSECS);
 	
-	//-------------------------------------------------------------------------
-	// Set LAN and LAN Mem CS High (Don't need anymore)
-	//gpio_set_gpio_pin(AVR32_EBI_NCS_2_PIN);
-	//gpio_set_gpio_pin(AVR32_EBI_NCS_3_PIN);	
-	
-    gpio_set_gpio_pin(AVR32_PIN_PB27); // Set LAN Sleep pin (active low)
-	soft_usecWait(10 * SOFT_MSECS);
-
-#if 0 // Test (Lan register map read)
+#if 0 // Test (LAN register map read)
 	debug("\n\n");
 	*((uint16*)0xC800030A) = 0x0000; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0000, *((uint16*)0xC800030C));
 	*((uint16*)0xC800030A) = 0x0002; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0002, *((uint16*)0xC800030C));
@@ -943,17 +947,8 @@ extern void ToggleLedOff8900(void);
 	debug("\n");
 #endif
 
-	//ReadId8900();
-	//ToggleLedOn8900();
-	//soft_usecWait(1 * SOFT_SECS);
-
 	//Sleep8900();
 	Sleep8900_LedOn();
-
-	//ToggleLedOn8900();
-	//soft_usecWait(1 * SOFT_SECS);
-	//ToggleLedOff8900();
-	//soft_usecWait(5 * SOFT_SECS);
 #endif
 
 	//-------------------------------------------------------------------------
@@ -983,13 +978,6 @@ extern void ToggleLedOff8900(void);
     Set_Contrast(24);
     InitDisplay();
 
-#if 0 // Test (Read the LCD control register)
-extern uint8 Read_display(uint8, uint8);
-	debug("LCD Control register: 0x%x\n", Read_display(COMMAND_REGISTER, FIRST_HALF_DISPLAY));
-	debug("LCD Control register: 0x%x\n", Read_display(COMMAND_REGISTER, FIRST_HALF_DISPLAY));
-	debug("LCD Control register: 0x%x\n", Read_display(COMMAND_REGISTER, FIRST_HALF_DISPLAY));
-#endif
-
 	//-------------------------------------------------------------------------
 	// Initialize the Internal Real Time Counter for half second tick used for state processing
 	//-------------------------------------------------------------------------
@@ -1013,10 +1001,9 @@ extern uint8 Read_display(uint8, uint8);
 	//-------------------------------------------------------------------------
 	// Power on the SD Card and init the file system
 	//-------------------------------------------------------------------------
-	
 	// Necessary ?
 	// Set SD Power pin as GPIO
-	gpio_enable_gpio_pin(AVR32_PIN_PB15);
+	//gpio_enable_gpio_pin(AVR32_PIN_PB15);
 	
 	// Necessary ?
 	// Set SD Write Protect pin as GPIO
@@ -1074,34 +1061,13 @@ extern uint8 Read_display(uint8, uint8);
 	}
 
 	// Turn on the red keypad LED while loading
-#if 1 // Normal
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
-#endif
 
 	//-------------------------------------------------------------------------
 	//Display_Craft_Logo();
 	//soft_usecWait(3 * SOFT_SECS);
 	
-#if 1 // Test
-	while (0)
-	{
-		read_mcp23018(IO_ADDRESS_KPD, GPIOA);
-	}
-
-#if 1 // Test (Read the network part)
-	uint32 i = 0;
-	//*((uint16*)0xC800030A) = 0x0000;
-	
-	while (1)
-	{
-		//debugRaw("Lan Address (0x%04x) returns Data: 0x%x, LCD Data: 0x%x (%d)\n", 0x0000, *((uint16*)0xC800030C), Read_display(DATA_REGISTER, FIRST_HALF_DISPLAY), ++i);
-		*((uint16*)0xC800030A) = 0x0000;
-		debugRaw("Lan Address (0x%04x) returns Data: 0x%x and 0x%x (%d)\n", 0x0000, *((uint16*)0xC800030C), *((uint16*)0xC800030E), ++i);
-		*((uint16*)0xC800030A) = 0x0002;
-		debugRaw("Lan Address (0x%04x) returns Data: 0x%x and 0x%x (%d)\n", 0x0002, *((uint16*)0xC800030C), *((uint16*)0xC800030E), i);
-	}
-#endif
-
+#if 0 // Test
 	debug("\nClosing up shop.\n\n");
 
     gpio_set_gpio_pin(AVR32_PIN_PB08);
@@ -1113,6 +1079,7 @@ extern uint8 Read_display(uint8, uint8);
 
 	//displayTimerCallBack();
 	setLcdBacklightState(BACKLIGHT_OFF);
+
 	//lcdPwTimerCallBack();
 	powerControl(LCD_CONTRAST_ENABLE, OFF);
 	clearLcdDisplay();
@@ -1157,30 +1124,42 @@ void InitSoftwareSettings_NS8100(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 
-	debug("Address of local variable: 0x%x\n", &mn_msg);
+	//debug("Address of local variable: 0x%x\n", &mn_msg);
 
 	debug("Init Software Settings\n");
     debug("Init Version Strings...\n");
 
+	//-------------------------------------------------------------------------
 	// Init version strings
+	//-------------------------------------------------------------------------
 	initVersionStrings();
 
+	//-------------------------------------------------------------------------
 	// Init version msg
+	//-------------------------------------------------------------------------
     debug("Init Version Msg...\n");
 	initVersionMsg();
 
+	//-------------------------------------------------------------------------
 	// Init time msg
+	//-------------------------------------------------------------------------
     debug("Init Time Msg...\n");
 	initTimeMsg();
 
+	//-------------------------------------------------------------------------
 	// Load current time into cache
+	//-------------------------------------------------------------------------
 	updateCurrentTime();
 
+	//-------------------------------------------------------------------------
 	// Get the function address passed by the bootloader
+	//-------------------------------------------------------------------------
     debug("Init Get Boot Function Addr...\n");
 	getBootFunctionAddress();
 
+	//-------------------------------------------------------------------------
 	// Setup defaults, load records, init the language table
+	//-------------------------------------------------------------------------
     debug("Init Setup Menu Defaults...\n");
 	setupMnDef();
 
@@ -1189,8 +1168,9 @@ void InitSoftwareSettings_NS8100(void)
 	InitKeypad();
 #endif
 
+	//-------------------------------------------------------------------------
 	// Check for Timer mode activation
-#if 1 // Normal
+	//-------------------------------------------------------------------------
     debug("Init Timer Mode Check...\n");
 	if (timerModeActiveCheck() == TRUE)
 	{
@@ -1206,15 +1186,16 @@ void InitSoftwareSettings_NS8100(void)
 	{
 		debug("--- Normal Startup ---\n");
 	}
-#else
-	debugWarn("WARNING: Timer mode check logic disabled!\n");
-#endif
 
+	//-------------------------------------------------------------------------
 	// Init the cmd message handling buffers before initialization of the ports.
+	//-------------------------------------------------------------------------
     debug("Init Cmd Msg Handler...\n");
 	cmdMessageHandlerInit();
 
+	//-------------------------------------------------------------------------
 	// Init the input buffers and status flags for input craft data.
+	//-------------------------------------------------------------------------
     debug("Init Craft Init Status Flags...\n");
 	craftInitStatusFlags();
 
@@ -1227,23 +1208,28 @@ void InitSoftwareSettings_NS8100(void)
 	overlayMessage(getLangText(STATUS_TEXT), buff, 0);
 #endif
 
+	//-------------------------------------------------------------------------
 	// Reset LCD timers
+	//-------------------------------------------------------------------------
 	resetSoftTimer(DISPLAY_ON_OFF_TIMER_NUM);
 	resetSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM);
 
+	//-------------------------------------------------------------------------
 	// Turn on the Green keypad LED when system init complete
+	//-------------------------------------------------------------------------
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
 
+	//-------------------------------------------------------------------------
 	// Assign a one second keypad led update timer
-#if 1 // Normal
+	//-------------------------------------------------------------------------
 	assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
-#endif
 
-	debug("Jump to Main Menu\n");
+	//-------------------------------------------------------------------------
 	// Jump to the true main menu
-	g_activeMenu = MAIN_MENU;
-	ACTIVATE_MENU_MSG();
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	//-------------------------------------------------------------------------
+	debug("Jump to Main Menu\n");
+	SETUP_MENU_MSG(MAIN_MENU);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //=================================================================================================
@@ -1661,7 +1647,7 @@ int main(void)
 	//testSnippetsBeforeInit();
 
     InitSystemHardware_NS8100();
-#if 0 // Normal
+#if 1 // Normal
 	InitInterrupts_NS8100();
 	InitSoftwareSettings_NS8100();
 	BootLoadManager();
@@ -1672,7 +1658,7 @@ int main(void)
 	// Test code
 	//testSnippetsAfterInit();
 
-#if 0 // Normal
+#if 1 // Normal
  	// ==============
 	// Executive loop
 	// ==============
@@ -1710,7 +1696,7 @@ int main(void)
 			(g_modemStatus.xferState == NOP_CMD))
 		{
 			// Sleepy time
-			SLEEP(AVR32_PM_SMODE_IDLE);
+			SLEEP(AVR32_IDLE_MODE);
 		}
 	}    
 	// End of NS8100 Main

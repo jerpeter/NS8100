@@ -121,9 +121,8 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					g_skipAutoCalInWaveformAfterMidnightCal = NO;
 
 					// Jump back to main menu
-					g_activeMenu = MAIN_MENU;
-					ACTIVATE_MENU_MSG();
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_MENU_MSG(MAIN_MENU);
+					JUMP_TO_ACTIVE_MENU();
 					
 					overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT MONITOR.", (5 * SOFT_SECS));
 					return;
@@ -270,9 +269,8 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 								getRecData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 								g_helpRecord.auto_print = temp_g_helpRecord.auto_print;
 
-								g_activeMenu = MAIN_MENU;
-								ACTIVATE_MENU_MSG();
-								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+								SETUP_MENU_MSG(MAIN_MENU);
+								JUMP_TO_ACTIVE_MENU();
 							}
 
 							g_promtForLeavingMonitorMode = FALSE;
@@ -432,9 +430,8 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 			getRecData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 			g_helpRecord.auto_print = temp_g_helpRecord.auto_print;
 
-			g_activeMenu = MAIN_MENU;
-			ACTIVATE_MENU_MSG();
-			(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+			SETUP_MENU_MSG(MAIN_MENU);
+			JUMP_TO_ACTIVE_MENU();
 			
 			overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) MONITOR STOPPED.", (5 * SOFT_SECS));
 		break;
@@ -998,7 +995,14 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
-					sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), hexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+					if (g_helpRecord.report_millibars == NO)
+					{
+						sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), hexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+					}
+					else // Report Air in Millibars
+					{
+						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), hexToMillBars(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+					}
 				}
 				else // (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS) || (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 				{
@@ -1012,7 +1016,14 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							if (g_helpRecord.report_millibars == NO)
+							{
+								sprintf(buff, "AIR %4.1f dB ", hexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							}
+							else // Report Air in Millibars
+							{
+								sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							}
 						}
 						else if (g_triggerRecord.op_mode == COMBO_MODE)
 						{
@@ -1022,7 +1033,14 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_comboSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							if (g_helpRecord.report_millibars == NO)
+							{
+								sprintf(buff, "AIR %4.1f dB ", hexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							}
+							else // Report Air in Millibars
+							{
+								sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							}
 						}
 					}
 					else // g_displayBargraphResultsMode == JOB_PEAK_RESULTS
@@ -1033,7 +1051,14 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 									((float)((g_aJobFreq * 2) - 1)));
 						}
 
-						sprintf(buff, "AIR %4.1f dB ", hexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+						if (g_helpRecord.report_millibars == NO)
+						{
+							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+						}
+						else // Report Air in Millibars
+						{
+							sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+						}
 					}
 
 					if (tempA > 100)

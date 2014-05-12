@@ -182,9 +182,8 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 							getRecData(&temp_g_helpRecord, 0, REC_HELP_USER_MENU_TYPE);
 							g_helpRecord.auto_print = temp_g_helpRecord.auto_print;
 
-							g_activeMenu = MAIN_MENU;
-							ACTIVATE_MENU_MSG();
-							(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+							SETUP_MENU_MSG(MAIN_MENU);
+							JUMP_TO_ACTIVE_MENU();
 						}
 
 						g_promtForLeavingMonitorMode = FALSE;
@@ -224,8 +223,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 							}
 							else // User hit enter on waveform results that were processed in real time after leaving monitor mode
 							{
-								g_activeMenu = MAIN_MENU;
-								ACTIVATE_MENU_MSG();
+								SETUP_MENU_MSG(MAIN_MENU);
 							}
 						}
 						else // MINIGRAPH_UNIT
@@ -245,16 +243,14 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 					{
  						if (g_summaryListMenuActive == YES)
  						{
-	 						g_activeMenu = SUMMARY_MENU;
-							ACTIVATE_MENU_MSG(); msg.data[0] = ESC_KEY;
+							SETUP_MENU_MSG(SUMMARY_MENU); msg.data[0] = ESC_KEY;
 						}
 						else
 						{
-							g_activeMenu = MAIN_MENU;
-							ACTIVATE_MENU_MSG();
+							SETUP_MENU_MSG(MAIN_MENU);
 						}
 
-						(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+						JUMP_TO_ACTIVE_MENU();
 					}
 				break;
 
@@ -309,9 +305,8 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 					}
 					else // (g_sampleProcessing == IDLE_STATE)
 					{
-						g_activeMenu = SUMMARY_MENU;
-						ACTIVATE_MENU_MSG(); mn_msg.data[0] = ESC_KEY;
-						(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+						SETUP_MENU_MSG(SUMMARY_MENU); mn_msg.data[0] = ESC_KEY;
+						JUMP_TO_ACTIVE_MENU();
 
 						mn_msg.length = 1;
 						mn_msg.cmd = KEYPRESS_MENU_CMD;
@@ -839,11 +834,11 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    // Air
 	    byteSet(&buff[0], 0, sizeof(buff));
 
-		if (g_printMillibars == OFF)
+		if (g_helpRecord.report_millibars == OFF)
 		{
 		    sprintf(buff,"%0.1f dB", hexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}
-		else
+		else // Report Air in Millibars
 		{
 		    sprintf(buff,"%0.3f mb", hexToMillBars(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}

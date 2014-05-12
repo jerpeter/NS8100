@@ -231,7 +231,7 @@ uint16 ckInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 ///	Function:	procInputMsg
 ///	Purpose:
 ///----------------------------------------------------------------------------
-void procInputMsg(INPUT_MSG_STRUCT msg)
+void procInputMsg(INPUT_MSG_STRUCT mn_msg)
 {
 	keypressEventMgr();
 
@@ -241,19 +241,19 @@ void procInputMsg(INPUT_MSG_STRUCT msg)
 		debug("Keypress command absorbed to signal unit to power on LCD\n");
 
 		// Clear out the message parameters
-		msg.cmd = 0; msg.length = 0; msg.data[0] = 0;
+		mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
 
 		// Clear the flag
 		clearSystemEventFlag(UPDATE_MENU_EVENT);
 
 		// Recall the current active menu
-		(*menufunc_ptrs[g_activeMenu])(msg);
+		JUMP_TO_ACTIVE_MENU();
 
 		// Done processing, return
 		return;
 	}
 
-	switch (msg.cmd)
+	switch (mn_msg.cmd)
 	{
 #if 0 // ns7100
 		case PAPER_FEED_CMD:
@@ -263,7 +263,7 @@ void procInputMsg(INPUT_MSG_STRUCT msg)
 		case CTRL_CMD:
 			{
 				debug("Handling Ctrl Sequence\n");
-				handleCtrlKeyCombination((char)msg.data[0]);
+				handleCtrlKeyCombination((char)mn_msg.data[0]);
 			}
 			break;
 
@@ -277,7 +277,7 @@ void procInputMsg(INPUT_MSG_STRUCT msg)
 		case KEYPRESS_MENU_CMD:
 			{
 				debug("Handling Keypress Command\n");
-				(*menufunc_ptrs[g_activeMenu])(msg);
+				JUMP_TO_ACTIVE_MENU();
 			}				
 			break;
 

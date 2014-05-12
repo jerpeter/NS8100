@@ -477,6 +477,14 @@ extern void BootLoadManager(void);
 						//copyValidFlashEventSummariesToRam();
 						//powerControl(POWER_OFF, ON);
 					}
+					else if (keyPressed == KEY_BACKLIGHT)
+					{
+						displayTimerCallBack();
+						lcdPwTimerCallBack();
+						
+						p_msg->cmd = 0;
+						p_msg->length = 0;
+					}
 #endif
 				}
 				else if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)

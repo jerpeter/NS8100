@@ -235,9 +235,8 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 		//debug("Cal Menu Screen 1 selected\n");
 		s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
 
-		g_activeMenu = MAIN_MENU;
-		ACTIVATE_MENU_MSG();
-		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+		SETUP_MENU_MSG(MAIN_MENU);
+		JUMP_TO_ACTIVE_MENU();
 	}
 }
 
@@ -300,8 +299,8 @@ void calSetupMnProc(INPUT_MSG_STRUCT msg,
 						break;
 					}
 
-					ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
+					JUMP_TO_ACTIVE_MENU();
 					break;
 
 				default:

@@ -209,9 +209,8 @@ void InitSoftwareSettings(void)
 
 	debug("Jump to Main Menu\n");
 	// Jump to the true main menu
-	g_activeMenu = MAIN_MENU;
-	ACTIVATE_MENU_MSG();
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	SETUP_MENU_MSG(MAIN_MENU);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 /****************************************
@@ -368,17 +367,15 @@ void MenuEventManager(void)
 	{
 		clearMenuEventFlag(RESULTS_MENU_EVENT);
 
-		g_activeMenu = RESULTS_MENU;
-
 		if (g_triggerRecord.op_mode == MANUAL_CAL_MODE)
 		{
-			RESULTS_MENU_MANUEL_CAL_MSG();
+			SETUP_RESULTS_MENU_MANUEL_CAL_MSG(RESULTS_MENU);
 		}
 		else
 		{
-			RESULTS_MENU_MONITORING_MSG();
+			SETUP_RESULTS_MENU_MONITORING_MSG(RESULTS_MENU);
 		}
-		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+		JUMP_TO_ACTIVE_MENU();
 	}
 
 	if (getTimerEventState(SOFT_TIMER_CHECK_EVENT))
@@ -394,9 +391,8 @@ void MenuEventManager(void)
 		clearTimerEventFlag(TIMER_MODE_TIMER_EVENT);
 
 		debug("Timer mode: Start monitoring...\n");
-		g_activeMenu = MONITOR_MENU;
-		ACTIVATE_MENU_WITH_DATA_MSG(g_triggerRecord.op_mode);
-		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+		JUMP_TO_ACTIVE_MENU();
 	}
 }
 
@@ -556,9 +552,8 @@ void FactorySetupManager(void)
 		keypressEventMgr();
 		messageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
 
-		g_activeMenu = DATE_TIME_MENU;
-		ACTIVATE_MENU_MSG();
-		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+		SETUP_MENU_MSG(DATE_TIME_MENU);
+		JUMP_TO_ACTIVE_MENU();
 	}
 #if 0 // Added to work around On Key IRQ problem
 	else if (g_factorySetupRecord.invalid && g_factorySetupSequence != PROCESS_FACTORY_SETUP)
@@ -568,9 +563,8 @@ void FactorySetupManager(void)
 		keypressEventMgr();
 		messageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
 
-		g_activeMenu = DATE_TIME_MENU;
-		ACTIVATE_MENU_MSG();
-		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+		SETUP_MENU_MSG(DATE_TIME_MENU);
+		JUMP_TO_ACTIVE_MENU();
 	}
 #endif
 }

@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef RS232_TEST_MENU_H_
 #define RS232_TEST_MENU_H_
 
@@ -127,3 +130,5 @@ static void (*RS232_Test_Menu_Functions[])(void) =
 };
 
 #endif //RS232_TEST_MENU_H_
+
+#endif

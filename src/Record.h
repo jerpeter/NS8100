@@ -226,7 +226,7 @@ typedef struct
 	uint16 encode_ln;
 	uint8 unused[6];
 	uint8 unused1;
-	uint8 bargraph_report;
+	uint8 unused2;
 	uint8 auto_cal_in_waveform;
 	uint8 report_displacement;
 	uint8 flash_wrapping;
@@ -240,7 +240,7 @@ typedef struct
 	uint8 lcd_timeout;
 	uint8 auto_print;
 	uint8 units_of_measure;
-	uint8 bar_space;
+	uint8 report_millibars;
 	uint8 alarm_one_mode;
 	uint8 alarm_two_mode;
 	uint8 print_monitor_log;

@@ -1,6 +1,7 @@
 /* FORCE_ACTIVE {__SGFM_configuration_field}  // Prevents deadstripping of SGFM config fld */
 
 #if 0
+
 SECTIONS
 {	
   .vectormap :					           // Put the vector map at the very beginning
@@ -88,4 +89,5 @@ MEMORY
   __SPI_PORT_DATA_REG_ADDR          = 0x00CB0007;
   __SPI_PORT_DATA_DIR_REG_ADDR      = 0x00CB0008;
 }
+
 #endif

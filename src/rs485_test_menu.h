@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef RS485_TEST_MENU_H_
 #define RS485_TEST_MENU_H_
 
@@ -101,3 +104,5 @@ static void (*RS485_Test_Menu_Functions[])(void) =
 };
 
 #endif //RS485_TEST_MENU_H_
+
+#endif

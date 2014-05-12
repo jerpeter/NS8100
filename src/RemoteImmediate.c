@@ -1672,9 +1672,8 @@ void handleGMN(CMD_BUFFER_STRUCT* inCmd)
 			case COMBO_MODE:
 				// Good data
 				g_triggerRecord.op_mode = tempBuff[0];
-				g_activeMenu = MONITOR_MENU;
-				ACTIVATE_MENU_WITH_DATA_MSG((uint32)g_triggerRecord.op_mode);
-				(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+				SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, (uint32)g_triggerRecord.op_mode);
+				JUMP_TO_ACTIVE_MENU();
 				returnCode = CFG_ERR_NONE;
 				break;
 
@@ -1721,9 +1720,8 @@ void handleHLT(CMD_BUFFER_STRUCT* inCmd)
 		stopMonitoring(g_triggerRecord.op_mode, EVENT_PROCESSING);
 
 		// Jump to the main menu
-		g_activeMenu = MAIN_MENU;
-		ACTIVATE_MENU_MSG();
-		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+		SETUP_MENU_MSG(MAIN_MENU);
+		JUMP_TO_ACTIVE_MENU();
 		resultCode = MSGTYPE_RESPONSE;
 	}
 

@@ -224,8 +224,8 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 
 				case (HELP_KEY):
 					// Jump to the Help menu
-					ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
+					JUMP_TO_ACTIVE_MENU();
 				break;
 
 				case (DOWN_ARROW_KEY):

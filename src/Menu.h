@@ -238,7 +238,7 @@ enum {
 #define AUTO_72_HOUR_TIMEOUT 	72 	// hours
 #define AUTO_NO_CAL_TIMEOUT 	0 	// Disabled
 
-// Bargraph Report stuff
+// (Unused currently although text equivalent is available)
 #define NORMAL_FORMAT		1
 #define SHORT_FORMAT		2
 
@@ -395,6 +395,7 @@ enum {
 	PRINTER,
 	PRINT_MONITOR_LOG,
 	REPORT_DISPLACEMENT,
+	REPORT_MILLIBARS,
 	SENSOR_GAIN_TYPE,
 	SERIAL_NUMBER,
 	SUMMARIES_EVENTS,
@@ -714,24 +715,28 @@ typedef enum {
 } MB_CHOICE_TYPE;
 
 // Menu Message Macros
-#define ACTIVATE_MENU_MSG() \
+#define JUMP_TO_ACTIVE_MENU()	(*menufunc_ptrs[g_activeMenu]) (mn_msg)
+
+#define SETUP_MENU_MSG(m) \
+	g_activeMenu = m; \
 	mn_msg.cmd = ACTIVATE_MENU_CMD;\
 	mn_msg.length = 0;\
 	mn_msg.data[0] = 0;
 
-#define ACTIVATE_MENU_WITH_DATA_MSG(x) \
+#define SETUP_MENU_WITH_DATA_MSG(m, x) \
+	g_activeMenu = m; \
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 1;\
 	mn_msg.data[0] = x;            
 
-#define ACTIVATE_USER_MENU_MSG(a, b) \
+#define SETUP_USER_MENU_MSG(a, b) \
 	g_activeMenu = USER_MENU;\
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 4;\
 	mn_msg.data[0] = (uint32)a;\
 	mn_msg.data[1] = (uint32)b;
 
-#define ACTIVATE_USER_MENU_FOR_FLOATS_MSG(a, b, c, d, e, f) \
+#define SETUP_USER_MENU_FOR_FLOATS_MSG(a, b, c, d, e, f) \
 	g_activeMenu = USER_MENU;\
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 4;\
@@ -742,7 +747,7 @@ typedef enum {
 	g_userMenuCacheData.floatMinValue = (float)e;\
 	g_userMenuCacheData.floatMaxValue = (float)f;
 
-#define ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(a, b, c, d, e) \
+#define SETUP_USER_MENU_FOR_INTEGERS_MSG(a, b, c, d, e) \
 	g_activeMenu = USER_MENU;\
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 4;\
@@ -752,20 +757,21 @@ typedef enum {
 	g_userMenuCacheData.intMinValue = (uint32)d;\
 	g_userMenuCacheData.intMaxValue = (uint32)e;
 
-#define RESULTS_MENU_MONITORING_MSG() \
+#define SETUP_RESULTS_MENU_MONITORING_MSG(m) \
+	g_activeMenu = m; \
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 1;\
 	mn_msg.data[0] = 12;
 
-#define RESULTS_MENU_MANUEL_CAL_MSG() \
+#define SETUP_RESULTS_MENU_MANUEL_CAL_MSG(m) \
+	g_activeMenu = m; \
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 1;\
 	mn_msg.data[0] = 13;
 
 enum {
 	PRINTER_OFF,
-	PRINTER_ON,
-	LCD_ON
+	PRINTER_ON
 };	
 
 ///----------------------------------------------------------------------------

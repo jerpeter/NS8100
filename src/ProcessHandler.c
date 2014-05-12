@@ -655,11 +655,9 @@ void bargraphForcedCalibration(void)
 		clearMenuEventFlag(RESULTS_MENU_EVENT);
 
 #if 0 // fix_ns8100
-		g_activeMenu = RESULTS_MENU;
+		SETUP_RESULTS_MENU_MANUEL_CAL_MSG(RESULTS_MENU);
 
-		RESULTS_MENU_MANUEL_CAL_MSG();
-
-		(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+		JUMP_TO_ACTIVE_MENU();
 #else
 		UNUSED(mn_msg);
 #endif

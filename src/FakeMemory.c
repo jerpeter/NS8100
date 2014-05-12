@@ -1,3 +1,5 @@
+#if 0
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -27,7 +29,7 @@ __ramFlashSummaryTblKey = 0x81801000;
 __ramFlashSummaryTbl = 0x81801004;
 */
 
-#if 1
+#if 0
 int ReadPSR(void)
 {
 	uint8 i = 0;
@@ -50,4 +52,6 @@ void Wait(void)
 
 	i+=i;
 }
+#endif
+
 #endif

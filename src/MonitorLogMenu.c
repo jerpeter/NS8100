@@ -167,8 +167,8 @@ void monitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 				case (PLUS_KEY): adjustLcdContrast(LIGHTER); break;
 
 				case (ESC_KEY):
-					ACTIVATE_USER_MENU_MSG(&monitorLogMenu, DEFAULT_ITEM_1);
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_USER_MENU_MSG(&monitorLogMenu, DEFAULT_ITEM_1);
+					JUMP_TO_ACTIVE_MENU();
 				break;
 
 				default:

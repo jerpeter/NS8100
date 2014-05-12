@@ -125,32 +125,32 @@ void airScaleMenuHandler(uint8 keyPressed, void* data)
 			// If alarm mode is off, the proceed to save setup
 			if ((g_helpRecord.alarm_one_mode == ALARM_MODE_OFF) && (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF))
 			{
-				ACTIVATE_USER_MENU_MSG(&saveSetupMenu, YES);
+				SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
 			}
 			else // Goto Alarm setup menus
 			{
-				ACTIVATE_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+				SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
 			}
 		}
 		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 		{
-			ACTIVATE_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
+			SETUP_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
 		if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 		{
-			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 				RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 		}
 		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 		{
-			ACTIVATE_USER_MENU_MSG(&barChannelMenu, 0);
+			SETUP_USER_MENU_MSG(&barChannelMenu, 0);
 		}
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -179,14 +179,18 @@ void airSetupMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_factorySetupRecord.aweight_option = (uint8)airSetupMenu[newItemIndex].data;
 
-		ACTIVATE_USER_MENU_MSG(&millibarMenu, g_printMillibars);
+#if 0 // ns7100
+		SETUP_USER_MENU_MSG(&millibarMenu, g_helpRecord.report_millibars);
+#else // ns8100
+		SETUP_MENU_MSG(CAL_SETUP_MENU);
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
+		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -223,7 +227,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 				g_helpRecord.alarm_one_seismic_lvl = NO_TRIGGER_CHAR;
 				g_helpRecord.alarm_one_air_lvl = NO_TRIGGER_CHAR;
 
-				ACTIVATE_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+				SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
 			break;
 
 			case (ALARM_MODE_SEISMIC):
@@ -231,7 +235,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "SEISMIC TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					ACTIVATE_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+					SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
 				}
 				else
 				{
@@ -264,7 +268,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 						g_helpRecord.alarm_one_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
 #endif
-					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
 						(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						g_bitAccuracyMidpoint);
@@ -276,7 +280,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					ACTIVATE_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+					SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
 				}
 				else
 				{
@@ -303,7 +307,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Call Alarm One Air Level
-					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
 						g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
 				}
 			break;
@@ -314,7 +318,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "SEISMIC OR AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					ACTIVATE_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+					SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
 				}
 				else
 				{
@@ -365,7 +369,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 						g_helpRecord.alarm_one_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
 #endif
-					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
 						(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						g_bitAccuracyMidpoint);
@@ -379,21 +383,21 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 		{
 			if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
 			{
-				ACTIVATE_USER_MENU_MSG(&airScaleMenu, 0);
+				SETUP_USER_MENU_MSG(&airScaleMenu, 0);
 			}
 			else
 			{
-				ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 					RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 			}
 		}
 		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 		{
-		     ACTIVATE_USER_MENU_MSG(&barResultMenu, g_helpRecord.vector_sum);
+		     SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vector_sum);
 		}
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -432,7 +436,7 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 
 				saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-				ACTIVATE_USER_MENU_MSG(&saveSetupMenu, YES);
+				SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
 			break;
 
 			case (ALARM_MODE_SEISMIC):
@@ -440,7 +444,7 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "SEISMIC TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					ACTIVATE_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
 				}
 				else
 				{
@@ -473,7 +477,7 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 						g_helpRecord.alarm_two_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
 #endif
-					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
 						(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						g_bitAccuracyMidpoint);
@@ -485,7 +489,7 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					ACTIVATE_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
 				}
 				else
 				{
@@ -512,7 +516,7 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Call Alarm One Air Level
-					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
 						g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
 				}
 			break;
@@ -523,7 +527,7 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "SEISMIC OR AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					ACTIVATE_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
 				}
 				else
 				{
@@ -574,7 +578,7 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 						g_helpRecord.alarm_two_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
 #endif
-					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
 						(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						g_bitAccuracyMidpoint);
@@ -586,17 +590,17 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 	{
 		if (g_helpRecord.alarm_one_mode == ALARM_MODE_OFF)
 		{
-			ACTIVATE_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+			SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
 		}
 		else
 		{
-			ACTIVATE_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_helpRecord.alarm_one_time,
+			SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_helpRecord.alarm_one_time,
 				ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT,
 				ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 		}
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -628,14 +632,14 @@ void alarmOutputMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, ALARM_OUTPUT_MODE);
+		SETUP_USER_MENU_MSG(&configMenu, ALARM_OUTPUT_MODE);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -677,14 +681,14 @@ void autoCalMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, AUTO_CALIBRATION);
+		SETUP_USER_MENU_MSG(&configMenu, AUTO_CALIBRATION);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -719,14 +723,14 @@ void autoMonitorMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, AUTO_MONITOR);
+		SETUP_USER_MENU_MSG(&configMenu, AUTO_MONITOR);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -795,14 +799,14 @@ void barChannelMenuHandler(uint8 keyPressed, void* data)
 					(float)(gainFactor * BAR_SCALE_EIGHTH)));
 		}
 
-		ACTIVATE_USER_MENU_MSG(&barScaleMenu, g_triggerRecord.berec.barScale);
+		SETUP_USER_MENU_MSG(&barScaleMenu, g_triggerRecord.berec.barScale);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&sensitivityMenu, g_triggerRecord.srec.sensitivity);
+		SETUP_USER_MENU_MSG(&sensitivityMenu, g_triggerRecord.srec.sensitivity);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -836,14 +840,14 @@ void barIntervalMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_triggerRecord.bgrec.barInterval = barIntervalMenu[newItemIndex].data;
 
-		ACTIVATE_USER_MENU_MSG(&summaryIntervalMenu, g_triggerRecord.bgrec.summaryInterval);
+		SETUP_USER_MENU_MSG(&summaryIntervalMenu, g_triggerRecord.bgrec.summaryInterval);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&barScaleMenu, g_triggerRecord.berec.barScale);
+		SETUP_USER_MENU_MSG(&barScaleMenu, g_triggerRecord.berec.barScale);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -874,14 +878,14 @@ void barScaleMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_triggerRecord.berec.barScale = (uint8)(barScaleMenu[newItemIndex].data);
 
-		ACTIVATE_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
+		SETUP_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&barChannelMenu, g_triggerRecord.berec.barChannel);
+		SETUP_USER_MENU_MSG(&barChannelMenu, g_triggerRecord.berec.barChannel);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -916,15 +920,15 @@ void summaryIntervalMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_triggerRecord.bgrec.summaryInterval = summaryIntervalMenu[newItemIndex].data;
 
-		ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
+		SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
 			LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
+		SETUP_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -974,27 +978,27 @@ void barResultMenuHandler(uint8 keyPressed, void* data)
 				g_triggerRecord.trec.seismicTriggerLevel /= (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
 				(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
 		}
 		else if ((g_helpRecord.alarm_one_mode == ALARM_MODE_OFF) && (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF))
 		{
-			ACTIVATE_USER_MENU_MSG(&saveSetupMenu, YES);
+			SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
 		}
 		else
 		{
-			ACTIVATE_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+			SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
+		SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
 			LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1051,14 +1055,14 @@ void baudRateMenuHandler(uint8 keyPressed, void* data)
 			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 		}
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, BAUD_RATE);
+		SETUP_USER_MENU_MSG(&configMenu, BAUD_RATE);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1100,19 +1104,19 @@ void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
 		// Check if sample rate is 16K which can not process temp readings
 		if (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K)
 		{
-			ACTIVATE_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
+			SETUP_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
 		}
 		else // All other sample rates
 		{
-			ACTIVATE_USER_MENU_MSG(&recalibrateMenu, g_triggerRecord.trec.adjustForTempDrift);
+			SETUP_USER_MENU_MSG(&recalibrateMenu, g_triggerRecord.trec.adjustForTempDrift);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
+		SETUP_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1120,7 +1124,7 @@ void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
-#define CONFIG_MENU_ENTRIES 30
+#define CONFIG_MENU_ENTRIES 31
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1145,6 +1149,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, PRINTER_TEXT,				NO_TAG, {PRINTER}},
 {NO_TAG, 0, PRINT_MONITOR_LOG_TEXT,		NO_TAG, {PRINT_MONITOR_LOG}},
 {NO_TAG, 0, REPORT_DISPLACEMENT_TEXT,	NO_TAG, {REPORT_DISPLACEMENT}},
+{NO_TAG, 0, REPORT_MILLIBARS_TEXT,		NO_TAG, {REPORT_MILLIBARS}},
 {NO_TAG, 0, SENSOR_GAIN_TYPE_TEXT,		NO_TAG, {SENSOR_GAIN_TYPE}},
 {NO_TAG, 0, SERIAL_NUMBER_TEXT,			NO_TAG, {SERIAL_NUMBER}},
 {NO_TAG, 0, SUMMARIES_EVENTS_TEXT,		NO_TAG, {SUMMARIES_EVENTS}},
@@ -1168,11 +1173,11 @@ void configMenuHandler(uint8 keyPressed, void* data)
 		switch (configMenu[newItemIndex].data)
 		{
 			case (ALARM_OUTPUT_MODE):
-				ACTIVATE_USER_MENU_MSG(&alarmOutputMenu, (g_helpRecord.alarm_one_mode | g_helpRecord.alarm_two_mode));
+				SETUP_USER_MENU_MSG(&alarmOutputMenu, (g_helpRecord.alarm_one_mode | g_helpRecord.alarm_two_mode));
 			break;
 
 			case (AUTO_CALIBRATION):
-				ACTIVATE_USER_MENU_MSG(&autoCalMenu, g_helpRecord.auto_cal_mode);
+				SETUP_USER_MENU_MSG(&autoCalMenu, g_helpRecord.auto_cal_mode);
 			break;
 
 			case (AUTO_DIAL_INFO):
@@ -1180,15 +1185,15 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (AUTO_MONITOR):
-				ACTIVATE_USER_MENU_MSG(&autoMonitorMenu, g_helpRecord.auto_monitor_mode);
+				SETUP_USER_MENU_MSG(&autoMonitorMenu, g_helpRecord.auto_monitor_mode);
 			break;
 
 			case (BATTERY):
-				g_activeMenu = BATTERY_MENU; ACTIVATE_MENU_MSG();
+				SETUP_MENU_MSG(BATTERY_MENU);
 			break;
 
 			case (BAUD_RATE):
-				ACTIVATE_USER_MENU_MSG(&baudRateMenu, g_helpRecord.baud_rate);
+				SETUP_USER_MENU_MSG(&baudRateMenu, g_helpRecord.baud_rate);
 			break;
 
 			case (CALIBRATION_DATE):
@@ -1198,7 +1203,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			case (COPIES):
 				if (SUPERGRAPH_UNIT)
 				{
-					ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&copiesMenu, &g_helpRecord.copies,
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&copiesMenu, &g_helpRecord.copies,
 						COPIES_DEFAULT_VALUE, COPIES_MIN_VALUE, COPIES_MAX_VALUE);
 				}
 				else // MINIGRAPH_UNIT
@@ -1208,15 +1213,15 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (DATE_TIME):
-				g_activeMenu = DATE_TIME_MENU; ACTIVATE_MENU_MSG();
+				SETUP_MENU_MSG(DATE_TIME_MENU);
 			break;
 
 			case (ERASE_FLASH):
-				ACTIVATE_USER_MENU_MSG(&eraseEventsMenu, YES);
+				SETUP_USER_MENU_MSG(&eraseEventsMenu, YES);
 			break;
 
 			case (FLASH_WRAPPING):
-				ACTIVATE_USER_MENU_MSG(&flashWrappingMenu, g_helpRecord.flash_wrapping);
+				SETUP_USER_MENU_MSG(&flashWrappingMenu, g_helpRecord.flash_wrapping);
 			break;
 
 			case (FLASH_STATS):
@@ -1226,7 +1231,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			case (FREQUENCY_PLOT):
 				if (SUPERGRAPH_UNIT)
 				{
-					ACTIVATE_USER_MENU_MSG(&freqPlotMenu, g_helpRecord.freq_plot_mode);
+					SETUP_USER_MENU_MSG(&freqPlotMenu, g_helpRecord.freq_plot_mode);
 				}
 				else // MINIGRAPH_UNIT
 				{
@@ -1235,30 +1240,30 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (LANGUAGE):
-				ACTIVATE_USER_MENU_MSG(&languageMenu, g_helpRecord.lang_mode);
+				SETUP_USER_MENU_MSG(&languageMenu, g_helpRecord.lang_mode);
 			break;
 
 			case (LCD_CONTRAST):
-				g_activeMenu = LCD_CONTRAST_MENU; ACTIVATE_MENU_MSG();
+				SETUP_MENU_MSG(LCD_CONTRAST_MENU);
 			break;
 
 			case (LCD_TIMEOUT):
-				ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&lcdTimeoutMenu, &g_helpRecord.lcd_timeout,
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdTimeoutMenu, &g_helpRecord.lcd_timeout,
 					LCD_TIMEOUT_DEFAULT_VALUE, LCD_TIMEOUT_MIN_VALUE, LCD_TIMEOUT_MAX_VALUE);
 			break;
 
 			case (MODEM_SETUP):
-				ACTIVATE_USER_MENU_MSG(&modemSetupMenu, g_modemSetupRecord.modemStatus);
+				SETUP_USER_MENU_MSG(&modemSetupMenu, g_modemSetupRecord.modemStatus);
 			break;
 
 			case (MONITOR_LOG):
-				ACTIVATE_USER_MENU_MSG(&monitorLogMenu, DEFAULT_ITEM_1);
+				SETUP_USER_MENU_MSG(&monitorLogMenu, DEFAULT_ITEM_1);
 			break;
 
 			case (PRINTER):
 				if (SUPERGRAPH_UNIT)
 				{
-					ACTIVATE_USER_MENU_MSG(&printerEnableMenu, g_helpRecord.auto_print);
+					SETUP_USER_MENU_MSG(&printerEnableMenu, g_helpRecord.auto_print);
 				}
 				else // MINIGRAPH_UNIT
 				{
@@ -1269,7 +1274,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			case (PRINT_MONITOR_LOG):
 				if (SUPERGRAPH_UNIT)
 				{
-					ACTIVATE_USER_MENU_MSG(&printMonitorLogMenu, g_helpRecord.print_monitor_log);
+					SETUP_USER_MENU_MSG(&printMonitorLogMenu, g_helpRecord.print_monitor_log);
 				}
 				else
 				{
@@ -1278,7 +1283,11 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (REPORT_DISPLACEMENT):
-				ACTIVATE_USER_MENU_MSG(&displacementMenu, g_helpRecord.report_displacement);
+				SETUP_USER_MENU_MSG(&displacementMenu, g_helpRecord.report_displacement);
+			break;
+
+			case (REPORT_MILLIBARS):
+				SETUP_USER_MENU_MSG(&millibarMenu, g_helpRecord.report_millibars);
 			break;
 
 			case (SENSOR_GAIN_TYPE):
@@ -1290,7 +1299,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (SUMMARIES_EVENTS):
-				g_activeMenu = SUMMARY_MENU; ACTIVATE_MENU_MSG(); mn_msg.data[0] = START_FROM_TOP;
+				SETUP_MENU_MSG(SUMMARY_MENU); mn_msg.data[0] = START_FROM_TOP;
 			break;
 
 			case (TIMER_MODE):
@@ -1312,38 +1321,38 @@ void configMenuHandler(uint8 keyPressed, void* data)
 
 						saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-						ACTIVATE_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timer_mode);
+						SETUP_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timer_mode);
 					}
 					else // User did not cancel timer mode
 					{
-						ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+						SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 					}
 				}
 				else // Timer mode is disabled
 				{
-					ACTIVATE_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timer_mode);
+					SETUP_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timer_mode);
 				}
 			break;
 
 			case (UNITS_OF_MEASURE):
-				ACTIVATE_USER_MENU_MSG(&unitsMenu, g_helpRecord.units_of_measure);
+				SETUP_USER_MENU_MSG(&unitsMenu, g_helpRecord.units_of_measure);
 			break;
 
 			case (VECTOR_SUM):
-				ACTIVATE_USER_MENU_MSG(&vectorSumMenu, g_helpRecord.vector_sum);
+				SETUP_USER_MENU_MSG(&vectorSumMenu, g_helpRecord.vector_sum);
 			break;
 
 			case (WAVEFORM_AUTO_CAL):
-				ACTIVATE_USER_MENU_MSG(&waveformAutoCalMenu, g_helpRecord.auto_cal_in_waveform);
+				SETUP_USER_MENU_MSG(&waveformAutoCalMenu, g_helpRecord.auto_cal_in_waveform);
 			break;
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
+		SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1374,14 +1383,14 @@ void displacementMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, REPORT_DISPLACEMENT);
+		SETUP_USER_MENU_MSG(&configMenu, REPORT_DISPLACEMENT);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1444,20 +1453,20 @@ void eraseEventsMenuHandler(uint8 keyPressed, void* data)
 				// Call routine to reset the LCD display timers
 				keypressEventMgr();
 
-				ACTIVATE_USER_MENU_MSG(&zeroEventNumberMenu, YES);
+				SETUP_USER_MENU_MSG(&zeroEventNumberMenu, YES);
 			}
 		}
 		else
 		{
-			ACTIVATE_USER_MENU_MSG(&eraseSettingsMenu, YES);
+			SETUP_USER_MENU_MSG(&eraseSettingsMenu, YES);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, ERASE_FLASH);
+		SETUP_USER_MENU_MSG(&configMenu, ERASE_FLASH);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1514,14 +1523,14 @@ void eraseSettingsMenuHandler(uint8 keyPressed, void* data)
 			overlayMessage(getLangText(SUCCESS_TEXT), getLangText(ERASE_COMPLETE_TEXT), (2 * SOFT_SECS));
 		}
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&eraseEventsMenu, YES);
+		SETUP_USER_MENU_MSG(&eraseEventsMenu, YES);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1552,14 +1561,14 @@ void flashWrappingMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, FLASH_WRAPPING);
+		SETUP_USER_MENU_MSG(&configMenu, FLASH_WRAPPING);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1590,21 +1599,21 @@ void freqPlotMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_helpRecord.freq_plot_mode == YES)
 		{
-			ACTIVATE_USER_MENU_MSG(&freqPlotStandardMenu, g_helpRecord.freq_plot_type);
+			SETUP_USER_MENU_MSG(&freqPlotStandardMenu, g_helpRecord.freq_plot_type);
 		}
 		else
 		{
 			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-			ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+			SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, FREQUENCY_PLOT);
+		SETUP_USER_MENU_MSG(&configMenu, FREQUENCY_PLOT);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1639,14 +1648,14 @@ void freqPlotStandardMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&freqPlotMenu, g_helpRecord.freq_plot_mode);
+		SETUP_USER_MENU_MSG(&freqPlotMenu, g_helpRecord.freq_plot_mode);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1675,23 +1684,22 @@ void helpMenuHandler(uint8 keyPressed, void* data)
 	{
 		if (helpMenu[newItemIndex].data == CONFIG)
 		{
-			ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+			SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 		}
 		else
 		{
 			messageBox(getLangText(STATUS_TEXT), getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT), MB_OK);
 
 			// Don't call menu for now, since it's empty
-			//ACTIVATE_USER_MENU_MSG(&infoMenu, DEFAULT_ITEM_1);
+			//SETUP_USER_MENU_MSG(&infoMenu, DEFAULT_ITEM_1);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		g_activeMenu = MAIN_MENU;
-		ACTIVATE_MENU_MSG();
+		SETUP_MENU_MSG(MAIN_MENU);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1718,14 +1726,14 @@ void infoMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
+		SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&helpMenu, INFORMATION);
+		SETUP_USER_MENU_MSG(&helpMenu, INFORMATION);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1771,14 +1779,14 @@ void languageMenuHandler(uint8 keyPressed, void* data)
 					break;
 		}
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, LANGUAGE);
+		SETUP_USER_MENU_MSG(&configMenu, LANGUAGE);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1805,17 +1813,25 @@ void millibarMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_printMillibars = (uint8)millibarMenu[newItemIndex].data;
+		g_helpRecord.report_millibars = (uint8)millibarMenu[newItemIndex].data;
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		g_activeMenu = CAL_SETUP_MENU;
-		ACTIVATE_MENU_MSG();
+#if 0 // ns7100
+		SETUP_MENU_MSG(CAL_SETUP_MENU);
+#else
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
+#if 0 // ns7100
+		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
+#else // ns8100
+		SETUP_USER_MENU_MSG(&configMenu, REPORT_DISPLACEMENT);
+#endif
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1845,21 +1861,19 @@ void modeMenuHandler(uint8 keyPressed, void* data)
 		if (modeMenu[newItemIndex].data == MONITOR)
 		{
 			// Call the Monitor menu and start monitoring
-			g_activeMenu = MONITOR_MENU;
-			ACTIVATE_MENU_WITH_DATA_MSG((uint32)g_triggerRecord.op_mode);
+			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, (uint32)g_triggerRecord.op_mode);
 		}
 		else // Mode is EDIT
 		{
-			ACTIVATE_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
+			SETUP_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		g_activeMenu = MAIN_MENU;
-		ACTIVATE_MENU_MSG(); mn_msg.data[0] = ESC_KEY;
+		SETUP_MENU_MSG(MAIN_MENU); mn_msg.data[0] = ESC_KEY;
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1890,7 +1904,7 @@ void modemSetupMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_modemSetupRecord.modemStatus == YES)
 		{
-			ACTIVATE_USER_MENU_MSG(&modemInitMenu, &g_modemSetupRecord.init);
+			SETUP_USER_MENU_MSG(&modemInitMenu, &g_modemSetupRecord.init);
 
 		}
 		else // Modem Setup is NO
@@ -1906,15 +1920,15 @@ void modemSetupMenuHandler(uint8 keyPressed, void* data)
 			g_modemStatus.ringIndicator = 0;
 
 			saveRecData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
-			ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+			SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, MODEM_SETUP);
+		SETUP_USER_MENU_MSG(&configMenu, MODEM_SETUP);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1944,7 +1958,7 @@ void monitorLogMenuHandler(uint8 keyPressed, void* data)
 	{
 		if(newItemIndex == VIEW_LOG)
 		{
-			g_activeMenu = VIEW_MONITOR_LOG_MENU; ACTIVATE_MENU_MSG();
+			SETUP_MENU_MSG(VIEW_MONITOR_LOG_MENU);
 		}
 		else if(newItemIndex == PRINT_LOG)
 		{
@@ -1957,10 +1971,10 @@ void monitorLogMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if(keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, MONITOR_LOG);
+		SETUP_USER_MENU_MSG(&configMenu, MONITOR_LOG);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -1991,14 +2005,14 @@ void printerEnableMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, PRINTER);
+		SETUP_USER_MENU_MSG(&configMenu, PRINTER);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2030,22 +2044,20 @@ void printOutMenuHandler(uint8 keyPressed, void* data)
 		{
 			// Using tempCopies just to seed with a value of 1 with the understanding that this value will
 			//  be referenced before this routine exits (User Menu Handler) and not at all afterwards
-			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&copiesMenu, &tempCopies,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&copiesMenu, &tempCopies,
 				COPIES_DEFAULT_VALUE, COPIES_MIN_VALUE, COPIES_MAX_VALUE);
 		}
 		else
 		{
-			g_activeMenu = SUMMARY_MENU;
-			ACTIVATE_MENU_MSG(); mn_msg.data[0] = ESC_KEY;
+			SETUP_MENU_MSG(SUMMARY_MENU); mn_msg.data[0] = ESC_KEY;
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		g_activeMenu = SUMMARY_MENU;
-		ACTIVATE_MENU_MSG(); mn_msg.data[0] = ESC_KEY;
+		SETUP_MENU_MSG(SUMMARY_MENU); mn_msg.data[0] = ESC_KEY;
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2076,14 +2088,14 @@ void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, PRINT_MONITOR_LOG);
+		SETUP_USER_MENU_MSG(&configMenu, PRINT_MONITOR_LOG);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2115,14 +2127,14 @@ void recalibrateMenuHandler(uint8 keyPressed, void* data)
 		// Save the current trig record into the default location
 		saveRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
+		SETUP_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
+		SETUP_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2166,7 +2178,7 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 
 			debug("Sample Rate: %d is not supported for this mode.\n", g_triggerRecord.trec.record_time_max);
 
-			ACTIVATE_USER_MENU_MSG(&sampleRateMenu, sampleRateMenu[DEFAULT_ITEM_2].data);
+			SETUP_USER_MENU_MSG(&sampleRateMenu, sampleRateMenu[DEFAULT_ITEM_2].data);
 		}
 		else
 		{
@@ -2180,16 +2192,16 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 
 			debug("New Max Record Time: %d\n", g_triggerRecord.trec.record_time_max);
 
-			ACTIVATE_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
+			SETUP_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
 		updateModeMenuTitle(g_triggerRecord.op_mode);
-		ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
+		SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2218,7 +2230,7 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 	{
 		if (saveSetupMenu[newItemIndex].data == YES)
 		{
-			ACTIVATE_USER_MENU_MSG(&saveRecordMenu, (uint8)0);
+			SETUP_USER_MENU_MSG(&saveRecordMenu, (uint8)0);
 		}
 		else // User selected NO
 		{
@@ -2226,7 +2238,7 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 			saveRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 			updateModeMenuTitle(g_triggerRecord.op_mode);
-			ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
+			SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -2240,11 +2252,11 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 				{
 					if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
 					{
-						ACTIVATE_USER_MENU_MSG(&airScaleMenu, 0);
+						SETUP_USER_MENU_MSG(&airScaleMenu, 0);
 					}
 					else
 					{
-						ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 							RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 					}
 				}
@@ -2252,11 +2264,11 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 				{
 					if (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF)
 					{
-						ACTIVATE_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+						SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
 					}
 					else
 					{
-						ACTIVATE_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarm_two_time,
+						SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarm_two_time,
 							ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT,
 							ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 					}
@@ -2267,17 +2279,17 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 				if ((g_helpRecord.alarm_one_mode == ALARM_MODE_OFF) &&
 					(g_helpRecord.alarm_two_mode == ALARM_MODE_OFF))
 				{
-					ACTIVATE_USER_MENU_MSG(&barResultMenu, g_helpRecord.vector_sum);
+					SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vector_sum);
 				}
 				else
 				{
 					if (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF)
 					{
-						ACTIVATE_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+						SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
 					}
 					else
 					{
-						ACTIVATE_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarm_two_time,
+						SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarm_two_time,
 							ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT,
 							ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 					}
@@ -2286,7 +2298,7 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 		}
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2334,22 +2346,22 @@ void sensitivityMenuHandler(uint8 keyPressed, void* data)
 				g_triggerRecord.trec.seismicTriggerLevel /= (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
 				(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
 		}
 		else if ((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 		{
-			ACTIVATE_USER_MENU_MSG(&barChannelMenu, g_triggerRecord.berec.barChannel);
+			SETUP_USER_MENU_MSG(&barChannelMenu, g_triggerRecord.berec.barChannel);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&operatorMenu, &g_triggerRecord.trec.oper);
+		SETUP_USER_MENU_MSG(&operatorMenu, &g_triggerRecord.trec.oper);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2383,26 +2395,26 @@ void sensorTypeMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
 		{
-			ACTIVATE_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
+			SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
 		}
 		else
 		{
-			ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
+			SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
 		if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
 		{
-			ACTIVATE_USER_MENU_MSG(&serialNumberMenu, &g_factorySetupRecord.serial_num);
+			SETUP_USER_MENU_MSG(&serialNumberMenu, &g_factorySetupRecord.serial_num);
 		}
 		else
 		{
-			ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
+			SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
 		}
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2433,11 +2445,11 @@ void timerModeMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_helpRecord.timer_mode == ENABLED)
 		{
-			ACTIVATE_USER_MENU_MSG(&timerModeFreqMenu, g_helpRecord.timer_mode_freq);
+			SETUP_USER_MENU_MSG(&timerModeFreqMenu, g_helpRecord.timer_mode_freq);
 		}
 		else
 		{
-			ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+			SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 		}
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
@@ -2457,10 +2469,10 @@ void timerModeMenuHandler(uint8 keyPressed, void* data)
 			messageBox(getLangText(STATUS_TEXT), getLangText(DISABLING_TIMER_MODE_TEXT), MB_OK);
 		}
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, TIMER_MODE);
+		SETUP_USER_MENU_MSG(&configMenu, TIMER_MODE);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2501,15 +2513,14 @@ void timerModeFreqMenuHandler(uint8 keyPressed, void* data)
 			messageBox("TIMER MODE HOURLY", "HOURS = ACTIVE HOURS, MINS = ACTIVE MIN RANGE EACH HOUR", MB_OK);
 		}
 		
-		g_activeMenu = TIMER_MODE_TIME_MENU;
-		ACTIVATE_MENU_MSG();
+		SETUP_MENU_MSG(TIMER_MODE_TIME_MENU);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timer_mode);
+		SETUP_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timer_mode);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2551,14 +2562,14 @@ void unitsMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, UNITS_OF_MEASURE);
+		SETUP_USER_MENU_MSG(&configMenu, UNITS_OF_MEASURE);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2589,14 +2600,14 @@ void vectorSumMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, VECTOR_SUM);
+		SETUP_USER_MENU_MSG(&configMenu, VECTOR_SUM);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2627,14 +2638,14 @@ void waveformAutoCalMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		ACTIVATE_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if(keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&configMenu, WAVEFORM_AUTO_CAL);
+		SETUP_USER_MENU_MSG(&configMenu, WAVEFORM_AUTO_CAL);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 //*****************************************************************************
@@ -2677,12 +2688,12 @@ void zeroEventNumberMenuHandler(uint8 keyPressed, void* data)
 			overlayMessage(getLangText(SUCCESS_TEXT), getLangText(EVENT_NUMBER_ZEROING_COMPLETE_TEXT), (2 * SOFT_SECS));
 		}
 
-		ACTIVATE_USER_MENU_MSG(&eraseSettingsMenu, YES);
+		SETUP_USER_MENU_MSG(&eraseSettingsMenu, YES);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&eraseEventsMenu, YES);
+		SETUP_USER_MENU_MSG(&eraseEventsMenu, YES);
 	}
 
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	JUMP_TO_ACTIVE_MENU();
 }

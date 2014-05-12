@@ -23,6 +23,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef TRIGGER_TEST_MENU_H_
 #define TRIGGER_TEST_MENU_H_
 
@@ -145,3 +148,5 @@ static void (*Trigger_Out_Menu_Functions[])(void) =
     Trigger_Out_Set_High
 };
 #endif //TRIGGER_TEST_MENU_H_
+
+#endif

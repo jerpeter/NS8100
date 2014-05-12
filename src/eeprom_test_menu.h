@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 1
+
 #ifndef EEPROM_TEST_MENU_H_
 #define EEPROM_TEST_MENU_H_
 
@@ -79,3 +82,4 @@ void EEPROM_Config_Restore_Default_Data(void);
 
 #endif //EEPROM_TEST_MENU_H_
 
+#endif

@@ -153,8 +153,8 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 								g_triggerRecord.op_mode = WAVEFORM_MODE;
 								clearSoftTimer(MENU_UPDATE_TIMER_NUM);
 								updateModeMenuTitle(g_triggerRecord.op_mode);
-								ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
-								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
+								JUMP_TO_ACTIVE_MENU();
 							}
 							break; 
 
@@ -169,8 +169,8 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 								g_triggerRecord.op_mode = BARGRAPH_MODE;
 								clearSoftTimer(MENU_UPDATE_TIMER_NUM);
 								updateModeMenuTitle(g_triggerRecord.op_mode);
-								ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
-								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
+								JUMP_TO_ACTIVE_MENU();
 							}
 							break;
 
@@ -185,15 +185,15 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 								g_triggerRecord.op_mode = COMBO_MODE;
 								clearSoftTimer(MENU_UPDATE_TIMER_NUM);
 								updateModeMenuTitle(g_triggerRecord.op_mode);
-								ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
-								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
+								JUMP_TO_ACTIVE_MENU();
 							}
 							break;
 
 						case (DEFAULT_ROW_6): // Load Saved Record
 							clearSoftTimer(MENU_UPDATE_TIMER_NUM);
-							g_activeMenu = LOAD_REC_MENU;
-							ACTIVATE_MENU_MSG(); (*menufunc_ptrs[g_activeMenu]) (mn_msg);
+							SETUP_MENU_MSG(LOAD_REC_MENU);
+							JUMP_TO_ACTIVE_MENU();
 							break;
 						default:
 							break;
@@ -252,8 +252,8 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					break;
 				case (HELP_KEY):
 					clearSoftTimer(MENU_UPDATE_TIMER_NUM);
-					ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
-					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
+					JUMP_TO_ACTIVE_MENU();
 					break;
 				default:
 					break;

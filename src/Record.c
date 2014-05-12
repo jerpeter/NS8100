@@ -450,8 +450,6 @@ void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 	rec_ptr->alarm_two_air_lvl     = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
 	rec_ptr->alarm_one_time  = ALARM_OUTPUT_TIME_DEFAULT;
 	rec_ptr->alarm_two_time  = ALARM_OUTPUT_TIME_DEFAULT;
-	rec_ptr->bar_space = 0;
-	rec_ptr->bargraph_report = NORMAL_FORMAT;
 	rec_ptr->baud_rate = BAUD_RATE_38400;
 	rec_ptr->copies = 1;
 	rec_ptr->freq_plot_type = 1;
@@ -570,17 +568,17 @@ void GetParameterMemory(uint8* dataDest, uint16 startAddr, uint16 dataLength)
 	
 	//debugRaw("\nGPM: Addr: %x -> ", startAddr);
 
-	spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+	spi_selectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
 
 	// Write Command
-	spi_write(EEPROM_SPI, EEPROM_READ_DATA);
-	spi_write(EEPROM_SPI, (startAddr >> 8) & 0xFF);
-	spi_write(EEPROM_SPI, startAddr & 0xFF);
+	spi_write(&AVR32_SPI1, EEPROM_READ_DATA);
+	spi_write(&AVR32_SPI1, (startAddr >> 8) & 0xFF);
+	spi_write(&AVR32_SPI1, startAddr & 0xFF);
 
 	while(dataLength--)
 	{
-		spi_write(EEPROM_SPI, 0xFF);
-		spi_read(EEPROM_SPI, &tempData);
+		spi_write(&AVR32_SPI1, 0xFF);
+		spi_read(&AVR32_SPI1, &tempData);
 
 		//debugRaw("%02x ", (uint8)(tempData));
 
@@ -588,7 +586,7 @@ void GetParameterMemory(uint8* dataDest, uint16 startAddr, uint16 dataLength)
 		*dataDest++ = (uint8)tempData;
 	}
 	   
-	spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+	spi_unselectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
 }
 
 //-----------------------------------------------------------------------------

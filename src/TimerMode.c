@@ -293,9 +293,8 @@ void handleUserPowerOffDuringTimerMode(void)
 		}
 	}
 
-	g_activeMenu = MAIN_MENU;
-	ACTIVATE_MENU_MSG();
-	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+	SETUP_MENU_MSG(MAIN_MENU);
+	JUMP_TO_ACTIVE_MENU();
 }
 
 /****************************************

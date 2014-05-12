@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef VOLTAGE_MONITOR_TEST_MENU_H_
 #define VOLTAGE_MONITOR_TEST_MENU_H_
 
@@ -133,3 +136,5 @@ static void (*Voltage_Monitor_Vin_Test_Menu_Functions[])(void) =
 };
 
 #endif //VOLTAGE_MONITOR_TEST_MENU_H_
+
+#endif

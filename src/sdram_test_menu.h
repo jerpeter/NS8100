@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef SDRAM_TEST_MENU_H_
 #define SDRAM_TEST_MENU_H_
 
@@ -114,3 +117,5 @@ static void (*SDRAM_Test_Menu_Functions[])(void) =
 };
 
 #endif //SDRAM_TEST_MENU_H_
+
+#endif

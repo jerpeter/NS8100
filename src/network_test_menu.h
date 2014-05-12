@@ -21,6 +21,9 @@
 //   1.0 - Initial code generation and checking                               //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+
 #ifndef NETWORK_TEST_MENU_H_
 #define NETWORK_TEST_MENU_H_
 
@@ -121,3 +124,5 @@ Network_Set_IP
 };
 
 #endif //NETWORK_TEST_MENU_H_
+
+#endif

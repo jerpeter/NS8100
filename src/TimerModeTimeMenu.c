@@ -148,9 +148,8 @@ void timerModeTimeMnProc(INPUT_MSG_STRUCT msg,
                      rec_ptr[s_dataRecordCurrentItem].enterflag = FALSE;
                      tmKeepTime(rec_ptr);
 
-                     g_activeMenu = TIMER_MODE_DATE_MENU;
-                     ACTIVATE_MENU_MSG();
-                     (*menufunc_ptrs[g_activeMenu]) (mn_msg);
+                     SETUP_MENU_MSG(TIMER_MODE_DATE_MENU);
+                     JUMP_TO_ACTIVE_MENU();
                      break;      
                case (DOWN_ARROW_KEY):
                      if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
@@ -175,8 +174,8 @@ void timerModeTimeMnProc(INPUT_MSG_STRUCT msg,
                      rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
                      break;
                case (ESC_KEY):
-					ACTIVATE_USER_MENU_MSG(&timerModeFreqMenu, g_helpRecord.timer_mode_freq);
-                     (*menufunc_ptrs[g_activeMenu]) (mn_msg);
+					SETUP_USER_MENU_MSG(&timerModeFreqMenu, g_helpRecord.timer_mode_freq);
+                     JUMP_TO_ACTIVE_MENU();
                      break;
                default:
                      break;
