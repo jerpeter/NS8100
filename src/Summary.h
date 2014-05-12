@@ -72,6 +72,7 @@ typedef struct
 } SEISMIC_CHANNEL_INFO_STRUCT;
 
 // Parameter Information, Initial condition information and system level settings. 
+#define UNUSED_PARAMETERS_SIZE	40
 #pragma pack(1)
 typedef struct
 {
@@ -105,11 +106,12 @@ typedef struct
 	uint8	sessionLocation[SESSION_LOCATION_STRING_SIZE];
 	uint8	sessionComments[SESSION_COMMENTS_STRING_SIZE];
 	
-	uint8	unused[40];						// Space for expansion
+	uint8	unused[UNUSED_PARAMETERS_SIZE];		// Space for expansion, currently 40
 } PARAMETERS_STRUCT;
 #pragma pack()
 
 // Capture Information - After an event, System data at the end of an event. 
+#define UNUSED_CAPTURE_SIZE	18
 #pragma pack(1)
 typedef struct
 {
@@ -122,7 +124,7 @@ typedef struct
 	DATE_TIME_STRUCT	eventTime;			// Waveform and bargraph start information. 
 	DATE_TIME_STRUCT	endTime;			// Bargraph specific
 
-	uint8				unused[18];			// Space for expansion
+	uint8				unused[UNUSED_CAPTURE_SIZE];		// Space for expansion, currently 18
 } CAPTURE_INFO_STRUCT;
 #pragma pack()
 
@@ -141,6 +143,7 @@ typedef struct
 // consistent with the previous release. Yes if we move data structure into 
 // channel data structure, the data layout would be neater, but users of 
 // the data has already defined their variable to use the old formats.
+#define UNUSED_CALCULATED_SIZE	50
 #pragma pack(1)
 typedef struct
 {
@@ -164,7 +167,7 @@ typedef struct
 	uint32				barIntervalsCaptured;	// Number of bar interval samples save in flash.
 	uint16				summariesCaptured;		// Number bar summaries captured and saved in flsah.
 
-	uint8				unused[50]; // was 52
+	uint8				unused[UNUSED_CALCULATED_SIZE];	// Space for expansion, currently 50
 	uint32				calcStructEndFlag;
 } CALCULATED_DATA_STRUCT;
 #pragma pack()

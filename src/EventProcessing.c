@@ -564,8 +564,14 @@ void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 {
 	uint8 idex;
 
+#if 0 // ns7100
 	byteSet(eventRec, 0xFF, sizeof(EVT_RECORD));
-
+#else // ns8100
+	byteSet(eventRec, 0x00, sizeof(EVT_RECORD));
+	byteSet(eventRec->summary.parameters.unused, 0xFF, sizeof(eventRec->summary.parameters.unused));
+	byteSet(eventRec->summary.captured.unused, 0xFF, sizeof(eventRec->summary.captured.unused));
+	byteSet(eventRec->summary.calculated.unused, 0xFF, sizeof(eventRec->summary.calculated.unused));
+#endif
 	//--------------------------------
 	eventRec->header.startFlag = (uint16)EVENT_RECORD_START_FLAG;
 	eventRec->header.recordVersion = (uint16)EVENT_RECORD_VERSION;
