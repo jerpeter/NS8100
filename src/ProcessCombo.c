@@ -83,16 +83,6 @@ void StartNewCombo(void)
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
 	byteSet(g_comboSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
 
-	g_pendingBargraphRecord.summary.captured.batteryLevel = (uint32)((float)100.0 * (float)convertedBatteryLevel(BATTERY_VOLTAGE));
-	g_pendingBargraphRecord.summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
-	g_pendingBargraphRecord.summary.captured.calDate = g_factorySetupRecord.cal_date;
-
-	// Get the time
-	g_pendingBargraphRecord.summary.captured.eventTime = g_pendingBargraphRecord.summary.captured.endTime = getCurrentTime();
-
-	// Need to set the count to 0 so it can be incremented during writes
-	g_pendingBargraphRecord.header.dataLength = 0;
-
 	MoveStartOfComboEventRecordToFile();
 
 	// Update the current monitor log entry
@@ -135,6 +125,17 @@ void ProcessComboData(void)
 
 	// Handle preTriggerBuf pointer for circular buffer after processing both individual modes,
 	//	neither of which advanced the pointer
+	if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
+}
+
+/*****************************************************************************
+* Function:		ProcessComboDataSkipBargraphDuringCal (Step 2)
+* Purpose:		Copy A/D channel data from pretrigger buffer into event buffer
+******************************************************************************/
+void ProcessComboDataSkipBargraphDuringCal(void)
+{
+	ProcessComboSampleData();
+
 	if (g_tailOfPreTrigBuff >= g_endOfPreTrigBuff) g_tailOfPreTrigBuff = g_startOfPreTrigBuff;
 }
 
@@ -185,7 +186,7 @@ void ProcessComboBargraphData(void)
 void ProcessComboSampleData(void)
 {
 	//SUMMARY_DATA* sumEntry;
-	uint16 commandNibble;
+	static uint16 commandNibble;
 
 	// Store the command nibble for the first channel of data
 	commandNibble = (uint16)(*(g_tailOfPreTrigBuff) & EMBEDDED_CMD);
@@ -369,10 +370,10 @@ void ProcessComboSampleData(void)
 					if (g_processingCal == 0)
 					{
 						// Temp - Add CAL_END command flag
-						*(g_eventBufferCalPtr - 4) |= CAL_END;
-						*(g_eventBufferCalPtr - 3) |= CAL_END;
-						*(g_eventBufferCalPtr - 2) |= CAL_END;
-						*(g_eventBufferCalPtr - 1) |= CAL_END;
+						*(g_delayedOneEventBufferCalPtr - 4) |= CAL_END;	*(g_eventBufferCalPtr - 4) |= CAL_END;
+						*(g_delayedOneEventBufferCalPtr - 3) |= CAL_END;	*(g_eventBufferCalPtr - 3) |= CAL_END;
+						*(g_delayedOneEventBufferCalPtr - 2) |= CAL_END;	*(g_eventBufferCalPtr - 2) |= CAL_END;
+						*(g_delayedOneEventBufferCalPtr - 1) |= CAL_END;	*(g_eventBufferCalPtr - 1) |= CAL_END;
 
 						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
@@ -398,10 +399,10 @@ void ProcessComboSampleData(void)
 					if (g_processingCal == 0)
 					{
 						// Temp - Add CAL_END command flag
-						*(g_eventBufferCalPtr - 4) |= CAL_END;
-						*(g_eventBufferCalPtr - 3) |= CAL_END;
-						*(g_eventBufferCalPtr - 2) |= CAL_END;
-						*(g_eventBufferCalPtr - 1) |= CAL_END;
+						*(g_delayedTwoEventBufferCalPtr - 4) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 4) |= CAL_END;	*(g_eventBufferCalPtr - 4) |= CAL_END;
+						*(g_delayedTwoEventBufferCalPtr - 3) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 3) |= CAL_END;	*(g_eventBufferCalPtr - 3) |= CAL_END;
+						*(g_delayedTwoEventBufferCalPtr - 2) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 2) |= CAL_END;	*(g_eventBufferCalPtr - 2) |= CAL_END;
+						*(g_delayedTwoEventBufferCalPtr - 1) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 1) |= CAL_END;	*(g_eventBufferCalPtr - 1) |= CAL_END;
 
 						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
@@ -1187,7 +1188,10 @@ void MoveStartOfComboEventRecordToFile(void)
 
 	// ns8100 - *NOTE* With Combo and keeping consistant with event numbers, save now instead of at the end of bargraph
 	// Combo - Bargraph event created, inc event number for potential Combo - Waveform events
-	storeCurrentEventNumber();		
+	storeCurrentEventNumber();
+	
+	// Update the Waveform pending record with the new event number to use
+	g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 }
 
 //*****************************************************************************
@@ -1412,16 +1416,19 @@ void MoveComboWaveformEventToFile(void)
 				sumEntry->waveShapeData.r.freq = 0;
 				sumEntry->waveShapeData.v.freq = 0;
 				sumEntry->waveShapeData.t.freq = 0;
+
 				flashMovState = FLASH_PRE;
 				break;
 
 			case FLASH_PRE:
 				for (i = g_samplesInPretrig; i != 0; i--)
 				{
+					// fix_ns8100 - adjust pointer past pre
 					// Store entire sample
 					//storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
+
 				flashMovState = FLASH_BODY_INT;
 				break;
 
@@ -1429,24 +1436,24 @@ void MoveComboWaveformEventToFile(void)
 				sampGrpsLeft = (g_samplesInBody - 1);
 
 				// A channel
-				sample = *(g_currentEventSamplePtr + 0);
+				sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
 				sumEntry->waveShapeData.a.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + 0);
 
 				// R channel
-				sample = *(g_currentEventSamplePtr + 1);
+				sample = *(g_currentEventSamplePtr + R_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.r.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				vectorSum = (uint32)(tempPeak * tempPeak);
 				sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + 1);
 
 				// V channel
-				sample = *(g_currentEventSamplePtr + 2);
+				sample = *(g_currentEventSamplePtr + V_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.v.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				vectorSum += (uint32)(tempPeak * tempPeak);
 				sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + 2);
 
 				// T channel
-				sample = *(g_currentEventSamplePtr + 3);
+				sample = *(g_currentEventSamplePtr + T_CHAN_OFFSET);
 				tempPeak = sumEntry->waveShapeData.t.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 				vectorSum += (uint32)(tempPeak * tempPeak);
 				sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + 3);
@@ -1464,7 +1471,7 @@ void MoveComboWaveformEventToFile(void)
 					sampGrpsLeft--;
 
 					// A channel
-					sample = *(g_currentEventSamplePtr + 0);
+					sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.a.peak)
 					{
@@ -1473,7 +1480,7 @@ void MoveComboWaveformEventToFile(void)
 					}
 
 					// R channel
-					sample = *(g_currentEventSamplePtr + 1);
+					sample = *(g_currentEventSamplePtr + R_CHAN_OFFSET);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.r.peak)
 					{
@@ -1483,7 +1490,7 @@ void MoveComboWaveformEventToFile(void)
 					vectorSum = (uint32)(normalizedData * normalizedData);
 
 					// V channel
-					sample = *(g_currentEventSamplePtr + 2);
+					sample = *(g_currentEventSamplePtr + V_CHAN_OFFSET);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.v.peak)
 					{
@@ -1493,7 +1500,7 @@ void MoveComboWaveformEventToFile(void)
 					vectorSum += (normalizedData * normalizedData);
 
 					// T channel
-					sample = *(g_currentEventSamplePtr + 3);
+					sample = *(g_currentEventSamplePtr + T_CHAN_OFFSET);
 					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
 					if (normalizedData > sumEntry->waveShapeData.t.peak)
 					{
@@ -1548,10 +1555,6 @@ void MoveComboWaveformEventToFile(void)
 					sprintf((char*)&g_spareBuffer[0], "COMBO WAVEFORM EVENT #%d BEING SAVED... (MAY TAKE TIME)", g_nextEventNumberToUse);
 					overlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
-#if 1 // cheat
-					g_pendingEventRecord.header.dataLength = g_wordSizeInEvent * 2;
-#endif
-
 					// Write the event record header and summary
 					fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
@@ -1562,8 +1565,8 @@ void MoveComboWaveformEventToFile(void)
 					fl_fclose(g_currentEventFileHandle);
 					debug("Event file closed\n");
 
-					ramSummaryEntry->fileEventNum = g_nextEventNumberToUse;
-
+					ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
+					
 					updateMonitorLogEntry();
 
 					// After event numbers have been saved, store current event number in persistent storage.
@@ -1589,10 +1592,9 @@ void MoveComboWaveformEventToFile(void)
 					clearSystemEventFlag(TRIGGER_EVENT);
 				}
 
-				g_lastCompletedRamSummary = ramSummaryEntry;
+				g_lastCompletedRamSummaryIndex = ramSummaryEntry;
 
 #if 0 // Leave in monitor mode menu display processing for bargraph
-				g_printOutMode = WAVEFORM_MODE;
 				raiseMenuEventFlag(RESULTS_MENU_EVENT);
 #endif
 
@@ -1603,7 +1605,7 @@ void MoveComboWaveformEventToFile(void)
 				if (getPowerControlState(LCD_POWER_ENABLE) == OFF)
 				{
 					assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
-					assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+					assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 				}
 
 				// Check to see if there is room for another event, if not send a signal to stop monitoring

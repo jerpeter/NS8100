@@ -55,13 +55,6 @@ void StartNewBargraph(void)
 		debug("Out of Ram Summary Entrys\n");
 		return;
 	}
-#if 0 // ns7100
-	else
-	{
-		// Setup location of the event data in flash. True for bargraph and waveform.
-		advFlashDataPtrToEventData(g_bargraphSummaryPtr);
-	}
-#endif
 
 	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
 	byteSet(&(g_bargraphBarInterval[0]), 0, (sizeof(BARGRAPH_BAR_INTERVAL_DATA) * NUM_OF_BAR_INTERVAL_BUFFERS));
@@ -87,20 +80,6 @@ void StartNewBargraph(void)
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
 	byteSet(g_bargraphSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
 
-	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
-	// Save the captured event after the the preliminary ram event record.
-	// EVENT_SUMMARY_STRUCT - Fill in the event CAPTURE_INFO_STRUCT data
-	// For Bargraph, these values are filled in at the end of bargraph.
-	g_pendingBargraphRecord.summary.captured.batteryLevel = (uint32)((float)100.0 * (float)convertedBatteryLevel(BATTERY_VOLTAGE));
-	g_pendingBargraphRecord.summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
-	g_pendingBargraphRecord.summary.captured.calDate = g_factorySetupRecord.cal_date;
-
-	// Get the time
-	g_pendingBargraphRecord.summary.captured.eventTime = g_pendingBargraphRecord.summary.captured.endTime = getCurrentTime();
-
-	// Need to set the count to 0 so it can be incremented during writes
-	g_pendingBargraphRecord.header.dataLength = 0;
-	
 	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
 	MoveStartOfBargraphEventRecordToFlash();
 

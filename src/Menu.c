@@ -1074,6 +1074,8 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 
 	writeMapToLcd(g_mmap);
 
+	debug("MB: Look for a key\n");
+
 	// Loop forever unitl an enter or escape key is found
 	while ((key != ENTER_KEY) && (key != ESC_KEY))
 	{

@@ -26,7 +26,7 @@
 
 enum{
 	DISPLAY_ON_OFF_TIMER_NUM = 0,
-	LCD_PW_ON_OFF_TIMER_NUM,
+	LCD_POWER_ON_OFF_TIMER_NUM,
 	AUTO_MONITOR_TIMER_NUM,
 	MENU_UPDATE_TIMER_NUM,
 	ALARM_ONE_OUTPUT_TIMER_NUM,
@@ -56,9 +56,10 @@ enum{
 
 typedef struct
 {
-	uint32 	state;		// The timer is in use or not.
-	uint32  tickStart;	// Tick value when turned on.		
-	uint32 	timePeriod;	// The time period to wait, number of ticks.
+	uint32 	state;			// The timer is in use or not
+	uint32  tickStart;		// Tick value when the timer was started		
+	uint32 	timePeriod;		// The time period to wait, number of ticks
+	uint32	timeoutValue;	// Added to hold the value for a reset of the timeout period
 	void (*callback)(void);
 
 } SOFT_TIMER_STRUCT;
@@ -66,8 +67,9 @@ typedef struct
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void assignSoftTimer(uint16, uint32, void*);
-void clearSoftTimer(uint16);
+void assignSoftTimer(uint16 timerNum, uint32 timeout, void* callback);
+void resetSoftTimer(uint16 timerNum);
+void clearSoftTimer(uint16 timerNum);
 void checkSoftTimers(void);
 void procTimerEvents(void);
 void processTimerMode(void);

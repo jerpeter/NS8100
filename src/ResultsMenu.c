@@ -106,20 +106,20 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 		mn_layout_ptr->curr_ln =	RESULTS_MN_TBL_START_LINE;
 		mn_layout_ptr->top_ln =		RESULTS_MN_TBL_START_LINE;
 
-		g_resultsRamSummaryPtr = g_lastCompletedRamSummary;
+		g_resultsRamSummaryPtr = g_lastCompletedRamSummaryIndex;
 		g_updateResultsEventRecord = YES;
 		
 		s_monitorSessionFirstEvent = getStartingEventNumberForCurrentMonitorLog();
 		s_monitorSessionLastEvent = getUniqueEventNumber(g_resultsRamSummaryPtr);
 
 		// Check if we have recorded enough events to wrap the ram summary table
-		if((s_monitorSessionLastEvent - s_monitorSessionFirstEvent) >= TOTAL_RAM_SUMMARIES)
+		if ((s_monitorSessionLastEvent - s_monitorSessionFirstEvent) >= TOTAL_RAM_SUMMARIES)
 		{
 			// Set the first event number to the oldest ram summary entry reference event number
 			s_monitorSessionFirstEvent = (uint16)(s_monitorSessionLastEvent - TOTAL_RAM_SUMMARIES + 1);
 		}
 
-		debug("g_lastCompletedRamSummary Event Number = %d\n", g_lastCompletedRamSummary->fileEventNum);
+		debug("g_lastCompletedRamSummaryIndex Event Number = %d\n", g_lastCompletedRamSummaryIndex->fileEventNum);
 
 		// Check if data corresponds to a Calibration Pulse
 		if (msg.data[0] == 13)
@@ -132,7 +132,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 				g_enterMonitorModeAfterMidnightCal = NO;
 
 				// Check if Auto Cal is enabled
-				if(g_helpRecord.auto_cal_in_waveform == ENABLED)
+				if (g_helpRecord.auto_cal_in_waveform == ENABLED)
 				{
 					// Set flag to skip auto calibration at start of waveform
 					g_skipAutoCalInWaveformAfterMidnightCal = YES;
@@ -143,7 +143,6 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 			}
 		}
 	}
-
 	else if (msg.cmd == KEYPRESS_MENU_CMD)
 	{
 		if (g_waitForUser == TRUE)
@@ -281,14 +280,14 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 				case (UP_ARROW_KEY):
 					if (g_sampleProcessing == ACTIVE_STATE)
 					{
-						if(msg.data[0] == DOWN_ARROW_KEY)
+						if (msg.data[0] == DOWN_ARROW_KEY)
 						{
-							if(getUniqueEventNumber(g_resultsRamSummaryPtr) < s_monitorSessionLastEvent)
+							if (getUniqueEventNumber(g_resultsRamSummaryPtr) < s_monitorSessionLastEvent)
 							{
 								g_resultsRamSummaryPtr++;
 								g_updateResultsEventRecord = YES;
 
-								if(g_resultsRamSummaryPtr > &__ramFlashSummaryTbl[LAST_RAM_SUMMARY_INDEX])
+								if (g_resultsRamSummaryPtr > &__ramFlashSummaryTbl[LAST_RAM_SUMMARY_INDEX])
 								{
 									g_resultsRamSummaryPtr = &__ramFlashSummaryTbl[0];
 								}
@@ -296,19 +295,19 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 						}
 						else // msg.data[0] == UP_ARROW_KEY
 						{
-							if(getUniqueEventNumber(g_resultsRamSummaryPtr) > s_monitorSessionFirstEvent)
+							if (getUniqueEventNumber(g_resultsRamSummaryPtr) > s_monitorSessionFirstEvent)
 							{
 								g_resultsRamSummaryPtr--;
 								g_updateResultsEventRecord = YES;
 
-								if(g_resultsRamSummaryPtr < &__ramFlashSummaryTbl[0])
+								if (g_resultsRamSummaryPtr < &__ramFlashSummaryTbl[0])
 								{
 									g_resultsRamSummaryPtr = &__ramFlashSummaryTbl[LAST_RAM_SUMMARY_INDEX];
 								}
 							}
 						}
 					}
-					else // MSP430_State != MSP430_SAMPLING
+					else // (g_sampleProcessing == IDLE_STATE)
 					{
 						g_activeMenu = SUMMARY_MENU;
 						ACTIVATE_MENU_MSG(); mn_msg.data[0] = ESC_KEY;
@@ -355,17 +354,18 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	DATE_TIME_STRUCT time;
 	uint8 calResults = PASSED;
 
-#if 0 // ns7100
-	EVT_RECORD* eventRecord = (EVT_RECORD *)g_resultsRamSummaryPtr->linkPtr;
-#else // ns8100
 	static EVT_RECORD resultsEventRecord;
 	EVT_RECORD* eventRecord = &resultsEventRecord;
 	
 	if ((g_updateResultsEventRecord == YES) || (g_bargraphForcedCal == YES))
 	{
 		debug("Results menu: updating event record cache\n");
-		//getEventFileRecord(__ramFlashSummaryTbl[g_resultsRamSummaryIndex].fileEventNum, &resultsEventRecord);
-		getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
+
+		if (g_summaryListMenuActive == YES)
+			getEventFileRecord(g_summaryEventNumber, &resultsEventRecord);
+		else
+			getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
+
 		g_updateResultsEventRecord = NO;
 
 		debugRaw("\n\tResults Evt: %04d, Mode: %d\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
@@ -375,7 +375,6 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				eventRecord->summary.calculated.v.peak,
 				eventRecord->summary.calculated.t.peak);
 	}
-#endif
 
 	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
@@ -420,20 +419,30 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else
 	{
-		if (eventRecord->summary.mode == MANUAL_CAL_MODE)
+		switch (eventRecord->summary.mode)
 		{
-			sprintf(buff, "%s", getLangText(CAL_SUMMARY_TEXT));
-		}
-		else if (eventRecord->summary.mode == WAVEFORM_MODE)
-		{
-			sprintf(buff, "%s", getLangText(EVENT_SUMMARY_TEXT));
-		}
-		else // eventRecord->summary.mode == BARGRAPH_MODE
-		{
-			sprintf(buff, "%s", "BARGRAPH SUMMARY");
-		}
+			case MANUAL_CAL_MODE:
+				length = sprintf(buff, "%s", getLangText(CAL_SUMMARY_TEXT));
+				break;
 
-		length = (uint8)strlen(buff);
+			case WAVEFORM_MODE:
+				length = sprintf(buff, "%s", getLangText(EVENT_SUMMARY_TEXT));
+				break;
+
+			case BARGRAPH_MODE:
+				length = sprintf(buff, "%s", "BARGRAPH SUMMARY");
+				break;
+
+			case COMBO_MODE:
+				if (eventRecord->summary.subMode == WAVEFORM_MODE)
+					length = sprintf(buff, "%s", "COMBO - EVENT SUM");
+				else if (eventRecord->summary.subMode == BARGRAPH_MODE)
+					length = sprintf(buff, "%s", "COMBO - BARGRAPH");
+				break;
+
+			default:
+				break;
+		}
 	}
 
 	// Setup current column to center text
@@ -446,16 +455,18 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// Next line after title
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
-		if(g_monitorOperationMode == WAVEFORM_MODE)
+		if (g_monitorOperationMode == WAVEFORM_MODE)
 		{
-			if(getUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionFirstEvent)
+			//if (getUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionFirstEvent)
+			if (eventRecord->summary.eventNumber == s_monitorSessionFirstEvent)
 				arrowChar = DOWN_ARROW_CHAR;
-			else if(getUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionLastEvent)
+			//else if (getUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionLastEvent)
+			else if (eventRecord->summary.eventNumber == s_monitorSessionLastEvent)
 				arrowChar = UP_ARROW_CHAR;
 			else
 				arrowChar = BOTH_ARROWS_CHAR;
 
-			if(s_monitorSessionFirstEvent != s_monitorSessionLastEvent)
+			if (s_monitorSessionFirstEvent != s_monitorSessionLastEvent)
 			{
 				sprintf(buff, "%c", arrowChar);
 			    wnd_layout_ptr->curr_col = 120;
@@ -465,7 +476,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else // MSP430_State != MSP430_SAMPLING
 	{
-		if(g_summaryListMenuActive == YES)
+		if (g_summaryListMenuActive == YES)
 		{
 			sprintf(buff, "%c", g_summaryListArrowChar);
 		    wnd_layout_ptr->curr_col = 120;
@@ -510,18 +521,22 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     //-------------------------------------------------------------
     // Event number
     byteSet(&buff[0], 0, sizeof(buff));
-	sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), getUniqueEventNumber(g_resultsRamSummaryPtr));
+
+	// Remove commented code assuming display works
+	//if (g_summaryListMenuActive == YES)
+		sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), eventRecord->summary.eventNumber);
+	//else sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), getUniqueEventNumber(g_resultsRamSummaryPtr));
 
     wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
 
     //-------------------------------------------------------------
     // Units inches or millimeters LABEL
     byteSet(&buff[0], 0, sizeof(buff));
-	if(eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
+	if (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
 	{
 		sprintf(buff, "mg/s");
 	}
-	else if(g_sensorInfoPtr->unitsFlag == IMPERIAL)
+	else if (g_sensorInfoPtr->unitsFlag == IMPERIAL)
 	{
 		sprintf(buff, "in/s");
 	}
@@ -637,7 +652,8 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     //-------------------------------------------------------------
     // R FREQ, T FREQ, V FREQ
 	byteSet(&buff[0], 0, sizeof(buff));
-	if(eventRecord->summary.mode == BARGRAPH_MODE)
+	if ((eventRecord->summary.mode == BARGRAPH_MODE) || 
+			((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
 	{
 		sprintf(buff,"%5.2f %5.2f %5.2f Hz",
 			((float)eventRecord->summary.parameters.sampleRate / (float)((eventRecord->summary.calculated.r.frequency * 2) - 1)),
@@ -695,7 +711,8 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				// R is max
 			    normalize_max_peak = (float)eventRecord->summary.calculated.r.peak / (float)div;
 
-				if(eventRecord->summary.mode == BARGRAPH_MODE)
+				if ((eventRecord->summary.mode == BARGRAPH_MODE) ||
+						((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
 				{
 					tempPeakDisp = ((float)eventRecord->summary.calculated.r.displacement / (float)1000000 / (float)div);
 				}
@@ -709,7 +726,8 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				// T is max
 			    normalize_max_peak = (float)eventRecord->summary.calculated.t.peak / (float)div;
 
-				if(eventRecord->summary.mode == BARGRAPH_MODE)
+				if ((eventRecord->summary.mode == BARGRAPH_MODE) ||
+						((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
 				{
 					tempPeakDisp = ((float)eventRecord->summary.calculated.t.displacement / (float)1000000 / (float)div);
 				}
@@ -726,7 +744,8 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				// V is max
 			    normalize_max_peak = (float)eventRecord->summary.calculated.v.peak / (float)div;
 
-				if(eventRecord->summary.mode == BARGRAPH_MODE)
+				if ((eventRecord->summary.mode == BARGRAPH_MODE) || 
+						((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
 				{
 					tempPeakDisp = ((float)eventRecord->summary.calculated.v.displacement / (float)1000000 / (float)div);
 				}
@@ -740,7 +759,8 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				// T is max
 			    normalize_max_peak = (float)eventRecord->summary.calculated.t.peak / (float)div;
 
-				if(eventRecord->summary.mode == BARGRAPH_MODE)
+				if ((eventRecord->summary.mode == BARGRAPH_MODE) ||
+						((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
 				{
 					tempPeakDisp = ((float)eventRecord->summary.calculated.t.displacement / (float)1000000 / (float)div);
 				}
@@ -751,7 +771,8 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			}
 		}
 
-		if(eventRecord->summary.mode != BARGRAPH_MODE)
+		if ((eventRecord->summary.mode != BARGRAPH_MODE) &&
+				!((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
 		{
 			tempPeakDisp = (float)normalize_max_peak / ((float)2 * (float)PI * (float)tempFreq);
 		}
@@ -788,7 +809,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    // Air
 	    byteSet(&buff[0], 0, sizeof(buff));
 
-		if(g_printMillibars == OFF)
+		if (g_printMillibars == OFF)
 		{
 		    sprintf(buff,"%0.1f dB",
 		    	hexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED) );
@@ -813,7 +834,8 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		// A FREQ
 		byteSet(&buff[0], 0, sizeof(buff));
 
-		if(eventRecord->summary.mode == BARGRAPH_MODE)
+		if ((eventRecord->summary.mode == BARGRAPH_MODE) ||
+				((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
 		{
 			sprintf(buff,"%.1f Hz", ((float)eventRecord->summary.parameters.sampleRate /
 					(float)((eventRecord->summary.calculated.a.frequency * 2) - 1)));

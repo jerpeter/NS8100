@@ -17,7 +17,6 @@
 ///	Includes
 ///----------------------------------------------------------------------------
 #include "RemoteCommon.h"
-#include "RemoteModem.h"
 #include "RemoteOperation.h"
 #include "RemoteImmediate.h"
 

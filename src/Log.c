@@ -471,6 +471,8 @@ void initMonitorLogTableFromLogFile(void)
 	}		
 	else // Monitor log file contains entries
 	{
+		overlayMessage("MONITOR LOG", "INITIALIZING MONITOR LOG WITH SAVED ENTRIES", 1 * SOFT_SECS);
+
 		bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 		
 		// Loop while data continues to be read from MONITOR log file

@@ -297,10 +297,9 @@ void MoveManuelCalToFlash(void)
 		}
 		clearSystemEventFlag(MANUEL_CAL_EVENT);
 
-		g_lastCompletedRamSummary = ramSummaryEntry;
+		g_lastCompletedRamSummaryIndex = ramSummaryEntry;
 
 		// Set printout mode to allow the results menu processing to know this is a manual cal pulse
-		g_printOutMode = MANUAL_CAL_MODE;
 		raiseMenuEventFlag(RESULTS_MENU_EVENT);
 
 		g_freeEventBuffers++;

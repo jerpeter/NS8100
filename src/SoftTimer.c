@@ -27,7 +27,7 @@
 #include "Old_Board.h"
 #include "Uart.h"
 #include "Keypad.h"
-#include "RemoteModem.h"
+#include "RemoteOperation.h"
 #include "ProcessBargraph.h"
 #include "TextTypes.h"
 #include "EventProcessing.h"
@@ -63,7 +63,29 @@ void assignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 		g_rtcTimerBank[timerNum].state = TIMER_ASSIGNED;
 		g_rtcTimerBank[timerNum].tickStart = g_rtcSoftTimerTickCount;
 		g_rtcTimerBank[timerNum].timePeriod = g_rtcSoftTimerTickCount + timeout;
+		g_rtcTimerBank[timerNum].timeoutValue = timeout;
 		g_rtcTimerBank[timerNum].callback = callback;
+	}
+
+	return;
+}
+
+/****************************************
+*	Function:    assignSoftTimer
+*	Purpose:
+****************************************/
+void resetSoftTimer(uint16 timerNum)
+{
+	if (timerNum >= NUM_OF_SOFT_TIMERS)
+	{
+		debugErr("assignSoftTimer Error: Timer Number not valid: %d\n", timerNum);
+		return;
+	}
+
+	if (g_rtcTimerBank[timerNum].state == TIMER_ASSIGNED)
+	{
+		g_rtcTimerBank[timerNum].tickStart = g_rtcSoftTimerTickCount;
+		g_rtcTimerBank[timerNum].timePeriod = g_rtcSoftTimerTickCount + g_rtcTimerBank[timerNum].timeoutValue;
 	}
 
 	return;
@@ -84,6 +106,7 @@ void clearSoftTimer(uint16 timerNum)
 	g_rtcTimerBank[timerNum].state = TIMER_UNASSIGNED;
 	g_rtcTimerBank[timerNum].tickStart = 0;
 	g_rtcTimerBank[timerNum].timePeriod = 0;
+	g_rtcTimerBank[timerNum].timeoutValue = 0;
 	g_rtcTimerBank[timerNum].callback = NULL;
 }
 
@@ -99,7 +122,7 @@ void checkSoftTimers(void)
 	for (softTimerIndex = 0; softTimerIndex < NUM_OF_SOFT_TIMERS; softTimerIndex++)
 	{
 		// Check if it is in use.
-		if (TIMER_ASSIGNED == g_rtcTimerBank[softTimerIndex].state)
+		if (g_rtcTimerBank[softTimerIndex].state == TIMER_ASSIGNED)
 		{
 			// Did our timer loop or wrap around the max?
 			if (g_rtcTimerBank[softTimerIndex].tickStart > g_rtcTimerBank[softTimerIndex].timePeriod)
@@ -127,12 +150,11 @@ void checkSoftTimers(void)
 					}
 				}
 			}
-
 			// The timer did not loop. But did our tick count loop?
 			else
 			{
 				// Did the tick count loop around the MAX? Or did we go past the time?
-				if ((g_rtcSoftTimerTickCount <  g_rtcTimerBank[softTimerIndex].tickStart	) ||
+				if ((g_rtcSoftTimerTickCount < g_rtcTimerBank[softTimerIndex].tickStart) ||
 				   (g_rtcSoftTimerTickCount >= g_rtcTimerBank[softTimerIndex].timePeriod))
 				{
 					// Once the timer has activated, clear the timer state and other values
@@ -140,7 +162,7 @@ void checkSoftTimers(void)
 					g_rtcTimerBank[softTimerIndex].tickStart = 0;
 					g_rtcTimerBank[softTimerIndex].timePeriod = 0;
 
-						// Process the callback, or func is null and an error.
+					// Process the callback, or func is null and an error.
 					if (NULL != g_rtcTimerBank[softTimerIndex].callback)
 					{
 						(*(g_rtcTimerBank[softTimerIndex].callback)) ();
@@ -149,7 +171,6 @@ void checkSoftTimers(void)
 					{
 						debug("checkSoftTimers:Error function call is NULL\n");
 					}
-
 				}
 			}
 		}
@@ -176,12 +197,8 @@ void displayTimerCallBack(void)
 ****************************************/
 void alarmOneOutputTimerCallback(void)
 {
-#if 0 // ns7100
 	// Deactivate alarm 1 signal
-	reg_TIM2PORT.reg &= 0x0B;
-#else //ns8100
 	powerControl(ALARM_1_ENABLE, OFF);
-#endif
 }
 
 /****************************************
@@ -190,13 +207,8 @@ void alarmOneOutputTimerCallback(void)
 ****************************************/
 void alarmTwoOutputTimerCallback(void)
 {
-#if 0 // ns7100
 	// Deactivate alarm 2 signal
-	reg_TIM2PORT.reg &= 0x07;
-#else //ns8100
 	powerControl(ALARM_2_ENABLE, OFF);
-#endif
-
 }
 
 /****************************************

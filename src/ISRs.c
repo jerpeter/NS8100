@@ -872,6 +872,11 @@ void eic_keypad_irq(void)
 __attribute__((__interrupt__))
 void eic_system_irq(void)
 {
+	static uint8 onKeyCount = 0;
+	static uint8 powerOffAttempted = NO;
+	uint8 keyFlag;
+	uint8 keyScan;
+
 	// Print test for verification of operation
 	//debugRaw("&");
 
@@ -899,16 +904,50 @@ void eic_system_irq(void)
 #endif
 
 #if 1
-	uint8 keyScan;
-	keyScan = read_mcp23018(IO_ADDRESS_KPD, INTFA);
+	keyFlag = read_mcp23018(IO_ADDRESS_KPD, INTFA);
+	//debugRaw("\n%x ", keyFlag);
+	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	//debugRaw("\n%x ", keyScan);
+	
+	//debugRaw("\n%x ", keyScan);
 
-	if (keyScan & 0x04)
+	// Check if the On key was pressed
+	if ((keyFlag & keyScan) == ON_KEY)
 	{
 		if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 		{
-			debug("Factory Setup: Stage 1\n");
+			//debug("Factory Setup: Stage 1\n");
 			g_factorySetupSequence = STAGE_1;
 		}
+
+		if (powerOffAttempted == YES)
+		{ 
+			onKeyCount++;
+			//debugRaw("\n%d ", onKeyCount);
+		}
+
+#if 0 // Test - seemingly doesn't want to work, only shows 1 key being pressed
+		// Check if the Off key is also being pressed - silent ability to power off the unit in the case of a monitor failure
+		if (keyScan & OFF_KEY)
+		{
+			// Jumping off the ledge.. Buh bye! No returning from this
+			powerControl(POWER_OFF, ON);
+		}
+#endif
+	}
+
+	if (keyScan & OFF_KEY)
+	{
+		if ((powerOffAttempted == YES) && (onKeyCount == 3))
+		{
+			// Jumping off the ledge.. Buh bye! No returning from this
+			//debugRaw("\n--> BOOM <--");
+			powerControl(POWER_OFF, ON);
+		}
+
+		//debugRaw("\n(Y) ", onKeyCount);
+		powerOffAttempted = YES;
+		onKeyCount = 0;
 	}
 #endif
 
@@ -1107,15 +1146,15 @@ void Setup_8100_EIC_Keypad_ISR(void)
 	// Enable the interrupt
 	rtc_enable_interrupt(&AVR32_RTC);
 
-#if 0 
+#if 0
 	// Test for int enable
 	if(AVR32_EIC.IMR.int5 == 0x01)
 	{
-		print_dbg("\r\nKeypad Interrupt Enabled\n");
+		debug("\nKeypad Interrupt Enabled\n");
 	}
 	else
 	{
-		print_dbg("\r\nKeypad Interrupt Not Enabled\n");
+		debug("\nKeypad Interrupt Not Enabled\n");
 	}
 #endif
 }
@@ -1140,11 +1179,12 @@ void Setup_8100_EIC_System_ISR(void)
 	// Enable the interrupt
 	rtc_enable_interrupt(&AVR32_RTC);
 
-#if 0 // Test for int enable
+#if 0 
+	// Test for int enable
 	if(AVR32_EIC.IMR.int4 == 0x01)
-		debug("\r\nSystem Interrupt Enabled\n");
+		debug("\nSystem Interrupt Enabled\n");
 	else
-		debug("\r\nSystem Interrupt Not Enabled\n");
+		debug("\nSystem Interrupt Not Enabled\n");
 #endif
 }
 
@@ -1787,7 +1827,14 @@ void tc_sample_irq(void)
 					}
 					else if (g_triggerRecord.op_mode == COMBO_MODE)
 					{
-						ProcessComboData();
+						if (s_calPulse == NO)
+						{
+							ProcessComboData();
+						}
+						else // (s_calPulse == YES)
+						{
+							ProcessComboDataSkipBargraphDuringCal();
+						}							
 					}
 
 				} // End of process all modes except for manual cal

@@ -149,8 +149,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	else if (op_mode == BARGRAPH_MODE)
 	{
 		debug("--- Bargraph Mode Settings ---\n");
-		//debug("\tRecord Time: %d, Sample Rate: %d\n", g_msgs430.startMsg430.total_record_time, trig_mn.sample_rate);
-		debug("\tBar Interval: %d secs, Summary Interval: %d mins\n", g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));
+		debug("\tSample Rate: %d, Bar Interval: %d secs, Summary Interval: %d mins\n", trig_mn.sample_rate, g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));
 	}
 	else if (op_mode == COMBO_MODE)
 	{

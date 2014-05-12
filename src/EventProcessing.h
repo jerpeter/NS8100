@@ -76,7 +76,7 @@ void condenseRamSummaryTable(void);
 void advFlashDataPtrToEventData(SUMMARY_DATA*);
 uint8 InitFlashEvtBuff(void);
 void InitFlashBuffs(void);
-void initEventRecord(EVT_RECORD*, uint8 op_mode);
+void initEventRecord(uint8 op_mode);
 void initCurrentEventNumber(void);
 uint16 getLastStoredEventNumber(void);
 void storeCurrentEventNumber(void);

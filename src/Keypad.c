@@ -419,6 +419,7 @@ BOOLEAN keypad(void)
 #if 0 // ns7100
 				if ((reg_EPPDR.bit.EPPD0 == 0x00) && (keyPressed == ENTER_KEY))
 #else // ns8100
+				// Check if the On key is being pressed
 				if (read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0x04)
 #endif
 				{
@@ -441,7 +442,8 @@ extern void BootLoadManager(void);
 					}
 					else if (keyPressed == HELP_KEY)
 					{
-						copyValidFlashEventSummariesToRam();
+						//copyValidFlashEventSummariesToRam();
+						powerControl(POWER_OFF, ON);
 					}
 #endif
 				}
@@ -475,7 +477,7 @@ void keypressEventMgr(void)
 		setLcdContrast(g_contrast_value);
 		powerControl(LCD_POWER_ENABLE, ON);
 		initLcdDisplay();					// Setup LCD segments and clear display buffer
-		assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+		assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 
 		// Check if the unit is monitoring, if so, reassign the monitor update timer
 		if (g_sampleProcessing == ACTIVE_STATE)
@@ -486,7 +488,7 @@ void keypressEventMgr(void)
 	}
 	else // Reassign the LCD Power countdown timer
 	{
-		assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+		assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 	}
 
 	// Check if the LCD Backlight was turned off
@@ -643,7 +645,7 @@ uint8 getKeypadKey(uint8 mode)
 	soft_usecWait(1000);
 
 	// Reassign the LCD Power countdown timer
-	assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+	assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 
 	// Reassign the LCD Backlight countdown timer
 	assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
@@ -664,16 +666,21 @@ uint8 messageBoxKeyInput = 0;
 extern uint8 messageBoxActiveFlag;
 uint8 scanKeypad(void)
 {
-	//volatile uint8* keypadAddress = (uint8*)KEYPAD_ADDRESS;
-
 	uint8 rowMask = 0;
 	uint8 keyPressed = KEY_NONE;
 	uint8 i = 0;
 
-	//s_keyMap[0] = (uint8)(~(*keypadAddress));
+	//debug("MB: Reading keypad...\n");
+
+	//soft_usecWait(250 * SOFT_MSECS);
+	
+#if 1 // Test
+	read_mcp23018(IO_ADDRESS_KPD, INTFB);
+#endif
+
 	s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 
-	debug("Scan Keypad: Key: %x\n", s_keyMap[0]);
+	//debug("Scan Keypad: Key: %x\n", s_keyMap[0]);
 
 	// Find keys by locating the 1's in the map
 	for (rowMask = 0x01, i = 0; i < TOTAL_KEYPAD_KEYS; i++)
@@ -688,7 +695,9 @@ uint8 scanKeypad(void)
 
 	if (messageBoxActiveFlag == YES)
 	{
+#if 0 // ns7100
 		keyPressed = messageBoxKeyInput;
+#endif
 	}
 
 	return (keyPressed);

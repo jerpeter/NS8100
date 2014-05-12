@@ -78,10 +78,12 @@ void InitDataBuffs(uint8 op_mode)
 	// Set up the end of the pre trigger buffer
 	g_endOfPreTrigBuff = &(g_preTrigBuff[preTriggerSize]);
 
+	// Setup the pending event record information that is available at this time
+	initEventRecord(op_mode);
+
+	// Setup buffers based on mode
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE))
 	{
-		initEventRecord(&g_pendingEventRecord, op_mode);
-
 		// Calculate samples for each section and total event
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
 		g_samplesInPretrig  = (uint32)(sampleRate / 4);
@@ -95,7 +97,7 @@ void InitDataBuffs(uint8 op_mode)
 		g_wordSizeInEvent = g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal;
 
 		// Calculate total event buffers available
-		g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / (g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal));
+		g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / g_wordSizeInEvent);
 		g_freeEventBuffers = g_maxEventBuffers;
 
 		// Init starting event buffer pointers
@@ -113,23 +115,31 @@ void InitDataBuffs(uint8 op_mode)
 		g_processingCal = 0;
 		g_calTestExpected = 0;
 		g_doneTakingEvents = NO;
+		
+		// Update the data length to be used based on the size calculations
+		if (op_mode == WAVEFORM_MODE)
+		{
+			g_pendingEventRecord.header.dataLength = (g_wordSizeInEvent * 2);
+		}
+		else // op_mode == MANUAL_CAL_MODE
+		{
+			g_pendingEventRecord.header.dataLength = (g_wordSizeInCal * 2);
+		}
 	}
 	else if (op_mode == BARGRAPH_MODE)
 	{		
-		initEventRecord(&g_pendingBargraphRecord, op_mode);
-
 		g_bg430DataStartPtr = &(g_eventDataBuffer[0]);
 		g_bg430DataWritePtr = &(g_eventDataBuffer[0]);
 		g_bg430DataReadPtr = &(g_eventDataBuffer[0]);
 		g_bg430DataEndPtr = &(g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS - 4]);
 
+		// Start the total off with zero (incremented when bar and summary intervals are stored)
+		g_pendingBargraphRecord.header.dataLength = 0;
+		
 		StartNewBargraph();
 	}
 	else if (op_mode == COMBO_MODE)
 	{		
-		initEventRecord(&g_pendingEventRecord, op_mode);
-		initEventRecord(&g_pendingBargraphRecord, op_mode);
-
 		// Waveform init
 		// Calculate samples for each section and total event
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
@@ -144,8 +154,7 @@ void InitDataBuffs(uint8 op_mode)
 		g_wordSizeInEvent = g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal;
 
 		// Calculate total event buffers available
-		g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET) / 
-							(g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal));
+		g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET) / g_wordSizeInEvent);
 		g_freeEventBuffers = g_maxEventBuffers;
 
 		// Init starting event buffer pointers
@@ -169,6 +178,11 @@ void InitDataBuffs(uint8 op_mode)
 		g_bg430DataWritePtr = &(g_eventDataBuffer[0]);
 		g_bg430DataReadPtr = &(g_eventDataBuffer[0]);
 		g_bg430DataEndPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET - 16]);
+
+		// Update the waveform data length to be used based on the size calculations
+		g_pendingEventRecord.header.dataLength = (g_wordSizeInEvent * 2);
+		// Start the total off with zero (incremented when bar and summary intervals are stored)
+		g_pendingBargraphRecord.header.dataLength = 0;
 
 		StartNewCombo();
 	}

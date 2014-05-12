@@ -115,8 +115,10 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 			// Add in time (hour:min) to the 2nd LCD line right justified
 			length = strlen(getLangText(SELECT_TEXT));
 			byteSet(&(g_menuPtr[1].data[length]), ' ', (12 - length));
-			sprintf((char*)&(g_menuPtr[1].data[12]), "%02d:%02d %s", (currentTime.hour % 12), currentTime.min, 
-					((currentTime.hour / 12) == 1) ? "PM" : "AM");
+			sprintf((char*)&(g_menuPtr[1].data[12]), "%02d:%02d %s", ((currentTime.hour % 12) == 0) ? 12 : (currentTime.hour % 12),
+					currentTime.min, ((currentTime.hour / 12) == 1) ? "PM" : "AM");
+
+			sprintf((char*)&(g_menuPtr[2].data[0]), "_____________________");
 
 			// Since time was added, start the menu update timer
 			assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
@@ -220,8 +222,8 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 
 		default:
 			// Menu called without action, most likely the menu update timer
-			sprintf((char*)&(g_menuPtr[1].data[12]), "%02d:%02d %s", (currentTime.hour % 12), currentTime.min, 
-					((currentTime.hour / 12) == 1) ? "PM" : "AM");
+			sprintf((char*)&(g_menuPtr[1].data[12]), "%02d:%02d %s", ((currentTime.hour % 12) == 0) ? 12 : (currentTime.hour % 12),
+					currentTime.min, ((currentTime.hour / 12) == 1) ? "PM" : "AM");
 
 			// Since time was added, start the menu update timer
 			assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);

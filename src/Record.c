@@ -503,7 +503,7 @@ void activateHelpRecordOptions(void)
 	{
 		g_helpRecord.lcd_timeout = LCD_TIMEOUT_DEFAULT_VALUE;
 	}
-	assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+	assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 
 	debug("Auto Monitor Mode: %s\n", (g_helpRecord.auto_monitor_mode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
     assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.auto_monitor_mode * TICKS_PER_MIN), autoMonitorTimerCallBack);     

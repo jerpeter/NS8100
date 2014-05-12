@@ -376,21 +376,21 @@ void setMcorePwMgntDefaults(void)
 	uint16* powerManagementPort = (uint16*)POWER_CONTROL_ADDRESS;
 
 	//debug("Power Defaults Set\n");
-	s_powerManagement.bit.alarm2Enable = 				ON;
-	s_powerManagement.bit.alarm1Enable = 				ON;
-	s_powerManagement.bit.serial485ReceiverEnable = 	OFF;
+	s_powerManagement.bit.alarm2Enable = 			ON;
+	s_powerManagement.bit.alarm1Enable = 			ON;
+	s_powerManagement.bit.serial485ReceiverEnable = OFF;
 	s_powerManagement.bit.serial485DriverEnable = 	OFF;
-	s_powerManagement.bit.serial232ReceiverEnable = 	ON;
+	s_powerManagement.bit.serial232ReceiverEnable = ON;
 	s_powerManagement.bit.serial232DriverEnable = 	ON;
-	s_powerManagement.bit.powerShutdownEnable = 		OFF;
-	s_powerManagement.bit.powerOff = 					OFF;
-	s_powerManagement.bit.lcdBacklightHiEnable = 		OFF;
+	s_powerManagement.bit.powerShutdownEnable = 	OFF;
+	s_powerManagement.bit.powerOff = 				OFF;
+	s_powerManagement.bit.lcdBacklightHiEnable = 	OFF;
 	s_powerManagement.bit.lcdBacklightEnable = 		OFF;
 	s_powerManagement.bit.lcdContrastEnable = 		OFF;
 	s_powerManagement.bit.lcdSleepEnable = 			OFF;
 	s_powerManagement.bit.analogSleepEnable = 		ON;
 	s_powerManagement.bit.lanSleepEnable = 			ON;
-	s_powerManagement.bit.usbDeviceSleepEnable = 		ON;
+	s_powerManagement.bit.usbDeviceSleepEnable = 	ON;
 	s_powerManagement.bit.usbHostSleepEnable = 		ON;
 
 	//s_powerManagement.reg = 0xCC0F;

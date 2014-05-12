@@ -67,6 +67,10 @@
 #define SHIFT_KEY		KEY_SHIFT
 #define CTRL_KEY 		KEY_CTRL
 
+// Power Keys
+#define ON_KEY			0x04
+#define OFF_KEY			0x02
+
 #define WAIT_FOR_KEY			0
 #define CHECK_ONCE_FOR_KEY		1
 

@@ -36,6 +36,15 @@
 #define SUMMARY_MENU_ACTIVE_ITEMS	7
 #define NO_EVENT_LINK	 			0xFFFFFFFF
 
+typedef struct {
+	uint32 eventNumber;
+	DATE_TIME_STRUCT eventTime;
+	uint8 mode;
+	uint8 subMode;
+	uint8 unused;
+	uint8 validFlag;
+} SUMMARY_MENU_EVENT_CACHE_STRUCT;
+
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
@@ -48,10 +57,12 @@ extern USER_MENU_STRUCT configMenu[];
 static SUMMARY_DATA *s_flashReadSummaryTablePtr = &__ramFlashSummaryTbl[0];
 static uint16 s_topMenuSummaryIndex = 0;
 static uint16 s_currentSummaryIndex = 0;
+static uint32 cacheEntries = 0;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
+SUMMARY_MENU_EVENT_CACHE_STRUCT* getSummaryEventInfo(uint16 tempSummaryIndex);
 void summaryMn(INPUT_MSG_STRUCT);
 
 void summaryMnProc(INPUT_MSG_STRUCT,
@@ -94,9 +105,8 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
                    WND_LAYOUT_STRUCT *wnd_layout_ptr,
                    SUMMARY_DATA *rd_summary_ptr)
 {
-	//uint16 i = 0;
+	SUMMARY_MENU_EVENT_CACHE_STRUCT* eventInfo;
 	INPUT_MSG_STRUCT mn_msg;
-	EVT_RECORD* eventRecord;
 	uint16 tempSummaryIndex = 0;
 
 	if (msg.cmd == ACTIVATE_MENU_CMD)
@@ -107,7 +117,7 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 		wnd_layout_ptr->end_row =   SUMMARY_WND_END_ROW;        /* 6 */
 
 		g_summaryListMenuActive = YES;
-
+		
 		if (msg.data[0] == START_FROM_TOP)
 		{
 			// Find the first valid summary index and set the top and current index to match
@@ -125,50 +135,28 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 				// Check if the top menu summary index represents a valid index
 				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
 				{
-					g_resultsRamSummaryPtr = (rd_summary_ptr + s_currentSummaryIndex);
-#if 0 // ns7100
-					eventRecord = (EVT_RECORD *)g_resultsRamSummaryPtr->linkPtr;
-#else // ns8100
-					static EVT_RECORD resultsEventRecord;
-					eventRecord = &resultsEventRecord;
-	
-					getEventFileRecord(__ramFlashSummaryTbl[s_currentSummaryIndex].fileEventNum, &resultsEventRecord);
-					g_resultsRamSummaryPtr = &(__ramFlashSummaryTbl[s_currentSummaryIndex]);
-					g_resultsRamSummaryIndex = s_currentSummaryIndex;
+					// Grab the event info, assuming it's cached
+					eventInfo = getSummaryEventInfo(s_currentSummaryIndex);
+
+					g_summaryEventNumber = eventInfo->eventNumber;
 					g_updateResultsEventRecord = YES;
 
-					debug("Summary menu: updating event record cache for event #%d, Addr Compare: 0x%x <-> 0x%x\n",
-							__ramFlashSummaryTbl[s_currentSummaryIndex].fileEventNum, g_resultsRamSummaryPtr, g_resultsRamSummaryPtr);
-#endif
+					debug("Summary menu: Calling Results Menu for Event #%d\n", eventInfo->eventNumber);
 
-char dateStr[50];
-					debugRaw("\n\tEvt: %04d, Mode: %d\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
-					convertTimeStampToString(&dateStr[0], &(eventRecord->summary.captured.calDate), REC_DATE_TIME_TYPE);
-					debugRaw("\tCal Date: %s\n", dateStr);
-					convertTimeStampToString(&dateStr[0], &(eventRecord->summary.captured.eventTime), REC_DATE_TIME_TYPE);
-					debugRaw("\tEvent Time: %s\n", dateStr);
-					convertTimeStampToString(&dateStr[0], &(eventRecord->summary.captured.endTime), REC_DATE_TIME_TYPE);
-					debugRaw("\tStart Time: %s\n\n", dateStr);
-					
-					switch (eventRecord->summary.mode)
+					switch (eventInfo->mode)
 					{
 						case WAVEFORM_MODE:
 						case MANUAL_CAL_MODE:
-							g_printOutMode = WAVEFORM_MODE;
+						case BARGRAPH_MODE: 
+						case COMBO_MODE:
 							g_activeMenu = RESULTS_MENU;
 							ACTIVATE_MENU_MSG();
 							(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							break;   
-	                   case BARGRAPH_MODE: 
-							g_printOutMode = BARGRAPH_MODE;
-							g_activeMenu = RESULTS_MENU;
-							ACTIVATE_MENU_MSG();
-							(*menufunc_ptrs[g_activeMenu]) (mn_msg);
-							break;    
-						case COMBO_MODE:
-							break;
+
 						case MANUAL_TRIGGER_MODE:
 							break;
+
 						default:
 							break;
 					} 
@@ -205,6 +193,9 @@ char dateStr[50];
 				else // We're done here
 				{
 					g_summaryListMenuActive = NO;
+					
+					// Reset the cached entries since the temp space used can be overwritten
+					cacheEntries = 0;
 
 					ACTIVATE_USER_MENU_MSG(&configMenu, SUMMARIES_EVENTS);
 					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
@@ -223,13 +214,13 @@ char dateStr[50];
 void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
                     SUMMARY_DATA *rd_summary_ptr)
 {
+	SUMMARY_MENU_EVENT_CACHE_STRUCT* eventInfo;
 	char dateBuff[25];
 	char lineBuff[30];
 	char modeBuff[2];
 	uint16 itemsDisplayed = 1;
 	uint16 length;
 	uint16 tempSummaryIndex = 0;
-	EVT_RECORD* eventRecord;
 
 	// Clear the LCD map
 	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
@@ -261,24 +252,17 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 
 		while ((itemsDisplayed <= SUMMARY_MENU_ACTIVE_ITEMS) && (tempSummaryIndex < TOTAL_RAM_SUMMARIES))
 		{
-#if 0 // ns7100
-			eventRecord = (EVT_RECORD *)((rd_summary_ptr + tempSummaryIndex)->linkPtr);
-#else // ns8100
-			static EVT_RECORD resultsEventRecord;
-			eventRecord = &resultsEventRecord;
-	
-			debug("Summary menu: updating event record cache\n");
-			getEventFileRecord(__ramFlashSummaryTbl[tempSummaryIndex].fileEventNum, &resultsEventRecord);
-#endif
+			// Check if entry is cached to prevent long delay reading files
+			eventInfo = getSummaryEventInfo(tempSummaryIndex);
 
 			// Clear and setup the time stamp string for the current event
 			byteSet(&dateBuff[0], 0, sizeof(dateBuff));
-			convertTimeStampToString(dateBuff, (void*)(&eventRecord->summary.captured.eventTime), 
+			convertTimeStampToString(dateBuff, (void*)(&(eventInfo->eventTime)), 
 										REC_DATE_TIME_DISPLAY);
 
 			// Clear and setup the mode string for the curent event
 			byteSet(&modeBuff[0], 0, sizeof(modeBuff));
-			switch (eventRecord->summary.mode)
+			switch (eventInfo->mode)
 			{
 				case WAVEFORM_MODE: 		strcpy(modeBuff, "W"); break;
 				case BARGRAPH_MODE: 		strcpy(modeBuff, "B"); break;
@@ -289,7 +273,7 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 			
 			// Clear and setup the event line string for the curent event
 			byteSet(&lineBuff[0], 0, sizeof(lineBuff));
-			sprintf(lineBuff, "E%03d %s %s", eventRecord->summary.eventNumber, dateBuff, modeBuff);
+			sprintf(lineBuff, "E%03d %s %s", (int)eventInfo->eventNumber, dateBuff, modeBuff);
 
 			// Check if the current line is to be highlighted
 			if (tempSummaryIndex == s_currentSummaryIndex)
@@ -472,21 +456,39 @@ BOOLEAN checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 	return (validEventLink);
 }
 
+/****************************************
+*	Function:	
+*	Purpose:
+****************************************/
+SUMMARY_MENU_EVENT_CACHE_STRUCT* getSummaryEventInfo(uint16 tempSummaryIndex)
+{
+	EVT_RECORD resultsEventRecord;
+	SUMMARY_MENU_EVENT_CACHE_STRUCT* cacheSummaryLineEntry = (SUMMARY_MENU_EVENT_CACHE_STRUCT*)&g_eventDataBuffer[0];
+	uint32 i = 0;
 
+	// Check if entry is cached to prevent long delay reading files
+	while (i < cacheEntries)
+	{		
+		if ((cacheSummaryLineEntry[i].eventNumber == __ramFlashSummaryTbl[tempSummaryIndex].fileEventNum) && 
+				(cacheSummaryLineEntry[i].validFlag == YES))
+		{
+			debug("Summary menu: Found cached event record info\n");
+			return (&cacheSummaryLineEntry[i]);
+		}
+		
+		i++;
+	}
 
+	// If here, no cache entry was found, load the event file to get the event record info
+	debug("Summary menu: Adding event record info to cache\n");
 
+	getEventFileRecord(__ramFlashSummaryTbl[tempSummaryIndex].fileEventNum, &resultsEventRecord);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	cacheSummaryLineEntry[cacheEntries].eventNumber = resultsEventRecord.summary.eventNumber;
+	cacheSummaryLineEntry[cacheEntries].mode = resultsEventRecord.summary.mode;
+	cacheSummaryLineEntry[cacheEntries].subMode = resultsEventRecord.summary.subMode;
+	cacheSummaryLineEntry[cacheEntries].eventTime = resultsEventRecord.summary.captured.eventTime;
+	cacheSummaryLineEntry[cacheEntries].validFlag = YES;
+		
+	return (&cacheSummaryLineEntry[cacheEntries++]);
+}

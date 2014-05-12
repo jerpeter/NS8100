@@ -161,12 +161,13 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 
+#if 0 // ns7100
 					// Check if the sample rate is not 1024
 					if (g_triggerRecord.trec.sample_rate != 1024)
 					{
 						g_triggerRecord.trec.sample_rate = 1024;
 					}	
-
+#endif
 					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
 					g_aJobPeak = g_rJobPeak = g_vJobPeak = g_tJobPeak = 0;
 					g_aJobFreq = g_rJobFreq = g_vJobFreq = g_tJobFreq = 0;
@@ -203,12 +204,13 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 
+#if 0 // ns7100
 					// Check if the sample rate is not 1024
 					if (g_triggerRecord.trec.sample_rate != 1024)
 					{
 						g_triggerRecord.trec.sample_rate = 1024;
 					}	
-
+#endif
 					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
 					g_aJobPeak = g_rJobPeak = g_vJobPeak = g_tJobPeak = 0;
 					g_aJobFreq = g_rJobFreq = g_vJobFreq = g_tJobFreq = 0;
@@ -674,9 +676,18 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
-				tempR = ((float)g_bargraphSumIntervalWritePtr->r.peak / (float)div);
-				tempT = ((float)g_bargraphSumIntervalWritePtr->t.peak / (float)div);
-				tempV = ((float)g_bargraphSumIntervalWritePtr->v.peak / (float)div);
+				if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+				{
+					tempR = ((float)g_bargraphSumIntervalWritePtr->r.peak / (float)div);
+					tempT = ((float)g_bargraphSumIntervalWritePtr->t.peak / (float)div);
+					tempV = ((float)g_bargraphSumIntervalWritePtr->v.peak / (float)div);
+				}
+				else if (g_triggerRecord.op_mode == COMBO_MODE)
+				{
+					tempR = ((float)g_comboSumIntervalWritePtr->r.peak / (float)div);
+					tempT = ((float)g_comboSumIntervalWritePtr->t.peak / (float)div);
+					tempV = ((float)g_comboSumIntervalWritePtr->v.peak / (float)div);
+				}
 			}
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 			{
@@ -743,20 +754,41 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 				{
-					if (g_bargraphSumIntervalWritePtr->r.frequency > 0)
+					if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 					{
-						tempR = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-								((float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1)));
+						if (g_bargraphSumIntervalWritePtr->r.frequency > 0)
+						{
+							tempR = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+									((float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1)));
+						}
+						if (g_bargraphSumIntervalWritePtr->v.frequency > 0)
+						{
+							tempV = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+									((float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1)));
+						}
+						if (g_bargraphSumIntervalWritePtr->t.frequency > 0)
+						{
+							tempT = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+									((float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1)));
+						}
 					}
-					if (g_bargraphSumIntervalWritePtr->v.frequency > 0)
+					else if (g_triggerRecord.op_mode == COMBO_MODE)
 					{
-						tempV = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-								((float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1)));
-					}
-					if (g_bargraphSumIntervalWritePtr->t.frequency > 0)
-					{
-						tempT = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-								((float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1)));
+						if (g_comboSumIntervalWritePtr->r.frequency > 0)
+						{
+							tempR = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+									((float)((g_comboSumIntervalWritePtr->r.frequency * 2) - 1)));
+						}
+						if (g_comboSumIntervalWritePtr->v.frequency > 0)
+						{
+							tempV = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+									((float)((g_comboSumIntervalWritePtr->v.frequency * 2) - 1)));
+						}
+						if (g_comboSumIntervalWritePtr->t.frequency > 0)
+						{
+							tempT = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+									((float)((g_comboSumIntervalWritePtr->t.frequency * 2) - 1)));
+						}
 					}
 				}
 				else // g_displayBargraphResultsMode == JOB_PEAK_RESULTS
@@ -820,7 +852,12 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				tempVS = sqrtf((float)g_vsImpulsePeak) / (float)div;
 			else if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
-				tempVS = sqrtf((float)g_bargraphSumIntervalWritePtr->vectorSumPeak) / (float)div;
+			{
+				if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+					tempVS = sqrtf((float)g_bargraphSumIntervalWritePtr->vectorSumPeak) / (float)div;
+				else if (g_triggerRecord.op_mode == COMBO_MODE)
+					tempVS = sqrtf((float)g_comboSumIntervalWritePtr->vectorSumPeak) / (float)div;
+			}			
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 				tempVS = sqrtf((float)g_vsJobPeak) / (float)div;
 
@@ -844,16 +881,32 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
-				tempR = g_bargraphSumIntervalWritePtr->r.peak;
-				tempV = g_bargraphSumIntervalWritePtr->v.peak;
-				tempT = g_bargraphSumIntervalWritePtr->t.peak;
+				if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+				{
+					tempR = g_bargraphSumIntervalWritePtr->r.peak;
+					tempV = g_bargraphSumIntervalWritePtr->v.peak;
+					tempT = g_bargraphSumIntervalWritePtr->t.peak;
 
-				rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-						((float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1)));
-				vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-						((float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1)));
-				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-						((float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1)));
+					rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+							((float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1)));
+					vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+							((float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1)));
+					tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+							((float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1)));
+				}
+				else if (g_triggerRecord.op_mode == COMBO_MODE)
+				{
+					tempR = g_comboSumIntervalWritePtr->r.peak;
+					tempV = g_comboSumIntervalWritePtr->v.peak;
+					tempT = g_comboSumIntervalWritePtr->t.peak;
+
+					rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+							((float)((g_comboSumIntervalWritePtr->r.frequency * 2) - 1)));
+					vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+							((float)((g_comboSumIntervalWritePtr->v.frequency * 2) - 1)));
+					tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+							((float)((g_comboSumIntervalWritePtr->t.frequency * 2) - 1)));
+				}
 			}
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 			{
@@ -931,13 +984,26 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				{
 					if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 					{
-						if (g_bargraphSumIntervalWritePtr->a.frequency > 0)
+						if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 						{
-							tempA = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-									((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
-						}
+							if (g_bargraphSumIntervalWritePtr->a.frequency > 0)
+							{
+								tempA = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+										((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
+							}
 
-						sprintf(buff, "AIR %4.1f dB ", hexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED));
+							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED));
+						}
+						else if (g_triggerRecord.op_mode == COMBO_MODE)
+						{
+							if (g_comboSumIntervalWritePtr->a.frequency > 0)
+							{
+								tempA = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+										((float)((g_comboSumIntervalWritePtr->a.frequency * 2) - 1)));
+							}
+
+							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED));
+						}
 					}
 					else // g_displayBargraphResultsMode == JOB_PEAK_RESULTS
 					{

@@ -69,10 +69,13 @@ void initRamSummaryTbl(void)
 // Purpose: When the ram summary table is garbage, copy flash summaries to ram
 //*****************************************************************************
 #include "lcd.h"
+#define TOTAL_DOTS	4
 void copyValidFlashEventSummariesToRam(void)
 {
 	uint16 ramSummaryIndex = 0;
 	uint16 eventMajorVersion = (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK);
+
+	overlayMessage("SUMMARY LIST", "INITIALIZING SUMMARY LIST WITH STORED EVENT INFO", 1 * SOFT_SECS);
 
 #if 1 // ns8100 ---------------------------------------------------------------------------------------
 	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(g_eventDataBuffer[0]);
@@ -81,6 +84,10 @@ void copyValidFlashEventSummariesToRam(void)
 	FL_FILE* eventFile;
 	EVT_RECORD tempEventRecord;
 	unsigned long int dirStartCluster;
+	uint8 dotBuff[TOTAL_DOTS];
+	static uint8 dotState = 0;
+	char overlayText[50];
+	uint8 i = 0;
 	
 	debug("Copying valid SD event summaries to ram...\n");
 
@@ -91,6 +98,21 @@ void copyValidFlashEventSummariesToRam(void)
 	{
 		if (dirList[entriesFound].type == FAT32_FILE)
 		{
+			//_______________________________________________________________________________
+			//___Create the idea of progress with scrolling dots
+			byteSet(&overlayText[0], 0, sizeof(overlayText));
+			byteSet(&dotBuff[0], 0, sizeof(dotBuff));
+	
+			for (i = 0; i < dotState; i++) { dotBuff[i] = '.'; }
+			for (; i < (TOTAL_DOTS - 1); i++) { dotBuff[i] = ' '; }
+
+			if (++dotState >= TOTAL_DOTS) { dotState = 0; }
+
+			sprintf((char*)&overlayText[0], "INITIALIZING SUMMARY LIST WITH STORED EVENT INFO%s", (char*)&dotBuff[0]);
+			overlayMessage("SUMMARY LIST", (char*)&overlayText[0], 0);
+
+			//_______________________________________________________________________________
+			//___Handle the next file found
 			sprintf(fileName, "C:\\Events\\%s", dirList[entriesFound].name);
 			eventFile = fl_fopen(fileName, "r");
 
@@ -534,101 +556,28 @@ void InitFlashBuffs(void)
 }
 
 //*****************************************************************************
-// FUNCTION:	initEventRecord
+// FUNCTION:
 // DESCRIPTION:
 //*****************************************************************************
-void initEventRecord(EVT_RECORD* eventRec, uint8 op_mode)
+void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 {
 	uint8 idex;
 
 	byteSet(eventRec, 0xFF, sizeof(EVT_RECORD));
 
 	//--------------------------------
-	// EVENT_HEADER_STRUCT  -
 	eventRec->header.startFlag = (uint16)EVENT_RECORD_START_FLAG;
 	eventRec->header.recordVersion = (uint16)EVENT_RECORD_VERSION;
 	eventRec->header.headerLength = (uint16)sizeof(EVENT_HEADER_STRUCT);
 	eventRec->header.summaryLength = (uint16)sizeof(EVENT_SUMMARY_STRUCT);
-
-	// The following data will be filled in when the data has been moved over to flash.
-	// dataCompression, dataLength, summaryChecksum, dataChecksum;
-
 	//-----------------------
-	// EVENT_SUMMARY_STRUCT - Fill in the event VERSION_INFO_STRUCT data
-	eventRec->summary.mode = op_mode;
-	eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
-
+	eventRec->summary.parameters.sampleRate = (uint16)g_triggerRecord.trec.sample_rate;
 	//-----------------------
-	// EVENT_SUMMARY_STRUCT - Fill in the event VERSION_INFO_STRUCT data
-
-	byteSet(&(eventRec->summary.version.modelNumber[0]), 0, MODEL_STRING_SIZE);
-	byteCpy(&(eventRec->summary.version.modelNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
-	byteSet(&(eventRec->summary.version.serialNumber[0]), 0, SERIAL_NUMBER_STRING_SIZE);
-	byteCpy(&(eventRec->summary.version.serialNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
-	byteSet(&(eventRec->summary.version.softwareVersion[0]), 0, VERSION_STRING_SIZE);
-	byteCpy(&(eventRec->summary.version.softwareVersion[0]), &(g_appVersion[0]), VERSION_STRING_SIZE - 1);
-
+	eventRec->summary.captured.endTime = getCurrentTime();
+	eventRec->summary.captured.batteryLevel = (uint32)(100.0 * convertedBatteryLevel(BATTERY_VOLTAGE));
+	eventRec->summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
+	eventRec->summary.captured.calDate = g_factorySetupRecord.cal_date;
 	//-----------------------
-	// EVENT_SUMMARY_STRUCT - Fill in the event PARAMETERS_STRUCT data
-
-	eventRec->summary.parameters.bitAccuracy = 12;
-	eventRec->summary.parameters.numOfChannels = 4;
-	// 8 is the total number of records to copy over.
-	for (idex = 0; idex < 8; idex++)
-	{
-		eventRec->summary.parameters.channel[idex].type = g_msgs430.startMsg430.channel[idex].channel_type;
-		eventRec->summary.parameters.channel[idex].input = g_msgs430.startMsg430.channel[idex].channel_num;
-		eventRec->summary.parameters.channel[idex].group = g_msgs430.startMsg430.channel[idex].group_num;
-
-		if (op_mode == MANUAL_CAL_MODE)
-		{
-			eventRec->summary.parameters.channel[idex].options = GAIN_SELECT_x2;
-		}
-		else // Waveform, Bargraph, Combo
-		{
-			eventRec->summary.parameters.channel[idex].options = g_msgs430.startMsg430.channel[idex].options;
-		}
-	}
-
-	if (eventRec->summary.mode == MANUAL_CAL_MODE)
-	{
-		eventRec->summary.parameters.sampleRate = 1024;
-	}
-	else
-	{
-		eventRec->summary.parameters.sampleRate = (uint16)g_triggerRecord.trec.sample_rate;
-	}
-
-	eventRec->summary.parameters.aWeighting = (uint8)g_factorySetupRecord.aweight_option;
-	eventRec->summary.parameters.seismicSensorType = (uint16)g_factorySetupRecord.sensor_type;
-	eventRec->summary.parameters.airSensorType = (uint16)0x0;
-	eventRec->summary.parameters.distToSource = (uint32)(g_triggerRecord.trec.dist_to_source * 100.0);
-	eventRec->summary.parameters.weightPerDelay = (uint32)(g_triggerRecord.trec.weight_per_delay * 100.0);
-
-	if ((eventRec->summary.mode == WAVEFORM_MODE) || (eventRec->summary.mode == MANUAL_CAL_MODE))
-	{
-		eventRec->summary.captured.batteryLevel = (uint32)(100.0 * convertedBatteryLevel(BATTERY_VOLTAGE));
-		eventRec->summary.captured.endTime = getCurrentTime();
-		eventRec->summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
-		eventRec->summary.captured.calDate = g_factorySetupRecord.cal_date;
-
-		eventRec->summary.parameters.numOfSamples = (uint16)(g_triggerRecord.trec.sample_rate * g_triggerRecord.trec.record_time);
-		eventRec->summary.parameters.preBuffNumOfSamples = (uint16)(g_triggerRecord.trec.sample_rate / 4);
-		eventRec->summary.parameters.calDataNumOfSamples = (uint16)(CALIBRATION_NUMBER_OF_SAMPLES);
-	}
-
-	if ((eventRec->summary.mode == MANUAL_CAL_MODE) || (eventRec->summary.mode == BARGRAPH_MODE))
-	{
-		eventRec->summary.parameters.numOfSamples = 0;
-		eventRec->summary.parameters.preBuffNumOfSamples = 0;
-	}
-
-	if (eventRec->summary.mode == BARGRAPH_MODE)
-	{
-		eventRec->summary.parameters.calDataNumOfSamples = 0;
-		eventRec->summary.parameters.activeChannels = g_triggerRecord.berec.barChannel;
-	}
-
 	byteSet(&(eventRec->summary.parameters.companyName[0]), 0, COMPANY_NAME_STRING_SIZE);
 	byteCpy(&(eventRec->summary.parameters.companyName[0]), &(g_triggerRecord.trec.client[0]), COMPANY_NAME_STRING_SIZE - 1);
 	byteSet(&(eventRec->summary.parameters.seismicOperator[0]), 0, SEISMIC_OPERATOR_STRING_SIZE);
@@ -637,19 +586,91 @@ void initEventRecord(EVT_RECORD* eventRec, uint8 op_mode)
 	byteCpy(&(eventRec->summary.parameters.sessionLocation[0]), &(g_triggerRecord.trec.loc[0]), SESSION_LOCATION_STRING_SIZE - 1);
 	byteSet(&(eventRec->summary.parameters.sessionComments[0]), 0, SESSION_COMMENTS_STRING_SIZE);
 	byteCpy(&(eventRec->summary.parameters.sessionComments[0]), &(g_triggerRecord.trec.comments[0]), sizeof(g_triggerRecord.trec.comments));
+	//-----------------------
+	byteSet(&(eventRec->summary.version.modelNumber[0]), 0, MODEL_STRING_SIZE);
+	byteCpy(&(eventRec->summary.version.modelNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
+	byteSet(&(eventRec->summary.version.serialNumber[0]), 0, SERIAL_NUMBER_STRING_SIZE);
+	byteCpy(&(eventRec->summary.version.serialNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
+	byteSet(&(eventRec->summary.version.softwareVersion[0]), 0, VERSION_STRING_SIZE);
+	byteCpy(&(eventRec->summary.version.softwareVersion[0]), &(g_appVersion[0]), VERSION_STRING_SIZE - 1);
+	//-----------------------
+	eventRec->summary.parameters.bitAccuracy = 12;
+	eventRec->summary.parameters.numOfChannels = 4;
+	eventRec->summary.parameters.aWeighting = (uint8)g_factorySetupRecord.aweight_option;
+	eventRec->summary.parameters.seismicSensorType = (uint16)g_factorySetupRecord.sensor_type;
+	eventRec->summary.parameters.airSensorType = (uint16)0x0;
+	eventRec->summary.parameters.distToSource = (uint32)(g_triggerRecord.trec.dist_to_source * 100.0);
+	eventRec->summary.parameters.weightPerDelay = (uint32)(g_triggerRecord.trec.weight_per_delay * 100.0);
+	//-----------------------
+	for (idex = 0; idex < 8; idex++) // Max 8 channels
+	{
+		eventRec->summary.parameters.channel[idex].type = g_msgs430.startMsg430.channel[idex].channel_type;
+		eventRec->summary.parameters.channel[idex].input = g_msgs430.startMsg430.channel[idex].channel_num;
+		eventRec->summary.parameters.channel[idex].group = g_msgs430.startMsg430.channel[idex].group_num;
+		eventRec->summary.parameters.channel[idex].options = g_msgs430.startMsg430.channel[idex].options;
+	}
+}
 
-	// Waveform specific
-	eventRec->summary.parameters.seismicTriggerLevel = (uint32)g_triggerRecord.trec.seismicTriggerLevel;
-	eventRec->summary.parameters.airTriggerLevel = (uint32)g_triggerRecord.trec.soundTriggerLevel;
-	eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
+//*****************************************************************************
+// FUNCTION:	initEventRecord
+// DESCRIPTION:
+//*****************************************************************************
+void initEventRecord(uint8 op_mode)
+{
+	EVT_RECORD* eventRec;
+	uint8 idex;
 
-	// Bargraph specific
-	eventRec->summary.parameters.barInterval = (uint16)g_triggerRecord.bgrec.barInterval;
-	eventRec->summary.parameters.summaryInterval = (uint16)g_triggerRecord.bgrec.summaryInterval;
+	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))
+	{
+		eventRec = &g_pendingEventRecord;		
+		clearAndFillInCommonRecordInfo(eventRec);
 
-	// SUMMARY_EVENT_PARAMETERS -
-	// Fill in the event Parameter data structure at the end of the event.
-	// Fill in the data length, data checksum and summary checksum at the end of the event.
+		eventRec->summary.mode = op_mode;
+		eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
+
+		eventRec->summary.parameters.numOfSamples = (uint16)(g_triggerRecord.trec.sample_rate * g_triggerRecord.trec.record_time);
+		eventRec->summary.parameters.preBuffNumOfSamples = (uint16)(g_triggerRecord.trec.sample_rate / 4);
+		eventRec->summary.parameters.calDataNumOfSamples = (uint16)(CALIBRATION_NUMBER_OF_SAMPLES);
+
+		if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
+		{
+			eventRec->summary.parameters.seismicTriggerLevel = (uint32)g_triggerRecord.trec.seismicTriggerLevel;
+			eventRec->summary.parameters.airTriggerLevel = (uint32)g_triggerRecord.trec.soundTriggerLevel;
+			eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
+		}	
+		else // (op_mode == MANUAL_CAL_MODE)
+		{ 
+			eventRec->summary.parameters.sampleRate = MANUAL_CAL_DEFAULT_SAMPLE_RATE;
+			eventRec->summary.parameters.numOfSamples = 0;
+			eventRec->summary.parameters.preBuffNumOfSamples = 0;
+			eventRec->summary.parameters.seismicTriggerLevel = 0;
+			eventRec->summary.parameters.airTriggerLevel = 0;
+			eventRec->summary.parameters.recordTime = 0;
+			for (idex = 0; idex < 8; idex++) { eventRec->summary.parameters.channel[idex].options = GAIN_SELECT_x2; }
+		}
+
+		if (op_mode == COMBO_MODE) { eventRec->summary.subMode = WAVEFORM_MODE; }
+	}
+
+	if ((op_mode == BARGRAPH_MODE) || (op_mode == COMBO_MODE))
+	{
+		eventRec = &g_pendingBargraphRecord;		
+		clearAndFillInCommonRecordInfo(eventRec);
+
+		eventRec->summary.mode = op_mode;
+		eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
+
+		eventRec->summary.captured.eventTime = getCurrentTime();
+
+		eventRec->summary.parameters.barInterval = (uint16)g_triggerRecord.bgrec.barInterval;
+		eventRec->summary.parameters.summaryInterval = (uint16)g_triggerRecord.bgrec.summaryInterval;
+		eventRec->summary.parameters.numOfSamples = 0;
+		eventRec->summary.parameters.preBuffNumOfSamples = 0;
+		eventRec->summary.parameters.calDataNumOfSamples = 0;
+		eventRec->summary.parameters.activeChannels = g_triggerRecord.berec.barChannel;
+		
+		if (op_mode == COMBO_MODE) { eventRec->summary.subMode = BARGRAPH_MODE; }
+	}	
 }
 
 //*****************************************************************************
@@ -1226,51 +1247,56 @@ void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 	//--------------------------------
 	// EVT_RECORD -
 
-	// Check if Waveform or Manual Cal mode
+	// Only called for Wave, Cal, C-Wave, all settings are common
+#if 0
 	if ((g_pendingEventRecord.summary.mode == WAVEFORM_MODE) || (g_pendingEventRecord.summary.mode == MANUAL_CAL_MODE) || 
 			(g_pendingEventRecord.summary.mode == COMBO_MODE))
 	{
-		debug("Copy calculated from Waveform buffer to global ram event record\n");
+#endif
+
+	debug("Copy calculated from Waveform buffer to global ram event record\n");
 		
-		// Fill in calculated data (Bargraph data filled in at the end of bargraph)
-		g_pendingEventRecord.summary.calculated.a.peak = flashSummPtr->waveShapeData.a.peak = ramSummPtr->waveShapeData.a.peak;
-		g_pendingEventRecord.summary.calculated.r.peak = flashSummPtr->waveShapeData.r.peak = ramSummPtr->waveShapeData.r.peak;
-		g_pendingEventRecord.summary.calculated.v.peak = flashSummPtr->waveShapeData.v.peak = ramSummPtr->waveShapeData.v.peak;
-		g_pendingEventRecord.summary.calculated.t.peak = flashSummPtr->waveShapeData.t.peak = ramSummPtr->waveShapeData.t.peak;
+	// Fill in calculated data (Bargraph data filled in at the end of bargraph)
+	g_pendingEventRecord.summary.calculated.a.peak = flashSummPtr->waveShapeData.a.peak = ramSummPtr->waveShapeData.a.peak;
+	g_pendingEventRecord.summary.calculated.r.peak = flashSummPtr->waveShapeData.r.peak = ramSummPtr->waveShapeData.r.peak;
+	g_pendingEventRecord.summary.calculated.v.peak = flashSummPtr->waveShapeData.v.peak = ramSummPtr->waveShapeData.v.peak;
+	g_pendingEventRecord.summary.calculated.t.peak = flashSummPtr->waveShapeData.t.peak = ramSummPtr->waveShapeData.t.peak;
 
-		debug("Newly stored peaks: a:%x r:%x v:%x t:%x\n", 
-				g_pendingEventRecord.summary.calculated.a.peak, 
-				g_pendingEventRecord.summary.calculated.r.peak,
-				g_pendingEventRecord.summary.calculated.v.peak,
-				g_pendingEventRecord.summary.calculated.t.peak);
+	debug("Newly stored peaks: a:%04x r:%04x v:%04x t:%04x\n", 
+			g_pendingEventRecord.summary.calculated.a.peak, 
+			g_pendingEventRecord.summary.calculated.r.peak,
+			g_pendingEventRecord.summary.calculated.v.peak,
+			g_pendingEventRecord.summary.calculated.t.peak);
 
-		g_pendingEventRecord.summary.calculated.a.frequency = flashSummPtr->waveShapeData.a.freq = ramSummPtr->waveShapeData.a.freq;
-		g_pendingEventRecord.summary.calculated.r.frequency = flashSummPtr->waveShapeData.r.freq = ramSummPtr->waveShapeData.r.freq;
-		g_pendingEventRecord.summary.calculated.v.frequency = flashSummPtr->waveShapeData.v.freq = ramSummPtr->waveShapeData.v.freq;
-		g_pendingEventRecord.summary.calculated.t.frequency = flashSummPtr->waveShapeData.t.freq = ramSummPtr->waveShapeData.t.freq;
+	g_pendingEventRecord.summary.calculated.a.frequency = flashSummPtr->waveShapeData.a.freq = ramSummPtr->waveShapeData.a.freq;
+	g_pendingEventRecord.summary.calculated.r.frequency = flashSummPtr->waveShapeData.r.freq = ramSummPtr->waveShapeData.r.freq;
+	g_pendingEventRecord.summary.calculated.v.frequency = flashSummPtr->waveShapeData.v.freq = ramSummPtr->waveShapeData.v.freq;
+	g_pendingEventRecord.summary.calculated.t.frequency = flashSummPtr->waveShapeData.t.freq = ramSummPtr->waveShapeData.t.freq;
 
-		debug("Newly stored freq: a:%d r:%d v:%d t:%d\n", 
-				g_pendingEventRecord.summary.calculated.a.frequency, 
-				g_pendingEventRecord.summary.calculated.r.frequency,
-				g_pendingEventRecord.summary.calculated.v.frequency,
-				g_pendingEventRecord.summary.calculated.t.frequency);
+	debug("Newly stored freq: a:%d r:%d v:%d t:%d\n", 
+			g_pendingEventRecord.summary.calculated.a.frequency, 
+			g_pendingEventRecord.summary.calculated.r.frequency,
+			g_pendingEventRecord.summary.calculated.v.frequency,
+			g_pendingEventRecord.summary.calculated.t.frequency);
 
-		g_pendingEventRecord.summary.calculated.a.displacement = 0;
+	g_pendingEventRecord.summary.calculated.a.displacement = 0;
 
-		// Calculate Displacement as PPV/(2 * PI * Freq) with 1000000 to shift to keep accuracy and the 10 to adjust the frequency
-		g_pendingEventRecord.summary.calculated.r.displacement =
-			(uint32)(ramSummPtr->waveShapeData.r.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.r.freq * 10);
-		g_pendingEventRecord.summary.calculated.v.displacement =
-			(uint32)(ramSummPtr->waveShapeData.v.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.v.freq * 10);
-		g_pendingEventRecord.summary.calculated.t.displacement =
-			(uint32)(ramSummPtr->waveShapeData.t.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.t.freq * 10);
-	}
+	// Calculate Displacement as PPV/(2 * PI * Freq) with 1000000 to shift to keep accuracy and the 10 to adjust the frequency
+	g_pendingEventRecord.summary.calculated.r.displacement =
+		(uint32)(ramSummPtr->waveShapeData.r.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.r.freq * 10);
+	g_pendingEventRecord.summary.calculated.v.displacement =
+		(uint32)(ramSummPtr->waveShapeData.v.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.v.freq * 10);
+	g_pendingEventRecord.summary.calculated.t.displacement =
+		(uint32)(ramSummPtr->waveShapeData.t.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.t.freq * 10);
+
+	//} End of now if 0 defined check
 
 	//--------------------------------
 	// EVENT_HEADER_STRUCT  -
 	g_pendingEventRecord.header.summaryChecksum = 0;
 	g_pendingEventRecord.header.dataChecksum = 0;
 
+#if 0 // ns8100 - Replaced with data length calculated at init
 	// *** Fix bug with summary.parameters.numOfSamples bug where a value can be larger than the uint16 it holds
 	if (((g_pendingEventRecord.summary.mode == WAVEFORM_MODE) || (g_pendingEventRecord.summary.mode == COMBO_MODE)) && 
 			((g_pendingEventRecord.summary.parameters.sampleRate * g_pendingEventRecord.summary.parameters.recordTime) > 0xFFFF))
@@ -1290,6 +1316,7 @@ void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 							 				 g_pendingEventRecord.summary.parameters.numOfSamples +
 											 g_pendingEventRecord.summary.parameters.calDataNumOfSamples)) * 2);
 	}
+#endif
 
 	//--------------------------------
 

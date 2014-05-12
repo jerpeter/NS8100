@@ -77,6 +77,72 @@ void handleVSL(CMD_BUFFER_STRUCT* inCmd);
 // Function: handleVEL - View event log.
 void handleVEL(CMD_BUFFER_STRUCT* inCmd);
 
+// Function: handleVBD - View backlight delay.
+void handleVBD(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleSBD - Set backlight delay.
+void handleSBD(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleVDT - View display timeout.
+void handleVDT(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleSDT - Set display timeout.
+void handleSDT(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleVCL - View contrast level.
+void handleVCL(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleSCL - Set contrast level.
+void handleSCL(CMD_BUFFER_STRUCT* inCmd);
+
+// Init process
+void modemInitProcess(void);
+
+// Reset process, for the US Robotics
+void modemResetProcess(void);
+
+// Function: handleMRS - Modem reset.
+void handleMRS(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMVS - Modem view settings.
+void handleMVS(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMPO - Toggle modem on/off.
+void handleMPO(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMMO - Toggle modem mode transmit/receive.
+void handleMMO(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMNO - Toggle modem phone number A/B/C.
+void handleMNO(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMTO - Toggle modem log on/off.
+void handleMTO(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMSD - Modem set default initialization string.
+void handleMSD(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMSR - Modem set receive initialization string.
+void handleMSR(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMST - Modem set transmit initialization string.
+void handleMST(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMSA - Modem set phone number A.
+void handleMSA(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMSB - Modem set phone number B.
+void handleMSB(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMSC - Modem set phone number C.
+void handleMSC(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMVI - Modem view last call in detail.
+void handleMVI(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleMVO - Modem view last call out detail.
+void handleMVO(CMD_BUFFER_STRUCT* inCmd);
+
 uint8 convertAscii2Binary(uint8 firstByte, uint8 secondByte);
 
 #endif // _REMOTE_OPERATION_H_

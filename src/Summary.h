@@ -299,7 +299,7 @@ typedef struct
 	CALCULATED_DATA_STRUCT	calculated;
 	uint16 					eventNumber;
 	uint8					mode;
-	uint8					unused;
+	uint8					subMode;
 } EVENT_SUMMARY_STRUCT;
 
 #pragma pack(2)

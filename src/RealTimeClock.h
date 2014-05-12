@@ -1207,7 +1207,6 @@ void updateCurrentTime(void);
 DATE_TIME_STRUCT getCurrentTime(void);
 void DisableRtcAlarm(void);
 void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second);
-void SetAlarmFrequency(uint8 mode);
 void convertCurrentTimeForFat(uint8* fatTimeField);
 void convertCurrentDateForFat(uint8* fatTimeDate);
 void rtcWrite(uint8 register_address, int length, uint8* data);

@@ -78,7 +78,7 @@ void ProcessWaveformData(void)
 						// Set loop counter to 1 minus the total samples to be recieved in the event body (minus the trigger data sample)
 						g_isTriggered = g_samplesInBody - 1;
 
-#if 0 // ns7100						
+#if 0 // ns7100
 						// Save the link to the beginning of the pretrigger data
 						g_summaryTable[g_eventBufferIndex].linkPtr = g_eventBufferPretrigPtr;
 #endif
@@ -158,7 +158,7 @@ void ProcessWaveformData(void)
 
 							// Set the pointer to the third event Cal buffer
 							g_delayedTwoEventBufferCalPtr = g_delayedOneEventBufferCalPtr + g_wordSizeInEvent;
-							
+
 							// Copy PreTrigger data over to the Event Cal buffers
 							*(g_delayedTwoEventBufferCalPtr + 0) = *(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | CAL_START);
 							*(g_delayedTwoEventBufferCalPtr + 1) = *(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | CAL_START);
@@ -171,7 +171,7 @@ void ProcessWaveformData(void)
 							g_eventBufferCalPtr += 4;
 							g_tailOfPreTrigBuff += 4;
 							break;
-					}   
+					}
 					break;
 
 				default:
@@ -228,10 +228,10 @@ void ProcessWaveformData(void)
 					if (g_processingCal == 0)
 					{
 						// Temp - Add CAL_END command flag
-						*(g_eventBufferCalPtr - 4) |= CAL_END;
-						*(g_eventBufferCalPtr - 3) |= CAL_END;
-						*(g_eventBufferCalPtr - 2) |= CAL_END;
-						*(g_eventBufferCalPtr - 1) |= CAL_END;
+						*(g_delayedOneEventBufferCalPtr - 4) |= CAL_END;	*(g_eventBufferCalPtr - 4) |= CAL_END;
+						*(g_delayedOneEventBufferCalPtr - 3) |= CAL_END;	*(g_eventBufferCalPtr - 3) |= CAL_END;
+						*(g_delayedOneEventBufferCalPtr - 2) |= CAL_END;	*(g_eventBufferCalPtr - 2) |= CAL_END;
+						*(g_delayedOneEventBufferCalPtr - 1) |= CAL_END;	*(g_eventBufferCalPtr - 1) |= CAL_END;
 
 						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
@@ -240,7 +240,7 @@ void ProcessWaveformData(void)
 						g_calTestExpected = 0;
 					}
 					break;
-				    
+
 				case 3:
 					*(g_delayedTwoEventBufferCalPtr + 0) = *(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = *(g_tailOfPreTrigBuff + 0);
 					*(g_delayedTwoEventBufferCalPtr + 1) = *(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = *(g_tailOfPreTrigBuff + 1);
@@ -256,10 +256,10 @@ void ProcessWaveformData(void)
 					if (g_processingCal == 0)
 					{
 						// Temp - Add CAL_END command flag
-						*(g_eventBufferCalPtr - 4) |= CAL_END;
-						*(g_eventBufferCalPtr - 3) |= CAL_END;
-						*(g_eventBufferCalPtr - 2) |= CAL_END;
-						*(g_eventBufferCalPtr - 1) |= CAL_END;
+						*(g_delayedTwoEventBufferCalPtr - 4) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 4) |= CAL_END;	*(g_eventBufferCalPtr - 4) |= CAL_END;
+						*(g_delayedTwoEventBufferCalPtr - 3) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 3) |= CAL_END;	*(g_eventBufferCalPtr - 3) |= CAL_END;
+						*(g_delayedTwoEventBufferCalPtr - 2) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 2) |= CAL_END;	*(g_eventBufferCalPtr - 2) |= CAL_END;
+						*(g_delayedTwoEventBufferCalPtr - 1) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 1) |= CAL_END;	*(g_eventBufferCalPtr - 1) |= CAL_END;
 
 						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
@@ -282,7 +282,7 @@ void ProcessWaveformData(void)
 			*(g_eventBufferBodyPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_END);
 			*(g_eventBufferBodyPtr + 2) = (uint16)((*(g_tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_END);
 			*(g_eventBufferBodyPtr + 3) = (uint16)((*(g_tailOfPreTrigBuff + 3) & DATA_MASK) | EVENT_END);
-			
+
 			// Advance the pointers
 			g_eventBufferBodyPtr += 4;
 			g_tailOfPreTrigBuff += 4;
@@ -322,12 +322,10 @@ void ProcessWaveformData(void)
 
 		// Deincrement g_isTriggered since another event sample has been stored
 		g_isTriggered--;
-		
+
 		// Check if all the event data from the PreTrigger buffer has been moved into the event buffer
 		if (g_isTriggered == 0)
 		{
-			//debugRaw("\nEvtEnd\n");
-			
 			g_freeEventBuffers--;
 			g_eventBufferIndex++;
 			g_calTestExpected++;
@@ -375,29 +373,10 @@ void MoveWaveformEventToFlash(void)
 		switch (flashMovState)
 		{
 			case FLASH_IDLE:
-				if (g_helpRecord.flash_wrapping == NO)
-				{
-					getFlashUsageStats(&flashStats);
-					
-					if (flashStats.waveEventsLeft == 0)
-					{
-						// Release the buffer (in essence)
-						g_freeEventBuffers++;
-						
-						// Can't store event, just return
-						return;
-					}
-				}
-
 				if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 				{
 					debugErr("Out of Ram Summary Entrys\n");
 				}
-
-#if 0 // ns7100
-				// Set our flash event data pointer to the start of the flash event
-				advFlashDataPtrToEventData(ramSummaryEntry);
-#endif
 
 				sumEntry = &g_summaryTable[g_currentEventBuffer];
 				sumEntry->mode = WAVEFORM_MODE;
@@ -407,23 +386,25 @@ void MoveWaveformEventToFlash(void)
 				sumEntry->waveShapeData.r.freq = 0;
 				sumEntry->waveShapeData.v.freq = 0;
 				sumEntry->waveShapeData.t.freq = 0;
+
 				flashMovState = FLASH_PRE;
 				break;
-        
+
 			case FLASH_PRE:
 				for (i = g_samplesInPretrig; i != 0; i--)
 				{
+					// fix_ns8100 - adjust pointer past pre
 					// Store entire sample
-					//debugRaw("\nEvent Pretrigger --> ");
 					//storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
+
 				flashMovState = FLASH_BODY_INT;
 				break;
-	        
+
 			case FLASH_BODY_INT:
 				sampGrpsLeft = (g_samplesInBody - 1);
-	        
+
 				// A channel
 				sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
 				sumEntry->waveShapeData.a.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
@@ -449,14 +430,11 @@ void MoveWaveformEventToFlash(void)
 
 				vectorSumTotal = (uint32)vectorSum;
 
-				// Store entire sample
-				//debugRaw("\nEvent Data --> ");
-				//storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 				g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
 				flashMovState = FLASH_BODY;
 				break;
-	        
+
 			case FLASH_BODY:
 				for (i = 0; ((i < g_triggerRecord.trec.sample_rate) && (sampGrpsLeft != 0)); i++)
 				{
@@ -503,13 +481,10 @@ void MoveWaveformEventToFlash(void)
 
 					// Vector Sum
 					if (vectorSum > vectorSumTotal)
-					{ 
+					{
 						vectorSumTotal = (uint32)vectorSum;
 					}
 
-					// Store entire sample
-					//debugRaw("\nEvent Data --> ");
-					//storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -520,39 +495,27 @@ void MoveWaveformEventToFlash(void)
 					flashMovState = FLASH_CAL;
 				}
 				break;
-	        
+
 			case FLASH_CAL:
 #if 0 // Does nothing
 				// Loop 100 times
 				for (i = g_samplesInCal; i != 0; i--)
 				{
-					// Store entire sample
-					//debugRaw("\nEvent Cal --> ");
-					//storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-
 					// Advance the pointer using sample rate ratio to act as a filter to always scale down to a 1024 rate
 					g_currentEventSamplePtr += ((g_triggerRecord.trec.sample_rate/1024) * g_sensorInfoPtr->numOfChannels);
 				}
 #endif
 
 				sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
-				sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);   
-				sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);   
-				sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);       
-
-#if 0
-				debug("Cached freq: a:%d r:%d v:%d t:%d\n", 
-						sumEntry->waveShapeData.a.freq,
-						sumEntry->waveShapeData.r.freq,
-						sumEntry->waveShapeData.v.freq,
-						sumEntry->waveShapeData.t.freq);
-#endif
+				sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
+				sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
+				sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
 
 				completeRamEventSummary(ramSummaryEntry, sumEntry);
 
 				// Get new event file handle
 				g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
-				
+
 				if (g_currentEventFileHandle == NULL)
 				{
 					debugErr("Failed to get a new file handle for the current Waveform event!\n");
@@ -572,7 +535,7 @@ void MoveWaveformEventToFlash(void)
 					fl_fclose(g_currentEventFileHandle);
 					debug("Event file closed\n");
 
-					ramSummaryEntry->fileEventNum = g_nextEventNumberToUse;
+					ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 					
 					updateMonitorLogEntry();
 
@@ -593,32 +556,31 @@ void MoveWaveformEventToFlash(void)
 				{
 					g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_currentEventBuffer * g_wordSizeInEvent);
 				}
-	          
+
 				if (g_freeEventBuffers == g_maxEventBuffers)
 				{
 					clearSystemEventFlag(TRIGGER_EVENT);
 				}
 
-				g_lastCompletedRamSummary = ramSummaryEntry;
+				g_lastCompletedRamSummaryIndex = ramSummaryEntry;
 
-				g_printOutMode = WAVEFORM_MODE;
 				raiseMenuEventFlag(RESULTS_MENU_EVENT);
 
 				//debug("DataBuffs: Changing flash move state: %s\n", "FLASH_IDLE");
 				flashMovState = FLASH_IDLE;
 				g_freeEventBuffers++;
-				
+
 				if (getPowerControlState(LCD_POWER_ENABLE) == OFF)
 				{
 					assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
-					assignSoftTimer(LCD_PW_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+					assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 				}
-				
+
 				// Check to see if there is room for another event, if not send a signal to stop monitoring
 				if (g_helpRecord.flash_wrapping == NO)
 				{
 					getFlashUsageStats(&flashStats);
-					
+
 					if (flashStats.waveEventsLeft == 0)
 					{
 						msg.cmd = STOP_MONITORING_CMD;
@@ -626,16 +588,16 @@ void MoveWaveformEventToFlash(void)
 						(*menufunc_ptrs[MONITOR_MENU])(msg);
 					}
 				}
-				
+
 				// Check if AutoDialout is enabled and signal the system if necessary
-				checkAutoDialoutStatus();				
+				checkAutoDialoutStatus();
 			break;
 		}
 	}
 	else
 	{
 		clearSystemEventFlag(TRIGGER_EVENT);
-		
+
 		// Check if not monitoring
 		if (g_sampleProcessing != ACTIVE_STATE)
 		{

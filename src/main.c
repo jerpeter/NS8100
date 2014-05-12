@@ -865,6 +865,7 @@ void InitSoftwareSettings_NS8100(void)
 	setupMnDef();
 
 	// Check for Timer mode activation
+#if 0
     debug("Init Timer Mode Check...\n");
 	if (timerModeActiveCheck() == TRUE)
 	{
@@ -880,6 +881,9 @@ void InitSoftwareSettings_NS8100(void)
 	{
 		debug("--- Normal Startup ---\n");
 	}
+#else
+	debugWarn("WARNING: Timer mode check logic disabled!\n");
+#endif
 
 	// Init the cmd message handling buffers before initialization of the ports.
     debug("Init Cmd Msg Handler...\n");
@@ -897,6 +901,10 @@ void InitSoftwareSettings_NS8100(void)
 	sprintf((char*)buff, "%s %s", getLangText(SENSOR_CHECK_TEXT), getLangText(ZEROING_SENSORS_TEXT));
 	overlayMessage(getLangText(STATUS_TEXT), buff, 0);
 #endif
+
+	// Reset LCD timers
+	resetSoftTimer(DISPLAY_ON_OFF_TIMER_NUM);
+	resetSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM);
 
 	debug("Jump to Main Menu\n");
 	// Jump to the true main menu

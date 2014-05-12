@@ -28,6 +28,7 @@
 ///----------------------------------------------------------------------------
 void StartNewCombo(void);
 void ProcessComboData(void);
+void ProcessComboDataSkipBargraphDuringCal(void);
 uint8 CalculateComboData(void);
 void ProcessComboSampleData(void) ;
 void ProcessComboBargraphData(void); 

@@ -271,7 +271,7 @@ void convertCurrentTimeForFat(uint8* fatTimeField)
 	uint16 conversionTime;
 	
 /*
-	The File Time :	The two bytes at offsets 0x16 and 0x17 are treated as a 16 bit value; remember that the least significant byte is at offset 0x16. They contain the time when the file was created or last updated. The time is mapped in the bits as follows; the first line indicates the byte's offset, the second line indicates (in decimal) individual bit numbers in the 16 bit value, and the third line indicates what is stored in each bit.
+	The File Time:	The two bytes at offsets 0x16 and 0x17 are treated as a 16 bit value; remember that the least significant byte is at offset 0x16. They contain the time when the file was created or last updated. The time is mapped in the bits as follows; the first line indicates the byte's offset, the second line indicates (in decimal) individual bit numbers in the 16 bit value, and the third line indicates what is stored in each bit.
 	<------- 0x17 --------> <------- 0x16 -------->
 	15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00
 	h  h  h  h  h  m  m  m  m  m  m  x  x  x  x  x
@@ -298,7 +298,7 @@ void convertCurrentDateForFat(uint8* fatDateField)
 	uint16 conversionDate;
 
 /*
-	The File Date :	The two bytes at offsets 0x18 and 0x19 are treated as a 16 bit value; remember that the least significant byte is at offset 0x18. They contain the date when the file was created or last updated. The date is mapped in the bits as follows; the first line indicates the byte's offset, the second line indicates (in decimal) individual bit numbers in the 16 bit value, and the third line indicates what is stored in each bit.
+	The File Date:	The two bytes at offsets 0x18 and 0x19 are treated as a 16 bit value; remember that the least significant byte is at offset 0x18. They contain the date when the file was created or last updated. The date is mapped in the bits as follows; the first line indicates the byte's offset, the second line indicates (in decimal) individual bit numbers in the 16 bit value, and the third line indicates what is stored in each bit.
 	<------- 0x19 --------> <------- 0x18 -------->
 	15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00
 	y  y  y  y  y  y  y  m  m  m  m  d  d  d  d  d
@@ -322,7 +322,8 @@ void convertCurrentDateForFat(uint8* fatDateField)
 void DisableRtcAlarm(void)
 {
 	RTC_ALARM_STRUCT disableAlarm;
-	uint8 clearAlarmFlag = 0xEF; // Logic 0 to clear Alarm flag, bit 4
+
+	uint8 clearAlarmFlag = 0xEF; // Logic 0 on the bit will clear Alarm flag, bit 4
 
 	disableAlarm.second_alarm = RTC_DISABLE_ALARM;
 	disableAlarm.minute_alarm = RTC_DISABLE_ALARM;
@@ -344,7 +345,8 @@ void DisableRtcAlarm(void)
 void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 {
 	RTC_ALARM_STRUCT enableAlarm;
-	uint8 clearAlarmFlag = 0xEF; // Logic 0 to clear Alarm flag, bit 4
+
+	uint8 clearAlarmFlag = 0xEF; // Logic 0 on the bit will clear Alarm flag, bit 4
 
 	enableAlarm.day_alarm = (UINT8_CONVERT_TO_BCD(day, RTC_BCD_DAYS_MASK) | RTC_ENABLE_ALARM);
 	enableAlarm.hour_alarm = (UINT8_CONVERT_TO_BCD(hour, RTC_BCD_HOURS_MASK) | RTC_ENABLE_ALARM);
@@ -356,22 +358,6 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 
 	// Clear the Alarm flag
 	rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
-}
-
-/****************************************
-*	Function:    SetAlarmFrequency
-*	Purpose:
-****************************************/
-void SetAlarmFrequency(uint8 mode)
-{
-#if 0 // ns7100
-	RTC_DAY_ALARM.alarmBit.alarmMask = s_rtcAlarmFreq[mode].dayAlarmMask;
-	RTC_HOURS_ALARM.alarmBit.alarmMask = s_rtcAlarmFreq[mode].hoursAlarmMask;
-	RTC_MINUTES_ALARM.alarmBit.alarmMask = s_rtcAlarmFreq[mode].minutesAlarmMask;
-	RTC_SECONDS_ALARM.alarmBit.alarmMask = s_rtcAlarmFreq[mode].secondsAlarmMask;
-#else // ns8100
-	// fix_ns8100
-#endif
 }
 
 /****************************************
