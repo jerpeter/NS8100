@@ -1226,7 +1226,7 @@ void displaySplashScreen(void)
 	// Add in Battery Voltage
 	//----------------------------------------------------------------------------------------
 	byteSet(&buff[0], 0, sizeof(buff));
-	sprintf((char*)(&buff[0]), "%s: %.2f", getLangText(BATT_VOLTAGE_TEXT), convertedBatteryLevel(BATTERY_VOLTAGE));
+	sprintf((char*)(&buff[0]), "%s: %.2f", getLangText(BATT_VOLTAGE_TEXT), getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 	length = (uint8)strlen((char*)(&buff[0]));
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_SIX;

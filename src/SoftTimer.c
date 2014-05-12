@@ -256,9 +256,66 @@ void menuUpdateTimerCallBack(void)
 ****************************************/
 void keypadLedUpdateTimerCallBack(void)
 {
-	static uint8 ledState = OFF;
+	static uint8 ledState = KEYPAD_LED_STATE_UNKNOWN;
 	uint8 config = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	BOOLEAN externalChargePresent = checkExternalChargeVoltagePresent();
 
+	// States
+	// 1) Init complete, not monitoring, not charging --> Static Green
+	// 2) Init complete, monitoring, not charging --> Flashing Green (state transition)
+	// 3) Init complete, not monitoring, charging --> Static Red
+	// 4) Init complete, monitoring, charging --> Alternate Flashing Green/Red (state transition)
+
+	if ((g_sampleProcessing == IDLE_STATE) && (externalChargePresent == FALSE))
+	{
+		config &= ~RED_LED_PIN;
+		config |= GREEN_LED_PIN;
+		
+		ledState = KEYPAD_LED_STATE_GREEN_ON;
+	}
+	else if ((g_sampleProcessing == ACTIVE_STATE) && (externalChargePresent == FALSE))
+	{
+		config &= ~RED_LED_PIN;
+
+		if(ledState == KEYPAD_LED_STATE_GREEN_ON)
+		{
+			config &= ~GREEN_LED_PIN;
+			
+			ledState = KEYPAD_LED_STATE_BOTH_OFF;
+		}
+		else
+		{
+			config |= GREEN_LED_PIN;
+
+			ledState = KEYPAD_LED_STATE_GREEN_ON;
+		}
+	}		
+	else if ((g_sampleProcessing == IDLE_STATE) && (externalChargePresent == TRUE))
+	{
+		config &= ~GREEN_LED_PIN;
+		config |= RED_LED_PIN;
+		
+		ledState = KEYPAD_LED_STATE_RED_ON;
+	}
+	else // ((g_sampleProcessing == ACTIVE_STATE) && (externalChargePresent == TRUE))
+	{
+		if(ledState == KEYPAD_LED_STATE_RED_ON)
+		{
+			config &= ~RED_LED_PIN;
+			config |= GREEN_LED_PIN;
+
+			ledState = KEYPAD_LED_STATE_GREEN_ON;
+		}
+		else
+		{
+			config |= RED_LED_PIN;
+			config &= ~GREEN_LED_PIN;
+
+			ledState = KEYPAD_LED_STATE_RED_ON;
+		}
+	}
+	
+#if 0 // Hold
 	// Check if Green enabled
 	if (ledState)
 	{
@@ -274,6 +331,7 @@ void keypadLedUpdateTimerCallBack(void)
 		
 		ledState = ON;
 	}
+#endif
 
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, config);
 
@@ -423,7 +481,7 @@ void procTimerEvents(void)
 	}
 
 	// Check if the unit is in monitor mode and the battery voltage has dropped below 5 volts
-	if ((g_sampleProcessing == ACTIVE_STATE) && (convertedBatteryLevel(BATTERY_VOLTAGE) < 5.0))
+	if ((g_sampleProcessing == ACTIVE_STATE) && (getExternalVoltageLevelAveraged(BATTERY_VOLTAGE) < 5.0))
 	{
 		// Disable the monitor menu update timer
 		clearSoftTimer(MENU_UPDATE_TIMER_NUM);

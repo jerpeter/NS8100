@@ -1260,6 +1260,7 @@ extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 	if (0)
 #endif
 	{
+#if 0 // ns7100
 		// Build the crc and copressed fields.
 		flagData = CRC_32BIT;
 		flagData = (uint8)(flagData << 4);
@@ -1283,6 +1284,7 @@ extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 		g_modemStatus.xferMutex = YES;
 		g_modemStatus.xferState = DEMx_CMD;
 		g_modemStatus.xferPrintState = g_helpRecord.auto_print;
+#endif
 	}
 
 	// It DOES NOT wrap in flash. Use .
@@ -1500,9 +1502,13 @@ uint8 sendDEMData(void)
 		}
 		else	// The ptr does wrap in flash so the limit is the end of flash.
 		{
+#if 0 // ns7100
 			g_demXferStructPtr->dataPtr = sendDataFlashWrapCheck(
 				g_demXferStructPtr->dataPtr);
-
+#else // ns8100
+			g_demXferStructPtr->dataPtr = sendDataNoFlashWrapCheck(
+				g_demXferStructPtr->dataPtr, g_demXferStructPtr->endDataPtr);
+#endif
 			if (NULL == g_demXferStructPtr->dataPtr)
 			{
 				g_demXferStructPtr->xferStateFlag = NOP_XFER_STATE;
@@ -1533,6 +1539,7 @@ uint8 sendDEMData(void)
 // Input:
 // Return: void
 //--------------------------------------------------
+#if 0 // ns7100
 uint8* sendDataFlashWrapCheck(uint8* xferPtr)
 {
 	uint32 xmitSize = XMIT_SIZE_MONITORING;
@@ -1568,6 +1575,7 @@ uint8* sendDataFlashWrapCheck(uint8* xferPtr)
 
 	return (xferPtr);
 }
+#endif
 
 //==================================================
 // Function: sendDataNoFlashWrapCheck

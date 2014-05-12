@@ -228,7 +228,7 @@ void moveSummaryIntervalDataToFile(void)
 	g_bargraphSumIntervalWritePtr->summariesCaptured = g_summaryCount;
 	g_bargraphSumIntervalWritePtr->intervalEnd_Time = getCurrentTime();
 	g_bargraphSumIntervalWritePtr->batteryLevel =
-		(uint32)(100.0 * convertedBatteryLevel(BATTERY_VOLTAGE));
+		(uint32)(100.0 * getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 	g_bargraphSumIntervalWritePtr->calcStructEndFlag = 0xEECCCCEE;	// End structure flag
 
 	// Reset summary interval count

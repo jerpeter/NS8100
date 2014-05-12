@@ -269,6 +269,15 @@ void SystemEventManager(void)
 		debug("Cyclic Event\n");
 		clearSystemEventFlag(CYCLIC_EVENT);
 
+#if 1 // Test
+		//sprintf((char*)&g_spareBuffer[0], "%d (%s) %d", (int)g_execCycles, ((g_channelSyncError == YES) ? "YES" : "NO"), (int)(g_sampleCount / 4));
+		//overlayMessage("EXEC CYCLES", (char*)&g_spareBuffer[0], 500 * SOFT_MSECS);
+		debugRaw("ISR Ticks/sec: %d (E:%s), Exec: %d\n", (g_sampleCountHold / 4), ((g_channelSyncError == YES) ? "YES" : "NO"), g_execCycles);
+		g_sampleCountHold = 0;
+		g_execCycles = 0;
+		g_channelSyncError = NO;
+#endif
+
 		procTimerEvents();
 	}
 

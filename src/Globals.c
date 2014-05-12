@@ -282,6 +282,7 @@ uint8 g_summaryListMenuActive = NO;
 uint8 g_summaryListArrowChar = BOTH_ARROWS_CHAR;
 uint8 g_disableDebugPrinting;
 uint8 g_spi1AccessLock = NO;
+uint32 g_cyclicEventDelay = 0;
 USER_MENU_CACHE_STRUCT		g_userMenuCache[36];
 USER_MENU_CACHE_STRUCT* 	g_userMenuCachePtr = &g_userMenuCache[0];
 USER_MENU_CACHE_DATA g_userMenuCacheData;
@@ -294,5 +295,11 @@ uint16 g_testTrigger = NO;
 char g_languageTable[8192];
 uint8 g_spareBuffer[8192];
 uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
+
+// Test only
+uint32 g_execCycles = 0;
+uint32 g_sampleCount = 0;
+uint32 g_sampleCountHold = 0;
+uint8 g_channelSyncError = NO;
 
 // End of the list

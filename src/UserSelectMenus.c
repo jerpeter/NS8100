@@ -2021,7 +2021,7 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{
 		if ((sampleRateMenu[newItemIndex].data < sampleRateMenu[ITEM_1].data) || 
-			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data))
+			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_6].data))
 		{
 			byteSet(&message[0], 0, sizeof(message));
 			sprintf((char*)message, "%lu %s", sampleRateMenu[newItemIndex].data,

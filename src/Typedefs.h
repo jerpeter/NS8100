@@ -58,7 +58,7 @@ typedef signed long int		int32;  		/* 32 bits */
 enum debugModes {RAW, NORM, WARN, ERR};
 
 // Define Project Debug Mode
-#define GLOBAL_DEBUG_PRINT_ENABLED	NO_DEBUG
+#define GLOBAL_DEBUG_PRINT_ENABLED	ALL_DEBUG
 
 // Print all debug statements
 #if (GLOBAL_DEBUG_PRINT_ENABLED == ALL_DEBUG)

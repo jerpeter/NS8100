@@ -22,7 +22,11 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
+#if 0 // ns7100
 #define NAND_FLASH_ADDRESS			DATA_ADDRESS
+#else
+#define NAND_FLASH_ADDRESS			0x0
+#endif
 #define NAND_TOTAL_BOCKS			4096
 #define NAND_TOTAL_PAGES			32
 #define NAND_TOTAL_A_BYTES			256

@@ -477,9 +477,11 @@ void AD_Init(void)
 	AD_resources_init();
 	AD_control_write(0x00);
 
-	// Setup config for 4 Chan + Temp + other factors
-	//AD_config_write(0x3BD4);
-	AD_config_write(0x39B4);
+	// Setup config for 4 Chan + Temp + Read back config + others
+	//AD_config_write(0x39B4);
+
+	// Setup config for 4 Chan, No Temp, No read back
+	AD_config_write(0x39FF);
 
 	//Delay for 1.2us at least
 	for(temp=0;temp<100;temp++) {}

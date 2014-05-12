@@ -576,7 +576,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		// Battery Voltage
 		//-----------------------------------------------------------------------
 		byteSet(&buff[0], 0, sizeof(buff));	
-		length = (uint8)sprintf(buff,"%s %.2f", getLangText(BATTERY_TEXT), convertedBatteryLevel(BATTERY_VOLTAGE));
+		length = (uint8)sprintf(buff,"%s %.2f", getLangText(BATTERY_TEXT), getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 
 		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 

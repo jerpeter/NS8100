@@ -51,11 +51,11 @@ static INPUT_MSG_STRUCT* s_inputReadPtr = &(g_input_buffer[0]);
 static void (*s_bootloader)(void) = NULL;
 
 ///----------------------------------------------------------------------------
-///	Function:	convertedBatteryLevel
-///	Purpose:	Convert the raw battery level from the a-to-d to the actual value
+///	Function:	getExternalVoltageLevelAveraged
+///	Purpose:	Convert the raw external voltage level from the a-to-d to the actual value
 ///----------------------------------------------------------------------------
 #define AD_VOLTAGE_READ_LOOP_COUNT	15
-float convertedBatteryLevel(uint8 type)
+float getExternalVoltageLevelAveraged(uint8 type)
 {
 	uint32 adVoltageReadValue;
 	uint32 adChannelSum = 0;
@@ -106,11 +106,43 @@ float convertedBatteryLevel(uint8 type)
 	
 	adVoltageLevel /= (AD_VOLTAGE_READ_LOOP_COUNT - 2);
 		
-	// Converted A/D value / 1023 * 3.3 * 3
+	// Converted A/D value / 1024 * 3.3 * 3
 	adVoltageLevel *= (REFERENCE_VOLTAGE * VOLTAGE_RATIO);
 	adVoltageLevel /= BATT_RESOLUTION;
 
 	return (adVoltageLevel);
+}
+
+///----------------------------------------------------------------------------
+///	Function:	checkExternalChargeVoltagePresent
+///	Purpose:	Convert the raw external voltage level from the a-to-d to the actual value
+///----------------------------------------------------------------------------
+BOOLEAN checkExternalChargeVoltagePresent(void)
+{
+	float adVoltageLevel = (float)0.0;
+	BOOLEAN	externalChargePresent = NO;
+
+	adc_start(&AVR32_ADC);
+
+#if 1 // Normal operation
+	adVoltageLevel = (float)adc_get_value(&AVR32_ADC, VIN_CHANNEL);
+#else // Test with battery
+	adVoltageLevel = (float)adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
+#endif
+					
+	// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
+	//soft_usecWait(4);
+
+	//debug("Ext Charge Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+		
+	// Converted A/D value / 1024 * 3.3 * 3
+	adVoltageLevel *= (REFERENCE_VOLTAGE * VOLTAGE_RATIO);
+	adVoltageLevel /= BATT_RESOLUTION;
+
+	if (adVoltageLevel > 5.0)
+		externalChargePresent = YES;
+		
+	return (externalChargePresent);
 }
 
 ///----------------------------------------------------------------------------

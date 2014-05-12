@@ -23,6 +23,7 @@
 #define CONFIG_VERSION		"1.6"
 #define CONFIG_DATE			"05-18-2003"
 
+#if 0 // ns7100
 /* System Bus Clock Info */
 #define SYSCLK          	(32 * 1000000) //32000000
 #define	SYSTEM_CLOCK		(SYSCLK / 1000000)		/* system bus frequency in MHz */
@@ -91,6 +92,7 @@
 #define ETHERNET_VECTOR			28
 #define TIMER_BENCHMARK_VECTOR	26
 #define TIMER_NETWORK_VECTOR	25
+#endif
 
 /* Uart Info */
 #define CRAFT_BAUDRATE	115200 //14400 //38400
@@ -122,8 +124,10 @@
 #define VOLTAGE_RATIO		    (float)3
 #endif
 
+#if 0 // ns7100
 /* Macro that returns a pointer to the Internal Memory Map */
 #define mmc2114_get_immp()      ((MMC2114_IMM *)(IMM_ADDRESS))
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Prototypes

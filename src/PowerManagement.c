@@ -371,6 +371,7 @@ BOOLEAN getPowerControlState(POWER_MGMT_OPTIONS option)
 *	Function:		setMcorePwMgntDefaults
 *	Purpose:
 ****************************************/
+#if 0 // ns7100
 void setMcorePwMgntDefaults(void)
 {
 	uint16* powerManagementPort = (uint16*)POWER_CONTROL_ADDRESS;
@@ -399,6 +400,7 @@ void setMcorePwMgntDefaults(void)
 
 	soft_usecWait(10 * SOFT_MSECS);
 }
+#endif
 
 /****************************************
 *	Function:	void PowerUnitOff(uint8)
@@ -406,7 +408,9 @@ void setMcorePwMgntDefaults(void)
 ****************************************/
 void PowerUnitOff(uint8 powerOffMode)
 {
+#if 0 // ns7100
 	uint16* powerManagementPort = (uint16*)POWER_CONTROL_ADDRESS;
+#endif
 
 	if (powerOffMode == SHUTDOWN_UNIT)
 	{
@@ -425,8 +429,10 @@ void PowerUnitOff(uint8 powerOffMode)
 	//s_powerManagement.bit.powerOff = ON;
 	powerControl(POWER_OFF, ON);
 
+#if 0 // ns7100
 	*powerManagementPort = s_powerManagement.reg;
 	soft_usecWait(10 * SOFT_MSECS);
+#endif
 
 	while (1) { /* do nothing */ };
 }

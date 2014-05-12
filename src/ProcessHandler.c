@@ -88,8 +88,10 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	// Assign a one second menu update timer
 	assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
 
-	// Assign a one second menu update timer
-	assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
+#if 0 	// Moved to system init
+	// Assign a one second menu keypad led update timer
+	//assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
+#endif
 
 	// Where ever num_sensor_channels gets set g_totalSamples needs to be 
 	// set also it is used to know the size of data burst expected from 
@@ -392,7 +394,10 @@ void stopDataCollection(void)
 	powerControl(ANALOG_SLEEP_ENABLE, ON);		
 
 	clearSoftTimer(MENU_UPDATE_TIMER_NUM);
-	clearSoftTimer(KEYPAD_LED_TIMER_NUM);
+	
+#if 0 // Moved to system init
+	//clearSoftTimer(KEYPAD_LED_TIMER_NUM);
+#endif
 
 	// Check if not in Timer Mode and if the Power Off key is disabled
 	if ((g_helpRecord.timer_mode != ENABLED) && (getPowerControlState(POWER_SHUTDOWN_ENABLE) == ON))

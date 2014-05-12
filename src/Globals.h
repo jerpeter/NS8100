@@ -244,5 +244,12 @@ extern uint8 g_fileProcessActiveUsbLockout;
 extern uint8 g_spi1AccessLock;
 extern EVT_RECORD g_resultsEventCache[50];
 extern uint16 g_resultsCacheIndex;
+extern uint32 g_cyclicEventDelay;
+
+// Test
+extern uint32 g_execCycles;
+extern uint8 g_channelSyncError;
+extern uint32 g_sampleCount;
+extern uint32 g_sampleCountHold;
 
 #endif /* GLOBALS_H_ */

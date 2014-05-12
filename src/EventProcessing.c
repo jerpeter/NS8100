@@ -581,7 +581,7 @@ void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.parameters.sampleRate = (uint16)g_triggerRecord.trec.sample_rate;
 	//-----------------------
 	eventRec->summary.captured.endTime = getCurrentTime();
-	eventRec->summary.captured.batteryLevel = (uint32)(100.0 * convertedBatteryLevel(BATTERY_VOLTAGE));
+	eventRec->summary.captured.batteryLevel = (uint32)(100.0 * getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 	eventRec->summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
 	eventRec->summary.captured.calDate = g_factorySetupRecord.cal_date;
 	//-----------------------
@@ -1500,6 +1500,7 @@ uint16* getFlashDataPointer(void)
 *	Function:	checkFlashDataPointer
 *	Purpose:
 *******************************************************************************/
+#if 0 // ns7100
 void checkFlashDataPointer(void)
 {
 	// Check if current flash data pointer is equal to or past the flash sector boundary
@@ -1520,6 +1521,7 @@ void checkFlashDataPointer(void)
 		s_endFlashSectorPtr = s_endFlashSectorPtr + FLASH_SECTOR_SIZE_x16;
 	}
 }
+#endif
 
 /*******************************************************************************
 *	Function:	storeData

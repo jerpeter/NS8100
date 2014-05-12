@@ -153,7 +153,7 @@ void batteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
     wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
-    curr_batt_volts = convertedBatteryLevel(BATTERY_VOLTAGE);
+    curr_batt_volts = getExternalVoltageLevelAveraged(BATTERY_VOLTAGE);
 
 	// ********** Print Battery text **********
 	byteSet(&buff[0], 0, sizeof(buff));
@@ -217,7 +217,7 @@ void batteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// ********** Print other battery voltages **********
 	byteSet(&buff[0], 0, sizeof(buff));
 
-	curr_batt_volts = convertedBatteryLevel(EXT_CHARGE_VOLTAGE);
+	curr_batt_volts = getExternalVoltageLevelAveraged(EXT_CHARGE_VOLTAGE);
 
 	// Check if the external charge voltage is above 0.5 volts indicating that it's active
 	if (curr_batt_volts < 0.5)

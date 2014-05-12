@@ -63,7 +63,6 @@ extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
-static uint32 g_cyclicEventDelay = 0;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -499,10 +498,15 @@ void soft_timer_tick_irq(void)
 	raiseTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
 
 	// Every 8 ticks (4 secs) trigger the cyclic event flag
-	if (++g_cyclicEventDelay >= 8)
+	if (++g_cyclicEventDelay == 8)
 	{
 		g_cyclicEventDelay = 0;
 		raiseSystemEventFlag(CYCLIC_EVENT);
+
+#if 1 // Test
+		g_sampleCountHold = g_sampleCount;
+		g_sampleCount = 0;
+#endif
 	}
 
 	// Every 60 ticks (30 secs) get the rtc time.
@@ -574,7 +578,7 @@ void Setup_8100_EIC_System_ISR(void)
 // ============================================================================
 void Setup_8100_Usart_RS232_ISR(void)
 {
-	INTC_register_interrupt(&usart_1_rs232_irq, AVR32_USART1_IRQ, 0);
+	INTC_register_interrupt(&usart_1_rs232_irq, AVR32_USART1_IRQ, 1);
 
 	// Enable Receive Ready, Overrun, Parity and Framing error interrupts
 	AVR32_USART1.ier = (AVR32_USART_IER_RXRDY_MASK | AVR32_USART_IER_OVRE_MASK |
@@ -621,7 +625,7 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 		.cpcstop  = FALSE,                             // Counter clock stopped with RC compare.
 		.burst    = FALSE,                             // Burst signal selection.
 		.clki     = FALSE,                             // Clock inversion.
-		.tcclks   = TC_CLOCK_SOURCE_TC2                // Internal source clock 2 - connected to PBA/4
+		.tcclks   = TC_CLOCK_SOURCE_TC2                // Internal source clock 2 - connected to PBA/2
 	};
 
 	// Options for interrupt
@@ -641,12 +645,12 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 	{
 		case TC_SAMPLE_TIMER_CHANNEL:
 			// Register the RTC interrupt handler to the interrupt controller.
-			INTC_register_interrupt(&tc_sample_irq, AVR32_TC_IRQ0, 0);
+			INTC_register_interrupt(&tc_sample_irq, AVR32_TC_IRQ0, 3);
 			break;
 			
 		case TC_CALIBRATION_TIMER_CHANNEL:
 			// Register the RTC interrupt handler to the interrupt controller.
-			INTC_register_interrupt(&tc_sample_irq, AVR32_TC_IRQ1, 0);
+			INTC_register_interrupt(&tc_sample_irq, AVR32_TC_IRQ1, 3);
 			break;
 			
 		case TC_TYPEMATIC_TIMER_CHANNEL:
@@ -663,7 +667,8 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 	// We configure it to count ms.
 	// We want: (1/(FOSC0/4)) * RC = 1000 Hz => RC = (FOSC0/4) / 1000 = 3000 to get an interrupt every 1ms
 	//tc_write_rc(tc, TC_CHANNEL_0, (FOSC0/2)/1000);  // Set RC value.
-	tc_write_rc(tc, channel, (FOSC0 / (sampleRate * 2)));
+	//tc_write_rc(tc, channel, (FOSC0 / (sampleRate * 2)));
+	tc_write_rc(tc, channel, (32900000 / sampleRate));
 	
 	tc_configure_interrupts(tc, channel, &TC_INTERRUPT);
 }
@@ -772,42 +777,59 @@ void tc_sample_irq(void)
 	//___Sample Output with return config words for reference
 	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp:  dbe (b6d0)
 	
+#if 1 // Test
 	//___________________________________________________________________________________________
 	//___AD raw data read all channels
     // Chan 0 - R
-	spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_R_channelReading);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(AD_SPI, &s_R_channelReading);
+    //spi_write(&AVR32_SPI0, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	//if(s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
+	//if(s_channelConfigReadBack != 0xe0d0) { g_channelSyncError = YES; }	
 
     // Chan 1 - T
-    spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_T_channelReading);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
+    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(AD_SPI, &s_T_channelReading);
+    //spi_write(&AVR32_SPI0, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	//if(s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
+	//if(s_channelConfigReadBack != 0xe2d0) { g_channelSyncError = YES; }
 
     // Chan 2 - V
-    spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_V_channelReading);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
+    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(AD_SPI, &s_V_channelReading);
+    //spi_write(&AVR32_SPI0, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	//if(s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
+	//if(s_channelConfigReadBack != 0xe4d0) { g_channelSyncError = YES; }
 
     // Chan 3 - A
-    spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_A_channelReading);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
+    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(AD_SPI, &s_A_channelReading);
+    //spi_write(&AVR32_SPI0, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	//if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
+	//if(s_channelConfigReadBack != 0xe6d0) { g_channelSyncError = YES; }
 
     // Temp
-    spi_selectChip(AD_SPI, AD_SPI_NPCS);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_temperatureReading);
-    spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
-    spi_unselectChip(AD_SPI, AD_SPI_NPCS);
-	if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
+    //spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+    //spi_write(&AVR32_SPI0, 0x0000); spi_read(AD_SPI, &s_temperatureReading);
+    //spi_write(&AVR32_SPI0, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
+    //spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	//if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
+	//if(s_channelConfigReadBack != 0xb6d0) { g_channelSyncError = YES; }
+#endif // Test
+
+	//___________________________________________________________________________________________
+	//___Test timing (throw away)
+	// clear the interrupt flag
+	g_sampleCount++;
+	//tc_read_sr(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+	//tc_read_sr(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+	//DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+	//DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+	//return;
 
 	//___________________________________________________________________________________________
 	//___Check for channel sync error
@@ -860,13 +882,13 @@ void tc_sample_irq(void)
 		s_T_channelReading -= g_channelOffset.t_12bit;
 		s_A_channelReading -= g_channelOffset.a_12bit;
 
-#if 1
+#if 1 // Normal
 		// Store the data into the pretrigger buffer
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->r = s_R_channelReading;
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->v = s_V_channelReading;
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->t = s_T_channelReading;
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->a = s_A_channelReading;
-#else
+#else // Test
 		// Store the fakedata into the pretrigger buffer
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->r = (((fakeDataIncrement + 1) & 0x0FFF) | 0x0000);
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->v = (((fakeDataIncrement + 2) & 0x0FFF) | 0x0000);
@@ -928,13 +950,13 @@ void tc_sample_irq(void)
 					// Mark the start of the Manual Cal pulse
 					if (g_manualCalSampleCount == MAX_CAL_SAMPLES)
 					{
-#if 1
+#if 1 // Normal
 						// Signal the start of the Cal pulse
 						*(g_tailOfPreTrigBuff + 0) |= CAL_START;
 						*(g_tailOfPreTrigBuff + 1) |= CAL_START;
 						*(g_tailOfPreTrigBuff + 2) |= CAL_START;
 						*(g_tailOfPreTrigBuff + 3) |= CAL_START;
-#else
+#else // Test
 						// Signal the start of the Cal pulse
 						*(g_tailOfPreTrigBuff + 0) &= 0x0FFF; *(g_tailOfPreTrigBuff + 0) |= CAL_START;
 						*(g_tailOfPreTrigBuff + 1) &= 0x0FFF; *(g_tailOfPreTrigBuff + 1) |= CAL_START;
@@ -950,13 +972,13 @@ void tc_sample_irq(void)
 						// Check if done with the Manual Cal pulse
 						if (g_manualCalSampleCount == 0)
 						{
-#if 1
+#if 1 // Normal
 							// Mark the end of the Cal pulse
 							*(g_tailOfPreTrigBuff + 0) |= CAL_END;
 							*(g_tailOfPreTrigBuff + 1) |= CAL_END;
 							*(g_tailOfPreTrigBuff + 2) |= CAL_END;
 							*(g_tailOfPreTrigBuff + 3) |= CAL_END;
-#else
+#else // Test
 							// Signal the start of the Cal pulse
 							*(g_tailOfPreTrigBuff + 0) &= 0x0FFF; *(g_tailOfPreTrigBuff + 0) |= CAL_END;
 							*(g_tailOfPreTrigBuff + 1) &= 0x0FFF; *(g_tailOfPreTrigBuff + 1) |= CAL_END;
@@ -988,14 +1010,14 @@ void tc_sample_irq(void)
 						// Check if seismic is enabled for Alarm 1
 						if (g_helpRecord.alarm_one_mode & ALARM_MODE_SEISMIC)
 						{
-							if (s_R_channelReading > g_helpRecord.alarm_one_seismic_lvl) { raiseSystemEventFlag(WARNING1_EVENT); }
-							else if (s_V_channelReading > g_helpRecord.alarm_one_seismic_lvl) { raiseSystemEventFlag(WARNING1_EVENT); }
-							else if (s_T_channelReading > g_helpRecord.alarm_one_seismic_lvl) { raiseSystemEventFlag(WARNING1_EVENT); }
+							if (s_R_channelReading > (g_helpRecord.alarm_one_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
+							else if (s_V_channelReading > (g_helpRecord.alarm_one_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
+							else if (s_T_channelReading > (g_helpRecord.alarm_one_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
 						}
 
 						// Check if air is enabled for Alarm 1
 						if (g_helpRecord.alarm_one_mode & ALARM_MODE_AIR)
-							if (s_A_channelReading > g_helpRecord.alarm_one_air_lvl) { raiseSystemEventFlag(WARNING1_EVENT); }
+							if (s_A_channelReading > (g_helpRecord.alarm_one_air_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
 					}
 						
 					if (g_helpRecord.alarm_two_mode != ALARM_MODE_OFF)
@@ -1003,14 +1025,14 @@ void tc_sample_irq(void)
 						// Check if seismic is enabled for Alarm 2
 						if (g_helpRecord.alarm_two_mode & ALARM_MODE_SEISMIC)
 						{
-							if (s_R_channelReading > g_helpRecord.alarm_two_seismic_lvl) { raiseSystemEventFlag(WARNING2_EVENT); }
-							else if (s_V_channelReading > g_helpRecord.alarm_two_seismic_lvl) { raiseSystemEventFlag(WARNING2_EVENT); }
-							else if (s_T_channelReading > g_helpRecord.alarm_two_seismic_lvl) { raiseSystemEventFlag(WARNING2_EVENT); }
+							if (s_R_channelReading > (g_helpRecord.alarm_two_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
+							else if (s_V_channelReading > (g_helpRecord.alarm_two_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
+							else if (s_T_channelReading > (g_helpRecord.alarm_two_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
 						}
 
 						// Check if air is enabled for Alarm 2
 						if (g_helpRecord.alarm_two_mode & ALARM_MODE_AIR)
-							if (s_A_channelReading > g_helpRecord.alarm_two_air_lvl) { raiseSystemEventFlag(WARNING2_EVENT); }
+							if (s_A_channelReading > (g_helpRecord.alarm_two_air_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
 					}				
 
 					//_____________________________________________________________________________________
@@ -1026,9 +1048,9 @@ void tc_sample_irq(void)
 							//___Check for triggers
 							if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 							{
-								if (s_R_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
-								else if (s_V_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
-								else if (s_T_channelReading > g_triggerRecord.trec.seismicTriggerLevel) { s_seismicTriggerSample = YES; }
+								if (s_R_channelReading > (g_triggerRecord.trec.seismicTriggerLevel * 16)) { s_seismicTriggerSample = YES; }
+								else if (s_V_channelReading > (g_triggerRecord.trec.seismicTriggerLevel * 16)) { s_seismicTriggerSample = YES; }
+								else if (s_T_channelReading > (g_triggerRecord.trec.seismicTriggerLevel * 16)) { s_seismicTriggerSample = YES; }
 					
 								if (s_seismicTriggerSample == YES) { s_consecSeismicTriggerCount++; s_seismicTriggerSample = NO; }
 								else {s_consecSeismicTriggerCount = 0; }
@@ -1036,7 +1058,7 @@ void tc_sample_irq(void)
 
 							if (g_triggerRecord.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
 							{
-								if (s_A_channelReading > g_triggerRecord.trec.soundTriggerLevel) { s_airTriggerSample = YES; }
+								if (s_A_channelReading > (g_triggerRecord.trec.soundTriggerLevel * 16)) { s_airTriggerSample = YES; }
 						
 								if (s_airTriggerSample == YES) { s_consecAirTriggerCount++; s_airTriggerSample = NO; }
 								else { s_consecAirTriggerCount = 0; }
@@ -1044,23 +1066,23 @@ void tc_sample_irq(void)
 
 							//___________________________________________________________________________________________
 							//___Check if either a seismic or acoustic trigger threshold condition was achieved
-#if 1
+#if 1 // Normal
 							if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
 								(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
 							{
-#else
+#else // Test
 							if (g_testTrigger)
 							{
 								g_testTrigger = NO;
 #endif
 								
-#if 1
+#if 1 // Normal
 								// Signal the start of a Trigger
 								*(g_tailOfPreTrigBuff + 0) |= TRIG_ONE;
 								*(g_tailOfPreTrigBuff + 1) |= TRIG_ONE;
 								*(g_tailOfPreTrigBuff + 2) |= TRIG_ONE;
 								*(g_tailOfPreTrigBuff + 3) |= TRIG_ONE;
-#else
+#else // Test
 								// Signal the start of a Trigger
 								*(g_tailOfPreTrigBuff + 0) &= 0x0FFF; *(g_tailOfPreTrigBuff + 0) |= TRIG_ONE;
 								*(g_tailOfPreTrigBuff + 1) &= 0x0FFF; *(g_tailOfPreTrigBuff + 1) |= TRIG_ONE;
@@ -1175,12 +1197,12 @@ void tc_sample_irq(void)
 									// Signal the start of a Cal
 									if (s_calSampleCount == MAX_CAL_SAMPLES)
 									{
-#if 1
+#if 1 // Normal
 										*(g_tailOfPreTrigBuff + 0) |= CAL_START;
 										*(g_tailOfPreTrigBuff + 1) |= CAL_START;
 										*(g_tailOfPreTrigBuff + 2) |= CAL_START;
 										*(g_tailOfPreTrigBuff + 3) |= CAL_START;
-#else
+#else // Test
 										*(g_tailOfPreTrigBuff + 0) &= 0x0FFF; *(g_tailOfPreTrigBuff + 0) |= CAL_START;
 										*(g_tailOfPreTrigBuff + 1) &= 0x0FFF; *(g_tailOfPreTrigBuff + 1) |= CAL_START;
 										*(g_tailOfPreTrigBuff + 2) &= 0x0FFF; *(g_tailOfPreTrigBuff + 2) |= CAL_START;

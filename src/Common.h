@@ -188,12 +188,21 @@ enum {
 #define VIN_CHANNEL     2
 #define VBAT_CHANNEL    3
 
+enum {
+	KEYPAD_LED_STATE_UNKNOWN = 0,
+	KEYPAD_LED_STATE_GREEN_ON,
+	KEYPAD_LED_STATE_RED_ON,
+	KEYPAD_LED_STATE_BOTH_OFF
+};
+
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
 // Battery routines
-float convertedBatteryLevel(uint8 type);
-uint8 adjustedRawBatteryLevel(void);
+float getExternalVoltageLevelAveraged(uint8 type);
+BOOLEAN checkExternalChargeVoltagePresent(void);
+//uint8 adjustedRawBatteryLevel(void);
 
 // Math routines
 uint16 isqrt (uint32 x);

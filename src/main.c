@@ -906,6 +906,62 @@ void InitSoftwareSettings_NS8100(void)
 	resetSoftTimer(DISPLAY_ON_OFF_TIMER_NUM);
 	resetSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM);
 
+#if 1 // fix_ns8100
+	// Have to recall Keypad init otherwise interrupt hangs
+	InitKeypad();
+#endif
+
+	// Turn on the Green keypad LED when system init complete
+	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
+
+	// Assign a one second keypad led update timer
+	assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
+
+#if 0 // Logic test
+	uint8 keypadState;
+	while (1 == 1)
+	{
+		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		if (keypadState & GREEN_LED_PIN)
+			debug("Green LED Active\n");
+		if (keypadState & RED_LED_PIN)
+			debug("Red LED Active\n");
+
+		debug("Turning on the Green LED only\n");
+		keypadState |= GREEN_LED_PIN;
+		keypadState &= ~RED_LED_PIN;
+		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
+
+		soft_usecWait(3 * SOFT_SECS);
+
+		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		if (keypadState & GREEN_LED_PIN)
+			debug("Green LED Active\n");
+		if (keypadState & RED_LED_PIN)
+			debug("Red LED Active\n");
+
+		debug("Turning on the Red LED only\n");
+		keypadState &= ~GREEN_LED_PIN;
+		keypadState |= RED_LED_PIN;
+		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
+
+		soft_usecWait(3 * SOFT_SECS);
+
+		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		if (keypadState & GREEN_LED_PIN)
+			debug("Green LED Active\n");
+		if (keypadState & RED_LED_PIN)
+			debug("Red LED Active\n");
+
+		debug("Turning off both LEDs\n");
+		keypadState &= ~GREEN_LED_PIN;
+		keypadState &= ~RED_LED_PIN;
+		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
+
+		soft_usecWait(3 * SOFT_SECS);
+	}
+#endif
+
 	debug("Jump to Main Menu\n");
 	// Jump to the true main menu
 	g_activeMenu = MAIN_MENU;
@@ -927,14 +983,6 @@ int main(void)
 	InitSoftwareSettings_NS8100();
 	BootLoadManager();
 
-#if 1 // fix_ns8100
-	// Have to recall Keypad init otherwise interrupt hangs
-	InitKeypad();
-#endif
-
-	// Turn on the Green keypad LED while loading
-	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
-
 	//debug("Unit Type: %s\n", "NS8100 Minigraph");
 	debug("--- System Init complete ---\n");
 
@@ -949,6 +997,8 @@ int main(void)
 	// ==============
 	while (1)
 	{
+		g_execCycles++;
+
 		// Debug Test routines
 		//craftTestMenuThruDebug();
 
