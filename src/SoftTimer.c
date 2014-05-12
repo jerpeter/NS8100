@@ -351,8 +351,8 @@ void powerOffTimerCallback(void)
 
 	overlayMessage(getLangText(TIMER_MODE_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 2 * SOFT_SECS);
 
-	// Re-Enable the Power Off key
-	powerControl(POWER_SHUTDOWN_ENABLE, ON);
+	// Disable Power Off Protection
+	powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 
 	// Power the unit off
 	debug("Timer mode: Finished for the day, sleep time.\n");

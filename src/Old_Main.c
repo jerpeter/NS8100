@@ -181,9 +181,9 @@ void InitSoftwareSettings(void)
 		processTimerMode();
 
 		// If here, the unit is in Timer mode, but did not power itself off yet
-		// Disable the Power Off key
+		// Enable Power Off protection
 		debug("Timer Mode: Disabling Power Off key\n");
-		powerControl(POWER_SHUTDOWN_ENABLE, OFF);
+		powerControl(POWER_OFF_PROTECTION_ENABLE, ON);
 	}
 	else
 	{

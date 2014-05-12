@@ -642,8 +642,8 @@ void processTimerModeSettings(uint8 mode)
 		}
 		else // status == IN_PROGRESS
 		{
-			// Disable the Power Off key
-			powerControl(POWER_SHUTDOWN_ENABLE, OFF);
+			// Enable power off protection
+			powerControl(POWER_OFF_PROTECTION_ENABLE, ON);
 
 			if (mode == PROMPT)
 			{

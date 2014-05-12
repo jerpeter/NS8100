@@ -109,12 +109,12 @@ void isr_PowerOffKey(void)
 	if (g_sampleProcessing != ACTIVE_STATE)
 	{
 		// Check if timer mode is enabled and power off enable has been turned off
-		if ((g_helpRecord.timer_mode == ENABLED) && (getPowerControlState(POWER_SHUTDOWN_ENABLE) == OFF))
+		if ((g_helpRecord.timer_mode == ENABLED) && (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
 		{
 			// Signal a Power Off event
 			raiseSystemEventFlag(POWER_OFF_EVENT);
 		}
-		else if (getPowerControlState(POWER_SHUTDOWN_ENABLE) == ON)
+		else if (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == OFF)
 		{
 			// Unit is already starting to power down, stop interrupts to prevent the proc from waking back up
 			RTC_ENABLES.bit.periodicIntEnable = OFF;
@@ -130,8 +130,8 @@ void isr_PowerOffKey(void)
 			RTC_ENABLES.bit.periodicIntEnable = OFF;
 			RTC_ENABLES.bit.powerFailIntEnable = OFF;
 
-			// Enable the power off Control
-			powerControl(POWER_SHUTDOWN_ENABLE, ON);
+			// Disable the power off protection
+			powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 		}
 
 		// Clear the processor interrupt flag

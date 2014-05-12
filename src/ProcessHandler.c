@@ -75,12 +75,12 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	// Display a message to be patient while the software disables the power off key and setups up parameters
 	overlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
 
-	if (getPowerControlState(POWER_SHUTDOWN_ENABLE) == OFF)
+	if (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == OFF)
 	{
-		debug("Start Trigger: Disabling Power Off key\n");
+		debug("Start Trigger: Enabling Power Off Protection\n");
 
-		// Disable the Power Off key
-		powerControl(POWER_SHUTDOWN_ENABLE, ON);
+		// Enable power off protection
+		powerControl(POWER_OFF_PROTECTION_ENABLE, ON);
 	}
 
 	// Assign a one second menu update timer
@@ -364,11 +364,11 @@ void stopDataCollection(void)
 #endif
 
 	// Check if not in Timer Mode and if the Power Off key is disabled
-	if ((g_helpRecord.timer_mode != ENABLED) && (getPowerControlState(POWER_SHUTDOWN_ENABLE) == ON))
+	if ((g_helpRecord.timer_mode != ENABLED) && (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
 	{
-		// Set Power Shutdown control to be enabled
-		debug("Stop Trigger: Re-Enabling Power Off key\n");
-		powerControl(POWER_SHUTDOWN_ENABLE, OFF);
+		// Disable power off protection
+		debug("Stop Trigger: Disabling Power Off Protection\n");
+		powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 	}
 }
 

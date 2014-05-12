@@ -91,9 +91,14 @@ BOOLEAN InitExternalRtc(void)
 		debug("Ext RTC: Clock running and intergrity validated\n");
 	}
 
+#if 0 // Normal
 	// Clear flags (write 0's) and disable interrupt generation for timestamp pin (currently not functioning as expected)
 	rtcMap.control_2 = (RTC_ALARM_INT_ENABLE);
 	rtcWrite(RTC_CONTROL_2_ADDR, 1, &rtcMap.control_2);
+#else // Test
+	// Disable alarm settings and clear flags 
+	DisableRtcAlarm();
+#endif
 
 	// Need to initialize the global Current Time
 	updateCurrentTime();
@@ -184,7 +189,7 @@ DATE_TIME_STRUCT getRtcTime(void)
 {
 	DATE_TIME_STRUCT time;
 	RTC_DATE_TIME_STRUCT translateTime;
-	
+
 	rtcRead(RTC_SECONDS_ADDR_TEMP, 7, (uint8*)&translateTime);
 
 	// Get time and date registers (24 Hour settings), BCD format
@@ -347,7 +352,7 @@ void DisableRtcAlarm(void)
 	rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
 }
 
-#if 0 // Normal
+#if 1 // Normal
 /****************************************
 *	Function:    EnableRtcAlarm
 *	Purpose:
@@ -378,7 +383,7 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 {
 	RTC_ALARM_STRUCT enableAlarm;
 
-	uint8 clearAlarmFlag = 0xEF; // Logic 0 on the bit will clear Alarm flag, bit 4
+	uint8 clearAlarmFlag = 0xEA; // Logic 0 on the bit will clear Alarm flag, bit 4
 
 	enableAlarm.day_alarm = RTC_DISABLE_ALARM;
 	enableAlarm.hour_alarm = RTC_DISABLE_ALARM;

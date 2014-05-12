@@ -333,8 +333,8 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			{
 				setRtcDate(&(cfg.currentTime));
 				g_helpRecord.timer_mode = DISABLED;
-				// Enable the Power Off key
-				powerControl(POWER_SHUTDOWN_ENABLE, ON);
+				// Disable Power Off protection
+				powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 				
 				// Disable the Power Off timer if it's set
 				clearSoftTimer(POWER_OFF_TIMER_NUM);
@@ -352,8 +352,8 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				setRtcTime(&(cfg.currentTime));
 				g_helpRecord.timer_mode = DISABLED;
 				
-				// Enable the Power Off key
-				powerControl(POWER_SHUTDOWN_ENABLE, ON);
+				// Disable Power Off protection
+				powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 				
 				// Disable the Power Off timer if it's set
 				clearSoftTimer(POWER_OFF_TIMER_NUM);

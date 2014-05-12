@@ -222,6 +222,7 @@ void handleUserPowerOffDuringTimerMode(void)
 	messageBox(getLangText(STATUS_TEXT), getLangText(UNIT_IS_IN_TIMER_MODE_TEXT), MB_OK);
 	choice = messageBox(getLangText(WARNING_TEXT), getLangText(CANCEL_TIMER_MODE_Q_TEXT), MB_YESNO);
 
+	// User decided to cancel Timer mode
 	if (choice == MB_FIRST_CHOICE)
 	{
 		g_helpRecord.timer_mode = DISABLED;
@@ -232,8 +233,8 @@ void handleUserPowerOffDuringTimerMode(void)
 		// Save help record
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		// Re-Enable the Power Off key
-		powerControl(POWER_SHUTDOWN_ENABLE, ON);
+		// Disable power off protection
+		powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 
 		overlayMessage(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), 2 * SOFT_SECS);
 	}
@@ -246,8 +247,8 @@ void handleUserPowerOffDuringTimerMode(void)
 			messageBox(getLangText(STATUS_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), MB_OK);
 			messageBox(getLangText(STATUS_TEXT), getLangText(PLEASE_PRESS_ENTER_TEXT), MB_OK);
 
-			// Re-Enable the Power Off key
-			powerControl(POWER_SHUTDOWN_ENABLE, ON);
+			// Enable power off protection
+			powerControl(POWER_OFF_PROTECTION_ENABLE, ON);
 
 			// Turn unit off/sleep
 			debug("Timer mode: Shutting down unit early due to user request. Powering off now...\n");

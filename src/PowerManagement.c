@@ -69,7 +69,7 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			}
 			break;
 
-		case POWER_SHUTDOWN_ENABLE:
+		case POWER_OFF_PROTECTION_ENABLE:
 			//debug("Power Shutdown Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
@@ -81,7 +81,7 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 				state |= 0x80;
 				write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
 				//debug("MCP23018 write complete\n");
-				s_powerManagement.reg |= POWER_SHUTDOWN_ENABLE_BIT;
+				s_powerManagement.reg |= POWER_OFF_PROTECTION_ENABLE_BIT;
 			} 
 			else
 			{
@@ -93,7 +93,7 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 				state &= ~0x80;
 				write_mcp23018(IO_ADDRESS_KPD, OLATA, state);
 				//debug("MCP23018 write complete\n");
-				s_powerManagement.reg &= ~(POWER_SHUTDOWN_ENABLE_BIT);
+				s_powerManagement.reg &= ~(POWER_OFF_PROTECTION_ENABLE_BIT);
 			}
 			break;
 
@@ -313,8 +313,8 @@ BOOLEAN getPowerControlState(POWER_MGMT_OPTIONS option)
 			if (s_powerManagement.reg & POWER_OFF_BIT) state = ON;
 			break;
 
-		case POWER_SHUTDOWN_ENABLE:
-			if (s_powerManagement.reg & POWER_SHUTDOWN_ENABLE_BIT) state = ON;
+		case POWER_OFF_PROTECTION_ENABLE:
+			if (s_powerManagement.reg & POWER_OFF_PROTECTION_ENABLE_BIT) state = ON;
 			break;
 
 		case ALARM_1_ENABLE:

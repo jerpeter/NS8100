@@ -1295,8 +1295,8 @@ void configMenuHandler(uint8 keyPressed, void* data)
 					{
 						g_helpRecord.timer_mode = DISABLED;
 
-						// Enable the Power Off key
-						powerControl(POWER_SHUTDOWN_ENABLE, ON);
+						// Disable power off protection
+						powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 
 						// Disable the Power Off timer if it's set
 						clearSoftTimer(POWER_OFF_TIMER_NUM);

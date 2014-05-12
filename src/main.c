@@ -923,9 +923,9 @@ void InitSoftwareSettings_NS8100(void)
 		processTimerMode();
 
 		// If here, the unit is in Timer mode, but did not power itself off yet
-		// Disable the Power Off key
-		debug("Timer Mode: Disabling Power Off key\n");
-		powerControl(POWER_SHUTDOWN_ENABLE, OFF);
+		// Enabling power off protection
+		debug("Timer Mode: Enabling Power Off Protection\n");
+		powerControl(POWER_OFF_PROTECTION_ENABLE, ON);
 	}
 	else
 	{
