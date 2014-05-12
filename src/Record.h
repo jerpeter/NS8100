@@ -99,18 +99,18 @@ enum {
 };
 
 ///----------------------------------------------------------------------------
-///	Defines
+///	Structures
 ///----------------------------------------------------------------------------
 typedef struct {
 	// Sensor type information 
 	uint8	numOfChannels;			// The number of channels from a sensor.
 	uint8   sensorAccuracy;			// = 100, sensor values are X 100 for numeric accuracy. 
-	uint8	unitsFlag;	 			// 0 = SAE; 1 = Metric
-	uint8	airUnitsFlag;			// 0 = Decibel; 1 = Millibar
+	uint8	unitsFlag;	 			// 0 = SAE, 1 = Metric
+	uint8	airUnitsFlag;			// 0 = Decibel, 1 = Millibar
 
 	float	hexToLengthConversion;
-	float	measurementRatio;	 	// 1 = SAE; 25.4 = Metric
-	float	ameasurementRatio;		// ? = Decibel; 1 = Millibar
+	float	measurementRatio;	 	// 1 = SAE, 25.4 = Metric
+	float	ameasurementRatio;		// ? = Decibel, 1 = Millibar
 	float	sensorTypeNormalized;	
 
 	uint16  shiftVal;
@@ -302,6 +302,12 @@ typedef struct
 	DATE_TIME_STRUCT	stopTime;
 	uint16				eventsRecorded;
 	uint16				startEventNumber;
+#if 1 // Updated (Port lost change)
+	uint32				seismicTriggerLevel;
+	uint32				soundTriggerLevel;
+	int32				sensor_type;
+	int32				sensitivity;
+#endif
 } MONITOR_LOG_ENTRY_STRUCT;
 
 typedef struct

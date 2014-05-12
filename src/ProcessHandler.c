@@ -480,8 +480,21 @@ uint16 airTriggerConvert(uint16 airTriggerDbToConvert)
 	// Check if the air trigger level is not no trigger and not manual trigger
 	if ((airTriggerDbToConvert != NO_TRIGGER_CHAR) && (airTriggerDbToConvert != MANUAL_TRIGGER_CHAR))
 	{
+#if 0 // Port lost change
 		// Convert the float db to an offset from 0 to 2048 and upscale to 16-bit
 		airTriggerDbToConvert = (dbToHex(airTriggerDbToConvert) * 16);
+#else // Updated
+		if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+		{
+			// Convert the float mb to an offset from 0 to 2048 and upscale to 16-bit
+			airTriggerDbToConvert = (uint32)(dbToHex((float)airTriggerDbToConvert) * 16);
+		}
+		else
+		{
+			// Convert the float db to an offset from 0 to 2048 and upscale to 16-bit
+			airTriggerDbToConvert = (uint32)(mbToHex((float)airTriggerDbToConvert) * 16);
+		}
+#endif
 	}
 
 	return (airTriggerDbToConvert);

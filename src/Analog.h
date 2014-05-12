@@ -53,7 +53,11 @@
 #define CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD 2 // Treating event + event as 1 consecutive, event + event + event as 2 consecutive
 #define PENDING	2 // Anything above 1
 
+#if 0 // Normal
 #define AD_TEMP_COUNT_FOR_ADJUSTMENT	4
+#else // Test new count
+#define AD_TEMP_COUNT_FOR_ADJUSTMENT	16
+#endif
 
 enum {
 	DEFAULT_CAL_BUFFER_INDEX = 0,

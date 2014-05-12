@@ -605,7 +605,11 @@ void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.parameters.numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;
 	eventRec->summary.parameters.aWeighting = (uint8)g_factorySetupRecord.aweight_option;
 	eventRec->summary.parameters.seismicSensorType = (uint16)g_factorySetupRecord.sensor_type;
+#if 0 // Port lost change
 	eventRec->summary.parameters.airSensorType = (uint16)0x0;
+#else // Updated
+   eventRec->summary.parameters.airSensorType = (uint16)g_helpRecord.units_of_air;
+#endif
 	eventRec->summary.parameters.distToSource = (uint32)(g_triggerRecord.trec.dist_to_source * 100.0);
 	eventRec->summary.parameters.weightPerDelay = (uint32)(g_triggerRecord.trec.weight_per_delay * 100.0);
 	//-----------------------
@@ -1438,15 +1442,23 @@ void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 			g_pendingEventRecord.summary.calculated.v.frequency,
 			g_pendingEventRecord.summary.calculated.t.frequency);
 
+	// Calculate Displacement as PPV/(2 * PI * Freq) with 1000000 to shift to keep accuracy and the 10 to adjust the frequency
 	g_pendingEventRecord.summary.calculated.a.displacement = 0;
 
-	// Calculate Displacement as PPV/(2 * PI * Freq) with 1000000 to shift to keep accuracy and the 10 to adjust the frequency
-	g_pendingEventRecord.summary.calculated.r.displacement =
-		(uint32)(ramSummPtr->waveShapeData.r.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.r.freq * 10);
-	g_pendingEventRecord.summary.calculated.v.displacement =
-		(uint32)(ramSummPtr->waveShapeData.v.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.v.freq * 10);
-	g_pendingEventRecord.summary.calculated.t.displacement =
-		(uint32)(ramSummPtr->waveShapeData.t.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.t.freq * 10);
+	g_pendingEventRecord.summary.calculated.r.displacement = (uint32)(ramSummPtr->waveShapeData.r.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.r.freq * 10);
+	g_pendingEventRecord.summary.calculated.v.displacement = (uint32)(ramSummPtr->waveShapeData.v.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.v.freq * 10);
+	g_pendingEventRecord.summary.calculated.t.displacement = (uint32)(ramSummPtr->waveShapeData.t.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.t.freq * 10);
+
+#if 1 // Updated (Port lost change)	
+	// Calculate Peak Acceleration as (2 * PI * PPV * Freq) / 1G, where 1G = 386.4in/sec2 or 9814.6 mm/sec2, using 1000 to shift to keep accuracy
+	// The divide by 10 at the end to adjust the frequency, since freq stored as freq * 10
+	// Not dividing by 1G at this time. Before displaying Peak Acceleration, 1G will need to be divided out
+	g_pendingEventRecord.summary.calculated.a.acceleration = 0;
+
+	g_pendingEventRecord.summary.calculated.r.acceleration = (uint32)(ramSummPtr->waveShapeData.r.peak * 1000 * 2 * PI * ramSummPtr->waveShapeData.r.freq / 10);
+	g_pendingEventRecord.summary.calculated.v.acceleration = (uint32)(ramSummPtr->waveShapeData.v.peak * 1000 * 2 * PI * ramSummPtr->waveShapeData.v.freq / 10);
+	g_pendingEventRecord.summary.calculated.t.acceleration = (uint32)(ramSummPtr->waveShapeData.t.peak * 1000 * 2 * PI * ramSummPtr->waveShapeData.t.freq / 10);
+#endif
 
 	//} End of now if 0 defined check
 

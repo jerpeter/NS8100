@@ -83,7 +83,11 @@ extern USER_MENU_STRUCT weightPerDelayMenu[];
 USER_MENU_STRUCT airTriggerMenu[AIR_TRIGGER_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, AIR_TRIGGER_TEXT, TITLE_POST_TAG, 
 	{INSERT_USER_MENU_INFO(INTEGER_SPECIAL_TYPE, AIR_TRIGGER_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
+#if 0 // Port lost change
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, DBA_TYPE)}},
+#else // Updated
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, MB_TYPE)}},
+#endif
 {NO_TAG, 0, NULL_TEXT, NO_TAG},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&airTriggerMenuHandler}}
 };
@@ -130,6 +134,14 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 				RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 		}
 #else // ns8100 - Allow both Seismic and Air trigger levels to be No Trigger (only allowing External trigger)
+
+#if 1 // Updated (Port lost change)
+		if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) && g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR)
+		{
+			messageBox(getLangText(WARNING_TEXT), "UNIT SET FOR EXTERNAL TRIGGER.", MB_OK);
+		}
+#endif
+
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 			RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 #endif
@@ -191,8 +203,21 @@ void alarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH)
 		{
+#if 0 // Port lost change
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
 				g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+#else // Updated
+			if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl,
+													g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+			}
+			else
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl,
+													g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+			}
+#endif
 		}
 		else // g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC
 		{
@@ -225,7 +250,11 @@ void alarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT alarmOneAirLevelMenu[ALARM_ONE_AIR_LEVEL_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, ALARM_1_AIR_LEVEL_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_SPECIAL_TYPE, ALARM_ONE_AIR_LEVEL_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
+#if 0 // Port lost change
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, DBA_TYPE)}},
+#else // Updated
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, MB_TYPE)}},
+#endif
 {NO_TAG, 0, NULL_TEXT, NO_TAG},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmOneAirLevelMenuHandler}}
 };
@@ -304,8 +333,21 @@ void alarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_AIR))
 		{
+#if 0 // Port lost change
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
 				g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+#else // Updated
+			if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl,
+												g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+			}
+			else
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl,
+												g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+			}
+#endif
 		}
 		else if (g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC)
 		{
@@ -369,8 +411,21 @@ void alarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH)
 		{
+#if 0 // Port lost change
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
 				g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+#else // Updated
+			if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
+													g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+			}
+			else
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
+													g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+			}
+#endif
 		}
 		else // g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC
 		{
@@ -403,7 +458,11 @@ void alarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT alarmTwoAirLevelMenu[ALARM_TWO_AIR_LEVEL_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, ALARM_2_AIR_LEVEL_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(INTEGER_SPECIAL_TYPE, ALARM_TWO_AIR_LEVEL_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
+#if 0 // Port lost change
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, DBA_TYPE)}},
+#else
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, MB_TYPE)}},
+#endif
 {NO_TAG, 0, NULL_TEXT, NO_TAG},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmTwoAirLevelMenuHandler}}
 };
@@ -484,8 +543,21 @@ void alarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_AIR))
 		{
+#if 0 // Port lost change
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
 				g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+#else // Updated
+			if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
+												g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+			}
+			else
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
+												g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+			}
+#endif
 		}
 		else if (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC)
 		{
@@ -1076,8 +1148,21 @@ void recordTimeMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+#if 0 // Port lost change
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel,
 			AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+#else // Updated
+		if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+		{
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel, AIR_TRIGGER_DEFAULT_VALUE,
+												AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+		}
+		else
+		{
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel, AIR_TRIGGER_MB_DEFAULT_VALUE, 
+												AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
+		}
+#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -1271,8 +1356,21 @@ void seismicTriggerMenuHandler(uint8 keyPressed, void* data)
 			debug("Seismic Trigger: %d counts\n", g_triggerRecord.trec.seismicTriggerLevel);
 		}
 
+#if 0 // Port lost change
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel,
 			AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+#else // Updated
+		if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+		{
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel, AIR_TRIGGER_DEFAULT_VALUE,
+											AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+		}
+		else
+		{
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel, AIR_TRIGGER_MB_DEFAULT_VALUE,
+											AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
+		}
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{

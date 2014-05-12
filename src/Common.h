@@ -140,7 +140,7 @@ typedef struct
 #define UNUSED(p) ((void)p)
 
 #define	DB_CONVERSION_VALUE		5000000
-#define  MB_CONVERSION_VALUE	1
+#define MB_CONVERSION_VALUE		1
 
 enum {
 	INPUT_BUFFER_EMPTY = 0,

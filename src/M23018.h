@@ -37,6 +37,7 @@
 
 #define GREEN_LED_PIN	0x10
 #define RED_LED_PIN		0x20
+#define NO_LED_PINS		0x00
 
 void init_mcp23018(unsigned char chip);
 void write_mcp23018(unsigned char chip, unsigned char address, unsigned char data);

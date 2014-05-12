@@ -348,9 +348,13 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 							g_displayBargraphResultsMode = IMPULSE_RESULTS;
 							
 							// Check if results mode is Peak Displacement
+#if 0 // Port lost change
 							if (g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
+#else // Updated
+							if((g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS) || (g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS))
+#endif
 							{
-								// Change it
+								// Change it since Peak Displacement and Peak Acceleration are not valid for Impulse results
 								g_displayAlternateResultState = DEFAULT_RESULTS;
 							}
 						}
@@ -361,6 +365,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					switch (g_displayAlternateResultState)
 					{
 						case DEFAULT_RESULTS:
+#if 0 // Port lost change
 							if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 							{
 								if(g_helpRecord.vector_sum == ENABLED)				
@@ -373,6 +378,12 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 								else if(g_helpRecord.vector_sum == ENABLED)
 									g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 							}
+#else
+							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
+								g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS;
+							else
+								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
+#endif
 						break;
 						
 						case VECTOR_SUM_RESULTS:
@@ -380,11 +391,23 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 						break;
 						
 						case PEAK_DISPLACEMENT_RESULTS:
+#if 0 // Port lost change
 							if(g_helpRecord.vector_sum == ENABLED)
 								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 							else
 								g_displayAlternateResultState = DEFAULT_RESULTS;
+#else // Updated
+			               g_displayAlternateResultState = VECTOR_SUM_RESULTS;
+#endif
 						break;
+#if 1 // Updated (Port lost change)
+						case PEAK_ACCELERATION_RESULTS:
+							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
+								g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
+							else
+								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
+						break;
+#endif
 					}
 				break;
 
@@ -392,13 +415,18 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					switch (g_displayAlternateResultState)
 					{
 						case DEFAULT_RESULTS: 
+#if 0 // Port lost change
 							if(g_helpRecord.vector_sum == ENABLED)
 								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 							else if((g_helpRecord.report_displacement == ENABLED) && (g_displayBargraphResultsMode != IMPULSE_RESULTS))
 								g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
+#else // Updated
+			               g_displayAlternateResultState = VECTOR_SUM_RESULTS;
+#endif
 						break;
 							
 						case VECTOR_SUM_RESULTS:
+#if 0 // Port lost change
 							if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 							{
 								g_displayAlternateResultState = DEFAULT_RESULTS;
@@ -410,11 +438,30 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 								else
 									g_displayAlternateResultState = DEFAULT_RESULTS;
 							}
+#else // Updated
+							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
+								g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
+							else
+								g_displayAlternateResultState = DEFAULT_RESULTS;
+#endif
 						break;
 						
 						case PEAK_DISPLACEMENT_RESULTS:
+#if 0 // Port lost change							
 							g_displayAlternateResultState = DEFAULT_RESULTS;
+#else // Updated
+							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
+								g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS;
+							else
+								g_displayAlternateResultState = DEFAULT_RESULTS;
+#endif
 						break;
+
+#if 1 // Updated (Port lost change)
+							case PEAK_ACCELERATION_RESULTS:
+							g_displayAlternateResultState = DEFAULT_RESULTS;
+							break;
+#endif
 					}
 				break;
 
@@ -454,6 +501,9 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	static uint8 dotState = 0;
 	char displayFormat[22];
 	float div = 1, tempR = 0, tempV = 0, tempT = 0, tempA = 0, tempVS = 0, tempPeakDisp, normalize_max_peak;
+#if 1 // Updated (Port lost change)
+	float tempPeakAcc;
+#endif
 	float rFreq = 0, vFreq = 0, tFreq = 0, tempFreq;
 	uint8 arrowChar;
 	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
@@ -943,13 +993,13 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (tempR > tempT)
 				{
-					// R is max
+					// R Disp is max
 				    normalize_max_peak = (float)tempR / (float)div;
 				    tempFreq = rFreq;
 				}
 				else
 				{
-					// T is max
+					// T Disp is max
 				    normalize_max_peak = (float)tempT / (float)div;
 				    tempFreq = tFreq;
 				}
@@ -958,13 +1008,13 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (tempV > tempT)
 				{
-					// V is max
+					// V Disp is max
 				    normalize_max_peak = (float)tempV / (float)div;
 				    tempFreq = vFreq;
 				}
 				else
 				{
-					// T is max
+					// T Disp is max
 				    normalize_max_peak = (float)tempT / (float)div;
 				    tempFreq = tFreq;
 				}
@@ -986,8 +1036,92 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				strcpy(displayFormat, "mm");
 			}
 
-			sprintf(buff,"PEAK DISP %6f %s", tempPeakDisp, displayFormat);
+#if 0 // Port lost change
+			sprintf(buff, "PEAK DISP %6f %s", tempPeakDisp, displayFormat);
+#else // Updated
+			sprintf(buff, "PEAK DISP %5.4f %s", tempPeakDisp, displayFormat);
+#endif
 		}
+#if 1 // Updated (Port lost change)
+		else if((g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS) && (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL))
+		{
+			if(g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
+			{
+				tempR = g_bargraphSumIntervalWritePtr->r.peak;
+				tempV = g_bargraphSumIntervalWritePtr->v.peak;
+				tempT = g_bargraphSumIntervalWritePtr->t.peak;
+
+				rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
+				((float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1)));
+				vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
+				((float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1)));
+				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
+				((float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1)));
+			}
+			else if(g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
+			{
+				tempR = g_rJobPeak;
+				tempV = g_vJobPeak;
+				tempT = g_tJobPeak;
+
+				rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / ((float)((g_rJobFreq * 2) - 1)));
+				vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / ((float)((g_vJobFreq * 2) - 1)));
+				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / ((float)((g_tJobFreq * 2) - 1)));
+			}
+
+			if((tempR * rFreq) > (tempV * vFreq))
+			{
+				if((tempR * rFreq) > (tempT * tFreq))
+				{
+					// R Acc is max
+					normalize_max_peak = (float)tempR / (float)div;
+					tempFreq = rFreq;
+				}
+				else
+				{
+					// T Acc is max
+					normalize_max_peak = (float)tempT / (float)div;
+					tempFreq = tFreq;
+				}
+			}
+			else
+			{
+				if((tempV * vFreq) > (tempT * tFreq))
+				{
+					// V Acc is max
+					normalize_max_peak = (float)tempV / (float)div;
+					tempFreq = vFreq;
+				}
+				else
+				{
+					// T Acc is max
+					normalize_max_peak = (float)tempT / (float)div;
+					tempFreq = tFreq;
+				}
+			}
+
+			tempPeakAcc = (float)normalize_max_peak * (float)2 * (float)PI * (float)tempFreq;
+
+			if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
+			{
+				tempPeakAcc /= (float)ONE_GRAVITY_IN_INCHES;
+
+				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+					strcpy(displayFormat, "mg/s2");
+				else
+					strcpy(displayFormat, "in/s2");
+			}
+			else // Metric
+			{
+				tempPeakAcc *= (float)METRIC;
+				tempPeakAcc /= (float)ONE_GRAVITY_IN_MM;
+
+				strcpy(displayFormat, "mm/s2");
+			}
+
+			sprintf(buff,"PEAK ACC %5.4f %s", tempPeakAcc, displayFormat);
+		}
+#endif
 		else // g_displayAlternateResultState == DEFAULT_RESULTS || g_triggerRecord.berec.barChannel == BAR_AIR_CHANNEL
 		{
 			// Check if the bar channel to display isn't just seismic
@@ -995,7 +1129,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
+#if 1 // Port lost change
 					if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
+#else // Incorrect - Updated
+					if (g_sensorInfoPtr->airUnitsFlag == DECIBEL_TYPE)
+#endif
 					{
 						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), hexToMillBars(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 					}
@@ -1016,7 +1154,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
+#if 1 // Port lost change
 							if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
+#else // Incorrect - Updated
+							if (g_sensorInfoPtr->airUnitsFlag == DECIBEL_TYPE)
+#endif
 							{
 								sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
@@ -1033,7 +1175,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_comboSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
+#if 1 // Port lost change
 							if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
+#else // Incorrect - Updated
+							if (g_sensorInfoPtr->airUnitsFlag == DECIBEL_TYPE)
+#endif
 							{
 								sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}

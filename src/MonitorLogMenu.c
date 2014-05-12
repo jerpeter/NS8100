@@ -255,12 +255,21 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 				if(__monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded == 1)
 				{
+#if 0 // Port lost change
 					length = (uint8)sprintf((char*)(&buff[0]), "EVENT #s: %d", __monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber);
+#else // Updated
+					length = (uint8)sprintf((char*)(&buff[0]), "%s: %d", getLangText(EVENT_NUMBER_TEXT), __monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber);
+#endif
 				}
 				else
 				{
+#if 0 // Port lost change
 					length = (uint8)sprintf((char*)(&buff[0]), "EVENT #s: %d-%d", __monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber,
 											(__monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber + __monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded - 1));
+#else // Updated
+					length = (uint8)sprintf((char*)(&buff[0]), "%s: %d-%d", getLangText(EVENT_NUMBER_TEXT), __monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber,
+											(__monitorLogTbl[s_monitorMnCurrentLogIndex].startEventNumber + __monitorLogTbl[s_monitorMnCurrentLogIndex].eventsRecorded - 1));
+#endif
 				}
 
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
@@ -273,8 +282,11 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			// Display Start of Log
 			byteSet(&buff[0], 0, sizeof(buff));
+#if 0 // Port lost change
 			length = (uint8)sprintf((char*)buff, "<%s>", "START OF LOG");
-
+#else // Updated
+			length = (uint8)sprintf((char*)buff, "<%s>", getLangText(START_OF_LOG_TEXT));
+#endif
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
@@ -283,8 +295,11 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			// Display End of Log
 			byteSet(&buff[0], 0, sizeof(buff));
+#if 0 // Port lost change
 			length = (uint8)sprintf((char*)buff, "<%s>", "END OF LOG");
-
+#else // Updated
+			length = (uint8)sprintf((char*)buff, "<%s>", getLangText(END_OF_LOG_TEXT));
+#endif
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 			wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);

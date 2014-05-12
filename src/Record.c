@@ -463,8 +463,14 @@ void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 	rec_ptr->lcd_timeout = 2;
 	rec_ptr->timer_mode = DISABLED;
 	rec_ptr->units_of_measure = IMPERIAL_TYPE;
+#if 1 // Updated (Port missing change)
+	rec_ptr->units_of_air = DECIBEL_TYPE;
+#endif
 	rec_ptr->vector_sum = DISABLED;
 	rec_ptr->report_displacement = DISABLED;
+#if 1 // Updated (Port missing change)
+	rec_ptr->report_peak_acceleration = DISABLED;
+#endif
 	rec_ptr->auto_cal_in_waveform = NO;
 
 	if (SUPERGRAPH_UNIT)
@@ -498,6 +504,9 @@ void activateHelpRecordOptions(void)
 
 	// The choices are between metric and sae measurement systems.
 	g_sensorInfoPtr->unitsFlag = g_helpRecord.units_of_measure;
+#if 1 // Updated (Port missing change)
+	g_sensorInfoPtr->airUnitsFlag = g_helpRecord.units_of_air;
+#endif
 
 	assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
 

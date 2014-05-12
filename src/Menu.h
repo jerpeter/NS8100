@@ -526,8 +526,12 @@ enum {
 };
 
 // Data values used in 430 messaging
+#if 0 // Port lost change
 #define NO_TRIGGER_CHAR 				0xEFFF
-#define BYTE_SWAPPED_NO_TRIGGER_CHAR 	0xFFEF
+#else // Updated
+#define NO_TRIGGER_CHAR					0x1FFF
+#endif
+
 #define EXTERNAL_TRIGGER_CHAR			0x1FFF
 #define MANUAL_TRIGGER_CHAR 			0x2FFF
 

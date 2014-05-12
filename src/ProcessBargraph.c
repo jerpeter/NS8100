@@ -193,17 +193,47 @@ uint32 moveBarIntervalDataToFile(void)
 //*****************************************************************************
 void moveSummaryIntervalDataToFile(void)
 {
+#if 0 // Port lost change
 	float rFreq, vFreq, tFreq;
+#else // Updated
+	float rFreq = (float)0, vFreq = (float)0, tFreq = (float)0;
+#endif
 
+#if 0 // Port lost change
 	rFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1));
 	vFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1));
 	tFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1));
+#else // Updated
+	// Note: This should be raw unadjusted freq
+	if(g_bargraphSumIntervalWritePtr->r.frequency > 0)
+	{
+		rFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1));
+	}
+	
+	if(g_bargraphSumIntervalWritePtr->v.frequency > 0)
+	{
+		vFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1));
+	}
+	
+	if(g_bargraphSumIntervalWritePtr->t.frequency > 0)
+	{
+		tFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1));
+	}
+#endif
 
 	// Calculate the Peak Displacement
 	g_bargraphSumIntervalWritePtr->a.displacement = 0;
 	g_bargraphSumIntervalWritePtr->r.displacement = (uint32)(g_bargraphSumIntervalWritePtr->r.peak * 1000000 / 2 / PI / rFreq);
 	g_bargraphSumIntervalWritePtr->v.displacement = (uint32)(g_bargraphSumIntervalWritePtr->v.peak * 1000000 / 2 / PI / vFreq);
 	g_bargraphSumIntervalWritePtr->t.displacement = (uint32)(g_bargraphSumIntervalWritePtr->t.peak * 1000000 / 2 / PI / tFreq);
+
+#if 1 // Updated (Port lost change)
+	// Calculate the Peak Acceleration
+	g_bargraphSumIntervalWritePtr->a.acceleration = 0;
+	g_bargraphSumIntervalWritePtr->r.acceleration = (uint32)(g_bargraphSumIntervalWritePtr->r.peak * 1000 * 2 * PI * rFreq);
+	g_bargraphSumIntervalWritePtr->v.acceleration = (uint32)(g_bargraphSumIntervalWritePtr->v.peak * 1000 * 2 * PI * vFreq);
+	g_bargraphSumIntervalWritePtr->t.acceleration = (uint32)(g_bargraphSumIntervalWritePtr->t.peak * 1000 * 2 * PI * tFreq);
+#endif
 
 	// Store timestamp for the end of the summary interval
 	g_summaryCount++;
@@ -513,6 +543,20 @@ uint8 CalculateBargraphData(void)
 		//=================================================
 		// Freq Calc Information
 		//=================================================
+#if 1 // Updated (Port lost change)
+		// ------------
+		// All Channels
+		// ------------
+		// Check if the freq count is zero, meaning initial sample or the start of a new summary interval (doesn't matter which channel is checked)
+		if(g_bargraphFreqCalcBuffer.a.freq_count == 0)
+		{
+			g_bargraphFreqCalcBuffer.a.sign = (uint16)(currentDataSample.a & g_bitAccuracyMidpoint);
+			g_bargraphFreqCalcBuffer.r.sign = (uint16)(currentDataSample.r & g_bitAccuracyMidpoint);
+			g_bargraphFreqCalcBuffer.v.sign = (uint16)(currentDataSample.v & g_bitAccuracyMidpoint);
+			g_bargraphFreqCalcBuffer.t.sign = (uint16)(currentDataSample.t & g_bitAccuracyMidpoint);
+		}
+#endif
+
 		// ---------
 		// A channel
 		// ---------

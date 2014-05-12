@@ -29,6 +29,7 @@ extern char englishLanguageTable[];
 extern char frenchLanguageTable[];
 extern char italianLanguageTable[];
 extern char germanLanguageTable[];
+extern char spanishLanguageTable[];
 
 ///----------------------------------------------------------------------------
 ///	Defines

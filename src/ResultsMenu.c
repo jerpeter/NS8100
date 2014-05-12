@@ -257,9 +257,16 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 				case (MINUS_KEY):
 					switch (g_displayAlternateResultState)
 					{
+#if 0 // Port lost change
 						case DEFAULT_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
+#else // Updated
+						case DEFAULT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
+#endif
 						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
 						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
+#if 1 // Updated (Port lost change)
+						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
+#endif
 					}
 				break;
 
@@ -268,7 +275,12 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 					{
 						case DEFAULT_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
 						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
+#if 0 // Port lost change
 						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
+#else
+						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
+						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
+#endif
 					}
 				break;
 
@@ -343,7 +355,9 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	float normalize_max_peak;
 	float tempVS;
 	float tempPeakDisp = 0;
-	float tempFreq = 0;
+#if 1 // Updated (Port lost change)
+	float tempPeakAcc;
+#endif
 	char buff[50];
 	char srBuff[6];
 	char displayFormat[10];
@@ -724,6 +738,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
+#if 0 // Port lost change
 	else if (g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
 	{
 	    byteSet(&buff[0], 0, sizeof(buff));
@@ -821,6 +836,104 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
+#else // Updated
+	else if(g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
+	{
+		byteSet(&buff[0], 0, sizeof(buff));
+		byteSet(&displayFormat[0], 0, sizeof(displayFormat));
+
+		if(eventRecord->summary.calculated.r.displacement > eventRecord->summary.calculated.v.displacement)
+		{
+			// R is max
+			if(eventRecord->summary.calculated.r.displacement > eventRecord->summary.calculated.t.displacement)
+			{
+				tempPeakDisp = (float)eventRecord->summary.calculated.r.displacement;
+			}
+			else // T is max
+			{
+				tempPeakDisp = (float)eventRecord->summary.calculated.t.displacement;
+			}
+		}
+		else
+		{
+			// V is max
+			if(eventRecord->summary.calculated.v.displacement > eventRecord->summary.calculated.t.displacement)
+			{
+				tempPeakDisp = (float)eventRecord->summary.calculated.r.displacement;
+			}
+			else // T is max
+			{
+				tempPeakDisp = (float)eventRecord->summary.calculated.t.displacement;
+			}
+		}
+
+		tempPeakDisp = (float)tempPeakDisp / (float)1000000 / (float)div;
+
+		if((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
+		{
+			if(eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
+				strcpy(displayFormat, "mg");
+			else
+				strcpy(displayFormat, "in");
+		}
+		else // Metric
+		{
+			tempPeakDisp *= (float)METRIC;
+			strcpy(displayFormat, "mm");
+		}
+
+		sprintf(buff,"PEAK DISP %5.4f %s", tempPeakDisp, displayFormat);
+		wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+		wndMpWrtString((uint8*)buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+	}
+	else if(g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS)
+	{
+		if(eventRecord->summary.calculated.r.acceleration > eventRecord->summary.calculated.v.acceleration)
+		{
+			// R is max
+			if(eventRecord->summary.calculated.r.acceleration > eventRecord->summary.calculated.t.acceleration)
+			{
+				tempPeakAcc = (float)eventRecord->summary.calculated.r.acceleration;
+			}
+			else // T is max
+			{
+				tempPeakAcc = (float)eventRecord->summary.calculated.t.acceleration;
+			}
+		}
+		else
+		{
+			// V is max
+			if(eventRecord->summary.calculated.v.acceleration > eventRecord->summary.calculated.t.acceleration)
+			{
+				tempPeakAcc = (float)eventRecord->summary.calculated.v.acceleration;
+			}
+			else // T is max
+			{
+				tempPeakAcc = (float)eventRecord->summary.calculated.t.acceleration;
+			}
+		}
+
+		tempPeakAcc = (float)tempPeakAcc / (float)1000 / (float)div;
+
+		if((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
+		{
+			tempPeakAcc /= (float)ONE_GRAVITY_IN_INCHES;
+		}
+		else // Metric
+		{
+			tempPeakAcc *= (float)METRIC;
+			tempPeakAcc /= (float)ONE_GRAVITY_IN_MM;
+		}
+
+		strcpy(displayFormat, "g");
+
+		sprintf(buff,"PEAK ACC %5.4f %s", tempPeakAcc, displayFormat);
+		wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+		wndMpWrtString((uint8*)buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+	}
+#endif
 	else // g_displayAlternateResultState == DEFAULT_RESULTS
 	{
 	    //-------------------------------------------------------------
@@ -834,7 +947,11 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    // Air
 	    byteSet(&buff[0], 0, sizeof(buff));
 
+#if 1 // Port lost change
 		if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
+#else // Not Updated - Incorrect reference
+		if(g_sensorInfoPtr->airUnitsFlag == DECIBEL_TYPE)
+#endif
 		{
 		    sprintf(buff,"%0.3f mb", hexToMillBars(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}

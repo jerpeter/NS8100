@@ -517,8 +517,21 @@ void advanceInputNumber(uint32 direction)
 					}
 					else
 					{
+#if 0 // Port lost change
 						// Increment the data by the key scrolling speed
 						g_userMenuCacheData.numLongData += g_keypadNumberSpeed;
+#else // Updated
+						if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_helpRecord.units_of_air == MILLIBAR_TYPE))
+						{
+							// Increment the data by the key scrolling speed
+							g_userMenuCacheData.numLongData += g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE;
+						}
+						else
+						{
+							// Increment the data by the key scrolling speed
+							g_userMenuCacheData.numLongData += g_keypadNumberSpeed;
+						}
+#endif
 					}
 				}
 				// Check if the menu type is integer special or integer count
@@ -673,8 +686,29 @@ void advanceInputNumber(uint32 direction)
 						}
 						else
 						{
+#if 0 // Port lost change
 							// Decrement the data by the key scrolling speed
 							g_userMenuCacheData.numLongData -= g_keypadNumberSpeed;
+#else // Updated
+							if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_helpRecord.units_of_air == MILLIBAR_TYPE))
+							{
+								if((g_userMenuCacheData.numLongData - (g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE)) > g_userMenuCacheData.intMaxValue)
+								{
+									// Set the min value
+									g_userMenuCacheData.numLongData = g_userMenuCacheData.intMinValue;
+								}
+								else
+								{
+									// Decrement the data by the key scrolling speed
+									g_userMenuCacheData.numLongData -= g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE;
+								}
+							}
+							else
+							{
+								// Decrement the data by the key scrolling speed
+								g_userMenuCacheData.numLongData -= g_keypadNumberSpeed;
+							}
+#endif
 						}
 					}
 					else // current data is less than the key scrolling speed
@@ -1092,10 +1126,26 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 		case INTEGER_COUNT_TYPE:
 			if (USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE)
 			{
+#if 0 // Port lost change
 				// Set the specifications line for the integer type
 				sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%lu-%lu%s, N)", 
 					g_userMenuCacheData.intMinValue, g_userMenuCacheData.intMaxValue, g_userMenuCacheData.unitText);
+#else // Updated
+				g_userMenuCacheData.floatMinValue = (float)g_userMenuCacheData.intMinValue / 10000;
+				g_userMenuCacheData.floatMaxValue = (float)g_userMenuCacheData.intMaxValue / 10000;
+				g_userMenuCacheData.floatData = (float)g_userMenuCacheData.numLongData / 10000;
 
+				if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+				{
+					// Set the specifications line for the integer type
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%lu-%lu%s, N)", g_userMenuCacheData.intMinValue, g_userMenuCacheData.intMaxValue, "Db");
+				}
+				else
+				{
+					// Set the specifications line for the integer type
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.3f-%.3f%s,N)", g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, "mb");
+				}
+#endif
 				// Check if the data is NO_TRIGGER
 				if (g_userMenuCacheData.numLongData == NO_TRIGGER_CHAR)
 				{
@@ -1104,8 +1154,21 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				}
 				else
 				{
+#if 0 // Port lost change
 					// Print the data value
 					sprintf(g_userMenuCachePtr[tempRow].text, "%lu", g_userMenuCacheData.numLongData);
+#else
+					if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+					{
+						// Print the data value
+						sprintf(g_userMenuCachePtr[tempRow].text, "%lu", g_userMenuCacheData.numLongData);
+					}
+					else
+					{
+						// Print the data value
+						sprintf(g_userMenuCachePtr[tempRow].text, "%.4f", g_userMenuCacheData.floatData);
+					}
+#endif
 				}
 			}
 			else if (USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_COUNT_TYPE)
@@ -1125,7 +1188,7 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400) * g_bitAccuracyMidpoint));
 				}
 
-				// Set the min, max and data count values adjusted by the float incrememnt
+				// Set the min, max and data count values adjusted by the float increment
 				g_userMenuCacheData.floatMinValue = (float)g_userMenuCacheData.intMinValue * g_userMenuCacheData.floatIncrement;
 				g_userMenuCacheData.floatMaxValue = (float)g_userMenuCacheData.intMaxValue * g_userMenuCacheData.floatIncrement;
 				g_userMenuCacheData.floatData = (float)g_userMenuCacheData.numLongData * g_userMenuCacheData.floatIncrement;

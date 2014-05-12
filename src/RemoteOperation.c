@@ -446,7 +446,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		
 #if 1 // Updated (Port missing change)
 		// Update air sensor type DB or MB
-		if((uint8)cfg.eventCfg.airSensorType == MILLIBAR_TYPE)
+		if ((uint8)cfg.eventCfg.airSensorType == MILLIBAR_TYPE)
 		{
 			g_helpRecord.units_of_air = MILLIBAR_TYPE;
 		}
@@ -460,7 +460,11 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
 			(NO_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
 			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_VALUE) &&
+#if 0 // Port lost change
 			(cfg.eventCfg.airTriggerLevel <= AIR_TRIGGER_MAX_VALUE)))
+#else // Updated
+			(cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
+#endif
 		{
 			g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
 			g_helpRecord.alarm_one_air_min_lvl = g_triggerRecord.trec.airTriggerLevel;
@@ -690,7 +694,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_VECTOR_SUM;
 		}
 		
-		// Units of Measuere check
+		// Units of Measure check
 		if ((IMPERIAL_TYPE == cfg.printerCfg.units_of_measure) || 
 			(METRIC_TYPE == cfg.printerCfg.units_of_measure))
 		{
@@ -710,7 +714,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 		else
 		{
-			returnCode = CFG_ERR_UNITS_OF_AIR;
+			returnCode = CFG_ERR_UNITS_OF_MEASURE; // fix_ns8100 - Create CFG_ERR_UNITS_OF_AIR
 		}
 #endif
 
@@ -782,13 +786,16 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				}
 			}
 
-			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_one_mode) ||
-				(ALARM_MODE_AIR == g_helpRecord.alarm_one_mode))    
+			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_one_mode) || (ALARM_MODE_AIR == g_helpRecord.alarm_one_mode))    
 			{
-				// Alarm One Air trigger level check.
+	            // Alarm One Air trigger level check DB/MB.
 				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_one_air_lvl) 	||
 					((cfg.alarmCfg.alarm_one_air_lvl >= g_triggerRecord.trec.airTriggerLevel) &&
-					  (cfg.alarmCfg.alarm_one_air_lvl <= AIR_TRIGGER_MAX_VALUE)))
+#if 0 // Port lost change					  
+					(cfg.alarmCfg.alarm_one_air_lvl <= AIR_TRIGGER_MAX_VALUE)))
+#else // Updated
+					(cfg.alarmCfg.alarm_one_air_lvl <= AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
+#endif
 				{
 					g_helpRecord.alarm_one_air_lvl = cfg.alarmCfg.alarm_one_air_lvl;
 				}
@@ -864,13 +871,16 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				}
 			}
 			
-			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_two_mode) ||
-				(ALARM_MODE_AIR == g_helpRecord.alarm_two_mode))    
+			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_two_mode) || (ALARM_MODE_AIR == g_helpRecord.alarm_two_mode))    
 			{
-				// Alarm Two Air trigger level check.
+	            // Alarm Two Air trigger level check DB/MB.
 				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_two_air_lvl) 	||
 					((cfg.alarmCfg.alarm_two_air_lvl >= g_triggerRecord.trec.airTriggerLevel) &&
-					  (cfg.alarmCfg.alarm_two_air_lvl <= AIR_TRIGGER_MAX_VALUE)))
+#if 0 // Port lost change
+					(cfg.alarmCfg.alarm_two_air_lvl <= AIR_TRIGGER_MAX_VALUE)))
+#else // Updated
+					(cfg.alarmCfg.alarm_two_air_lvl <= AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
+#endif
 				{
 					g_helpRecord.alarm_two_air_lvl = cfg.alarmCfg.alarm_two_air_lvl;
 				}

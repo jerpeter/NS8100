@@ -70,6 +70,9 @@ extern USER_MENU_STRUCT modemSetupMenu[];
 extern USER_MENU_STRUCT modemInitMenu[];
 extern USER_MENU_STRUCT monitorLogMenu[];
 extern USER_MENU_STRUCT operatorMenu[];
+#if 1 // Updated (Port lost change)
+extern USER_MENU_STRUCT peakAccMenu[];
+#endif
 extern USER_MENU_STRUCT printerEnableMenu[];
 extern USER_MENU_STRUCT printMonitorLogMenu[];
 extern USER_MENU_STRUCT recalibrateMenu[];
@@ -305,12 +308,38 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
+#if 0 // Port lost change
 						g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MIN_VALUE;
+#else // Updated
+						if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+						{
+							g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MIN_VALUE;
+						}
+						else
+						{
+							g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MB_MIN_VALUE;
+						}
+#endif
 					}
 
+#if 0 // Port lost change
 					// Call Alarm One Air Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
 						g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+#else // Updated
+					if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+					{
+						// Call Alarm One Air Level
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl, 
+														g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+					}
+					else
+					{
+						// Call Alarm One Air Level
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl,
+														g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+					}
+#endif
 				}
 			break;
 
@@ -361,7 +390,18 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
+#if 0 // Port lost change
 						g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MIN_VALUE;
+#else // Updated
+						if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+						{
+							g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MIN_VALUE;
+						}
+						else
+						{
+							g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MB_MIN_VALUE;
+						}
+#endif
 					}
 
 					// Call Alarm One Seismic Level
@@ -514,12 +554,38 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
+#if 0 // Port lost change
 						g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MIN_VALUE;
+#else // Updated
+						if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+						{
+							g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MIN_VALUE;
+						}
+						else
+						{
+							g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MB_MIN_VALUE;
+						}
+#endif
 					}
 
+#if 0 // Port lost change
 					// Call Alarm One Air Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
 						g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+#else // Updated
+					if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+					{
+						// Call Alarm One Air Level
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
+														g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+					}
+					else
+					{
+						// Call Alarm One Air Level
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
+														g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+					}
+#endif
 				}
 			break;
 
@@ -570,7 +636,18 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
+#if 0 // Port lost change
 						g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MIN_VALUE;
+#else // Updated
+						if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+						{
+							g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MIN_VALUE;
+						}
+						else
+						{
+							g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MB_MIN_VALUE;
+						}
+#endif
 					}
 
 					// Call Alarm Two Seismic Level
@@ -1153,8 +1230,12 @@ void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
 //*****************************************************************************
 #if 0 // ns7100
 #define CONFIG_MENU_ENTRIES 31
-#else
+#else // ns8100
+#if 0 // Port lost change
 #define CONFIG_MENU_ENTRIES 27
+#else // Updated
+#define CONFIG_MENU_ENTRIES 28
+#endif
 #endif
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
@@ -1186,6 +1267,9 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, PRINT_MONITOR_LOG_TEXT,		NO_TAG, {PRINT_MONITOR_LOG}},
 #endif
 {NO_TAG, 0, REPORT_DISPLACEMENT_TEXT,	NO_TAG, {REPORT_DISPLACEMENT}},
+#if 1 // Updated (Port lost change)
+{NO_TAG, 0, REPORT_PEAK_ACC_TEXT,		NO_TAG, {REPORT_PEAK_ACC}},
+#endif
 {NO_TAG, 0, SENSOR_GAIN_TYPE_TEXT,		NO_TAG, {SENSOR_GAIN_TYPE}},
 {NO_TAG, 0, SERIAL_NUMBER_TEXT,			NO_TAG, {SERIAL_NUMBER}},
 {NO_TAG, 0, SUMMARIES_EVENTS_TEXT,		NO_TAG, {SUMMARIES_EVENTS}},
@@ -1322,6 +1406,12 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			case (REPORT_DISPLACEMENT):
 				SETUP_USER_MENU_MSG(&displacementMenu, g_helpRecord.report_displacement);
 			break;
+
+#if 1 // Updated (Port lost change)
+			case (REPORT_PEAK_ACC):
+				SETUP_USER_MENU_MSG(&peakAccMenu, g_helpRecord.report_peak_acceleration);
+			break;
+#endif
 
 			case (SENSOR_GAIN_TYPE):
 				displaySensorType();
@@ -1495,7 +1585,11 @@ void eraseEventsMenuHandler(uint8 keyPressed, void* data)
 		}
 		else
 		{
+#if 0 // Port lost change
 			SETUP_USER_MENU_MSG(&eraseSettingsMenu, YES);
+#else // Updated
+			SETUP_USER_MENU_MSG(&eraseSettingsMenu, NO);
+#endif
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -1831,6 +1925,7 @@ void languageMenuHandler(uint8 keyPressed, void* data)
 			case FRENCH_LANG:
 			case ITALIAN_LANG:
 			case GERMAN_LANG:
+			case SPANISH_LANG:
 					g_helpRecord.lang_mode = (uint8)languageMenu[newItemIndex].data;
 					build_languageLinkTable(g_helpRecord.lang_mode);
 					saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
@@ -2000,6 +2095,44 @@ void monitorLogMenuHandler(uint8 keyPressed, void* data)
 	else if(keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&configMenu, MONITOR_LOG);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Peak Acceleration Menu
+//=============================================================================
+//*****************************************************************************
+#define PEAK_ACC_MENU_ENTRIES 4
+USER_MENU_STRUCT peakAccMenu[PEAK_ACC_MENU_ENTRIES] = {
+{NO_TAG, 0, REPORT_PEAK_ACC_TEXT, NO_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, PEAK_ACC_MENU_ENTRIES, TITLE_LEFT_JUSTIFIED, DEFAULT_ITEM_2)}},
+{ITEM_1, 0, YES_TEXT,   NO_TAG, {YES}},
+{ITEM_2, 0, NO_TEXT, NO_TAG, {NO}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&peakAccMenuHandler}}
+};
+
+//-------------------------------
+// Peak Acceleration Menu Handler
+//-------------------------------
+void peakAccMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if(keyPressed == ENTER_KEY)
+	{
+		g_helpRecord.report_peak_acceleration = (uint8)peakAccMenu[newItemIndex].data;
+
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if(keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu, REPORT_PEAK_ACC);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -2649,14 +2782,57 @@ void unitsOfAirMenuHandler(uint8 keyPressed, void* data)
 	INPUT_MSG_STRUCT mn_msg = {0, 0};
 	uint16 newItemIndex = *((uint16*)data);
 
+#if 0 // Port lost change
 	if (keyPressed == ENTER_KEY)
 	{
 		g_helpRecord.units_of_air = (uint8)unitsOfAirMenu[newItemIndex].data;
+#else // Updated
+	uint16 changeFlag = FALSE;
+
+	if(keyPressed == ENTER_KEY)
+	{
+		if (!(g_helpRecord.units_of_air == (uint8)unitsOfAirMenu[newItemIndex].data))
+		{
+			changeFlag = TRUE;
+		}
+
+		g_helpRecord.units_of_air = (uint8)unitsOfAirMenu[newItemIndex].data;
+
+		if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+		{
+			g_sensorInfoPtr->airUnitsFlag = DB_TYPE;
+			g_sensorInfoPtr->ameasurementRatio = (float)DECIBEL;
+
+			if(changeFlag == TRUE)
+			{
+				g_triggerRecord.trec.airTriggerLevel = convertMBtoDB(g_triggerRecord.trec.airTriggerLevel);
+				g_helpRecord.alarm_one_air_min_lvl = convertMBtoDB(g_helpRecord.alarm_one_air_min_lvl);
+				g_helpRecord.alarm_two_air_min_lvl = convertMBtoDB(g_helpRecord.alarm_two_air_min_lvl);
+				g_helpRecord.alarm_one_air_lvl = convertMBtoDB(g_helpRecord.alarm_one_air_lvl);
+				g_helpRecord.alarm_two_air_lvl = convertMBtoDB(g_helpRecord.alarm_two_air_lvl);
+			}
+		}
+		else // g_helpRecord.units_of_air == Millibar
+		{
+			g_sensorInfoPtr->airUnitsFlag = MB_TYPE;
+			g_sensorInfoPtr->ameasurementRatio = (float)MILLIBAR;
+
+			if (changeFlag == TRUE)
+			{
+				g_triggerRecord.trec.airTriggerLevel = convertDBtoMB(g_triggerRecord.trec.airTriggerLevel);
+				g_helpRecord.alarm_one_air_min_lvl = convertDBtoMB(g_helpRecord.alarm_one_air_min_lvl);
+				g_helpRecord.alarm_two_air_min_lvl = convertDBtoMB(g_helpRecord.alarm_two_air_min_lvl);
+				g_helpRecord.alarm_one_air_lvl = convertDBtoMB(g_helpRecord.alarm_one_air_lvl);
+				g_helpRecord.alarm_two_air_lvl = convertDBtoMB(g_helpRecord.alarm_two_air_lvl);
+			}
+		}
+#endif
+
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 #if 0 // ns7100
 		SETUP_MENU_MSG(CAL_SETUP_MENU);
-#else
+#else // ns8100
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 #endif
 	}
@@ -2665,7 +2841,7 @@ void unitsOfAirMenuHandler(uint8 keyPressed, void* data)
 #if 0 // ns7100
 		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
 #else // ns8100
-		SETUP_USER_MENU_MSG(&configMenu, REPORT_DISPLACEMENT);
+		SETUP_USER_MENU_MSG(&configMenu, UNITS_OF_AIR);
 #endif
 	}
 
@@ -2788,7 +2964,11 @@ void zeroEventNumberMenuHandler(uint8 keyPressed, void* data)
 			overlayMessage(getLangText(SUCCESS_TEXT), getLangText(EVENT_NUMBER_ZEROING_COMPLETE_TEXT), (2 * SOFT_SECS));
 		}
 
+#if 0 // Port lost change
 		SETUP_USER_MENU_MSG(&eraseSettingsMenu, YES);
+#else // Updated
+		SETUP_USER_MENU_MSG(&eraseSettingsMenu, NO);
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{

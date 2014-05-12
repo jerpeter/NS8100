@@ -1375,6 +1375,7 @@ void displayFlashUsageStats(void)
 
 	getFlashUsageStats(&usage);
 
+#if 0 // Port lost change
 	if (usage.sizeUsed < 1000)
 		sprintf(&sizeUsedStr[0], "USED: %3.1fKB %d%%", ((float)usage.sizeUsed / (float)1000), usage.percentUsed);
 	else if (usage.sizeUsed < 1000000)
@@ -1401,6 +1402,32 @@ void displayFlashUsageStats(void)
 				usage.waveEventsLeft, usage.barHoursLeft);
 
 	messageBox("FLASH USAGE STATS", (char*)message, MB_OK);
+#else // Updated
+	if (usage.sizeUsed < 1000)
+		sprintf(&sizeUsedStr[0], "%s: %3.1fKB %d%%", getLangText(USED_TEXT),((float)usage.sizeUsed / (float)1000), usage.percentUsed);
+	else if (usage.sizeUsed < 1000000)
+		sprintf(&sizeUsedStr[0], "%s: %3luKB %d%%", getLangText(USED_TEXT),(usage.sizeUsed / 1000), usage.percentUsed);
+	else
+		sprintf(&sizeUsedStr[0], "%s: %3.1fMB %d%%", getLangText(USED_TEXT),((float)usage.sizeUsed / (float)1000000), usage.percentUsed);
+
+	if (usage.sizeFree < 1000)
+		sprintf(&sizeFreeStr[0], "%s: %3.1fKB %d%%", getLangText(FREE_TEXT),((float)usage.sizeFree / (float)1000), usage.percentFree);
+	else if (usage.sizeFree < 1000000)
+		sprintf(&sizeFreeStr[0], "%s: %3luKB %d%%", getLangText(FREE_TEXT),(usage.sizeFree / 1000), usage.percentFree);
+	else
+		sprintf(&sizeFreeStr[0], "%s: %3.1fMB %d%%", getLangText(FREE_TEXT),((float)usage.sizeFree / (float)1000000), usage.percentFree);
+
+	sprintf(&message[0], "%s       %s %s %s: %s", getLangText(EVENT_DATA_TEXT),sizeUsedStr, sizeFreeStr, getLangText(WRAPPED_TEXT),(usage.wrapped == YES) ? "YES" : "NO");
+
+	messageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
+
+	if (g_helpRecord.flash_wrapping == NO)
+		sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(SPACE_REMAINING_TEXT),getLangText(WAVEFORMS_TEXT),usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT),usage.barHoursLeft);
+	else // Wrapping is on
+		sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(BEFORE_OVERWRITE_TEXT),getLangText(WAVEFORMS_TEXT),usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT),usage.barHoursLeft);
+
+	messageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
+#endif
 }
 
 //=============================================================================
@@ -1427,8 +1454,15 @@ void displayAutoDialInfo(void)
 				__autoDialoutTbl.lastConnectTime.sec);
 	}
 
+#if 0 // Port lost change
 	sprintf(&message[0], "LAST DL EVT: %d, LAST REC: %d, LAST CONNECT: %s",
 			__autoDialoutTbl.lastDownloadedEvent, getLastStoredEventNumber(), dateStr);
 
 	messageBox("AUTO DIALOUT INFO", (char*)message, MB_OK);
+#else // Updated
+	sprintf(&message[0], "%s: %d, %s: %d, %s: %s", getLangText(LAST_DIAL_EVENT_TEXT),__autoDialoutTbl.lastDownloadedEvent,
+			getLangText(LAST_RECEIVED_TEXT), getLastStoredEventNumber(), getLangText(LAST_CONNECTED_TEXT),dateStr);
+
+	messageBox(getLangText(AUTO_DIALOUT_INFO_TEXT), (char*)message, MB_OK);
+#endif
 }

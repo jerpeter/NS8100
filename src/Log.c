@@ -152,6 +152,11 @@ void newMonitorLogEntry(uint8 mode)
 	__monitorLogTbl[__monitorLogTblIndex].startEventNumber = g_nextEventNumberToUse;
 	__monitorLogTbl[__monitorLogTblIndex].status = PARTIAL_LOG_ENTRY;
 	
+	__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+	__monitorLogTbl[__monitorLogTblIndex].soundTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+	__monitorLogTbl[__monitorLogTblIndex].sensor_type =  g_factorySetupRecord.sensor_type;
+	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
+
 	byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
 	convertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
 }

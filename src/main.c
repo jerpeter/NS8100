@@ -1209,8 +1209,11 @@ extern void SetupADChannelConfig(uint32 sampleRate);
 #if 0
 	//-------------------------------------------------------------------------
 	// Test full power down and halt
-	spi_reset(&AVR32_SPI1);
 
+	// Turn on the red keypad LED while loading
+	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | NO_LED_PINS));
+
+	spi_reset(&AVR32_SPI1);
 	gpio_clr_gpio_pin(AVR32_SPI1_MISO_0_0_PIN);
 	gpio_clr_gpio_pin(AVR32_SPI1_MOSI_0_0_PIN);
 	gpio_clr_gpio_pin(AVR32_SPI1_NPCS_3_PIN);
@@ -1900,7 +1903,11 @@ int main(void)
 			(g_modemStatus.xferState == NOP_CMD))
 		{
 			// Sleepy time
+#if 0 // Normal
 			SLEEP(AVR32_IDLE_MODE);
+#else // Test
+			SLEEP(AVR32_PM_SMODE_STANDBY);
+#endif
 		}
 	}    
 	// End of NS8100 Main

@@ -499,9 +499,19 @@ extern void BootLoadManager(void);
 					}
 					else if (keyPressed == HELP_KEY)
 					{
+#if 0 // Test
+						powerControl(LCD_CONTRAST_ENABLE, OFF);
+						clearLcdDisplay();
+						clearControlLinesLcdDisplay();
+						LcdClearPortReg();
+						powerControl(LCD_POWER_ENABLE, OFF);
+#endif
+
+#if 0 // Test
 						//g_triggerRecord.trec.sample_rate += 1024;
 						//copyValidFlashEventSummariesToRam();
 						//powerControl(POWER_OFF, ON);
+#endif					
 					}
 					else if (keyPressed == KEY_BACKLIGHT)
 					{
