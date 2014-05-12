@@ -55,7 +55,7 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			//debug("Power Off: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-#if 0 // Skip re-init since it was fond to be causing a lockup
+#if 1 // Skip re-init since it was fond to be causing a lockup
 				init_mcp23018(IO_ADDRESS_KPD);
 #endif				
 				state = read_mcp23018(IO_ADDRESS_KPD, GPIOA);

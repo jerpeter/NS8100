@@ -204,14 +204,18 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					mainMnScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (MINUS_KEY): 
-#if 0 // Test
+#if 1 // Test
 					powerDownSDCard();
+				    gpio_enable_gpio_pin(AVR32_PIN_PA19);
+					gpio_clr_gpio_pin(AVR32_PIN_PA19);
 #else
 					adjustLcdContrast(DARKER);
 #endif
 					break;
 				case (PLUS_KEY): 
-#if 0 // Test
+#if 1 // Test
+				    //gpio_set_gpio_pin(AVR32_PIN_PB19);
+					gpio_enable_module_pin(AVR32_PIN_PA19, AVR32_SPI1_NPCS_2_0_FUNCTION);
 					powerUpSDCardAndInitFat32();
 #else
 					adjustLcdContrast(LIGHTER); 

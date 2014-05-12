@@ -909,8 +909,13 @@ void InitSoftwareSettings_NS8100(void)
     debug("Init Setup Menu Defaults...\n");
 	setupMnDef();
 
+#if 1 // fix_ns8100
+	// Have to recall Keypad init otherwise interrupt hangs
+	InitKeypad();
+#endif
+
 	// Check for Timer mode activation
-#if 0 // fix_ns8100
+#if 1 // fix_ns8100
     debug("Init Timer Mode Check...\n");
 	if (timerModeActiveCheck() == TRUE)
 	{
@@ -950,11 +955,6 @@ void InitSoftwareSettings_NS8100(void)
 	// Reset LCD timers
 	resetSoftTimer(DISPLAY_ON_OFF_TIMER_NUM);
 	resetSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM);
-
-#if 1 // fix_ns8100
-	// Have to recall Keypad init otherwise interrupt hangs
-	InitKeypad();
-#endif
 
 	// Turn on the Green keypad LED when system init complete
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
@@ -1042,6 +1042,78 @@ int main(void)
 	}
 #endif
 
+#if 0 // Test
+	gpio_enable_gpio_pin(AVR32_PIN_PA14);
+	gpio_enable_gpio_pin(AVR32_PIN_PA18);
+	gpio_enable_gpio_pin(AVR32_PIN_PA19);
+	gpio_enable_gpio_pin(AVR32_PIN_PA20);
+
+	while (1)
+	{
+		debug("SPI1 CS's 0\n");
+		//gpio_clr_gpio_pin(AVR32_PIN_PA14);
+		//gpio_clr_gpio_pin(AVR32_PIN_PA18);
+		gpio_clr_gpio_pin(AVR32_PIN_PA19);
+		//gpio_clr_gpio_pin(AVR32_PIN_PA20);
+
+		spi_selectChip(&AVR32_SPI1, 2);
+		// Small delay before the RTC device is accessible
+		soft_usecWait(500);
+unsigned int i;
+		for (i = 0; i < 10000; i++)
+			spi_write(&AVR32_SPI1, 0x0000);
+		spi_unselectChip(&AVR32_SPI1, 2);
+
+		__monitorLogTblKey = 0;
+		initMonitorLog();
+
+		soft_usecWait(3 * SOFT_SECS);
+
+		debug("SPI1 CS's 1\n");
+		//gpio_set_gpio_pin(AVR32_PIN_PB14);
+		gpio_set_gpio_pin(AVR32_PIN_PB18);
+		//gpio_set_gpio_pin(AVR32_PIN_PB19);
+		//gpio_set_gpio_pin(AVR32_PIN_PB20);
+
+		soft_usecWait(3 * SOFT_SECS);
+	}
+
+#endif
+
+#if 0 // Test
+	EnableRtcAlarm(0, 0, 0, 0);
+
+	static RTC_MEM_MAP_STRUCT rtcMap;
+	static uint8 clearAlarmFlag = 0x03; //0xEF; // Logic 0 on the bit will clear Alarm flag, bit 4
+	static uint32 counter = 0;
+
+	rtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
+	
+	if (rtcMap.control_2 & 0x10)
+	{
+		debug("RTC Alarm Flag indicates alarm condition raised. (0x%x, 0x%x, 0x%x)\n", rtcMap.control_1, rtcMap.control_2, rtcMap.control_3);
+		
+		rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+		debug("RTC Alarm Flag being cleared\n");
+
+		rtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
+
+		if (rtcMap.control_2 & 0x10)
+		{
+			debugWarn("RTC Alarm flag was not cleared successfully! (0x%x, 0x%x, 0x%x)\n", rtcMap.control_1, rtcMap.control_2, rtcMap.control_3);
+		}
+		else
+		{
+			debug("RTC Alarm Flag cleared. (0x%x, 0x%x, 0x%x)\n", rtcMap.control_1, rtcMap.control_2, rtcMap.control_3);
+		}		
+	}
+	else
+	{
+		rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+		debug("RTC Alarm Flag does not show an alarm condition. (0x%x, 0x%x, 0x%x)\n", rtcMap.control_1, rtcMap.control_2, rtcMap.control_3);
+	}
+#endif
+
  	// ==============
 	// Executive loop
 	// ==============
@@ -1049,13 +1121,48 @@ int main(void)
 	{
 		g_execCycles++;
 
+#if 0 // Test
+		if (counter)
+		{
+			counter--;
+			
+			if (counter == 0)
+			{
+				rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+				debug("RTC Alarm Flag being cleared\n");
+
+				rtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
+
+				if (rtcMap.control_2 & 0x10)
+				{
+					debugWarn("RTC Alarm flag was not cleared successfully! (0x%x, 0x%x, 0x%x)\n", rtcMap.control_1, rtcMap.control_2, rtcMap.control_3);
+				}
+				else
+				{
+					debug("RTC Alarm Flag cleared. (0x%x, 0x%x, 0x%x)\n", rtcMap.control_1, rtcMap.control_2, rtcMap.control_3);
+				}		
+			}
+		}
+		else
+		{
+			rtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
+		
+			if (rtcMap.control_2 & 0x10)
+			{
+				debug("RTC Alarm Flag indicates alarm condition raised. (0x%x, 0x%x, 0x%x)\n", rtcMap.control_1, rtcMap.control_2, rtcMap.control_3);
+				counter = 1000000;
+			}
+		}
+		
+#endif
+
 		// Debug Test routines
 		//craftTestMenuThruDebug();
 
 		//debugRaw("k");
 		//testKeypad();
 
-#if 1
+#if 1 // Normal operational cycle
 		// Handle system events
 	    SystemEventManager();
 

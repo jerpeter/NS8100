@@ -892,7 +892,7 @@ uint8 getDayOfWeek(uint8 year, uint8 month, uint8 day)
 	// Add in days passed of current month offset by 1 due to day 1 as a reference
 	numOfDaysPassed += day - 1;
 
-	// For each month passed, add in number of days passed
+	// For each month passed in the current year, add in number of days passed for the specific month
 	while (--month > 0)
 	{
 		switch (month)
@@ -917,7 +917,7 @@ uint8 getDayOfWeek(uint8 year, uint8 month, uint8 day)
 	// Mod to find day offset from reference
 	dayOfWeek = (uint8)(numOfDaysPassed % 7);
 
-	// If the day of the week is Saturday, set it to the day after Sunday (instead of the day before) due to the following calculation to convert to zero based weekdays
+	// If the day of the week is Saturday, set it to the day after Friday (based on RTC week starting Sunday)
 	if (dayOfWeek == 0) 
 		dayOfWeek = 7;
 

@@ -159,7 +159,7 @@ void processTimerMode(void)
 	// Check if the Timer mode activated during active dates but on an off day
 	else if ((g_helpRecord.timer_mode_freq == TIMER_MODE_WEEKDAYS) && ((currTime.weekday == SAT) || (currTime.weekday == SUN)))
 	{
-		debug("Timer Mode: Activated on off day (weekday freq)...\n");
+		debug("Timer Mode: Activated on an off day (weekday freq)...\n");
 		resetTimeOfDayAlarm();
 
 		// Turn unit off/sleep
@@ -310,7 +310,7 @@ void resetTimeOfDayAlarm(void)
 			startDay++;
 		}
 
-		// Check if the start day is eyond the number of days in the current month
+		// Check if the start day is beyond the number of days in the current month
 		if (startDay > g_monthTable[currTime.month].days)
 		{
 			// Subtract out the number of days in the current month to get the start day for next month
@@ -346,7 +346,7 @@ void resetTimeOfDayAlarm(void)
 		{
 			month = (uint8)(currTime.month + 1);
 		}
-		else // It's december and next month is Jan
+		else // It's December and next month is Jan
 		{
 			month = 1;
 		}

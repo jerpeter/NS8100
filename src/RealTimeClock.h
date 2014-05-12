@@ -42,13 +42,13 @@ enum {
 
 // Days
 enum {
-	SUN = 1,
-	MON, // 2
-	TUE, // 3
-	WED, // 4
-	THU, // 5
-	FRI, // 6
-	SAT  // 7
+	SUN = 0,
+	MON, // 1
+	TUE, // 2
+	WED, // 3
+	THU, // 4
+	FRI, // 5
+	SAT  // 6
 };
 
 typedef struct
@@ -493,6 +493,9 @@ typedef struct
 #define RTC_CLOCK_INTEGRITY	0x80
 #define RTC_24_HOUR_MODE	0x00
 #define RTC_12_HOUR_MODE	0x04
+#define RTC_TIMESTAMP_INT_ENABLE	0x04
+#define RTC_ALARM_INT_ENABLE		0x02
+#define RTC_COUNTDOWN_INT_ENABLE	0x01
 #define RTC_BCD_SECONDS_MASK	0x7F
 #define RTC_BCD_MINUTES_MASK	0x7F
 #define RTC_BCD_HOURS_MASK		0x3F

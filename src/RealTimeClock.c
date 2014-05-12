@@ -91,6 +91,10 @@ BOOLEAN InitExternalRtc(void)
 		debug("Ext RTC: Clock running and intergrity validated\n");
 	}
 
+	// Clear flags (write 0's) and disable interrupt generation for timestamp pin (currently not functioning as expected)
+	rtcMap.control_2 = (RTC_ALARM_INT_ENABLE);
+	rtcWrite(RTC_CONTROL_2_ADDR, 1, &rtcMap.control_2);
+
 	// Need to initialize the global Current Time
 	updateCurrentTime();
 
@@ -156,6 +160,7 @@ uint8 setRtcDate(DATE_TIME_STRUCT* time)
 			rtcDate.months = UINT8_CONVERT_TO_BCD(time->month, RTC_BCD_MONTHS_MASK);
 			rtcDate.days = UINT8_CONVERT_TO_BCD(time->day, RTC_BCD_DAYS_MASK);
 
+			// Calculate the weekday based on the new date
 			rtcDate.weekdays = getDayOfWeek(time->year, time->month, time->day);
 
 			//debug("Ext RTC: Apply Date: %x-%x-%x\n", rtcDate.months, rtcDate.days, rtcDate.years);
@@ -186,7 +191,11 @@ DATE_TIME_STRUCT getRtcTime(void)
 	time.year = BCD_CONVERT_TO_UINT8(translateTime.years, RTC_BCD_YEARS_MASK);
 	time.month = BCD_CONVERT_TO_UINT8(translateTime.months, RTC_BCD_MONTHS_MASK);
 	time.day = BCD_CONVERT_TO_UINT8(translateTime.days, RTC_BCD_DAYS_MASK);
+#if 0 // ns7100
 	time.weekday = getDayOfWeek(time.year, time.month, time.day);
+#else // ns8100
+	time.weekday = BCD_CONVERT_TO_UINT8(translateTime.weekdays, RTC_BCD_WEEKDAY_MASK);
+#endif
 	time.hour = BCD_CONVERT_TO_UINT8(translateTime.hours, RTC_BCD_HOURS_MASK);
 	time.min = BCD_CONVERT_TO_UINT8(translateTime.minutes, RTC_BCD_MINUTES_MASK);
 	time.sec = BCD_CONVERT_TO_UINT8(translateTime.seconds, RTC_BCD_SECONDS_MASK);
@@ -323,7 +332,7 @@ void DisableRtcAlarm(void)
 {
 	RTC_ALARM_STRUCT disableAlarm;
 
-	uint8 clearAlarmFlag = 0xEF; // Logic 0 on the bit will clear Alarm flag, bit 4
+	uint8 clearAlarmFlag = 0xEA; // Logic 0 on the bit will clear Alarm flag, bit 4
 
 	disableAlarm.second_alarm = RTC_DISABLE_ALARM;
 	disableAlarm.minute_alarm = RTC_DISABLE_ALARM;
@@ -338,6 +347,7 @@ void DisableRtcAlarm(void)
 	rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
 }
 
+#if 0 // Normal
 /****************************************
 *	Function:    EnableRtcAlarm
 *	Purpose:
@@ -346,7 +356,7 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 {
 	RTC_ALARM_STRUCT enableAlarm;
 
-	uint8 clearAlarmFlag = 0xEF; // Logic 0 on the bit will clear Alarm flag, bit 4
+	uint8 clearAlarmFlag = 0xEA; // Logic 0 on the bit will clear Alarm flag, bit 4
 
 	enableAlarm.day_alarm = (UINT8_CONVERT_TO_BCD(day, RTC_BCD_DAYS_MASK) | RTC_ENABLE_ALARM);
 	enableAlarm.hour_alarm = (UINT8_CONVERT_TO_BCD(hour, RTC_BCD_HOURS_MASK) | RTC_ENABLE_ALARM);
@@ -359,6 +369,29 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 	// Clear the Alarm flag
 	rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
 }
+#else // Test
+/****************************************
+*	Function:    EnableRtcAlarm
+*	Purpose:
+****************************************/
+void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
+{
+	RTC_ALARM_STRUCT enableAlarm;
+
+	uint8 clearAlarmFlag = 0xEF; // Logic 0 on the bit will clear Alarm flag, bit 4
+
+	enableAlarm.day_alarm = RTC_DISABLE_ALARM;
+	enableAlarm.hour_alarm = RTC_DISABLE_ALARM;
+	enableAlarm.minute_alarm = RTC_DISABLE_ALARM;
+	enableAlarm.second_alarm = (UINT8_CONVERT_TO_BCD(second, RTC_BCD_SECONDS_MASK) | RTC_ENABLE_ALARM);
+	enableAlarm.weekday_alarm = RTC_DISABLE_ALARM;
+	
+	rtcWrite(RTC_SECOND_ALARM_ADDR, 5, (uint8*)&enableAlarm);
+
+	// Clear the Alarm flag
+	rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+}
+#endif
 
 /****************************************
 *	Function:    
