@@ -2782,48 +2782,47 @@ void unitsOfAirMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_helpRecord.units_of_air = (uint8)unitsOfAirMenu[newItemIndex].data;
 #else // Updated
-	uint16 changeFlag = FALSE;
-
 	if(keyPressed == ENTER_KEY)
 	{
-		if (!(g_helpRecord.units_of_air == (uint8)unitsOfAirMenu[newItemIndex].data))
+		if (g_helpRecord.units_of_air != (uint8)unitsOfAirMenu[newItemIndex].data)
 		{
-			changeFlag = TRUE;
-		}
+			g_helpRecord.units_of_air = (uint8)unitsOfAirMenu[newItemIndex].data;
 
-		g_helpRecord.units_of_air = (uint8)unitsOfAirMenu[newItemIndex].data;
-
-		if (g_helpRecord.units_of_air == DECIBEL_TYPE)
-		{
-			g_sensorInfoPtr->airUnitsFlag = DB_TYPE;
-			g_sensorInfoPtr->ameasurementRatio = (float)DECIBEL;
-
-			if(changeFlag == TRUE)
+			// Check if the units of air was changed to dB, which means the prior mb values need to be converted
+			if (g_helpRecord.units_of_air == DECIBEL_TYPE)
 			{
+				g_sensorInfoPtr->airUnitsFlag = DB_TYPE;
+				g_sensorInfoPtr->ameasurementRatio = (float)DECIBEL;
+
+				debug("Units of Air: Convert from MB value %f\n", (float)((float)g_triggerRecord.trec.airTriggerLevel / (float)10000));
+
 				g_triggerRecord.trec.airTriggerLevel = convertMBtoDB(g_triggerRecord.trec.airTriggerLevel);
 				g_helpRecord.alarm_one_air_min_lvl = convertMBtoDB(g_helpRecord.alarm_one_air_min_lvl);
 				g_helpRecord.alarm_two_air_min_lvl = convertMBtoDB(g_helpRecord.alarm_two_air_min_lvl);
 				g_helpRecord.alarm_one_air_lvl = convertMBtoDB(g_helpRecord.alarm_one_air_lvl);
 				g_helpRecord.alarm_two_air_lvl = convertMBtoDB(g_helpRecord.alarm_two_air_lvl);
-			}
-		}
-		else // g_helpRecord.units_of_air == Millibar
-		{
-			g_sensorInfoPtr->airUnitsFlag = MB_TYPE;
-			g_sensorInfoPtr->ameasurementRatio = (float)MILLIBAR;
 
-			if (changeFlag == TRUE)
+				debug("Units of Air: Convert to DB value %d\n", g_triggerRecord.trec.airTriggerLevel);
+			}
+			else // g_helpRecord.units_of_air == MILLIBAR_TYPE, units of air now mb, change from prior dB
 			{
+				g_sensorInfoPtr->airUnitsFlag = MB_TYPE;
+				g_sensorInfoPtr->ameasurementRatio = (float)MILLIBAR;
+
+				debug("Units of Air: Convert from DB value %d\n", g_triggerRecord.trec.airTriggerLevel);
+
 				g_triggerRecord.trec.airTriggerLevel = convertDBtoMB(g_triggerRecord.trec.airTriggerLevel);
 				g_helpRecord.alarm_one_air_min_lvl = convertDBtoMB(g_helpRecord.alarm_one_air_min_lvl);
 				g_helpRecord.alarm_two_air_min_lvl = convertDBtoMB(g_helpRecord.alarm_two_air_min_lvl);
 				g_helpRecord.alarm_one_air_lvl = convertDBtoMB(g_helpRecord.alarm_one_air_lvl);
 				g_helpRecord.alarm_two_air_lvl = convertDBtoMB(g_helpRecord.alarm_two_air_lvl);
+
+				debug("Units of Air: Convert to MB value %f\n", (float)((float)g_triggerRecord.trec.airTriggerLevel / (float)10000));
 			}
+
+			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 		}
 #endif
-
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 #if 0 // ns7100
 		SETUP_MENU_MSG(CAL_SETUP_MENU);

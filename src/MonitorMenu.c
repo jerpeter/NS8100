@@ -1127,10 +1127,10 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 #if 1 // Port lost change
 					if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
 #else // Incorrect - Updated
-					if (g_sensorInfoPtr->airUnitsFlag == DECIBEL_TYPE)
+					if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
 #endif
 					{
-						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), hexToMillBars(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), hexToMB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 					}
 					else // Report Air in DB
 					{
@@ -1152,10 +1152,10 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 #if 1 // Port lost change
 							if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
 #else // Incorrect - Updated
-							if (g_sensorInfoPtr->airUnitsFlag == DECIBEL_TYPE)
+							if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
 #endif
 							{
-								sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+								sprintf(buff, "AIR %0.3f mb ", hexToMB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
 							else // Report Air in DB
 							{
@@ -1173,10 +1173,10 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 #if 1 // Port lost change
 							if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
 #else // Incorrect - Updated
-							if (g_sensorInfoPtr->airUnitsFlag == DECIBEL_TYPE)
+							if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
 #endif
 							{
-								sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+								sprintf(buff, "AIR %0.3f mb ", hexToMB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
 							else // Report Air in DB
 							{
@@ -1194,7 +1194,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 						if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
 						{
-							sprintf(buff, "AIR %0.3f mb ", hexToMillBars(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							sprintf(buff, "AIR %0.3f mb ", hexToMB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 						}
 						else // Report Air in DB
 						{

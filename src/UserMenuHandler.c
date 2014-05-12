@@ -1135,9 +1135,9 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 					// Set the specifications line for the integer type
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%lu-%lu%s, N)", g_userMenuCacheData.intMinValue, g_userMenuCacheData.intMaxValue, "Db");
 				}
-				else
+				else // MILLIBAR_TYPE
 				{
-					// Set the specifications line for the integer type
+					// Set the specifications line for the float type
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.3f-%.3f%s,N)", g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, "mb");
 				}
 #endif
@@ -1158,7 +1158,7 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 						// Print the data value
 						sprintf(g_userMenuCachePtr[tempRow].text, "%lu", g_userMenuCacheData.numLongData);
 					}
-					else
+					else // MILLIBAR_TYPE
 					{
 						// Print the data value
 						sprintf(g_userMenuCachePtr[tempRow].text, "%.4f", g_userMenuCacheData.floatData);

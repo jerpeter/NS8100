@@ -134,8 +134,13 @@ typedef struct
 // To eliminate C warning when the variable is not used.
 #define UNUSED(p) ((void)p)
 
-#define	DB_CONVERSION_VALUE		5000000
-#define MB_CONVERSION_VALUE		1
+#define	DB_CONVERSION_VALUE			5000000
+#if 0 // Port mistake?
+#define MB_CONVERSION_VALUE			1
+#else // Corrected value
+#define MB_CONVERSION_VALUE			400
+#define ADJUSTED_MB_TO_HEX_VALUE	25
+#endif
 
 enum {
 	INPUT_BUFFER_EMPTY = 0,
@@ -239,12 +244,12 @@ void spinBar(void);
 // Conversion routines
 uint16 swapInt(uint16);
 float hexToDB(uint16, uint8, uint16);
-float hexToMillBars(uint16, uint8, uint16);
+float hexToMB(uint16, uint8, uint16);
 float hexToPsi(uint16, uint8, uint16);
 uint16 dbToHex(uint16);
-float mbToHex(float);
-uint16 convertDBtoMB(uint32);
-uint16 convertMBtoDB(uint32);
+uint16 mbToHex(float);
+uint32 convertDBtoMB(uint32);
+uint32 convertMBtoDB(uint32);
 
 // PIT timers
 void startPitTimer(PIT_TIMER timer);

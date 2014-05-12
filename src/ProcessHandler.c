@@ -48,7 +48,7 @@ extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 ///	Prototypes
 ///----------------------------------------------------------------------------
 uint16 seisTriggerConvert(float);
-uint16 airTriggerConvert(uint16 airTriggerLevel);
+uint16 airTriggerConvert(uint32 airTriggerLevel);
 void dataIsrInit(void);
 void startDataCollection(uint32 sampleRate);
 
@@ -137,7 +137,15 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	{
 		debug("--- Waveform Mode Settings ---\n");
 		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
-		debug("\tSeismic Trigger Count: 0x%x, Air Trigger Level: 0x%x db\n", trig_mn.seismicTriggerLevel, trig_mn.airTriggerLevel);
+
+		if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+		{
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, trig_mn.airTriggerLevel, g_airTriggerCount);
+		}
+		else
+		{
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, ((float)trig_mn.airTriggerLevel / (float)10000), g_airTriggerCount);
+		}
 	}
 	else if (op_mode == BARGRAPH_MODE)
 	{
@@ -148,7 +156,16 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	{
 		debug("--- Combo Mode Settings ---\n");
 		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
-		debug("\tSeismic Trigger Count: 0x%x, Air Trigger Level: 0x%x db\n", trig_mn.seismicTriggerLevel, trig_mn.airTriggerLevel);
+
+		if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+		{
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, trig_mn.airTriggerLevel, g_airTriggerCount);
+		}
+		else
+		{
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, ((float)trig_mn.airTriggerLevel / (float)10000), g_airTriggerCount);
+		}
+
 		debug("\tBar Interval: %d secs, Summary Interval: %d mins\n", g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));
 	}
 	else if (op_mode == MANUAL_TRIGGER_MODE)
@@ -470,29 +487,29 @@ uint16 seisTriggerConvert(float seismicTriggerLevel)
 *	Function:	 airTriggerConvert
 *	Purpose:
 ****************************************/
-uint16 airTriggerConvert(uint16 airTriggerDbToConvert)
+uint16 airTriggerConvert(uint32 airTriggerToConvert)
 {
 	// Check if the air trigger level is not no trigger and not manual trigger
-	if ((airTriggerDbToConvert != NO_TRIGGER_CHAR) && (airTriggerDbToConvert != MANUAL_TRIGGER_CHAR))
+	if ((airTriggerToConvert != NO_TRIGGER_CHAR) && (airTriggerToConvert != MANUAL_TRIGGER_CHAR))
 	{
 #if 0 // Port lost change
 		// Convert the float db to an offset from 0 to 2048 and upscale to 16-bit
-		airTriggerDbToConvert = (dbToHex(airTriggerDbToConvert) * 16);
+		airTriggerToConvert = (dbToHex(airTriggerToConvert) * 16);
 #else // Updated
 		if (g_helpRecord.units_of_air == DECIBEL_TYPE)
 		{
-			// Convert the float mb to an offset from 0 to 2048 and upscale to 16-bit
-			airTriggerDbToConvert = (uint32)(dbToHex((float)airTriggerDbToConvert) * 16);
+			// Convert dB to an offset from 0 to 2048 and upscale to 16-bit
+			airTriggerToConvert = (uint32)(dbToHex(airTriggerToConvert) * 16);
 		}
 		else
 		{
-			// Convert the float db to an offset from 0 to 2048 and upscale to 16-bit
-			airTriggerDbToConvert = (uint32)(mbToHex((float)airTriggerDbToConvert) * 16);
+			// Convert mb to an offset from 0 to 2048 and upscale to 16-bit
+			airTriggerToConvert = (uint32)(mbToHex(airTriggerToConvert) * 16);
 		}
 #endif
 	}
 
-	return (airTriggerDbToConvert);
+	return (airTriggerToConvert);
 }
 
 /****************************************
@@ -678,7 +695,7 @@ void bargraphForcedCalibration(void)
 
 	g_bargraphForcedCal = NO;
 
-	// Reset the mode back to bargraph
+	// Reset the mode back to Bargraph
 	g_triggerRecord.op_mode = pendingMode;
 
 	updateMonitorLogEntry();

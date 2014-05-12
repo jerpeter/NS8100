@@ -942,13 +942,13 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    // Air
 	    byteSet(&buff[0], 0, sizeof(buff));
 
-#if 1 // Port lost change
+#if 0 // Port lost change
 		if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
-#else // Not Updated - Incorrect reference
-		if(g_sensorInfoPtr->airUnitsFlag == DECIBEL_TYPE)
+#else // Updated
+		if(eventRecord->summary.parameters.airSensorType == MILLIBAR_TYPE)
 #endif
 		{
-		    sprintf(buff,"%0.3f mb", hexToMillBars(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+		    sprintf(buff,"%0.3f mb", hexToMB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}
 		else // Report Air in DB
 		{

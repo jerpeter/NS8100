@@ -104,7 +104,11 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 		}
 		else
 		{
-			debug("Air Trigger: %d\n", g_triggerRecord.trec.airTriggerLevel);
+			if (g_helpRecord.units_of_air == DECIBEL_TYPE) { debug("Air Trigger: %d dB\n", g_triggerRecord.trec.airTriggerLevel); }
+			else // MILLIBAR_TYPE (true value has been shifted up by 10,000)
+			{
+				debug("Air Trigger: %f mb\n", (float)g_triggerRecord.trec.airTriggerLevel / (float)10000);
+			}
 		}
 
 #if 0 // ns7100

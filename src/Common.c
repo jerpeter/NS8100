@@ -414,7 +414,7 @@ float hexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
 	float tempValue;
 
-	tempValue =  hexToMillBars(data, dataNormalizedFlag, bitAccuracyMidpoint) * (float)DB_CONVERSION_VALUE;
+	tempValue =  hexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint) * (float)DB_CONVERSION_VALUE;
 
 	if (tempValue > 0)
 	{
@@ -425,11 +425,11 @@ float hexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	hexToMillBars
+///	Function:	hexToMB
 ///	Purpose:	ABS((hexValue - 2048) * 25 / 10000), Where (hexValue - 2048)
 ///				is for the full spread between 0 - 4096
 ///----------------------------------------------------------------------------
-float hexToMillBars(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
+float hexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
 	float millibars;
 
@@ -462,7 +462,7 @@ float hexToPsi(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint
 {
 	float psi;
 
-	psi =  hexToMillBars(data, dataNormalizedFlag, bitAccuracyMidpoint);
+	psi =  hexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint);
 
 	psi = (float)((psi * (float)14.7)/(float)1013.25);
 
@@ -482,7 +482,7 @@ uint16 dbToHex(uint16 db)
 	dbValue = (double)dbValue / (double)DB_CONVERSION_VALUE;
 
 	// Do the conversion. millibar conversion 400 = 10000/25
-	dbValue = (double)dbValue * (double)400.0;
+	dbValue = (double)dbValue * (double)MB_CONVERSION_VALUE;
 
 	return (ceil(dbValue));
 }
@@ -492,58 +492,98 @@ uint16 dbToHex(uint16 db)
 *  Function:   mbToHex
 *  Purpose:
 ****************************************/
-float mbToHex(float mb)
+uint16 mbToHex(float mb)
 {
-	double mbValue = (double)mb / (double)25;
+	// Range is from 0 to 2048. Incoming mb is adjusted up by 10,000. Divide by 25 to bring to the correct range.
+	uint16 mbValue = ceil(mb / ADJUSTED_MB_TO_HEX_VALUE);
 
-	// Do the conversion. 1/.0000002 = 5000000
-	mbValue = (double)mbValue * (double)MB_CONVERSION_VALUE;
-
-	if (mbValue < (double)4.0)
-	{
-		mbValue = (double)4.0;
-	}
-
-	// Now adjust for the zero midpoint at 2048.
-	//mbValue += 0x800;
-
-	return( (float)mbValue );
+	return (mbValue);
 }
 
 /****************************************
 *  Function:   convertDBtoMB
 *  Purpose: Convert the db value to mb
 ****************************************/
-uint16 convertDBtoMB(uint32 level)
+uint32 convertDBtoMB(uint32 level)
 {
+#if 0 // Poor
 	uint16 hexData;
 	uint32 remainder;
 
-	if(level != NO_TRIGGER_CHAR)
+	if (level != NO_TRIGGER_CHAR)
 	{
-		hexData = (uint16)dbToHex((float) level);
-		level = (uint32)(10000 * hexToMillBars((uint16)hexData, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+		hexData = dbToHex(level);
+		level = (uint32)(10000 * hexToMB((uint16)hexData, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 		remainder = level % AIR_TRIGGER_MB_INC_VALUE;
 		hexData = (uint16)(level - remainder);
 	}
+	
 	return(hexData);
+#else // Better
+	double mbValue;
+	uint32 mbConverted;
+
+	if (level == NO_TRIGGER_CHAR)
+	{
+		return (NO_TRIGGER_CHAR);
+	}
+	else
+	{
+		// This is the inverse log of base 10.
+		mbValue = (double)pow((double)10, ((double)level/(double)20.0));
+
+		// Do the conversion divide by 5000000 and multiply by 10000 equals divide by 500
+		mbValue /= (DB_CONVERSION_VALUE / (MB_CONVERSION_VALUE * ADJUSTED_MB_TO_HEX_VALUE));
+
+		mbConverted = ceil(mbValue);
+		
+		if (mbConverted <= AIR_TRIGGER_MB_MIN_VALUE) { mbConverted = AIR_TRIGGER_MB_MIN_VALUE; }
+		else if (mbConverted >= AIR_TRIGGER_MB_MAX_VALUE) { mbConverted = AIR_TRIGGER_MB_MAX_VALUE; }
+		
+		return (mbConverted);
+	}
+#endif
 }
 
 /****************************************
 *  Function:   convertMBtoDB
 *  Purpose: Convert the mb value to db
 ****************************************/
-uint16 convertMBtoDB(uint32 level)
+uint32 convertMBtoDB(uint32 level)
 {
+#if 0 // Poor
 	uint16 hexData;
 	uint16 returnData;
 
-	if(level != NO_TRIGGER_CHAR)
+	if (level != NO_TRIGGER_CHAR)
 	{
-		hexData = (uint16)mbToHex((float) level);
+		hexData = mbToHex((float) level);
 		returnData = (uint16)hexToDB((uint16)hexData, DATA_NORMALIZED, g_bitAccuracyMidpoint);
 	}
+	
 	return(returnData);
+#else // Better
+	double dbValue;
+	uint32 dbConverted;
+	
+	if (level == NO_TRIGGER_CHAR)
+	{
+		return (NO_TRIGGER_CHAR);
+	}
+	else
+	{
+		dbValue = (double)level * (double)(DB_CONVERSION_VALUE / (MB_CONVERSION_VALUE * ADJUSTED_MB_TO_HEX_VALUE));
+
+		dbValue = (float)log10f(dbValue) * (float)20.0;
+
+		dbConverted = floor(dbValue);
+		
+		if (dbConverted <= AIR_TRIGGER_MIN_VALUE) { dbConverted = AIR_TRIGGER_MIN_VALUE; }
+		else if (dbConverted >= AIR_TRIGGER_MAX_VALUE) { dbConverted = AIR_TRIGGER_MAX_VALUE; }
+
+		return (dbConverted);
+	}
+#endif
 }
 #endif
 
