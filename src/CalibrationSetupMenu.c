@@ -19,9 +19,7 @@
 #include "Uart.h"
 #include "Display.h"
 #include "Common.h"
-#include "Ispi.h"
 #include "InitDataBuffers.h"
-#include "Msgs430.h"
 #include "Summary.h"
 #include "SysEvents.h"
 #include "Board.h"
@@ -444,65 +442,6 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 ****************************************/
 void mnStartCal(void)
 {
-	g_totalSamples = (uint32)((SAMPLE_BUF_SIZE / g_sensorInfoPtr->numOfChannels) * g_sensorInfoPtr->numOfChannels);
-
-#if 0 // fix_ns8100
-	uint8 i = 0;
-	g_msgs430.startMsg430.cmd_id = START_TRIGGER_CMD;
-
-	// All channels
-	for (i = 0; i < 8; i++)
-	{
-		g_msgs430.startMsg430.channel[i].options = GAIN_SELECT_x2;
-		g_msgs430.startMsg430.channel[i].trig_lvl_1 = BYTE_SWAPPED_NO_TRIGGER_CHAR;
-		g_msgs430.startMsg430.channel[i].trig_lvl_2 = BYTE_SWAPPED_NO_TRIGGER_CHAR;
-		g_msgs430.startMsg430.channel[i].trig_lvl_3 = BYTE_SWAPPED_NO_TRIGGER_CHAR;
-	}
-
-	// Channel 1
-	g_msgs430.startMsg430.channel[0].channel_num = MSP430_CHANNEL_1_INPUT;
-	g_msgs430.startMsg430.channel[0].channel_type = RADIAL_CHANNEL_TYPE;
-	g_msgs430.startMsg430.channel[0].group_num = SEISMIC_GROUP_1;
-
-	// Channel 2
-	g_msgs430.startMsg430.channel[1].channel_num = MSP430_CHANNEL_2_INPUT;
-	g_msgs430.startMsg430.channel[1].channel_type = VERTICAL_CHANNEL_TYPE;
-	g_msgs430.startMsg430.channel[1].group_num = SEISMIC_GROUP_1;
-
-	// Channel 3
-	g_msgs430.startMsg430.channel[2].channel_num = MSP430_CHANNEL_3_INPUT;
-	g_msgs430.startMsg430.channel[2].channel_type = TRANSVERSE_CHANNEL_TYPE;
-	g_msgs430.startMsg430.channel[2].group_num = SEISMIC_GROUP_1;
-
-	// Channel 4
-	g_msgs430.startMsg430.channel[3].channel_num = MSP430_CHANNEL_8_INPUT;
-	g_msgs430.startMsg430.channel[3].channel_type = ACOUSTIC_CHANNEL_TYPE;
-	g_msgs430.startMsg430.channel[3].group_num = SEISMIC_GROUP_1;
-
-	// Channels 5-8
-	for (i = 4; i < 8; i++)
-	{
-		g_msgs430.startMsg430.channel[i].channel_num = DISABLED;
-		g_msgs430.startMsg430.channel[i].channel_type = 0;
-		g_msgs430.startMsg430.channel[i].group_num = SEISMIC_GROUP_2;
-	}
-
-	// Fake a waveform mode to just collect data in the quarter sec buffer
-	g_triggerRecord.op_mode = WAVEFORM_MODE;
-
-	g_msgs430.startMsg430.capture_mode = g_triggerRecord.op_mode;
-	g_msgs430.startMsg430.bg_sample_interval = 0;
-	g_msgs430.startMsg430.sample_per_second = swapInt(1024);
-	g_msgs430.startMsg430.total_record_time = 1;
-	g_msgs430.startMsg430.end_mark = 0xffff;
-
-	InitDataBuffs(g_msgs430.startMsg430.capture_mode);
-
-	g_sampleProcessing = ACTIVE_STATE;
-
-	ISPI_SendMsg(g_msgs430.startMsg430.cmd_id);
-#endif
-
 	// fix_ns8100
 	// Setup AD Channel config
 	SetupADChannelConfig();

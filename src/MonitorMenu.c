@@ -20,9 +20,7 @@
 #include "Uart.h"
 #include "Display.h"
 #include "Common.h"
-#include "Ispi.h"
 #include "InitDataBuffers.h"
-#include "Msgs430.h"
 #include "Summary.h"
 #include "SysEvents.h"
 #include "Board.h"
@@ -497,7 +495,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	if (g_monitorOperationMode == WAVEFORM_MODE)
 	{
-		if (g_isTriggered)
+		if (g_busyProcessingEvent == YES)
 		{
 			length = (uint8)sprintf((char*)buff, "%s%s (W)", getLangText(PROCESSING_TEXT), dotBuff);
 		}
@@ -512,7 +510,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else if (g_monitorOperationMode == COMBO_MODE)
 	{
-		if (g_isTriggered)
+		if (g_busyProcessingEvent == YES)
 		{
 			length = (uint8)sprintf((char*)buff, "%s%s (C)", getLangText(PROCESSING_TEXT), dotBuff);
 		}

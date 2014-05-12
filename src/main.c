@@ -26,7 +26,6 @@
 #include "Display.h"
 #include "Menu.h"
 #include "Uart.h"
-#include "Ispi.h"
 #include "spi.h"
 #include "ProcessBargraph.h"
 #include "ProcessCombo.h"

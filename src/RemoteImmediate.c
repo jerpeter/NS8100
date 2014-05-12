@@ -23,7 +23,6 @@
 #include "Uart.h"
 #include "Menu.h"
 #include "EventProcessing.h"
-#include "Msgs430.h"
 #include "PowerManagement.h"
 #include "Menu.h"
 #include "SysEvents.h"

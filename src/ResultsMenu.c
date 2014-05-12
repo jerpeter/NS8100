@@ -20,9 +20,7 @@
 #include "Menu.h"
 #include "Display.h"
 #include "Common.h"
-#include "Ispi.h"
 #include "InitDataBuffers.h"
-#include "Msgs430.h"
 #include "Summary.h"
 #include "SysEvents.h"
 #include "EventProcessing.h"
@@ -406,7 +404,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		if (g_monitorOperationMode == WAVEFORM_MODE)
 		{
-			if (g_isTriggered)
+			if (g_busyProcessingEvent == YES)
 			{
 				length = (uint8)sprintf((char*)buff, "%s%s (W)", getLangText(PROCESSING_TEXT), dotBuff);
 			}
@@ -460,6 +458,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
 
 	// Next line after title
+	// Check if monitoring
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 		if (g_monitorOperationMode == WAVEFORM_MODE)
@@ -481,7 +480,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			}
 		}
 	}
-	else // MSP430_State != MSP430_SAMPLING
+	else // Not monitoring
 	{
 		if (g_summaryListMenuActive == YES)
 		{

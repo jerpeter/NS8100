@@ -22,7 +22,6 @@
 #include "Display.h"
 #include "Menu.h"
 #include "Uart.h"
-#include "Ispi.h"
 #include "ProcessBargraph.h"
 #include "ProcessCombo.h"
 #include "SysEvents.h"
@@ -309,25 +308,13 @@ void SystemEventManager(void)
 		}		
 	}
 
-#if 0
-	if (getSystemEventState(COMBO_EVENT))
-	{
-		clearSystemEventFlag(COMBO_EVENT);
-		CalculateComboData();
-	}
-#endif
-
 	if (getSystemEventState(WARNING1_EVENT))
 	{
 		debug("Warning Event 1\n");
 		clearSystemEventFlag(WARNING1_EVENT);
 
-#if 0 // ns7100
-		// Activate alarm 1 signal
-		reg_TIM2PORT.reg |= 0x04;
-#else //ns8100
 		powerControl(ALARM_1_ENABLE, ON);
-#endif
+
 		// Assign soft timer to turn the Alarm 1 signal off
 		assignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarm_one_time * 2), alarmOneOutputTimerCallback);
 	}
@@ -337,12 +324,8 @@ void SystemEventManager(void)
 		debug("Warning Event 2\n");
 		clearSystemEventFlag(WARNING2_EVENT);
 
-#if 0 // ns7100
-		// Activate alarm 2 signal
-		reg_TIM2PORT.reg |= 0x08;
-#else //ns8100
 		powerControl(ALARM_2_ENABLE, ON);
-#endif
+
 		// Assign soft timer to turn the Alarm 2 signal off
 		assignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarm_two_time * 2), alarmTwoOutputTimerCallback);
 	}

@@ -82,7 +82,6 @@ void StartNewBargraph(void)
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
 	byteSet(g_bargraphSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
 
-	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
 	MoveStartOfBargraphEventRecordToFlash();
 
 	// Update the current monitor log entry
@@ -106,9 +105,6 @@ void EndBargraph(void)
 	if ((eventDataFlag > 0) || (g_summaryIntervalCnt>0))
 	{
 		moveSummaryIntervalDataToFile();
-#if 0 // ns7100
-		MoveBargraphEventDataToFlash();
-#endif
 	}
 
 	MoveEndOfBargraphEventRecordToFlash();
@@ -119,43 +115,45 @@ void EndBargraph(void)
 * Function:		ProcessBargraphData (Step 2)
 * Purpose:		Copy A/D channel data from quarter sec buffer into event buffer
 ******************************************************************************/
+#if 0
 void ProcessBargraphData(void)
 {
 	// Check to see if we have a chunk of ram buffer to write, otherwise check for data wrapping.
-	if ((g_bg430DataEndPtr - g_bg430DataWritePtr) >= 4)
+	if ((g_bargraphDataEndPtr - g_bargraphDataWritePtr) >= 4)
 	{
-		// Move from the pre-trigger buffer to our large ram buffer.
-		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
-		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
-		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
-		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		// Move from the quarter sec buffer to our large ram buffer.
+		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
 
 		// Check for the end and if so go to the top
-		if (g_bg430DataWritePtr > g_bg430DataEndPtr) 
-			g_bg430DataWritePtr = g_bg430DataStartPtr;
+		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) 
+			g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 	}
 	else
 	{
 		// Move from the pre-trigger buffer to our large ram buffer, but check for data wrapping.
-		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
-		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
+		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
-		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
-		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
+		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
-		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
-		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
+		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
-		*g_bg430DataWritePtr++ = *g_tailOfQuarterSecBuff++;
-		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
+		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 	}
 
 	// Handle quarter sec buffer pointer for circular buffer
-	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
+	//if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
 	raiseSystemEventFlag(BARGRAPH_EVENT);
 }
+#endif
 
 //*****************************************************************************
 // Function: moveBarIntervalDataToFile(void)
@@ -171,24 +169,8 @@ uint32 moveBarIntervalDataToFile(void)
 		// Reset the bar interval count
 		g_barIntervalCnt = 0;
 
-#if 0 // ns7100
-		// Save Bar Interval peak Air into event data buffer
-		*(g_bargraphEventDataWritePtr++) = g_bargraphBarIntervalWritePtr->aMax;
-		END_OF_EVENT_BUFFER_CHECK(g_bargraphEventDataWritePtr, g_bargraphEventDataStartPtr, g_bargraphEventDataEndPtr);
-
-		// Save Bar Interval peak RVT into event data buffer
-		*(g_bargraphEventDataWritePtr++) = g_bargraphBarIntervalWritePtr->rvtMax;
-		END_OF_EVENT_BUFFER_CHECK(g_bargraphEventDataWritePtr, g_bargraphEventDataStartPtr, g_bargraphEventDataEndPtr);
-
-		// Save Bar Interval peak Vector Sum into event data buffer. since vs is a long save two words.
-		*(g_bargraphEventDataWritePtr++) = (uint16)((g_bargraphBarIntervalWritePtr->vsMax & 0xFFFF0000) >> 16);
-		END_OF_EVENT_BUFFER_CHECK(g_bargraphEventDataWritePtr, g_bargraphEventDataStartPtr, g_bargraphEventDataEndPtr);
-		*(g_bargraphEventDataWritePtr++) = (uint16)(g_bargraphBarIntervalWritePtr->vsMax & 0x0000FFFF);
-		END_OF_EVENT_BUFFER_CHECK(g_bargraphEventDataWritePtr, g_bargraphEventDataStartPtr, g_bargraphEventDataEndPtr);
-#else // ns8100
 		fl_fwrite(g_bargraphBarIntervalWritePtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, g_currentEventFileHandle);		
 		g_pendingBargraphRecord.header.dataLength += sizeof(BARGRAPH_BAR_INTERVAL_DATA);
-#endif
 
 		// Advance the Bar Interval global buffer pointer
 		advanceBarIntervalBufPtr(WRITE_PTR);
@@ -234,46 +216,8 @@ void moveSummaryIntervalDataToFile(void)
 	// Reset summary interval count
 	g_summaryIntervalCnt = 0;
 
-#if 0 // ns7100
-	uint32 sizeOfRemainingBuffer;
-	uint8* tempSummaryIntervalWritePtr;
-
-	// Calculate the size of the remaining buffer in terms of bytes.
-	sizeOfRemainingBuffer =
-		(uint32)((uint8*)g_bargraphEventDataEndPtr - (uint8*)g_bargraphEventDataWritePtr);
-
-	// If buffersize is greater then the strucutre size then copy and increment write ptr.
-	// If less then, then copy only the bytes that fit, then start at the top.
-	if (sizeOfRemainingBuffer > SUMMARY_INTERVAL_SIZE_IN_BYTES)
-	{
-		byteCpy((uint8*)g_bargraphEventDataWritePtr,
-			(uint8*)g_bargraphSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT));
-		g_bargraphEventDataWritePtr += SUMMARY_INTERVAL_SIZE_IN_WORDS;
-	}
-	else
-	{
-		// Copy only the size of data that fits.
-		byteCpy((uint8*)g_bargraphEventDataWritePtr,
-			(uint8*)g_bargraphSumIntervalWritePtr, sizeOfRemainingBuffer);
-
-		// Go to the start of the buffer.
-		g_bargraphEventDataWritePtr = g_bargraphEventDataStartPtr;
-
-		// ptr to the start of the uncopied data.
-		tempSummaryIntervalWritePtr = (uint8*)g_bargraphSumIntervalWritePtr + sizeOfRemainingBuffer;
-
-		// Number of bytes remaining to move.
-		sizeOfRemainingBuffer = SUMMARY_INTERVAL_SIZE_IN_BYTES - sizeOfRemainingBuffer;
-		byteCpy((uint8*)g_bargraphEventDataWritePtr,
-			(uint8*)tempSummaryIntervalWritePtr, sizeOfRemainingBuffer);
-
-		// Move write ptr by the number of words.
-		g_bargraphEventDataWritePtr += ((sizeOfRemainingBuffer+1)/2);
-	}
-#else // ns8100
 	fl_fwrite(g_bargraphSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT), 1, g_currentEventFileHandle);		
 	g_pendingBargraphRecord.header.dataLength += sizeof(CALCULATED_DATA_STRUCT);
-#endif
 
 	// Move update the job totals.
 	UpdateBargraphJobTotals(g_bargraphSumIntervalWritePtr);
@@ -305,66 +249,65 @@ uint8 CalculateBargraphData(void)
 	int32 processingCount = 500;
 	uint16* dataReadStart;
 
-	while ((g_bg430DataReadPtr != g_bg430DataWritePtr) && (processingCount-- > 0))
+	while ((g_bargraphDataReadPtr != g_bargraphDataWritePtr) && (processingCount-- > 0))
 	{
 
 		if (processingCount == 1)
 		{
-			if (g_bg430DataWritePtr < g_bg430DataReadPtr)
+			if (g_bargraphDataWritePtr < g_bargraphDataReadPtr)
 			{
-				if (((g_bg430DataWritePtr - g_bg430DataStartPtr) +
-					 (g_bg430DataEndPtr - g_bg430DataReadPtr)) > 500)
+				if (((g_bargraphDataWritePtr - g_bargraphDataStartPtr) +
+					 (g_bargraphDataEndPtr - g_bargraphDataReadPtr)) > 500)
 					processingCount = 500;
 			}
 			else
 			{
-				if ((g_bg430DataWritePtr - g_bg430DataReadPtr) > 500)
+				if ((g_bargraphDataWritePtr - g_bargraphDataReadPtr) > 500)
 					processingCount = 500;
 			}
 		}
 
-		dataReadStart = g_bg430DataReadPtr;
+		dataReadStart = g_bargraphDataReadPtr;
 
 		// Make sure that we will not catch up to writing the data, almost impossible.
-		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
+		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
 			debugErr("1a - Reading ptr equal to writing ptr.");
-			g_bg430DataReadPtr = dataReadStart;
+			g_bargraphDataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		// Move from the pre-trigger buffer to our large ram buffer, but check for data wrapping.
-		aTemp = *g_bg430DataReadPtr++;
-		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
+		aTemp = *g_bargraphDataReadPtr++;
+		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 
 		// We have caught up to the end of the write with out it being completed.
-		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
+		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
 			debugErr("1b - Reading ptr equal to writing ptr.");
-			g_bg430DataReadPtr = dataReadStart;
+			g_bargraphDataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		rTemp = *g_bg430DataReadPtr++;
-		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
-		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
+		rTemp = *g_bargraphDataReadPtr++;
+		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
+		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
 			debugErr("1c - Reading ptr equal to writing ptr.");
-			g_bg430DataReadPtr = dataReadStart;
+			g_bargraphDataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		vTemp = *g_bg430DataReadPtr++;
-		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
-		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
+		vTemp = *g_bargraphDataReadPtr++;
+		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
+		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
 			debugErr("1d - Reading ptr equal to writing ptr.");
-			g_bg430DataReadPtr = dataReadStart;
+			g_bargraphDataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		tTemp = *g_bg430DataReadPtr++;
-		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
+		tTemp = *g_bargraphDataReadPtr++;
+		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 
 		// If here we got data;
 		gotDataFlag = YES;
@@ -880,7 +823,7 @@ uint8 CalculateBargraphData(void)
 
 	} // While != loop
 
-	if (g_bg430DataWritePtr != g_bg430DataReadPtr)
+	if (g_bargraphDataWritePtr != g_bargraphDataReadPtr)
 	{
 		return (BG_BUFFER_NOT_EMPTY);
 	}
@@ -925,41 +868,16 @@ void MoveBargraphEventDataToFlash(void)
 //*****************************************************************************
 void MoveStartOfBargraphEventRecordToFlash(void)
 {
-	// Check if we have a valid flash ptr.
-	if (g_bargraphSummaryPtr == 0)
-	{	// If failed the ptr will be 0.
-		debug("Out of Ram Summary Entrys\n");
-	}
-	else
-	{
-#if 0 // ns7100
-	uint32 moveSizeInWords;
-	uint16* destPtr;
-	uint16* srcPtr;
-	EVT_RECORD* flashEventRecord;
-
-		flashEventRecord = (EVT_RECORD *)(g_bargraphSummaryPtr->linkPtr);
-
-		moveSizeInWords = (sizeof(EVT_RECORD))/2;
-		destPtr = (uint16*)(flashEventRecord);
-		srcPtr = (uint16*)(&g_pendingBargraphRecord);
-		flashWrite(destPtr, srcPtr, moveSizeInWords);
-
-		byteSet((uint8*)&(g_pendingBargraphRecord.summary.calculated), 0, sizeof(CALCULATED_DATA_STRUCT));
-#else // ns8100
-		// Get new file handle
-		g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+	// Get new file handle
+	g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
-		if (g_currentEventFileHandle == NULL)
-		{
-			debugErr("Failed to get a new file handle for the current Bargraph event!\n");
-		}			
+	if (g_currentEventFileHandle == NULL)
+	{
+		debugErr("Failed to get a new file handle for the current Bargraph event!\n");
+	}			
 
-		// Write in the current but unfinished event record to provide an offset to start writing in the data
-		fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
-#endif
-	}
-
+	// Write in the current but unfinished event record to provide an offset to start writing in the data
+	fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 }
 
 
@@ -972,57 +890,21 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 //*****************************************************************************
 void MoveEndOfBargraphEventRecordToFlash(void)
 {
-#if 0 // ns7100
-	//uint16 checksumDex = 0;
-	uint32 moveSizeInWords;
-	EVT_RECORD* flashEventRecord = (EVT_RECORD*)g_bargraphSummaryPtr->linkPtr;
-	uint16* eventDataPtr;
-	uint16* destPtr;
-	uint16* srcPtr;
-	uint16* flashPtr = getFlashDataPointer();
-#endif
+	// The following data will be filled in when the data has been moved over to flash.
+	g_pendingBargraphRecord.header.summaryChecksum = 0xAABB;
+	g_pendingBargraphRecord.header.dataChecksum = 0xCCDD;
+	g_pendingBargraphRecord.header.dataCompression = 0;
 
-	// Check if we have a valid flash ptr.
-	if (g_bargraphSummaryPtr == 0)
-	{	// If failed the ptr will be 0.
-		debug("Out of Ram Summary Entrys\n");
-	}
-	else
-	{
-		// The following data will be filled in when the data has been moved over to flash.
-		g_pendingBargraphRecord.header.summaryChecksum = 0xAABB;
-		g_pendingBargraphRecord.header.dataChecksum = 0xCCDD;
-		g_pendingBargraphRecord.header.dataCompression = 0;
+	g_pendingBargraphRecord.summary.captured.endTime = getCurrentTime();
 
-		g_pendingBargraphRecord.summary.captured.endTime = getCurrentTime();
+	// Make sure at the beginning of the file
+	fl_fseek(g_currentEventFileHandle, 0, SEEK_SET);
 
-#if 0 // ns7100
-		// Setup ptrs so we are at the beginning of the CAPTURE_INFO_STRUCT. Copy over only the
-		// CAPTURE_INFO_STRUCT and CALCULATED_DATA_STRUCT. Get the size of the data to copy.
-		moveSizeInWords = sizeof(CAPTURE_INFO_STRUCT)/2;
-		destPtr = (uint16*)(&(flashEventRecord->summary.captured));
-		srcPtr = (uint16*)(&(g_pendingBargraphRecord.summary.captured));
-		flashWrite(destPtr, srcPtr, moveSizeInWords);
+	// Rewrite the event record
+	fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
-		// Setup ptrs so we are at the beginning of the CAPTURE_INFO_STRUCT. Copy over only the
-		// CAPTURE_INFO_STRUCT and CALCULATED_DATA_STRUCT. Get the size of the data to copy.
-		moveSizeInWords = sizeof(CALCULATED_DATA_STRUCT)/2;
-		destPtr = (uint16*)(&(flashEventRecord->summary.calculated));
-		srcPtr = (uint16*)(&(g_pendingBargraphRecord.summary.calculated));
-		flashWrite(destPtr, srcPtr, moveSizeInWords);
-#endif
-
-#if 1 // ns8100
-		// Make sure at the beginning of the file
-		fl_fseek(g_currentEventFileHandle, 0, SEEK_SET);
-
-		// Rewrite the event record
-		fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
-
-		fl_fclose(g_currentEventFileHandle);
-		debug("Bargraph event file closed\n");
-#endif
-	}
+	fl_fclose(g_currentEventFileHandle);
+	debug("Bargraph event file closed\n");
 
 	// Store and increment the event number even if we do not save the event header information.
 	storeCurrentEventNumber();

@@ -22,7 +22,6 @@
 #include "Record.h"
 #include "Uart.h"
 #include "Menu.h"
-#include "Msgs430.h"
 #include "TextTypes.h"
 #include "NandFlash.h"
 #include "FAT32_Definitions.h"
@@ -562,7 +561,7 @@ void InitFlashBuffs(void)
 //*****************************************************************************
 void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 {
-	uint8 idex;
+	uint8 i;
 
 #if 0 // ns7100
 	byteSet(eventRec, 0xFF, sizeof(EVT_RECORD));
@@ -610,12 +609,27 @@ void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.parameters.distToSource = (uint32)(g_triggerRecord.trec.dist_to_source * 100.0);
 	eventRec->summary.parameters.weightPerDelay = (uint32)(g_triggerRecord.trec.weight_per_delay * 100.0);
 	//-----------------------
-	for (idex = 0; idex < 8; idex++) // Max 8 channels
+	eventRec->summary.parameters.channel[0].type = ACOUSTIC_CHANNEL_TYPE;
+	eventRec->summary.parameters.channel[0].input = 4;
+	eventRec->summary.parameters.channel[1].type = RADIAL_CHANNEL_TYPE;
+	eventRec->summary.parameters.channel[1].input = 1;
+	eventRec->summary.parameters.channel[2].type = VERTICAL_CHANNEL_TYPE;
+	eventRec->summary.parameters.channel[2].input = 3;
+	eventRec->summary.parameters.channel[3].type = TRANSVERSE_CHANNEL_TYPE;
+	eventRec->summary.parameters.channel[3].input = 2;
+
+	for (i = 0; i < 4; i++) // First seismic group
 	{
-		eventRec->summary.parameters.channel[idex].type = g_msgs430.startMsg430.channel[idex].channel_type;
-		eventRec->summary.parameters.channel[idex].input = g_msgs430.startMsg430.channel[idex].channel_num;
-		eventRec->summary.parameters.channel[idex].group = g_msgs430.startMsg430.channel[idex].group_num;
-		eventRec->summary.parameters.channel[idex].options = g_msgs430.startMsg430.channel[idex].options;
+		eventRec->summary.parameters.channel[i].group = SEISMIC_GROUP_1;
+		eventRec->summary.parameters.channel[i].options = (g_triggerRecord.srec.sensitivity == LOW) ? GAIN_SELECT_x2 : GAIN_SELECT_x4;
+	}
+
+	for (i = 4; i < 8; i++) // Second seismic group
+	{
+		eventRec->summary.parameters.channel[i].group = SEISMIC_GROUP_2;
+		eventRec->summary.parameters.channel[i].type = 0;
+		eventRec->summary.parameters.channel[i].input = DISABLED;
+		eventRec->summary.parameters.channel[i].options = 0;
 	}
 }
 

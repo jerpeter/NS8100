@@ -24,12 +24,10 @@
 #include "Keypad.h"
 #include "ProcessBargraph.h"
 #include "Uart.h"
-#include "Msgs430.h"
 #include "TextTypes.h"
 
 // Global Externs ---------------------------------------------------------------------
 
-extern MSGS430_UNION g_msgs430;
 extern ANALOG_CONTROL_STRUCT g_analogControl;
 extern OFFSET_DATA_STRUCT g_channelOffset;
 extern INPUT_MSG_STRUCT g_input_buffer[INPUT_BUFFER_SIZE];
@@ -81,13 +79,13 @@ extern SUMMARY_DATA* g_lastCompletedRamSummaryIndex;
 extern uint32 g_isTriggered;
 extern uint32 g_processingCal;
 extern uint16 g_eventsNotCompressed;
-extern uint16* g_bg430DataStartPtr;
-extern uint16* g_bg430DataWritePtr;
-extern uint16* g_bg430DataReadPtr;
-extern uint16* g_bg430DataEndPtr;
+extern uint16* g_bargraphDataStartPtr;
+extern uint16* g_bargraphDataWritePtr;
+extern uint16* g_bargraphDataReadPtr;
+extern uint16* g_bargraphDataEndPtr;
 extern uint8 g_powerNoiseFlag;
-extern uint8 g_doneTakingEvents;
-extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
+extern uint8 volatile g_doneTakingEvents;
+extern uint8 volatile g_busyProcessingEvent;
 extern volatile uint8 g_sampleProcessing;
 extern uint8 g_modemConnected;
 extern uint8 g_lcdBacklightFlag;
@@ -195,7 +193,6 @@ extern BARGRAPH_BAR_INTERVAL_DATA g_comboBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS
 extern BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalWritePtr;
 extern BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalReadPtr;
 extern BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalEndPtr;
-extern uint32 g_totalSamples;
 extern uint16 g_manualCalFlag;
 extern uint16 g_manualCalSampleCount;
 extern uint8 g_bargraphForcedCal;
@@ -246,6 +243,7 @@ extern uint8 g_spi1AccessLock;
 extern EVT_RECORD g_resultsEventCache[50];
 extern uint16 g_resultsCacheIndex;
 extern uint32 g_cyclicEventDelay;
+extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 
 // Test
 extern uint32 g_execCycles;

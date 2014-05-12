@@ -17,8 +17,6 @@
 #include "math.h"
 #include "Typedefs.h"
 #include "InitDataBuffers.h"
-#include "Ispi.h"
-#include "Msgs430.h"
 #include "SysEvents.h"
 #include "Record.h"
 #include "Menu.h"
@@ -75,7 +73,7 @@ void InitDataBuffs(uint8 op_mode)
 
 	// Set the Quarter Sec buffer size in words, 1/4 sec @ sample rate * number of channels, plus 1 sample (1/4 sec plus actual trigger sample)
 	quarterSecBufferSize = ((uint32)(sampleRate / 4) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
-	// Set up the end of the pre trigger buffer
+	// Set up the end of the quarter sec buffer
 	g_endOfQuarterSecBuff = &(g_quarterSecBuff[quarterSecBufferSize]);
 
 	// Setup the pending event record information that is available at this time
@@ -101,7 +99,15 @@ void InitDataBuffs(uint8 op_mode)
 		g_wordSizeInCal = g_samplesInCal * g_sensorInfoPtr->numOfChannels;
 		g_wordSizeInEvent = g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal;
 
-		if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE))
+		if (op_mode == COMBO_MODE)
+		{
+			// Calculate total event buffers available (partial event buffer size)
+			g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS) / g_wordSizeInEvent);
+
+			// Init starting event buffer pointers
+			g_startOfEventBufferPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS]);
+		}
+		else // ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE))
 		{
 			// Calculate total event buffers available (full event buffer size)
 			g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / g_wordSizeInEvent);
@@ -109,20 +115,12 @@ void InitDataBuffs(uint8 op_mode)
 			// Init starting event buffer pointers
 			g_startOfEventBufferPtr = &(g_eventDataBuffer[0]);
 		}
-		else if (op_mode == COMBO_MODE)
-		{
-			// Calculate total event buffers available (partial event buffer size)
-			g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET) / g_wordSizeInEvent);
-
-			// Init starting event buffer pointers
-			g_startOfEventBufferPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET]);
-		}
 
 		g_freeEventBuffers = g_maxEventBuffers;
 		g_eventBufferReadIndex = 0;
 		g_eventBufferWriteIndex = 0;
 
-		g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr;
+		g_currentEventSamplePtr = g_currentEventStartPtr = g_startOfEventBufferPtr;
 		g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
 		g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
 		g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
@@ -150,10 +148,10 @@ void InitDataBuffs(uint8 op_mode)
 			g_pendingEventRecord.header.dataLength = (g_wordSizeInEvent * 2);
 
 			// Bargraph init
-			g_bg430DataStartPtr = &(g_eventDataBuffer[0]);
-			g_bg430DataWritePtr = &(g_eventDataBuffer[0]);
-			g_bg430DataReadPtr = &(g_eventDataBuffer[0]);
-			g_bg430DataEndPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET - 16]);
+			g_bargraphDataStartPtr = &(g_eventDataBuffer[0]);
+			g_bargraphDataWritePtr = &(g_eventDataBuffer[0]);
+			g_bargraphDataReadPtr = &(g_eventDataBuffer[0]);
+			g_bargraphDataEndPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS - 4]);
 
 			// Start the total off with zero (incremented when bar and summary intervals are stored)
 			g_pendingBargraphRecord.header.dataLength = 0;
@@ -163,10 +161,10 @@ void InitDataBuffs(uint8 op_mode)
 	}
 	else if (op_mode == BARGRAPH_MODE)
 	{		
-		g_bg430DataStartPtr = &(g_eventDataBuffer[0]);
-		g_bg430DataWritePtr = &(g_eventDataBuffer[0]);
-		g_bg430DataReadPtr = &(g_eventDataBuffer[0]);
-		g_bg430DataEndPtr = &(g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS - 4]);
+		g_bargraphDataStartPtr = &(g_eventDataBuffer[0]);
+		g_bargraphDataWritePtr = &(g_eventDataBuffer[0]);
+		g_bargraphDataReadPtr = &(g_eventDataBuffer[0]);
+		g_bargraphDataEndPtr = &(g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS - 4]);
 
 		// Start the total off with zero (incremented when bar and summary intervals are stored)
 		g_pendingBargraphRecord.header.dataLength = 0;

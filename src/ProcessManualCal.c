@@ -17,8 +17,6 @@
 #include "math.h"
 #include "Typedefs.h"
 #include "InitDataBuffers.h"
-#include "Ispi.h"
-#include "Msgs430.h"
 #include "SysEvents.h"
 #include "Record.h"
 #include "Menu.h"
@@ -168,11 +166,6 @@ void MoveManuelCalToFlash(void)
 			debugErr("Out of Ram Summary Entrys\n");
 		}
 
-#if 0 // ns7100
-		// Set our flash event data pointer to the start of the flash event
-		advFlashDataPtrToEventData(ramSummaryEntry);
-#endif
-
 		sumEntry = &g_summaryTable[g_eventBufferReadIndex];
 		sumEntry->mode = MANUAL_CAL_MODE;
 
@@ -182,8 +175,8 @@ void MoveManuelCalToFlash(void)
 		sumEntry->waveShapeData.v.freq = 0;
 		sumEntry->waveShapeData.t.freq = 0;
 
-		startOfEventPtr = g_currentEventSamplePtr;
-		endOfEventDataPtr = g_currentEventSamplePtr + g_wordSizeInCal;
+		startOfEventPtr = g_currentEventStartPtr;
+		endOfEventDataPtr = g_currentEventStartPtr + g_wordSizeInCal;
 		
 		for (i = (uint16)g_samplesInCal; i != 0; i--)
 		{

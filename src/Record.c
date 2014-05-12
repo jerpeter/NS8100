@@ -23,7 +23,6 @@
 #include "Uart.h"
 #include "RealTimeClock.h"
 #include "Display.h"
-#include "Msgs430.h"
 #include "spi.h"
 #include "eeprom_test_menu.h"
 

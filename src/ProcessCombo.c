@@ -118,6 +118,7 @@ void EndCombo(void)
 * Function:		ProcessComboData (Step 2)
 * Purpose:		Copy A/D channel data from quarter sec buffer into event buffer
 ******************************************************************************/
+#if 0
 void ProcessComboData(void)
 {
 	// In theory, the following would be processed
@@ -129,56 +130,61 @@ void ProcessComboData(void)
 	//	neither of which advanced the pointer
 	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
 }
+#endif
 
 /*****************************************************************************
 * Function:		ProcessComboDataSkipBargraphDuringCal (Step 2)
 * Purpose:		Copy A/D channel data from quarter sec buffer into event buffer
 ******************************************************************************/
+#if 0
 void ProcessComboDataSkipBargraphDuringCal(void)
 {
-	//ProcessComboSampleData();
+	ProcessComboSampleData();
 
 	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
 }
+#endif
 
 /*****************************************************************************
 * Function:		ProcessComboBargraphData (Step 2)
 * Purpose:		Copy A/D channel data from quarter sec buffer into event buffer
 ******************************************************************************/
+#if 0
 void ProcessComboBargraphData(void)
 {
 	// Check to see if we have a chunk of ram buffer to write, otherwise check for data wrapping.
-	if ((g_bg430DataEndPtr - g_bg430DataWritePtr) >= 4)
+	if ((g_bargraphDataEndPtr - g_bargraphDataWritePtr) >= 4)
 	{
 		// Move from the pre-trigger buffer to our large ram buffer.
-		*g_bg430DataWritePtr++ = *(g_tailOfQuarterSecBuff + 0);
-		*g_bg430DataWritePtr++ = *(g_tailOfQuarterSecBuff + 1);
-		*g_bg430DataWritePtr++ = *(g_tailOfQuarterSecBuff + 2);
-		*g_bg430DataWritePtr++ = *(g_tailOfQuarterSecBuff + 3);
+		*g_bargraphDataWritePtr++ = *(g_tailOfQuarterSecBuff + 0);
+		*g_bargraphDataWritePtr++ = *(g_tailOfQuarterSecBuff + 1);
+		*g_bargraphDataWritePtr++ = *(g_tailOfQuarterSecBuff + 2);
+		*g_bargraphDataWritePtr++ = *(g_tailOfQuarterSecBuff + 3);
 
 		// Check for the end and if so go to the top
-		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
+		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
 	}
 	else
 	{
 		// Move from the pre-trigger buffer to our large ram buffer, but check for data wrapping.
-		*g_bg430DataWritePtr++ = *(g_tailOfQuarterSecBuff + 0);
-		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
+		*g_bargraphDataWritePtr++ = *(g_tailOfQuarterSecBuff + 0);
+		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
-		*g_bg430DataWritePtr++ = *(g_tailOfQuarterSecBuff + 1);
-		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
+		*g_bargraphDataWritePtr++ = *(g_tailOfQuarterSecBuff + 1);
+		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
-		*g_bg430DataWritePtr++ = *(g_tailOfQuarterSecBuff + 2);
-		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
+		*g_bargraphDataWritePtr++ = *(g_tailOfQuarterSecBuff + 2);
+		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
-		*g_bg430DataWritePtr++ = *(g_tailOfQuarterSecBuff + 3);
-		if (g_bg430DataWritePtr > g_bg430DataEndPtr) g_bg430DataWritePtr = g_bg430DataStartPtr;
+		*g_bargraphDataWritePtr++ = *(g_tailOfQuarterSecBuff + 3);
+		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 	}
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
 	raiseSystemEventFlag(BARGRAPH_EVENT);
 }
+#endif
 
 //*****************************************************************************
 // Function:	ProcessComboSampleData (Step 2)
@@ -587,66 +593,65 @@ uint8 CalculateComboData(void)
 	int32 processingCount = 500;
 	uint16* dataReadStart;
 
-	while ((g_bg430DataReadPtr != g_bg430DataWritePtr) && (processingCount-- > 0))
+	while ((g_bargraphDataReadPtr != g_bargraphDataWritePtr) && (processingCount-- > 0))
 	{
 
 		if (processingCount == 1)
 		{
-			if (g_bg430DataWritePtr < g_bg430DataReadPtr)
+			if (g_bargraphDataWritePtr < g_bargraphDataReadPtr)
 			{
-				if (((g_bg430DataWritePtr - g_bg430DataStartPtr) +
-					 (g_bg430DataEndPtr - g_bg430DataReadPtr)) > 500)
+				if (((g_bargraphDataWritePtr - g_bargraphDataStartPtr) +
+					 (g_bargraphDataEndPtr - g_bargraphDataReadPtr)) > 500)
 					processingCount = 500;
 			}
 			else
 			{
-				if ((g_bg430DataWritePtr - g_bg430DataReadPtr) > 500)
+				if ((g_bargraphDataWritePtr - g_bargraphDataReadPtr) > 500)
 					processingCount = 500;
 			}
 		}
 
-		dataReadStart = g_bg430DataReadPtr;
+		dataReadStart = g_bargraphDataReadPtr;
 
 		// Make sure that we will not catch up to writing the data, almost impossible.
-		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
+		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
 			debug("ERROR 1a - Reading ptr equal to writing ptr.");
-			g_bg430DataReadPtr = dataReadStart;
+			g_bargraphDataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		// Move from the pretrigger buffer to our large ram buffer, but check for data wrapping.
-		aTemp = *g_bg430DataReadPtr++;
-		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
+		aTemp = *g_bargraphDataReadPtr++;
+		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 
 		// We have caught up to the end of the write with out it being completed.
-		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
+		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
 			debug("ERROR 1b - Reading ptr equal to writing ptr.");
-			g_bg430DataReadPtr = dataReadStart;
+			g_bargraphDataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		rTemp = *g_bg430DataReadPtr++;
-		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
-		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
+		rTemp = *g_bargraphDataReadPtr++;
+		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
+		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
 			debug("ERROR 1c - Reading ptr equal to writing ptr.");
-			g_bg430DataReadPtr = dataReadStart;
+			g_bargraphDataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		vTemp = *g_bg430DataReadPtr++;
-		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
-		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
+		vTemp = *g_bargraphDataReadPtr++;
+		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
+		if (g_bargraphDataReadPtr == g_bargraphDataWritePtr)
 		{
 			debug("ERROR 1d - Reading ptr equal to writing ptr.");
-			g_bg430DataReadPtr = dataReadStart;
+			g_bargraphDataReadPtr = dataReadStart;
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		tTemp = *g_bg430DataReadPtr++;
-		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
+		tTemp = *g_bargraphDataReadPtr++;
+		if (g_bargraphDataReadPtr > g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 
 		// If here we got data;
 		gotDataFlag = YES;
@@ -1162,7 +1167,7 @@ uint8 CalculateComboData(void)
 
 	} // While != loop
 
-	if (g_bg430DataWritePtr != g_bg430DataReadPtr)
+	if (g_bargraphDataWritePtr != g_bargraphDataReadPtr)
 	{
 		return (BG_BUFFER_NOT_EMPTY);
 	}

@@ -346,7 +346,7 @@ void powerOffTimerCallback(void)
 {
 	debug("Power Off Timer callback: activated.\n");
 
-	// Handle stopping 430 communication and finishing any processing
+	// Handle and finish any processing
 	stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 	overlayMessage(getLangText(TIMER_MODE_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 2 * SOFT_SECS);
@@ -491,7 +491,7 @@ void procTimerEvents(void)
 		// Voltage is low, turn printing off
 		g_helpRecord.auto_print = OFF;
 
-		// Handle stopping 430 communication
+		// Handle and finish monitoring
 		stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 		// Clear and setup the message buffer
@@ -558,7 +558,7 @@ void handleMidnightEvent(void)
 			if (g_sampleProcessing == ACTIVE_STATE)
 				g_enterMonitorModeAfterMidnightCal = YES;
 
-			// Handle stopping 430 communication and finishing any processing
+			// Handle and finish any processing
 			stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 			getFlashUsageStats(&flashStats);

@@ -24,7 +24,6 @@
 #include "Keypad.h"
 #include "ProcessBargraph.h"
 #include "Uart.h"
-#include "Msgs430.h"
 #include "TextTypes.h"
 
 ///----------------------------------------------------------------------------
@@ -39,7 +38,6 @@
 ///	Globals
 ///----------------------------------------------------------------------------
 
-MSGS430_UNION g_msgs430;
 ANALOG_CONTROL_STRUCT g_analogControl;
 OFFSET_DATA_STRUCT g_channelOffset;
 INPUT_MSG_STRUCT g_input_buffer[INPUT_BUFFER_SIZE];
@@ -106,12 +104,13 @@ SUMMARY_DATA* g_lastCompletedRamSummaryIndex;
 uint32 g_isTriggered = 0;
 uint32 g_processingCal = 0;
 uint16 g_eventsNotCompressed = 0; 
-uint16* g_bg430DataStartPtr;
-uint16* g_bg430DataWritePtr;
-uint16* g_bg430DataReadPtr;
-uint16* g_bg430DataEndPtr;
+uint16* g_bargraphDataStartPtr;
+uint16* g_bargraphDataWritePtr;
+uint16* g_bargraphDataReadPtr;
+uint16* g_bargraphDataEndPtr;
 uint8 g_powerNoiseFlag = PRINTER_OFF;
-uint8 g_doneTakingEvents = NO;
+uint8 volatile g_doneTakingEvents = NO;
+uint8 volatile g_busyProcessingEvent = NO;
 uint8 volatile g_sampleProcessing = IDLE_STATE;
 uint8 g_modemConnected = NO;
 uint8 g_lcdBacklightFlag  = ENABLED;
@@ -242,7 +241,6 @@ BARGRAPH_BAR_INTERVAL_DATA g_comboBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS];
 BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalWritePtr = &(g_comboBarInterval[0]);
 BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalReadPtr = &(g_comboBarInterval[0]);
 BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalEndPtr = &(g_comboBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS - 1]);
-uint32 g_totalSamples;
 uint16 g_manualCalFlag = FALSE;
 uint16 g_manualCalSampleCount = 0;
 uint8 g_bargraphForcedCal = NO;

@@ -17,8 +17,6 @@
 #include "math.h"
 #include "Typedefs.h"
 #include "InitDataBuffers.h"
-#include "Ispi.h"
-#include "Msgs430.h"
 #include "SysEvents.h"
 #include "Record.h"
 #include "Menu.h"

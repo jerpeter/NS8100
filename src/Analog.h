@@ -46,6 +46,19 @@
 
 #define AD_SPI_0_CHIP_SELECT	0
 
+#define GAIN_SELECT_x2	0x01
+#define GAIN_SELECT_x4	0x00
+
+#define CONSECUTIVE_TRIGGERS_THRESHOLD 2
+#define CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD 2 // Treating event + event as 1 consecutive, event + event + event as 2 consecutive
+#define PENDING	2 // Anything above 1
+
+enum {
+	DEFAULT_CAL_BUFFER_INDEX = 0,
+	ONCE_DELAYED_CAL_BUFFER_INDEX = 1,
+	TWICE_DELAYED_CAL_BUFFER_INDEX = 2
+};
+
 enum {
 	SEISMIC_GAIN_LOW,
 	SEISMIC_GAIN_HIGH,

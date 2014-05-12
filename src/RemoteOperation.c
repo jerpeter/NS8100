@@ -20,7 +20,6 @@
 #include "RemoteOperation.h"
 #include "Uart.h"
 #include "Menu.h"
-#include "Msgs430.h"
 #include "InitDataBuffers.h"
 #include "SysEvents.h"
 #include "PowerManagement.h"
@@ -66,7 +65,6 @@ void handleAAA(CMD_BUFFER_STRUCT* inCmd)
 //--------------------------------------------------
 void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 {
-	uint16 idex;
 	SYSTEM_CFG cfg;					// 424 bytes, or 848 chars from the pc.
 	uint8 dcmHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
@@ -117,14 +115,6 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	byteCpy((uint8*)cfg.eventCfg.sessionLocation, g_triggerRecord.trec.loc, SESSION_LOCATION_STRING_SIZE - 2);
 	byteCpy((uint8*)cfg.eventCfg.sessionComments, g_triggerRecord.trec.comments, SESSION_COMMENTS_STRING_SIZE - 2);
 	
-	for (idex = 0; idex < 8; idex++)
-	{
-		cfg.eventCfg.channel[idex].type = g_msgs430.startMsg430.channel[idex].channel_type;
-		cfg.eventCfg.channel[idex].input = g_msgs430.startMsg430.channel[idex].channel_num;
-		cfg.eventCfg.channel[idex].group = g_msgs430.startMsg430.channel[idex].group_num;
-		cfg.eventCfg.channel[idex].options = g_msgs430.startMsg430.channel[idex].options;
-	}
-
 	cfg.autoCfg.auto_monitor_mode = g_helpRecord.auto_monitor_mode;
 	cfg.autoCfg.auto_cal_mode = g_helpRecord.auto_cal_mode;
 
@@ -507,12 +497,6 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		byteCpy((uint8*)g_triggerRecord.trec.oper, cfg.eventCfg.seismicOperator, SEISMIC_OPERATOR_STRING_SIZE - 2);
 		byteCpy((uint8*)g_triggerRecord.trec.loc, cfg.eventCfg.sessionLocation, SESSION_LOCATION_STRING_SIZE - 2);
 		byteCpy((uint8*)g_triggerRecord.trec.comments, cfg.eventCfg.sessionComments, SESSION_COMMENTS_STRING_SIZE - 2);
-
-		for (buffDex = 0; buffDex < 8; buffDex++)
-		{
-			// No check for the flag.
-			g_msgs430.startMsg430.channel[buffDex].options = cfg.eventCfg.channel[buffDex].options;
-		}
 
 		if ((LOW == cfg.eventCfg.preBuffNumOfSamples) || (HIGH == cfg.eventCfg.preBuffNumOfSamples))
 		{

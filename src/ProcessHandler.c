@@ -20,9 +20,7 @@
 #include "Uart.h"
 #include "Display.h"
 #include "Common.h"
-#include "Ispi.h"
 #include "InitDataBuffers.h"
-#include "Msgs430.h"
 #include "Summary.h"
 #include "SysEvents.h"
 #include "Board.h"
@@ -93,15 +91,6 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	//assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
 #endif
 
-	// Where ever num_sensor_channels gets set g_totalSamples needs to be 
-	// set also it is used to know the size of data burst expected from 
-	// msp430 when collecting sample data.  
-
-	// TODO: This should be moved to where the trigger data is setup.	  
-	// g_numOfSensorChannels = 4; // hardcoded for test   
-	// This creates a buffer size in an even integral of the number of sensors.
-	g_totalSamples = (uint32)((SAMPLE_BUF_SIZE / g_sensorInfoPtr->numOfChannels) * g_sensorInfoPtr->numOfChannels);
-
 	// This is for error checking, If these checks are true, the defaults are not being set.
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
 	{
@@ -163,8 +152,6 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	else if (op_mode == MANUAL_TRIGGER_MODE)
 	{
 		debug("--- Manual Trigger Mode Settings ---\n");
-		//debug("\tRecord Time: %d, Sample Rate: %d\n", g_msgs430.startMsg430.total_record_time, trig_mn.sample_rate);
-		//debug("\tSeismic Trigger Count: %d, Air Trigger Level: %d db\n", trig_mn.seismicTriggerLevel, trig_mn.soundTriggerLevel);
 	}
 	else if (op_mode == MANUAL_CAL_MODE)
 	{
@@ -172,30 +159,6 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		debug("\tSample Rate: %d, Channels: %d\n", trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
 	}
 
-#if 0 // Old 430 Code - Remove
-	if (g_sensorInfoPtr->numOfChannels == NUMBER_OF_CHANNELS_DEFAULT)
-	{
-		debug("--- Seismic Group 1 Setup ---\n");
-		for (i = 0; i < NUMBER_OF_CHANNELS_DEFAULT; i++)
-		{
-			byteSet(&channelType[0], 0, sizeof(channelType));
-			
-			switch (g_msgs430.startMsg430.channel[i].channel_type)
-			{
-				case RADIAL_CHANNEL_TYPE	: strcpy(channelType, "Radial    "); break;
-				case VERTICAL_CHANNEL_TYPE	: strcpy(channelType, "Vertical  "); break;
-				case TRANSVERSE_CHANNEL_TYPE: strcpy(channelType, "Transverse"); break;
-				case ACOUSTIC_CHANNEL_TYPE	: strcpy(channelType, "Acoustic  "); break;
-			}
-
-			debug("\tChan %d: <%s>, 430 A/D Input: %d, Trig: 0x%x, Alarm 1: 0x%x, Alarm 2:0x%x\n",
-					(i + 1), channelType, g_msgs430.startMsg430.channel[i].channel_num,
-					swapInt(g_msgs430.startMsg430.channel[i].trig_lvl_1),
-					swapInt(g_msgs430.startMsg430.channel[i].trig_lvl_2),
-					swapInt(g_msgs430.startMsg430.channel[i].trig_lvl_3));
-		}
-	}
-#endif		
 	debug("---------------------------\n");
 
 	// Check if mode is Manual Cal
@@ -285,19 +248,9 @@ void startDataCollection(uint32 sampleRate)
 	// Start the timer for collecting data
 	Start_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 
-#if 0 // Quarter sec buffer fill is now inside the ISR
-	// Gather 1/4 second worth of data before comparing samples
-	soft_usecWait(1 * SOFT_SECS);
-#endif
-
 	// Change state to start processing the samples
 	debug("Raise signal to start sampling\n");
 	g_sampleProcessing = ACTIVE_STATE;
-
-#if 0 // ns7100
-	// Send message to 430
-	//ISPI_SendMsg(g_msgs430.startMsg430.cmd_id);
-#endif
 }
 
 /****************************************
@@ -314,7 +267,7 @@ void stopMonitoring(uint8 mode, uint8 operation)
 		if ((mode == WAVEFORM_MODE) || (mode == COMBO_MODE))
 		{
 			// Set flag to prevent any more incoming events from being processed
-			g_doneTakingEvents = YES;
+			g_doneTakingEvents = PENDING;
 
 			// Wait for any triggered events to finish sending
 			waitForEventProcessingToFinish();
@@ -427,15 +380,13 @@ void stopDataClock(void)
 ****************************************/
 void waitForEventProcessingToFinish(void)
 {
-	//uint32 waitForCalCount = 0;
-
-	if (g_isTriggered || g_processingCal || g_calTestExpected)
+	if (g_doneTakingEvents == PENDING)
 	{
-		debug("IsTriggered: %d, ProcCal: %d, CalTestExp: %d", g_isTriggered, g_processingCal, g_calTestExpected);
+		debug("ISR Monitor process is still pending\n");
 		
 		overlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
 
-		while (g_isTriggered || g_processingCal || g_calTestExpected)
+		while (g_doneTakingEvents == PENDING)
 		{
 			// Just wait for the cal and end immediately afterwards
 			soft_usecWait(250);
@@ -506,7 +457,7 @@ void handleManualCalibration(void)
 			(getSystemEventState(TRIGGER_EVENT) == NO))
 		{
 			// Check if still waiting for an event and not processing a cal and not waiting for a cal
-			if ((g_isTriggered == NO) && (g_processingCal == NO) && (g_calTestExpected == NO))
+			if (g_busyProcessingEvent == NO)
 			{
 				getFlashUsageStats(&flashStats);
 				
@@ -530,32 +481,14 @@ void handleManualCalibration(void)
 					// Make sure Cal pulse is generated at low sensitivity
 					SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 
-#if 0 // fix_ns8100
-					// Set flag to Sampling, we are about to begin to sample.
-					g_sampleProcessing = ACTIVE_STATE;
-#else
 					startDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
-#endif
-
-					// No longer needed, handled in the ISR for Cal
-					//GenerateCalSignal();
 
 					// Wait for the Cal Pulse to complete, 250ms + 100ms
 					soft_usecWait(350 * SOFT_MSECS);
 
 					// Just make absolutely sure we are done with the Cal pulse
 					while ((volatile uint32)g_manualCalSampleCount != 0) { }
-#if 0 // fix_ns8100
-					{
-						// After 350ms, the Cal pulse should have decremented the Manual Cal Sample count
-						if ((volatile uint32)g_manualCalSampleCount == manualCalProgressCheck)
-							break; // There's a problem, break out and hope for the best, but that won't happen
-		
-						// Cache the current value and try again
-						manualCalProgressCheck = g_manualCalSampleCount;
-						soft_usecWait(5 * SOFT_MSECS);
-					}
-#endif
+
 					// Stop data transfer
 					stopDataClock();
 
@@ -566,13 +499,6 @@ void handleManualCalibration(void)
 					g_manualCalFlag = FALSE;
 					g_manualCalSampleCount = 0;
 
-#if 0 // fix_ns8100
-					// Set flag to Sampling, we are about to begin to sample.
-					g_sampleProcessing = ACTIVE_STATE;
-
-					// Send message to 430
-					ISPI_SendMsg(g_msgs430.startMsg430.cmd_id);
-#else
 					// Make sure to reset the gain after the Cal pulse (which is generated at low sensitivity)
 					if (g_triggerRecord.srec.sensitivity == SEISMIC_GAIN_HIGH)
 					{
@@ -580,7 +506,6 @@ void handleManualCalibration(void)
 					}
 
 					startDataCollection(g_triggerRecord.trec.sample_rate);
-#endif
 				}
 			}
 		}					
@@ -598,26 +523,6 @@ void handleManualCalibration(void)
 		{
 			overlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
 
-#if 0 // ns7100
-			// Temp set mode to waveform to force the 430 ISR to call ProcessWaveformData instead of ProcessBargraphData 
-			// after the calibration finishes to prevent a lockup when bargraph references globals that are not inited yet
-			holdOpMode = g_triggerRecord.op_mode;
-
-			g_triggerRecord.op_mode = WAVEFORM_MODE;
-
-			// Stop data transfer
-			stopDataCollection();
-
-			// Issue a Cal Pulse message to the 430
-			startMonitoring(g_triggerRecord.trec, MANUAL_CAL_PULSE_CMD, MANUAL_CAL_MODE);
-
-			// Wait until after the Cal Pulse has completed, 250ms to be safe (just less than 100 ms to complete)
-			soft_usecWait(250 * SOFT_MSECS);
-
-			// Stop data transfer
-			stopDataCollection();
-#endif
-
 			InitDataBuffs(MANUAL_CAL_MODE);
 			g_manualCalFlag = TRUE;
 			g_manualCalSampleCount = MAX_CAL_SAMPLES;
@@ -632,17 +537,7 @@ void handleManualCalibration(void)
 
 			// Just make absolutely sure we are done with the Cal pulse
 			while ((volatile uint32)g_manualCalSampleCount != 0) { }
-#if 0 // fix_ns8100
-			{
-				// After 350ms, the Cal pulse should have decremented the Manual Cal Sample count
-				if ((volatile uint32)g_manualCalSampleCount == manualCalProgressCheck)
-					break; // There's a problem, break out and hope for the best, but that won't happen
-		
-				// Cache the current value and try again
-				manualCalProgressCheck = g_manualCalSampleCount;
-				soft_usecWait(5 * SOFT_MSECS);
-			}
-#endif
+
 			// Stop data transfer
 			stopDataClock();
 
@@ -651,11 +546,6 @@ void handleManualCalibration(void)
 
 			g_manualCalFlag = FALSE;
 			g_manualCalSampleCount = 0;
-
-#if 0
-			// Restore Op mode
-			g_triggerRecord.op_mode = holdOpMode;
-#endif
 		}
 	}
 }
