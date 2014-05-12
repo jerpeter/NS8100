@@ -99,7 +99,7 @@ void EndCombo(void)
 {
 	uint32 barIntervalsStored;
 
-	while (BG_BUFFER_NOT_EMPTY == CalculateComboData()) {}
+	while (CalculateComboData() == BG_BUFFER_NOT_EMPTY) {}
 
 	// For the last time, put the data into the event buffer.
 	barIntervalsStored = moveComboBarIntervalDataToFile();

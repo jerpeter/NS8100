@@ -96,7 +96,7 @@ void EndBargraph(void)
 {
 	uint32 eventDataFlag;
 
-	while (BG_BUFFER_NOT_EMPTY == CalculateBargraphData()) {}
+	while (CalculateBargraphData() == BG_BUFFER_NOT_EMPTY) {}
 
 	// For the last time, put the data into the event buffer.
 	eventDataFlag = moveBarIntervalDataToFile();

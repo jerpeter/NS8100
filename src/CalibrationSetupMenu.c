@@ -440,6 +440,9 @@ void mnStartCal(void)
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
 
+	// fix_ns8100
+	// Need to power on AD
+
 	// Setup AD Channel config
 	SetupADChannelConfig(CAL_PULSE_FIXED_SAMPLE_RATE);
 	GetChannelOffsets(CAL_PULSE_FIXED_SAMPLE_RATE);
@@ -458,4 +461,7 @@ void mnStartCal(void)
 void mnStopCal(void)
 {
 	Stop_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
+
+	// fix_ns8100
+	// Need to power down AD
 }

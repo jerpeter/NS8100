@@ -349,7 +349,7 @@ void powerOffTimerCallback(void)
 	// Handle and finish any processing
 	stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
-	overlayMessage(getLangText(TIMER_MODE_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 2 * SOFT_SECS);
+	overlayMessage(getLangText(TIMER_MODE_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 3 * SOFT_SECS);
 
 	// Disable Power Off Protection
 	powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);

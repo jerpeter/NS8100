@@ -471,7 +471,7 @@ void GetChannelOffsets(uint32 sampleRate)
 	uint8 powerAnalogDown = NO;
 
 	// Check to see if the A/D is in sleep mode
-	if (getPowerControlState(ANALOG_SLEEP_ENABLE) == YES)
+	if (getPowerControlState(ANALOG_SLEEP_ENABLE) == ON)
 	{
 		// Power the A/D on to set the offsets
 		powerControl(ANALOG_SLEEP_ENABLE, OFF);

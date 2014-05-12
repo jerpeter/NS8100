@@ -235,7 +235,10 @@ void startDataCollection(uint32 sampleRate)
 {
 	// Enable the A/D
 	debug("Enable the A/D\n");
-	powerControl(ANALOG_SLEEP_ENABLE, OFF);		
+	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+
+	// Delay to allow AD to power up/stabilize
+	soft_usecWait(50 * SOFT_MSECS);
 
 	// Setup the A/D Channel configuration
 	SetupADChannelConfig(sampleRate);
@@ -280,14 +283,14 @@ void stopMonitoring(uint8 mode, uint8 operation)
 
 			// Wait for any triggered events to finish sending
 			waitForEventProcessingToFinish();
-
-			// Need to stop all print jobs
 		}
 		
+#if 0 // ns7100 (Serves no useful purpose)
 		if (((mode == BARGRAPH_MODE) || (mode == COMBO_MODE)) && (operation == EVENT_PROCESSING))
 		{
 			raiseSystemEventFlag(BARGRAPH_EVENT);
 		}
+#endif
 
 		// Stop the data transfers
 		stopDataCollection();
@@ -332,6 +335,19 @@ void stopMonitoring(uint8 mode, uint8 operation)
 		{
 			closeMonitorLogEntry();
 		}
+		
+#if 0 // Test
+		char modeBuff[10];
+		char msgBuff[50];
+		if (mode == WAVEFORM_MODE)
+			sprintf(&modeBuff[0], "%s", getLangText(WAVEFORM_MODE_TEXT));
+		else if (mode == BARGRAPH_MODE)
+			sprintf(&modeBuff[0], "%s", getLangText(BARGRAPH_MODE_TEXT));
+		else if (mode == COMBO_MODE)
+			sprintf(&modeBuff[0], "%s", getLangText(COMBO_MODE_TEXT));
+		sprintf(&msgBuff[0], "%s MONITORING AND EVENT CLOSURE COMPLETE", modeBuff);
+		overlayMessage(getLangText(TIMER_MODE_TEXT), msgBuff, 3 * SOFT_SECS);
+#endif		
 	}
 	
 	// Turn on the Green keypad LED
@@ -382,7 +398,7 @@ void stopDataClock(void)
 
 	Stop_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 
-	powerControl(ANALOG_SLEEP_ENABLE, OFF);		
+	powerControl(ANALOG_SLEEP_ENABLE, ON);		
 }
 
 /****************************************

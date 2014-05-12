@@ -54,14 +54,22 @@ BOOLEAN timerModeActiveCheck(void)
 
 	if (g_helpRecord.encode_ln == 0xA5A5)
 	{
-		// Check if timer mode is enabled and if the time of day alarm flag is set
+		// Check if timer mode is enabled
 		if (g_helpRecord.timer_mode == ENABLED)
 		{
 			debug("Timer Mode active\n");
 
+			// Check if the timer mode settings match the current hour and minute meaning the unit powered itself on
 			if ((g_helpRecord.tm_start_time.hour == time.hour) && (g_helpRecord.tm_start_time.min == time.min))
 			{
 				debug("Timer Mode Check: Matched Timer settings...\n");
+				status = TRUE;
+			}
+			// Check again if settings match current hour and near minute meaning unit powered itself on but suffered from long startup
+			else if ((g_helpRecord.tm_start_time.hour == time.hour) && 
+					((((g_helpRecord.tm_start_time.min + 1) == 60) && (time.min == 0)) || ((g_helpRecord.tm_start_time.min + 1) == time.min)))
+			{
+				debug("Timer Mode Check: Matched Timer settings (long startup) ...\n");
 				status = TRUE;
 			}
 			else
@@ -113,7 +121,7 @@ void processTimerMode(void)
 	DATE_TIME_STRUCT currTime = getRtcTime();
 
 	// Check if the Timer mode activated after stop date
-	if (	// First Check for past year
+	if (// First Check for past year
 		(currTime.year > g_helpRecord.tm_stop_date.year) ||
 
 		// Second check for equal year but past month
@@ -275,6 +283,7 @@ void resetTimeOfDayAlarm(void)
 
 	if (g_helpRecord.timer_mode_freq == TIMER_MODE_DAILY)
 	{
+#if 0 // Normal
 		// Get the current day and add one
 		startDay = (uint8)(currTime.day + 1);
 
@@ -287,6 +296,30 @@ void resetTimeOfDayAlarm(void)
 
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
 				g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, startDay);
+#else // Test
+		// Loop test on and off in a cycle
+		startDay = currTime.day;
+		
+		g_helpRecord.tm_start_time.min += 3;
+		
+		if (g_helpRecord.tm_start_time.min >= 60)
+		{
+			g_helpRecord.tm_start_time.min -= 60;
+			g_helpRecord.tm_start_time.hour	+= 1;
+			
+			if (g_helpRecord.tm_start_time.hour >= 24)
+			{
+				g_helpRecord.tm_start_time.hour = 0;
+				startDay = currTime.day + 1; // Ignore month boundary for testing
+			}
+		}
+		
+		// Save new testing timer mode adjustments
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+
+		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
+				g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, startDay);
+#endif
 
 		EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
 	}
