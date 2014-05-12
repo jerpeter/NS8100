@@ -89,7 +89,6 @@ extern uint32 vsJobPeak;
 ///----------------------------------------------------------------------------
 ///	Globals
 ///----------------------------------------------------------------------------
-uint8 g_monitorOperationMode;
 uint32 gTotalSamples;
 uint16 manual_cal_flag = FALSE;
 uint16 manualCalSampleCount = 0;
@@ -151,7 +150,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	gTotalSamples = (uint32)((SAMPLE_BUF_SIZE / gp_SensorInfo->numOfChannels) * gp_SensorInfo->numOfChannels);
 
 	// This is for error checking, If these checks are true, the defaults are not being set.
-	if (op_mode == WAVEFORM_MODE)
+	if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
 	{
 		if ((help_rec.alarm_one_mode == ALARM_MODE_SEISMIC) || (help_rec.alarm_one_mode == ALARM_MODE_BOTH))
 		{
@@ -202,6 +201,13 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		//debug("\tRecord Time: %d, Sample Rate: %d\n", msgs430.startMsg430.total_record_time, trig_mn.sample_rate);
 		debug("\tBar Interval: %d secs, Summary Interval: %d mins\n", trig_rec.bgrec.barInterval, (trig_rec.bgrec.summaryInterval / 60));
 	}
+	else if (op_mode == COMBO_MODE)
+	{
+		debug("--- Combo Mode Settings ---\n");
+		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\n", trig_rec.trec.record_time, trig_mn.sample_rate, gp_SensorInfo->numOfChannels);
+		debug("\tSeismic Trigger Count: 0x%x, Air Trigger Level: 0x%x db\n", trig_mn.seismicTriggerLevel, trig_mn.soundTriggerLevel);
+		debug("\tBar Interval: %d secs, Summary Interval: %d mins\n", trig_rec.bgrec.barInterval, (trig_rec.bgrec.summaryInterval / 60));
+	}
 	else if (op_mode == MANUAL_TRIGGER_MODE)
 	{
 		debug("--- Manual Trigger Mode Settings ---\n");
@@ -213,7 +219,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		debug("--- Manual Cal Mode Settings ---\n");
 	}
 
-#if 0
+#if 0 // Old 430 Code - Remove
 	if (gp_SensorInfo->numOfChannels == NUMBER_OF_CHANNELS_DEFAULT)
 	{
 		debug("--- Seismic Group 1 Setup ---\n");
@@ -245,7 +251,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		// Raise flag
 		manual_cal_flag = TRUE;
 	}
-	else // Waveform, Bargraph
+	else // Waveform, Bargraph, Combo
 	{
 		// Clear flag
 		manual_cal_flag = FALSE;

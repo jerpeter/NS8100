@@ -159,8 +159,21 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 								(*menufunc_ptrs[active_menu]) (mn_msg);
 							}
 							break;
-						case (5): // Combo mode - not operational yet
-							messageBox(getLangText(STATUS_TEXT), getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT), MB_OK);
+						case (5): 
+							// Combo mode - not operational yet
+							//messageBox(getLangText(STATUS_TEXT), getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT), MB_OK);
+							if (factory_setup_rec.invalid)
+							{
+								debugWarn("Factory setup record not found.\n");
+								messageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
+							}
+							else
+							{
+								trig_rec.op_mode = COMBO_MODE;
+								updateModeMenuTitle(trig_rec.op_mode);
+								ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
+								(*menufunc_ptrs[active_menu]) (mn_msg);
+							}
 							break;
 						case (6): active_menu = LOAD_REC_MENU;
 							ACTIVATE_MENU_MSG(); (*menufunc_ptrs[active_menu]) (mn_msg);

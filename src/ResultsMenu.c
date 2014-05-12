@@ -420,6 +420,10 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			length = (uint8)sprintf((char*)buff, "%s%s (B)", getLangText(MONITORING_TEXT), dotBuff);
 		}
+		else if (g_monitorOperationMode == COMBO_MODE)
+		{
+			length = (uint8)sprintf((char*)buff, "%s%s (C)", getLangText(MONITORING_TEXT), dotBuff);
+		}
 	}
 	else
 	{

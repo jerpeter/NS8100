@@ -1106,6 +1106,7 @@ void tc_irq(void)
 					*(tailOfPreTrigBuff + 3) |= TRIG_ONE;
 
 					debug("--> Trigger Found! %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
+					
 					recording = YES;
 					sampleCount = trig_rec.trec.record_time * trig_rec.trec.sample_rate;
 				}
@@ -1165,7 +1166,7 @@ void tc_irq(void)
 			// Else check if we are still recording but handling the last sample
 			else if ((recording == YES) && (sampleCount == 0))
 			{
-				debug("--> Recording done!\n");
+				//debug("--> Recording done!\n");
 
 				recording = NO;
 				trigFound = NO;
@@ -1202,7 +1203,7 @@ void tc_irq(void)
 			}
 			else if ((calPulse == YES) && (calSampleCount == 0))
 			{
-				debug("--> Cal done!\n");
+				//debug("--> Cal done!\n");
 
 				calPulse = NO;
 			}

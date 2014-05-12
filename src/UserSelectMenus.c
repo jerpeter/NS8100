@@ -372,7 +372,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (trig_rec.op_mode == WAVEFORM_MODE)
+		if ((trig_rec.op_mode == WAVEFORM_MODE) || (trig_rec.op_mode == COMBO_MODE))
 		{
 			if ((!factory_setup_rec.invalid) && (factory_setup_rec.aweight_option == ENABLED))
 			{
@@ -836,10 +836,10 @@ void barIntervalMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT barScaleMenu[BAR_SCALE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, BAR_SCALE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAR_SCALE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 0, (uint8)NULL_TEXT,	BAR_SCALE_FULL_TAG,		{BAR_SCALE_FULL}},
-{ITEM_2, 0, (uint8)NULL_TEXT,	BAR_SCALE_HALF_TAG,		{BAR_SCALE_HALF}},
-{ITEM_3, 0, (uint8)NULL_TEXT,	BAR_SCALE_QUARTER_TAG,	{BAR_SCALE_QUARTER}},
-{ITEM_4, 0, (uint8)NULL_TEXT,	BAR_SCALE_EIGHTH_TAG,	{BAR_SCALE_EIGHTH}},
+{ITEM_1, 0, NULL_TEXT,	BAR_SCALE_FULL_TAG,		{BAR_SCALE_FULL}},
+{ITEM_2, 0, NULL_TEXT,	BAR_SCALE_HALF_TAG,		{BAR_SCALE_HALF}},
+{ITEM_3, 0, NULL_TEXT,	BAR_SCALE_QUARTER_TAG,	{BAR_SCALE_QUARTER}},
+{ITEM_4, 0, NULL_TEXT,	BAR_SCALE_EIGHTH_TAG,	{BAR_SCALE_EIGHTH}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&barScaleMenuHandler}}
 };
 
@@ -935,7 +935,24 @@ void barResultMenuHandler(uint8 keyPressed, void* data)
 		help_rec.vector_sum = (uint8)barResultMenu[newItemIndex].data;
 		saveRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		if ((help_rec.alarm_one_mode == ALARM_MODE_OFF) && (help_rec.alarm_two_mode == ALARM_MODE_OFF))
+		// If Combo mode, jump back over to waveform specific settings
+		if (trig_rec.op_mode == COMBO_MODE)
+		{
+			if (factory_setup_rec.sensor_type == SENSOR_ACC)
+			{
+				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
+				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
+			}
+			else
+			{
+				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = IN_TYPE;
+				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
+			}
+
+			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &trig_rec.trec.seismicTriggerLevel,
+				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
+		}
+		else if ((help_rec.alarm_one_mode == ALARM_MODE_OFF) && (help_rec.alarm_two_mode == ALARM_MODE_OFF))
 		{
 			ACTIVATE_USER_MENU_MSG(&saveSetupMenu, YES);
 		}
@@ -962,9 +979,9 @@ void barResultMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT baudRateMenu[BAUD_RATE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, BAUD_RATE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAUD_RATE_MENU_ENTRIES, TITLE_LEFT_JUSTIFIED, DEFAULT_ITEM_1)}},
-{ITEM_1, 38400, (uint8)NULL_TEXT,	NO_TAG, {BAUD_RATE_38400}},
-{ITEM_2, 19200, (uint8)NULL_TEXT,	NO_TAG, {BAUD_RATE_19200}},
-{ITEM_3, 9600, (uint8)NULL_TEXT,	NO_TAG, {BAUD_RATE_9600}},
+{ITEM_1, 38400, NULL_TEXT,	NO_TAG, {BAUD_RATE_38400}},
+{ITEM_2, 19200, NULL_TEXT,	NO_TAG, {BAUD_RATE_19200}},
+{ITEM_3, 9600, NULL_TEXT,	NO_TAG, {BAUD_RATE_9600}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&baudRateMenuHandler}}
 };
 
@@ -1594,7 +1611,7 @@ void helpMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT infoMenu[INFO_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, HELP_INFO_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, INFO_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{NO_TAG, 0, (uint8)NULL_TEXT,	NO_TAG, {DEFAULT_ITEM_1}},
+{NO_TAG, 0, NULL_TEXT,	NO_TAG, {DEFAULT_ITEM_1}},
 {NO_TAG, 0, NOT_INCLUDED_TEXT,	NO_TAG, {DEFAULT_ITEM_2}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&infoMenuHandler}}
 };
@@ -1716,7 +1733,7 @@ void millibarMenuHandler(uint8 keyPressed, void* data)
 //*****************************************************************************
 #define MODE_MENU_ENTRIES 4
 USER_MENU_STRUCT modeMenu[MODE_MENU_ENTRIES] = {
-{TITLE_PRE_TAG, 0, (uint8)NULL_TEXT, TITLE_POST_TAG,
+{TITLE_PRE_TAG, 0, NULL_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, MODE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, MONITOR_TEXT,	NO_TAG, {MONITOR}},
 {ITEM_2, 0, EDIT_TEXT,		NO_TAG, {EDIT}},
@@ -1745,7 +1762,7 @@ void modeMenuHandler(uint8 keyPressed, void* data)
 			{
 				ACTIVATE_USER_MENU_MSG(&companyMenu, &trig_rec.trec.client);
 			}
-			else
+			else // WAVEFORM_MODE or COMBO_MODE
 			{
 				ACTIVATE_USER_MENU_MSG(&sampleRateMenu, trig_rec.trec.sample_rate);
 			}
@@ -1989,14 +2006,15 @@ void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 // Sample Rate Menu
 //=============================================================================
 //*****************************************************************************
-#define SAMPLE_RATE_MENU_ENTRIES 6
+#define SAMPLE_RATE_MENU_ENTRIES 7
 USER_MENU_STRUCT sampleRateMenu[SAMPLE_RATE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, SAMPLE_RATE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, SAMPLE_RATE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 1024, (uint8)NULL_TEXT, NO_TAG, {1024}},
-{ITEM_2, 2048, (uint8)NULL_TEXT, NO_TAG, {2048}},
-{ITEM_3, 4096, (uint8)NULL_TEXT, NO_TAG, {4096}},
-{ITEM_4, 8192, (uint8)NULL_TEXT, NO_TAG, {8192}},
+{ITEM_1, 512, NULL_TEXT, NO_TAG, {512}},
+{ITEM_2, 1024, NULL_TEXT, NO_TAG, {1024}},
+{ITEM_3, 2048, NULL_TEXT, NO_TAG, {2048}},
+{ITEM_4, 4096, NULL_TEXT, NO_TAG, {4096}},
+{ITEM_5, 8192, NULL_TEXT, NO_TAG, {8192}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&sampleRateMenuHandler}}
 };
 
@@ -2027,6 +2045,7 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 		{
 			trig_rec.trec.sample_rate = sampleRateMenu[newItemIndex].data;
 
+			// fix_ns8100 - Add in Combo mode calc that accounts for Bargraph buffers
 			trig_rec.trec.record_time_max = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS -
 				(trig_rec.trec.sample_rate / 4 * gp_SensorInfo->numOfChannels) -
 					(trig_rec.trec.sample_rate / 1024 * 100 * gp_SensorInfo->numOfChannels)) /
@@ -2088,6 +2107,7 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 		switch (trig_rec.op_mode)
 		{
 			case WAVEFORM_MODE:
+			case COMBO_MODE:
 				if ((help_rec.alarm_one_mode == ALARM_MODE_OFF) &&
 					(help_rec.alarm_two_mode == ALARM_MODE_OFF))
 				{
@@ -2136,9 +2156,6 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 					}
 				}
 			break;
-
-			case COMBO_MODE:
-			break;
 		}
 	}
 
@@ -2186,7 +2203,7 @@ void sensitivityMenuHandler(uint8 keyPressed, void* data)
 			ACTIVATE_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &trig_rec.trec.seismicTriggerLevel,
 				SEISMIC_TRIGGER_DEFAULT_VALUE, SEISMIC_TRIGGER_MIN_VALUE, SEISMIC_TRIGGER_MAX_VALUE);
 		}
-		else if (trig_rec.op_mode == BARGRAPH_MODE)
+		else if ((trig_rec.op_mode == BARGRAPH_MODE) || (trig_rec.op_mode == COMBO_MODE))
 		{
 			ACTIVATE_USER_MENU_MSG(&barChannelMenu, trig_rec.berec.barChannel);
 		}

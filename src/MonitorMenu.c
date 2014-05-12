@@ -95,7 +95,6 @@ extern uint16 vJobFreq;
 extern uint16 tJobPeak;
 extern uint16 tJobFreq;
 extern uint32 vsJobPeak;
-extern uint8 g_monitorOperationMode;
 extern uint8 g_skipAutoCalInWaveformAfterMidnightCal;
 
 ///----------------------------------------------------------------------------
@@ -105,6 +104,7 @@ extern uint8 g_skipAutoCalInWaveformAfterMidnightCal;
 //uint16 manual_cal_flag = FALSE;
 //uint16 manualCalSampleCount = 0;
 //uint8 g_bargraphForcedCal = NO;
+uint8 g_monitorOperationMode;
 uint8 g_waitForUser = FALSE;
 uint8 g_promtForLeavingMonitorMode = FALSE;
 uint8 g_promtForCancelingPrintJobs = FALSE;
@@ -200,6 +200,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 				break;   
 
 				case BARGRAPH_MODE: 
+					// fix_ns8100 - Look into the assignment, why does it exist since it should already be set?
 					// For bargraph mode these have to be set.
 					trig_rec.op_mode = BARGRAPH_MODE;
 					
@@ -245,6 +246,37 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 				break;
 
 				case COMBO_MODE:
+					// Set the default display mode to be the summary interval results
+					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
+					
+					if(help_rec.vector_sum == DISABLED)
+					{
+						g_displayAlternateResultState = DEFAULT_RESULTS;
+					}
+					
+					if(help_rec.report_displacement == DISABLED)
+					{
+						g_displayAlternateResultState = DEFAULT_RESULTS;
+					}
+
+					// Check if the sample rate is not 1024
+					if (trig_rec.trec.sample_rate != 1024)
+					{
+						trig_rec.trec.sample_rate = 1024;
+					}	
+
+					aImpulsePeak = rImpulsePeak = vImpulsePeak = tImpulsePeak = 0;
+					aJobPeak = rJobPeak = vJobPeak = tJobPeak = 0;
+					aJobFreq = rJobFreq = vJobFreq = tJobFreq = 0;
+					vsImpulsePeak = vsJobPeak = 0;
+					
+					if ((trig_rec.berec.impulseMenuUpdateSecs < LCD_IMPULSE_TIME_MIN_VALUE) || 
+						(trig_rec.berec.impulseMenuUpdateSecs > LCD_IMPULSE_TIME_MAX_VALUE))
+					{
+						trig_rec.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
+					}
+
+					startMonitoring(trig_rec.trec, START_TRIGGER_CMD, trig_rec.op_mode);
 					break;
 
 				default:
@@ -332,7 +364,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 #if 1
 						g_showRVTA = YES;
 #endif					
-					if (g_monitorOperationMode == BARGRAPH_MODE)
+					if ((g_monitorOperationMode == BARGRAPH_MODE) || (g_monitorOperationMode == COMBO_MODE))
 					{
 						// Check if at the Impulse Results screen
 						if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
@@ -353,7 +385,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 #if 1
 						g_showRVTA = NO;
 #endif					
-					if (g_monitorOperationMode == BARGRAPH_MODE)
+					if ((g_monitorOperationMode == BARGRAPH_MODE) || (g_monitorOperationMode == COMBO_MODE))
 					{
 						// Check if at the Job Peak Results screen
 						if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
@@ -520,13 +552,17 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		length = (uint8)sprintf((char*)buff, "%s%s (B)", getLangText(MONITORING_TEXT), dotBuff);
 	}
+	else if (g_monitorOperationMode == COMBO_MODE)
+	{
+		length = (uint8)sprintf((char*)buff, "%s%s (C)", getLangText(MONITORING_TEXT), dotBuff);
+	}
 
 	// Setup current column to center text
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	// Write string to screen
 	wndMpWrtString((uint8*)&buff[0], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-	if(g_monitorOperationMode == BARGRAPH_MODE)
+	if((g_monitorOperationMode == BARGRAPH_MODE) || (g_monitorOperationMode == COMBO_MODE))
 	{
 		if(g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			arrowChar = BOTH_ARROWS_CHAR;
@@ -624,7 +660,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 #endif
 	}
-	else if (g_monitorOperationMode == BARGRAPH_MODE)
+	else if ((g_monitorOperationMode == BARGRAPH_MODE) || (g_monitorOperationMode == COMBO_MODE))
 	{
 		//-----------------------------------------------------------------------
 		// Date and Time
