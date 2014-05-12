@@ -2,6 +2,7 @@
 #define FAT32_DEFINITIONS_H_
 
 #include "define.h"
+#include "FAT32_Opts.h"
 
 //-----------------------------------------------------------------------------
 //			FAT32 Offsets
@@ -105,6 +106,19 @@ typedef struct STRUCT_PACK
 //	UINT32 FileSize;
 	BYTE FileSize[4];
 } FAT32_ShortEntry;
+
+enum {
+	FAT32_END_LIST = 0,
+	FAT32_DIR = 1,
+	FAT32_FILE = 2
+} FAT32_ENTRY_TYPE;
+
+typedef struct
+{
+	UINT32 type;
+	UINT32 size;
+	char name[MAX_LONG_FILENAME];
+} FAT32_DIRLIST;
 
 
 #endif /*FAT32_DEFINITIONS_H_*/

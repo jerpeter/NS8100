@@ -1292,11 +1292,11 @@ void UpdateBargraphJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 // Function:	checkSpaceForBarSummaryInterval
 // Purpose:
 //*****************************************************************************
-BOOL checkSpaceForBarSummaryInterval(void)
+BOOLEAN checkSpaceForBarSummaryInterval(void)
 {
 	FLASH_USAGE_STRUCT flashStats = getFlashUsageStats();
 	uint32 barIntervalSize;
-	BOOL spaceLeft;
+	BOOLEAN spaceLeft;
 
 	barIntervalSize = (sizeof(CALCULATED_DATA_STRUCT) + (((trig_rec.bgrec.summaryInterval / trig_rec.bgrec.barInterval) + 1) * 8));
 

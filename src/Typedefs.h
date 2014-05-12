@@ -32,8 +32,10 @@
 #define _TYPEDEFS_H_
 
 typedef unsigned			bitfield;		/* variable # of bits */
-typedef unsigned char       BOOL;
 typedef unsigned long       ADDRESS;
+
+// Defined elsewhere as int, changing to match
+//typedef unsigned char       BOOLEAN;
 
 typedef unsigned char		uint8;  		/*  8 bits */
 typedef unsigned short int	uint16; 		/* 16 bits */
@@ -176,7 +178,7 @@ enum {FAILED = 0, PASSED};
 #define PASSED 1
 #endif
 
-#if 0
+#if 0 // Redefined in other code
 #ifndef FAIL
 #define FAIL 0
 #endif

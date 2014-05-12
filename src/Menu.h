@@ -696,7 +696,7 @@ enum {
 
 // MessageBox choices struct
 typedef struct {
-	BOOL numChoices;
+	BOOLEAN numChoices;
 	uint16 firstTextEntry;
 	uint16 secondTextEntry;
 } MB_CHOICE;

@@ -231,7 +231,11 @@ typedef struct
 
 typedef struct
 { 
+#if 1 // Old
 	uint16* linkPtr;
+#else // SD card partial name
+	uint32 fileEventNum;
+#endif
 	uint8  mode;
 	SUMMARY_WAVESHAPE waveShapeData;
 } SUMMARY_DATA;

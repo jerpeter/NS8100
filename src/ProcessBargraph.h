@@ -66,6 +66,6 @@ void MoveEndOfBargraphEventRecordToFlash(void);
 void advanceBarIntervalBufPtr(uint8);
 void advanceSumIntervalBufPtr(uint8);
 
-BOOL checkSpaceForBarSummaryInterval(void);
+BOOLEAN checkSpaceForBarSummaryInterval(void);
 
 #endif //_DATABUFFS_H_

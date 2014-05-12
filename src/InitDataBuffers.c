@@ -94,13 +94,15 @@ SUMMARY_DATA* gLastCompDataSum;
 uint32 isTriggered = 0;
 uint32 processingCal = 0;
 uint16 eventsNotCompressed = 0; 
-uint8 g_doneTakingEvents = NO;
-uint16  eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 uint16* gp_bg430DataStart;
 uint16* gp_bg430DataWrite;
 uint16* gp_bg430DataRead;
 uint16* gp_bg430DataEnd;
 uint8 g_powerNoiseFlag = PRINTER_OFF;
+uint8 g_doneTakingEvents = NO;
+// fix_ns8100 - No aligned correctly
+uint16 deadSpaceFix;
+uint16 eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 
 //*****************************************************************************
 // Function:	InitDataBuffs

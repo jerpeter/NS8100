@@ -99,7 +99,7 @@ uint8 keyMap[8];
 *	Purpose:
 ****************************************/
 #include "M23018.h"
-BOOL keypad(void)
+BOOLEAN keypad(void)
 {
 	INPUT_MSG_STRUCT msg;
 	INPUT_MSG_STRUCT* p_msg = &msg;

@@ -116,8 +116,8 @@ typedef struct
 	uint16 manualCalsLeft;
 	uint8 percentUsed;
 	uint8 percentFree;
-	BOOL wrapped;
-	BOOL roomForBargraph;
+	BOOLEAN wrapped;
+	BOOLEAN roomForBargraph;
 } FLASH_USAGE_STRUCT;
 
 ///----------------------------------------------------------------------------

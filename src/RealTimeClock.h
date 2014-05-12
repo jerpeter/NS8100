@@ -1068,7 +1068,7 @@ typedef struct
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-BOOL InitRtc(void);
+BOOLEAN InitRtc(void);
 uint8 setRtcTime(DATE_TIME_STRUCT* time);
 uint8 setRtcDate(DATE_TIME_STRUCT* time);
 DATE_TIME_STRUCT getRtcTime(void);

@@ -508,7 +508,7 @@ void stopPitTimer(PIT_TIMER timer)
 ///	Function:	checkPitTimer
 ///	Purpose:
 ///----------------------------------------------------------------------------
-BOOL checkPitTimer(PIT_TIMER timer)
+BOOLEAN checkPitTimer(PIT_TIMER timer)
 {
 #if 0 // fix_ns8100
 	if (timer == KEYPAD_TIMER)

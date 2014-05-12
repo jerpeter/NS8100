@@ -218,6 +218,6 @@ void uart_putc(uint8 c, int32 channel);
 void uart_init(uint32 BaudRate, int32 channel);
 void uartControl(uint8 control, int8 channel);
 uint16 auto_baud(int32 channel);
-BOOL uart_char_waiting(int32 channel);
+BOOLEAN uart_char_waiting(int32 channel);
 
 #endif // _UART_H_

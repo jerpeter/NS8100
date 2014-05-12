@@ -446,7 +446,7 @@ BOOL FAT32_MarkFileDeleted(UINT32 Cluster, char *shortname)
 // ListDirectory: Using starting cluster number of a directory and the FAT,
 //				  list all directories and files 
 //-----------------------------------------------------------------------------
-void ListDirectory(UINT32 StartCluster)
+void ListDirectory(UINT32 StartCluster, FAT32_DIRLIST* dirList, BOOL displayResults)
 {
 //	BYTE buffer[128];
 	BYTE i,item;
@@ -462,10 +462,12 @@ void ListDirectory(UINT32 StartCluster)
     unsigned int  dirDirs = 0;
     unsigned long int  freeSpace;
     unsigned long tempData;
+	UINT16 totalEntriesFound = 0;
 
     FAT32.filenumber=0;
 	//print_dbg("\r\nNo.             Filename\r\n");
-	print_dbg("\r\n");
+	if (displayResults)
+		print_dbg("\r\n");
 
 	FATMisc_ClearLFN(TRUE);
 	
@@ -503,22 +505,51 @@ void ListDirectory(UINT32 StartCluster)
 
 		 			if (FATMisc_If_dir_entry(directoryEntry)) 
 		 			{
-		 				print_dbg("\r\n    01/01/2008  12:00p    <DIR>  ");
+						if (displayResults)
+		 					print_dbg("\r\n    01/01/2008  12:00p    <DIR>  ");
 		                sprintf(tempBuffer,"%s",LongFilename);
-		            	print_dbg(tempBuffer);
+						if (displayResults)
+							print_dbg(tempBuffer);
     					dirDirs++;
+
+#if 1
+						if (dirList != NULL)
+						{
+							//memset(&dirList[totalEntriesFound], 0, sizeof(FAT32_DIRLIST));
+							
+							//print_dbg(" (Found long name dir)");
+							dirList[totalEntriesFound].type = FAT32_DIR;
+							sprintf(dirList[totalEntriesFound].name, "%s", LongFilename);
+							totalEntriesFound++;
+						}
+#endif
 		 			}
     				if (FATMisc_If_file_entry(directoryEntry)) 
     				{
-    					print_dbg("\r\n    01/01/2008  12:00p    ");
+						if (displayResults)
+	    					print_dbg("\r\n    01/01/2008  12:00p    ");
     					tempData = ((directoryEntry->FileSize[0] << 0) & 0x000000FF);
       					tempData += ((directoryEntry->FileSize[1] << 8) & 0x0000FF00);
       					tempData += ((directoryEntry->FileSize[2] << 16)& 0x00FF0000);
       					tempData += ((directoryEntry->FileSize[3] << 24)& 0xFF000000);
    	                    sprintf(tempBuffer,"%8lu  %s",tempData, LongFilename);
-   	            		print_dbg(tempBuffer);
+						if (displayResults)
+	   	            		print_dbg(tempBuffer);
     					dirFiles++;
     					dirSize += tempData;
+
+#if 1
+						if (dirList != NULL)
+						{
+							//memset(&dirList[totalEntriesFound], 0, sizeof(FAT32_DIRLIST));
+							
+							//print_dbg(" (Found long name file)");
+							dirList[totalEntriesFound].type = FAT32_FILE;
+							dirList[totalEntriesFound].size = tempData;
+							sprintf(dirList[totalEntriesFound].name, "%s", LongFilename);
+							totalEntriesFound++;
+						}
+#endif
     				}
 
 					// Print Filename
@@ -545,10 +576,23 @@ void ListDirectory(UINT32 StartCluster)
 					
 		 			if (FATMisc_If_dir_entry(directoryEntry))
 		 			{
-		 				print_dbg("\r\n    01/01/2008  12:00p    <DIR>     ");
+		 				//print_dbg("\r\n    01/01/2008  12:00p    <DIR>     ");
 		                sprintf(tempBuffer,"%s",directoryEntry->Name);
-		            	print_dbg(tempBuffer);
+						if (displayResults)
+			            	print_dbg(tempBuffer);
     					dirDirs++;
+
+#if 1
+						if (dirList != NULL)
+						{
+							//memset(&dirList[totalEntriesFound], 0, sizeof(FAT32_DIRLIST));
+							
+							//print_dbg(" (Found short name dir)");
+							dirList[totalEntriesFound].type = FAT32_DIR;
+							sprintf(dirList[totalEntriesFound].name, "%s", directoryEntry->Name);
+							totalEntriesFound++;
+						}
+#endif
 		 			}
     				if (FATMisc_If_file_entry(directoryEntry))
     				{
@@ -565,15 +609,30 @@ void ListDirectory(UINT32 StartCluster)
     					for (i=8; i<11; i++) 
     						ShortFilename[i+1] = directoryEntry->Name[i];
 
-    					print_dbg("\r\n    01/01/2008  12:00p    ");
+						if (displayResults)
+	    					print_dbg("\r\n    01/01/2008  12:00p    ");
     					tempData = ((directoryEntry->FileSize[0] << 0) & 0x000000FF);
       					tempData += ((directoryEntry->FileSize[1] << 8) & 0x0000FF00);
       					tempData += ((directoryEntry->FileSize[2] << 16)& 0x00FF0000);
       					tempData += ((directoryEntry->FileSize[3] << 24)& 0xFF000000);
    	                    sprintf(tempBuffer,"%8lu  %s",tempData, ShortFilename);
-   	            		print_dbg(tempBuffer);
+						if (displayResults)
+	   	            		print_dbg(tempBuffer);
     					dirFiles++;
     					dirSize += tempData;
+
+#if 1
+						if (dirList != NULL)
+						{
+							//memset(&dirList[totalEntriesFound], 0, sizeof(FAT32_DIRLIST));
+							
+							//print_dbg(" (Found short name file)");
+							dirList[totalEntriesFound].type = FAT32_FILE;
+							sprintf(dirList[totalEntriesFound].name, "%s", ShortFilename);
+							dirList[totalEntriesFound].size = tempData;
+							totalEntriesFound++;
+						}
+#endif
     				}
 
 		  			
@@ -593,10 +652,21 @@ void ListDirectory(UINT32 StartCluster)
 		else
 			break;
 	}
+
+	if (dirList != NULL)
+	{
+		if (displayResults)
+			print_dbg("\r\nMark last list entry the End\r\n");
+		memset(&dirList[totalEntriesFound], 0, sizeof(FAT32_DIRLIST));
+		dirList[totalEntriesFound].type = FAT32_END_LIST;
+	}
+
     sprintf(tempBuffer,"\n\r\n\r    %5d file(s)     %8d bytes\n\r",dirFiles, dirSize);
-	print_dbg(tempBuffer);
+	if (displayResults)
+		print_dbg(tempBuffer);
 	freeSpace = FAT32_FindFreeClusters();   
 	sprintf(tempBuffer,"    %5d dir(s)    %10lu free bytes\n\r",dirDirs, freeSpace);
-	print_dbg(tempBuffer);
+	if (displayResults)
+		print_dbg(tempBuffer);
 } 
 

@@ -50,6 +50,9 @@
 #include "eeprom_test_menu.h"
 #include "twi.h"
 #include "M23018.h"
+#include "sd_mmc_spi.h"
+#include "FAT32_Disk.h"
+#include "FAT32_Access.h"
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -287,9 +290,11 @@ void Display_Craft_Logo()
 //=============================================================================
 void soft_delay(volatile unsigned long int counter)
 {
-	for(; counter > 0;)
+	unsigned long int countdown = (counter << 2) + counter;
+	
+	for(; countdown > 0;)
 	{
-		counter--;
+		countdown--;
 	}
 }
 
@@ -637,15 +642,26 @@ void InitSystemHardware_NS8100(void)
 	
 	// Primer read
 	uint8 keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-	if(keyScan)
+	if (keyScan)
 	{
 		debugWarn("Keypad key being pressed, likely a bug. Key: %x", keyScan);
 	}
 	
+	SD_MMC_Power_On();
+
+	spi_selectChip(SDMMC_SPI, SD_MMC_SPI_NPCS);
+	sd_mmc_spi_internal_init();
+	spi_unselectChip(SDMMC_SPI, SD_MMC_SPI_NPCS);
+
+    FAT32_InitDrive();
+    if (FAT32_InitFAT() == FALSE)
+    {
+        debugErr("FAT32 Initialization failed!\n\r");
+    }
+
 	//-------------------------------------------------------------------------
 	//Display_Craft_Logo();
-	soft_delay(3 * SOFT_SECS);
-
+	//soft_delay(3 * SOFT_SECS);
 }
 
 //=================================================================================================
@@ -806,6 +822,7 @@ int main(void)
 		//debugRaw("k");
 		//testKeypad();
 
+#if 0
 		// Handle system events
 	    SystemEventManager();
 
@@ -820,7 +837,7 @@ int main(void)
 
 		// Handle processing the factory setup
 		FactorySetupManager();
-
+#endif
 		// Check if no System Event and Lcd and Printer power are off
 		if ((SysEvents_flags.wrd == 0x0000) && !(powerManagement.reg & 0x60) &&
 			(g_ModemStatus.xferState == NOP_CMD))

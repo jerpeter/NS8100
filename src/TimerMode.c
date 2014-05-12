@@ -51,9 +51,9 @@ extern MONTH_TABLE_STRUCT monthTable[];
 *	Function:    timerModeActiveCheck
 *	Purpose:
 ****************************************/
-BOOL timerModeActiveCheck(void)
+BOOLEAN timerModeActiveCheck(void)
 {
-	BOOL status = FALSE;
+	BOOLEAN status = FALSE;
 	DATE_TIME_STRUCT time = getRtcTime();
 	uint8 choice;
 

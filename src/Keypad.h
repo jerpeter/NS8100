@@ -82,7 +82,7 @@ enum {
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-BOOL keypad(void);
+BOOLEAN keypad(void);
 void keypressEventMgr(void);
 uint8 getShiftChar(uint8 inputChar);
 uint8 handleCtrlKeyCombination(uint8 inputChar);

@@ -71,7 +71,7 @@ void checkSoftTimers(void);
 void procTimerEvents(void);
 void processTimerMode(void);
 void handleMidnightEvent(void);
-BOOL timerModeActiveCheck(void);
+BOOLEAN timerModeActiveCheck(void);
 void resetTimeOfDayAlarm(void);
 void handleUserPowerOffDuringTimerMode(void);
 void displayTimerCallBack(void);

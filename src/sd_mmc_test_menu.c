@@ -114,6 +114,11 @@ const unsigned char SD_MMC_File_System_Test_Menu_Text[] =
 "   9) Copy File.\n\r"
 "  10) Change Drive.\n\r"
 "  11) List Volume of SD/MMC.\n\r"
+"  12) Display SID text file.\n\r"
+"  13) Display Log text file.\n\r"
+"  14) Add Log entry to text file.\n\r"
+"  15) Test Standard Fat Driver.\n\r"
+"  16) Test Standard Fat Read.\n\r"
 "\0"
 };
 
@@ -130,7 +135,12 @@ static void (*SD_MMC_File_System_Test_Menu_Functions[])(void) =
    SD_MMC_File_System_Rename,
    SD_MMC_File_System_Copy,
    SD_MMC_File_System_Change_Drive,
-   SD_MMC_File_System_Volume
+   SD_MMC_File_System_Volume,
+   SD_MMC_Display_SID_text,
+   SD_MMC_Display_Log_text,
+   SD_MMC_Add_Log_text,
+   SD_MMC_Test_Standard_Fat_Driver,
+   SD_MMC_Test_Standard_Fat_Read
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -248,10 +258,26 @@ void SD_MMC_Power_Off(void)
 
 void SD_MMC_File_System_Menu(void)
 {
-   sd_mmc_resources_init();
-   Menu_Items = (sizeof(SD_MMC_File_System_Test_Menu_Functions)/sizeof(NONE))/4;
-   Menu_Functions = (unsigned long *)SD_MMC_File_System_Test_Menu_Functions;
-   Menu_String = (unsigned char *)SD_MMC_File_System_Test_Menu_Text;
+    unsigned int fatPresent=FALSE;
+
+	sd_mmc_resources_init();
+   
+    FAT32_InitDrive();
+    if(FAT32_InitFAT())
+    {
+        print_dbg("Passed FAT32 Initialization.\n\r");
+        fatPresent = TRUE;
+
+		Menu_Items = (sizeof(SD_MMC_File_System_Test_Menu_Functions)/sizeof(NONE))/4;
+		Menu_Functions = (unsigned long *)SD_MMC_File_System_Test_Menu_Functions;
+		Menu_String = (unsigned char *)SD_MMC_File_System_Test_Menu_Text;
+
+    }
+    else
+    {
+        print_dbg("Failed FAT32 Initialization.\n\r\n\r");
+    }
+   
 }
 
 void SD_MMC_Read_Write_Protect(void)
@@ -296,11 +322,24 @@ void SD_MMC_File_System_Exit(void)
    Menu_String = (unsigned char *)SD_MMC_Test_Menu_Text;
 }
 
-void SD_MMC_File_System_Format(void){}
+void SD_MMC_File_System_Format(void)
+{
+	// Empty
+}
+
+#include "FAT32_Opts.h"
+extern unsigned short int eventDataBuffer[];
 void SD_MMC_File_System_List_Directory(void)
 {
+	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(eventDataBuffer[0]);
     unsigned int fatPresent=FALSE;
-
+	unsigned long int dirStartCluster;
+	unsigned int entriesFound = 0;
+	unsigned long int totalSize = 0;
+	FL_FILE* SID_file;
+	unsigned long int fileSize;
+	char fileName[50];
+	
 	// Read Card capacity
     print_dbg("\n\rDetecting SD_MMC capacity........");
     sd_mmc_spi_get_capacity();
@@ -317,13 +356,357 @@ void SD_MMC_File_System_List_Directory(void)
     {
         print_dbg("Failed FAT32 Initialization.\n\r\n\r");
     }
+
+	print_dbg("Address of EventBuff: 0x");
+	print_dbg_hex((unsigned long int)&eventDataBuffer[0]);
+	print_dbg(", Aligned x4: ");
+	if (((unsigned long int)&eventDataBuffer[0]) % 4 == 0) print_dbg("Yes\r\n"); else print_dbg("No\r\n"); 
+
+	print_dbg("Address of dirList: 0x");
+	print_dbg_hex((unsigned long int)dirList);
+	print_dbg(", Aligned x4: ");
+	if (((unsigned long int)dirList) % 4 == 0) print_dbg("Yes\r\n"); else print_dbg("No\r\n"); 
+
+//--------------------------------------------------------------------------------
     if(fatPresent == TRUE)
     {
         FAT32_ShowFATDetails();
         print_dbg("\n\rDirectory of C:\\");
-        ListDirectory(FAT32_GetRootCluster());
+        ListDirectory(FAT32_GetRootCluster(), dirList, 1);
     }
+
+	print_dbg("----------------------------------\n\r");
+    print_dbg("Buffer Contents:\n\r");
+	entriesFound = 0;
+	totalSize = 0;
+	
+	while(dirList[entriesFound].type != FAT32_END_LIST)
+	{
+		if (dirList[entriesFound].type == FAT32_DIR)
+		{
+			print_dbg("DIR : ");			
+			print_dbg(dirList[entriesFound].name);			
+			print_dbg("\r\n");			
+			entriesFound++;
+		}
+		else if (dirList[entriesFound].type == FAT32_FILE)
+		{
+			print_dbg("FILE: ");			
+			print_dbg(dirList[entriesFound].name);			
+			print_dbg(", Size: ");			
+			print_dbg_ulong(dirList[entriesFound].size);			
+			print_dbg("\r\n");			
+			totalSize += dirList[entriesFound].size;
+
+			sprintf(fileName, "C:\\%s", dirList[entriesFound].name);
+			SID_file = fl_fopen(fileName, "r");
+	
+			if (SID_file == NULL)
+				print_dbg("Error: SID File not found!\r\n");
+			else
+			{
+				print_dbg("File Contents:\r\n");
+
+				fileSize = SID_file->filelength;
+				while (fileSize--)
+				{
+					print_dbg_char(fl_fgetc(SID_file));
+				}
+		
+				print_dbg("\n\rSID Size:");
+				print_dbg_ulong(SID_file->filelength);
+				print_dbg("\n\r");
+
+				fl_fclose(SID_file);
+			}		
+
+			entriesFound++;
+		}
+	}
+	print_dbg("Total File Size: ");			
+	print_dbg_ulong(totalSize);			
+	print_dbg("\r\n");			
+
+//--------------------------------------------------------------------------------
+    if(fatPresent == TRUE)
+    {
+		fl_directory_start_cluster("C:\\Events", &dirStartCluster);
+        print_dbg("\n\rDirectory of C:\\Events");
+        ListDirectory(dirStartCluster, dirList, 1);
+	}
+
+	print_dbg("----------------------------------\n\r");
+    print_dbg("Buffer Contents:\n\r");
+	entriesFound = 0;
+	totalSize = 0;
+
+	while(dirList[entriesFound].type != FAT32_END_LIST)
+	{
+		if (dirList[entriesFound].type == FAT32_DIR)
+		{
+			print_dbg("DIR : ");			
+			print_dbg(dirList[entriesFound].name);			
+			print_dbg("\r\n");			
+			entriesFound++;
+		}
+		else if (dirList[entriesFound].type == FAT32_FILE)
+		{
+			print_dbg("FILE: ");			
+			print_dbg(dirList[entriesFound].name);			
+			print_dbg(", Size: ");			
+			print_dbg_ulong(dirList[entriesFound].size);			
+			print_dbg("\r\n");			
+			totalSize += dirList[entriesFound].size;
+			entriesFound++;
+		}
+	}
+	print_dbg("Total File Size: ");			
+	print_dbg_ulong(totalSize);			
+	print_dbg("\r\n");			
+
+//--------------------------------------------------------------------------------
+    if(fatPresent == TRUE)
+    {
+		fl_directory_start_cluster("C:\\Logs", &dirStartCluster);
+        print_dbg("\n\rDirectory of C:\\Logs");
+        ListDirectory(dirStartCluster, dirList, 1);
+	}
+
+	print_dbg("----------------------------------\n\r");
+    print_dbg("Buffer Contents:\n\r");
+	entriesFound = 0;
+	totalSize = 0;
+
+	while(dirList[entriesFound].type != FAT32_END_LIST)
+	{
+		if (dirList[entriesFound].type == FAT32_DIR)
+		{
+			print_dbg("DIR : ");			
+			print_dbg(dirList[entriesFound].name);			
+			print_dbg("\r\n");			
+			entriesFound++;
+		}
+		else if (dirList[entriesFound].type == FAT32_FILE)
+		{
+			print_dbg("FILE: ");			
+			print_dbg(dirList[entriesFound].name);			
+			print_dbg(", Size: ");			
+			print_dbg_ulong(dirList[entriesFound].size);			
+			print_dbg("\r\n");			
+			totalSize += dirList[entriesFound].size;
+			entriesFound++;
+		}
+	}
+	print_dbg("Total File Size: ");			
+	print_dbg_ulong(totalSize);			
+	print_dbg("\r\n");			
+
+//--------------------------------------------------------------------------------
+    if(fatPresent == TRUE)
+    {
+		fl_directory_start_cluster("C:\\System", &dirStartCluster);
+        print_dbg("\n\rDirectory of C:\\System");
+        ListDirectory(dirStartCluster, dirList, 1);
+	}
+
+	print_dbg("----------------------------------\n\r");
+    print_dbg("Buffer Contents:\n\r");
+	entriesFound = 0;
+	totalSize = 0;
+
+	while(dirList[entriesFound].type != FAT32_END_LIST)
+	{
+		if (dirList[entriesFound].type == FAT32_DIR)
+		{
+			print_dbg("DIR : ");			
+			print_dbg(dirList[entriesFound].name);			
+			print_dbg("\r\n");			
+			entriesFound++;
+		}
+		else if (dirList[entriesFound].type == FAT32_FILE)
+		{
+			print_dbg("FILE: ");			
+			print_dbg(dirList[entriesFound].name);			
+			print_dbg(", Size: ");			
+			print_dbg_ulong(dirList[entriesFound].size);			
+			print_dbg("\r\n");			
+			totalSize += dirList[entriesFound].size;
+			entriesFound++;
+		}
+	}
+	print_dbg("Total File Size: ");			
+	print_dbg_ulong(totalSize);			
+	print_dbg("\r\n");			
+
     print_dbg("\n\r");
+}
+
+#include "navigation.h"
+#include "fat.h"
+#include "fs_com.h"
+void SD_MMC_Test_Standard_Fat_Driver(void)
+{
+	nav_drive_set(LUN_2);
+
+	if (fat_check_device() == TRUE)
+	{
+	    print_dbg("Fat Check successful.\n\r");
+	}
+	else
+	{
+	    print_dbg("Fat Check unsuccessful! Error code: ");
+		print_dbg_hex(fs_g_status);
+	    print_dbg("\n\r");
+	}
+
+	if (fat_check_mount_noopen() == TRUE)
+	{
+	    print_dbg("Fat Check Mount successful.\n\r");
+	}
+	else
+	{
+	    print_dbg("Fat Check Mount unsuccessful! Error code: ");
+		print_dbg_hex(fs_g_status);
+	    print_dbg("\n\r");
+	}
+
+	if (fat_mount() == TRUE)
+	{
+	    print_dbg("Fat Mount successful.\n\r");
+	}
+	else
+	{
+	    print_dbg("Fat Mount unsuccessful! Error code: ");
+		print_dbg_hex(fs_g_status);
+	    print_dbg("\n\r");
+	}
+	
+	print_dbg("Fat Free Sectors: ");
+	print_dbg_hex(fat_read_fat32_FSInfo());
+	print_dbg("\n\r");
+
+	print_dbg("Fat Free Space: ");
+	print_dbg_hex(fat_getfreespace());
+	print_dbg("\n\r");
+
+	print_dbg("Fat Free Space Percent: ");
+	print_dbg_ulong(100 * fat_getfreespace_percent());
+	print_dbg("\n\r");
+}
+
+#include "fsaccess.h"
+void SD_MMC_Test_Standard_Fat_Read(void)
+{
+	int SID_file;
+	char buff[100];
+	int returnSize, i = 0;
+
+	print_dbg("Attempting to open SID File...\r\n");
+	SID_file = open("C:\\SID.txt", O_RDONLY);
+	
+	if (SID_file == -1)
+		print_dbg("Error: SID File not found!\r\n");
+	else
+	{
+		print_dbg("SID Contents:\r\n");
+
+		returnSize = read(SID_file, &buff[0], 27);
+
+		while (i < returnSize)
+		{
+			print_dbg_char(buff[i++]);
+		}
+		
+		print_dbg("\n\rSID Size:");
+		print_dbg_ulong(returnSize);
+		print_dbg("\n\r");
+
+		close(SID_file);
+	}
+}
+
+void SD_MMC_Display_SID_text(void)
+{
+	FL_FILE* SID_file;
+	unsigned long int fileSize;
+
+	print_dbg("Attempting to open SID File...\r\n");
+	SID_file = fl_fopen("C:\\SID     .txt", "r");
+	
+	if (SID_file == NULL)
+		print_dbg("Error: SID File not found!\r\n");
+	else
+	{
+		print_dbg("SID Contents:\r\n");
+
+		fileSize = SID_file->filelength;
+		while (fileSize--)
+		{
+			print_dbg_char(fl_fgetc(SID_file));
+		}
+		
+		print_dbg("\n\rSID Size:");
+		print_dbg_ulong(SID_file->filelength);
+		print_dbg("\n\r");
+
+		fl_fclose(SID_file);
+	}		
+}
+
+void SD_MMC_Display_Log_text(void)
+{
+	FL_FILE* Log_file;
+	unsigned long int fileSize;
+
+	print_dbg("Attempting to open Log File...\r\n");
+	Log_file = fl_fopen("C:\\Logs\\Testlog.txt", "r");
+	
+	if (Log_file == NULL)
+		print_dbg("Error: Log File not found!\r\n");
+	else
+	{
+		print_dbg("Log Contents:\r\n");
+
+		fileSize = Log_file->filelength;
+		while (fileSize--)
+		{
+			print_dbg_char(fl_fgetc(Log_file));
+		}
+		
+		print_dbg("\n\rLog Size:");
+		print_dbg_ulong(Log_file->filelength);
+		print_dbg("\n\r");
+
+		fl_fclose(Log_file);
+	}		
+}
+
+void SD_MMC_Add_Log_text(void)
+{
+	FL_FILE* Log_file;
+	unsigned int fileSize;
+	char addLogEntry[50];
+
+	print_dbg("Attempting to open Log File...\r\n");
+	Log_file = fl_fopen("C:\\Logs\\Testlog.txt", "a+");
+	
+	if (Log_file == NULL)
+		print_dbg("Error: Log File not found!\r\n");
+	else
+	{
+		memset(&addLogEntry[0], 0, sizeof(addLogEntry));
+		fileSize = Log_file->filelength;
+		fileSize -= 11;
+		fileSize /= 19;
+		fileSize++;
+		
+		sprintf(addLogEntry, "Test log entry #%d\n", fileSize);		
+		fl_fputs(addLogEntry, Log_file);
+
+		fl_fclose(Log_file);
+
+		print_dbg("Log File modified\r\n");
+	}		
 }
 
 void SD_MMC_File_System_Change_Directory(void){}

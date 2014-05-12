@@ -43,7 +43,7 @@ POWER_MANAGEMENT_STRUCT powerManagement;
 #include "gpio.h"
 #include "M23018.h"
 #include "lcd.h"
-void powerControl(POWER_MGMT_OPTIONS option, BOOL mode)
+void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 {
 	// NS7100
 	//uint16* powerManagementPort = (uint16*)POWER_CONTROL_ADDRESS;
@@ -310,9 +310,9 @@ void powerControl(POWER_MGMT_OPTIONS option, BOOL mode)
 *	Function:	getPowerControlState
 *	Purpose:
 ****************************************/
-BOOL getPowerControlState(POWER_MGMT_OPTIONS option)
+BOOLEAN getPowerControlState(POWER_MGMT_OPTIONS option)
 {
-	BOOL state = OFF;
+	BOOLEAN state = OFF;
 
 	switch (option)
 	{

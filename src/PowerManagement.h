@@ -92,8 +92,8 @@ typedef union
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void powerControl(POWER_MGMT_OPTIONS option, BOOL mode);
-BOOL getPowerControlState(POWER_MGMT_OPTIONS option);
+void powerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode);
+BOOLEAN getPowerControlState(POWER_MGMT_OPTIONS option);
 void setMcorePwMgntDefaults(void);
 void PowerUnitOff(uint8 powerOffMode);
 

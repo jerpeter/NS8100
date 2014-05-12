@@ -375,9 +375,9 @@ void uart_puts(char* s, int32 channel)
 /********************************************************************
                       Uart Character Check
  ********************************************************************/
-BOOL uart_char_waiting(int32 channel)
+BOOLEAN uart_char_waiting(int32 channel)
 {
-    BOOL charWaiting = FALSE;
+    BOOLEAN charWaiting = FALSE;
 
     volatile MMC2114_IMM *imm = mmc2114_get_immp();
 
@@ -431,7 +431,7 @@ uint8 uart_getc(int32 channel, uint8 mode)
 char* uart_gets(char* s, int32 channel)
 {
     char* b = s;
-    BOOL end = FALSE;
+    BOOLEAN end = FALSE;
     int32  data;
     int32  count = 0;
 

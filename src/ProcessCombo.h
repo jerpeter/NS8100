@@ -69,6 +69,6 @@ void MoveEndOfComboEventRecordToFlash(void);
 void advanceComboBarIntervalBufPtr(uint8);
 void advanceComboSumIntervalBufPtr(uint8);
 
-BOOL checkSpaceForComboBarSummaryInterval(void);
+BOOLEAN checkSpaceForComboBarSummaryInterval(void);
 
 #endif //_DATABUFFS_H_

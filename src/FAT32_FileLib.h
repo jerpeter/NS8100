@@ -46,6 +46,7 @@ typedef struct
 //-----------------------------------------------------------------------------
 
 // External
+BOOL				fl_directory_start_cluster(char *path, UINT32 *pathCluster);
 void				fl_shutdown();
 FL_FILE*			fl_fopen(char *path, char *modifiers);
 void				fl_fclose(FL_FILE *file);

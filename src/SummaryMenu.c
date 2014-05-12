@@ -74,7 +74,7 @@ void summaryMnScroll(char direction);
 uint16 getFirstValidRamSummaryIndex(void);
 uint16 getNextValidRamSummaryIndex(uint16 currentValidSummaryIndex);
 uint16 getPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex);
-BOOL checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex);
+BOOLEAN checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex);
 
 /****************************************
 *	Function:	summaryMn
@@ -443,9 +443,9 @@ uint16 getPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 *	Function:	checkRamSummaryIndexForEventLink
 *	Purpose:
 ****************************************/
-BOOL checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
+BOOLEAN checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 {
-	BOOL validEventLink = NO;
+	BOOLEAN validEventLink = NO;
 
 	if (ramSummaryIndex < TOTAL_RAM_SUMMARIES)
 	{

@@ -27,6 +27,6 @@ UINT32 FAT32_GetFileEntry(UINT32 Cluster, char *nametofind, FAT32_ShortEntry *sf
 BOOL FAT32_SFNexists(UINT32 Cluster, char *shortname);
 BOOL FAT32_UpdateFileLength(UINT32 Cluster, char *shortname, UINT32 fileLength);
 BOOL FAT32_MarkFileDeleted(UINT32 Cluster, char *shortname);
-void ListDirectory(UINT32 StartCluster);
+void ListDirectory(UINT32 StartCluster, FAT32_DIRLIST* dirList, BOOL displayResults);
 
 #endif /*FAT32_ACCESS_H_*/

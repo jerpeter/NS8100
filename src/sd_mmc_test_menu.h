@@ -72,5 +72,10 @@ void SD_MMC_File_System_Rename(void);
 void SD_MMC_File_System_Copy(void);
 void SD_MMC_File_System_Change_Drive(void);
 void SD_MMC_File_System_Volume(void);
+void SD_MMC_Display_SID_text(void);
+void SD_MMC_Display_Log_text(void);
+void SD_MMC_Add_Log_text(void);
+void SD_MMC_Test_Standard_Fat_Driver(void);
+void SD_MMC_Test_Standard_Fat_Read(void);
 
 #endif //SD_MMC_TEST_MENU_H_

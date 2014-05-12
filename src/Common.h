@@ -204,7 +204,7 @@ float dbToHex(float);
 // PIT timers
 void startPitTimer(PIT_TIMER timer);
 void stopPitTimer(PIT_TIMER timer);
-BOOL checkPitTimer(PIT_TIMER timer);
+BOOLEAN checkPitTimer(PIT_TIMER timer);
 void configPitTimer(PIT_TIMER timer, uint16 clockDivider, uint16 modulus);
 
 // Language translation

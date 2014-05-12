@@ -25,6 +25,9 @@
 #include "Msgs430.h"
 #include "TextTypes.h"
 #include "NandFlash.h"
+#include "FAT32_Definitions.h"
+#include "FAT32_FileLib.h"
+#include "FAT32_Access.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -42,6 +45,7 @@ extern REC_HELP_MN_STRUCT help_rec;
 extern MSGS430_UNION msgs430;
 extern char appVersion[];
 extern AUTODIALOUT_STRUCT __autoDialoutTbl;
+extern uint16 eventDataBuffer[];
 
 ///----------------------------------------------------------------------------
 ///	Globals
@@ -81,8 +85,77 @@ void initRamSummaryTbl(void)
 void copyValidFlashEventSummariesToRam(void)
 {
 	uint16 ramSummaryIndex = 0;
-	uint16 eventHeaderSize = sizeof(EVENT_HEADER_STRUCT);
 	uint16 eventMajorVersion = (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK);
+
+#if 1 //---------------------------------------------------------------------------------------
+	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(eventDataBuffer[0]);
+	uint16 entriesFound = 0;
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+	FL_FILE* eventFile;
+	EVENT_HEADER_STRUCT fileEventHeader;
+	EVENT_SUMMARY_STRUCT fileSummary;
+	unsigned long int dirStartCluster;
+	
+	debug("Copying valid SD event summaries to ram...\n");
+
+	fl_directory_start_cluster("C:\\Events", &dirStartCluster);
+    ListDirectory(dirStartCluster, dirList, NO);
+
+	//debug("CVFESR: Dirctory list created\n");
+
+	while(dirList[entriesFound].type != FAT32_END_LIST)
+	{
+		//debug("CVFESR: Handling Next Entry...\n");
+
+		if (dirList[entriesFound].type == FAT32_FILE)
+		{
+			//debug("CVFESR: Found File Entry...\n");
+
+			sprintf(fileName, "C:\\Events\\%s", dirList[entriesFound].name);
+			eventFile = fl_fopen(fileName, "r");
+
+			if (eventFile == NULL)
+				debugErr("Error: Event File %s not found!\r\n", dirList[entriesFound].name);
+			else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+				debugErr("Error: Event File %s is corrupt!\r\n", dirList[entriesFound].name);
+			else
+			{
+				//debug("CVFESR: Reading File Entry Header...\n");
+
+				fl_fread(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
+
+				// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
+				if ((fileEventHeader.startFlag == EVENT_RECORD_START_FLAG) &&
+					((fileEventHeader.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
+					(fileEventHeader.headerLength == sizeof(EVENT_HEADER_STRUCT)))
+				{
+					debug("Found Valid Event File: %s", dirList[entriesFound].name);
+
+					fl_fread(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
+
+					//__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = fileSummary.eventNumber;
+					__ramFlashSummaryTbl[ramSummaryIndex].linkPtr = (void*)((uint32)(fileSummary.eventNumber));
+
+					// Check to make sure ram summary index doesnt get out of range, if so reset to zero
+					if (++ramSummaryIndex >= TOTAL_RAM_SUMMARIES)
+					{
+						ramSummaryIndex = 0;
+					}
+				}
+				else
+				{
+					debugWarn("Event File: %s is not valid for this unit.\r\n", dirList[entriesFound].name);
+				}
+
+				fl_fclose(eventFile);
+			}		
+		}
+
+		entriesFound++;
+	}
+	
+#else //---------------------------------------------------------------------------------------
+	uint16 eventHeaderSize = sizeof(EVENT_HEADER_STRUCT);
 	uint32 eventSize = 0;
 	EVT_RECORD* flashEventPtr = (EVT_RECORD*)FLASH_EVENT_START;
 
@@ -131,10 +204,11 @@ void copyValidFlashEventSummariesToRam(void)
 		}
 
 	}
+#endif
 
 	if (ramSummaryIndex == 0)
 	{
-		debugRaw(" done (none discovered).\n", ramSummaryIndex);
+		debugRaw(" done (none discovered).\n");
 	}
 	else
 	{
@@ -451,7 +525,7 @@ void InitFlashBuffs(void)
 		// Re-init the table
 		initRamSummaryTbl();
 
-#if 0 // fix_ns8100
+#if 1 // fix_ns8100
 		// Find all flash events and recreate ram summary entries for them
 		copyValidFlashEventSummariesToRam();
 #endif

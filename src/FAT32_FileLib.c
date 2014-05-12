@@ -151,6 +151,45 @@ static BOOL _open_directory(char *path, UINT32 *pathCluster)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
+// fl_directory_start_cluster: Cycle through path string to find the start cluster
+//-----------------------------------------------------------------------------
+BOOL fl_directory_start_cluster(char *path, UINT32 *pathCluster)
+{
+	int levels;
+	int sublevel;
+	char currentfolder[MAX_LONG_FILENAME];
+	FAT32_ShortEntry sfEntry;
+	UINT32 startcluster;
+
+	// Set starting cluster to root cluster
+	startcluster = FAT32_GetRootCluster();
+
+	// Find number of levels
+	levels = FileString_PathTotalLevels(path);
+
+	// Cycle through each level and get the start sector
+	for (sublevel=0;sublevel<(levels+1);sublevel++) 
+	{
+		FileString_GetSubString(path, sublevel, currentfolder);
+
+		// Find clusteraddress for folder (currentfolder) 
+		if (FAT32_GetFileEntry(startcluster, currentfolder,&sfEntry))
+		{
+			//startcluster = (((UINT32)sfEntry.FstClusHI)<<16) + sfEntry.FstClusLO;
+			startcluster =  ((UINT32)sfEntry.FstClusHI[0] << 16);
+			startcluster += ((UINT32)sfEntry.FstClusHI[1] << 24);
+			startcluster += ((UINT32)sfEntry.FstClusLO[0]);
+			startcluster += ((UINT32)sfEntry.FstClusLO[1] << 8);
+		}
+		else
+			return FALSE;
+	}
+
+	*pathCluster = startcluster;
+	return TRUE;
+}
+
+//-----------------------------------------------------------------------------
 // fl_shutdown: Call before shutting down system
 //-----------------------------------------------------------------------------
 void fl_shutdown()
