@@ -91,7 +91,7 @@ void copyValidFlashEventSummariesToRam(void)
 	uint16 ramSummaryIndex = 0;
 	uint16 eventMajorVersion = (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK);
 
-#if 1 //---------------------------------------------------------------------------------------
+#if 1 // ns8100 ---------------------------------------------------------------------------------------
 	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(eventDataBuffer[0]);
 	uint16 entriesFound = 0;
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
@@ -137,8 +137,7 @@ void copyValidFlashEventSummariesToRam(void)
 
 					fl_fread(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
 
-					//__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = fileSummary.eventNumber;
-					__ramFlashSummaryTbl[ramSummaryIndex].linkPtr = (void*)((uint32)(fileSummary.eventNumber));
+					__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = fileSummary.eventNumber;
 
 					// Check to make sure ram summary index doesnt get out of range, if so reset to zero
 					if (++ramSummaryIndex >= TOTAL_RAM_SUMMARIES)
@@ -158,7 +157,7 @@ void copyValidFlashEventSummariesToRam(void)
 		entriesFound++;
 	}
 	
-#else //---------------------------------------------------------------------------------------
+#else // ns7100 ---------------------------------------------------------------------------------------
 	uint16 eventHeaderSize = sizeof(EVENT_HEADER_STRUCT);
 	uint32 eventSize = 0;
 	EVT_RECORD* flashEventPtr = (EVT_RECORD*)FLASH_EVENT_START;
@@ -234,7 +233,7 @@ void condenseRamSummaryTable(void)
 	for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
 	{
 		// Check if we have an empty summary entry
-		if (__ramFlashSummaryTbl[i].linkPtr == (uint16*)0xFFFFFFFF)
+		if (__ramFlashSummaryTbl[i].fileEventNum == 0xFFFFFFFF)
 		{
 			// Index (i) is the current empty summary entry
 
@@ -242,13 +241,13 @@ void condenseRamSummaryTable(void)
 			for (j = (uint16)(i + 1); j < TOTAL_RAM_SUMMARIES; j++)
 			{
 				// If the current summary entry is valid, the move it to the empty entry
-				if (__ramFlashSummaryTbl[j].linkPtr != (uint16*)0xFFFFFFFF)
+				if (__ramFlashSummaryTbl[j].fileEventNum != 0xFFFFFFFF)
 				{
 					// Copy the valid summary entry to the current empty entry
 					__ramFlashSummaryTbl[i] = __ramFlashSummaryTbl[j];
 
 					// Set the link pointer to FF's to make the algorithm think the entry is empty
-					__ramFlashSummaryTbl[j].linkPtr = (uint16*)0xFFFFFFFF;
+					__ramFlashSummaryTbl[j].fileEventNum = 0xFFFFFFFF;
 					break;
 				}
 			}
@@ -265,6 +264,7 @@ void condenseRamSummaryTable(void)
 	//debugRaw(" done.\n");
 }
 
+#if 0 // ns7100
 //*****************************************************************************
 // Function:	advFlashDataPtrToEventData
 // Purpose:
@@ -292,6 +292,7 @@ void advFlashDataPtrToEventData(SUMMARY_DATA* currentSummary)
 		sFlashDataPtr = (uint16*)((uint32)sFlashDataPtr + sizeof(EVT_RECORD));
 	}
 }
+#endif
 
 //*****************************************************************************
 // FUNCTION
@@ -308,7 +309,7 @@ uint8 InitFlashEvtBuff(void)
 	// Find the first free ram summary entry (table should be condensed, all used entries up front)
 	for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
 	{
-		if (__ramFlashSummaryTbl[i].linkPtr == (uint16*)0xFFFFFFFF)
+		if (__ramFlashSummaryTbl[i].fileEventNum == 0xFFFFFFFF)
 		{
 			currFlashSummary = i;
 			break;
@@ -472,10 +473,10 @@ void InitFlashBuffs(void)
 		for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
 		{
 			// Check if the link pointer points to something
-			if (__ramFlashSummaryTbl[i].linkPtr != (uint16*)0xFFFFFFFF)
+			if (__ramFlashSummaryTbl[i].fileEventNum != 0xFFFFFFFF)
 			{
 				// Check to make sure ram values arent garbage
-				if((uint32)(__ramFlashSummaryTbl[i].linkPtr) >= g_currentEventNumber)
+				if((uint32)(__ramFlashSummaryTbl[i].fileEventNum) >= g_currentEventNumber)
 				{
 					// This signals a big warning
 					//debugPrint(RAW, "Data in Ram Summary Table is garbage.\n");
@@ -484,10 +485,10 @@ void InitFlashBuffs(void)
 					dataInRamGarbage = TRUE;
 					break;
 				}
-				else if(validEventFile((uint16)((uint32)(__ramFlashSummaryTbl[i].linkPtr))) == NO)
+				else if(validEventFile((uint16)((uint32)(__ramFlashSummaryTbl[i].fileEventNum))) == NO)
 				{
 					//debugPrint(RAW, "Ram summary (%d) points to an invalid event.\n", i+1);
-					__ramFlashSummaryTbl[i].linkPtr = (uint16*)0xFFFFFFFF;
+					__ramFlashSummaryTbl[i].fileEventNum = 0xFFFFFFFF;
 				}
 				else
 				{
@@ -518,7 +519,7 @@ void InitFlashBuffs(void)
 		numOfFlashSummarys = 0;
 		for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
 		{
-			if (__ramFlashSummaryTbl[i].linkPtr != (uint16*)0xFFFFFFFF)
+			if (__ramFlashSummaryTbl[i].fileEventNum != 0xFFFFFFFF)
 			{
 				numOfFlashSummarys++;
 			}
@@ -835,7 +836,7 @@ uint16 getUniqueEventNumber(SUMMARY_DATA* currentSummary)
 #endif
 
 #if 1 // Event number is stored in ram summary
-	return (uint16)((uint32)(currentSummary->linkPtr));
+	return currentSummary->fileEventNum;
 #endif
 }
 
@@ -944,7 +945,7 @@ FL_FILE* getNewEventFileHandle(uint16 newFileEventNumber)
 
 //*****************************************************************************
 // FUNCTION
-//  uint16 GetFlashSumEntry(SUMMARY_DATA* entryPtr)
+//  uint16 GetRamSummaryEntry(SUMMARY_DATA* entryPtr)
 //
 // DESCRIPTION
 //  general description of function.
@@ -956,7 +957,7 @@ FL_FILE* getNewEventFileHandle(uint16 newFileEventNumber)
 //  DATE         NAME              REMARKS
 //   5/11/2003 - Paul Hankins      - Initial Coding
 //*****************************************************************************
-uint16 GetFlashSumEntry(SUMMARY_DATA** sumEntryPtr)
+uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr)
 {
 	uint16 success = TRUE;
 
@@ -973,11 +974,11 @@ uint16 GetFlashSumEntry(SUMMARY_DATA** sumEntryPtr)
 			// Clear out oldest summary
 			if (currFlashSummary == LAST_RAM_SUMMARY_INDEX)
 			{
-				__ramFlashSummaryTbl[0].linkPtr = (uint16*)0xFFFFFFFF;
+				__ramFlashSummaryTbl[0].fileEventNum = 0xFFFFFFFF;
 			}
 			else
 			{
-				__ramFlashSummaryTbl[currFlashSummary + 1].linkPtr = (uint16*)0xFFFFFFFF;
+				__ramFlashSummaryTbl[currFlashSummary + 1].fileEventNum = 0xFFFFFFFF;
 			}
 		}
 
@@ -1017,7 +1018,7 @@ uint16 GetFlashSumEntry(SUMMARY_DATA** sumEntryPtr)
 
 #if 1 // ns8100
 		// Set the flash pointer address in the ram summary
-		__ramFlashSummaryTbl[currFlashSummary].linkPtr = (uint16*)((uint32)(g_currentEventNumber));
+		__ramFlashSummaryTbl[currFlashSummary].fileEventNum = g_currentEventNumber;
 
 		// Set the current summary pointer to the current ram summary
 		*sumEntryPtr = &__ramFlashSummaryTbl[currFlashSummary];
@@ -1046,26 +1047,13 @@ uint16 GetFlashSumEntry(SUMMARY_DATA** sumEntryPtr)
 
 /*****************************************************************************
   FUNCTION
-		void FillFlashSummarys(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
-
-  DESCRIPTION
-	Write in the following structures into flash. Fill them in with data from the ram
-	record and then write to flash.	The flashSummPtr->linkPtr points to the valid flash
-	location. flashSummPtr is a structure in ram.
-
+		void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
   INPUTS
 	SUMMARY_DATA* flashSummPtr 	- location of the flash memory
 	SUMMARY_DATA* ramSummPtr	- location of the ram memory
 *****************************************************************************/
-void FillInFlashSummarys(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
+void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
 {
-	//uint8 i = 0;
-	uint32 eventDataSize = 0;
-
-#if 0 // ns7100
-	EVT_RECORD* flashEventRecord = (EVT_RECORD*)flashSummPtr->linkPtr;
-#endif
-
 	//--------------------------------
 	// EVT_RECORD -
 
@@ -1120,27 +1108,21 @@ void FillInFlashSummarys(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
 	}
 
 	//--------------------------------
+
+#if 0 // ns7100
+	//uint8 i = 0;
+	uint32 eventDataSize = 0;
+
+	EVT_RECORD* flashEventRecord = (EVT_RECORD*)flashSummPtr->linkPtr;
+
 	// Get the structure size as the number of words. The following will round up.
 	eventDataSize = (sizeof(EVT_RECORD) + 1) / 2;
 
-#if 0 // ns7100
 	flashWrite((uint16*)flashEventRecord, (uint16*)&(g_RamEventRecord), eventDataSize);
-#else // ns8100
-	fl_fseek(gCurrentEventFileHandle, 0, SEEK_SET);
-	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
-	fl_fclose(gCurrentEventFileHandle);
-	debug("Event file closed\n");
 #endif
-
-	updateMonitorLogEntry();
-
-	// After event numbers have been saved, store current event number in persistent storage.
-	storeCurrentEventNumber();
-
-	// Now store the updated event number in the universal ram storage.
-	g_RamEventRecord.summary.eventNumber = g_currentEventNumber;
 }
 
+#if 0 // ns7100
 //******************************************************************************
 // Function:	ReclaimSpace
 //******************************************************************************
@@ -1214,6 +1196,7 @@ void ReclaimSpace(uint16* sectorAddr)
 		sectorErase(sectorAddr, 1);
 	}
 }
+#endif
 
 /*******************************************************************************
 *	Function:	getFlashDataPointer

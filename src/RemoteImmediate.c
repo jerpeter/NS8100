@@ -682,7 +682,7 @@ void handleDQM(CMD_BUFFER_STRUCT* inCmd)
 	// Determine the data size first. This size is needed for the header length.
 	for (idex = 0; idex < TOTAL_RAM_SUMMARIES; idex++)
 	{
-		if (__ramFlashSummaryTbl[idex].linkPtr != (uint16*)0xFFFFFFFF)
+		if (__ramFlashSummaryTbl[idex].fileEventNum != 0xFFFFFFFF)
 		{
 			gp_DqmXferStruct->numOfRecs++;
 		}
@@ -785,10 +785,18 @@ uint8 sendDQMData(void)
 			while ((idex < DQM_XFER_SIZE) &&
 				(gp_DqmXferStruct->ramTableIndex < TOTAL_RAM_SUMMARIES))
 			{
-				if (__ramFlashSummaryTbl[gp_DqmXferStruct->ramTableIndex].linkPtr != (uint16*)0xFFFFFFFF)
+				if (__ramFlashSummaryTbl[gp_DqmXferStruct->ramTableIndex].fileEventNum != 0xFFFFFFFF)
 				{
 					// Assign it a new ptr, easier to read and handle.
+#if 0 // ns7100
 					eventRecord = (EVT_RECORD *)__ramFlashSummaryTbl[gp_DqmXferStruct->ramTableIndex].linkPtr;
+#else // ns8100
+					static EVT_RECORD resultsEventRecord;
+					eventRecord = &resultsEventRecord;
+	
+					getEventFileInfo(__ramFlashSummaryTbl[gp_DqmXferStruct->ramTableIndex].fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary);
+#endif
+					
 					gp_DqmXferStruct->dqmData[idex].dqmxFlag = 0xCC;
 					gp_DqmXferStruct->dqmData[idex].mode = eventRecord->summary.mode;
 					gp_DqmXferStruct->dqmData[idex].eventNumber = eventRecord->summary.eventNumber;
@@ -858,7 +866,7 @@ void handleDSM(CMD_BUFFER_STRUCT* inCmd)
 	// Determine the data size first. This size is needed for the header length.
 	for (idex = 0; idex < TOTAL_RAM_SUMMARIES; idex++)
 	{
-		if (__ramFlashSummaryTbl[idex].linkPtr != (uint16*)0xFFFFFFFF)
+		if (__ramFlashSummaryTbl[idex].fileEventNum != 0xFFFFFFFF)
 		{
 			dataLength += sizeof(EVENT_RECORD_DOWNLOAD_STRUCT);
 			numberOfRecs++;
@@ -964,7 +972,7 @@ uint8 sendDSMData(void)
 	{
 		// Loop for the first non-empty table summary.
 		while ((gp_DsmXferStruct->tableIndex < gp_DsmXferStruct->tableIndexEnd) &&
-				(__ramFlashSummaryTbl[gp_DsmXferStruct->tableIndex].linkPtr == (uint16*)0xFFFFFFFF))
+				(__ramFlashSummaryTbl[gp_DsmXferStruct->tableIndex].fileEventNum == 0xFFFFFFFF))
 		{
 			gp_DsmXferStruct->tableIndex++;
 		}
@@ -972,7 +980,15 @@ uint8 sendDSMData(void)
 		// If not at the end of the table, xfer it over, else we are done and go to the footer state.
 		if (gp_DsmXferStruct->tableIndex < gp_DsmXferStruct->tableIndexEnd)
 		{
+#if 0 // ns7100
 			eventRecord = (EVT_RECORD *)__ramFlashSummaryTbl[gp_DsmXferStruct->tableIndex].linkPtr;
+#else // ns8100
+			static EVT_RECORD resultsEventRecord;
+			eventRecord = &resultsEventRecord;
+	
+			getEventFileInfo(__ramFlashSummaryTbl[gp_DsmXferStruct->tableIndex].fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary);
+#endif
+			
 			gp_DsmXferStruct->dloadEventRec.event = *eventRecord;
 			gp_DsmXferStruct->dloadEventRec.structureFlag = START_DLOAD_FLAG;
 			gp_DsmXferStruct->dloadEventRec.downloadDate = getCurrentTime();
@@ -1153,10 +1169,17 @@ void handleDEM(CMD_BUFFER_STRUCT* inCmd)
 		// Send each individual summary record.
 		for (idex = 0; idex < TOTAL_RAM_SUMMARIES; idex++)
 		{
-			if (__ramFlashSummaryTbl[idex].linkPtr != (uint16*)0xFFFFFFFF)
+			if (__ramFlashSummaryTbl[idex].fileEventNum != 0xFFFFFFFF)
 			{
 				// Check to see if this is the correct event number.
+#if 0 // ns7100
 				eventRecord = (EVT_RECORD *)__ramFlashSummaryTbl[idex].linkPtr;
+#else // ns8100
+				static EVT_RECORD resultsEventRecord;
+				eventRecord = &resultsEventRecord;
+	
+				getEventFileInfo(__ramFlashSummaryTbl[idex].fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary);
+#endif
 
 				if (eventRecord->summary.eventNumber == eventNumToSend)
 				{

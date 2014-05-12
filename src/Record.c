@@ -36,7 +36,7 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 extern MONTH_TABLE_STRUCT monthTable[];
-extern SUMMARY_DATA summaryTable[MAX_RAM_SUMMARYS];
+//extern SUMMARY_DATA summaryTable[MAX_RAM_SUMMARYS];
 extern REC_HELP_MN_STRUCT help_rec;
 extern uint8 contrast_value;
 extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;

@@ -77,5 +77,7 @@ void SD_MMC_Display_Log_text(void);
 void SD_MMC_Add_Log_text(void);
 void SD_MMC_Test_Standard_Fat_Driver(void);
 void SD_MMC_Test_Standard_Fat_Read(void);
+void SD_MMC_Copy_Test_File(void);
+void SD_MMC_Inc_Buffer_Size_Test_File(void);
 
 #endif //SD_MMC_TEST_MENU_H_

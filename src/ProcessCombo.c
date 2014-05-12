@@ -37,7 +37,7 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern uint16* endFlashSectorPtr;
+//extern uint16* endFlashSectorPtr;
 extern EVT_RECORD g_RamEventRecord;				// The event record in Ram, being filled for the current event.
 extern SENSOR_PARAMETERS_STRUCT* gp_SensorInfo;// Sensor information, calculated when sensor parameters change.
 extern REC_EVENT_MN_STRUCT trig_rec;		// Current trigger record structure in ram.
@@ -70,7 +70,7 @@ extern uint32 gWordSizeInPre;
 extern uint32 gWordSizeInBody;
 extern uint32 gWordSizeInCal;
 extern uint32 gWordSizeInEvent;
-extern uint16* startOfEventBufferPtr;
+extern uint16* g_startOfEventBufferPtr;
 extern uint16* gEventBufferPrePtr;
 extern uint16* gEventBufferBodyPtr;
 extern uint16* gEventBufferCalPtr;
@@ -116,6 +116,7 @@ extern uint32 vsJobPeak;
 extern FL_FILE* gCurrentEventFileHandle;
 extern uint16 g_currentEventNumber;
 extern FL_FILE* gComboDualCurrentEventFileHandle;
+extern uint16* gCurrentEventStartPtr;
 
 ///----------------------------------------------------------------------------
 ///	Globals
@@ -141,11 +142,13 @@ BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalReadPtr = &(g_comboBarInterval[0])
 BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalEndPtr = &(g_comboBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS - 1]);
 
 // The following are the Event Data ram buffer pointers.
-uint16 g_comboeventDataBufferer[BG_DATA_BUFFER_SIZE];
+#if 0 // Unused
+uint16* g_comboEventDataBuffer;
 uint16* g_comboEventDataStartPtr;
 uint16* g_comboEventDataWritePtr;
 uint16* g_comboEventDataReadPtr;
 uint16* g_comboEventDataEndPtr;
+#endif
 
 //*****************************************************************************
 // Function:	StartNewCombo
@@ -156,15 +159,10 @@ void StartNewCombo(void)
 	gComboSummaryPtr = NULL;
 
 	// Get the address and empty Ram summary
-	if (GetFlashSumEntry(&gComboSummaryPtr) == FALSE)
+	if (GetRamSummaryEntry(&gComboSummaryPtr) == FALSE)
 	{
 		debug("Out of Flash Summary Entrys\n");
 		return;
-	}
-	else
-	{
-		// Setup location of the event data in flash. True for combo, bargraph and waveform.
-		advFlashDataPtrToEventData(gComboSummaryPtr);
 	}
 
 	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
@@ -181,6 +179,7 @@ void StartNewCombo(void)
 	gSummaryIntervalCnt = 0;	// Count the number of bars that make up a summary interval.
 	gTotalBarIntervalCnt = 0;
 
+#if 0 // Unused
 	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
 	byteSet(&(g_comboeventDataBufferer[0]), 0, (sizeof(uint16) * BG_DATA_BUFFER_SIZE));
 
@@ -188,6 +187,7 @@ void StartNewCombo(void)
 	g_comboEventDataWritePtr = &(g_comboeventDataBufferer[0]);
 	g_comboEventDataReadPtr = &(g_comboeventDataBufferer[0]);
 	g_comboEventDataEndPtr = &(g_comboeventDataBufferer[BG_DATA_BUFFER_SIZE - 1]);
+#endif
 
 	g_comboBarIntervalWritePtr = &(g_comboBarInterval[0]);
 	g_comboBarIntervalReadPtr = &(g_comboBarInterval[0]);
@@ -199,15 +199,9 @@ void StartNewCombo(void)
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
 	byteSet(g_comboSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
 
-	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
-	MoveStartOfComboEventRecordToFlash();
+	MoveStartOfComboEventRecordToFile();
 
-	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
-	// Save the captured event after the the preliminary ram event record.
-	// EVENT_SUMMARY_STRUCT - Fill in the event CAPTURE_INFO_STRUCT data
-	// For Combo, these values are filled in at the end of combo.
-	g_RamEventRecord.summary.captured.batteryLevel =
-		(uint32)((float)100.0 * (float)convertedBatteryLevel(BATTERY_VOLTAGE));
+	g_RamEventRecord.summary.captured.batteryLevel = (uint32)((float)100.0 * (float)convertedBatteryLevel(BATTERY_VOLTAGE));
 	g_RamEventRecord.summary.captured.printerStatus = (uint8)(help_rec.auto_print);
 	g_RamEventRecord.summary.captured.calDate = factory_setup_rec.cal_date;
 
@@ -225,21 +219,20 @@ void StartNewCombo(void)
 //*****************************************************************************
 void EndCombo(void)
 {
-	uint32 eventDataFlag;
+	uint32 barIntervalsStored;
 
 	while (BG_BUFFER_NOT_EMPTY == CalculateComboData()) {}
 
 	// For the last time, put the data into the event buffer.
-	eventDataFlag = putBarIntervalDataIntoEventDataBufferer();
+	barIntervalsStored = moveComboBarIntervalDataToFile();
 
-	// If no data, both flags are zero, then skip, end of record.
-	if ((eventDataFlag > 0) || (gSummaryIntervalCnt>0))
+	// Check if bar intervals were stored or a summery interval is present
+	if ((barIntervalsStored) || (gSummaryIntervalCnt))
 	{
-		putSummaryIntervalDataIntoEventDataBufferer();
-		MoveComboEventDataToFlash();
+		moveComboSummaryIntervalDataToFile();
 	}
 
-	MoveEndOfComboEventRecordToFlash();
+	MoveEndOfComboEventRecordToFile();
 }
 
 /*****************************************************************************
@@ -264,22 +257,6 @@ void ProcessComboData(void)
 ******************************************************************************/
 void ProcessComboBargraphData(void)
 {
-	uint16 commandNibble = 0x0000;
-
-	// Store the command nibble for the first channel of data
-	commandNibble = (uint16)(*(tailOfPreTrigBuff) & EMBEDDED_CMD);
-
-	// Check if the command is a trigger two, which is the 1st warning event
-	if (commandNibble == TRIG_TWO)
-	{
-		raiseSystemEventFlag(WARNING1_EVENT);
-	}
-	// Check if the command is a trigger three, which is the 2nd warning event
-	else if (commandNibble == TRIG_THREE)
-	{
-		raiseSystemEventFlag(WARNING2_EVENT);
-	}
-
 	// Check to see if we have a chunk of ram buffer to write, otherwise check for data wrapping.
 	if ((gp_bg430DataEnd - gp_bg430DataWrite) >= 4)
 	{
@@ -335,20 +312,7 @@ void ProcessComboSampleData(void)
 			// Check the Command Nibble on the first channel (Acoustic)
 			switch (commandNibble)
 			{
-				case TRIG_THREE:
-				case TRIG_TWO:
 				case TRIG_ONE:
-					// Check if the command is a trigger two, which is the 1st warning event
-					if (commandNibble == TRIG_TWO)
-					{
-						raiseSystemEventFlag(WARNING1_EVENT);
-					}
-					// Check if the command is a trigger three, which is the 2nd warning event
-					else if (commandNibble == TRIG_THREE)
-					{
-						raiseSystemEventFlag(WARNING2_EVENT);
-					}
-
 					// Check if there are still free event containers and we are still taking new events
 					if ((gFreeEventBuffers != 0) && (g_doneTakingEvents == NO))
 					{
@@ -358,9 +322,10 @@ void ProcessComboSampleData(void)
 						// Set loop counter to 1 minus the total samples to be recieved in the event body (minus the trigger data sample)
 						isTriggered = gSamplesInBody - 1;
 
+#if 0 // ns7100
 						// Save the link to the beginning of the pretrigger data
 						summaryTable[gCurrentEventNumber].linkPtr = gEventBufferPrePtr;
-
+#endif
 						// Copy PreTrigger data over to the Event body buffer
 						*(gEventBufferBodyPtr + 0) = *(tailOfPreTrigBuff + 0);
 						*(gEventBufferBodyPtr + 1) = *(tailOfPreTrigBuff + 1);
@@ -560,17 +525,6 @@ void ProcessComboSampleData(void)
 	}
 	else // isTriggered != 0
 	{
-		// Check if the command is a trigger two, which is the 1st warning event
-		if (commandNibble == TRIG_TWO)
-		{
-			raiseSystemEventFlag(WARNING1_EVENT);
-		}
-		// Check if the command is a trigger three, which is the 2nd warning event
-		else if (commandNibble == TRIG_THREE)
-		{
-			raiseSystemEventFlag(WARNING2_EVENT);
-		}
-
 		// Check if this is the last sample of the triggered event
 		if ((isTriggered - 1) == 0)
 		{
@@ -638,8 +592,8 @@ void ProcessComboSampleData(void)
 			else
 			{
 				gCurrentEventNumber = 0;
-				gEventBufferPrePtr = startOfEventBufferPtr;
-				gEventBufferBodyPtr = startOfEventBufferPtr + gWordSizeInPre;
+				gEventBufferPrePtr = g_startOfEventBufferPtr;
+				gEventBufferBodyPtr = g_startOfEventBufferPtr + gWordSizeInPre;
 			}
 		}
 	}
@@ -649,33 +603,20 @@ void ProcessComboSampleData(void)
 }
 
 //*****************************************************************************
-// Function: putBarIntervalDataIntoEventDataBufferer(void)
-// Purpose : Transfer the data from the bar interval buffers into the event
-//				write buffers for storage into flash.
+// Function: moveComboBarIntervalDataToFile(void)
+// Purpose : Transfer the data from the bar interval buffers into the event file
 //*****************************************************************************
-uint32 putComboBarIntervalDataIntoEventDataBufferer(void)
+uint32 moveComboBarIntervalDataToFile(void)
 {
-	uint32 remainingIntervalCnt = gBarIntervalCnt;
+	uint32 accumulatedBarIntervalCount = gBarIntervalCnt;
 
-	// If there has been no more data captures, it COULD happen.
+	// If Bar Intervals have been cached
 	if (gBarIntervalCnt > 0)
 	{
 		// Reset the bar interval count
 		gBarIntervalCnt = 0;
 
-		// Save Bar Interval peak Air into event data buffer
-		*(g_comboEventDataWritePtr++) = g_comboBarIntervalWritePtr->aMax;
-		END_OF_EVENT_BUFFER_CHECK(g_comboEventDataWritePtr, g_comboEventDataStartPtr, g_comboEventDataEndPtr);
-
-		// Save Bar Interval peak RVT into event data buffer
-		*(g_comboEventDataWritePtr++) = g_comboBarIntervalWritePtr->rvtMax;
-		END_OF_EVENT_BUFFER_CHECK(g_comboEventDataWritePtr, g_comboEventDataStartPtr, g_comboEventDataEndPtr);
-
-		// Save Bar Interval peak Vector Sum into event data buffer. since vs is a long save two words.
-		*(g_comboEventDataWritePtr++) = (uint16)((g_comboBarIntervalWritePtr->vsMax & 0xFFFF0000) >> 16);
-		END_OF_EVENT_BUFFER_CHECK(g_comboEventDataWritePtr, g_comboEventDataStartPtr, g_comboEventDataEndPtr);
-		*(g_comboEventDataWritePtr++) = (uint16)(g_comboBarIntervalWritePtr->vsMax & 0x0000FFFF);
-		END_OF_EVENT_BUFFER_CHECK(g_comboEventDataWritePtr, g_comboEventDataStartPtr, g_comboEventDataEndPtr);
+		fl_fwrite(g_comboBarIntervalWritePtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, gComboDualCurrentEventFileHandle);		
 
 		// Advance the Bar Interval global buffer pointer
 		advanceBarIntervalBufPtr(WRITE_PTR);
@@ -687,20 +628,16 @@ uint32 putComboBarIntervalDataIntoEventDataBufferer(void)
 		g_comboSumIntervalWritePtr->barIntervalsCaptured ++;
 	}
 
-	// This is a flag for the end of combo function. It is used to indicate that
-	// there IS bar and summary data to be processed.
-	return (remainingIntervalCnt);
+	// Flag for the end of bargraph, used to indicate that a bar interval was stored, thus a summary should be too
+	return (accumulatedBarIntervalCount);
 }
 
 //*****************************************************************************
-// Function: putSummaryIntervalDataIntoEventDataBufferer(void)
-// Purpose : Transfer the data from the summary interval buffers into the event
-//				write buffers for storage into flash.
+// Function: moveComboSummaryIntervalDataToFile(void)
+// Purpose : Transfer the data from the summary interval buffer into the event file
 //*****************************************************************************
-void putComboSummaryIntervalDataIntoEventDataBufferer(void)
+void moveComboSummaryIntervalDataToFile(void)
 {
-	uint32 sizeOfRemainingBuffer;
-	uint8* tempSummaryIntervalWritePtr;
 	float rFreq, vFreq, tFreq;
 
 	rFreq = (float)((float)trig_rec.trec.sample_rate / (float)((g_comboSumIntervalWritePtr->r.frequency * 2) - 1));
@@ -724,39 +661,7 @@ void putComboSummaryIntervalDataIntoEventDataBufferer(void)
 	// Reset summary interval count
 	gSummaryIntervalCnt = 0;
 
-	// Calculate the size of the remaining buffer in terms of bytes.
-	sizeOfRemainingBuffer =
-		(uint32)((uint8*)g_comboEventDataEndPtr - (uint8*)g_comboEventDataWritePtr);
-
-	// If buffersize is greater then the strucutre size then copy and increment write ptr.
-	// If less then, then copy only the bytes that fit, then start at the top.
-	if (sizeOfRemainingBuffer > SUMMARY_INTERVAL_SIZE_IN_BYTES)
-	{
-		byteCpy((uint8*)g_comboEventDataWritePtr,
-			(uint8*)g_comboSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT));
-		g_comboEventDataWritePtr += SUMMARY_INTERVAL_SIZE_IN_WORDS;
-	}
-
-	else
-	{
-		// Copy only the size of data that fits.
-		byteCpy((uint8*)g_comboEventDataWritePtr,
-			(uint8*)g_comboSumIntervalWritePtr, sizeOfRemainingBuffer);
-
-		// Go to the start of the buffer.
-		g_comboEventDataWritePtr = g_comboEventDataStartPtr;
-
-		// ptr to the start of the uncopied data.
-		tempSummaryIntervalWritePtr = (uint8*)g_comboSumIntervalWritePtr + sizeOfRemainingBuffer;
-
-		// Number of bytes remaining to move.
-		sizeOfRemainingBuffer = SUMMARY_INTERVAL_SIZE_IN_BYTES - sizeOfRemainingBuffer;
-		byteCpy((uint8*)g_comboEventDataWritePtr,
-			(uint8*)tempSummaryIntervalWritePtr, sizeOfRemainingBuffer);
-
-		// Move write ptr by the number of words.
-		g_comboEventDataWritePtr += ((sizeOfRemainingBuffer+1)/2);
-	}
+	fl_fwrite(g_comboSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT), 1, gComboDualCurrentEventFileHandle);		
 
 	// Move update the job totals.
 	UpdateComboJobTotals(g_comboSumIntervalWritePtr);
@@ -787,7 +692,6 @@ uint8 CalculateComboData(void)
 	uint8 gotDataFlag = NO;
 	int32 processingCount = 500;
 	uint16* dataReadStart;
-	INPUT_MSG_STRUCT msg;
 
 	while ((gp_bg430DataRead != gp_bg430DataWrite) && (processingCount-- > 0))
 	{
@@ -1350,7 +1254,7 @@ uint8 CalculateComboData(void)
 		//=================================================
 		if (++gBarIntervalCnt >= (uint32)(trig_rec.bgrec.barInterval * trig_rec.trec.sample_rate))
 		{
-			putBarIntervalDataIntoEventDataBufferer();
+			moveComboBarIntervalDataToFile();
 
 			//=================================================
 			// End of Summary Interval
@@ -1358,20 +1262,7 @@ uint8 CalculateComboData(void)
 			if (++gSummaryIntervalCnt >=
 				(uint32)(trig_rec.bgrec.summaryInterval / trig_rec.bgrec.barInterval))
 			{
-				putSummaryIntervalDataIntoEventDataBufferer();
-			}
-
-			// Move data to flash.
-			MoveComboEventDataToFlash();
-
-			if (help_rec.flash_wrapping == NO)
-			{
-				if (checkSpaceForBarSummaryInterval() == NO)
-				{
-					msg.cmd = STOP_MONITORING_CMD;
-					msg.length = 1;
-					(*menufunc_ptrs[MONITOR_MENU])(msg);
-				}
+				moveComboSummaryIntervalDataToFile();
 			}
 		}
 
@@ -1388,190 +1279,48 @@ uint8 CalculateComboData(void)
 }
 
 //*****************************************************************************
-// Function: MoveComboEventDataToFlash(void)
-// Purpose : Move the data in the bargarpheventDataBufferer into flash. Copy
-//				all the data from the buffer until the readPtr == writePtr.
+// Function: MoveStartOfComboEventRecordToFile
+// Purpose : Move the combo Event Record into file
 //*****************************************************************************
-void MoveComboEventDataToFlash(void)
+void MoveStartOfComboEventRecordToFile(void)
 {
-	// While we haven't found the end of the combo Event data
-	while (g_comboEventDataReadPtr != g_comboEventDataWritePtr)
-	{
-		// Write in data (alternates between Air and RVT max normalized values) for a bar interval
-#if 0 // ns7100
-		storeData(g_comboEventDataReadPtr, 1);
-#else // ns8100
-		fl_fwrite(gComboDualCurrentEventFileHandle, 1, 2, gCurrentEventFileHandle);
-#endif
-
-		g_comboEventDataReadPtr += 1;
-
-		// Check to see if the read ptr has gone past the end, if it has start at the top again.
-		END_OF_EVENT_BUFFER_CHECK(g_comboEventDataReadPtr, g_comboEventDataStartPtr, g_comboEventDataEndPtr);
-	}
-}
-
-//*****************************************************************************
-// Function: MoveStartofComboEventRecordToFlash
-// Purpose : Move the combo Event Record into flash. Copy most of the
-//				event record data. Unable to copy the captured data structures
-//				until they are filled out. so only copy the header and system
-//				data structs.
-//*****************************************************************************
-void MoveStartOfComboEventRecordToFlash(void)
-{
-	// Check if we have a valid flash ptr.
-	if (gComboSummaryPtr == 0)
-	{	// If failed the ptr will be 0.
-		debug("Out of Flash Summary Entrys\n");
-	}
-	else
-	{
-#if 0 // ns7100
-	uint32 moveSizeInWords;
-	uint16* destPtr;
-	uint16* srcPtr;
-	EVT_RECORD* flashEventRecord;
-
-		flashEventRecord = (EVT_RECORD *)(gComboSummaryPtr->linkPtr);
-
-		moveSizeInWords = (sizeof(EVT_RECORD))/2;
-		destPtr = (uint16*)(flashEventRecord);
-		srcPtr = (uint16*)(&g_RamEventRecord);
-		flashWrite(destPtr, srcPtr, moveSizeInWords);
-
-		byteSet((uint8*)&(g_RamEventRecord.summary.calculated), 0, sizeof(CALCULATED_DATA_STRUCT));
-
-#else // ns8100
-		// Get new file handle
-		gComboDualCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+	// Get new file handle
+	gComboDualCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
 				
-		if (gComboDualCurrentEventFileHandle == NULL)
-			debugErr("Failed to get a new file handle for the current Combo (Bargraph) event!\n");
+	if (gComboDualCurrentEventFileHandle == NULL)
+		debugErr("Failed to get a new file handle for the current Combo - Bargraph event!\n");
 
-		// Make sure at the beginning of the file
-		fl_fseek(gComboDualCurrentEventFileHandle, 0, SEEK_SET);
-		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gComboDualCurrentEventFileHandle);
-		
-		// Move to the start of the data section
-		fl_fseek(gComboDualCurrentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
+	// Write in the current but unfinished event record to provide an offset to start writing in the data
+	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gComboDualCurrentEventFileHandle);
 
-		// fix_ns8100
-		// Combo - bargraph event created, inc event number for possible waveform events
-		storeCurrentEventNumber();		
-#endif
-	}
-
+	// ns8100 - *NOTE* With Combo and keeping consistant with event numbers, save now instead of at the end of bargraph
+	// Combo - Bargraph event created, inc event number for potential Combo - Waveform events
+	storeCurrentEventNumber();		
 }
 
-
 //*****************************************************************************
-// Function: MoveEndOfComboEventRecordToFlash
-// Purpose : Move the combo Event Record into flash. Copy most of the
-//				event record data. Unable to copy the captured data structures
-//				until they are filled out. so only copy the header and system
-//				data structs.
+// Function: MoveEndOfComboEventRecordToFile
+// Purpose : Move the combo Event Record into the file
 //*****************************************************************************
-void MoveEndOfComboEventRecordToFlash(void)
+void MoveEndOfComboEventRecordToFile(void)
 {
-	// This global will contain the ram record with the reference to the start of the event record ptr.
-	// SUMMARY_DATA* gComboSummaryPtr;
-	// EVENT_REC* flashEventRecord = (EVENT_REC *)gComboSummaryPtr->linkPtr;
+	// The following data will be filled in when the data has been moved over to flash.
+	g_RamEventRecord.header.summaryChecksum = 0xAABB;
+	g_RamEventRecord.header.dataChecksum = 0xCCDD;
+	g_RamEventRecord.header.dataCompression = 0;
 
-#if 0 // ns7100
-	//uint16 checksumDex = 0;
-	uint32 moveSizeInWords;
-	EVT_RECORD* flashEventRecord = (EVT_RECORD*)gComboSummaryPtr->linkPtr;
-	uint16* eventDataPtr;
-	uint16* destPtr;
-	uint16* srcPtr;
-	uint16* flashPtr = getFlashDataPointer();
-#endif
+	g_RamEventRecord.summary.captured.endTime = getCurrentTime();
 
-	// Check if we have a valid flash ptr.
-	if (gComboSummaryPtr == 0)
-	{	// If failed the ptr will be 0.
-		debug("Out of Flash Summary Entrys\n");
-	}
-	else
-	{
-#if 0 // ns7100
-		// Set our flash event data pointer to the start of the flash event
-	    eventDataPtr = (uint16*)((uint8*)flashEventRecord + sizeof(EVT_RECORD));
+	// Make sure at the beginning of the file
+	fl_fseek(gComboDualCurrentEventFileHandle, 0, SEEK_SET);
 
-		// Check if the flash pointer is greater than the event data pointer suggesting that the event has not wrapped
-		if (flashPtr > eventDataPtr)
-		{
-			g_RamEventRecord.header.dataLength = (uint32)((uint32)flashPtr - (uint32)eventDataPtr);
-		}
-		else
-		{
-			// The size of the data to the end of the buffer.
-			g_RamEventRecord.header.dataLength = (uint32)((FLASH_EVENT_END - (uint32)eventDataPtr) +
-				((uint32)flashPtr - FLASH_EVENT_START));
-		}
-#endif
+	// Rewrite the event record
+	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gComboDualCurrentEventFileHandle);
 
-/*
-		// Is the checksum done in words or bytes, do we do a crc?
-		for (checksumDex = 0; checksumDex < g_RamEventRecord.header.dataLength; checksumDex++)
-		{
-			g_RamEventRecord.header.dataChecksum = 0;
-		}
+	fl_fclose(gComboDualCurrentEventFileHandle);
+	debug("Bargraph event file closed\n");
 
-		// Is the checksum done in words or bytes, do we do a crc?
-		for (checksumDex = 0; checksumDex < sizeof(EVENT_SUMMARY_STRUCT); checksumDex++)
-		{
-			g_RamEventRecord.header.summaryChecksum = 0;
-		}
-*/
-		// The following data will be filled in when the data has been moved over to flash.
-		g_RamEventRecord.header.summaryChecksum = 0xAABB;
-		g_RamEventRecord.header.dataChecksum = 0xCCDD;
-		g_RamEventRecord.header.dataCompression = 0;
-
-#if 0 // ns7100
-		// We dont worry about the end of the falsh buffer because when the new flash event record is setup,
-		// a check is made so the event record is one contiguous structure, not including the event data.
-		// Not sure if flashwrite will mod the ptrs, so setup dest and src ptrs. We are copying over the
-		// dataLength(32), summaryChecksum, dataChecksum, and dataCompression, unused, unused;
-		moveSizeInWords = 7;
-		destPtr = (uint16*)(&(flashEventRecord->header.dataLength));
-		srcPtr = (uint16*)(&(g_RamEventRecord.header.dataLength));
-		flashWrite(destPtr, srcPtr, moveSizeInWords);
-#endif
-
-		g_RamEventRecord.summary.captured.endTime = getCurrentTime();
-
-#if 0 // ns7100
-		// Setup ptrs so we are at the beginning of the CAPTURE_INFO_STRUCT. Copy over only the
-		// CAPTURE_INFO_STRUCT and CALCULATED_DATA_STRUCT. Get the size of the data to copy.
-		moveSizeInWords = sizeof(CAPTURE_INFO_STRUCT)/2;
-		destPtr = (uint16*)(&(flashEventRecord->summary.captured));
-		srcPtr = (uint16*)(&(g_RamEventRecord.summary.captured));
-		flashWrite(destPtr, srcPtr, moveSizeInWords);
-
-		// Setup ptrs so we are at the beginning of the CAPTURE_INFO_STRUCT. Copy over only the
-		// CAPTURE_INFO_STRUCT and CALCULATED_DATA_STRUCT. Get the size of the data to copy.
-		moveSizeInWords = sizeof(CALCULATED_DATA_STRUCT)/2;
-		destPtr = (uint16*)(&(flashEventRecord->summary.calculated));
-		srcPtr = (uint16*)(&(g_RamEventRecord.summary.calculated));
-		flashWrite(destPtr, srcPtr, moveSizeInWords);
-#endif
-
-#if 1 // ns8100
-		// Make sure at the beginning of the file
-		fl_fseek(gComboDualCurrentEventFileHandle, 0, SEEK_SET);
-		// Rewrite the event record
-		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gComboDualCurrentEventFileHandle);
-
-		debug("Bargraph event file closed\n");
-		fl_fclose(gComboDualCurrentEventFileHandle);
-#endif
-	}
-
-#if 0 // fix_ns8100
-	// Skip since this is temp now handled just after combo bargraph file creation
+#if 0 // ns8100 - *NOTE* With Combo and keeping consistant with event numbers, save moved to start instead of at the end of bargraph
 	// Store and increment the event number even if we do not save the event header information.
 	storeCurrentEventNumber();
 #endif
@@ -1709,6 +1458,7 @@ void UpdateComboJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 	g_RamEventRecord.summary.calculated.calcStructEndFlag = 0xEECCCCEE;
 }
 
+#if 0 // Unused
 //*****************************************************************************
 // Function:	checkSpaceForBarSummaryInterval
 // Purpose:
@@ -1730,16 +1480,17 @@ BOOLEAN checkSpaceForComboBarSummaryInterval(void)
 
 	return (spaceLeft);
 }
+#endif
 
 //*****************************************************************************
-// Function:	MoveComboWaveformEventToFlash
+// Function:	MoveComboWaveformEventToFile
 // Purpose :
 //*****************************************************************************
-void MoveComboWaveformEventToFlash(void)
+void MoveComboWaveformEventToFile(void)
 {
 	static FLASH_MOV_STATE flashMovState = FLASH_IDLE;
 	static SUMMARY_DATA* sumEntry;
-	static SUMMARY_DATA* flashSumEntry;
+	static SUMMARY_DATA* ramSummaryEntry;
 	static int32 sampGrpsLeft;
 	static uint32 vectorSumTotal;
 
@@ -1756,40 +1507,10 @@ void MoveComboWaveformEventToFlash(void)
 		switch (flashMovState)
 		{
 			case FLASH_IDLE:
-				if (help_rec.flash_wrapping == NO)
-				{
-					getFlashUsageStats(&flashStats);
-
-					if (flashStats.waveEventsLeft == 0)
-					{
-						// Release the buffer (in essence)
-						gFreeEventBuffers++;
-
-						// Can't store event, just return
-						return;
-					}
-				}
-
-				if (GetFlashSumEntry(&flashSumEntry) == FALSE)
+				if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 				{
 					debugErr("Out of Flash Summary Entrys\n");
 				}
-
-#if 0 // ns7100
-				// Set our flash event data pointer to the start of the flash event
-				advFlashDataPtrToEventData(flashSumEntry);
-#endif
-
-#if 1 // ns8100
-				// Get new file handle
-				gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
-				
-				if (gCurrentEventFileHandle == NULL)
-					debugErr("Failed to get a new file handle for the Combo (Waveform) event!\n");
-
-				// Seek to beginning of where data will be stored in event
-				fl_fseek(gCurrentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
-#endif
 
 				sumEntry = &summaryTable[gCurrentEventBuffer];
 				sumEntry->mode = WAVEFORM_MODE;
@@ -1806,11 +1527,7 @@ void MoveComboWaveformEventToFlash(void)
 				for (i = (uint16)gSamplesInPre; i != 0; i--)
 				{
 					// Store entire sample
-#if 0 // ns7100
-					storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-#else // ns8100
-					fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
-#endif
+					//storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 					gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 				flashMovState = FLASH_BODY_INT;
@@ -1844,12 +1561,6 @@ void MoveComboWaveformEventToFlash(void)
 
 				vectorSumTotal = (uint32)vectorSum;
 
-				// Store entire sample
-#if 0 //ns7100
-				storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-#else
-				fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
-#endif
 				gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
 				flashMovState = FLASH_BODY;
@@ -1905,12 +1616,6 @@ void MoveComboWaveformEventToFlash(void)
 						vectorSumTotal = (uint32)vectorSum;
 					}
 
-					// Store entire sample
-#if 0 // ns7100
-					storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-#else // ns8100
-					fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
-#endif
 					gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -1923,44 +1628,67 @@ void MoveComboWaveformEventToFlash(void)
 				break;
 
 			case FLASH_CAL:
+#if 0 // Does nothing
 				// Loop 100 times
 				for (i = (uint16)(gSamplesInCal / (trig_rec.trec.sample_rate / 1024)); i != 0; i--)
 				{
-					// Store entire sample
-#if 0 // ns7100
-					storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-#else // ns8100
-					fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
-#endif
-
 					// Advance the pointer using sample rate ratio to act as a filter to always scale down to a 1024 rate
 					gCurrentEventSamplePtr += ((trig_rec.trec.sample_rate/1024) * gp_SensorInfo->numOfChannels);
 				}
-
-				if (++gCurrentEventBuffer == gMaxEventBuffers)
-				{
-					gCurrentEventBuffer = 0;
-					gCurrentEventSamplePtr = startOfEventBufferPtr;
-				}
-				else
-				{
-					gCurrentEventSamplePtr = startOfEventBufferPtr + (gCurrentEventBuffer * gWordSizeInEvent);
-				}
+#endif
 
 				sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, (uint16)trig_rec.trec.sample_rate);
 				sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, (uint16)trig_rec.trec.sample_rate);
 				sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, (uint16)trig_rec.trec.sample_rate);
 				sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, (uint16)trig_rec.trec.sample_rate);
 
+				completeRamEventSummary(ramSummaryEntry, sumEntry);
 
-				FillInFlashSummarys(flashSumEntry, sumEntry);
+				// Get new event file handle
+				gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+
+				if (gCurrentEventFileHandle == NULL)
+				{
+					debugErr("Failed to get a new file handle for the current Combo - Waveform event!\n");
+				}					
+				else // Write the file event to the SD card
+				{
+					// Write the event record header and summary
+					fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
+
+					// Write the event data, containing the pretrigger, event and cal
+					fl_fwrite(gCurrentEventStartPtr, gWordSizeInEvent, 2, gCurrentEventFileHandle);
+
+					// Done writing the event file, close the file handle
+					fl_fclose(gCurrentEventFileHandle);
+					debug("Event file closed\n");
+
+					updateMonitorLogEntry();
+
+					// After event numbers have been saved, store current event number in persistent storage.
+					storeCurrentEventNumber();
+
+					// Now store the updated event number in the universal ram storage.
+					g_RamEventRecord.summary.eventNumber = g_currentEventNumber;
+				}
+
+				// Update event buffer count and pointers
+				if (++gCurrentEventBuffer == gMaxEventBuffers)
+				{
+					gCurrentEventBuffer = 0;
+					gCurrentEventStartPtr = gCurrentEventSamplePtr = g_startOfEventBufferPtr;
+				}
+				else
+				{
+					gCurrentEventStartPtr = gCurrentEventSamplePtr = g_startOfEventBufferPtr + (gCurrentEventBuffer * gWordSizeInEvent);
+				}
 
 				if (gFreeEventBuffers == gMaxEventBuffers)
 				{
 					clearSystemEventFlag(TRIGGER_EVENT);
 				}
 
-				gLastCompDataSum = flashSumEntry;
+				gLastCompDataSum = ramSummaryEntry;
 
 				print_out_mode = WAVEFORM_MODE;
 				raiseMenuEventFlag(RESULTS_MENU_EVENT);

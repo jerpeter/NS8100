@@ -2009,12 +2009,12 @@ void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 #define SAMPLE_RATE_MENU_ENTRIES 7
 USER_MENU_STRUCT sampleRateMenu[SAMPLE_RATE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, SAMPLE_RATE_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, SAMPLE_RATE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 512, NULL_TEXT, NO_TAG, {512}},
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, SAMPLE_RATE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
+{ITEM_1, 512, NULL_TEXT, NO_TAG, {MIN_SAMPLE_RATE}}, // 512
 {ITEM_2, 1024, NULL_TEXT, NO_TAG, {1024}},
 {ITEM_3, 2048, NULL_TEXT, NO_TAG, {2048}},
 {ITEM_4, 4096, NULL_TEXT, NO_TAG, {4096}},
-{ITEM_5, 8192, NULL_TEXT, NO_TAG, {8192}},
+{ITEM_5, 8192, NULL_TEXT, NO_TAG, {MAX_SAMPLE_RATE}}, // 8192
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&sampleRateMenuHandler}}
 };
 
@@ -2029,8 +2029,8 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		if (((trig_rec.op_mode == WAVEFORM_MODE) && (sampleRateMenu[newItemIndex].data >= 8192)) ||
-			((trig_rec.op_mode == BARGRAPH_MODE) && (sampleRateMenu[newItemIndex].data >= 2048)))
+		if ((sampleRateMenu[newItemIndex].data < sampleRateMenu[ITEM_1].data) || 
+			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_5].data))
 		{
 			byteSet(&message[0], 0, sizeof(message));
 			sprintf((char*)message, "%lu %s", sampleRateMenu[newItemIndex].data,
@@ -2039,7 +2039,7 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 
 			debug("Sample Rate: %d is not supported for this mode.\n", trig_rec.trec.record_time_max);
 
-			ACTIVATE_USER_MENU_MSG(&sampleRateMenu, 1024);
+			ACTIVATE_USER_MENU_MSG(&sampleRateMenu, sampleRateMenu[DEFAULT_ITEM_2].data);
 		}
 		else
 		{
@@ -2047,8 +2047,8 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 
 			// fix_ns8100 - Add in Combo mode calc that accounts for Bargraph buffers
 			trig_rec.trec.record_time_max = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS -
-				(trig_rec.trec.sample_rate / 4 * gp_SensorInfo->numOfChannels) -
-					(trig_rec.trec.sample_rate / 1024 * 100 * gp_SensorInfo->numOfChannels)) /
+				((trig_rec.trec.sample_rate / 4) * gp_SensorInfo->numOfChannels) -
+					((trig_rec.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * gp_SensorInfo->numOfChannels)) /
 						(trig_rec.trec.sample_rate * gp_SensorInfo->numOfChannels))));
 
 			debug("New Max Record Time: %d\n", trig_rec.trec.record_time_max);

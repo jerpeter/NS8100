@@ -117,8 +117,10 @@ const unsigned char SD_MMC_File_System_Test_Menu_Text[] =
 "  12) Display SID text file.\n\r"
 "  13) Display Log text file.\n\r"
 "  14) Add Log entry to text file.\n\r"
-"  15) Test Standard Fat Driver.\n\r"
-"  16) Test Standard Fat Read.\n\r"
+"  15) Copy test file.\n\r"
+"  16) Delete test file.\n\r"
+//"  ) Test Standard Fat Driver.\n\r"
+//"  ) Test Standard Fat Read.\n\r"
 "\0"
 };
 
@@ -139,8 +141,10 @@ static void (*SD_MMC_File_System_Test_Menu_Functions[])(void) =
    SD_MMC_Display_SID_text,
    SD_MMC_Display_Log_text,
    SD_MMC_Add_Log_text,
-   SD_MMC_Test_Standard_Fat_Driver,
-   SD_MMC_Test_Standard_Fat_Read
+   SD_MMC_Copy_Test_File,
+   SD_MMC_Inc_Buffer_Size_Test_File
+//   SD_MMC_Test_Standard_Fat_Driver,
+//   SD_MMC_Test_Standard_Fat_Read
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -707,6 +711,71 @@ void SD_MMC_Add_Log_text(void)
 
 		print_dbg("Log File modified\r\n");
 	}		
+}
+
+extern unsigned long int g_rtcSoftTimerTickCount;
+unsigned long int bufferSizeForTest = 2048;
+void SD_MMC_Copy_Test_File(void)
+{
+	FL_FILE* fileRead;
+	FL_FILE* fileWrite;
+	unsigned char buffer[bufferSizeForTest];
+	unsigned long int count;
+	unsigned long int timer;
+
+	print_dbg("Attempting to delete Test File...\r\n");
+	if (fl_remove("C:\\System\\Boot.cpy") == -1)
+		print_dbg("Error: Test File not deleted!\r\n");
+	else
+	{
+		print_dbg("Test File removal successful\r\n");
+
+		print_dbg("Attempting to open Test File for reading...\r\n");
+		fileRead = fl_fopen("C:\\System\\Boot.x", "r");
+	
+		if (fileRead == NULL)
+			print_dbg("Error: Test File not found!\r\n");
+		else
+		{
+			print_dbg("Attempting to open Test File for writing...\r\n");
+			fileWrite = fl_fopen("C:\\System\\Boot.cpy", "w");
+
+			if (fileWrite == NULL)
+				print_dbg("Error: Test File not found!\r\n");
+			else
+			{
+				timer = g_rtcSoftTimerTickCount;
+
+				count = fileRead->filelength / bufferSizeForTest;
+				while (count--)
+				{			
+					fl_fread(fileRead, &buffer[0], bufferSizeForTest);
+					fl_fwrite(&buffer[0], bufferSizeForTest, 1, fileWrite);
+				}
+
+				if (fileRead->filelength % bufferSizeForTest)
+				{
+					fl_fread(fileRead, &buffer[0], fileRead->filelength % bufferSizeForTest);
+					fl_fwrite(&buffer[0], fileRead->filelength % bufferSizeForTest, 1, fileWrite);
+				}				
+						
+				fl_fclose(fileRead);
+				fl_fclose(fileWrite);
+
+				print_dbg("Closed both Test Files\r\n");
+				print_dbg("Time to copy file: ");
+				print_dbg_ulong((g_rtcSoftTimerTickCount - timer) / 2);
+				print_dbg(" secs, buffer size: ");
+				print_dbg_ulong(bufferSizeForTest);
+				print_dbg("\r\n");
+			}	
+		}		
+	}	
+}
+
+void SD_MMC_Inc_Buffer_Size_Test_File(void)
+{
+	bufferSizeForTest /= 2;
 }
 
 void SD_MMC_File_System_Change_Directory(void){}

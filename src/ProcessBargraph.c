@@ -59,14 +59,11 @@ extern uint16* gp_bg430DataEnd;
 // ns8100
 extern FL_FILE* gCurrentEventFileHandle;
 extern uint16 g_currentEventNumber;
+extern uint16 eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 
 ///----------------------------------------------------------------------------
 ///	Globals
 ///----------------------------------------------------------------------------
-// This ptr points to the current/in use (ram) summary table entry. It is
-// used to access the linkPtr which is really the flash event record Ptr.
-// And the record ptr is the location in ram. i.e.
-// EVENT_REC* currentEventRec = (EVENT_REC *)gBargraphSummaryPtr->linkPtr;
 SUMMARY_DATA* gBargraphSummaryPtr = 0;
 
 // For bargraph processing.
@@ -94,11 +91,13 @@ BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalReadPtr = &(g_bargraphBarInterv
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalEndPtr = &(g_bargraphBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS - 1]);
 
 // The following are the Event Data ram buffer pointers.
-uint16 g_bargrapheventDataBufferer[BG_DATA_BUFFER_SIZE];
+#if 0 // ns7100
+uint16* g_bargrapheventDataBuffer;
 uint16* g_bargraphEventDataStartPtr;
 uint16* g_bargraphEventDataWritePtr;
 uint16* g_bargraphEventDataReadPtr;
 uint16* g_bargraphEventDataEndPtr;
+#endif
 
 uint16 aImpulsePeak;
 uint16 rImpulsePeak;
@@ -125,7 +124,7 @@ void StartNewBargraph(void)
 	gBargraphSummaryPtr = NULL;
 
 	// Get the address of an empty Ram summary
-	if (GetFlashSumEntry(&gBargraphSummaryPtr) == FALSE)
+	if (GetRamSummaryEntry(&gBargraphSummaryPtr) == FALSE)
 	{
 		debug("Out of Flash Summary Entrys\n");
 		return;
@@ -153,13 +152,17 @@ void StartNewBargraph(void)
 	gSummaryIntervalCnt = 0;	// Count the number of bars that make up a summary interval.
 	gTotalBarIntervalCnt = 0;
 
-	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
-	byteSet(&(g_bargrapheventDataBufferer[0]), 0, (sizeof(uint16) * BG_DATA_BUFFER_SIZE));
+#if 0 // ns7100
+	g_bargrapheventDataBuffer = &eventDataBuffer[0];
 
-	g_bargraphEventDataStartPtr = &(g_bargrapheventDataBufferer[0]);
-	g_bargraphEventDataWritePtr = &(g_bargrapheventDataBufferer[0]);
-	g_bargraphEventDataReadPtr = &(g_bargrapheventDataBufferer[0]);
-	g_bargraphEventDataEndPtr = &(g_bargrapheventDataBufferer[BG_DATA_BUFFER_SIZE - 1]);
+	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
+	byteSet(&(g_bargrapheventDataBuffer[0]), 0, (sizeof(uint16) * BG_DATA_BUFFER_SIZE));
+
+	g_bargraphEventDataStartPtr = &(g_bargrapheventDataBuffer[0]);
+	g_bargraphEventDataWritePtr = &(g_bargrapheventDataBuffer[0]);
+	g_bargraphEventDataReadPtr = &(g_bargrapheventDataBuffer[0]);
+	g_bargraphEventDataEndPtr = &(g_bargrapheventDataBuffer[BG_DATA_BUFFER_SIZE - 1]);
+#endif
 
 	g_bargraphBarIntervalWritePtr = &(g_bargraphBarInterval[0]);
 	g_bargraphBarIntervalReadPtr = &(g_bargraphBarInterval[0]);
@@ -202,13 +205,15 @@ void EndBargraph(void)
 	while (BG_BUFFER_NOT_EMPTY == CalculateBargraphData()) {}
 
 	// For the last time, put the data into the event buffer.
-	eventDataFlag = putBarIntervalDataIntoEventDataBufferer();
+	eventDataFlag = moveBarIntervalDataToFile();
 
 	// If no data, both flags are zero, then skip, end of record.
 	if ((eventDataFlag > 0) || (gSummaryIntervalCnt>0))
 	{
-		putSummaryIntervalDataIntoEventDataBufferer();
+		moveSummaryIntervalDataToFile();
+#if 0 // ns7100
 		MoveBargraphEventDataToFlash();
+#endif
 	}
 
 	MoveEndOfBargraphEventRecordToFlash();
@@ -220,6 +225,7 @@ void EndBargraph(void)
 ******************************************************************************/
 void ProcessBargraphData(void)
 {
+#if 0 // ns8100 - Moved to handle only in the ISR
 	uint16 commandNibble = 0x0000;
 
 	// Store the command nibble for the first channel of data
@@ -235,6 +241,7 @@ void ProcessBargraphData(void)
 	{
 		raiseSystemEventFlag(WARNING2_EVENT);
 	}
+#endif
 
 	// Check to see if we have a chunk of ram buffer to write, otherwise check for data wrapping.
 	if ((gp_bg430DataEnd - gp_bg430DataWrite) >= 4)
@@ -246,8 +253,8 @@ void ProcessBargraphData(void)
 		*gp_bg430DataWrite++ = *tailOfPreTrigBuff++;
 
 		// Check for the end and if so go to the top
-		if (gp_bg430DataWrite > gp_bg430DataEnd) gp_bg430DataWrite = gp_bg430DataStart;
-
+		if (gp_bg430DataWrite > gp_bg430DataEnd) 
+			gp_bg430DataWrite = gp_bg430DataStart;
 	}
 	else
 	{
@@ -273,20 +280,20 @@ void ProcessBargraphData(void)
 }
 
 //*****************************************************************************
-// Function: putBarIntervalDataIntoEventDataBufferer(void)
-// Purpose : Transfer the data from the bar interval buffers into the event
-//				write buffers for storage into flash.
+// Function: moveBarIntervalDataToFile(void)
+// Purpose : Transfer the data from the bar interval buffers into the event file
 //*****************************************************************************
-uint32 putBarIntervalDataIntoEventDataBufferer(void)
+uint32 moveBarIntervalDataToFile(void)
 {
-	uint32 remainingIntervalCnt = gBarIntervalCnt;
+	uint32 accumulatedBarIntervalCount = gBarIntervalCnt;
 
-	// If there has been no more data captures, it COULD happen.
+	// If Bar Intervals have been cached
 	if (gBarIntervalCnt > 0)
 	{
 		// Reset the bar interval count
 		gBarIntervalCnt = 0;
 
+#if 0 // ns7100
 		// Save Bar Interval peak Air into event data buffer
 		*(g_bargraphEventDataWritePtr++) = g_bargraphBarIntervalWritePtr->aMax;
 		END_OF_EVENT_BUFFER_CHECK(g_bargraphEventDataWritePtr, g_bargraphEventDataStartPtr, g_bargraphEventDataEndPtr);
@@ -300,6 +307,9 @@ uint32 putBarIntervalDataIntoEventDataBufferer(void)
 		END_OF_EVENT_BUFFER_CHECK(g_bargraphEventDataWritePtr, g_bargraphEventDataStartPtr, g_bargraphEventDataEndPtr);
 		*(g_bargraphEventDataWritePtr++) = (uint16)(g_bargraphBarIntervalWritePtr->vsMax & 0x0000FFFF);
 		END_OF_EVENT_BUFFER_CHECK(g_bargraphEventDataWritePtr, g_bargraphEventDataStartPtr, g_bargraphEventDataEndPtr);
+#else // ns8100
+		fl_fwrite(g_bargraphBarIntervalWritePtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, gCurrentEventFileHandle);		
+#endif
 
 		// Advance the Bar Interval global buffer pointer
 		advanceBarIntervalBufPtr(WRITE_PTR);
@@ -308,23 +318,20 @@ uint32 putBarIntervalDataIntoEventDataBufferer(void)
 		byteSet(g_bargraphBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 
 		// Count the total number of intervals captured.
-		g_bargraphSumIntervalWritePtr->barIntervalsCaptured ++;
+		g_bargraphSumIntervalWritePtr->barIntervalsCaptured++;
 	}
 
-	// This is a flag for the end of bargraph function. It is used to indicate that
-	// there IS bar and summary data to be processed.
-	return (remainingIntervalCnt);
+	// Flag for the end of bargraph, used to indicate that a bar interval was stored, thus a summary should be too
+	return (accumulatedBarIntervalCount);
 }
 
 //*****************************************************************************
-// Function: putSummaryIntervalDataIntoEventDataBufferer(void)
+// Function: moveSummaryIntervalDataToFile(void)
 // Purpose : Transfer the data from the summary interval buffers into the event
 //				write buffers for storage into flash.
 //*****************************************************************************
-void putSummaryIntervalDataIntoEventDataBufferer(void)
+void moveSummaryIntervalDataToFile(void)
 {
-	uint32 sizeOfRemainingBuffer;
-	uint8* tempSummaryIntervalWritePtr;
 	float rFreq, vFreq, tFreq;
 
 	rFreq = (float)((float)trig_rec.trec.sample_rate / (float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1));
@@ -348,6 +355,10 @@ void putSummaryIntervalDataIntoEventDataBufferer(void)
 	// Reset summary interval count
 	gSummaryIntervalCnt = 0;
 
+#if 0 // ns7100
+	uint32 sizeOfRemainingBuffer;
+	uint8* tempSummaryIntervalWritePtr;
+
 	// Calculate the size of the remaining buffer in terms of bytes.
 	sizeOfRemainingBuffer =
 		(uint32)((uint8*)g_bargraphEventDataEndPtr - (uint8*)g_bargraphEventDataWritePtr);
@@ -360,7 +371,6 @@ void putSummaryIntervalDataIntoEventDataBufferer(void)
 			(uint8*)g_bargraphSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT));
 		g_bargraphEventDataWritePtr += SUMMARY_INTERVAL_SIZE_IN_WORDS;
 	}
-
 	else
 	{
 		// Copy only the size of data that fits.
@@ -381,6 +391,9 @@ void putSummaryIntervalDataIntoEventDataBufferer(void)
 		// Move write ptr by the number of words.
 		g_bargraphEventDataWritePtr += ((sizeOfRemainingBuffer+1)/2);
 	}
+#else // ns8100
+	fl_fwrite(g_bargraphSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT), 1, gCurrentEventFileHandle);		
+#endif
 
 	// Move update the job totals.
 	UpdateBargraphJobTotals(g_bargraphSumIntervalWritePtr);
@@ -975,7 +988,7 @@ uint8 CalculateBargraphData(void)
 		//=================================================
 		if (++gBarIntervalCnt >= (uint32)(trig_rec.bgrec.barInterval * trig_rec.trec.sample_rate))
 		{
-			putBarIntervalDataIntoEventDataBufferer();
+			moveBarIntervalDataToFile();
 
 			//=================================================
 			// End of Summary Interval
@@ -983,11 +996,13 @@ uint8 CalculateBargraphData(void)
 			if (++gSummaryIntervalCnt >=
 				(uint32)(trig_rec.bgrec.summaryInterval / trig_rec.bgrec.barInterval))
 			{
-				putSummaryIntervalDataIntoEventDataBufferer();
+				moveSummaryIntervalDataToFile();
 			}
 
 			// Move data to flash.
+#if 0 // ns7100
 			MoveBargraphEventDataToFlash();
+#endif
 
 			if (help_rec.flash_wrapping == NO)
 			{
@@ -1012,6 +1027,7 @@ uint8 CalculateBargraphData(void)
 	}
 }
 
+#if 0 // ns7100
 //*****************************************************************************
 // Function: MoveBargraphEventDataToFlash(void)
 // Purpose : Move the data in the bargarpheventDataBufferer into flash. Copy
@@ -1035,6 +1051,7 @@ void MoveBargraphEventDataToFlash(void)
 		END_OF_EVENT_BUFFER_CHECK(g_bargraphEventDataReadPtr, g_bargraphEventDataStartPtr, g_bargraphEventDataEndPtr);
 	}
 }
+#endif
 
 //*****************************************************************************
 // Function: MoveStartofBargraphEventRecordToFlash
@@ -1066,20 +1083,17 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 		flashWrite(destPtr, srcPtr, moveSizeInWords);
 
 		byteSet((uint8*)&(g_RamEventRecord.summary.calculated), 0, sizeof(CALCULATED_DATA_STRUCT));
-
 #else // ns8100
 		// Get new file handle
 		gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
 				
 		if (gCurrentEventFileHandle == NULL)
+		{
 			debugErr("Failed to get a new file handle for the current Bargraph event!\n");
+		}			
 
-		// Make sure at the beginning of the file
-		fl_fseek(gCurrentEventFileHandle, 0, SEEK_SET);
+		// Write in the current but unfinished event record to provide an offset to start writing in the data
 		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
-		
-		// Move to the start of the data section
-		fl_fseek(gCurrentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
 #endif
 	}
 
@@ -1095,10 +1109,6 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 //*****************************************************************************
 void MoveEndOfBargraphEventRecordToFlash(void)
 {
-	// This global will contain the ram record with the reference to the start of the event record ptr.
-	// SUMMARY_DATA* gBargraphSummaryPtr;
-	// EVENT_REC* flashEventRecord = (EVENT_REC *)gBargraphSummaryPtr->linkPtr;
-
 #if 0 // ns7100
 	//uint16 checksumDex = 0;
 	uint32 moveSizeInWords;
@@ -1183,11 +1193,12 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 #if 1 // ns8100
 		// Make sure at the beginning of the file
 		fl_fseek(gCurrentEventFileHandle, 0, SEEK_SET);
+
 		// Rewrite the event record
 		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
 
-		debug("Bargraph event file closed\n");
 		fl_fclose(gCurrentEventFileHandle);
+		debug("Bargraph event file closed\n");
 #endif
 	}
 

@@ -79,7 +79,7 @@ uint32 gWordSizeInPre;
 uint32 gWordSizeInBody;
 uint32 gWordSizeInCal;
 uint32 gWordSizeInEvent;
-uint16* startOfEventBufferPtr;
+uint16* g_startOfEventBufferPtr;
 uint16* gEventBufferPrePtr;
 uint16* gEventBufferBodyPtr;
 uint16* gEventBufferCalPtr;
@@ -91,6 +91,7 @@ uint16* ddgEventBufferCalPtr;
 //uint16* dChaTwoEvtCalPtr;
 //uint16* ddChaTwoEvtCalPtr;
 uint16* gCurrentEventSamplePtr;
+uint16* gCurrentEventStartPtr;
 uint16 gCurrentEventBuffer;
 SUMMARY_DATA summaryTable[MAX_RAM_SUMMARYS];
 SUMMARY_DATA* gLastCompDataSum;
@@ -142,7 +143,7 @@ void InitDataBuffs(uint8 op_mode)
 		// Calculate samples for each section and total event
 		gSamplesInBody = (uint32)(sampleRate * trig_rec.trec.record_time);
 		gSamplesInPre  = (uint32)(sampleRate / 4);
-		gSamplesInCal  = (uint32)((sampleRate / 1024) * 100);
+		gSamplesInCal  = (uint32)((sampleRate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES);
 		gSamplesInEvent  = gSamplesInPre + gSamplesInBody + gSamplesInCal;
 
 		// Calculate word size for each section and total event, since buffer is an array of words
@@ -156,12 +157,12 @@ void InitDataBuffs(uint8 op_mode)
 		gFreeEventBuffers = gMaxEventBuffers;
 
 		// Init starting event buffer pointers
-		startOfEventBufferPtr = &(eventDataBuffer[0]);
-		gCurrentEventSamplePtr = startOfEventBufferPtr; 
+		g_startOfEventBufferPtr = &(eventDataBuffer[0]);
+		gCurrentEventStartPtr = gCurrentEventSamplePtr = g_startOfEventBufferPtr;
 		gCurrentEventBuffer = 0;
 		gCurrentEventNumber = 0;
 
-		gEventBufferPrePtr = startOfEventBufferPtr;
+		gEventBufferPrePtr = g_startOfEventBufferPtr;
 		gEventBufferBodyPtr = gEventBufferPrePtr + gWordSizeInPre;
 		gEventBufferCalPtr = gEventBufferPrePtr + gWordSizeInPre + gWordSizeInBody;
 
@@ -186,7 +187,7 @@ void InitDataBuffs(uint8 op_mode)
 		// Calculate samples for each section and total event
 		gSamplesInBody = (uint32)(sampleRate * trig_rec.trec.record_time);
 		gSamplesInPre  = (uint32)(sampleRate / 4);
-		gSamplesInCal  = (uint32)((sampleRate / 1024) * 100);
+		gSamplesInCal  = (uint32)((sampleRate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES);
 		gSamplesInEvent  = gSamplesInPre + gSamplesInBody + gSamplesInCal;
 
 		// Calculate word size for each section and total event, since buffer is an array of words
@@ -196,16 +197,17 @@ void InitDataBuffs(uint8 op_mode)
 		gWordSizeInEvent = gWordSizeInPre + gWordSizeInBody + gWordSizeInCal;
 
 		// Calculate total event buffers available
-		gMaxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - BARGRAPH_BUFFER_SIZE_OFFSET) / (gWordSizeInPre + gWordSizeInBody + gWordSizeInCal));
+		gMaxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET) / 
+							(gWordSizeInPre + gWordSizeInBody + gWordSizeInCal));
 		gFreeEventBuffers = gMaxEventBuffers;
 
 		// Init starting event buffer pointers
-		startOfEventBufferPtr = &(eventDataBuffer[BARGRAPH_BUFFER_SIZE_OFFSET]);
-		gCurrentEventSamplePtr = startOfEventBufferPtr; 
+		g_startOfEventBufferPtr = &(eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET]);
+		gCurrentEventStartPtr = gCurrentEventSamplePtr = g_startOfEventBufferPtr; 
 		gCurrentEventBuffer = 0;
 		gCurrentEventNumber = 0;
 
-		gEventBufferPrePtr = startOfEventBufferPtr;
+		gEventBufferPrePtr = g_startOfEventBufferPtr;
 		gEventBufferBodyPtr = gEventBufferPrePtr + gWordSizeInPre;
 		gEventBufferCalPtr = gEventBufferPrePtr + gWordSizeInPre + gWordSizeInBody;
 
@@ -219,7 +221,7 @@ void InitDataBuffs(uint8 op_mode)
 		gp_bg430DataStart = &(eventDataBuffer[0]);
 		gp_bg430DataWrite = &(eventDataBuffer[0]);
 		gp_bg430DataRead = &(eventDataBuffer[0]);
-		gp_bg430DataEnd = &(eventDataBuffer[BARGRAPH_BUFFER_SIZE_OFFSET - 4]);
+		gp_bg430DataEnd = &(eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET - 16]);
 
 		StartNewCombo();
 	}

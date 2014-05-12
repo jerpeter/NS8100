@@ -141,23 +141,25 @@ void Voltage_Monitor_Battery_Menu_Exit(void)
 
 void Voltage_Monitor_Battery_Read_Continuous(void)
 {
-   unsigned long int adc_value = 0;
-   int whole;
-   int decimal;
-   int *uart_rx_character = 0;
+	unsigned long int adc_value = 0;
+	int whole;
+	int decimal;
+	int *uart_rx_character = 0;
 	unsigned int i = 0;
-   print_dbg("\n\rPress any key to exit. \n\r");
+	unsigned int avgNumberReads = 25;
 
-   while((usart_read_char(DBG_USART, uart_rx_character))!= USART_SUCCESS)
-   {
+	print_dbg("\n\rPress any key to exit. \n\r");
+
+	while((usart_read_char(DBG_USART, uart_rx_character))!= USART_SUCCESS)
+	{
 		// Need to average 25 reads
-		for(i = 0; i < 25; i++)
+		for(i = 0; i < avgNumberReads; i++)
 		{
 			adc_start(adc);
 			adc_value += adc_get_value(adc, VBAT_CHANNEL);
 		}
 
-		adc_value /= 25;
+		adc_value /= avgNumberReads;
 		
 		// Raw A/D value / 1023 * 3.3 * 3
 		whole = adc_value / 103;
@@ -172,8 +174,9 @@ void Voltage_Monitor_Battery_Read_Continuous(void)
 		print_dbg_ulong(adc_value);
 		print_dbg(")");
 		print_dbg("\r");
-   }
-   print_dbg("\n\r\n\r");
+	}
+
+	print_dbg("\n\r\n\r");
 }
 
 void Voltage_Monitor_Battery_Read_Once(void)
@@ -182,14 +185,15 @@ void Voltage_Monitor_Battery_Read_Once(void)
 	int whole;
 	int decimal;
 	unsigned int i = 0;
+	unsigned int avgNumberReads = 25;
 
-	for(i = 0; i < 25; i++)
+	for(i = 0; i < avgNumberReads; i++)
 	{
 		adc_start(adc);
 		adc_value += adc_get_value(adc, VBAT_CHANNEL);
 	}
 
-	adc_value /= 25;
+	adc_value /= avgNumberReads;
 
 	// Raw A/D value / 1023 * 3.3 * 3
 	whole = adc_value / 103;

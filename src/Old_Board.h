@@ -111,11 +111,16 @@
 #define BATT_MAX_VOLTS 			6.5
 #define BATT_MIN_VOLTS 			4.0
 
-#define REFERENCE_VOLTAGE       3.3
-#define BATT_RESOLUTION         1024  // 10-bit resolution
+#define REFERENCE_VOLTAGE       (float)3.3
+#define BATT_RESOLUTION         (float)1024  // 10-bit resolution
 
+
+#if 0 // ns7100
 #define BATT_RESISTOR_RATIO     	((604 + 301)/301)
-#define EXT_CHARGE_RESISTOR_RATION	((3000 + 200)/200)
+#define EXT_CHARGE_RESISTOR_RATIO	((3000 + 200)/200)
+#else // ns8100
+#define VOLTAGE_RATIO		    (float)3
+#endif
 
 /* Macro that returns a pointer to the Internal Memory Map */
 #define mmc2114_get_immp()      ((MMC2114_IMM *)(IMM_ADDRESS))

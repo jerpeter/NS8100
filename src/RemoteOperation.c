@@ -396,7 +396,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Sample Rate check
-		if ((1024 == cfg.eventCfg.sampleRate) || (2048 == cfg.eventCfg.sampleRate) ||
+		if ((512 == cfg.eventCfg.sampleRate) || (1024 == cfg.eventCfg.sampleRate) || (2048 == cfg.eventCfg.sampleRate) ||
 			(4096 == cfg.eventCfg.sampleRate) || (8192 == cfg.eventCfg.sampleRate))
 		{
 			if ((BARGRAPH_MODE == trig_rec.op_mode) && (1024 != cfg.eventCfg.sampleRate))
@@ -449,7 +449,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		// Number of channels is hardcoded to 4 = NUMBER_OF_CHANNELS_DEFAULT 
 		maxRecordTime = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS - 
 			((trig_rec.trec.sample_rate / 4) * NUMBER_OF_CHANNELS_DEFAULT) - 
-				((trig_rec.trec.sample_rate / 1024) * 100 * NUMBER_OF_CHANNELS_DEFAULT)) / 
+				((trig_rec.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * NUMBER_OF_CHANNELS_DEFAULT)) / 
 					(trig_rec.trec.sample_rate * NUMBER_OF_CHANNELS_DEFAULT))));
 
 		if ((cfg.eventCfg.recordTime >= 1) &&

@@ -343,20 +343,16 @@ void SystemEventManager(void)
 	if (getSystemEventState(TRIGGER_EVENT))
 	{
 		debug("Trigger Event 1\n");
-#if 1 // fix_ns8100
 		if (trig_rec.op_mode == WAVEFORM_MODE)
 			MoveWaveformEventToFlash();
 		else if (trig_rec.op_mode == COMBO_MODE)
-			MoveComboWaveformEventToFlash();
-#endif
+			MoveComboWaveformEventToFile();
 	}
 
 	if (getSystemEventState(MANUEL_CAL_EVENT))
 	{
 	    debug("Cal Pulse Event\n");
-#if 1 // fix_ns8100
 	    MoveManuelCalToFlash();
-#endif
 	}
 
 	if ((getSystemEventState(KEYPAD_EVENT)) ||

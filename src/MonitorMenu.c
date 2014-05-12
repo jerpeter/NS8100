@@ -637,7 +637,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-#if 1
+#if 1 // Show hidden RTVA Values
 		if (g_showRVTA == YES)
 		{
 			//-----------------------------------------------------------------------
@@ -645,17 +645,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			//-----------------------------------------------------------------------
 			byteSet(&buff[0], 0, sizeof(buff));	
 			length = (uint8)sprintf(buff," x%3x x%3x x%3x x%3x", 
-#if 1
 				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->r) & 0x0FFF),
 				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->v) & 0x0FFF),
 				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->t) & 0x0FFF),
 				((((SAMPLE_DATA_STRUCT*)tailOfPreTrigBuff)->a) & 0x0FFF));
-#else
-				(*(tailOfPreTrigBuff) & 0x0FFF),
-				(*(tailOfPreTrigBuff + 1) & 0x0FFF),
-				(*(tailOfPreTrigBuff + 2) & 0x0FFF),
-				(*(tailOfPreTrigBuff + 3) & 0x0FFF));
-#endif
+
 			wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
 			wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);

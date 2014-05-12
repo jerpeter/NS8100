@@ -398,7 +398,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	if ((updateResultsEventRecord == YES) || (g_bargraphForcedCal == YES))
 	{
 		debug("Results menu: updating event record cache\n");
-		getEventFileInfo((uint16)((uint32)(results_summtable_ptr->linkPtr)), &(resultsEventRecord.header), &resultsEventRecord.summary);
+		getEventFileInfo(results_summtable_ptr->fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary);
 		updateResultsEventRecord = NO;
 	}
 #endif

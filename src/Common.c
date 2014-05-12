@@ -28,6 +28,7 @@
 #include "SysEvents.h"
 #include "Old_Board.h"
 #include "TextTypes.h"
+#include "adc.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -83,47 +84,51 @@ MONTH_TABLE_STRUCT monthTable[] =  {
 ///	Function:	convertedBatteryLevel
 ///	Purpose:	Convert the raw battery level from the a-to-d to the actual value
 ///----------------------------------------------------------------------------
+#define AD_VOLTAGE_READ_LOOP_COUNT	10
 float convertedBatteryLevel(uint8 type)
 {
-	float rawBatteryValue = (float)0.0;
-	uint16 rawBatteryLevel = 0;
-	uint16 battResult1 = 0;
-	uint16 battResult2 = 0;
+	uint16 adVoltageReadValue;
+	uint32 adChannelSum = 0;
+	uint16 adChannelValueLow = 0xFFFF;
+	uint16 adChannelValueHigh = 0;
+	float adVoltageLevel = (float)0.0;
+	uint32 i = 0;
 
-#if 0 // fix_ns8100
-	switch (type)
+	// Need to average some amount of reads
+	for(i = 0; i < AD_VOLTAGE_READ_LOOP_COUNT; i++)
 	{
-		case EXT_CHARGE_VOLTAGE:
-			battResult1 = *((uint16*)(IMM_ADDRESS + DTOA_EXT_CHARGE_RESULT_1));
-			battResult2 = *((uint16*)(IMM_ADDRESS + DTOA_EXT_CHARGE_RESULT_2));
-			break;
+		adc_start(&AVR32_ADC);
 
-		case BATTERY_VOLTAGE:
-			battResult1 = *((uint16*)(IMM_ADDRESS + DTOA_BATT_VOLT_RESULT_1));
-			battResult2 = *((uint16*)(IMM_ADDRESS + DTOA_BATT_VOLT_RESULT_2));
-			break;
-	}
-#endif
+		switch (type)
+		{
+			case EXT_CHARGE_VOLTAGE:
+				adVoltageReadValue = adc_get_value(&AVR32_ADC, VIN_CHANNEL);
+				break;
 
-	// Take the higher of the two battery results (fix for Mcore A/D reference count bug)
-	if (battResult1 > battResult2)
-		rawBatteryLevel = battResult1;
-	else
-		rawBatteryLevel = battResult2;
+			case BATTERY_VOLTAGE:
+				adVoltageReadValue = adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
+				break;
+		}
+		
+		if (adVoltageReadValue < adChannelValueLow)
+			adChannelValueLow = adVoltageReadValue;
 
-	rawBatteryValue = (float)(((float)rawBatteryLevel * (float)REFERENCE_VOLTAGE) / ((float)BATT_RESOLUTION));
-
-	switch (type)
-	{
-		case EXT_CHARGE_VOLTAGE:
-			rawBatteryValue = (float)((float)rawBatteryValue * (float)EXT_CHARGE_RESISTOR_RATION);
-			break;
-		case BATTERY_VOLTAGE:
-			rawBatteryValue = (float)((float)rawBatteryValue * (float)BATT_RESISTOR_RATIO);
-			break;
+		if (adVoltageReadValue > adChannelValueHigh)
+			adChannelValueHigh = adVoltageReadValue;
+			
+		adChannelSum += adVoltageReadValue;
 	}
 
-	return (rawBatteryValue);
+	// Remove the lowest and highest values read
+	adChannelSum -= (adChannelValueLow + adChannelValueHigh);
+	
+	adVoltageLevel /= (AD_VOLTAGE_READ_LOOP_COUNT - 2);
+		
+	// Converted A/D value / 1023 * 3.3 * 3
+	adVoltageLevel *= (REFERENCE_VOLTAGE * VOLTAGE_RATIO);
+	adVoltageLevel /= BATT_RESOLUTION;
+
+	return (adVoltageLevel);
 }
 
 ///----------------------------------------------------------------------------
@@ -132,9 +137,10 @@ float convertedBatteryLevel(uint8 type)
 ///----------------------------------------------------------------------------
 uint8 adjustedRawBatteryLevel(void)
 {
+	uint8 adjustedRawBattLevel = 0;
+#if 0 // Unused
 	uint16 rawBatteryLevel = 0;
 	uint16 rawMinBatteryLevel = 0;
-	uint8 adjustedRawBattLevel = 0;
 	uint16 battResult1 = *((uint16*)(IMM_ADDRESS + DTOA_BATT_VOLT_RESULT_1));
 	uint16 battResult2 = *((uint16*)(IMM_ADDRESS + DTOA_BATT_VOLT_RESULT_2));
 
@@ -161,6 +167,7 @@ uint8 adjustedRawBatteryLevel(void)
 	// Calculate the adjusted raw battery level
 	else
 		adjustedRawBattLevel = (uint8)(rawBatteryLevel - rawMinBatteryLevel);
+#endif
 
 	return (adjustedRawBattLevel);
 }

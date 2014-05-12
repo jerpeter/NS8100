@@ -88,7 +88,7 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
     // Chan 1
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
     spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &(dataPtr->v));
+    spi_read(AD_SPI, &(dataPtr->t));
     spi_write(AD_SPI, 0x0000);
     spi_read(AD_SPI, &trash);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
@@ -96,7 +96,7 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
     // Chan 2
     spi_selectChip(AD_SPI, AD_SPI_NPCS);
     spi_write(AD_SPI, 0x0000);
-    spi_read(AD_SPI, &(dataPtr->t));
+    spi_read(AD_SPI, &(dataPtr->v));
     spi_write(AD_SPI, 0x0000);
     spi_read(AD_SPI, &trash);
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
@@ -118,7 +118,7 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
     spi_unselectChip(AD_SPI, AD_SPI_NPCS);
 #endif
 
-#if 0 // fix_ns8100
+#if 0
 	uint8 delay = 0;
 
 	// Set A0 mux to A1/B1 for R/V by clearing bit
@@ -150,10 +150,10 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 	dataPtr->t = *(uint16*)(ANALOG_ADDRESS + 0x02);
 	dataPtr->a = *(uint16*)(ANALOG_ADDRESS + 0x00);
 
-	dataPtr->r -= g_channelOffset.r;
-	dataPtr->v -= g_channelOffset.v;
-	dataPtr->t -= g_channelOffset.t;
-	dataPtr->a -= g_channelOffset.a;
+	dataPtr->r -= g_channelOffset.r_16bit;
+	dataPtr->v -= g_channelOffset.v_16bit;
+	dataPtr->t -= g_channelOffset.t_16bit;
+	dataPtr->a -= g_channelOffset.a_16bit;
 #endif
 
 #if 0
@@ -379,10 +379,7 @@ void GetChannelOffsets(void)
 	}
 
 	// Reset offset values
-	g_channelOffset.r = 0;
-	g_channelOffset.v = 0;
-	g_channelOffset.t = 0;
-	g_channelOffset.a = 0;
+	byteSet(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
 
 	// Read and pitch 50 samples
 	for (i=0;i<50;i++)
@@ -420,12 +417,18 @@ void GetChannelOffsets(void)
 	debug("A/D Channel offset average: 0x%x, 0x%x, 0x%x, 0x%x\n", rTotal, vTotal, tTotal, aTotal);
 
 	// Set the channel offsets
-	g_channelOffset.r = (int16)(rTotal - 0x8000);
-	g_channelOffset.v = (int16)(vTotal - 0x8000);
-	g_channelOffset.t = (int16)(tTotal - 0x8000);
-	g_channelOffset.a = (int16)(aTotal - 0x8000);
+	g_channelOffset.r_16bit = (int16)(rTotal - 0x8000);
+	g_channelOffset.v_16bit = (int16)(vTotal - 0x8000);
+	g_channelOffset.t_16bit = (int16)(tTotal - 0x8000);
+	g_channelOffset.a_16bit = (int16)(aTotal - 0x8000);
 
-	debug("A/D Channel offsets: %d, %d, %d, %d\n", g_channelOffset.r, g_channelOffset.v, g_channelOffset.t, g_channelOffset.a);
+	g_channelOffset.r_12bit = g_channelOffset.r_16bit >> 4;
+	g_channelOffset.v_12bit = g_channelOffset.v_16bit >> 4;
+	g_channelOffset.t_12bit = g_channelOffset.t_16bit >> 4;
+	g_channelOffset.a_12bit = g_channelOffset.a_16bit >> 4;
+
+	debug("A/D Channel offsets: %d, %d, %d, %d\n",
+		g_channelOffset.r_16bit, g_channelOffset.v_16bit, g_channelOffset.t_16bit, g_channelOffset.a_16bit);
 
 	// If we had to power on the A/D, then power it off
 	if (powerAnalogDown == YES)

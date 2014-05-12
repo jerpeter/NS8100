@@ -72,7 +72,7 @@ extern uint32 gWordSizeInPre;
 extern uint32 gWordSizeInBody;
 extern uint32 gWordSizeInCal;
 extern uint32 gWordSizeInEvent;
-extern uint16* startOfEventBufferPtr;
+extern uint16* g_startOfEventBufferPtr;
 extern uint16* gEventBufferPrePtr;
 //extern uint16* chaTwoEvtPrePtr;
 extern uint16* gEventBufferBodyPtr;
@@ -123,9 +123,9 @@ void ProcessManuelCalPulse(void)
 			if (gFreeEventBuffers != 0)
 			{
 				g_RamEventRecord.summary.captured.eventTime = triggerTimeStamp = getCurrentTime();
-
+#if 0 // ns7100
 				summaryTable[gCurrentEventNumber].linkPtr = gEventBufferPrePtr;
-
+#endif
 				*(gEventBufferPrePtr + 0) = (uint16)((*(tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_START);
 				*(gEventBufferPrePtr + 1) = (uint16)((*(tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_START);
 				*(gEventBufferPrePtr + 2) = (uint16)((*(tailOfPreTrigBuff + 2) & DATA_MASK) | EVENT_START);
@@ -182,8 +182,8 @@ void ProcessManuelCalPulse(void)
 		else
 		{
 			gCurrentEventNumber = 0;
-			gEventBufferPrePtr = startOfEventBufferPtr;
-			gEventBufferBodyPtr = startOfEventBufferPtr + gWordSizeInPre;
+			gEventBufferPrePtr = g_startOfEventBufferPtr;
+			gEventBufferBodyPtr = g_startOfEventBufferPtr + gWordSizeInPre;
 		}
 	}  
 
@@ -198,7 +198,7 @@ void ProcessManuelCalPulse(void)
 void MoveManuelCalToFlash(void)
 {
 	static SUMMARY_DATA* sumEntry;
-	static SUMMARY_DATA* flashSumEntry;
+	static SUMMARY_DATA* ramSummaryEntry;
 	uint16 i;
 	uint16 sample;
 	uint16 normalizedData;
@@ -207,14 +207,14 @@ void MoveManuelCalToFlash(void)
 
 	if (gFreeEventBuffers < gMaxEventBuffers)
 	{
-		if (GetFlashSumEntry(&flashSumEntry) == FALSE)
+		if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 		{
 			debugErr("Out of Flash Summary Entrys\n");
 		}
 
 #if 0 // ns7100
 		// Set our flash event data pointer to the start of the flash event
-		advFlashDataPtrToEventData(flashSumEntry);
+		advFlashDataPtrToEventData(ramSummaryEntry);
 #endif
 
 #if 1 // ns8100
@@ -312,11 +312,11 @@ void MoveManuelCalToFlash(void)
 		if (++gCurrentEventBuffer == gMaxEventBuffers)
 		{
 			gCurrentEventBuffer = 0;
-			gCurrentEventSamplePtr = startOfEventBufferPtr;
+			gCurrentEventSamplePtr = g_startOfEventBufferPtr;
 		}
 		else
 		{
-			gCurrentEventSamplePtr = startOfEventBufferPtr + (gCurrentEventBuffer * gWordSizeInEvent);
+			gCurrentEventSamplePtr = g_startOfEventBufferPtr + (gCurrentEventBuffer * gWordSizeInEvent);
 		}
 
 		sumEntry->waveShapeData.a.peak = (uint16)(hiA - lowA + 1);
@@ -329,11 +329,11 @@ void MoveManuelCalToFlash(void)
 		sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, 1024);   
 		sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, 1024);       
 
-		FillInFlashSummarys(flashSumEntry, sumEntry);
+		completeRamEventSummary(ramSummaryEntry, sumEntry);
 
 		clearSystemEventFlag(MANUEL_CAL_EVENT);
 
-		gLastCompDataSum = flashSumEntry;
+		gLastCompDataSum = ramSummaryEntry;
 
 		// Set printout mode to allow the results menu processing to know this is a manual cal pulse
 		print_out_mode = MANUAL_CAL_MODE;

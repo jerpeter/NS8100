@@ -30,9 +30,9 @@
 #define SUMMARY_INTERVAL_SIZE_IN_BYTES 	sizeof(CALCULATED_DATA_STRUCT)
 #define SUMMARY_INTERVAL_SIZE_IN_WORDS 	(SUMMARY_INTERVAL_SIZE_IN_BYTES + 1)/2
 
-#define BG_DATA_BUFFER_SIZE 			4096 * 4
+#define BG_DATA_BUFFER_SIZE 			8192 * 4 * 60
 
-#define BARGRAPH_BUFFER_SIZE_OFFSET		(((NUM_OF_BAR_INTERVAL_BUFFERS + NUM_OF_SUM_INTERVAL_BUFFERS) * sizeof(CALCULATED_DATA_STRUCT)) + BG_DATA_BUFFER_SIZE)
+#define COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET		(((NUM_OF_BAR_INTERVAL_BUFFERS + NUM_OF_SUM_INTERVAL_BUFFERS) * sizeof(CALCULATED_DATA_STRUCT)) + BG_DATA_BUFFER_SIZE)
 
 // Check if the current ptr goes past the end of the event(ram) buffer.
 // If it does go past, start at the top of the ram buffer.
@@ -56,10 +56,13 @@ uint8 CalculateBargraphData(void);
 void UpdateBargraphJobTotals(CALCULATED_DATA_STRUCT *);
 void EndBargraph(void);
 
-uint32 putBarIntervalDataIntoEventDataBufferer(void);
-void putSummaryIntervalDataIntoEventDataBufferer(void);
+uint32 moveBarIntervalDataToFile(void);
+void moveSummaryIntervalDataToFile(void);
 
+#if 0 // ns7100
 void MoveBargraphEventDataToFlash(void);
+#endif
+
 void MoveStartOfBargraphEventRecordToFlash(void);
 void MoveEndOfBargraphEventRecordToFlash(void);
 

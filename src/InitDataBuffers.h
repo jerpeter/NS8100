@@ -21,10 +21,11 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
+#define MIN_SAMPLE_RATE				512
 #define MAX_SAMPLE_RATE				8192
 #define MAX_NUM_OF_CHANNELS			4
 #define CHANNEL_DATA_IN_BYTES		2
-#define MAX_CAL_SAMPLES				100
+#define MAX_CAL_SAMPLES				(100 / (1024 / MIN_SAMPLE_RATE))
 #define MAX_DATA_PER_SAMPLE			(MAX_NUM_OF_CHANNELS * CHANNEL_DATA_IN_BYTES) // 8
 #define MAX_DATA_PER_SECOND			(MAX_SAMPLE_RATE * MAX_DATA_PER_SAMPLE) // 64K
 

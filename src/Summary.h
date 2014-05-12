@@ -186,10 +186,14 @@ typedef struct
 
 typedef struct
 {
-	int16 a;
-	int16 r;
-	int16 v;
-	int16 t;
+	int16 a_12bit;
+	int16 r_12bit;
+	int16 v_12bit;
+	int16 t_12bit;
+	int16 a_16bit;
+	int16 r_16bit;
+	int16 v_16bit;
+	int16 t_16bit;
 } OFFSET_DATA_STRUCT;
 
 // Bargraph Event struct - This is the grouping of the event data 
@@ -229,17 +233,21 @@ typedef struct
 	uint32 vs;
 } SUMMARY_WAVESHAPE;
 
+#if 0 // ns7100
 typedef struct
 { 
-#if 1 // Old
 	uint16* linkPtr;
-#else // SD card partial name
-	uint32 fileEventNum;
-#endif
 	uint8  mode;
 	SUMMARY_WAVESHAPE waveShapeData;
 } SUMMARY_DATA;
-
+#else // ns8100 - event number of file
+typedef struct
+{ 
+	uint32 fileEventNum;
+	uint8  mode;
+	SUMMARY_WAVESHAPE waveShapeData;
+} SUMMARY_DATA;
+#endif
 
 ////////////////////////////////////////////////////////////
 // structs for flash summarys

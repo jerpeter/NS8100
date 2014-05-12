@@ -71,7 +71,7 @@ extern uint32 gWordSizeInPre;
 extern uint32 gWordSizeInBody;
 extern uint32 gWordSizeInCal;
 extern uint32 gWordSizeInEvent;
-extern uint16* startOfEventBufferPtr;
+extern uint16* g_startOfEventBufferPtr;
 extern uint16* gEventBufferPrePtr;
 extern uint16* gEventBufferBodyPtr;
 extern uint16* gEventBufferCalPtr;
@@ -94,6 +94,7 @@ extern uint16* gp_bg430DataEnd;
 // ns8100
 extern FL_FILE* gCurrentEventFileHandle;
 extern uint16 g_currentEventNumber;
+extern uint16* gCurrentEventStartPtr;
 
 ///----------------------------------------------------------------------------
 ///	Globals
@@ -121,6 +122,7 @@ void ProcessWaveformData(void)
 			// Check the Command Nibble on the first channel (Acoustic)
 			switch (commandNibble)
 			{
+#if 0 // ns8100 - Moved to handle only in the ISR
 				case TRIG_THREE:
 				case TRIG_TWO:
 				case TRIG_ONE:
@@ -136,7 +138,8 @@ void ProcessWaveformData(void)
 					{
 						raiseSystemEventFlag(WARNING2_EVENT);
 					}
-
+#endif
+				case TRIG_ONE:
 					// Check if there are still free event containers and we are still taking new events
 					if ((gFreeEventBuffers != 0) && (g_doneTakingEvents == NO))
 					{
@@ -145,10 +148,11 @@ void ProcessWaveformData(void)
 
 						// Set loop counter to 1 minus the total samples to be recieved in the event body (minus the trigger data sample)
 						isTriggered = gSamplesInBody - 1;
-						
+
+#if 0 // ns7100						
 						// Save the link to the beginning of the pretrigger data
 						summaryTable[gCurrentEventNumber].linkPtr = gEventBufferPrePtr;
-
+#endif
 						// Copy PreTrigger data over to the Event body buffer
 						*(gEventBufferBodyPtr + 0) = *(tailOfPreTrigBuff + 0);
 						*(gEventBufferBodyPtr + 1) = *(tailOfPreTrigBuff + 1);
@@ -340,6 +344,7 @@ void ProcessWaveformData(void)
 	}
 	else // isTriggered != 0
 	{ 
+#if 0 // ns8100 - Moved to handle only in the ISR
 		// Check if the command is a trigger two, which is the 1st warning event
 		if (commandNibble == TRIG_TWO)
 		{
@@ -350,6 +355,7 @@ void ProcessWaveformData(void)
 		{
 			raiseSystemEventFlag(WARNING2_EVENT);
 		}
+#endif
 
 		// Check if this is the last sample of the triggered event
 		if ((isTriggered - 1) == 0)
@@ -418,8 +424,8 @@ void ProcessWaveformData(void)
 			else
 			{
 				gCurrentEventNumber = 0;
-				gEventBufferPrePtr = startOfEventBufferPtr;
-				gEventBufferBodyPtr = startOfEventBufferPtr + gWordSizeInPre;
+				gEventBufferPrePtr = g_startOfEventBufferPtr;
+				gEventBufferBodyPtr = g_startOfEventBufferPtr + gWordSizeInPre;
 			}
 		}
 	}
@@ -436,7 +442,7 @@ void MoveWaveformEventToFlash(void)
 {
 	static FLASH_MOV_STATE flashMovState = FLASH_IDLE;
 	static SUMMARY_DATA* sumEntry;
-	static SUMMARY_DATA* flashSumEntry;
+	static SUMMARY_DATA* ramSummaryEntry;
 	static int32 sampGrpsLeft;
 	static uint32 vectorSumTotal;
 
@@ -453,7 +459,6 @@ void MoveWaveformEventToFlash(void)
 		switch (flashMovState)
 		{
 			case FLASH_IDLE:
-#if 1
 				if (help_rec.flash_wrapping == NO)
 				{
 					getFlashUsageStats(&flashStats);
@@ -467,26 +472,15 @@ void MoveWaveformEventToFlash(void)
 						return;
 					}
 				}
-#endif
-				if (GetFlashSumEntry(&flashSumEntry) == FALSE)
+
+				if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 				{
 					debugErr("Out of Flash Summary Entrys\n");
 				}
 
 #if 0 // ns7100
 				// Set our flash event data pointer to the start of the flash event
-				advFlashDataPtrToEventData(flashSumEntry);
-#endif
-
-#if 1 // ns8100
-				// Get new file handle
-				gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
-				
-				if (gCurrentEventFileHandle == NULL)
-					debugErr("Failed to get a new file handle for the current Waveform event!\n");
-
-				// Seek to beginning of where data will be stored in event
-				fl_fseek(gCurrentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
+				advFlashDataPtrToEventData(ramSummaryEntry);
 #endif
 
 				sumEntry = &summaryTable[gCurrentEventBuffer];
@@ -506,7 +500,6 @@ void MoveWaveformEventToFlash(void)
 					// Store entire sample
 					//debugRaw("\nEvent Pretrigger --> ");
 					//storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-					fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
 					gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 				flashMovState = FLASH_BODY_INT;
@@ -543,7 +536,6 @@ void MoveWaveformEventToFlash(void)
 				// Store entire sample
 				//debugRaw("\nEvent Data --> ");
 				//storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-				fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
 				gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
 				flashMovState = FLASH_BODY;
@@ -602,7 +594,6 @@ void MoveWaveformEventToFlash(void)
 					// Store entire sample
 					//debugRaw("\nEvent Data --> ");
 					//storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-					fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
 					gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -615,42 +606,71 @@ void MoveWaveformEventToFlash(void)
 				break;
 	        
 			case FLASH_CAL:
+#if 0 // Does nothing
 				// Loop 100 times
 				for (i = (uint16)(gSamplesInCal / (trig_rec.trec.sample_rate / 1024)); i != 0; i--)
 				{
 					// Store entire sample
 					//debugRaw("\nEvent Cal --> ");
 					//storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
-					fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
 
 					// Advance the pointer using sample rate ratio to act as a filter to always scale down to a 1024 rate
 					gCurrentEventSamplePtr += ((trig_rec.trec.sample_rate/1024) * gp_SensorInfo->numOfChannels);
 				}
+#endif
 
-				if (++gCurrentEventBuffer == gMaxEventBuffers)
-				{
-					gCurrentEventBuffer = 0;
-					gCurrentEventSamplePtr = startOfEventBufferPtr;
-				}
-				else
-				{
-					gCurrentEventSamplePtr = startOfEventBufferPtr + (gCurrentEventBuffer * gWordSizeInEvent);
-				}
-	          
 				sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, (uint16)trig_rec.trec.sample_rate);
 				sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, (uint16)trig_rec.trec.sample_rate);   
 				sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, (uint16)trig_rec.trec.sample_rate);   
 				sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, (uint16)trig_rec.trec.sample_rate);       
 
+				completeRamEventSummary(ramSummaryEntry, sumEntry);
 
-				FillInFlashSummarys(flashSumEntry, sumEntry);
+				// Get new event file handle
+				gCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+				
+				if (gCurrentEventFileHandle == NULL)
+				{
+					debugErr("Failed to get a new file handle for the current Waveform event!\n");
+				}					
+				else // Write the file event to the SD card
+				{
+					// Write the event record header and summary
+					fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
 
+					// Write the event data, containing the pretrigger, event and cal
+					fl_fwrite(gCurrentEventStartPtr, gWordSizeInEvent, 2, gCurrentEventFileHandle);
+
+					// Done writing the event file, close the file handle
+					fl_fclose(gCurrentEventFileHandle);
+					debug("Event file closed\n");
+
+					updateMonitorLogEntry();
+
+					// After event numbers have been saved, store current event number in persistent storage.
+					storeCurrentEventNumber();
+
+					// Now store the updated event number in the universal ram storage.
+					g_RamEventRecord.summary.eventNumber = g_currentEventNumber;
+				}
+
+				// Update event buffer count and pointers
+				if (++gCurrentEventBuffer == gMaxEventBuffers)
+				{
+					gCurrentEventBuffer = 0;
+					gCurrentEventStartPtr = gCurrentEventSamplePtr = g_startOfEventBufferPtr;
+				}
+				else
+				{
+					gCurrentEventStartPtr = gCurrentEventSamplePtr = g_startOfEventBufferPtr + (gCurrentEventBuffer * gWordSizeInEvent);
+				}
+	          
 				if (gFreeEventBuffers == gMaxEventBuffers)
 				{
 					clearSystemEventFlag(TRIGGER_EVENT);
 				}
 
-				gLastCompDataSum = flashSumEntry;
+				gLastCompDataSum = ramSummaryEntry;
 
 				print_out_mode = WAVEFORM_MODE;
 				raiseMenuEventFlag(RESULTS_MENU_EVENT);

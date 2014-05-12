@@ -134,7 +134,15 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 				if (topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
 				{
 					results_summtable_ptr = (rd_summary_ptr + currentSummaryIndex);
+#if 0 // ns7100
 					eventRecord = (EVT_RECORD *)results_summtable_ptr->linkPtr;
+#else // ns8100
+					static EVT_RECORD resultsEventRecord;
+					eventRecord = &resultsEventRecord;
+	
+					debug("Summary menu: updating event record cache\n");
+					getEventFileInfo(results_summtable_ptr->fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary);
+#endif
 
 					//debugPrint(RAW, "Evt: %04d, Mode: %d\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
 					//convertTimeStampToString(&dateStr[0], &(eventRecord->summary.captured.calDate), REC_DATE_TIME_TYPE);
@@ -255,7 +263,15 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 
 		while ((itemsDisplayed <= SUMMARY_MENU_ACTIVE_ITEMS) && (tempSummaryIndex < TOTAL_RAM_SUMMARIES))
 		{
+#if 0 // ns7100
 			eventRecord = (EVT_RECORD *)((rd_summary_ptr + tempSummaryIndex)->linkPtr);
+#else // ns8100
+			static EVT_RECORD resultsEventRecord;
+			eventRecord = &resultsEventRecord;
+	
+			debug("Summary menu: updating event record cache\n");
+			getEventFileInfo(results_summtable_ptr->fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary);
+#endif
 
 			// Clear and setup the time stamp string for the current event
 			byteSet(&dateBuff[0], 0, sizeof(dateBuff));
@@ -449,7 +465,7 @@ BOOLEAN checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 
 	if (ramSummaryIndex < TOTAL_RAM_SUMMARIES)
 	{
-		if ((uint32)(__ramFlashSummaryTbl[ramSummaryIndex].linkPtr) != NO_EVENT_LINK)
+		if ((uint32)(__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum) != NO_EVENT_LINK)
 		{
 			validEventLink = YES;
 		}
