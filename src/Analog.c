@@ -607,7 +607,7 @@ void GetChannelOffsets(uint32 sampleRate)
 	debug("A/D Channel Second Pass channel average: 0x%x, 0x%x, 0x%x, 0x%x\n", s_rTotal, s_vTotal, s_tTotal, s_aTotal);
 	debug("A/D Channel Second Pass channel offsets: %d, %d, %d, %d\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 
-#if 0 // Test
+#if 0 // Test (Display the current temp)
 	if (sampleRate != SAMPLE_RATE_16K)
 	{
 		// Establish a baseline temperature to compare while monitoring
@@ -690,7 +690,7 @@ void UpdateChannelOffsetsForTempChange(void)
 
 				debug("Temp change - A/D Channel offsets (new): %d, %d, %d, %d\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 				
-#if 0 // Test
+#if 0 // Test (Attempt to only clear the update offset flag if all 4 channel data counts are within 4 counts of the adjusted midpoint)
 				// Check if the delta of movement in the offset has settled
 				if ((abs(s_rTotal - ACCURACY_16_BIT_MIDPOINT) < 4) && (abs(s_vTotal - ACCURACY_16_BIT_MIDPOINT) < 4) && 
 					(abs(s_tTotal - ACCURACY_16_BIT_MIDPOINT) < 4) && (abs(s_aTotal - ACCURACY_16_BIT_MIDPOINT) < 4))

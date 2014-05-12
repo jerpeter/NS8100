@@ -2155,11 +2155,7 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{
 		if ((sampleRateMenu[newItemIndex].data < sampleRateMenu[ITEM_1].data) || 
-#if 1 // Test 16K
 			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_6].data) ||
-#else
-			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_5].data) ||
-#endif
 			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && 
 			((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))))
 		{

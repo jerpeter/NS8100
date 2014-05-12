@@ -136,10 +136,14 @@ void ReadId8900(void)
 	debug("Lan ID (1): 0x%x\n", Read8900(DATA_PORT));
 }
 
+void BlindReadId8900(void)
+{
+	debug("Blind Lan ID (0): 0x%x\n", Read8900(DATA_PORT));
+}
 
 // writes a word in little-endian byte order to
 // a specified port-address
-void Write8900(unsigned short *Address, unsigned int Data)
+void Write8900(unsigned short *Address, unsigned short Data)
 {
 	volatile unsigned short *cs8900 = Address;
 
@@ -181,9 +185,9 @@ void CopyToFrame8900(void *Source, unsigned int Size)
 
 // reads a word in little-endian byte order from
 // a specified port-address
-unsigned int Read8900(unsigned short *Address)
+unsigned short Read8900(unsigned short *Address)
 {
-   unsigned int ReturnValue = 0;
+   unsigned short ReturnValue = 0;
    volatile unsigned short *cs8900 = Address;
 
    ReturnValue = *cs8900;                                  // write low order byte to data bus

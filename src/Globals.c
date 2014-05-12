@@ -125,6 +125,7 @@ uint8 g_kpadProcessingFlag = DEACTIVATED;
 uint8 g_kpadCheckForKeyFlag = DEACTIVATED;
 uint8 g_factorySetupSequence = SEQ_NOT_STARTED;
 uint8 g_kpadLastKeyPressed = 0;
+uint8 g_kpadInterruptWhileProcessing = 0;
 volatile uint32 g_keypadTimerTicks = 0;
 uint32 g_kpadKeyRepeatCount = 0;
 uint32 g_kpadLookForKeyTickCount = 0;

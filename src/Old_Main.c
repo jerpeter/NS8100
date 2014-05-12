@@ -308,7 +308,7 @@ void SystemEventManager(void)
 		}		
 	}
 
-#if 0 // Test (Throw away at some point)
+#if 0 // Test (Attempt to process buffered waveform data - Throw away at some point)
 	if (getSystemEventState())
 	{
 		clearSystemEventFlag();

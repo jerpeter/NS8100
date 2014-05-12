@@ -156,18 +156,18 @@
   }
 
 #define NRD_SETUP_SPECIAL     10 //10
-#define NRD_PULSE_SPECIAL     135 //135
+#define NRD_PULSE_SPECIAL     250 //135 //135
 #define NRD_CYCLE_SPECIAL     180 //180
 
 #define NCS_RD_SETUP_SPECIAL  35 //10
-#define NCS_RD_PULSE_SPECIAL  150 //250
+#define NCS_RD_PULSE_SPECIAL  250 //150 //250
 
 #define NWE_SETUP_SPECIAL     20 //20
 #define NWE_PULSE_SPECIAL     110 //110
 #define NWE_CYCLE_SPECIAL     165 //150
 
 #define NCS_WR_SETUP_SPECIAL  35 //20
-#define NCS_WR_PULSE_SPECIAL  150 //230
+#define NCS_WR_PULSE_SPECIAL  230 //150 //230
 
 #define SMC_CS_SETUP_SPECIAL(ncs) { \
   U32 nwe_setup    = ((NWE_SETUP_SPECIAL    * hsb_mhz_up + 999) / 1000); \
@@ -500,6 +500,7 @@ void _init_startup(void)
     // Switch the main clock to the external oscillator 0
     pm_switch_to_osc0(&AVR32_PM, FOSC0, OSC0_STARTUP);
 
+#if 1 // Normal
 	// Logic to change the clock source to PLL 0
     // PLL = 0, Multiplier = 10 (actual 11), Divider = 1 (actually 1), OSC = 0, 16 clocks to stabilize
 	pm_pll_setup(&AVR32_PM, 0, 10, 1, 0, 16);
@@ -516,15 +517,28 @@ void _init_startup(void)
     pm_cksel(&AVR32_PM, 0, 0, 0, 0, 0, 0);
     flashc_set_wait_state(1);
     pm_switch_to_clock(&AVR32_PM, AVR32_PM_MCSEL_PLL0);
+#endif
 
-#if 0 // Test
+#if 0 // Test (Network Active low SBHE)
     gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
     gpio_clr_gpio_pin(AVR32_EBI_NWE1_0_PIN);
     gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
 #endif
 
+#if 1 // Test (Network Active low SBHE - Hardware mod connecting pin GPIO 51 to network part)
+    gpio_clr_gpio_pin(AVR32_PIN_PB19);
+    //gpio_set_gpio_pin(AVR32_PIN_PB19);
+    //gpio_clr_gpio_pin(AVR32_PIN_PB19);
+    //gpio_set_gpio_pin(AVR32_PIN_PB19);
+    //gpio_clr_gpio_pin(AVR32_PIN_PB19);
+#endif
+
 	// Chip Select Initialization
+#if 1 // Normal
 	avr32_chip_select_init(FOSC0);
+#else // Test (12Mhz)
+	avr32_chip_select_init(12000000);
+#endif
 	
 	// Disable the unused and non connected clock 1
 	pm_disable_clk1(&AVR32_PM);
@@ -813,21 +827,28 @@ void InitSystemHardware_NS8100(void)
 {
 	//-------------------------------------------------------------------------
 	// Clock and chip selects setup in custom _init_startup
+	//-------------------------------------------------------------------------
 	initProcessorNoConnectPins();
 	
 	//-------------------------------------------------------------------------
 	// Set RTC Timestamp pin high
+	//-------------------------------------------------------------------------
 	gpio_set_gpio_pin(AVR32_PIN_PB18);
 
 	//-------------------------------------------------------------------------
-    // Turn on rs232 driver and receiver on NS8100 board ?
+    // Turn on rs232 driver and receiver
+	//-------------------------------------------------------------------------
     gpio_clr_gpio_pin(AVR32_PIN_PB08);
     gpio_clr_gpio_pin(AVR32_PIN_PB09);
 
     // Setup debug serial port
 	usart_options_t usart_1_rs232_options =
 	{
+#if 1 // Normal
 		.baudrate = 115200,
+#else // Test (12Mhz)
+		.baudrate = 38400,
+#endif
 		.charlength = 8,
 		.paritytype = USART_NO_PARITY,
 		.stopbits = USART_1_STOPBIT,
@@ -835,11 +856,18 @@ void InitSystemHardware_NS8100(void)
 	};
 
 	// Initialize it in RS232 mode.
+#if 1 // Normal
 	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
+#else // Test (12Mhz)
+	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, 12000000);
+#endif
 
 	// Init signals for ready to send and terminal ready
 	SET_RTS; SET_DTR;
 
+	//-------------------------------------------------------------------------
+    // Turn on rs485 driver and receiver
+	//-------------------------------------------------------------------------
 	// Options for debug USART.
 	usart_options_t usart_3_rs485_usart_options =
 	{
@@ -857,11 +885,13 @@ void InitSystemHardware_NS8100(void)
 extern void Sleep8900(void);
 extern void Sleep8900_LedOn(void);
 extern void ReadId8900(void);
+extern void BlindReadId8900(void);
 extern void ToggleLedOn8900(void);
 extern void ToggleLedOff8900(void);
 	//-------------------------------------------------------------------------
 	// Set LAN to Sleep
-    gpio_clr_gpio_pin(AVR32_PIN_PB27);
+	//-------------------------------------------------------------------------
+    gpio_clr_gpio_pin(AVR32_PIN_PB27); // Clear LAN Sleep pin (active low)
 	soft_usecWait(10 * SOFT_MSECS);
 	
 	//-------------------------------------------------------------------------
@@ -869,6 +899,50 @@ extern void ToggleLedOff8900(void);
 	//gpio_set_gpio_pin(AVR32_EBI_NCS_2_PIN);
 	//gpio_set_gpio_pin(AVR32_EBI_NCS_3_PIN);	
 	
+    gpio_set_gpio_pin(AVR32_PIN_PB27); // Set LAN Sleep pin (active low)
+	soft_usecWait(10 * SOFT_MSECS);
+
+#if 0 // Test (Lan register map read)
+	debug("\n\n");
+	*((uint16*)0xC800030A) = 0x0000; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0000, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0002; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0002, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0020; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0020, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0022; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0022, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0024; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0024, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0026; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0026, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0028; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0028, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x002A; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x002A, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x002C; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x002C, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0030; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0030, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0034; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0034, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0040; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0040, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0042; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0042, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0102; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0102, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0104; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0104, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0106; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0106, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0108; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0108, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x010A; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x010A, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0112; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0112, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0114; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0114, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0116; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0116, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0118; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0118, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0120; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0120, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0124; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0124, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0128; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0128, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x012C; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x012C, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0130; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0130, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0132; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0132, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0134; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0134, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0136; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0136, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0138; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0138, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x013C; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x013C, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0144; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0144, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0146; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0146, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0150; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0150, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0158; debug("Lan Address (0x%04x) returns Data: 0x%x\n", 0x0158, *((uint16*)0xC800030C));
+	debug("\n");
+#endif
+
 	//ReadId8900();
 	//ToggleLedOn8900();
 	//soft_usecWait(1 * SOFT_SECS);
@@ -879,24 +953,28 @@ extern void ToggleLedOff8900(void);
 	//ToggleLedOn8900();
 	//soft_usecWait(1 * SOFT_SECS);
 	//ToggleLedOff8900();
-	//soft_usecWait(10 * SOFT_SECS);
+	//soft_usecWait(5 * SOFT_SECS);
 #endif
 
 	//-------------------------------------------------------------------------
 	// Init the SPI interfaces
+	//-------------------------------------------------------------------------
 	SPI_0_Init();
 	SPI_1_Init();
 	
 	//-------------------------------------------------------------------------
 	// Initialize the external RTC
+	//-------------------------------------------------------------------------
 	InitExternalRtc();
 
 	//-------------------------------------------------------------------------
 	// Initialize the AD Control
+	//-------------------------------------------------------------------------
 	InitAnalogControl();
 
 	//-------------------------------------------------------------------------
     // Turn on display
+	//-------------------------------------------------------------------------
     gpio_set_gpio_pin(AVR32_PIN_PB21);
 
 	// LCD Init
@@ -905,8 +983,16 @@ extern void ToggleLedOff8900(void);
     Set_Contrast(24);
     InitDisplay();
 
+#if 0 // Test (Read the LCD control register)
+extern uint8 Read_display(uint8, uint8);
+	debug("LCD Control register: 0x%x\n", Read_display(COMMAND_REGISTER, FIRST_HALF_DISPLAY));
+	debug("LCD Control register: 0x%x\n", Read_display(COMMAND_REGISTER, FIRST_HALF_DISPLAY));
+	debug("LCD Control register: 0x%x\n", Read_display(COMMAND_REGISTER, FIRST_HALF_DISPLAY));
+#endif
+
 	//-------------------------------------------------------------------------
 	// Initialize the Internal Real Time Counter for half second tick used for state processing
+	//-------------------------------------------------------------------------
 	rtc_init(&AVR32_RTC, 1, 0);
 
 	// Set top value to generate an interrupt every 1/2 second */
@@ -917,6 +1003,7 @@ extern void ToggleLedOff8900(void);
 
 	//-------------------------------------------------------------------------
 	// Enable Processor A/D
+	//-------------------------------------------------------------------------
 	adc_configure(&AVR32_ADC);
 
 	// Enable the A/D channels.
@@ -925,6 +1012,7 @@ extern void ToggleLedOff8900(void);
 
 	//-------------------------------------------------------------------------
 	// Power on the SD Card and init the file system
+	//-------------------------------------------------------------------------
 	
 	// Necessary ?
 	// Set SD Power pin as GPIO
@@ -964,6 +1052,7 @@ extern void ToggleLedOff8900(void);
 
 	//-------------------------------------------------------------------------
     // Initialize USB clock.
+	//-------------------------------------------------------------------------
     pm_configure_usb_clock();
 
 #if 0 // Moved to USB device manager
@@ -974,6 +1063,7 @@ extern void ToggleLedOff8900(void);
 
 	//-------------------------------------------------------------------------
 	// Init Keypad
+	//-------------------------------------------------------------------------
 	InitKeypad();
 	
 	// Primer read
@@ -992,8 +1082,27 @@ extern void ToggleLedOff8900(void);
 	//Display_Craft_Logo();
 	//soft_usecWait(3 * SOFT_SECS);
 	
-#if 0 // Test
-	//debug("Closing up shop.\n\n");
+#if 1 // Test
+	while (0)
+	{
+		read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	}
+
+#if 1 // Test (Read the network part)
+	uint32 i = 0;
+	//*((uint16*)0xC800030A) = 0x0000;
+	
+	while (1)
+	{
+		//debugRaw("Lan Address (0x%04x) returns Data: 0x%x, LCD Data: 0x%x (%d)\n", 0x0000, *((uint16*)0xC800030C), Read_display(DATA_REGISTER, FIRST_HALF_DISPLAY), ++i);
+		*((uint16*)0xC800030A) = 0x0000;
+		debugRaw("Lan Address (0x%04x) returns Data: 0x%x and 0x%x (%d)\n", 0x0000, *((uint16*)0xC800030C), *((uint16*)0xC800030E), ++i);
+		*((uint16*)0xC800030A) = 0x0002;
+		debugRaw("Lan Address (0x%04x) returns Data: 0x%x and 0x%x (%d)\n", 0x0002, *((uint16*)0xC800030C), *((uint16*)0xC800030E), i);
+	}
+#endif
+
+	debug("\nClosing up shop.\n\n");
 
     gpio_set_gpio_pin(AVR32_PIN_PB08);
     gpio_set_gpio_pin(AVR32_PIN_PB09);
@@ -1126,7 +1235,9 @@ void InitSoftwareSettings_NS8100(void)
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
 
 	// Assign a one second keypad led update timer
+#if 1 // Normal
 	assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
+#endif
 
 	debug("Jump to Main Menu\n");
 	// Jump to the true main menu
@@ -1140,7 +1251,7 @@ void InitSoftwareSettings_NS8100(void)
 //=================================================================================================
 void testSnippetsBeforeInit(void)
 {
-#if 0 // Test
+#if 0 // Test (Enable serial and put processor in deep stop)
     gpio_clr_gpio_pin(AVR32_PIN_PB08);
     gpio_clr_gpio_pin(AVR32_PIN_PB09);
 
@@ -1526,7 +1637,7 @@ void testSnippetsExecLoop(void)
 		
 #endif
 
-#if 0 // Test (Temp)
+#if 0 // Test (Display temperature change readings)
 		static uint16 s_tempReading = 0;
 		
 		// 0x49 to 0x4c
@@ -1550,7 +1661,7 @@ int main(void)
 	//testSnippetsBeforeInit();
 
     InitSystemHardware_NS8100();
-#if 1 // Normal
+#if 0 // Normal
 	InitInterrupts_NS8100();
 	InitSoftwareSettings_NS8100();
 	BootLoadManager();
@@ -1561,7 +1672,7 @@ int main(void)
 	// Test code
 	//testSnippetsAfterInit();
 
-#if 1 // Normal
+#if 0 // Normal
  	// ==============
 	// Executive loop
 	// ==============

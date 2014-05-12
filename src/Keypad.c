@@ -107,13 +107,13 @@ BOOLEAN keypad(void)
 	s_keyMap[0] = (uint8)(~(*keypadAddress));
 #else // ns8100
 
-#if 1 // Test - 3 reads to filter out debounce
+#if 0 // Test (Multi read (3) and filter for out debounce)
 	s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	s_keyMap[3] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	
 	s_keyMap[0] = (s_keyMap[1] & s_keyMap[2] & s_keyMap[3]);
-#else // Test - 2 reads to filter out debounce (seems to work as effective as 3 reads)
+#else // Test (Multi read (2) reads to filter out debounce (seems to work as effective as 3 reads))
 	s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	
@@ -131,7 +131,7 @@ BOOLEAN keypad(void)
 	// Re-read keys and mask in to catch signal bouncing
 	//s_keyMap[0] &= *keypadAddress;
 
-#if 0
+#if 0 // ns7100
 	if (SUPERGRAPH_UNIT)
 	{
 		// Check for ctrl key, row 7 column 7 (zero based)
@@ -179,8 +179,14 @@ BOOLEAN keypad(void)
 	if (numKeysPressed == 0)
 	{
 		// Done looking for keys
-		g_kpadCheckForKeyFlag = DEACTIVATED;
 		g_kpadProcessingFlag = DEACTIVATED;
+		g_kpadCheckForKeyFlag = DEACTIVATED;
+
+		while (g_kpadInterruptWhileProcessing == YES)
+		{
+			g_kpadInterruptWhileProcessing = NO;
+			read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+		}
 
 #if 0 // ns7100
 		// Done looking for keys, disable the PIT timer
@@ -357,7 +363,7 @@ BOOLEAN keypad(void)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
-#if 0 // Test
+#if 0 // Test (Keypad override of the backlight key for testing)
 				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					g_testTrigger = YES;
@@ -486,6 +492,13 @@ extern void BootLoadManager(void);
 	}
 
 	g_kpadProcessingFlag = DEACTIVATED;
+
+	while (g_kpadInterruptWhileProcessing == YES)
+	{
+		g_kpadInterruptWhileProcessing = NO;
+		read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	}
+
 	return(PASSED);
 }
 
@@ -664,6 +677,13 @@ uint8 getKeypadKey(uint8 mode)
 
 			g_kpadProcessingFlag = DEACTIVATED;
 			clearSystemEventFlag(KEYPAD_EVENT);
+
+			while (g_kpadInterruptWhileProcessing == YES)
+			{
+				g_kpadInterruptWhileProcessing = NO;
+				read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+			}
+
 			return (0);
 		}
 	}
@@ -680,6 +700,12 @@ uint8 getKeypadKey(uint8 mode)
 
 	// Prevent a bouncing key from causing any action after this
 	clearSystemEventFlag(KEYPAD_EVENT);
+
+	while (g_kpadInterruptWhileProcessing == YES)
+	{
+		g_kpadInterruptWhileProcessing = NO;
+		read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	}
 
 	return (keyPressed);
 }
@@ -700,13 +726,13 @@ uint8 scanKeypad(void)
 
 	//soft_usecWait(250 * SOFT_MSECS);
 	
-#if 1 // Test
+#if 0 // Test (Keypad read before hardware mod in attempt to find a keypress)
 	read_mcp23018(IO_ADDRESS_KPD, INTFB);
 #endif
 
 #if 0 // Normal
 	s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-#else
+#else // Test
 	s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	s_keyMap[3] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);

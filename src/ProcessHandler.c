@@ -347,7 +347,7 @@ void stopMonitoring(uint8 mode, uint8 operation)
 			closeMonitorLogEntry();
 		}
 		
-#if 0 // Test
+#if 0 // Test (Display LCD message with mode for timer mode ending)
 		char modeBuff[10];
 		char msgBuff[50];
 		if (mode == WAVEFORM_MODE)
@@ -425,7 +425,7 @@ void waitForEventProcessingToFinish(void)
 
 		while (g_doneTakingEvents == PENDING)
 		{
-#if 0 // Test (Throw away at some point)
+#if 0 // Test (? Throw away at some point)
 			if (getSystemEventState())
 			{
 				clearSystemEventFlag();

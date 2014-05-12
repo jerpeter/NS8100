@@ -99,6 +99,7 @@ extern uint8 g_kpadProcessingFlag;
 extern uint8 g_kpadCheckForKeyFlag;
 extern uint8 g_factorySetupSequence;
 extern uint8 g_kpadLastKeyPressed;
+extern uint8 g_kpadInterruptWhileProcessing;
 extern uint32 g_keypadTimerTicks;
 extern uint32 g_kpadKeyRepeatCount;
 extern uint32 g_kpadLookForKeyTickCount;

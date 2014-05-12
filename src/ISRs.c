@@ -272,6 +272,10 @@ void eic_keypad_irq(void)
 		// Found a new key, reset last stored key
 		g_kpadLastKeyPressed = 0;
 	}
+	else
+	{
+		g_kpadInterruptWhileProcessing = YES;
+	}
 #endif
 
 #if 0
@@ -345,7 +349,7 @@ void eic_system_irq(void)
 			onKeyCount++;
 		}
 
-#if 0 // Test - seemingly doesn't want to work, only shows 1 key being pressed
+#if 0 // Test (Check if the off key is being pressed which seemingly doesn't want to work, only shows 1 key being pressed)
 		// Check if the Off key is also being pressed - silent ability to power off the unit in the case of a monitor failure
 		if (keyScan & OFF_KEY)
 		{
@@ -811,9 +815,6 @@ static inline void checkAlarms_ISR_Inline(void)
 		// Check if seismic is enabled for Alarm 1
 		if (g_helpRecord.alarm_one_mode & ALARM_MODE_SEISMIC)
 		{
-#if 0 // Test
-			debugRaw("PC Err! A1M (%d)\n", g_helpRecord.alarm_one_mode);
-#endif
 			if (s_R_channelReading > (g_helpRecord.alarm_one_seismic_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
 			else if (s_V_channelReading > (g_helpRecord.alarm_one_seismic_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
 			else if (s_T_channelReading > (g_helpRecord.alarm_one_seismic_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
@@ -869,7 +870,7 @@ static inline void processAndMoveManualCalData_ISR_Inline(void)
 	}
 }
 
-#if 0 // Test
+#if 0 // Test (First attempt to process waveform data buffered and outside of the ISR)
 // ============================================================================
 // processAndMoveWaveformData
 // ============================================================================
@@ -910,11 +911,11 @@ void processAndMoveWaveformData(void)
 #if 1 // Normal
 		if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
 			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
-#else // Test
+#else // Test (Part of the test trigger ability)
 		if (g_testTrigger == YES)
 #endif
 		{
-#if 0 // Test
+#if 0 // Test (Part of the test trigger ability)
 			g_testTrigger = NO;
 #endif
 			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
@@ -1260,11 +1261,11 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 #if 1 // Normal
 		if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
 			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
-#else // Test
+#else // Test (Part of the test trigger ability)
 		if (g_testTrigger == YES)
 #endif
 		{
-#if 0 // Test
+#if 0 // Test (Part of the test trigger ability)
 			g_testTrigger = NO;
 #endif
 			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
@@ -1514,7 +1515,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 	}
 }
 
-#if 0 // Test
+#if 0 // Test (First attempt to buffer waveform data for processing outside of the ISR)
 // ============================================================================
 // moveWaveformData_ISR_Inline
 // ============================================================================

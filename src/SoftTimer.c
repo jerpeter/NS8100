@@ -257,7 +257,8 @@ void menuUpdateTimerCallBack(void)
 void keypadLedUpdateTimerCallBack(void)
 {
 	static uint8 ledState = KEYPAD_LED_STATE_UNKNOWN;
-	uint8 config = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	uint8 lastLedState;
+	uint8 config; // = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
 	BOOLEAN externalChargePresent = checkExternalChargeVoltagePresent();
 
 	// States
@@ -266,51 +267,36 @@ void keypadLedUpdateTimerCallBack(void)
 	// 3) Init complete, not monitoring, charging --> Static Red
 	// 4) Init complete, monitoring, charging --> Alternate Flashing Green/Red (state transition)
 
+	// Hold the last state
+	lastLedState = ledState;
+
 	if ((g_sampleProcessing == IDLE_STATE) && (externalChargePresent == FALSE))
 	{
-		config &= ~RED_LED_PIN;
-		config |= GREEN_LED_PIN;
-		
 		ledState = KEYPAD_LED_STATE_GREEN_ON;
 	}
 	else if ((g_sampleProcessing == ACTIVE_STATE) && (externalChargePresent == FALSE))
 	{
-		config &= ~RED_LED_PIN;
-
 		if(ledState == KEYPAD_LED_STATE_GREEN_ON)
 		{
-			config &= ~GREEN_LED_PIN;
-			
 			ledState = KEYPAD_LED_STATE_BOTH_OFF;
 		}
 		else
 		{
-			config |= GREEN_LED_PIN;
-
 			ledState = KEYPAD_LED_STATE_GREEN_ON;
 		}
 	}		
 	else if ((g_sampleProcessing == IDLE_STATE) && (externalChargePresent == TRUE))
 	{
-		config &= ~GREEN_LED_PIN;
-		config |= RED_LED_PIN;
-		
 		ledState = KEYPAD_LED_STATE_RED_ON;
 	}
 	else // ((g_sampleProcessing == ACTIVE_STATE) && (externalChargePresent == TRUE))
 	{
 		if(ledState == KEYPAD_LED_STATE_RED_ON)
 		{
-			config &= ~RED_LED_PIN;
-			config |= GREEN_LED_PIN;
-
 			ledState = KEYPAD_LED_STATE_GREEN_ON;
 		}
 		else
 		{
-			config |= RED_LED_PIN;
-			config &= ~GREEN_LED_PIN;
-
 			ledState = KEYPAD_LED_STATE_RED_ON;
 		}
 	}
@@ -333,7 +319,31 @@ void keypadLedUpdateTimerCallBack(void)
 	}
 #endif
 
-	write_mcp23018(IO_ADDRESS_KPD, GPIOA, config);
+	// Check if the 
+	if (ledState != lastLedState)
+	{
+		config = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		
+		switch (ledState)
+		{
+			case KEYPAD_LED_STATE_BOTH_OFF:
+				config &= ~RED_LED_PIN;
+				config &= ~GREEN_LED_PIN;
+				break;
+				
+			case KEYPAD_LED_STATE_GREEN_ON:
+				config &= ~RED_LED_PIN;
+				config |= GREEN_LED_PIN;
+				break;
+				
+			case KEYPAD_LED_STATE_RED_ON:
+				config |= RED_LED_PIN;
+				config &= ~GREEN_LED_PIN;
+				break;
+		}
+
+		write_mcp23018(IO_ADDRESS_KPD, GPIOA, config);
+	}
 
 	assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
 }

@@ -1106,7 +1106,7 @@ void handleDEM(CMD_BUFFER_STRUCT* inCmd)
 
 	}
 
-#if 0 // Test code
+#if 0 // Test code (Display command components)
 	debugPrint(RAW, "Recieved DEM command: \n");
 	for(i=0;i<inCmd->size;i++)
 	{
