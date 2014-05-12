@@ -77,16 +77,18 @@ extern void rtc_enable(volatile avr32_rtc_t *rtc);
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define NWE_SETUP     20
-#define NCS_WR_SETUP  20
-#define NRD_SETUP     10
 #define NCS_RD_SETUP  10
-#define NWE_PULSE     110
-#define NCS_WR_PULSE  230
-#define NRD_PULSE     135
+#define NRD_SETUP     10
+#define NCS_WR_SETUP  20
+#define NWE_SETUP     20
+
 #define NCS_RD_PULSE  250
-#define NWE_CYCLE     150
+#define NRD_PULSE     135
+#define NCS_WR_PULSE  230
+#define NWE_PULSE     110
+
 #define NRD_CYCLE     180
+#define NWE_CYCLE     150
 
 #define EXT_SM_SIZE             16
 #define NCS_CONTROLLED_READ     FALSE
@@ -411,7 +413,7 @@ void avr32_enable_muxed_pins(void)
 //=================================================================================================
 void avr32_chip_select_init(unsigned long hsb_hz)
 {
-  unsigned long hsb_mhz_up = (hsb_hz + 999999) / 1000000;
+  unsigned long int hsb_mhz_up = (hsb_hz + 999999) / 1000000;
 
   // Setup all 4 chip selects
   SMC_CS_SETUP(0) // LCD
