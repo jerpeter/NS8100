@@ -32,6 +32,8 @@
 #include "ProcessBargraph.h"
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
+#include "FAT32_Disk.h"
+#include "FAT32_Access.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -73,7 +75,8 @@ void ProcessWaveformData(void)
 					if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
 					{
 						// Store the exact time we received the trigger data sample
-						g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
+						// fix_ns8100
+						//g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
 
 						// Set loop counter to 1 minus the total samples to be recieved in the event body (minus the trigger data sample)
 						g_isTriggered = g_samplesInBody - 1;
@@ -378,6 +381,10 @@ void MoveWaveformEventToFlash(void)
 					debugErr("Out of Ram Summary Entrys\n");
 				}
 
+				// Added temporarily to prevent SPI access issues
+				// fix_ns8100
+				g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
+
 				sumEntry = &g_summaryTable[g_currentEventBuffer];
 				sumEntry->mode = WAVEFORM_MODE;
 
@@ -497,100 +504,111 @@ void MoveWaveformEventToFlash(void)
 				break;
 
 			case FLASH_CAL:
-#if 0 // Does nothing
-				// Loop 100 times
-				for (i = g_samplesInCal; i != 0; i--)
+				if (g_spi1AccessLock == AVAILABLE)
 				{
-					// Advance the pointer using sample rate ratio to act as a filter to always scale down to a 1024 rate
-					g_currentEventSamplePtr += ((g_triggerRecord.trec.sample_rate/1024) * g_sensorInfoPtr->numOfChannels);
-				}
+					g_spi1AccessLock = EVENT_LOCK;
+
+#if 0 // Does nothing
+					// Loop 100 times
+					for (i = g_samplesInCal; i != 0; i--)
+					{
+						// Advance the pointer using sample rate ratio to act as a filter to always scale down to a 1024 rate
+						g_currentEventSamplePtr += ((g_triggerRecord.trec.sample_rate/1024) * g_sensorInfoPtr->numOfChannels);
+					}
 #endif
 
-				sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
-				sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
-				sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
-				sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
+					sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
+					sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
+					sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
+					sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
 
-				completeRamEventSummary(ramSummaryEntry, sumEntry);
-
-				// Get new event file handle
-				g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
-
-				if (g_currentEventFileHandle == NULL)
-				{
-					debugErr("Failed to get a new file handle for the current Waveform event!\n");
-				}					
-				else // Write the file event to the SD card
-				{
-					sprintf((char*)&g_spareBuffer[0], "WAVEFORM EVENT #%d BEING SAVED... (MAY TAKE TIME)", g_nextEventNumberToUse);
-					overlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
-
-					// Write the event record header and summary
-					fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
-
-					// Write the event data, containing the pretrigger, event and cal
-					fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, g_currentEventFileHandle);
-
-					// Done writing the event file, close the file handle
-					fl_fclose(g_currentEventFileHandle);
-					debug("Event file closed\n");
-
-					ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
+					completeRamEventSummary(ramSummaryEntry, sumEntry);
+					cacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 					
-					updateMonitorLogEntry();
+					// Get new event file handle
+					g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 
-					// After event numbers have been saved, store current event number in persistent storage.
-					storeCurrentEventNumber();
-
-					// Now store the updated event number in the universal ram storage.
-					g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
-				}
-
-				// Update event buffer count and pointers
-				if (++g_currentEventBuffer == g_maxEventBuffers)
-				{
-					g_currentEventBuffer = 0;
-					g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr;
-				}
-				else
-				{
-					g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_currentEventBuffer * g_wordSizeInEvent);
-				}
-
-				if (g_freeEventBuffers == g_maxEventBuffers)
-				{
-					clearSystemEventFlag(TRIGGER_EVENT);
-				}
-
-				g_lastCompletedRamSummaryIndex = ramSummaryEntry;
-
-				raiseMenuEventFlag(RESULTS_MENU_EVENT);
-
-				//debug("DataBuffs: Changing flash move state: %s\n", "FLASH_IDLE");
-				flashMovState = FLASH_IDLE;
-				g_freeEventBuffers++;
-
-				if (getPowerControlState(LCD_POWER_ENABLE) == OFF)
-				{
-					assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
-					assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
-				}
-
-				// Check to see if there is room for another event, if not send a signal to stop monitoring
-				if (g_helpRecord.flash_wrapping == NO)
-				{
-					getFlashUsageStats(&flashStats);
-
-					if (flashStats.waveEventsLeft == 0)
+					if (g_currentEventFileHandle == NULL)
 					{
-						msg.cmd = STOP_MONITORING_CMD;
-						msg.length = 1;
-						(*menufunc_ptrs[MONITOR_MENU])(msg);
-					}
-				}
+						debugErr("Failed to get a new file handle for the current Waveform event!\n");
+						
+						//reInitSdCardAndFat32();
+						//g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+					}					
+					else // Write the file event to the SD card
+					{
+						sprintf((char*)&g_spareBuffer[0], "WAVEFORM EVENT #%d BEING SAVED... (MAY TAKE TIME)", g_nextEventNumberToUse);
+						overlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
-				// Check if AutoDialout is enabled and signal the system if necessary
-				checkAutoDialoutStatus();
+						// Write the event record header and summary
+						fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
+
+						// Write the event data, containing the pretrigger, event and cal
+						fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, g_currentEventFileHandle);
+
+						// Done writing the event file, close the file handle
+						fl_fclose(g_currentEventFileHandle);
+						debug("Event file closed\n");
+
+						ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
+					
+						updateMonitorLogEntry();
+
+						// After event numbers have been saved, store current event number in persistent storage.
+						storeCurrentEventNumber();
+
+						// Now store the updated event number in the universal ram storage.
+						g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
+					}
+
+					// Update event buffer count and pointers
+					if (++g_currentEventBuffer == g_maxEventBuffers)
+					{
+						g_currentEventBuffer = 0;
+						g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr;
+					}
+					else
+					{
+						g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_currentEventBuffer * g_wordSizeInEvent);
+					}
+
+					if (g_freeEventBuffers == g_maxEventBuffers)
+					{
+						clearSystemEventFlag(TRIGGER_EVENT);
+					}
+
+					g_lastCompletedRamSummaryIndex = ramSummaryEntry;
+
+					raiseMenuEventFlag(RESULTS_MENU_EVENT);
+
+					//debug("DataBuffs: Changing flash move state: %s\n", "FLASH_IDLE");
+					flashMovState = FLASH_IDLE;
+					g_freeEventBuffers++;
+
+					if (getPowerControlState(LCD_POWER_ENABLE) == OFF)
+					{
+						assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
+						assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+					}
+
+					// Check to see if there is room for another event, if not send a signal to stop monitoring
+					if (g_helpRecord.flash_wrapping == NO)
+					{
+						getFlashUsageStats(&flashStats);
+
+						if (flashStats.waveEventsLeft == 0)
+						{
+							msg.cmd = STOP_MONITORING_CMD;
+							msg.length = 1;
+							(*menufunc_ptrs[MONITOR_MENU])(msg);
+						}
+					}
+
+					// Check if AutoDialout is enabled and signal the system if necessary
+					checkAutoDialoutStatus();
+
+					g_spi1AccessLock = AVAILABLE;
+				}
 			break;
 		}
 	}

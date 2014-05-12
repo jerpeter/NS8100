@@ -237,9 +237,12 @@ extern uint16 g_eventBufferIndex;
 extern uint8 g_spareBuffer[];
 extern uint8 g_tcSampleTimerActive;
 extern uint8 g_tcTypematicTimerActive;
-char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
-char g_languageTable[8192];
-uint16 g_testTrigger;
-uint8 g_fileProcessActiveUsbLockout;
+extern char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
+extern char g_languageTable[8192];
+extern uint16 g_testTrigger;
+extern uint8 g_fileProcessActiveUsbLockout;
+extern uint8 g_spi1AccessLock;
+extern EVT_RECORD g_resultsEventCache[50];
+extern uint16 g_resultsCacheIndex;
 
 #endif /* GLOBALS_H_ */

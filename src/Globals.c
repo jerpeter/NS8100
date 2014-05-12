@@ -135,6 +135,8 @@ SENSOR_PARAMETERS_STRUCT* g_sensorInfoPtr = &g_SensorInfoStruct;
 // Contains the event record in ram.
 EVT_RECORD g_pendingEventRecord;
 EVT_RECORD g_pendingBargraphRecord;
+EVT_RECORD g_resultsEventCache[50];
+uint16 g_resultsCacheIndex = 0;
 // Factory Setup record.
 FACTORY_SETUP_STRUCT g_factorySetupRecord;
 // Structure to contain system paramters and system settings.
@@ -279,6 +281,7 @@ uint32 g_summaryEventNumber;
 uint8 g_summaryListMenuActive = NO;
 uint8 g_summaryListArrowChar = BOTH_ARROWS_CHAR;
 uint8 g_disableDebugPrinting;
+uint8 g_spi1AccessLock = NO;
 USER_MENU_CACHE_STRUCT		g_userMenuCache[36];
 USER_MENU_CACHE_STRUCT* 	g_userMenuCachePtr = &g_userMenuCache[0];
 USER_MENU_CACHE_DATA g_userMenuCacheData;

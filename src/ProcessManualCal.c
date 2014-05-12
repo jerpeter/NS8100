@@ -33,6 +33,8 @@
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
 #include "FAT32_FileLib.h"
+#include "FAT32_Disk.h"
+#include "FAT32_Access.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -249,6 +251,7 @@ void MoveManuelCalToFlash(void)
 		sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, 1024);       
 
 		completeRamEventSummary(ramSummaryEntry, sumEntry);
+		cacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 
 		// Get new event file handle
 		g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
@@ -256,6 +259,9 @@ void MoveManuelCalToFlash(void)
 		if (g_currentEventFileHandle == NULL)
 		{
 			debugErr("Failed to get a new file handle for the Manual Cal event!\n");
+			
+			//reInitSdCardAndFat32();
+			//g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 		}					
 		else // Write the file event to the SD card
 		{

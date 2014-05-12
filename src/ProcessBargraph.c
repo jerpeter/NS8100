@@ -27,6 +27,8 @@
 #include "Flash.h"
 #include "EventProcessing.h"
 #include "FAT32_FileLib.h"
+#include "FAT32_Disk.h"
+#include "FAT32_Access.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines

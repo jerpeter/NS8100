@@ -29,6 +29,7 @@
 #include "FAT32_FileLib.h"
 #include "FAT32_Access.h"
 #include "sd_mmc_spi.h"
+#include "FAT32_Disk.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -1045,6 +1046,37 @@ void cacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 
 //*****************************************************************************
 // FUNCTION
+//  void cacheEventToRam(uint16 eventNumer)
+//*****************************************************************************
+void cacheEventToRam(uint16 eventNumber)
+{
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+	FL_FILE* eventFile;
+	
+	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
+	eventFile = fl_fopen(fileName, "r");
+
+	// Verify file ID
+	if (eventFile == NULL)
+	{
+		debugErr("Error: Event File %s not found!\r\n", fileName);
+		overlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+	}	
+	// Verify file is big enough
+	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+	{
+		debugErr("Error: Event File %s is corrupt!\r\n", fileName);
+		overlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+	}	
+	else
+	{
+		fl_fread(eventFile, (uint8*)&g_eventDataBuffer[0], eventFile->filelength);
+		fl_fclose(eventFile);
+	}
+}
+
+//*****************************************************************************
+// FUNCTION
 //  void validEventFile(uint16 eventNumer)
 //*****************************************************************************
 BOOLEAN validEventFile(uint16 eventNumber)
@@ -1087,6 +1119,46 @@ BOOLEAN validEventFile(uint16 eventNumber)
 	}
 
 	return(validFile);
+}
+
+//*****************************************************************************
+// FUNCTION
+//  void getEventFileHandle(uint16 eventNumer)
+//*****************************************************************************
+#include "sd_mmc_test_menu.h"
+#define SD_MMC_SPI_NPCS	2
+
+void reInitSdCardAndFat32(void)
+{
+	// Power off the SD card
+	SD_MMC_Power_Off();
+
+	// Wait for power to propogate
+	soft_usecWait(10 * SOFT_MSECS);
+
+	// Power on the SD Card and init the file system
+	SD_MMC_Power_On();
+
+	// Wait for power to propogate
+	soft_usecWait(10 * SOFT_MSECS);
+
+	// Check if SD Detect pin 
+	if (gpio_get_pin_value(AVR32_PIN_PA02) == ON)
+	{
+		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+		sd_mmc_spi_internal_init();
+		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
+
+		FAT32_InitDrive();
+		if (FAT32_InitFAT() == FALSE)
+		{
+			debugErr("FAT32 Initialization failed!\n\r");
+		}
+	}
+	else
+	{
+		debugErr("\n\nSD Card not detected!\n");
+	}
 }
 
 //*****************************************************************************

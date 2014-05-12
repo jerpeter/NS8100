@@ -415,3 +415,20 @@ void rtcRead(uint8 registerAddress, int length, uint8* data)
 
 	spi_unselectChip(&AVR32_SPI1, RTC_SPI_NPCS);
 }
+
+#if 0 // Add / Fix later
+/****************************************
+*	Function:    
+*	Purpose:
+****************************************/
+static DATE_TIME_STRUCT timestampEventCache[10];
+static uint16 timestampEventIndex = 0;
+
+void timestampEvent(void)
+{
+	if (timestampEventFlag = YES)
+	{
+		
+	}
+}
+#endif

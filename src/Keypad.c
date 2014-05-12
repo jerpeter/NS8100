@@ -344,7 +344,7 @@ BOOLEAN keypad(void)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
-#if 1 // Test
+#if 0 // Test
 				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					g_testTrigger = YES;
@@ -443,7 +443,7 @@ extern void BootLoadManager(void);
 					else if (keyPressed == HELP_KEY)
 					{
 						//copyValidFlashEventSummariesToRam();
-						powerControl(POWER_OFF, ON);
+						//powerControl(POWER_OFF, ON);
 					}
 #endif
 				}

@@ -91,9 +91,13 @@ void getFlashUsageStats(FLASH_USAGE_STRUCT* usage);
 void getEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
 void getEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
 void cacheEventDataToRam(uint16 eventNumber, uint32 dataSize);
+void cacheEventToRam(uint16 eventNumber);
 BOOLEAN validEventFile(uint16 eventNumber);
 FL_FILE* getEventFileHandle(uint16 eventNumber, EVENT_FILE_OPTION option);
 void deleteEventFileRecord(uint16 eventNumber);
 void deleteEventFileRecords(void);
+void reInitSdCardAndFat32(void);
+
+void cacheResultsEventInfo(EVT_RECORD* eventRecordToCache);
 
 #endif // _FLASHEVTS_H_

@@ -1995,7 +1995,7 @@ void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 // Sample Rate Menu
 //=============================================================================
 //*****************************************************************************
-#define SAMPLE_RATE_MENU_ENTRIES 9
+#define SAMPLE_RATE_MENU_ENTRIES 8
 USER_MENU_STRUCT sampleRateMenu[SAMPLE_RATE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, SAMPLE_RATE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, SAMPLE_RATE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
@@ -2005,7 +2005,7 @@ USER_MENU_STRUCT sampleRateMenu[SAMPLE_RATE_MENU_ENTRIES] = {
 {ITEM_4, 4096, NULL_TEXT, NO_TAG, {4096}},
 {ITEM_5, 8192, NULL_TEXT, NO_TAG, {8192}},
 {ITEM_6, 16384, NULL_TEXT, NO_TAG, {16384}},
-{ITEM_7, 32768, NULL_TEXT, NO_TAG, {32768}},
+//{ITEM_7, 32768, NULL_TEXT, NO_TAG, {32768}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&sampleRateMenuHandler}}
 };
 
@@ -2021,7 +2021,7 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{
 		if ((sampleRateMenu[newItemIndex].data < sampleRateMenu[ITEM_1].data) || 
-			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_7].data))
+			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data))
 		{
 			byteSet(&message[0], 0, sizeof(message));
 			sprintf((char*)message, "%lu %s", sampleRateMenu[newItemIndex].data,

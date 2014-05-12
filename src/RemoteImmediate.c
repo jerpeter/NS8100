@@ -1154,8 +1154,12 @@ void handleDEM(CMD_BUFFER_STRUCT* inCmd)
 	
 				//getEventFileInfo(__ramFlashSummaryTbl[idex].fileEventNum, &(resultsEventRecord.header), 
 				//					&resultsEventRecord.summary, YES);
-				getEventFileRecord(__ramFlashSummaryTbl[idex].fileEventNum, &resultsEventRecord);
-				cacheEventDataToRam(__ramFlashSummaryTbl[idex].fileEventNum, eventRecord->header.dataLength);
+				
+				//getEventFileRecord(__ramFlashSummaryTbl[idex].fileEventNum, &resultsEventRecord);
+				//cacheEventDataToRam(__ramFlashSummaryTbl[idex].fileEventNum, eventRecord->header.dataLength);
+				
+				cacheEventToRam(__ramFlashSummaryTbl[idex].fileEventNum);
+				eventRecord = (EVT_RECORD*)&g_eventDataBuffer[0];
 #endif
 
 				if (eventRecord->summary.eventNumber == eventNumToSend)
@@ -1239,9 +1243,9 @@ void prepareDEMDataToSend(EVT_RECORD* eventRecord, COMMAND_MESSAGE_HEADER* g_inC
 		eventRecord->header.dataLength;
 
 	// Find and set the pointer to the begining of the event data.
-#if 0 // ns7100
+#if 1 // Leave the same
 	g_demXferStructPtr->startDataPtr = (uint8*)eventRecord + sizeof(EVT_RECORD);
-#else
+#else // Ignore for now
 extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 	g_demXferStructPtr->startDataPtr = (uint8*)(&g_eventDataBuffer[0]);
 #endif

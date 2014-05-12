@@ -51,12 +51,14 @@
 ///----------------------------------------------------------------------------
 static uint16 s_monitorSessionFirstEvent = 0;
 static uint16 s_monitorSessionLastEvent = 0;
+static EVT_RECORD resultsEventRecord;
 
 /*******************************************************************************
 *  Function prototypes
 *******************************************************************************/
 void resultsMnDsply(WND_LAYOUT_STRUCT*);
 void resultsMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
+EVT_RECORD* getResultsEventInfoFromCache(uint32 fileEventNumber);
 
 /****************************************
 *	Function:	resultsMn
@@ -354,17 +356,22 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	DATE_TIME_STRUCT time;
 	uint8 calResults = PASSED;
 
-	static EVT_RECORD resultsEventRecord;
 	EVT_RECORD* eventRecord = &resultsEventRecord;
 	
 	if ((g_updateResultsEventRecord == YES) || (g_bargraphForcedCal == YES))
 	{
-		debug("Results menu: updating event record cache\n");
-
 		if (g_summaryListMenuActive == YES)
+		{
+			debug("Results menu: updating event record cache\n");
 			getEventFileRecord(g_summaryEventNumber, &resultsEventRecord);
+		}			
 		else
-			getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
+		{
+			getResultsEventInfoFromCache(g_resultsRamSummaryPtr->fileEventNum);
+
+			// Old
+			//getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
+		}		
 
 		g_updateResultsEventRecord = NO;
 
@@ -888,4 +895,47 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if (g_monitorModeActiveChoice == MB_SECOND_CHOICE)
 			messageChoiceActiveSwap(MB_YESNO);
 	}
+}
+
+/****************************************
+*	Function:	
+*	Purpose:
+****************************************/
+EVT_RECORD* getResultsEventInfoFromCache(uint32 fileEventNumber)
+{
+	uint32 i = 0;
+
+	// Check if entry is cached to prevent long delay reading files
+	while (i < 50)
+	{		
+		if (g_resultsEventCache[i].summary.eventNumber == fileEventNumber)
+		{
+			debug("Results menu: Found cached event record info\n");
+			//return (&g_resultsEventCache[i]);
+
+			byteCpy(&resultsEventRecord, &g_resultsEventCache[i], sizeof(EVT_RECORD));
+
+			return (NULL);
+		}
+		
+		i++;
+	}
+
+	// If here, no cache entry was found, load the event file to get the event record info
+	debug("Summary menu: Adding event record info to cache\n");
+	getEventFileRecord(fileEventNumber, &resultsEventRecord);
+
+	//return (&resultsEventRecord);
+	return (NULL);
+}
+
+/****************************************
+*	Function:	
+*	Purpose:
+****************************************/
+void cacheResultsEventInfo(EVT_RECORD* eventRecordToCache)
+{
+	byteCpy(&g_resultsEventCache[g_resultsCacheIndex], eventRecordToCache, sizeof(EVT_RECORD));
+	
+	if (++g_resultsCacheIndex >= 50) { g_resultsCacheIndex = 0; }
 }

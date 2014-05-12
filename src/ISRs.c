@@ -68,192 +68,8 @@ static uint32 g_cyclicEventDelay = 0;
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void isr_PowerOnKey(void);
-void isr_PowerOffKey(void);
-void isr_Lan(void);
-void isr_Keypad(void);
-void isr_UsbHost(void);
-void isr_UsbDevice(void);
-void isr_RTC(void);
-void isr_Trig(void);
-void isr_PIT1(void);
-void isr_PIT2(void);
-void isr_SCI1(void);
-void isr_SCI2(void);
-void isr_SPI_Transfer_Complete(void);
-void isr_MSP430WakeupMsg(void);
-
-// Test exception handlers
-void isr_misaligned_access(void);
-void isr_access_error(void);
-void isr_divide_by_zero(void);
-void isr_illegal_instruction(void);
-void isr_privilege_violation(void);
-void isr_trace_exception(void);
-void isr_breakpoint_exception(void);
-void isr_unrecoverable_error(void);
-
-extern  void __misaligned_access(void);
-extern  void __access_error(void);
-extern  void __divide_by_zero(void);
-extern  void __illegal_instruction(void);
-extern  void __privilege_violation(void);
-extern  void __trace_exception(void);
-extern  void __breakpoint_exception(void);
-extern  void __unrecoverable_error(void);
 
 #if 0 // ns7100
-
-// =================
-// Misaligned Access
-// =================
-void isr_misaligned_access(void)
-{
-#if TEST_EXCEPTION_HANDLING
-    MMC2114_IMM *imm = mmc2114_get_immp();
-
-	while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '1';
-
-	soft_usecWait(1 * SOFT_SECS);
-#else
-	__misaligned_access();
-#endif
-}
-
-// ============
-// Access Error
-// ============
-void isr_access_error(void)
-{
-#if TEST_EXCEPTION_HANDLING
-    MMC2114_IMM *imm = mmc2114_get_immp();
-
-	while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '2';
-
-	soft_usecWait(1 * SOFT_SECS);
-#else
-	__access_error();
-#endif
-}
-
-// ==============
-// Divide by Zero
-// ==============
-void isr_divide_by_zero(void)
-{
-#if TEST_EXCEPTION_HANDLING
-    MMC2114_IMM *imm = mmc2114_get_immp();
-
-	while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '3';
-
-	soft_usecWait(1 * SOFT_SECS);
-#else
-	__divide_by_zero();
-#endif
-}
-
-// ===================
-// Illegal Instruction
-// ===================
-void isr_illegal_instruction(void)
-{
-#if TEST_EXCEPTION_HANDLING
-    MMC2114_IMM *imm = mmc2114_get_immp();
-
-	while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '4';
-
-	soft_usecWait(1 * SOFT_SECS);
-#else
-	__illegal_instruction();
-#endif
-}
-
-// ====================
-// Priviledge Violation
-// ====================
-void isr_privilege_violation(void)
-{
-#if TEST_EXCEPTION_HANDLING
-    MMC2114_IMM *imm = mmc2114_get_immp();
-
-	while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '5';
-
-	soft_usecWait(1 * SOFT_SECS);
-#else
-	__privilege_violation();
-#endif
-}
-
-// ===============
-// Trace Exception
-// ===============
-void isr_trace_exception(void)
-{
-#if TEST_EXCEPTION_HANDLING
-    MMC2114_IMM *imm = mmc2114_get_immp();
-
-	while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '6';
-
-	soft_usecWait(1 * SOFT_SECS);
-#else
-	__trace_exception();
-#endif
-}
-
-// ====================
-// Breakpoint Exception
-// ====================
-void isr_breakpoint_exception(void)
-{
-#if TEST_EXCEPTION_HANDLING
-    MMC2114_IMM *imm = mmc2114_get_immp();
-
-	while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '7';
-
-	soft_usecWait(1 * SOFT_SECS);
-#else
-	__breakpoint_exception();
-#endif
-}
-
-// ===================
-// Unrecoverable Error
-// ===================
-void isr_unrecoverable_error(void)
-{
-#if TEST_EXCEPTION_HANDLING
-    MMC2114_IMM *imm = mmc2114_get_immp();
-
-	while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '8';
-
-	soft_usecWait(1 * SOFT_SECS);
-#else
-	__unrecoverable_error();
-#endif
-}
-#endif // big block
-
-#if 0 // ns7100
-/*******************************************************************************
-* Function: isr_PowerOnKey
-* Purpose:
-*******************************************************************************/
-//#pragma interrupt on
-void isr_PowerOnKey(void)
-{
-    //MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '!';
-
-	if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
-	{
-		g_factorySetupSequence = STAGE_1;
-	}
-
-	// Clear the processor interrupt flag
-	mmc_clear_EPF0_int;
-}
-//#pragma interrupt off
-
 /*******************************************************************************
 * Function: isr_PowerOffKey
 * Purpose:
@@ -298,224 +114,6 @@ void isr_PowerOffKey(void)
 
 	// Clear the processor interrupt flag
 	mmc_clear_EPF1_int;
-}
-//#pragma interrupt off
-
-/*******************************************************************************
-* Function: isr_Lan
-* Purpose:
-*******************************************************************************/
-//#pragma interrupt on
-void isr_Lan(void)
-{
-    //MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '#';
-
-	// Clear the processor interrupt flag
-	mmc_clear_EPF2_int;
-}
-//#pragma interrupt off
-
-/*******************************************************************************
-* Function: isr_Keypad
-* Purpose:                                                                     *
-*******************************************************************************/
-//#pragma interrupt on
-void isr_Keypad(void)
-{
-	//MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '$';
-
-	if (g_kpadProcessingFlag == DEACTIVATED)
-	{
-		raiseSystemEventFlag(KEYPAD_EVENT);
-
-		// Found a new key, reset last stored key
-		g_kpadLastKeyPressed = 0;
-	}
-
-	// Clear the processor interrupt flag
-	mmc_clear_EPF3_int;
-}
-//#pragma interrupt off
-
-/*******************************************************************************
-* Function: isr_UsbHost
-* Purpose:
-*******************************************************************************/
-//#pragma interrupt on
-void isr_UsbHost(void)
-{
-    //MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '%';
-
-	// Clear the processor interrupt flag
-	mmc_clear_EPF4_int;
-}
-//#pragma interrupt off
-
-/*******************************************************************************
-* Function: isr_UsbDevice
-* Purpose:
-*******************************************************************************/
-//#pragma interrupt on
-void isr_UsbDevice(void)
-{
-    //MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '^';
-
-	// Clear the processor interrupt flag
-	mmc_clear_EPF5_int;
-}
-//#pragma interrupt off
-
-/*******************************************************************************
-* Function: isr_RTC
-* Purpose:
-*******************************************************************************/
-//#pragma interrupt on
-void isr_RTC(void)
-{
-	RTC_FLAGS_STRUCT rtcFlags;
-	static uint32 samplingCounter = 0;
-
-	//MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '&';
-
-	// Reading the flags register clears all the flags
-	rtcFlags.reg = RTC_FLAGS.reg;
-
-	// Check which interrupt source has signaled the interrupt
-	if (rtcFlags.bit.alarmIntFlag)
-	{
-
-	}
-
-	if (rtcFlags.bit.periodicIntFlag)
-	{
-		if(g_sampleProcessing == ACTIVE_STATE)
-		{
-			GatherSampleData();
-
-			if (g_manualCalFlag)
-			{
-				ProcessManuelCalPulse();
-			}
-			else if (g_triggerRecord.op_mode == WAVEFORM_MODE)
-			{
-				ProcessWaveformData();
-			}
-			else //if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-			{
-				ProcessBargraphData();
-			}
-
-			// Check if a half seconds worth of samples have occurred
-			samplingCounter++;
-			if ((samplingCounter % (g_triggerRecord.trec.sample_rate >> 1)) == 0)
-			{
-				 samplingCounter = 0;
-
-				// Increment the lifetime soft timer tick count
-				g_rtcSoftTimerTickCount++;
-
-				// Every tick raise the flag to check soft timers
-				raiseTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
-
-				// Every 8 ticks (4 secs) trigger the cyclic event flag
-				if (++g_cyclicEventDelay >= 8)
-				{
-					g_cyclicEventDelay = 0;
-					raiseSystemEventFlag(CYCLIC_EVENT);
-				}
-
-				// Every 60 ticks (30 secs) get the rtc time.
-				if (++g_rtcCurrentTickCount >= 60)
-				{
-					raiseSystemEventFlag(UPDATE_TIME_EVENT);
-				}
-			}
-		}
-		else
-		{
-			// Reset the sampling counter if isn't not zero
-			if (samplingCounter) samplingCounter = 0;
-
-			// Increment the lifetime soft timer tick count
-			g_rtcSoftTimerTickCount++;
-
-			// Every tick raise the flag to check soft timers
-			raiseTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
-
-			// Every 8 ticks (4 secs) trigger the cyclic event flag
-			if (++g_cyclicEventDelay >= 8)
-			{
-				g_cyclicEventDelay = 0;
-				raiseSystemEventFlag(CYCLIC_EVENT);
-			}
-
-			// Every 60 ticks (30 secs) get the rtc time.
-			if (++g_rtcCurrentTickCount >= 60)
-			{
-				raiseSystemEventFlag(UPDATE_TIME_EVENT);
-			}
-		}
-	}
-
-	if (rtcFlags.bit.powerFailIntFlag)
-	{
-
-	}
-
-	// Clear the processor interrupt flag
-	mmc_clear_EPF6_int;
-}
-//#pragma interrupt off
-
-/*******************************************************************************
-* Function: isr_Trig
-* Purpose:
-*******************************************************************************/
-//#pragma interrupt on
-void isr_Trig(void)
-{
-    //MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '*';
-
-	// Clear the processor interrupt flag
-	mmc_clear_EPF7_int;
-}
-//#pragma interrupt off
-
-/*******************************************************************************
-* Function: isr_PIT1
-* Purpose: Provides an normal interrupt service routine for PIT interrupts
-*******************************************************************************/
-//#pragma interrupt on	    				   /* PIT1 interrupt service routine */
-void isr_PIT1(void)
-{
-    //MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '(';
-
-	// Clear the processor interrupt flag
-	mmc_clear_PIT1_int;
-	reg_PCSR1.reg = reg_PCSR1.reg;
-}
-//#pragma interrupt off
-
-/*******************************************************************************
-* Function: isr_PIT2
-* Purpose: Provides an normal interrupt service routine for PIT interrupts
-*******************************************************************************/
-//#pragma interrupt on	    				   /* PIT1 interrupt service routine */
-void isr_PIT2(void)
-{
-    //MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = ')';
-
-	// Clear the processor interrupt flag
-	mmc_clear_PIT2_int;
-	reg_PCSR2.reg = reg_PCSR2.reg;
 }
 //#pragma interrupt off
 
@@ -628,204 +226,7 @@ void isr_SCI1(void)
 #endif
 }
 //#pragma interrupt off
-
-/*******************************************************************************
-* Function: isr_SCI2
-* Purpose:
-*******************************************************************************/
-//#pragma interrupt on
-void isr_SCI2(void)
-{
-	uint8 statusReg = 0;
-	uint8 dataReg = 0;
-
-    MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '-';
-
-	// Read the Status register
-	statusReg = imm->Sci2.SCISR1;
-
-	// Read out the data register to clear the interrupt
-	dataReg = imm->Sci2.SCIDRL;
-}
-//#pragma interrupt off
-
-
-/*******************************************************************************
-* Function: isr_SPI_Transfer_Complete
-* Purpose:
-*******************************************************************************/
-//#pragma interrupt on
-void isr_SPI_Transfer_Complete(void)
-{
-    //MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '+';
-}
-//#pragma interrupt off
-
-/*******************************************************************************
-* Function: isr_MSP430WakeupMsg
-* Purpose:
-*******************************************************************************/
-//#pragma stack_regs off
-//#pragma fast_interrupt on
-//#pragma interrupt on
-void isr_MSP430WakeupMsg(void)
-{
-	extern uint32 g_totalSamples;
-	static uint32 numOfSampleCnt = 0;
-	uint32 numBytes = (uint32)(g_sensorInfoPtr->numOfChannels * 2);
-	volatile uint8* spiDR = _SPIDR;
-	volatile uint8* spiSR = _SPISR;
-	ISPI_PACKET* rTailOfPreTrigBuff = (ISPI_PACKET*)g_tailOfPreTrigBuff;
-	uint32 i = 0;
-	uint32 j;
-	uint8 tempByte;
-	//uint8 dcdStatus = (uint8)(reg_TIM1PORT.reg & 0x08);
-	//uint8 SS_Bit; //uncomment if we want to handshake every byte
-	//uint8 temp;   //uncomment if we what to handshake every byte
-
-    //MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '=';
-
-	if (READ_DCD == CONNECTION_ESTABLISHED)
-	{
-		// Clear RTS to hold the remote end from sending any more data
-		CLEAR_RTS;
-	}
-
-	// Clear the processor interrupt flag
-  	mmc_clear_EPF7_int;
-
-	if (ISPI_GetISPI_State() == ISPI_RECEIVE)
-	{
-	    // uncomment if we want to handshake every byte
-		//SS_Bit = (uint8)((*(uint8*)SPI_PORT_DATA_REG_ADDR) & (uint8)ISPI_DDRSP3_BIT);
-
-		//used i so I would not have to create another variable (Its about proformance)
-		// make a comment if we want to handshake every byte
-		i = (uint32)((*(volatile uint8*)SPI_PORT_DATA_REG_ADDR) & (uint8)ISPI_DDRSP3_BIT);
-
-		*spiDR = IDLE_DATA;
-		while ((*spiSR & ISPI_IRQ_BIT) != ISPI_IRQ_BIT){;}
-		rTailOfPreTrigBuff->sampleByte[0] = *spiDR;
-
-        // comment if we want to handshake every byte
-		while (i == ((*(volatile uint8*)SPI_PORT_DATA_REG_ADDR) & ISPI_DDRSP3_BIT)){;}
-
-		for (i = 2, j = 1; i < numBytes; i++, j++)
-		{
-		    // uncomment if we want to handshake every byte
-			//while (SS_Bit == (temp = (uint8)((*(uint8*)SPI_PORT_DATA_REG_ADDR) & (uint8)ISPI_DDRSP3_BIT))){;}
-            //SS_Bit = temp;
-
-			*spiDR = IDLE_DATA;
-			while ((*spiSR & ISPI_IRQ_BIT) != ISPI_IRQ_BIT){;}
-			rTailOfPreTrigBuff->sampleByte[j] = *spiDR;
-		}
-
-        // uncomment if we want to handshake every byte
-		//while (SS_Bit == (temp = (uint8)((*(volatile uint8*)SPI_PORT_DATA_REG_ADDR) & (uint8)ISPI_DDRSP3_BIT))){;}
-		*spiDR = IDLE_DATA;
-		while ((*spiSR & ISPI_IRQ_BIT) != ISPI_IRQ_BIT){;}
-		rTailOfPreTrigBuff->sampleByte[j] = *spiDR;
-
-		if (g_manualCalFlag)
-		{
-			ProcessManuelCalPulse();
-		}
-
-		else if (g_triggerRecord.op_mode == WAVEFORM_MODE)
-		{
-			ProcessWaveformData();
-		}
-
-		else // (g_triggerRecord.op_mode == BARGRAPH_MODE)
-		{
-			ProcessBargraphData();
-		}
-
-		numOfSampleCnt = numOfSampleCnt + g_sensorInfoPtr->numOfChannels;
-		if (numOfSampleCnt >= g_totalSamples)
-		{
-			//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = 'I';
-			ISPI_SetISPI_State(ISPI_IDLE);
-			numOfSampleCnt = 0;
-		}
-	}
-
-	else if (ISPI_GetISPI_State() == ISPI_IDLE)
-	{
-	    // uncomment if we want to handshake every btye
-		//SS_Bit = (uint8)((*(uint8*)SPI_PORT_DATA_REG_ADDR) & (uint8)ISPI_DDRSP3_BIT);
-
-	    //used j so I would not have to create another variable (Its about proformance)
-		// comment if we want to handshake every byte
-		j = (uint32)((*(volatile uint8*)SPI_PORT_DATA_REG_ADDR) & (uint8)ISPI_DDRSP3_BIT);
-
-		*spiDR = IDLE_DATA;
-		while ((*spiSR & ISPI_IRQ_BIT) != ISPI_IRQ_BIT)
-		{
-			i++;
-		}
-		tempByte = *spiDR;
-
-		if (tempByte == SAMPLING_CMD_ID)
-		{
-		    // comment out if we want to handshake every byte
-			while (j == ((*(volatile uint8*)SPI_PORT_DATA_REG_ADDR) & (uint8)ISPI_DDRSP3_BIT)){;}
-			for (i = 0; i < numBytes; i++)
-			{
-			    // uncomment if we want to handshake every byte
-				//while (SS_Bit == (temp = (uint8)((*(volatile uint8*)SPI_PORT_DATA_REG_ADDR) & ISPI_DDRSP3_BIT))){;}
-                //SS_Bit = temp;
-				*spiDR = IDLE_DATA;
-				while ((*spiSR & ISPI_IRQ_BIT) != ISPI_IRQ_BIT){;}
-				rTailOfPreTrigBuff->sampleByte[i] = *spiDR;
-			}
-
-			if (g_manualCalFlag)
-			{
-				ProcessManuelCalPulse();
-			}
-
-			else if (g_triggerRecord.op_mode == WAVEFORM_MODE)
-			{
-				ProcessWaveformData();
-			}
-
-			else //if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-			{
-				ProcessBargraphData();
-			}
-
-			numOfSampleCnt = numOfSampleCnt + g_sensorInfoPtr->numOfChannels;
-			//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = 'R';
-			ISPI_SetISPI_State(ISPI_RECEIVE);
-		}
-	}
-
-	else
-	{
-		// TODO: This is an error!!
-
-		// Since we "hang", print the error to the craft
-		// Note: If the while (1) condition is replaced (and operation is set to continue),
-		//       remove the print statement to prevent the ISR from running to long
-		debugErr("430 Wakeup ISR: Received an invalid message. Halting!\n");
-		while (1){;}
-	}
-
-	if (READ_DCD == CONNECTION_ESTABLISHED)
-	{
-		// Set RTS to allow the remote end to send data again
-		SET_RTS;
-	}
-}
-//#pragma stack_regs reset
-//#pragma fast_interrupt off
-//#pragma interrupt off
-#endif // huge block
+#endif
 
 // ============================================================================
 // eic_keypad_irq
@@ -891,25 +292,15 @@ void eic_system_irq(void)
 #endif
 
 #if 0
-	uint8 keyScan;
-	keyScan = read_mcp23018(IO_ADDRESS_KPD, INTFA);
-	{
-		debug("System IRQ: Interrupt Flags: %x\n", keyScan);
-	}
-
+	keyFlag = read_mcp23018(IO_ADDRESS_KPD, INTFA);
 	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
-	{
-		debug("System IRQ: Key Pressed: %x\n", keyScan);
-	}
+	debug("System IRQ: Interrupt Flags: %x\n", keyFlag);
+	debug("System IRQ: Key Pressed: %x\n", keyScan);
 #endif
 
 #if 1
 	keyFlag = read_mcp23018(IO_ADDRESS_KPD, INTFA);
-	//debugRaw("\n%x ", keyFlag);
 	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
-	//debugRaw("\n%x ", keyScan);
-	
-	//debugRaw("\n%x ", keyScan);
 
 	// Check if the On key was pressed
 	if ((keyFlag & keyScan) == ON_KEY)
@@ -923,7 +314,6 @@ void eic_system_irq(void)
 		if (powerOffAttempted == YES)
 		{ 
 			onKeyCount++;
-			//debugRaw("\n%d ", onKeyCount);
 		}
 
 #if 0 // Test - seemingly doesn't want to work, only shows 1 key being pressed
@@ -945,7 +335,6 @@ void eic_system_irq(void)
 			powerControl(POWER_OFF, ON);
 		}
 
-		//debugRaw("\n(Y) ", onKeyCount);
 		powerOffAttempted = YES;
 		onKeyCount = 0;
 	}
@@ -1148,14 +537,8 @@ void Setup_8100_EIC_Keypad_ISR(void)
 
 #if 0
 	// Test for int enable
-	if(AVR32_EIC.IMR.int5 == 0x01)
-	{
-		debug("\nKeypad Interrupt Enabled\n");
-	}
-	else
-	{
-		debug("\nKeypad Interrupt Not Enabled\n");
-	}
+	if(AVR32_EIC.IMR.int5 == 0x01) debug("\nKeypad Interrupt Enabled\n");
+	else debug("\nKeypad Interrupt Not Enabled\n");
 #endif
 }
 
@@ -1181,10 +564,8 @@ void Setup_8100_EIC_System_ISR(void)
 
 #if 0 
 	// Test for int enable
-	if(AVR32_EIC.IMR.int4 == 0x01)
-		debug("\nSystem Interrupt Enabled\n");
-	else
-		debug("\nSystem Interrupt Not Enabled\n");
+	if(AVR32_EIC.IMR.int4 == 0x01) debug("\nSystem Interrupt Enabled\n");
+	else debug("\nSystem Interrupt Not Enabled\n");
 #endif
 }
 
@@ -1374,7 +755,7 @@ void tc_sample_irq(void)
 	static uint32 s_pendingCalCount = 0;
 	static uint32 s_pretriggerCount = 0;
 
-	static uint32 fakeDataIncrement = 0;
+	//static uint32 fakeDataIncrement = 0;
 
 	static uint16 s_consecSeismicTriggerCount = 0;
 	static uint16 s_consecAirTriggerCount = 0;
@@ -1479,7 +860,7 @@ void tc_sample_irq(void)
 		s_T_channelReading -= g_channelOffset.t_12bit;
 		s_A_channelReading -= g_channelOffset.a_12bit;
 
-#if 0
+#if 1
 		// Store the data into the pretrigger buffer
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->r = s_R_channelReading;
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->v = s_V_channelReading;
@@ -1547,7 +928,7 @@ void tc_sample_irq(void)
 					// Mark the start of the Manual Cal pulse
 					if (g_manualCalSampleCount == MAX_CAL_SAMPLES)
 					{
-#if 0
+#if 1
 						// Signal the start of the Cal pulse
 						*(g_tailOfPreTrigBuff + 0) |= CAL_START;
 						*(g_tailOfPreTrigBuff + 1) |= CAL_START;
@@ -1569,7 +950,7 @@ void tc_sample_irq(void)
 						// Check if done with the Manual Cal pulse
 						if (g_manualCalSampleCount == 0)
 						{
-#if 0
+#if 1
 							// Mark the end of the Cal pulse
 							*(g_tailOfPreTrigBuff + 0) |= CAL_END;
 							*(g_tailOfPreTrigBuff + 1) |= CAL_END;
@@ -1663,16 +1044,17 @@ void tc_sample_irq(void)
 
 							//___________________________________________________________________________________________
 							//___Check if either a seismic or acoustic trigger threshold condition was achieved
-#if 0
+#if 1
 							if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
 								(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
+							{
 #else
 							if (g_testTrigger)
-#endif
 							{
 								g_testTrigger = NO;
+#endif
 								
-#if 0
+#if 1
 								// Signal the start of a Trigger
 								*(g_tailOfPreTrigBuff + 0) |= TRIG_ONE;
 								*(g_tailOfPreTrigBuff + 1) |= TRIG_ONE;
@@ -1686,7 +1068,7 @@ void tc_sample_irq(void)
 								*(g_tailOfPreTrigBuff + 3) &= 0x0FFF; *(g_tailOfPreTrigBuff + 3) |= TRIG_ONE;
 #endif
 								//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
-								usart_write_char(&AVR32_USART1, '$');
+								//usart_write_char(&AVR32_USART1, '$');
 					
 								s_consecSeismicTriggerCount = 0;
 								s_consecAirTriggerCount = 0;
@@ -1709,8 +1091,9 @@ void tc_sample_irq(void)
 								{
 									// Time to handle the Cal pulse
 									s_calPulse = YES;
-									s_calSampleCount = MAX_CAL_SAMPLES;
+									s_calSampleCount = START_CAL_SIGNAL;
 					
+#if 0 // Moved to Cal pulse for easier protection logic
 									// Check if on high sensitivity and if so set to low sensitivity for Cal pulse
 									if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
 
@@ -1718,6 +1101,7 @@ void tc_sample_irq(void)
 									DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
 									tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 									tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+#endif
 								}
 							}
 						}
@@ -1731,7 +1115,7 @@ void tc_sample_irq(void)
 							if (s_sampleCount == 0)
 							{
 								//debug("--> Recording done!\n");
-								usart_write_char(&AVR32_USART1, '%');
+								//usart_write_char(&AVR32_USART1, '%');
 
 								s_recording = NO;
 
@@ -1745,8 +1129,9 @@ void tc_sample_irq(void)
 								{
 									// Time to handle the Cal pulse
 									s_calPulse = YES;
-									s_calSampleCount = MAX_CAL_SAMPLES;
+									s_calSampleCount = START_CAL_SIGNAL;
 					
+#if 0 // Moved to Cal pulse for easier protection logic
 									// Check if on high sensitivity and if so set to low sensitivity for Cal pulse
 									if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
 
@@ -1754,6 +1139,7 @@ void tc_sample_irq(void)
 									DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
 									tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 									tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+#endif
 								}
 							}
 						}
@@ -1761,51 +1147,74 @@ void tc_sample_irq(void)
 						//___Check if handling cal pulse samples
 						else if ((s_calPulse == YES) && (s_calSampleCount))
 						{
-							// Wait 5 samples to start cal signaling (~5 ms)
-							if (s_calSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh();	}	// (~10 ms)
-							if (s_calSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
-							if (s_calSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
-							if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
-
-							// Signal the start of a Cal
-							if (s_calSampleCount == MAX_CAL_SAMPLES)
+							if (g_spi1AccessLock != EVENT_LOCK)
 							{
-#if 0
-								*(g_tailOfPreTrigBuff + 0) |= CAL_START;
-								*(g_tailOfPreTrigBuff + 1) |= CAL_START;
-								*(g_tailOfPreTrigBuff + 2) |= CAL_START;
-								*(g_tailOfPreTrigBuff + 3) |= CAL_START;
+								if (g_spi1AccessLock == AVAILABLE) { g_spi1AccessLock = CAL_PULSE_LOCK;	}
+							
+								// Check for the start of the Cal pulse and set low sensitivity and swap clock source for 1024 sample rate
+								if (s_calSampleCount == START_CAL_SIGNAL)
+								{
+									// Check if on high sensitivity and if so set to low sensitivity for Cal pulse
+									if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
+
+									// Swap to alternate timer/counter for default 1024 sample rate for Cal
+									DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+									tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+									tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+
+									s_calSampleCount = MAX_CAL_SAMPLES;
+								}
+								else // Cal pulse started
+								{
+									// Wait 5 samples to start cal signaling (~5 ms)
+									if (s_calSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh();	}	// (~10 ms)
+									if (s_calSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
+									if (s_calSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
+									if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
+
+									// Signal the start of a Cal
+									if (s_calSampleCount == MAX_CAL_SAMPLES)
+									{
+#if 1
+										*(g_tailOfPreTrigBuff + 0) |= CAL_START;
+										*(g_tailOfPreTrigBuff + 1) |= CAL_START;
+										*(g_tailOfPreTrigBuff + 2) |= CAL_START;
+										*(g_tailOfPreTrigBuff + 3) |= CAL_START;
 #else
-								*(g_tailOfPreTrigBuff + 0) &= 0x0FFF; *(g_tailOfPreTrigBuff + 0) |= CAL_START;
-								*(g_tailOfPreTrigBuff + 1) &= 0x0FFF; *(g_tailOfPreTrigBuff + 1) |= CAL_START;
-								*(g_tailOfPreTrigBuff + 2) &= 0x0FFF; *(g_tailOfPreTrigBuff + 2) |= CAL_START;
-								*(g_tailOfPreTrigBuff + 3) &= 0x0FFF; *(g_tailOfPreTrigBuff + 3) |= CAL_START;
+										*(g_tailOfPreTrigBuff + 0) &= 0x0FFF; *(g_tailOfPreTrigBuff + 0) |= CAL_START;
+										*(g_tailOfPreTrigBuff + 1) &= 0x0FFF; *(g_tailOfPreTrigBuff + 1) |= CAL_START;
+										*(g_tailOfPreTrigBuff + 2) &= 0x0FFF; *(g_tailOfPreTrigBuff + 2) |= CAL_START;
+										*(g_tailOfPreTrigBuff + 3) &= 0x0FFF; *(g_tailOfPreTrigBuff + 3) |= CAL_START;
 #endif
-							}
+									}
 
-							s_calSampleCount--;
+									s_calSampleCount--;
 
-							if (s_calSampleCount == 0)
-							{
-								//debug("\n--> Cal done!\n");
-								usart_write_char(&AVR32_USART1, '&');
+									if (s_calSampleCount == 0)
+									{
+										//debug("\n--> Cal done!\n");
+										//usart_write_char(&AVR32_USART1, '&');
 						
-								// Reset all states and counters (that haven't already)
-								s_calPulse = NO;
-								s_consecSeismicTriggerCount = 0;
-								s_consecAirTriggerCount = 0;
-								s_consecEventsWithoutCal = 0;
+										// Reset all states and counters (that haven't already)
+										s_calPulse = NO;
+										s_consecSeismicTriggerCount = 0;
+										s_consecAirTriggerCount = 0;
+										s_consecEventsWithoutCal = 0;
 					
-								// Check if on high sensitivity and if so reset to high sensitivity after Cal pulse (done on low)
-								if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
+										// Check if on high sensitivity and if so reset to high sensitivity after Cal pulse (done on low)
+										if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
 
-								// Swap back to original sampling rate
-								DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
-								tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
-								tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+										// Swap back to original sampling rate
+										DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+										tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+										tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 
-								// Invalidate the pretrigger until it's filled again
-								s_pretriggerFull = NO;
+										// Invalidate the pretrigger until it's filled again
+										s_pretriggerFull = NO;
+
+										g_spi1AccessLock = AVAILABLE;
+									}																
+								}
 							}
 						}
 						else
