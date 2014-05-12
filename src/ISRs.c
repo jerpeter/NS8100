@@ -53,16 +53,45 @@
 #define ESC_KEY_POSITION	0x01
 #endif
 
+#define CONSECUTIVE_TRIGGERS_THRESHOLD 2
+#define CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD 2 // Treating event + event as 1 consecutive, event + event + event as 2 consecutive
+#define PENDING	2 // Anything above 1
+
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
 extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
 extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
+extern uint16* g_startOfQuarterSecBuff;
+extern uint16* g_tailOfQuarterSecBuff;
+extern uint16* g_endOfQuarterSecBuff;
+extern OFFSET_DATA_STRUCT g_channelOffset;
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
+// Flags and variables to statically defined to prevent creating and clearing stack variables every ISR data process call
+static uint16 s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading;
+static uint16 s_temperatureReading, s_channelConfigReadBack;
+static uint16* s_pretrigPtr;
+static uint16* s_samplePtr;
+static uint16* s_calPtr[3] = {NULL, NULL, NULL};
+static uint32 s_pretrigCount = 0;
+static uint32 s_sampleCount = 0;
+static uint32 s_calSampleCount = 0;
+static uint32 s_pendingCalCount = 0;
+static uint32 s_quarterSecCount = 0;
+static uint16 s_consecSeismicTriggerCount = 0;
+static uint16 s_consecAirTriggerCount = 0;
+static uint8 s_quarterSecFull = NO;
+static uint8 s_seismicTriggerSample = NO;
+static uint8 s_airTriggerSample = NO;
+static uint8 s_recordingEvent = NO;
+static uint8 s_calPulse = NO;
+static uint8 s_consecEventsWithoutCal = 0;
+static uint8 s_channelSyncError = NO;
+static uint8 s_channelReadsToSync = 0;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -737,43 +766,272 @@ void tc_typematic_irq(void)
 }
 
 // ============================================================================
+// processWaveformData
+// ============================================================================
+static inline void processWaveformData_ISR_Inline(void)
+{
+	//_____________________________________________________________________________________
+	//___Check if not recording _and_ no cal pulse, or if pending cal and all below consecutive threshold
+	if ((((s_recordingEvent == NO) && (s_calPulse == NO)) || (s_pendingCalCount)) && 
+		(s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD))
+	{
+		//_____________________________________________________________________________________
+		//___Check for triggers
+		if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
+		{
+			if (s_R_channelReading > (g_triggerRecord.trec.seismicTriggerLevel * 16)) { s_seismicTriggerSample = YES; }
+			else if (s_V_channelReading > (g_triggerRecord.trec.seismicTriggerLevel * 16)) { s_seismicTriggerSample = YES; }
+			else if (s_T_channelReading > (g_triggerRecord.trec.seismicTriggerLevel * 16)) { s_seismicTriggerSample = YES; }
+					
+			if (s_seismicTriggerSample == YES) { s_consecSeismicTriggerCount++; s_seismicTriggerSample = NO; }
+			else {s_consecSeismicTriggerCount = 0; }
+		}
+
+		if (g_triggerRecord.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
+		{
+			if (s_A_channelReading > (g_triggerRecord.trec.soundTriggerLevel * 16)) { s_airTriggerSample = YES; }
+						
+			if (s_airTriggerSample == YES) { s_consecAirTriggerCount++; s_airTriggerSample = NO; }
+			else { s_consecAirTriggerCount = 0; }
+		}				
+
+		//___________________________________________________________________________________________
+		//___Check if either a seismic or acoustic trigger threshold condition was achieved
+		if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
+			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
+		{
+			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
+			//usart_write_char(&AVR32_USART1, '$');
+					
+			s_consecSeismicTriggerCount = 0;
+			s_consecAirTriggerCount = 0;
+
+			//___________________________________________________________________________________________
+			//___Check if there is an event buffer available and not marked done for taking events (stop trigger)
+			if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
+			{
+				//___________________________________________________________________________________________
+				//__Setup new event buffer pointers, counts, and flags
+				s_pretrigPtr = g_startOfEventBufferPtr + (g_eventBufferWriteIndex * g_wordSizeInEvent);
+				s_samplePtr = s_pretrigPtr + g_wordSizeInPretrig;
+				s_calPtr[s_consecEventsWithoutCal] = s_pretrigPtr + g_wordSizeInPretrig + g_wordSizeInEvent;
+
+				s_pretrigCount = g_samplesInPretrig;
+				s_sampleCount = g_samplesInEvent;
+
+				// Check if a cal pulse was already pending
+				if (s_calPulse == PENDING)
+				{
+					// An event has already been captured without a cal, so inc the consecutive count
+					s_consecEventsWithoutCal++;
+				}
+									
+				s_recordingEvent = YES;
+				s_calPulse = PENDING;
+				s_pendingCalCount = 0;
+									
+				//___________________________________________________________________________________________
+				//___Copy quarter sec buffer samples to event
+				*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+									
+				// Check if the end of the quarter sec buffer has been reached
+				if ((g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfQuarterSecBuff)
+				{
+					// Copy first (which is currently the oldest) quarter sec buffer samples to pretrig
+					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
+				}										
+				else // Copy oldest quarter sec buffer samples to pretrig
+				{
+					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
+				}										
+
+				// Advance data pointers and decrement counts
+				s_samplePtr += NUMBER_OF_CHANNELS_DEFAULT;
+				s_sampleCount--;
+									
+				s_pretrigPtr += NUMBER_OF_CHANNELS_DEFAULT;
+				s_pretrigCount--;
+			}
+		}
+		//___________________________________________________________________________________________
+		//___Check if pending for a cal pulse since no trigger was found
+		else if (s_pendingCalCount)
+		{
+			s_pendingCalCount--;
+						
+			// Check if done pending for a Cal pulse
+			if (s_pendingCalCount == 0)
+			{
+				// Time to handle the Cal pulse
+				s_calPulse = YES;
+				s_calSampleCount = START_CAL_SIGNAL;
+			}
+		}
+	}
+	//___________________________________________________________________________________________
+	//___Check if handling event samples
+	else if ((s_recordingEvent == YES) && (s_sampleCount))
+	{
+		//___________________________________________________________________________________________
+		//___Check if pretrig data to copy
+		if (s_pretrigCount)
+		{
+			// Check if the end of the quarter sec buffer has been reached
+			if ((g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfQuarterSecBuff)
+			{
+				// Copy oldest (which is currently the first) quarter sec buffer samples to pretrig
+				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
+			}										
+			else // Copy oldest quarter sec buffer samples to pretrig
+			{
+				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
+			}										
+
+			s_pretrigPtr += NUMBER_OF_CHANNELS_DEFAULT;
+			s_pretrigCount--;
+		}
+
+		//___________________________________________________________________________________________
+		//___Copy data samples to event buffer
+		*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+
+		s_samplePtr += NUMBER_OF_CHANNELS_DEFAULT;
+		s_sampleCount--;
+					
+		//___________________________________________________________________________________________
+		//___Check if all the event samples have been handled
+		if (s_sampleCount == 0)
+		{
+			//debug("--> Recording done!\n");
+			//usart_write_char(&AVR32_USART1, '%');
+
+			s_recordingEvent = NO;
+
+			// Mark one less event buffer available and inc the event buffer index for next event usage
+			g_freeEventBuffers--;
+			g_eventBufferWriteIndex++;
+
+			// Check if the event buffer index matches the max
+			if (g_eventBufferWriteIndex == g_maxEventBuffers)
+			{
+				// Reset event buffer index to the start
+				g_eventBufferWriteIndex = 0;
+			}
+
+			// Check if maximum consecutive events have not been captured, therefore pend Cal pulse
+			if (s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)
+			{
+				// Setup delay for Cal pulse (1/4 sample rate)
+				s_pendingCalCount = g_triggerRecord.trec.sample_rate / 4;
+			}
+			else // Max number of events have been captured, force a Cal pulse
+			{
+				// Time to handle the Cal pulse
+				s_calPulse = YES;
+				s_calSampleCount = START_CAL_SIGNAL;
+			}
+		}
+	}
+	//___________________________________________________________________________________________
+	//___Check if handling cal pulse samples
+	else if ((s_calPulse == YES) && (s_calSampleCount))
+	{
+		if (g_spi1AccessLock != EVENT_LOCK)
+		{
+			// If SPI lock is available, grab it and flag for cal pulse
+			if (g_spi1AccessLock == AVAILABLE) { g_spi1AccessLock = CAL_PULSE_LOCK;	}
+							
+			// Check for the start of the Cal pulse and set low sensitivity and swap clock source for 1024 sample rate
+			if (s_calSampleCount == START_CAL_SIGNAL)
+			{
+				// Check if on high sensitivity and if so set to low sensitivity for Cal pulse
+				if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
+
+				// Swap to alternate timer/counter for default 1024 sample rate for Cal
+				DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+				tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+				tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+
+				s_calSampleCount = MAX_CAL_SAMPLES;
+			}
+			else // Cal pulse started
+			{
+				// Wait 5 samples to start cal signaling (~5 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh();	}	// (~10 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
+
+				// Copy cal data to the event buffer cal section
+				*(SAMPLE_DATA_STRUCT*)s_calPtr[0] = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+				s_calPtr[0] += NUMBER_OF_CHANNELS_DEFAULT;
+									
+				// Check if a delayed cal pointer has been established
+				if (s_calPtr[1] != NULL)
+				{
+					// Copy delayed cal data to event buffer cal section
+					*(SAMPLE_DATA_STRUCT*)s_calPtr[1] = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+					s_calPtr[1] += NUMBER_OF_CHANNELS_DEFAULT;
+				}
+
+				// Check if a second delayed cal pointer has been established
+				if (s_calPtr[2] != NULL)
+				{
+					// Copy delayed cal data to event buffer cal section
+					*(SAMPLE_DATA_STRUCT*)s_calPtr[2] = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+					s_calPtr[2] += NUMBER_OF_CHANNELS_DEFAULT;
+				}
+
+				s_calSampleCount--;
+
+				if (s_calSampleCount == 0)
+				{
+					//debug("\n--> Cal done!\n");
+					//usart_write_char(&AVR32_USART1, '&');
+						
+					// Reset all states and counters (that haven't already)
+					s_calPulse = NO;
+					s_consecSeismicTriggerCount = 0;
+					s_consecAirTriggerCount = 0;
+					s_consecEventsWithoutCal = 0;
+					
+					// Reset cal pointers to null
+					s_calPtr[0] = NULL;
+					s_calPtr[1] = NULL;
+					s_calPtr[2] = NULL;
+
+					// Signal for an event to be processed
+					raiseSystemEventFlag(TRIGGER_EVENT);
+
+					// Check if on high sensitivity and if so reset to high sensitivity after Cal pulse (done on low)
+					if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
+
+					// Swap back to original sampling rate
+					DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+					tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+					tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+
+					// Invalidate the quarter sec buffer until it's filled again
+					s_quarterSecFull = NO;
+
+					g_spi1AccessLock = AVAILABLE;
+				}																
+			}
+		}
+	}
+	else
+	{
+		// Should _never_ get here
+		debugErr("Error in ISR processing!\n");
+	}
+}
+
+// ============================================================================
 // tc_sample_irq
 // ============================================================================
-#if 1
-extern uint16* g_startOfQuarterSecBuff;
-extern uint16* g_tailOfQuarterSecBuff;
-extern uint16* g_endOfQuarterSecBuff;
-extern OFFSET_DATA_STRUCT g_channelOffset;
-#define CONSECUTIVE_TRIGGERS_THRESHOLD 2
-#define CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD 2 // Treating event + event as 1 consecutive, event + event + event as 2 consecutive
-#define PENDING	2 // Anything above 1
-#endif
-
 __attribute__((__interrupt__))
 void tc_sample_irq(void)
 {
-	// Don't even bother with creating and clearing stack variables every time
-	static uint16 s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading;
-	static uint16 s_temperatureReading, s_channelConfigReadBack;
-	static uint16* s_pretrigPtr;
-	static uint16* s_samplePtr;
-	static uint16* s_calPtr[3] = {NULL, NULL, NULL};
-	static uint32 s_pretrigCount = 0;
-	static uint32 s_sampleCount = 0;
-	static uint32 s_calSampleCount = 0;
-	static uint32 s_pendingCalCount = 0;
-	static uint32 s_quarterSecCount = 0;
-	static uint16 s_consecSeismicTriggerCount = 0;
-	static uint16 s_consecAirTriggerCount = 0;
-	static uint8 s_quarterSecFull = NO;
-	static uint8 s_seismicTriggerSample = NO;
-	static uint8 s_airTriggerSample = NO;
-	static uint8 s_recordingEvent = NO;
-	static uint8 s_calPulse = NO;
-	static uint8 s_consecEventsWithoutCal = 0;
-	static uint8 s_channelSyncError = NO;
-	static uint8 s_channelReadsToSync = 0;
-
 	//___________________________________________________________________________________________
 	//___Sample Output with return config words for reference
 	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp:  dbe (b6d0)
@@ -824,13 +1082,6 @@ void tc_sample_irq(void)
 	//___Test timing (throw away at some point)
 	g_sampleCount++;
 
-	// clear the interrupt flag
-	//tc_read_sr(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
-	//tc_read_sr(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
-	//DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
-	//DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
-	//return;
-
 	//___________________________________________________________________________________________
 	//___Check for channel sync error
 	if (s_channelSyncError == YES)
@@ -865,428 +1116,190 @@ void tc_sample_irq(void)
 			spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack);
 			spi_unselectChip(AD_SPI, AD_SPI_NPCS);
 		}
+
+		// clear the interrupt flags and leave
+		DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+		DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+		return;
 	}
+	
 	//___________________________________________________________________________________________
 	//___AD data read successfully, Normal operation
-	else // Analog data ready to be processed
+
+	// Apply channel offset
+	s_R_channelReading -= g_channelOffset.r_offset;
+	s_V_channelReading -= g_channelOffset.v_offset;
+	s_T_channelReading -= g_channelOffset.t_offset;
+	s_A_channelReading -= g_channelOffset.a_offset;
+
+	// Store the data into the quarter sec buffer
+	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = s_R_channelReading;
+	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = s_V_channelReading;
+	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = s_T_channelReading;
+	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = s_A_channelReading;
+
+	//___________________________________________________________________________________________
+	//___Check if the sampling flag is idle
+	if (g_sampleProcessing == IDLE_STATE)
 	{
-		// Fit into legacy design, throw away 4 bits
-		s_R_channelReading = s_R_channelReading / 16;
-		s_V_channelReading = s_V_channelReading / 16;
-		s_T_channelReading = s_T_channelReading / 16;
-		s_A_channelReading = s_A_channelReading / 16;
-	
-		// Apply channel offset
-		s_R_channelReading -= g_channelOffset.r_12bit;
-		s_V_channelReading -= g_channelOffset.v_12bit;
-		s_T_channelReading -= g_channelOffset.t_12bit;
-		s_A_channelReading -= g_channelOffset.a_12bit;
+		// Idle and not processing, might as well adjust the channel offsets
+		// fix_ns8100
 
-		// Store the data into the quarter sec buffer
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = s_R_channelReading;
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = s_V_channelReading;
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = s_T_channelReading;
-		((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = s_A_channelReading;
+		// Advance to the next sample in the buffer
+		g_tailOfQuarterSecBuff += g_sensorInfoPtr->numOfChannels;
 
-		//___________________________________________________________________________________________
-		//___Check if the system flag is idle
-		if (g_sampleProcessing == IDLE_STATE)
+		// Check if the end of the quarter sec buffer has been reached
+		if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
+
+		// clear the interrupt flag and leave
+		DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+		DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+		return;
+	}
+
+	//_____________________________________________________________________________________
+	//___Check if the quarter sec buffer is not full, which is necessary for an event (Sampling is Active)
+	if (s_quarterSecFull == NO)
+	{
+		s_quarterSecCount++;
+
+		// Check if the quarter sec count has accumulated to 1/4 of a second
+		if (s_quarterSecCount >= (g_triggerRecord.trec.sample_rate / 4)) 
+		{ 
+			s_quarterSecFull = YES;
+			s_quarterSecCount = 0;
+		}					
+
+		// Advance to the next sample in the buffer
+		g_tailOfQuarterSecBuff += g_sensorInfoPtr->numOfChannels;
+
+		// Check if the end of the quarter sec buffer has been reached
+		if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
+
+		// clear the interrupt flag and leave
+		DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+		DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+		return;
+	}
+
+	//___________________________________________________________________________________________
+	//___Check if handling a Manual Cal
+	if (g_manualCalFlag == TRUE)
+	{
+		// Wait 5 samples to start cal signaling (~5 ms)
+		if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
+		if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
+		if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
+		if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
+
+		// Mark the start of the Manual Cal pulse
+		if (g_manualCalSampleCount == MAX_CAL_SAMPLES)
 		{
-			// Idle and not processing, might as well adjust the channel offsets
-			// fix_ns8100
-
-			// Advance to the next sample in the buffer
-			g_tailOfQuarterSecBuff += g_sensorInfoPtr->numOfChannels;
-
-			// Check if the end of the quarter sec buffer has been reached
-			if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
+			// Signal the start of the Cal pulse
+			//g_waveState = CAL_START;
 		}
-		//___________________________________________________________________________________________
-		//___Processing Data in real time for Alarms, Triggers and Cal pulse
-		else // (g_sampleProcessing == ACTIVE_STATE)
+
+		if (g_manualCalSampleCount)
 		{
-			//_____________________________________________________________________________________
-			//___Check if the quarter sec buffer is not full, which is necessary for an event
-			if (s_quarterSecFull == NO)
+			g_manualCalSampleCount--;
+
+			// Check if done with the Manual Cal pulse
+			if (g_manualCalSampleCount == 0)
 			{
-				s_quarterSecCount++;
-
-				// Check if the quarter sec count has accumulated to 1/4 of a second
-				if (s_quarterSecCount >= (g_triggerRecord.trec.sample_rate / 4)) 
-				{ 
-					s_quarterSecFull = YES;
-					s_quarterSecCount = 0;
-				}					
-					
-				// Advance to the next sample in the buffer
-				g_tailOfQuarterSecBuff += g_sensorInfoPtr->numOfChannels;
-
-				// Check if the end of the quarter sec buffer has been reached
-				if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
+				// Signal the end of the Cal pulse
+				//g_waveState = CAL_END;
 			}
-			//___________________________________________________________________________________________
-			//___Quarter sec buffer is full and ready
-			else // (s_quarterSecFull == YES)
-			{
-				//___________________________________________________________________________________________
-				//___If handling a Manual Cal
-				if (g_manualCalFlag == TRUE)
-				{
-					// Wait 5 samples to start cal signaling (~5 ms)
-					if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
-					if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
-					if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
-					if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
+		}
 
-					// Mark the start of the Manual Cal pulse
-					if (g_manualCalSampleCount == MAX_CAL_SAMPLES)
-					{
-						// Signal the start of the Cal pulse
-						//g_waveState = CAL_START;
-					}
+		// Process the samples
+		//ProcessManuelCalPulse();
 
-					if (g_manualCalSampleCount)
-					{
-						g_manualCalSampleCount--;
+		// Advance to the next sample in the buffer
+		g_tailOfQuarterSecBuff += g_sensorInfoPtr->numOfChannels;
 
-						// Check if done with the Manual Cal pulse
-						if (g_manualCalSampleCount == 0)
-						{
-							// Signal the end of the Cal pulse
-							//g_waveState = CAL_END;
-						}
-					}
+		// Check if the end of the quarter sec buffer has been reached
+		if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
 
-					// Process the samples
-					ProcessManuelCalPulse();
-				}
-				//___________________________________________________________________________________________
-				//___For all other modes check for Alarms and mode specific triggers and cal
-				else // (g_manualCalFlag == FALSE)
-				{
-					//___________________________________________________________________________________________
-					//___Normalize to zero (positive) for comparison
-					if (s_R_channelReading < 0x800) { s_R_channelReading = 0x800 - s_R_channelReading; } else { s_R_channelReading -= 0x800; }
-					if (s_V_channelReading < 0x800) { s_V_channelReading = 0x800 - s_V_channelReading; } else { s_V_channelReading -= 0x800; }
-					if (s_T_channelReading < 0x800) { s_T_channelReading = 0x800 - s_T_channelReading; } else { s_T_channelReading -= 0x800; }
-					if (s_A_channelReading < 0x800) { s_A_channelReading = 0x800 - s_A_channelReading; } else { s_A_channelReading -= 0x800; }
+		// clear the interrupt flag and leave
+		DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
+		DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
+		return;
+	}
+
+	//___________________________________________________________________________________________
+	//___For all modes not Manual Cal, Processing Data in real time for Alarms, Triggers and Cal pulse (Quarter sec buffer is full and ready)
+
+	//___________________________________________________________________________________________
+	//___Normalize sample data to zero (positive) for comparison
+	if (s_R_channelReading < g_sampleDataMidpoint) { s_R_channelReading = g_sampleDataMidpoint - s_R_channelReading; } 
+	else { s_R_channelReading -= g_sampleDataMidpoint; }
+	if (s_V_channelReading < g_sampleDataMidpoint) { s_V_channelReading = g_sampleDataMidpoint - s_V_channelReading; } 
+	else { s_V_channelReading -= g_sampleDataMidpoint; }
+	if (s_T_channelReading < g_sampleDataMidpoint) { s_T_channelReading = g_sampleDataMidpoint - s_T_channelReading; } 
+	else { s_T_channelReading -= g_sampleDataMidpoint; }
+	if (s_A_channelReading < g_sampleDataMidpoint) { s_A_channelReading = g_sampleDataMidpoint - s_A_channelReading; } 
+	else { s_A_channelReading -= g_sampleDataMidpoint; }
 	
-					//___________________________________________________________________________________________
-					//___Start of Alarm section
-					// Collecting data for any mode (other than calibration), signal alarm if active
-					if (g_helpRecord.alarm_one_mode != ALARM_MODE_OFF)
-					{
-						// Check if seismic is enabled for Alarm 1
-						if (g_helpRecord.alarm_one_mode & ALARM_MODE_SEISMIC)
-						{
-							if (s_R_channelReading > (g_helpRecord.alarm_one_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
-							else if (s_V_channelReading > (g_helpRecord.alarm_one_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
-							else if (s_T_channelReading > (g_helpRecord.alarm_one_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
-						}
+	//___________________________________________________________________________________________
+	//___Alarm checking section
 
-						// Check if air is enabled for Alarm 1
-						if (g_helpRecord.alarm_one_mode & ALARM_MODE_AIR)
-							if (s_A_channelReading > (g_helpRecord.alarm_one_air_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
-					}
+	if (g_helpRecord.alarm_one_mode != ALARM_MODE_OFF)
+	{
+		// Check if seismic is enabled for Alarm 1
+		if (g_helpRecord.alarm_one_mode & ALARM_MODE_SEISMIC)
+		{
+			if (s_R_channelReading > (g_helpRecord.alarm_one_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
+			else if (s_V_channelReading > (g_helpRecord.alarm_one_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
+			else if (s_T_channelReading > (g_helpRecord.alarm_one_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
+		}
+
+		// Check if air is enabled for Alarm 1
+		if (g_helpRecord.alarm_one_mode & ALARM_MODE_AIR)
+			if (s_A_channelReading > (g_helpRecord.alarm_one_air_lvl * 16)) { raiseSystemEventFlag(WARNING1_EVENT); }
+	}
 						
-					if (g_helpRecord.alarm_two_mode != ALARM_MODE_OFF)
-					{
-						// Check if seismic is enabled for Alarm 2
-						if (g_helpRecord.alarm_two_mode & ALARM_MODE_SEISMIC)
-						{
-							if (s_R_channelReading > (g_helpRecord.alarm_two_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
-							else if (s_V_channelReading > (g_helpRecord.alarm_two_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
-							else if (s_T_channelReading > (g_helpRecord.alarm_two_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
-						}
+	if (g_helpRecord.alarm_two_mode != ALARM_MODE_OFF)
+	{
+		// Check if seismic is enabled for Alarm 2
+		if (g_helpRecord.alarm_two_mode & ALARM_MODE_SEISMIC)
+		{
+			if (s_R_channelReading > (g_helpRecord.alarm_two_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
+			else if (s_V_channelReading > (g_helpRecord.alarm_two_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
+			else if (s_T_channelReading > (g_helpRecord.alarm_two_seismic_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
+		}
 
-						// Check if air is enabled for Alarm 2
-						if (g_helpRecord.alarm_two_mode & ALARM_MODE_AIR)
-							if (s_A_channelReading > (g_helpRecord.alarm_two_air_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
-					}				
+		// Check if air is enabled for Alarm 2
+		if (g_helpRecord.alarm_two_mode & ALARM_MODE_AIR)
+			if (s_A_channelReading > (g_helpRecord.alarm_two_air_lvl * 16)) { raiseSystemEventFlag(WARNING2_EVENT); }
+	}				
 
-					//_____________________________________________________________________________________
-					//___If processing Waveform or Combo mode, look for triggers and manage the cal pulse
-					if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
-					{
-						//_____________________________________________________________________________________
-						//___Check if not recording _and_ no cal pulse, or if pending cal and all below consec threshold
-						if ((((s_recordingEvent == NO) && (s_calPulse == NO)) || (s_pendingCalCount)) && 
-							(s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD))
-						{
-							//_____________________________________________________________________________________
-							//___Check for triggers
-							if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
-							{
-								if (s_R_channelReading > (g_triggerRecord.trec.seismicTriggerLevel * 16)) { s_seismicTriggerSample = YES; }
-								else if (s_V_channelReading > (g_triggerRecord.trec.seismicTriggerLevel * 16)) { s_seismicTriggerSample = YES; }
-								else if (s_T_channelReading > (g_triggerRecord.trec.seismicTriggerLevel * 16)) { s_seismicTriggerSample = YES; }
-					
-								if (s_seismicTriggerSample == YES) { s_consecSeismicTriggerCount++; s_seismicTriggerSample = NO; }
-								else {s_consecSeismicTriggerCount = 0; }
-							}
+	//_____________________________________________________________________________________
+	//___Process the sample data based on the selected mode
+	if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
+	{
+		processWaveformData_ISR_Inline();
+	}
+	else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+	{
+		ProcessBargraphData();
+	}
+	else if (g_triggerRecord.op_mode == COMBO_MODE)
+	{
+		if (s_calPulse == NO)
+		{
+			ProcessComboData();
+		}
+		else // (s_calPulse == YES)
+		{
+			ProcessComboDataSkipBargraphDuringCal();
+		}							
+	}
 
-							if (g_triggerRecord.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
-							{
-								if (s_A_channelReading > (g_triggerRecord.trec.soundTriggerLevel * 16)) { s_airTriggerSample = YES; }
-						
-								if (s_airTriggerSample == YES) { s_consecAirTriggerCount++; s_airTriggerSample = NO; }
-								else { s_consecAirTriggerCount = 0; }
-							}				
+	// Advance to the next sample in the buffer
+	g_tailOfQuarterSecBuff += g_sensorInfoPtr->numOfChannels;
 
-							//___________________________________________________________________________________________
-							//___Check if either a seismic or acoustic trigger threshold condition was achieved
-							if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
-								(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
-							{
-								//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
-								//usart_write_char(&AVR32_USART1, '$');
-					
-								s_consecSeismicTriggerCount = 0;
-								s_consecAirTriggerCount = 0;
-
-								//___________________________________________________________________________________________
-								//___Check if there is an event buffer available and not marked done for taking events (stop trigger)
-								if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
-								{
-									//___________________________________________________________________________________________
-									//__Setup new event buffer pointers, counts, and flags
-									s_pretrigPtr = g_startOfEventBufferPtr + (g_eventBufferIndex * g_wordSizeInEvent);
-									s_samplePtr = s_pretrigPtr + g_wordSizeInPretrig;
-									s_calPtr[s_consecEventsWithoutCal] = s_pretrigPtr + g_wordSizeInPretrig + g_wordSizeInEvent;
-
-									s_pretrigCount = g_samplesInPretrig;
-									s_sampleCount = g_samplesInEvent;
-
-									// Check if a cal pulse was already pending
-									if (s_calPulse == PENDING)
-									{
-										// An event has already been captured without a cal, so inc the consecutive count
-										s_consecEventsWithoutCal++;
-									}
-									
-									s_recordingEvent = YES;
-									s_calPulse = PENDING;
-									s_pendingCalCount = 0;
-									
-									//___________________________________________________________________________________________
-									//___Copy quarter sec buffer samples to event
-									*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
-									
-									// Check if the end of the quarter sec buffer has been reached
-									if ((g_tailOfQuarterSecBuff + 4) >= g_endOfQuarterSecBuff)
-									{
-										// Copy first (which is currently the oldest) quarter sec buffer samples to pretrig
-										*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
-									}										
-									else // Copy oldest quarter sec buffer samples to pretrig
-									{
-										*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + 4);
-									}										
-
-									// Advance data pointers and decrement counts
-									s_samplePtr += 4;
-									s_sampleCount--;
-									
-									s_pretrigPtr += 4;
-									s_pretrigCount--;
-								}
-							}
-							//___________________________________________________________________________________________
-							//___Check if pending for a cal pulse since no trigger was found
-							else if (s_pendingCalCount)
-							{
-								s_pendingCalCount--;
-						
-								// Check if done pending for a Cal pulse
-								if (s_pendingCalCount == 0)
-								{
-									// Time to handle the Cal pulse
-									s_calPulse = YES;
-									s_calSampleCount = START_CAL_SIGNAL;
-								}
-							}
-						}
-						//___________________________________________________________________________________________
-						//___Check if handling event samples
-						else if ((s_recordingEvent == YES) && (s_sampleCount))
-						{
-							//___________________________________________________________________________________________
-							//___Check if pretrig data to copy
-							if (s_pretrigCount)
-							{
-								// Check if the end of the quarter sec buffer has been reached
-								if ((g_tailOfQuarterSecBuff + 4) >= g_endOfQuarterSecBuff)
-								{
-									// Copy oldest (which is currently the first) quarter sec buffer samples to pretrig
-									*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
-								}										
-								else // Copy oldest quarter sec buffer samples to pretrig
-								{
-									*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + 4);
-								}										
-
-								s_pretrigPtr += 4;
-								s_pretrigCount--;
-							}
-
-							//___________________________________________________________________________________________
-							//___Copy data samples to event buffer
-							*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
-
-							s_samplePtr += 4;
-							s_sampleCount--;
-					
-							//___________________________________________________________________________________________
-							//___Check if all the event samples have been handled
-							if (s_sampleCount == 0)
-							{
-								//debug("--> Recording done!\n");
-								//usart_write_char(&AVR32_USART1, '%');
-
-								s_recordingEvent = NO;
-
-								// Mark one less event buffer available and inc the event buffer index for next event usage
-								g_freeEventBuffers--;
-								g_eventBufferIndex++;
-
-								// Check if the event buffer index matches the max
-								if (g_eventBufferIndex == g_maxEventBuffers)
-								{
-									// Reset event buffer index to the start
-									g_eventBufferIndex = 0;
-								}
-
-								// Check if maximum consecutive events have not been captured, therefore pend Cal pulse
-								if (s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)
-								{
-									// Setup delay for Cal pulse (1/4 sample rate)
-									s_pendingCalCount = g_triggerRecord.trec.sample_rate / 4;
-								}
-								else // Max number of events have been captured, force a Cal pulse
-								{
-									// Time to handle the Cal pulse
-									s_calPulse = YES;
-									s_calSampleCount = START_CAL_SIGNAL;
-								}
-							}
-						}
-						//___________________________________________________________________________________________
-						//___Check if handling cal pulse samples
-						else if ((s_calPulse == YES) && (s_calSampleCount))
-						{
-							if (g_spi1AccessLock != EVENT_LOCK)
-							{
-								// If SPI lock is available, grab it and flag for cal pulse
-								if (g_spi1AccessLock == AVAILABLE) { g_spi1AccessLock = CAL_PULSE_LOCK;	}
-							
-								// Check for the start of the Cal pulse and set low sensitivity and swap clock source for 1024 sample rate
-								if (s_calSampleCount == START_CAL_SIGNAL)
-								{
-									// Check if on high sensitivity and if so set to low sensitivity for Cal pulse
-									if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
-
-									// Swap to alternate timer/counter for default 1024 sample rate for Cal
-									DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);
-									tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
-									tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
-
-									s_calSampleCount = MAX_CAL_SAMPLES;
-								}
-								else // Cal pulse started
-								{
-									// Wait 5 samples to start cal signaling (~5 ms)
-									if (s_calSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh();	}	// (~10 ms)
-									if (s_calSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
-									if (s_calSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
-									if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
-
-									// Copy cal data to the event buffer cal section
-									*(SAMPLE_DATA_STRUCT*)s_calPtr[0] = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
-									s_calPtr[0] += 4;
-									
-									// Check if a delayed cal pointer has been established
-									if (s_calPtr[1] != NULL)
-									{
-										// Copy delayed cal data to event buffer cal section
-										*(SAMPLE_DATA_STRUCT*)s_calPtr[1] = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
-										s_calPtr[1] += 4;
-									}
-
-									// Check if a second delayed cal pointer has been established
-									if (s_calPtr[2] != NULL)
-									{
-										// Copy delayed cal data to event buffer cal section
-										*(SAMPLE_DATA_STRUCT*)s_calPtr[2] = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
-										s_calPtr[2] += 4;
-									}
-
-									s_calSampleCount--;
-
-									if (s_calSampleCount == 0)
-									{
-										//debug("\n--> Cal done!\n");
-										//usart_write_char(&AVR32_USART1, '&');
-						
-										// Reset all states and counters (that haven't already)
-										s_calPulse = NO;
-										s_consecSeismicTriggerCount = 0;
-										s_consecAirTriggerCount = 0;
-										s_consecEventsWithoutCal = 0;
-					
-										// Reset cal pointers to null
-										s_calPtr[0] = NULL;
-										s_calPtr[1] = NULL;
-										s_calPtr[2] = NULL;
-
-										// Check if on high sensitivity and if so reset to high sensitivity after Cal pulse (done on low)
-										if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
-
-										// Swap back to original sampling rate
-										DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
-										tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
-										tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
-
-										// Invalidate the quarter sec buffer until it's filled again
-										s_quarterSecFull = NO;
-
-										g_spi1AccessLock = AVAILABLE;
-									}																
-								}
-							}
-						}
-						else
-						{
-							// Should _never_ get here
-							debugErr("Error in ISR processing!\n");
-						}
-					} // End of processing waveform and combo trigger and cal pulse			
-
-					//___________________________________________________________________________________________
-					//___Process the data with the mode specific handler
-					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
-					{
-						//ProcessWaveformData();
-					}
-					else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-					{
-						ProcessBargraphData();
-					}
-					else if (g_triggerRecord.op_mode == COMBO_MODE)
-					{
-						if (s_calPulse == NO)
-						{
-							ProcessComboData();
-						}
-						else // (s_calPulse == YES)
-						{
-							ProcessComboDataSkipBargraphDuringCal();
-						}							
-					}
-
-				} // End of process all modes except for manual cal
-			} // End of quarter sec full
-		} // End of (g_sampleProcessing == ACTIVE_STATE)
-	} // End of data processing
+	// Check if the end of the quarter sec buffer has been reached
+	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
 
 	// clear the interrupt flag
 	DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);

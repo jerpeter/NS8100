@@ -122,7 +122,7 @@ void ProcessComboData(void)
 {
 	// In theory, the following would be processed
 	// however they both advance the quarter sec buffer pointer
-	ProcessComboSampleData();
+	//ProcessComboSampleData();
 	ProcessComboBargraphData();
 
 	// Handle quarter sec buffer pointer for circular buffer after processing both individual modes,
@@ -136,7 +136,7 @@ void ProcessComboData(void)
 ******************************************************************************/
 void ProcessComboDataSkipBargraphDuringCal(void)
 {
-	ProcessComboSampleData();
+	//ProcessComboSampleData();
 
 	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
 }
@@ -185,6 +185,7 @@ void ProcessComboBargraphData(void)
 // Purpose :	Copy A/D channel data from quarter sec buffer into event buffers and
 //				check for command nibble
 //*****************************************************************************
+#if 0
 void ProcessComboSampleData(void)
 {
 	//SUMMARY_DATA* sumEntry;
@@ -214,7 +215,7 @@ void ProcessComboSampleData(void)
 
 #if 0 // ns7100
 						// Save the link to the beginning of the pretrigger event data
-						g_summaryTable[g_eventBufferIndex].linkPtr = g_eventBufferPretrigPtr;
+						g_summaryTable[g_eventBufferWriteIndex].linkPtr = g_eventBufferPretrigPtr;
 #endif
 						// Copy quarter sec buffer data over to the Event body buffer
 						*(g_eventBufferBodyPtr + 0) = *(g_tailOfQuarterSecBuff + 0);
@@ -471,17 +472,17 @@ void ProcessComboSampleData(void)
 		if (g_isTriggered == 0)
 		{
 			g_freeEventBuffers--;
-			g_eventBufferIndex++;
+			g_eventBufferWriteIndex++;
 			g_calTestExpected++;
 
-			if (g_eventBufferIndex < g_maxEventBuffers)
+			if (g_eventBufferWriteIndex < g_maxEventBuffers)
 			{
 				g_eventBufferPretrigPtr = g_eventBufferBodyPtr + g_wordSizeInCal;
 				g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
 			}
 			else
 			{
-				g_eventBufferIndex = 0;
+				g_eventBufferWriteIndex = 0;
 				g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
 				g_eventBufferBodyPtr = g_startOfEventBufferPtr + g_wordSizeInPretrig;
 			}
@@ -491,6 +492,7 @@ void ProcessComboSampleData(void)
 	// Check if the end of the quarter sec buffer buffer has been reached
 	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
 }
+#endif
 
 //*****************************************************************************
 // Function: moveComboBarIntervalDataToFile(void)
@@ -613,8 +615,8 @@ uint8 CalculateComboData(void)
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		// Move from the pre-trigger buffer to our large ram buffer, but check for data wrapping.
-		aTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		// Move from the pretrigger buffer to our large ram buffer, but check for data wrapping.
+		aTemp = *g_bg430DataReadPtr++;
 		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
 
 		// We have caught up to the end of the write with out it being completed.
@@ -625,7 +627,7 @@ uint8 CalculateComboData(void)
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		rTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		rTemp = *g_bg430DataReadPtr++;
 		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
 		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
 		{
@@ -634,7 +636,7 @@ uint8 CalculateComboData(void)
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		vTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		vTemp = *g_bg430DataReadPtr++;
 		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
 		if (g_bg430DataReadPtr == g_bg430DataWritePtr)
 		{
@@ -643,7 +645,7 @@ uint8 CalculateComboData(void)
 			return (BG_BUFFER_NOT_EMPTY);
 		}
 
-		tTemp = (uint16)((*g_bg430DataReadPtr++) & DATA_MASK);
+		tTemp = *g_bg430DataReadPtr++;
 		if (g_bg430DataReadPtr > g_bg430DataEndPtr) g_bg430DataReadPtr = g_bg430DataStartPtr;
 
 		// If here we got data;
@@ -901,10 +903,10 @@ uint8 CalculateComboData(void)
 		// A channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_comboFreqCalcBuffer.a.sign ^ (aTemp & SIGNBIT_MASK))
+		if (g_comboFreqCalcBuffer.a.sign ^ (aTemp & g_sampleDataMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_comboFreqCalcBuffer.a.sign = (uint16)(aTemp & SIGNBIT_MASK);
+			g_comboFreqCalcBuffer.a.sign = (uint16)(aTemp & g_sampleDataMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_comboFreqCalcBuffer.a.updateFlag == TRUE)
@@ -962,10 +964,10 @@ uint8 CalculateComboData(void)
 		// R channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_comboFreqCalcBuffer.r.sign ^ (rTemp & SIGNBIT_MASK))
+		if (g_comboFreqCalcBuffer.r.sign ^ (rTemp & g_sampleDataMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_comboFreqCalcBuffer.r.sign = (uint16)(rTemp & SIGNBIT_MASK);
+			g_comboFreqCalcBuffer.r.sign = (uint16)(rTemp & g_sampleDataMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_comboFreqCalcBuffer.r.updateFlag == TRUE)
@@ -1023,10 +1025,10 @@ uint8 CalculateComboData(void)
 		// V channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_comboFreqCalcBuffer.v.sign ^ (vTemp & SIGNBIT_MASK))
+		if (g_comboFreqCalcBuffer.v.sign ^ (vTemp & g_sampleDataMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_comboFreqCalcBuffer.v.sign = (uint16)(vTemp & SIGNBIT_MASK);
+			g_comboFreqCalcBuffer.v.sign = (uint16)(vTemp & g_sampleDataMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_comboFreqCalcBuffer.v.updateFlag == TRUE)
@@ -1084,10 +1086,10 @@ uint8 CalculateComboData(void)
 		// T channel
 		// ---------
 		// Check if the stored sign comparison signals a zero crossing
-		if (g_comboFreqCalcBuffer.t.sign ^ (tTemp & SIGNBIT_MASK))
+		if (g_comboFreqCalcBuffer.t.sign ^ (tTemp & g_sampleDataMidpoint))
 		{
 			// Store new sign for future zero crossing comparisons
-			g_comboFreqCalcBuffer.t.sign = (uint16)(tTemp & SIGNBIT_MASK);
+			g_comboFreqCalcBuffer.t.sign = (uint16)(tTemp & g_sampleDataMidpoint);
 
 			// If the update flag was set, update freq count information
 			if (g_comboFreqCalcBuffer.t.updateFlag == TRUE)
@@ -1396,6 +1398,8 @@ void MoveComboWaveformEventToFile(void)
 	uint16 tempPeak;
 	FLASH_USAGE_STRUCT flashStats;
 	INPUT_MSG_STRUCT msg;
+	uint16* startOfEventPtr;
+	uint16* endOfEventDataPtr;
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
@@ -1411,7 +1415,7 @@ void MoveComboWaveformEventToFile(void)
 				// fix_ns8100
 				g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
 
-				sumEntry = &g_summaryTable[g_currentEventBuffer];
+				sumEntry = &g_summaryTable[g_eventBufferReadIndex];
 				sumEntry->mode = WAVEFORM_MODE;
 
 				// Initialize the freq data counts.
@@ -1440,24 +1444,24 @@ void MoveComboWaveformEventToFile(void)
 
 				// A channel
 				sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
-				sumEntry->waveShapeData.a.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
+				sumEntry->waveShapeData.a.peak = FixDataToZero(sample);
 				sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + 0);
 
 				// R channel
 				sample = *(g_currentEventSamplePtr + R_CHAN_OFFSET);
-				tempPeak = sumEntry->waveShapeData.r.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
+				tempPeak = sumEntry->waveShapeData.r.peak = FixDataToZero(sample);
 				vectorSum = (uint32)(tempPeak * tempPeak);
 				sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + 1);
 
 				// V channel
 				sample = *(g_currentEventSamplePtr + V_CHAN_OFFSET);
-				tempPeak = sumEntry->waveShapeData.v.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
+				tempPeak = sumEntry->waveShapeData.v.peak = FixDataToZero(sample);
 				vectorSum += (uint32)(tempPeak * tempPeak);
 				sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + 2);
 
 				// T channel
 				sample = *(g_currentEventSamplePtr + T_CHAN_OFFSET);
-				tempPeak = sumEntry->waveShapeData.t.peak = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
+				tempPeak = sumEntry->waveShapeData.t.peak = FixDataToZero(sample);
 				vectorSum += (uint32)(tempPeak * tempPeak);
 				sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + 3);
 
@@ -1475,7 +1479,7 @@ void MoveComboWaveformEventToFile(void)
 
 					// A channel
 					sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
-					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
+					normalizedData = FixDataToZero(sample);
 					if (normalizedData > sumEntry->waveShapeData.a.peak)
 					{
 						sumEntry->waveShapeData.a.peak = normalizedData;
@@ -1484,7 +1488,7 @@ void MoveComboWaveformEventToFile(void)
 
 					// R channel
 					sample = *(g_currentEventSamplePtr + R_CHAN_OFFSET);
-					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
+					normalizedData = FixDataToZero(sample);
 					if (normalizedData > sumEntry->waveShapeData.r.peak)
 					{
 						sumEntry->waveShapeData.r.peak = normalizedData;
@@ -1494,7 +1498,7 @@ void MoveComboWaveformEventToFile(void)
 
 					// V channel
 					sample = *(g_currentEventSamplePtr + V_CHAN_OFFSET);
-					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
+					normalizedData = FixDataToZero(sample);
 					if (normalizedData > sumEntry->waveShapeData.v.peak)
 					{
 						sumEntry->waveShapeData.v.peak = normalizedData;
@@ -1504,7 +1508,7 @@ void MoveComboWaveformEventToFile(void)
 
 					// T channel
 					sample = *(g_currentEventSamplePtr + T_CHAN_OFFSET);
-					normalizedData = FixDataToZero((uint16)(sample & ~EMBEDDED_CMD));
+					normalizedData = FixDataToZero(sample);
 					if (normalizedData > sumEntry->waveShapeData.t.peak)
 					{
 						sumEntry->waveShapeData.t.peak = normalizedData;
@@ -1534,19 +1538,12 @@ void MoveComboWaveformEventToFile(void)
 				{
 					g_spi1AccessLock = EVENT_LOCK;
 
-#if 0 // Does nothing
-					// Loop 100 times
-					for (i = g_samplesInCal; i != 0; i--)
-					{
-						// Advance the pointer using sample rate ratio to act as a filter to always scale down to a 1024 rate
-						g_currentEventSamplePtr += ((g_triggerRecord.trec.sample_rate/1024) * g_sensorInfoPtr->numOfChannels);
-					}
-#endif
-
-					sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
-					sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
-					sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
-					sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, (uint16)g_triggerRecord.trec.sample_rate);
+					startOfEventPtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
+					endOfEventDataPtr = startOfEventPtr + (g_wordSizeInPretrig + g_wordSizeInEvent);
+					sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
+					sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
+					sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
+					sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 
 					completeRamEventSummary(ramSummaryEntry, sumEntry);
 					cacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
@@ -1588,14 +1585,14 @@ void MoveComboWaveformEventToFile(void)
 					}
 
 					// Update event buffer count and pointers
-					if (++g_currentEventBuffer == g_maxEventBuffers)
+					if (++g_eventBufferReadIndex == g_maxEventBuffers)
 					{
-						g_currentEventBuffer = 0;
+						g_eventBufferReadIndex = 0;
 						g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr;
 					}
 					else
 					{
-						g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_currentEventBuffer * g_wordSizeInEvent);
+						g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
 					}
 
 					if (g_freeEventBuffers == g_maxEventBuffers)

@@ -601,8 +601,9 @@ void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	byteSet(&(eventRec->summary.version.softwareVersion[0]), 0, VERSION_STRING_SIZE);
 	byteCpy(&(eventRec->summary.version.softwareVersion[0]), &(g_appVersion[0]), VERSION_STRING_SIZE - 1);
 	//-----------------------
-	eventRec->summary.parameters.bitAccuracy = 12;
-	eventRec->summary.parameters.numOfChannels = 4;
+	eventRec->summary.parameters.bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_12_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ? 
+												ACCURACY_16_BIT : g_triggerRecord.trec.bitAccuracy;
+	eventRec->summary.parameters.numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;
 	eventRec->summary.parameters.aWeighting = (uint8)g_factorySetupRecord.aweight_option;
 	eventRec->summary.parameters.seismicSensorType = (uint16)g_factorySetupRecord.sensor_type;
 	eventRec->summary.parameters.airSensorType = (uint16)0x0;

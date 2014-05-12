@@ -53,6 +53,7 @@
 // Function:	ProcessManuelCalPulse
 // Purpose:		
 //*****************************************************************************
+#if 0
 void ProcessManuelCalPulse(void)
 {
 	DATE_TIME_STRUCT triggerTimeStamp;
@@ -68,12 +69,16 @@ void ProcessManuelCalPulse(void)
 			{
 				g_pendingEventRecord.summary.captured.eventTime = triggerTimeStamp = getCurrentTime();
 #if 0 // ns7100
-				g_summaryTable[g_eventBufferIndex].linkPtr = g_eventBufferPretrigPtr;
+				g_summaryTable[g_eventBufferWriteIndex].linkPtr = g_eventBufferPretrigPtr;
 #endif
-				*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | EVENT_START);
-				*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | EVENT_START);
-				*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | EVENT_START);
-				*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | EVENT_START);
+				*(g_eventBufferPretrigPtr + 0) = *(g_tailOfQuarterSecBuff + 0);
+				*(g_eventBufferPretrigPtr + 1) = *(g_tailOfQuarterSecBuff + 1);
+				*(g_eventBufferPretrigPtr + 2) = *(g_tailOfQuarterSecBuff + 2);
+				*(g_eventBufferPretrigPtr + 3) = *(g_tailOfQuarterSecBuff + 3);
+				//*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | EVENT_START);
+				//*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | EVENT_START);
+				//*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | EVENT_START);
+				//*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | EVENT_START);
 
 				g_eventBufferPretrigPtr += 4;
 				g_tailOfQuarterSecBuff += 4;
@@ -83,10 +88,14 @@ void ProcessManuelCalPulse(void)
 		case CAL_END:
 			s_manualCalInProgess = FALSE;
 
-			*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferPretrigPtr + 0) = *(g_tailOfQuarterSecBuff + 0);
+			*(g_eventBufferPretrigPtr + 1) = *(g_tailOfQuarterSecBuff + 1);
+			*(g_eventBufferPretrigPtr + 2) = *(g_tailOfQuarterSecBuff + 2);
+			*(g_eventBufferPretrigPtr + 3) = *(g_tailOfQuarterSecBuff + 3);
+			//*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | EVENT_END);
+			//*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | EVENT_END);
+			//*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | EVENT_END);
+			//*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | EVENT_END);
 
 			g_eventBufferPretrigPtr += 4;
 			g_tailOfQuarterSecBuff += 4;
@@ -117,15 +126,15 @@ void ProcessManuelCalPulse(void)
 	if (g_manualCalFlag == FALSE)
 	{
 		g_freeEventBuffers--;
-		g_eventBufferIndex++;
-		if (g_eventBufferIndex < g_maxEventBuffers)
+		g_eventBufferWriteIndex++;
+		if (g_eventBufferWriteIndex < g_maxEventBuffers)
 		{
 				g_eventBufferPretrigPtr = g_eventBufferBodyPtr + g_wordSizeInCal;
 				g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
 		}
 		else
 		{
-			g_eventBufferIndex = 0;
+			g_eventBufferWriteIndex = 0;
 			g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
 			g_eventBufferBodyPtr = g_startOfEventBufferPtr + g_wordSizeInPretrig;
 		}
@@ -134,6 +143,7 @@ void ProcessManuelCalPulse(void)
 	// Check if the end of the quarter sec buffer buffer has been reached
 	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
 }
+#endif
 
 //*****************************************************************************
 // Function:	MoveManuelCalToFlash
@@ -148,6 +158,8 @@ void MoveManuelCalToFlash(void)
 	uint16 normalizedData;
 	uint16 hiA = 0, hiR = 0, hiV = 0, hiT = 0;
 	uint16 lowA = 0xFFF, lowR = 0xFFF, lowV = 0xFFF, lowT = 0xFFF;
+	uint16* startOfEventPtr;
+	uint16* endOfEventDataPtr;
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
@@ -161,7 +173,7 @@ void MoveManuelCalToFlash(void)
 		advFlashDataPtrToEventData(ramSummaryEntry);
 #endif
 
-		sumEntry = &g_summaryTable[g_currentEventBuffer];
+		sumEntry = &g_summaryTable[g_eventBufferReadIndex];
 		sumEntry->mode = MANUAL_CAL_MODE;
 
 		// Initialize the freq data counts.
@@ -170,11 +182,14 @@ void MoveManuelCalToFlash(void)
 		sumEntry->waveShapeData.v.freq = 0;
 		sumEntry->waveShapeData.t.freq = 0;
 
+		startOfEventPtr = g_currentEventSamplePtr;
+		endOfEventDataPtr = g_currentEventSamplePtr + g_wordSizeInCal;
+		
 		for (i = (uint16)g_samplesInCal; i != 0; i--)
 		{
 			//=========================================================
 			// First channel - A
-			sample = (uint16)((*(g_currentEventSamplePtr + 0)) & DATA_MASK);
+			sample = *(g_currentEventSamplePtr + 0);
 
 			if (sample > hiA) hiA = sample;
 			if (sample < lowA) lowA = sample;
@@ -189,7 +204,7 @@ void MoveManuelCalToFlash(void)
 
 			//=========================================================
 			// Second channel - R
-			sample = (uint16)((*(g_currentEventSamplePtr + 1)) & DATA_MASK);
+			sample = *(g_currentEventSamplePtr + 1);
 
 			if (sample > hiR) hiR = sample;
 			if (sample < lowR) lowR = sample;
@@ -204,7 +219,7 @@ void MoveManuelCalToFlash(void)
 
 			//=========================================================
 			// Third channel - V
-			sample = (uint16)((*(g_currentEventSamplePtr + 2)) & DATA_MASK);
+			sample = *(g_currentEventSamplePtr + 2);
 
 			if (sample > hiV) hiV = sample;
 			if (sample < lowV) lowV = sample;
@@ -219,7 +234,7 @@ void MoveManuelCalToFlash(void)
 
 			//=========================================================
 			// Fourth channel - T
-			sample = (uint16)((*(g_currentEventSamplePtr + 3)) & DATA_MASK);
+			sample = *(g_currentEventSamplePtr + 3);
 
 			if (sample > hiT) hiT = sample;
 			if (sample < lowT) lowT = sample;
@@ -245,10 +260,10 @@ void MoveManuelCalToFlash(void)
 		sumEntry->waveShapeData.v.peak = (uint16)(hiV - lowV + 1);
 		sumEntry->waveShapeData.t.peak = (uint16)(hiT - lowT + 1);
 
-		sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, 1024);
-		sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, 1024);   
-		sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, 1024);   
-		sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, 1024);       
+		sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, 1024, startOfEventPtr, endOfEventDataPtr);
+		sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, 1024, startOfEventPtr, endOfEventDataPtr);   
+		sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, 1024, startOfEventPtr, endOfEventDataPtr);   
+		sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, 1024, startOfEventPtr, endOfEventDataPtr);       
 
 		completeRamEventSummary(ramSummaryEntry, sumEntry);
 		cacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
@@ -292,14 +307,14 @@ void MoveManuelCalToFlash(void)
 			g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 		}
 
-		if (++g_currentEventBuffer == g_maxEventBuffers)
+		if (++g_eventBufferReadIndex == g_maxEventBuffers)
 		{
-			g_currentEventBuffer = 0;
+			g_eventBufferReadIndex = 0;
 			g_currentEventSamplePtr = g_startOfEventBufferPtr;
 		}
 		else
 		{
-			g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_currentEventBuffer * g_wordSizeInEvent);
+			g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
 		}
 		clearSystemEventFlag(MANUEL_CAL_EVENT);
 

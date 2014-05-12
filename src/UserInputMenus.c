@@ -47,6 +47,7 @@ extern USER_MENU_STRUCT alarmTwoMenu[];
 extern USER_MENU_STRUCT airScaleMenu[];
 extern USER_MENU_STRUCT barChannelMenu[];
 extern USER_MENU_STRUCT barResultMenu[];
+extern USER_MENU_STRUCT bitAccuracyMenu[];
 extern USER_MENU_STRUCT configMenu[];
 extern USER_MENU_STRUCT distanceToSourceMenu[];
 extern USER_MENU_STRUCT modemSetupMenu[];
@@ -453,7 +454,7 @@ void companyMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		ACTIVATE_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
+		ACTIVATE_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
 	}
 
 	(*menufunc_ptrs[g_activeMenu]) (mn_msg);

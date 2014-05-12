@@ -278,8 +278,8 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// Set the Min and Max to mid level, Avg to zero
 	for (i = 0; i < 4; i++)
 	{
-		chanMin[i] = 0xFFF;
-		chanMax[i] = 0x000;
+		chanMin[i] = 0xFFFF;
+		chanMax[i] = 0x0000;
 		chanAvg[i] = 0;
 	}
 
@@ -292,21 +292,21 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			if (s_calPreTrigData[i].chan[j] > chanMax[j]) chanMax[j] = s_calPreTrigData[i].chan[j];
 			chanAvg[j] += s_calPreTrigData[i].chan[j];
 
-			if ((s_calPreTrigData[i].chan[j] >= 0x7FA) && (s_calPreTrigData[i].chan[j] <= 0x806))
+			if ((s_calPreTrigData[i].chan[j] >= (g_sampleDataMidpoint - 6)) && (s_calPreTrigData[i].chan[j] <= (g_sampleDataMidpoint + 6)))
 			{
-				if (chanMed[j][(s_calPreTrigData[i].chan[j] - 0x7FA)] < 255)
-					chanMed[j][(s_calPreTrigData[i].chan[j] - 0x7FA)]++;
+				if (chanMed[j][(s_calPreTrigData[i].chan[j] - (g_sampleDataMidpoint - 6))] < 255)
+					chanMed[j][(s_calPreTrigData[i].chan[j] - (g_sampleDataMidpoint - 6))]++;
 			}
 		}
 	}
 
 	for (i = 0; i < 4; i++)
 	{
-		chanMin[i] -= 0x800;
-		chanMax[i] -= 0x800;
+		chanMin[i] -= g_sampleDataMidpoint;
+		chanMax[i] -= g_sampleDataMidpoint;
 
 		chanAvg[i] /= 256;
-		chanAvg[i] -= 0x800;
+		chanAvg[i] -= g_sampleDataMidpoint;
 
 		for (j = 0; j < 13; j++)
 		{

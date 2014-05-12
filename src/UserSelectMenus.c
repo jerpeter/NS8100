@@ -51,6 +51,7 @@ extern USER_MENU_STRUCT barIntervalMenu[];
 extern USER_MENU_STRUCT barScaleMenu[];
 extern USER_MENU_STRUCT barResultMenu[];
 extern USER_MENU_STRUCT baudRateMenu[];
+extern USER_MENU_STRUCT bitAccuracyMenu[];
 extern USER_MENU_STRUCT companyMenu[];
 extern USER_MENU_STRUCT copiesMenu[];
 extern USER_MENU_STRUCT configMenu[];
@@ -1014,6 +1015,44 @@ void baudRateMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 		ACTIVATE_USER_MENU_MSG(&configMenu, BAUD_RATE);
+	}
+
+	(*menufunc_ptrs[g_activeMenu]) (mn_msg);
+}
+
+//*****************************************************************************
+//=============================================================================
+// Bit Accuracy Menu
+//=============================================================================
+//*****************************************************************************
+#define BIT_ACCURACY_MENU_ENTRIES 6
+USER_MENU_STRUCT bitAccuracyMenu[BIT_ACCURACY_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, BIT_ACCURACY_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, BIT_ACCURACY_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, ACCURACY_16_BIT, BIT_TEXT, NO_TAG, {ACCURACY_16_BIT}},
+{ITEM_2, ACCURACY_14_BIT, BIT_TEXT, NO_TAG, {ACCURACY_14_BIT}},
+{ITEM_3, ACCURACY_12_BIT, BIT_TEXT, NO_TAG, {ACCURACY_12_BIT}},
+{ITEM_4, ACCURACY_10_BIT, BIT_TEXT, NO_TAG, {ACCURACY_10_BIT}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&bitAccuracyMenuHandler}}
+};
+
+//-------------------------
+// Bit Accuracy Menu Handler
+//-------------------------
+void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg;
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_triggerRecord.trec.bitAccuracy = bitAccuracyMenu[newItemIndex].data;
+
+		ACTIVATE_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		ACTIVATE_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
 	}
 
 	(*menufunc_ptrs[g_activeMenu]) (mn_msg);

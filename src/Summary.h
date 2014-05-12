@@ -27,7 +27,6 @@
 #define CURR_TABLE_ENTRY 		2
 
 // Defined in rec. h
-//#define TRIGGER_EVENT_STRING_SIZE		101
 #define VERSION_STRING_SIZE				8
 #define MODEL_STRING_SIZE				20
 #define SERIAL_NUMBER_STRING_SIZE		20
@@ -37,8 +36,7 @@
 #define SESSION_LOCATION_STRING_SIZE	32
 #define SESSION_COMMENTS_STRING_SIZE	102
 
-
-// slowest sample rate * samllest time
+// slowest sample rate * samllest time ??
 #define MAX_RAM_SUMMARYS 				120 
 
 #define BARGRAPH_PEAK_BUFFER_SIZE 		30
@@ -189,14 +187,10 @@ typedef struct
 
 typedef struct
 {
-	int16 a_12bit;
-	int16 r_12bit;
-	int16 v_12bit;
-	int16 t_12bit;
-	int16 a_16bit;
-	int16 r_16bit;
-	int16 v_16bit;
-	int16 t_16bit;
+	int16 a_offset;
+	int16 r_offset;
+	int16 v_offset;
+	int16 t_offset;
 } OFFSET_DATA_STRUCT;
 
 // Bargraph Event struct - This is the grouping of the event data 

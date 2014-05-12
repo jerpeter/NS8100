@@ -171,7 +171,8 @@ typedef struct
 	uint32 record_time;
 	uint32 record_time_max;
 	uint32 sample_rate;
-	uint8 unused[2];
+	uint8 bitAccuracy;
+	uint8 unused;
 } TRIGGER_EVENT_DATA_STRUCT;
 
 typedef struct

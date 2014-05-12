@@ -429,13 +429,13 @@ float hexToMillBars(uint16 data, uint8 dataNormalizedFlag)
 
 	if (dataNormalizedFlag == DATA_NOT_NORMALIZED)
 	{
-		if (data >= 0x800)
+		if (data >= g_sampleDataMidpoint)
 		{
-			data = (uint16)(data - 0x0800);
+			data = (uint16)(data - g_sampleDataMidpoint);
 		}
 		else
 		{
-			data = (uint16)(0x0800 - data);
+			data = (uint16)(g_sampleDataMidpoint - data);
 		}
 	}
 

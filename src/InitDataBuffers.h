@@ -48,6 +48,7 @@ typedef enum
 	SUMM_TBL_FULL 	= 0x0002
 } FULL_FLAGS;
 
+#if 0 // Removed
 typedef enum
 {
 	SAMPLE_DATA 	= 0x0000,
@@ -64,6 +65,7 @@ typedef enum
 	DATA_MASK		= 0x0FFF,
 	SIGNBIT_MASK	= 0x0800
 } EMBEDDED_CMDS;
+#endif
 
 typedef enum
 {
@@ -118,11 +120,19 @@ enum
 	T_CHAN_OFFSET = 3
 };
 
+enum
+{
+	ACCURACY_16_BIT = 16,
+	ACCURACY_14_BIT = 14,
+	ACCURACY_12_BIT = 12,
+	ACCURACY_10_BIT = 10
+};
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
 void InitDataBuffs(uint8 op_mode);
-uint16 CalcSumFreq(uint16*, uint16);
+uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uint16* endAddrPtr);
 uint16 FixDataToZero(uint16 data_);
 
 void ProcessWaveformData(void);

@@ -81,8 +81,13 @@ void InitDataBuffs(uint8 op_mode)
 	// Setup the pending event record information that is available at this time
 	initEventRecord(op_mode);
 
+	if (g_triggerRecord.trec.bitAccuracy == ACCURACY_10_BIT) { g_sampleDataMidpoint = 0x0200; }
+	else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_12_BIT) { g_sampleDataMidpoint = 0x0800; }
+	else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_14_BIT) { g_sampleDataMidpoint = 0x2000; }
+	else { g_sampleDataMidpoint = 0x8000; } // Default to 16-bit accuracy
+
 	// Setup buffers based on mode
-	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE))
+	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))
 	{
 		// Calculate samples for each section and total event
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
@@ -96,16 +101,28 @@ void InitDataBuffs(uint8 op_mode)
 		g_wordSizeInCal = g_samplesInCal * g_sensorInfoPtr->numOfChannels;
 		g_wordSizeInEvent = g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal;
 
-		// Calculate total event buffers available
-		g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / g_wordSizeInEvent);
+		if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE))
+		{
+			// Calculate total event buffers available (full event buffer size)
+			g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / g_wordSizeInEvent);
+
+			// Init starting event buffer pointers
+			g_startOfEventBufferPtr = &(g_eventDataBuffer[0]);
+		}
+		else if (op_mode == COMBO_MODE)
+		{
+			// Calculate total event buffers available (partial event buffer size)
+			g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET) / g_wordSizeInEvent);
+
+			// Init starting event buffer pointers
+			g_startOfEventBufferPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET]);
+		}
+
 		g_freeEventBuffers = g_maxEventBuffers;
+		g_eventBufferReadIndex = 0;
+		g_eventBufferWriteIndex = 0;
 
-		// Init starting event buffer pointers
-		g_startOfEventBufferPtr = &(g_eventDataBuffer[0]);
 		g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr;
-		g_currentEventBuffer = 0;
-		g_eventBufferIndex = 0;
-
 		g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
 		g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
 		g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
@@ -119,11 +136,29 @@ void InitDataBuffs(uint8 op_mode)
 		// Update the data length to be used based on the size calculations
 		if (op_mode == WAVEFORM_MODE)
 		{
+			// Update the waveform data length to be used based on the size calculations
 			g_pendingEventRecord.header.dataLength = (g_wordSizeInEvent * 2);
 		}
-		else // op_mode == MANUAL_CAL_MODE
+		else if (op_mode == MANUAL_CAL_MODE)
 		{
+			// Update the manual cal data length to be used based on the size calculations
 			g_pendingEventRecord.header.dataLength = (g_wordSizeInCal * 2);
+		}
+		else if (op_mode == COMBO_MODE)
+		{		
+			// Update the combo-waveform data length to be used based on the size calculations
+			g_pendingEventRecord.header.dataLength = (g_wordSizeInEvent * 2);
+
+			// Bargraph init
+			g_bg430DataStartPtr = &(g_eventDataBuffer[0]);
+			g_bg430DataWritePtr = &(g_eventDataBuffer[0]);
+			g_bg430DataReadPtr = &(g_eventDataBuffer[0]);
+			g_bg430DataEndPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET - 16]);
+
+			// Start the total off with zero (incremented when bar and summary intervals are stored)
+			g_pendingBargraphRecord.header.dataLength = 0;
+
+			StartNewCombo();
 		}
 	}
 	else if (op_mode == BARGRAPH_MODE)
@@ -138,93 +173,45 @@ void InitDataBuffs(uint8 op_mode)
 		
 		StartNewBargraph();
 	}
-	else if (op_mode == COMBO_MODE)
-	{		
-		// Waveform init
-		// Calculate samples for each section and total event
-		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
-		g_samplesInPretrig = (uint32)(sampleRate / 4);
-		g_samplesInCal = (uint32)MAX_CAL_SAMPLES;
-		g_samplesInEvent = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
-
-		// Calculate word size for each section and total event, since buffer is an array of words
-		g_wordSizeInPretrig = g_samplesInPretrig * g_sensorInfoPtr->numOfChannels;
-		g_wordSizeInBody = g_samplesInBody * g_sensorInfoPtr->numOfChannels;
-		g_wordSizeInCal = g_samplesInCal * g_sensorInfoPtr->numOfChannels;
-		g_wordSizeInEvent = g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal;
-
-		// Calculate total event buffers available
-		g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET) / g_wordSizeInEvent);
-		g_freeEventBuffers = g_maxEventBuffers;
-
-		// Init starting event buffer pointers
-		g_startOfEventBufferPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET]);
-		g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr; 
-		g_currentEventBuffer = 0;
-		g_eventBufferIndex = 0;
-
-		g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
-		g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
-		g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
-
-		// Init flags
-		g_isTriggered = 0;
-		g_processingCal = 0;
-		g_calTestExpected = 0;
-		g_doneTakingEvents = NO;
-
-		// Bargraph init
-		g_bg430DataStartPtr = &(g_eventDataBuffer[0]);
-		g_bg430DataWritePtr = &(g_eventDataBuffer[0]);
-		g_bg430DataReadPtr = &(g_eventDataBuffer[0]);
-		g_bg430DataEndPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET - 16]);
-
-		// Update the waveform data length to be used based on the size calculations
-		g_pendingEventRecord.header.dataLength = (g_wordSizeInEvent * 2);
-		// Start the total off with zero (incremented when bar and summary intervals are stored)
-		g_pendingBargraphRecord.header.dataLength = 0;
-
-		StartNewCombo();
-	}
 }
 
 //*****************************************************************************
 // Function:	CalcSumFreq
 // Purpose:		
 //*****************************************************************************
-uint16 CalcSumFreq(uint16* workingPtr, uint16 sampleRate)
+uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uint16* endAddrPtr)
 {
 	uint16* samplePtr;
 	uint32 dataCount = 0;
 	uint16 freq = 0;
 
-	samplePtr = workingPtr;
+	samplePtr = dataPtr;
 
-	if ((*samplePtr & DATA_MASK) >= POS_VALID_PEAK)
+	if (*samplePtr >= POS_VALID_PEAK)
 	{
-		while (((*samplePtr & DATA_MASK) >= POS_CROSSOVER_BACKWARD) && ((*samplePtr & EMBEDDED_CMD) != EVENT_START))
+		while ((*samplePtr >= POS_CROSSOVER_BACKWARD) && (samplePtr > (startAddrPtr + 4)))
 		{
 			samplePtr -= 4;
 			dataCount++;
 		}
     
-		samplePtr = workingPtr;
-		while (((*samplePtr & DATA_MASK) >= POS_CROSSOVER_FORWARD) && ((*samplePtr & EMBEDDED_CMD) != EVENT_END))
+		samplePtr = dataPtr;
+		while ((*samplePtr >= POS_CROSSOVER_FORWARD) && (samplePtr < (endAddrPtr - 4)))
 		{
 			samplePtr += 4;
 			dataCount++;
 		}
 	}
-	else if ((*samplePtr & DATA_MASK) <= NEG_VALID_PEAK)
+	else if (*samplePtr <= NEG_VALID_PEAK)
 	{
-		while (((*samplePtr & DATA_MASK) <= NEG_CROSSOVER_BACKWARD) && ((*samplePtr & EMBEDDED_CMD) != EVENT_START))
+		while ((*samplePtr <= NEG_CROSSOVER_BACKWARD) && (samplePtr > (startAddrPtr + 4)))
 		{
 			samplePtr -= 4;
 			dataCount++;
 		}
     
-		samplePtr = workingPtr;
-		while (((*samplePtr & DATA_MASK) <= NEG_CROSSOVER_FORWARD) && ((*samplePtr & EMBEDDED_CMD) != EVENT_END))
+		samplePtr = dataPtr;
+		while ((*samplePtr <= NEG_CROSSOVER_FORWARD) && (samplePtr < (endAddrPtr - 4)))
 		{
 			samplePtr += 4;
 			dataCount++;
@@ -254,10 +241,10 @@ uint16 CalcSumFreq(uint16* workingPtr, uint16 sampleRate)
 //*****************************************************************************
 uint16 FixDataToZero(uint16 data_)
 {
-   if (data_ > 0x800)
-     data_ = (uint16)(data_ - 0x0800);
+   if (data_ > g_sampleDataMidpoint)
+     data_ = (uint16)(data_ - g_sampleDataMidpoint);
    else
-     data_ = (uint16)(0x0800 - data_);
+     data_ = (uint16)(g_sampleDataMidpoint - data_);
      
    return (data_);  
 }

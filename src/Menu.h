@@ -800,6 +800,7 @@ void barIntervalMenuHandler(uint8 key, void* data);
 void barScaleMenuHandler(uint8 key, void* data);
 void barResultMenuHandler(uint8 key, void* data);
 void baudRateMenuHandler(uint8 key, void* data);
+void bitAccuracyMenuHandler(uint8 key, void* data);
 void configMenuHandler(uint8 key, void* data);
 void displacementMenuHandler(uint8 key, void* data);
 void eraseEventsMenuHandler(uint8 key, void* data);
