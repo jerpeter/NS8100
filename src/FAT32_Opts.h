@@ -9,7 +9,7 @@
 #define MAX_LONG_FILENAME					260
 
 // Max open files (reduce to lower memory requirements)
-#define MAX_OPEN_FILES						2
+#define MAX_OPEN_FILES						4
 
 // Writes to FAT are done immediately
 #define FATBUFFER_IMMEDIATE_WRITEBACK		1

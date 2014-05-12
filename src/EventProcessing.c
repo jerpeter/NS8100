@@ -118,7 +118,7 @@ void copyValidFlashEventSummariesToRam(void)
 
 					debug("Found Valid Event File: %s, with Event #: %d, Mode: %d, Size: %s, RSI: %d\n", 
 							dirList[entriesFound].name, tempEventRecord.summary.eventNumber, tempEventRecord.summary.mode, 
-							(eventFile->filelength == (2 + tempEventRecord.header.headerLength + tempEventRecord.header.summaryLength + 
+							(eventFile->filelength == (tempEventRecord.header.headerLength + tempEventRecord.header.summaryLength + 
 							tempEventRecord.header.dataLength)) ? "Correct" : "Incorrect", ramSummaryIndex);
 					
 					__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = tempEventRecord.summary.eventNumber;
@@ -1074,6 +1074,7 @@ BOOLEAN validEventFile(uint16 eventNumber)
 //*****************************************************************************
 FL_FILE* getEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 {
+	FL_FILE* fileHandle;
 	char* fileName = (char*)&g_spareBuffer[0];
 	char fileOption[3];
 	
@@ -1093,6 +1094,19 @@ FL_FILE* getEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 		case APPEND_EVENT_FILE:
 			strcpy(&fileOption[0], "a+");
 			break;
+	}
+
+	// Check if trying to create a file but the filename exists
+	if (option == CREATE_EVENT_FILE)
+	{
+		fileHandle = fl_fopen(fileName, "r");
+		
+		// File alraedy exists
+		if (fileHandle != NULL)
+		{
+			fl_fclose(fileHandle);
+			fl_remove(fileName);
+		}
 	}
 
 	return (fl_fopen(fileName, fileOption));
@@ -1213,67 +1227,68 @@ void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 	// EVT_RECORD -
 
 	// Check if Waveform or Manual Cal mode
-	if ((g_RamEventRecord.summary.mode == WAVEFORM_MODE) || (g_RamEventRecord.summary.mode == MANUAL_CAL_MODE))
+	if ((g_pendingEventRecord.summary.mode == WAVEFORM_MODE) || (g_pendingEventRecord.summary.mode == MANUAL_CAL_MODE) || 
+			(g_pendingEventRecord.summary.mode == COMBO_MODE))
 	{
 		debug("Copy calculated from Waveform buffer to global ram event record\n");
 		
 		// Fill in calculated data (Bargraph data filled in at the end of bargraph)
-		g_RamEventRecord.summary.calculated.a.peak = flashSummPtr->waveShapeData.a.peak = ramSummPtr->waveShapeData.a.peak;
-		g_RamEventRecord.summary.calculated.r.peak = flashSummPtr->waveShapeData.r.peak = ramSummPtr->waveShapeData.r.peak;
-		g_RamEventRecord.summary.calculated.v.peak = flashSummPtr->waveShapeData.v.peak = ramSummPtr->waveShapeData.v.peak;
-		g_RamEventRecord.summary.calculated.t.peak = flashSummPtr->waveShapeData.t.peak = ramSummPtr->waveShapeData.t.peak;
+		g_pendingEventRecord.summary.calculated.a.peak = flashSummPtr->waveShapeData.a.peak = ramSummPtr->waveShapeData.a.peak;
+		g_pendingEventRecord.summary.calculated.r.peak = flashSummPtr->waveShapeData.r.peak = ramSummPtr->waveShapeData.r.peak;
+		g_pendingEventRecord.summary.calculated.v.peak = flashSummPtr->waveShapeData.v.peak = ramSummPtr->waveShapeData.v.peak;
+		g_pendingEventRecord.summary.calculated.t.peak = flashSummPtr->waveShapeData.t.peak = ramSummPtr->waveShapeData.t.peak;
 
 		debug("Newly stored peaks: a:%x r:%x v:%x t:%x\n", 
-				g_RamEventRecord.summary.calculated.a.peak, 
-				g_RamEventRecord.summary.calculated.r.peak,
-				g_RamEventRecord.summary.calculated.v.peak,
-				g_RamEventRecord.summary.calculated.t.peak);
+				g_pendingEventRecord.summary.calculated.a.peak, 
+				g_pendingEventRecord.summary.calculated.r.peak,
+				g_pendingEventRecord.summary.calculated.v.peak,
+				g_pendingEventRecord.summary.calculated.t.peak);
 
-		g_RamEventRecord.summary.calculated.a.frequency = flashSummPtr->waveShapeData.a.freq = ramSummPtr->waveShapeData.a.freq;
-		g_RamEventRecord.summary.calculated.r.frequency = flashSummPtr->waveShapeData.r.freq = ramSummPtr->waveShapeData.r.freq;
-		g_RamEventRecord.summary.calculated.v.frequency = flashSummPtr->waveShapeData.v.freq = ramSummPtr->waveShapeData.v.freq;
-		g_RamEventRecord.summary.calculated.t.frequency = flashSummPtr->waveShapeData.t.freq = ramSummPtr->waveShapeData.t.freq;
+		g_pendingEventRecord.summary.calculated.a.frequency = flashSummPtr->waveShapeData.a.freq = ramSummPtr->waveShapeData.a.freq;
+		g_pendingEventRecord.summary.calculated.r.frequency = flashSummPtr->waveShapeData.r.freq = ramSummPtr->waveShapeData.r.freq;
+		g_pendingEventRecord.summary.calculated.v.frequency = flashSummPtr->waveShapeData.v.freq = ramSummPtr->waveShapeData.v.freq;
+		g_pendingEventRecord.summary.calculated.t.frequency = flashSummPtr->waveShapeData.t.freq = ramSummPtr->waveShapeData.t.freq;
 
 		debug("Newly stored freq: a:%d r:%d v:%d t:%d\n", 
-				g_RamEventRecord.summary.calculated.a.frequency, 
-				g_RamEventRecord.summary.calculated.r.frequency,
-				g_RamEventRecord.summary.calculated.v.frequency,
-				g_RamEventRecord.summary.calculated.t.frequency);
+				g_pendingEventRecord.summary.calculated.a.frequency, 
+				g_pendingEventRecord.summary.calculated.r.frequency,
+				g_pendingEventRecord.summary.calculated.v.frequency,
+				g_pendingEventRecord.summary.calculated.t.frequency);
 
-		g_RamEventRecord.summary.calculated.a.displacement = 0;
+		g_pendingEventRecord.summary.calculated.a.displacement = 0;
 
 		// Calculate Displacement as PPV/(2 * PI * Freq) with 1000000 to shift to keep accuracy and the 10 to adjust the frequency
-		g_RamEventRecord.summary.calculated.r.displacement =
+		g_pendingEventRecord.summary.calculated.r.displacement =
 			(uint32)(ramSummPtr->waveShapeData.r.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.r.freq * 10);
-		g_RamEventRecord.summary.calculated.v.displacement =
+		g_pendingEventRecord.summary.calculated.v.displacement =
 			(uint32)(ramSummPtr->waveShapeData.v.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.v.freq * 10);
-		g_RamEventRecord.summary.calculated.t.displacement =
+		g_pendingEventRecord.summary.calculated.t.displacement =
 			(uint32)(ramSummPtr->waveShapeData.t.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.t.freq * 10);
 	}
 
 	//--------------------------------
 	// EVENT_HEADER_STRUCT  -
-	g_RamEventRecord.header.summaryChecksum = 0;
-	g_RamEventRecord.header.dataChecksum = 0;
+	g_pendingEventRecord.header.summaryChecksum = 0;
+	g_pendingEventRecord.header.dataChecksum = 0;
 
 	// *** Fix bug with summary.parameters.numOfSamples bug where a value can be larger than the uint16 it holds
-	if ((g_RamEventRecord.summary.mode == WAVEFORM_MODE) && ((g_RamEventRecord.summary.parameters.sampleRate *
-		g_RamEventRecord.summary.parameters.recordTime) > 0xFFFF))
+	if (((g_pendingEventRecord.summary.mode == WAVEFORM_MODE) || (g_pendingEventRecord.summary.mode == COMBO_MODE)) && 
+			((g_pendingEventRecord.summary.parameters.sampleRate * g_pendingEventRecord.summary.parameters.recordTime) > 0xFFFF))
 	{
 		// Store the event data size in bytes, It's (number of channels) * (pre + event + cal sample) * 2 bytes
-		g_RamEventRecord.header.dataLength = (uint32)((g_RamEventRecord.summary.parameters.numOfChannels *
-								 			 (g_RamEventRecord.summary.parameters.preBuffNumOfSamples +
-							 				 (g_RamEventRecord.summary.parameters.sampleRate *
-											 g_RamEventRecord.summary.parameters.recordTime) +
-											 g_RamEventRecord.summary.parameters.calDataNumOfSamples)) * 2);
+		g_pendingEventRecord.header.dataLength = (uint32)((g_pendingEventRecord.summary.parameters.numOfChannels *
+								 			 (g_pendingEventRecord.summary.parameters.preBuffNumOfSamples +
+							 				 (g_pendingEventRecord.summary.parameters.sampleRate *
+											 g_pendingEventRecord.summary.parameters.recordTime) +
+											 g_pendingEventRecord.summary.parameters.calDataNumOfSamples)) * 2);
 	}
 	else
 	{
 		// Store the event data size in bytes, It's (number of channels) * (pre + event + cal sample) * 2 bytes
-		g_RamEventRecord.header.dataLength = (uint32)((g_RamEventRecord.summary.parameters.numOfChannels *
-								 			 (g_RamEventRecord.summary.parameters.preBuffNumOfSamples +
-							 				 g_RamEventRecord.summary.parameters.numOfSamples +
-											 g_RamEventRecord.summary.parameters.calDataNumOfSamples)) * 2);
+		g_pendingEventRecord.header.dataLength = (uint32)((g_pendingEventRecord.summary.parameters.numOfChannels *
+								 			 (g_pendingEventRecord.summary.parameters.preBuffNumOfSamples +
+							 				 g_pendingEventRecord.summary.parameters.numOfSamples +
+											 g_pendingEventRecord.summary.parameters.calDataNumOfSamples)) * 2);
 	}
 
 	//--------------------------------
@@ -1287,7 +1302,7 @@ void completeRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 	// Get the structure size as the number of words. The following will round up.
 	eventDataSize = (sizeof(EVT_RECORD) + 1) / 2;
 
-	flashWrite((uint16*)flashEventRecord, (uint16*)&(g_RamEventRecord), eventDataSize);
+	flashWrite((uint16*)flashEventRecord, (uint16*)&(g_pendingEventRecord), eventDataSize);
 #endif
 }
 
@@ -1424,11 +1439,6 @@ void storeData(uint16* dataPtr, uint16 dataWords)
 				((SAMPLE_DATA_STRUCT*)dataPtr)->v,
 				((SAMPLE_DATA_STRUCT*)dataPtr)->t,
 				((SAMPLE_DATA_STRUCT*)dataPtr)->a);
-#endif
-
-#if 1 // Store to SD
-extern FL_FILE* g_currentEventFileHandle;
-		fl_fwrite(dataPtr, 2, dataWords, g_currentEventFileHandle);
 #endif
 }
 #endif

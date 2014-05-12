@@ -64,6 +64,7 @@ MONTH_TABLE_STRUCT g_monthTable[] =  {
 uint8 g_mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 uint8 g_contrast_value;
 uint8 g_LcdPowerState = ENABLED;
+uint8 g_fileProcessActiveUsbLockout = NO;
 uint16 g_nextEventNumberToUse = 1;
 uint32 __monitorLogTblKey;
 uint16 __monitorLogTblIndex;
@@ -126,12 +127,14 @@ uint32 g_keypadNumberSpeed = 1;
 uint8 g_keypadTable[8][8] = {
 {KEY_BACKLIGHT, KEY_HELP, KEY_ESCAPE, KEY_UPARROW, KEY_DOWNARROW, KEY_MINUS, KEY_PLUS, KEY_ENTER}
 };
+//char g_keypadTableText[8][11] = { "Backlight\0", "Help\0", "Escape\0", "Up Arrow\0", "Down Arrow\0", "Minus\0", "Plus\0", "Enter\0" };
 uint8 g_smc_tab_cs_size[4];
 // Sensor information and constants.
 SENSOR_PARAMETERS_STRUCT g_SensorInfoStruct;
 SENSOR_PARAMETERS_STRUCT* g_sensorInfoPtr = &g_SensorInfoStruct;
 // Contains the event record in ram.
-EVT_RECORD g_RamEventRecord;
+EVT_RECORD g_pendingEventRecord;
+EVT_RECORD g_pendingBargraphRecord;
 // Factory Setup record.
 FACTORY_SETUP_STRUCT g_factorySetupRecord;
 // Structure to contain system paramters and system settings.
@@ -284,6 +287,9 @@ uint16 g_eventBufferIndex;
 uint8 g_tcSampleTimerActive = NO;
 uint8 g_tcTypematicTimerActive = NO;
 char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
+uint16 g_testTrigger = NO;
 char g_languageTable[8192];
 uint8 g_spareBuffer[8192];
 uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
+
+// End of the list

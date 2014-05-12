@@ -498,7 +498,15 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else if (g_monitorOperationMode == COMBO_MODE)
 	{
-		length = (uint8)sprintf((char*)buff, "%s%s (C)", getLangText(MONITORING_TEXT), dotBuff);
+		if (g_isTriggered)
+		{
+			length = (uint8)sprintf((char*)buff, "%s%s (C)", getLangText(PROCESSING_TEXT), dotBuff);
+		}
+		else
+		{
+			length = (uint8)sprintf((char*)buff, "%s%s (C)", getLangText(MONITORING_TEXT), dotBuff);
+		}
+
 	}
 
 	// Setup current column to center text
@@ -737,17 +745,17 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				{
 					if (g_bargraphSumIntervalWritePtr->r.frequency > 0)
 					{
-						tempR = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+						tempR = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 								((float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1)));
 					}
 					if (g_bargraphSumIntervalWritePtr->v.frequency > 0)
 					{
-						tempV = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+						tempV = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 								((float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1)));
 					}
 					if (g_bargraphSumIntervalWritePtr->t.frequency > 0)
 					{
-						tempT = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+						tempT = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 								((float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1)));
 					}
 				}
@@ -755,17 +763,17 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				{
 					if (g_rJobFreq > 0)
 					{
-						tempR = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+						tempR = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 								((float)((g_rJobFreq * 2) - 1)));
 					}
 					if (g_vJobFreq > 0)
 					{
-						tempV = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+						tempV = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 								((float)((g_vJobFreq * 2) - 1)));
 					}
 					if (g_tJobFreq > 0)
 					{
-						tempT = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+						tempT = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 								((float)((g_tJobFreq * 2) - 1)));
 					}
 				}
@@ -840,11 +848,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tempV = g_bargraphSumIntervalWritePtr->v.peak;
 				tempT = g_bargraphSumIntervalWritePtr->t.peak;
 
-				rFreq = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+				rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 						((float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1)));
-				vFreq = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+				vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 						((float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1)));
-				tFreq = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 						((float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1)));
 			}
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
@@ -853,11 +861,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tempV = g_vJobPeak;
 				tempT = g_tJobPeak;
 
-				rFreq = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+				rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 						((float)((g_rJobFreq * 2) - 1)));
-				vFreq = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+				vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 						((float)((g_vJobFreq * 2) - 1)));
-				tFreq = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 						((float)((g_tJobFreq * 2) - 1)));
 			}
 
@@ -925,7 +933,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 					{
 						if (g_bargraphSumIntervalWritePtr->a.frequency > 0)
 						{
-							tempA = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+							tempA = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 									((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
 						}
 
@@ -935,7 +943,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 					{
 						if (g_aJobFreq > 0)
 						{
-							tempA = (float)((float)g_RamEventRecord.summary.parameters.sampleRate / 
+							tempA = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
 									((float)((g_aJobFreq * 2) - 1)));
 						}
 

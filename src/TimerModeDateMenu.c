@@ -566,7 +566,11 @@ void processTimerModeSettings(uint8 mode)
 	{
 		tmKeepDateTime();
 
+#if 0 // ns7100
 		RTC_FLAGS.reg = RTC_FLAGS.reg;
+#else // ns8100
+		// fix_ns8100
+#endif
 
 		//dayOfWeek = getDayOfWeek(g_helpRecord.tm_start_date.year, g_helpRecord.tm_start_date.month,
 		//						g_helpRecord.tm_start_date.day);

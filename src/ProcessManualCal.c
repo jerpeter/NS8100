@@ -64,7 +64,7 @@ void ProcessManuelCalPulse(void)
 			s_manualCalInProgess = TRUE;
 			if (g_freeEventBuffers != 0)
 			{
-				g_RamEventRecord.summary.captured.eventTime = triggerTimeStamp = getCurrentTime();
+				g_pendingEventRecord.summary.captured.eventTime = triggerTimeStamp = getCurrentTime();
 #if 0 // ns7100
 				g_summaryTable[g_eventBufferIndex].linkPtr = g_eventBufferPretrigPtr;
 #endif
@@ -261,11 +261,11 @@ void MoveManuelCalToFlash(void)
 		{
 			char tempBuffer[50];
 					
-			sprintf(&tempBuffer[0], "EVENT #%d BEING SAVED TO SD CARD (MAY TAKE A WHILE)", g_nextEventNumberToUse);
+			sprintf(&tempBuffer[0], "CALIBRATION EVENT #%d BEING SAVED...", g_nextEventNumberToUse);
 			overlayMessage("EVENT COMPLETE", &tempBuffer[0], 0);
 
 			// Write the event record header and summary
-			fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
+			fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
 			// Write the event data, containing the pretrigger, event and cal
 			fl_fwrite(g_currentEventStartPtr, g_wordSizeInCal, 2, g_currentEventFileHandle);
@@ -283,7 +283,7 @@ void MoveManuelCalToFlash(void)
 			storeCurrentEventNumber();
 
 			// Now store the updated event number in the universal ram storage.
-			g_RamEventRecord.summary.eventNumber = g_nextEventNumberToUse;
+			g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 		}
 
 		if (++g_currentEventBuffer == g_maxEventBuffers)

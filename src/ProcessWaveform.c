@@ -68,29 +68,12 @@ void ProcessWaveformData(void)
 			// Check the Command Nibble on the first channel (Acoustic)
 			switch (commandNibble)
 			{
-#if 0 // ns8100 - Moved to handle only in the ISR
-				case TRIG_THREE:
-				case TRIG_TWO:
-				case TRIG_ONE:
-					//debugRaw("\nEvtBeg\n");
-					
-					// Check if the command is a trigger two, which is the 1st warning event
-					if (commandNibble == TRIG_TWO)
-					{
-						raiseSystemEventFlag(WARNING1_EVENT);
-					}
-					// Check if the command is a trigger three, which is the 2nd warning event
-					else if (commandNibble == TRIG_THREE)
-					{
-						raiseSystemEventFlag(WARNING2_EVENT);
-					}
-#endif
 				case TRIG_ONE:
 					// Check if there are still free event containers and we are still taking new events
 					if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
 					{
 						// Store the exact time we received the trigger data sample
-						g_RamEventRecord.summary.captured.eventTime = getCurrentTime();
+						g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
 
 						// Set loop counter to 1 minus the total samples to be recieved in the event body (minus the trigger data sample)
 						g_isTriggered = g_samplesInBody - 1;
@@ -532,7 +515,7 @@ void MoveWaveformEventToFlash(void)
 
 				if (sampGrpsLeft == 0)
 				{
-					g_RamEventRecord.summary.calculated.vectorSumPeak = vectorSumTotal;
+					g_pendingEventRecord.summary.calculated.vectorSumPeak = vectorSumTotal;
 
 					flashMovState = FLASH_CAL;
 				}
@@ -576,11 +559,11 @@ void MoveWaveformEventToFlash(void)
 				}					
 				else // Write the file event to the SD card
 				{
-					sprintf((char*)&g_spareBuffer[0], "EVENT #%d BEING SAVED TO SD CARD (MAY TAKE A WHILE)", g_nextEventNumberToUse);
+					sprintf((char*)&g_spareBuffer[0], "WAVEFORM EVENT #%d BEING SAVED... (MAY TAKE TIME)", g_nextEventNumberToUse);
 					overlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
 					// Write the event record header and summary
-					fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
+					fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
 					// Write the event data, containing the pretrigger, event and cal
 					fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, g_currentEventFileHandle);
@@ -597,7 +580,7 @@ void MoveWaveformEventToFlash(void)
 					storeCurrentEventNumber();
 
 					// Now store the updated event number in the universal ram storage.
-					g_RamEventRecord.summary.eventNumber = g_nextEventNumberToUse;
+					g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 				}
 
 				// Update event buffer count and pointers

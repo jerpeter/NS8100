@@ -976,7 +976,6 @@ USER_MENU_STRUCT baudRateMenu[BAUD_RATE_MENU_ENTRIES] = {
 // Baud Rate Menu Handler
 //-----------------------
 #include "usart.h"
-#define FOSC0	66000000
 void baudRateMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg;

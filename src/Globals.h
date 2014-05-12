@@ -101,12 +101,14 @@ extern uint32 g_kpadKeyRepeatCount;
 extern uint32 g_kpadLookForKeyTickCount;
 extern uint32 g_keypadNumberSpeed;
 extern uint8 g_keypadTable[8][8];
+//extern char g_keypadTableText[8][11];
 extern unsigned char g_smc_tab_cs_size[4];
 // Sensor information and constants.
 extern SENSOR_PARAMETERS_STRUCT g_SensorInfoStruct;
 extern SENSOR_PARAMETERS_STRUCT* g_sensorInfoPtr;
 // Contains the event record in ram.
-extern EVT_RECORD g_RamEventRecord;
+extern EVT_RECORD g_pendingEventRecord;
+extern EVT_RECORD g_pendingBargraphRecord;
 // Factory Setup record.
 extern FACTORY_SETUP_STRUCT g_factorySetupRecord;
 // Structure to contain system paramters and system settings.
@@ -237,5 +239,7 @@ extern uint8 g_tcSampleTimerActive;
 extern uint8 g_tcTypematicTimerActive;
 char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
 char g_languageTable[8192];
+uint16 g_testTrigger;
+uint8 g_fileProcessActiveUsbLockout;
 
 #endif /* GLOBALS_H_ */

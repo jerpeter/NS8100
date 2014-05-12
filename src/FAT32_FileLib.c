@@ -254,6 +254,7 @@ FL_FILE* fl_fopen(char *path, char *mode)
 			else if (write)
 			{
 				read = TRUE;
+				//append = TRUE; // Added.. and damn it if I create a file for writing and + i should be able to overwrite my own content
 				erase = TRUE;
 				create = TRUE;
 			}
@@ -842,11 +843,31 @@ static BOOL _write_block(FL_FILE *file, BYTE *data, UINT32 length)
 			return FALSE;
 	}
 
+#if 0 // Shit fucking logic which doesn't account for overwrite where the file position might be something other than the EOF
 	// Increase file size
+	//debug("Fat32 Write: Start BN: %d, End BN: %d, Write Len: %d, File Len: %d, New File Len: %d\n", 
+	//		startByteNum, file->bytenum, length, file->filelength, (file->filelength + length));
+
 	file->filelength+=length;
 
 	// Update filesize in directory
 	FAT32_UpdateFileLength(file->parentcluster, (char*)file->shortfilename, file->filelength);
+
+#else // The real way to handle the new file length if it has in fact changed
+	
+	//debug("Fat32 Write: Start BN: %d, End BN: %d, Write Len: %d, File Len: %d, New File Len: %d\n", 
+	//		startByteNum, file->bytenum, length, file->filelength, (file->bytenum > file->filelength) ? file->bytenum : file->filelength);
+
+	// Check if the current file position is now greater than the cached file length
+	if (file->bytenum > file->filelength)
+	{
+		// If the file position carried past the EOF, then update the file length based on the current file position
+		file->filelength = file->bytenum;
+	}	
+
+	// Update filesize in directory (seemingly doesn't want to cooperate if not called even if filelength is the same)
+	FAT32_UpdateFileLength(file->parentcluster, (char*)file->shortfilename, file->filelength);
+#endif
 
 	return TRUE;
 }

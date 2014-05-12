@@ -242,7 +242,6 @@ void menuUpdateTimerCallBack(void)
 *	Function:    keypadLedUpdateTimerCallBack
 *	Purpose:	 update the LED on the Keypad
 ****************************************/
-#define GREEN_LED_PIN	0x10
 void keypadLedUpdateTimerCallBack(void)
 {
 	static uint8 ledState = OFF;

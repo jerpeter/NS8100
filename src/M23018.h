@@ -35,12 +35,12 @@
 #define OLATA      0x14
 #define OLATB      0x15
 
+#define GREEN_LED_PIN	0x10
+#define RED_LED_PIN		0x20
+
 void init_mcp23018(unsigned char chip);
-
 void write_mcp23018(unsigned char chip, unsigned char address, unsigned char data);
-
 void write_mcp23018_bytes(unsigned char chip, unsigned char address,  unsigned char *data, unsigned char length);
-
 unsigned char read_mcp23018(unsigned char chip, unsigned char address);
 
 #endif /* M23018_H_ */

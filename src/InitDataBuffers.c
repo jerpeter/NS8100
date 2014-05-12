@@ -69,19 +69,19 @@ void InitDataBuffs(uint8 op_mode)
 		sampleRate = g_triggerRecord.trec.sample_rate;
 	}
 
-	initEventRecord(&g_RamEventRecord, op_mode);
-
 	// Setup the pre-trigger buffer pointers
 	g_startOfPreTrigBuff = &(g_preTrigBuff[0]);
 	g_tailOfPreTrigBuff = &(g_preTrigBuff[0]);
 
-	// Set the PreTrigger size in words, 1/4 sec @ sample rate * number of channels, plus 1 sample
+	// Set the PreTrigger size in words, 1/4 sec @ sample rate * number of channels, plus 1 sample (1/4 sec plus actual trigger sample)
 	preTriggerSize = ((uint32)(sampleRate / 4) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
 	// Set up the end of the pre trigger buffer
 	g_endOfPreTrigBuff = &(g_preTrigBuff[preTriggerSize]);
 
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE))
 	{
+		initEventRecord(&g_pendingEventRecord, op_mode);
+
 		// Calculate samples for each section and total event
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
 		g_samplesInPretrig  = (uint32)(sampleRate / 4);
@@ -116,6 +116,8 @@ void InitDataBuffs(uint8 op_mode)
 	}
 	else if (op_mode == BARGRAPH_MODE)
 	{		
+		initEventRecord(&g_pendingBargraphRecord, op_mode);
+
 		g_bg430DataStartPtr = &(g_eventDataBuffer[0]);
 		g_bg430DataWritePtr = &(g_eventDataBuffer[0]);
 		g_bg430DataReadPtr = &(g_eventDataBuffer[0]);
@@ -125,6 +127,9 @@ void InitDataBuffs(uint8 op_mode)
 	}
 	else if (op_mode == COMBO_MODE)
 	{		
+		initEventRecord(&g_pendingEventRecord, op_mode);
+		initEventRecord(&g_pendingBargraphRecord, op_mode);
+
 		// Waveform init
 		// Calculate samples for each section and total event
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);

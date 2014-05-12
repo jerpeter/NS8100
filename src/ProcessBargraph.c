@@ -65,7 +65,6 @@ void StartNewBargraph(void)
 
 	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
 	byteSet(&(g_bargraphBarInterval[0]), 0, (sizeof(BARGRAPH_BAR_INTERVAL_DATA) * NUM_OF_BAR_INTERVAL_BUFFERS));
-
 	byteSet(&(g_bargraphSummaryInterval[0]), 0, (SUMMARY_INTERVAL_SIZE_IN_BYTES * NUM_OF_SUM_INTERVAL_BUFFERS));
 
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
@@ -78,18 +77,6 @@ void StartNewBargraph(void)
 	g_summaryIntervalCnt = 0;	// Count the number of bars that make up a summary interval.
 	g_totalBarIntervalCnt = 0;
 
-#if 0 // ns7100
-	g_bargraphg_eventDataBuffer = &g_eventDataBuffer[0];
-
-	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
-	byteSet(&(g_bargraphg_eventDataBuffer[0]), 0, (sizeof(uint16) * BG_DATA_BUFFER_SIZE));
-
-	g_bargraphEventDataStartPtr = &(g_bargraphg_eventDataBuffer[0]);
-	g_bargraphEventDataWritePtr = &(g_bargraphg_eventDataBuffer[0]);
-	g_bargraphEventDataReadPtr = &(g_bargraphg_eventDataBuffer[0]);
-	g_bargraphEventDataEndPtr = &(g_bargraphg_eventDataBuffer[BG_DATA_BUFFER_SIZE - 1]);
-#endif
-
 	g_bargraphBarIntervalWritePtr = &(g_bargraphBarInterval[0]);
 	g_bargraphBarIntervalReadPtr = &(g_bargraphBarInterval[0]);
 	g_bargraphSumIntervalWritePtr = &(g_bargraphSummaryInterval[0]);
@@ -101,20 +88,21 @@ void StartNewBargraph(void)
 	byteSet(g_bargraphSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
 
 	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
-	MoveStartOfBargraphEventRecordToFlash();
-
-	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
 	// Save the captured event after the the preliminary ram event record.
 	// EVENT_SUMMARY_STRUCT - Fill in the event CAPTURE_INFO_STRUCT data
 	// For Bargraph, these values are filled in at the end of bargraph.
-	g_RamEventRecord.summary.captured.batteryLevel =
-		(uint32)((float)100.0 * (float)convertedBatteryLevel(BATTERY_VOLTAGE));
-	g_RamEventRecord.summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
-	g_RamEventRecord.summary.captured.calDate = g_factorySetupRecord.cal_date;
+	g_pendingBargraphRecord.summary.captured.batteryLevel = (uint32)((float)100.0 * (float)convertedBatteryLevel(BATTERY_VOLTAGE));
+	g_pendingBargraphRecord.summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
+	g_pendingBargraphRecord.summary.captured.calDate = g_factorySetupRecord.cal_date;
 
 	// Get the time
-	g_RamEventRecord.summary.captured.eventTime =
-		g_RamEventRecord.summary.captured.endTime = getCurrentTime();
+	g_pendingBargraphRecord.summary.captured.eventTime = g_pendingBargraphRecord.summary.captured.endTime = getCurrentTime();
+
+	// Need to set the count to 0 so it can be incremented during writes
+	g_pendingBargraphRecord.header.dataLength = 0;
+	
+	// The ramevent record was byteSet to 0xFF, to write in a full structure block.
+	MoveStartOfBargraphEventRecordToFlash();
 
 	// Update the current monitor log entry
 	updateMonitorLogEntry();
@@ -143,6 +131,7 @@ void EndBargraph(void)
 	}
 
 	MoveEndOfBargraphEventRecordToFlash();
+	g_fileProcessActiveUsbLockout = OFF;
 }
 
 /*****************************************************************************
@@ -151,24 +140,6 @@ void EndBargraph(void)
 ******************************************************************************/
 void ProcessBargraphData(void)
 {
-#if 0 // ns8100 - Moved to handle only in the ISR
-	uint16 commandNibble = 0x0000;
-
-	// Store the command nibble for the first channel of data
-	commandNibble = (uint16)(*(g_tailOfPreTrigBuff) & EMBEDDED_CMD);
-
-	// Check if the command is a trigger two, which is the 1st warning event
-	if (commandNibble == TRIG_TWO)
-	{
-		raiseSystemEventFlag(WARNING1_EVENT);
-	}
-	// Check if the command is a trigger three, which is the 2nd warning event
-	else if (commandNibble == TRIG_THREE)
-	{
-		raiseSystemEventFlag(WARNING2_EVENT);
-	}
-#endif
-
 	// Check to see if we have a chunk of ram buffer to write, otherwise check for data wrapping.
 	if ((g_bg430DataEndPtr - g_bg430DataWritePtr) >= 4)
 	{
@@ -235,6 +206,7 @@ uint32 moveBarIntervalDataToFile(void)
 		END_OF_EVENT_BUFFER_CHECK(g_bargraphEventDataWritePtr, g_bargraphEventDataStartPtr, g_bargraphEventDataEndPtr);
 #else // ns8100
 		fl_fwrite(g_bargraphBarIntervalWritePtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, g_currentEventFileHandle);		
+		g_pendingBargraphRecord.header.dataLength += sizeof(BARGRAPH_BAR_INTERVAL_DATA);
 #endif
 
 		// Advance the Bar Interval global buffer pointer
@@ -319,6 +291,7 @@ void moveSummaryIntervalDataToFile(void)
 	}
 #else // ns8100
 	fl_fwrite(g_bargraphSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT), 1, g_currentEventFileHandle);		
+	g_pendingBargraphRecord.header.dataLength += sizeof(CALCULATED_DATA_STRUCT);
 #endif
 
 	// Move update the job totals.
@@ -348,10 +321,8 @@ uint8 CalculateBargraphData(void)
 	static uint8 g_aJobPeakMatch = NO, g_rJobPeakMatch = NO, g_vJobPeakMatch = NO, g_tJobPeakMatch = NO;
 
 	uint8 gotDataFlag = NO;
-	//int32 delta = 0;
 	int32 processingCount = 500;
 	uint16* dataReadStart;
-	INPUT_MSG_STRUCT msg;
 
 	while ((g_bg430DataReadPtr != g_bg430DataWritePtr) && (processingCount-- > 0))
 	{
@@ -924,21 +895,6 @@ uint8 CalculateBargraphData(void)
 			{
 				moveSummaryIntervalDataToFile();
 			}
-
-			// Move data to flash.
-#if 0 // ns7100
-			MoveBargraphEventDataToFlash();
-#endif
-
-			if (g_helpRecord.flash_wrapping == NO)
-			{
-				if (checkSpaceForBarSummaryInterval() == NO)
-				{
-					msg.cmd = STOP_MONITORING_CMD;
-					msg.length = 1;
-					(*menufunc_ptrs[MONITOR_MENU])(msg);
-				}
-			}
 		}
 
 	} // While != loop
@@ -1005,10 +961,10 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 
 		moveSizeInWords = (sizeof(EVT_RECORD))/2;
 		destPtr = (uint16*)(flashEventRecord);
-		srcPtr = (uint16*)(&g_RamEventRecord);
+		srcPtr = (uint16*)(&g_pendingBargraphRecord);
 		flashWrite(destPtr, srcPtr, moveSizeInWords);
 
-		byteSet((uint8*)&(g_RamEventRecord.summary.calculated), 0, sizeof(CALCULATED_DATA_STRUCT));
+		byteSet((uint8*)&(g_pendingBargraphRecord.summary.calculated), 0, sizeof(CALCULATED_DATA_STRUCT));
 #else // ns8100
 		// Get new file handle
 		g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
@@ -1019,7 +975,7 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 		}			
 
 		// Write in the current but unfinished event record to provide an offset to start writing in the data
-		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
+		fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 #endif
 	}
 
@@ -1052,67 +1008,26 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 	}
 	else
 	{
-#if 0 // ns7100
-		// Set our flash event data pointer to the start of the flash event
-	    eventDataPtr = (uint16*)((uint8*)flashEventRecord + sizeof(EVT_RECORD));
-
-		// Check if the flash pointer is greater than the event data pointer suggesting that the event has not wrapped
-		if (flashPtr > eventDataPtr)
-		{
-			g_RamEventRecord.header.dataLength = (uint32)((uint32)flashPtr - (uint32)eventDataPtr);
-		}
-		else
-		{
-			// The size of the data to the end of the buffer.
-			g_RamEventRecord.header.dataLength = (uint32)((FLASH_EVENT_END - (uint32)eventDataPtr) +
-				((uint32)flashPtr - FLASH_EVENT_START));
-		}
-#endif
-
-/*
-		// Is the checksum done in words or bytes, do we do a crc?
-		for (checksumDex = 0; checksumDex < g_RamEventRecord.header.dataLength; checksumDex++)
-		{
-			g_RamEventRecord.header.dataChecksum = 0;
-		}
-
-		// Is the checksum done in words or bytes, do we do a crc?
-		for (checksumDex = 0; checksumDex < sizeof(EVENT_SUMMARY_STRUCT); checksumDex++)
-		{
-			g_RamEventRecord.header.summaryChecksum = 0;
-		}
-*/
 		// The following data will be filled in when the data has been moved over to flash.
-		g_RamEventRecord.header.summaryChecksum = 0xAABB;
-		g_RamEventRecord.header.dataChecksum = 0xCCDD;
-		g_RamEventRecord.header.dataCompression = 0;
+		g_pendingBargraphRecord.header.summaryChecksum = 0xAABB;
+		g_pendingBargraphRecord.header.dataChecksum = 0xCCDD;
+		g_pendingBargraphRecord.header.dataCompression = 0;
 
-#if 0 // ns7100
-		// We dont worry about the end of the falsh buffer because when the new flash event record is setup,
-		// a check is made so the event record is one contiguous structure, not including the event data.
-		// Not sure if flashwrite will mod the ptrs, so setup dest and src ptrs. We are copying over the
-		// dataLength(32), summaryChecksum, dataChecksum, and dataCompression, unused, unused;
-		moveSizeInWords = 7;
-		destPtr = (uint16*)(&(flashEventRecord->header.dataLength));
-		srcPtr = (uint16*)(&(g_RamEventRecord.header.dataLength));
-		flashWrite(destPtr, srcPtr, moveSizeInWords);
-#endif
-
-		g_RamEventRecord.summary.captured.endTime = getCurrentTime();
+		g_pendingBargraphRecord.summary.captured.endTime = getCurrentTime();
 
 #if 0 // ns7100
 		// Setup ptrs so we are at the beginning of the CAPTURE_INFO_STRUCT. Copy over only the
 		// CAPTURE_INFO_STRUCT and CALCULATED_DATA_STRUCT. Get the size of the data to copy.
 		moveSizeInWords = sizeof(CAPTURE_INFO_STRUCT)/2;
 		destPtr = (uint16*)(&(flashEventRecord->summary.captured));
-		srcPtr = (uint16*)(&(g_RamEventRecord.summary.captured));
+		srcPtr = (uint16*)(&(g_pendingBargraphRecord.summary.captured));
 		flashWrite(destPtr, srcPtr, moveSizeInWords);
 
 		// Setup ptrs so we are at the beginning of the CAPTURE_INFO_STRUCT. Copy over only the
 		// CAPTURE_INFO_STRUCT and CALCULATED_DATA_STRUCT. Get the size of the data to copy.
 		moveSizeInWords = sizeof(CALCULATED_DATA_STRUCT)/2;
 		destPtr = (uint16*)(&(flashEventRecord->summary.calculated));
-		srcPtr = (uint16*)(&(g_RamEventRecord.summary.calculated));
+		srcPtr = (uint16*)(&(g_pendingBargraphRecord.summary.calculated));
 		flashWrite(destPtr, srcPtr, moveSizeInWords);
 #endif
 
@@ -1121,7 +1036,7 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 		fl_fseek(g_currentEventFileHandle, 0, SEEK_SET);
 
 		// Rewrite the event record
-		fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
+		fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
 		fl_fclose(g_currentEventFileHandle);
 		debug("Bargraph event file closed\n");
@@ -1185,85 +1100,85 @@ void UpdateBargraphJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 	// ---------
 	// A channel
 	// ---------
-	if (sumIntervalPtr->a.peak > g_RamEventRecord.summary.calculated.a.peak)
+	if (sumIntervalPtr->a.peak > g_pendingBargraphRecord.summary.calculated.a.peak)
 	{
-		g_RamEventRecord.summary.calculated.a = sumIntervalPtr->a;
-		g_RamEventRecord.summary.calculated.a_Time = sumIntervalPtr->a_Time;
+		g_pendingBargraphRecord.summary.calculated.a = sumIntervalPtr->a;
+		g_pendingBargraphRecord.summary.calculated.a_Time = sumIntervalPtr->a_Time;
 	}
-	else if (sumIntervalPtr->a.peak == g_RamEventRecord.summary.calculated.a.peak)
+	else if (sumIntervalPtr->a.peak == g_pendingBargraphRecord.summary.calculated.a.peak)
 	{
-		if (sumIntervalPtr->a.frequency > g_RamEventRecord.summary.calculated.a.frequency)
+		if (sumIntervalPtr->a.frequency > g_pendingBargraphRecord.summary.calculated.a.frequency)
 		{
-			g_RamEventRecord.summary.calculated.a = sumIntervalPtr->a;
-			g_RamEventRecord.summary.calculated.a_Time = sumIntervalPtr->a_Time;
+			g_pendingBargraphRecord.summary.calculated.a = sumIntervalPtr->a;
+			g_pendingBargraphRecord.summary.calculated.a_Time = sumIntervalPtr->a_Time;
 		}
 	}
 
 	// ---------
 	// R channel
 	// ---------
-	if (sumIntervalPtr->r.peak > g_RamEventRecord.summary.calculated.r.peak)
+	if (sumIntervalPtr->r.peak > g_pendingBargraphRecord.summary.calculated.r.peak)
 	{
-		g_RamEventRecord.summary.calculated.r = sumIntervalPtr->r;
-		g_RamEventRecord.summary.calculated.r_Time = sumIntervalPtr->r_Time;
+		g_pendingBargraphRecord.summary.calculated.r = sumIntervalPtr->r;
+		g_pendingBargraphRecord.summary.calculated.r_Time = sumIntervalPtr->r_Time;
 	}
-	else if (sumIntervalPtr->r.peak == g_RamEventRecord.summary.calculated.r.peak)
+	else if (sumIntervalPtr->r.peak == g_pendingBargraphRecord.summary.calculated.r.peak)
 	{
-		if (sumIntervalPtr->r.frequency > g_RamEventRecord.summary.calculated.r.frequency)
+		if (sumIntervalPtr->r.frequency > g_pendingBargraphRecord.summary.calculated.r.frequency)
 		{
-			g_RamEventRecord.summary.calculated.r = sumIntervalPtr->r;
-			g_RamEventRecord.summary.calculated.r_Time = sumIntervalPtr->r_Time;
+			g_pendingBargraphRecord.summary.calculated.r = sumIntervalPtr->r;
+			g_pendingBargraphRecord.summary.calculated.r_Time = sumIntervalPtr->r_Time;
 		}
 	}
 
 	// ---------
 	// V channel
 	// ---------
-	if (sumIntervalPtr->v.peak > g_RamEventRecord.summary.calculated.v.peak)
+	if (sumIntervalPtr->v.peak > g_pendingBargraphRecord.summary.calculated.v.peak)
 	{
-		g_RamEventRecord.summary.calculated.v = sumIntervalPtr->v;
-		g_RamEventRecord.summary.calculated.v_Time = sumIntervalPtr->v_Time;
+		g_pendingBargraphRecord.summary.calculated.v = sumIntervalPtr->v;
+		g_pendingBargraphRecord.summary.calculated.v_Time = sumIntervalPtr->v_Time;
 	}
-	else if (sumIntervalPtr->v.peak == g_RamEventRecord.summary.calculated.v.peak)
+	else if (sumIntervalPtr->v.peak == g_pendingBargraphRecord.summary.calculated.v.peak)
 	{
-		if (sumIntervalPtr->v.frequency > g_RamEventRecord.summary.calculated.v.frequency)
+		if (sumIntervalPtr->v.frequency > g_pendingBargraphRecord.summary.calculated.v.frequency)
 		{
-			g_RamEventRecord.summary.calculated.v = sumIntervalPtr->v;
-			g_RamEventRecord.summary.calculated.v_Time = sumIntervalPtr->v_Time;
+			g_pendingBargraphRecord.summary.calculated.v = sumIntervalPtr->v;
+			g_pendingBargraphRecord.summary.calculated.v_Time = sumIntervalPtr->v_Time;
 		}
 	}
 
 	// ---------
 	// T channel
 	// ---------
-	if (sumIntervalPtr->t.peak > g_RamEventRecord.summary.calculated.t.peak)
+	if (sumIntervalPtr->t.peak > g_pendingBargraphRecord.summary.calculated.t.peak)
 	{
-		g_RamEventRecord.summary.calculated.t = sumIntervalPtr->t;
-		g_RamEventRecord.summary.calculated.t_Time = sumIntervalPtr->t_Time;
+		g_pendingBargraphRecord.summary.calculated.t = sumIntervalPtr->t;
+		g_pendingBargraphRecord.summary.calculated.t_Time = sumIntervalPtr->t_Time;
 	}
-	else if (sumIntervalPtr->t.peak == g_RamEventRecord.summary.calculated.t.peak)
+	else if (sumIntervalPtr->t.peak == g_pendingBargraphRecord.summary.calculated.t.peak)
 	{
-		if (sumIntervalPtr->t.frequency > g_RamEventRecord.summary.calculated.t.frequency)
+		if (sumIntervalPtr->t.frequency > g_pendingBargraphRecord.summary.calculated.t.frequency)
 		{
-			g_RamEventRecord.summary.calculated.t = sumIntervalPtr->t;
-			g_RamEventRecord.summary.calculated.t_Time = sumIntervalPtr->t_Time;
+			g_pendingBargraphRecord.summary.calculated.t = sumIntervalPtr->t;
+			g_pendingBargraphRecord.summary.calculated.t_Time = sumIntervalPtr->t_Time;
 		}
 	}
 
 	// ----------
 	// Vector Sum
 	// ----------
-	if (sumIntervalPtr->vectorSumPeak > g_RamEventRecord.summary.calculated.vectorSumPeak)
+	if (sumIntervalPtr->vectorSumPeak > g_pendingBargraphRecord.summary.calculated.vectorSumPeak)
 	{
-		g_RamEventRecord.summary.calculated.vectorSumPeak = sumIntervalPtr->vectorSumPeak;
-		g_RamEventRecord.summary.calculated.vs_Time = sumIntervalPtr->vs_Time;
+		g_pendingBargraphRecord.summary.calculated.vectorSumPeak = sumIntervalPtr->vectorSumPeak;
+		g_pendingBargraphRecord.summary.calculated.vs_Time = sumIntervalPtr->vs_Time;
 	}
 
-	g_RamEventRecord.summary.calculated.summariesCaptured = sumIntervalPtr->summariesCaptured;
-	g_RamEventRecord.summary.calculated.barIntervalsCaptured += sumIntervalPtr->barIntervalsCaptured;
-	g_RamEventRecord.summary.calculated.intervalEnd_Time = sumIntervalPtr->intervalEnd_Time;
-	g_RamEventRecord.summary.calculated.batteryLevel = sumIntervalPtr->batteryLevel;
-	g_RamEventRecord.summary.calculated.calcStructEndFlag = 0xEECCCCEE;
+	g_pendingBargraphRecord.summary.calculated.summariesCaptured = sumIntervalPtr->summariesCaptured;
+	g_pendingBargraphRecord.summary.calculated.barIntervalsCaptured += sumIntervalPtr->barIntervalsCaptured;
+	g_pendingBargraphRecord.summary.calculated.intervalEnd_Time = sumIntervalPtr->intervalEnd_Time;
+	g_pendingBargraphRecord.summary.calculated.batteryLevel = sumIntervalPtr->batteryLevel;
+	g_pendingBargraphRecord.summary.calculated.calcStructEndFlag = 0xEECCCCEE;
 }
 
 //*****************************************************************************

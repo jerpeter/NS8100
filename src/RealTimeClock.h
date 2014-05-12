@@ -67,6 +67,7 @@ enum {
 	WHEN_DAY_HOURS_MINUTES_AND_SECONDS_MATCH
 };
 
+#if 0 // ns7100
 // Periodic Interrupt frequency
 enum {
 	NO_PERIODIC_INT = 0,	// 0x00, Disabled
@@ -403,6 +404,16 @@ typedef union
 	uint8 reg;
 } RTC_CENTURY_STRUCT;
 
+#if 0 // finish this...
+typedef struct
+{
+	RTC_SECONDS_ALARM_STRUCT 	secondsAlarm;	// Adress 1
+	RTC_MINUTES_ALARM_STRUCT	minutesAlarm;	// Adress 3 
+	RTC_HOURS_ALARM_STRUCT 		hoursAlarm;		// Adress 5
+	RTC_DAY_ALARM_STRUCT		dayAlarm;		// Adress 7
+} RTC_MEMORY_MAP_STRUCT;
+#endif
+
 // ===========================
 // RTC Definitions
 // ===========================
@@ -468,9 +479,33 @@ typedef struct
 	RTC_CENTURY_STRUCT			century;		// Adress F
 } RTC_MEMORY_MAP_STRUCT;
 
+#else // ns8100
+
 //=============================================================================
 //=== New RTC =================================================================
 //=============================================================================
+
+#define RTC_WRITE_CMD   0x20
+#define RTC_READ_CMD    0xA0
+#define RTC_ACCESS_DELAY	100
+
+#define RTC_CLOCK_STOPPED	0x20
+#define RTC_CLOCK_INTEGRITY	0x80
+#define RTC_24_HOUR_MODE	0x00
+#define RTC_12_HOUR_MODE	0x04
+#define RTC_BCD_SECONDS_MASK	0x7F
+#define RTC_BCD_MINUTES_MASK	0x7F
+#define RTC_BCD_HOURS_MASK		0x3F
+#define RTC_BCD_DAYS_MASK		0x3F
+#define RTC_BCD_WEEKDAY_MASK	0x07
+#define RTC_BCD_MONTHS_MASK		0x1F
+#define RTC_BCD_YEARS_MASK		0xFF
+#define RTC_DISABLE_ALARM		0x80
+#define RTC_ENABLE_ALARM		0x00
+
+#define BCD_CONVERT_TO_UINT8(x, filter)	((((x & filter) >> 4) * 10) + (x & 0x0F))
+#define UINT8_CONVERT_TO_BCD(x, filter)	((((uint8)(x / 10) << 4) & filter) | ((x % 10) & 0x0F))
+
 // ===========================
 // RTC Registers
 // ===========================
@@ -1011,6 +1046,7 @@ typedef union
 #define RTC_RAM_WRITE_ADDR			0x1c
 #define RTC_RAM_READ_ADDR			0x1d
 
+#if 0
 typedef struct
 {
 	RTC_CONTROL_1_STRUCT			control_1;
@@ -1044,7 +1080,43 @@ typedef struct
 	RTC_RAM_WRITE_STRUCT			ram_write;
 	RTC_RAM_READ_STRUCT				ram_read;
 } RTC_MEM_MAP_STRUCT;
+#else
+typedef struct
+{
+	uint8 control_1;
+	uint8 control_2;
+	uint8 control_3;
+	uint8 seconds;
+	uint8 minutes;
+	uint8 hours;
+	uint8 days;
+	uint8 weekdays;
+	uint8 months;
+	uint8 years;
+	uint8 second_alarm;
+	uint8 minute_alarm;
+	uint8 hour_alarm;
+	uint8 day_alarm;
+	uint8 weekday_alarm;
+	uint8 clock_out_control;
+	uint8 watchdog_control;
+	uint8 watchdog;
+	uint8 timestamp_control;
+	uint8 timestamp_seconds;
+	uint8 timestamp_minutes;
+	uint8 timestamp_hours;
+	uint8 timestamp_days;
+	uint8 timestamp_months;
+	uint8 timestamp_years;
+	uint8 aging_offset;
+	uint8 ram_address_msb;
+	uint8 ram_address_lsb;
+	uint8 ram_write;
+	uint8 ram_read;
+} RTC_MEM_MAP_STRUCT;
+#endif
 
+#if 0
 typedef struct
 {
 	RTC_SECONDS_STRUCT_TEMP			seconds;
@@ -1055,7 +1127,54 @@ typedef struct
 	RTC_MONTHS_STRUCT				months;
 	RTC_YEARS_STRUCT				years;
 } RTC_DATE_TIME_STRUCT;
+#else
+typedef struct
+{
+	uint8 seconds;
+	uint8 minutes;
+	uint8 hours;
+	uint8 days;
+	uint8 weekdays;
+	uint8 months;
+	uint8 years;
+} RTC_DATE_TIME_STRUCT;
+#endif
 
+#if 0
+typedef struct
+{
+	RTC_DAYS_STRUCT					days;
+	RTC_WEEKDAYS_STRUCT				weekdays;
+	RTC_MONTHS_STRUCT				months;
+	RTC_YEARS_STRUCT				years;
+} RTC_DATE_STRUCT;
+#else
+typedef struct
+{
+	uint8 days;
+	uint8 weekdays;
+	uint8 months;
+	uint8 years;
+} RTC_DATE_STRUCT;
+#endif
+
+#if 0
+typedef struct
+{
+	RTC_SECONDS_STRUCT_TEMP			seconds;
+	RTC_MINUTES_STRUCT_TEMP			minutes;
+	RTC_HOURS_STRUCT_TEMP			hours;
+} RTC_TIME_STRUCT;
+#else
+typedef struct
+{
+	uint8 seconds;
+	uint8 minutes;
+	uint8 hours;
+} RTC_TIME_STRUCT;
+#endif
+
+#if 0
 typedef struct
 {
 	RTC_SECOND_ALARM_STRUCT			second_alarm;
@@ -1064,11 +1183,23 @@ typedef struct
 	RTC_DAY_ALARM_STRUCT_TEMP		day_alarm;
 	RTC_WEEKDAY_ALARM_STRUCT		weekday_alarm;
 } RTC_ALARM_STRUCT;
+#else
+typedef struct
+{
+	uint8 second_alarm;
+	uint8 minute_alarm;
+	uint8 hour_alarm;
+	uint8 day_alarm;
+	uint8 weekday_alarm;
+} RTC_ALARM_STRUCT;
+#endif
+
+#endif // end of ns8100
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-BOOLEAN InitRtc(void);
+BOOLEAN InitExternalRtc(void);
 uint8 setRtcTime(DATE_TIME_STRUCT* time);
 uint8 setRtcDate(DATE_TIME_STRUCT* time);
 DATE_TIME_STRUCT getRtcTime(void);
@@ -1077,5 +1208,9 @@ DATE_TIME_STRUCT getCurrentTime(void);
 void DisableRtcAlarm(void);
 void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second);
 void SetAlarmFrequency(uint8 mode);
+void convertCurrentTimeForFat(uint8* fatTimeField);
+void convertCurrentDateForFat(uint8* fatTimeDate);
+void rtcWrite(uint8 register_address, int length, uint8* data);
+void rtcRead(uint8 register_address, int length, uint8* data);
 
 #endif // _RTC_H_

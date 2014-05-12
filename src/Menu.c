@@ -30,6 +30,7 @@
 #include "Font_Six_by_Eight_table.h"
 #include "TextTypes.h"
 #include "RemoteCommon.h"
+#include "usart.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -69,6 +70,8 @@ static MB_CHOICE s_messageChoices[MB_TOTAL_CHOICES] =
 void setupMnDef(void)
 {
 	char buff[50];
+	usart_options_t rs232Options = 
+		{ .charlength = 8, .paritytype = USART_NO_PARITY, .stopbits = USART_1_STOPBIT, .channelmode = USART_NORMAL_CHMODE };
 
     debug("Init Power on LCD...\n");
 
@@ -118,17 +121,20 @@ void setupMnDef(void)
 		// Help Record is valid
 		debug("Help record: Found.\n");
 
-#if 0 // fix_ns8100
-		// Set the baud rate to the user stored baud rate setting (initialized to 38400)
-		if (g_helpRecord.baud_rate == BAUD_RATE_19200)
+		// Set the baud rate to the user stored baud rate setting (initialized to 115200)
+		switch (g_helpRecord.baud_rate)
 		{
-			uart_init(19200, CRAFT_COM_PORT);
+			case BAUD_RATE_57600: rs232Options.baudrate = 57600; break;
+			case BAUD_RATE_38400: rs232Options.baudrate = 38400; break;
+			case BAUD_RATE_19200: rs232Options.baudrate = 19200; break;
+			case BAUD_RATE_9600: rs232Options.baudrate = 9600; break;
 		}
-		else if (g_helpRecord.baud_rate == BAUD_RATE_9600)
+
+		if (g_helpRecord.baud_rate != BAUD_RATE_115200)
 		{
-			uart_init(9600, CRAFT_COM_PORT);
+			// Re-Initialize the RS232 with the stored baud rate
+			usart_init_rs232(&AVR32_USART1, &rs232Options, FOSC0);
 		}
-#endif		
 	}
 
     debug("Init Build Language Table...\n");

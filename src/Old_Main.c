@@ -95,7 +95,7 @@ void InitSystemHardware(void)
 
 	// Init the real time clock
 	debug("Setting up RTC\n");
-	InitRtc();
+	InitExternalRtc();
 #endif
 }
 
@@ -226,11 +226,16 @@ void SystemEventManager(void)
 
 	if (getSystemEventState(TRIGGER_EVENT))
 	{
-		debug("Trigger Event 1\n");
 		if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+		{
+			debug("Trigger Event (Wave)\n");
 			MoveWaveformEventToFlash();
+		}		
 		else if (g_triggerRecord.op_mode == COMBO_MODE)
+		{
+			debug("Trigger Event (Combo)\n");
 			MoveComboWaveformEventToFile();
+		}		
 	}
 
 	if (getSystemEventState(MANUEL_CAL_EVENT))
@@ -284,14 +289,24 @@ void SystemEventManager(void)
 	if (getSystemEventState(BARGRAPH_EVENT))
 	{
 		clearSystemEventFlag(BARGRAPH_EVENT);
-		CalculateBargraphData();
+
+		if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+		{
+			CalculateBargraphData();
+		}		
+		else if (g_triggerRecord.op_mode == COMBO_MODE)
+		{
+			CalculateComboData();
+		}		
 	}
 
+#if 0
 	if (getSystemEventState(COMBO_EVENT))
 	{
 		clearSystemEventFlag(COMBO_EVENT);
 		CalculateComboData();
 	}
+#endif
 
 	if (getSystemEventState(WARNING1_EVENT))
 	{

@@ -29,6 +29,7 @@
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
 #include "FAT32_FileLib.h"
+#include "usart.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -72,16 +73,6 @@ void StartNewCombo(void)
 	g_summaryIntervalCnt = 0;	// Count the number of bars that make up a summary interval.
 	g_totalBarIntervalCnt = 0;
 
-#if 0 // Unused
-	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
-	byteSet(&(g_combog_eventDataBufferer[0]), 0, (sizeof(uint16) * BG_DATA_BUFFER_SIZE));
-
-	g_comboEventDataStartPtr = &(g_combog_eventDataBufferer[0]);
-	g_comboEventDataWritePtr = &(g_combog_eventDataBufferer[0]);
-	g_comboEventDataReadPtr = &(g_combog_eventDataBufferer[0]);
-	g_comboEventDataEndPtr = &(g_combog_eventDataBufferer[BG_DATA_BUFFER_SIZE - 1]);
-#endif
-
 	g_comboBarIntervalWritePtr = &(g_comboBarInterval[0]);
 	g_comboBarIntervalReadPtr = &(g_comboBarInterval[0]);
 	g_comboSumIntervalWritePtr = &(g_comboSummaryInterval[0]);
@@ -92,15 +83,17 @@ void StartNewCombo(void)
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
 	byteSet(g_comboSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
 
-	MoveStartOfComboEventRecordToFile();
-
-	g_RamEventRecord.summary.captured.batteryLevel = (uint32)((float)100.0 * (float)convertedBatteryLevel(BATTERY_VOLTAGE));
-	g_RamEventRecord.summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
-	g_RamEventRecord.summary.captured.calDate = g_factorySetupRecord.cal_date;
+	g_pendingBargraphRecord.summary.captured.batteryLevel = (uint32)((float)100.0 * (float)convertedBatteryLevel(BATTERY_VOLTAGE));
+	g_pendingBargraphRecord.summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
+	g_pendingBargraphRecord.summary.captured.calDate = g_factorySetupRecord.cal_date;
 
 	// Get the time
-	g_RamEventRecord.summary.captured.eventTime =
-		g_RamEventRecord.summary.captured.endTime = getCurrentTime();
+	g_pendingBargraphRecord.summary.captured.eventTime = g_pendingBargraphRecord.summary.captured.endTime = getCurrentTime();
+
+	// Need to set the count to 0 so it can be incremented during writes
+	g_pendingBargraphRecord.header.dataLength = 0;
+
+	MoveStartOfComboEventRecordToFile();
 
 	// Update the current monitor log entry
 	updateMonitorLogEntry();
@@ -126,6 +119,7 @@ void EndCombo(void)
 	}
 
 	MoveEndOfComboEventRecordToFile();
+	g_fileProcessActiveUsbLockout = OFF;
 }
 
 /*****************************************************************************
@@ -206,11 +200,13 @@ void ProcessComboSampleData(void)
 			switch (commandNibble)
 			{
 				case TRIG_ONE:
+					usart_write_char(&AVR32_USART1, '*');
+
 					// Check if there are still free event containers and we are still taking new events
 					if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
 					{
 						// Store the exact time we received the trigger data sample
-						g_RamEventRecord.summary.captured.eventTime = getCurrentTime();
+						g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
 
 						// Set loop counter to 1 minus the total samples to be recieved in the event body (minus the trigger data sample)
 						g_isTriggered = g_samplesInBody - 1;
@@ -253,6 +249,7 @@ void ProcessComboSampleData(void)
 					break;
 
 				case CAL_START:
+					usart_write_char(&AVR32_USART1, '+');
 					// Set loop counter to 1 minus the total cal samples to be recieved (minus the cal start sample)
 					g_processingCal = g_samplesInCal - 1;
 
@@ -510,6 +507,7 @@ uint32 moveComboBarIntervalDataToFile(void)
 		g_barIntervalCnt = 0;
 
 		fl_fwrite(g_comboBarIntervalWritePtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, g_comboDualCurrentEventFileHandle);		
+		g_pendingBargraphRecord.header.dataLength += sizeof(BARGRAPH_BAR_INTERVAL_DATA);
 
 		// Advance the Bar Interval global buffer pointer
 		advanceBarIntervalBufPtr(WRITE_PTR);
@@ -555,6 +553,7 @@ void moveComboSummaryIntervalDataToFile(void)
 	g_summaryIntervalCnt = 0;
 
 	fl_fwrite(g_comboSumIntervalWritePtr, sizeof(CALCULATED_DATA_STRUCT), 1, g_comboDualCurrentEventFileHandle);		
+	g_pendingBargraphRecord.header.dataLength += sizeof(CALCULATED_DATA_STRUCT);
 
 	// Move update the job totals.
 	UpdateComboJobTotals(g_comboSumIntervalWritePtr);
@@ -1184,7 +1183,7 @@ void MoveStartOfComboEventRecordToFile(void)
 		debugErr("Failed to get a new file handle for the current Combo - Bargraph event!\n");
 
 	// Write in the current but unfinished event record to provide an offset to start writing in the data
-	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_comboDualCurrentEventFileHandle);
+	fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_comboDualCurrentEventFileHandle);
 
 	// ns8100 - *NOTE* With Combo and keeping consistant with event numbers, save now instead of at the end of bargraph
 	// Combo - Bargraph event created, inc event number for potential Combo - Waveform events
@@ -1198,17 +1197,17 @@ void MoveStartOfComboEventRecordToFile(void)
 void MoveEndOfComboEventRecordToFile(void)
 {
 	// The following data will be filled in when the data has been moved over to flash.
-	g_RamEventRecord.header.summaryChecksum = 0xAABB;
-	g_RamEventRecord.header.dataChecksum = 0xCCDD;
-	g_RamEventRecord.header.dataCompression = 0;
+	g_pendingBargraphRecord.header.summaryChecksum = 0xAABB;
+	g_pendingBargraphRecord.header.dataChecksum = 0xCCDD;
+	g_pendingBargraphRecord.header.dataCompression = 0;
 
-	g_RamEventRecord.summary.captured.endTime = getCurrentTime();
+	g_pendingBargraphRecord.summary.captured.endTime = getCurrentTime();
 
 	// Make sure at the beginning of the file
 	fl_fseek(g_comboDualCurrentEventFileHandle, 0, SEEK_SET);
 
 	// Rewrite the event record
-	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_comboDualCurrentEventFileHandle);
+	fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_comboDualCurrentEventFileHandle);
 
 	fl_fclose(g_comboDualCurrentEventFileHandle);
 	debug("Bargraph event file closed\n");
@@ -1270,85 +1269,85 @@ void UpdateComboJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 	// ---------
 	// A channel
 	// ---------
-	if (sumIntervalPtr->a.peak > g_RamEventRecord.summary.calculated.a.peak)
+	if (sumIntervalPtr->a.peak > g_pendingBargraphRecord.summary.calculated.a.peak)
 	{
-		g_RamEventRecord.summary.calculated.a = sumIntervalPtr->a;
-		g_RamEventRecord.summary.calculated.a_Time = sumIntervalPtr->a_Time;
+		g_pendingBargraphRecord.summary.calculated.a = sumIntervalPtr->a;
+		g_pendingBargraphRecord.summary.calculated.a_Time = sumIntervalPtr->a_Time;
 	}
-	else if (sumIntervalPtr->a.peak == g_RamEventRecord.summary.calculated.a.peak)
+	else if (sumIntervalPtr->a.peak == g_pendingBargraphRecord.summary.calculated.a.peak)
 	{
-		if (sumIntervalPtr->a.frequency > g_RamEventRecord.summary.calculated.a.frequency)
+		if (sumIntervalPtr->a.frequency > g_pendingBargraphRecord.summary.calculated.a.frequency)
 		{
-			g_RamEventRecord.summary.calculated.a = sumIntervalPtr->a;
-			g_RamEventRecord.summary.calculated.a_Time = sumIntervalPtr->a_Time;
+			g_pendingBargraphRecord.summary.calculated.a = sumIntervalPtr->a;
+			g_pendingBargraphRecord.summary.calculated.a_Time = sumIntervalPtr->a_Time;
 		}
 	}
 
 	// ---------
 	// R channel
 	// ---------
-	if (sumIntervalPtr->r.peak > g_RamEventRecord.summary.calculated.r.peak)
+	if (sumIntervalPtr->r.peak > g_pendingBargraphRecord.summary.calculated.r.peak)
 	{
-		g_RamEventRecord.summary.calculated.r = sumIntervalPtr->r;
-		g_RamEventRecord.summary.calculated.r_Time = sumIntervalPtr->r_Time;
+		g_pendingBargraphRecord.summary.calculated.r = sumIntervalPtr->r;
+		g_pendingBargraphRecord.summary.calculated.r_Time = sumIntervalPtr->r_Time;
 	}
-	else if (sumIntervalPtr->r.peak == g_RamEventRecord.summary.calculated.r.peak)
+	else if (sumIntervalPtr->r.peak == g_pendingBargraphRecord.summary.calculated.r.peak)
 	{
-		if (sumIntervalPtr->r.frequency > g_RamEventRecord.summary.calculated.r.frequency)
+		if (sumIntervalPtr->r.frequency > g_pendingBargraphRecord.summary.calculated.r.frequency)
 		{
-			g_RamEventRecord.summary.calculated.r = sumIntervalPtr->r;
-			g_RamEventRecord.summary.calculated.r_Time = sumIntervalPtr->r_Time;
+			g_pendingBargraphRecord.summary.calculated.r = sumIntervalPtr->r;
+			g_pendingBargraphRecord.summary.calculated.r_Time = sumIntervalPtr->r_Time;
 		}
 	}
 
 	// ---------
 	// V channel
 	// ---------
-	if (sumIntervalPtr->v.peak > g_RamEventRecord.summary.calculated.v.peak)
+	if (sumIntervalPtr->v.peak > g_pendingBargraphRecord.summary.calculated.v.peak)
 	{
-		g_RamEventRecord.summary.calculated.v = sumIntervalPtr->v;
-		g_RamEventRecord.summary.calculated.v_Time = sumIntervalPtr->v_Time;
+		g_pendingBargraphRecord.summary.calculated.v = sumIntervalPtr->v;
+		g_pendingBargraphRecord.summary.calculated.v_Time = sumIntervalPtr->v_Time;
 	}
-	else if (sumIntervalPtr->v.peak == g_RamEventRecord.summary.calculated.v.peak)
+	else if (sumIntervalPtr->v.peak == g_pendingBargraphRecord.summary.calculated.v.peak)
 	{
-		if (sumIntervalPtr->v.frequency > g_RamEventRecord.summary.calculated.v.frequency)
+		if (sumIntervalPtr->v.frequency > g_pendingBargraphRecord.summary.calculated.v.frequency)
 		{
-			g_RamEventRecord.summary.calculated.v = sumIntervalPtr->v;
-			g_RamEventRecord.summary.calculated.v_Time = sumIntervalPtr->v_Time;
+			g_pendingBargraphRecord.summary.calculated.v = sumIntervalPtr->v;
+			g_pendingBargraphRecord.summary.calculated.v_Time = sumIntervalPtr->v_Time;
 		}
 	}
 
 	// ---------
 	// T channel
 	// ---------
-	if (sumIntervalPtr->t.peak > g_RamEventRecord.summary.calculated.t.peak)
+	if (sumIntervalPtr->t.peak > g_pendingBargraphRecord.summary.calculated.t.peak)
 	{
-		g_RamEventRecord.summary.calculated.t = sumIntervalPtr->t;
-		g_RamEventRecord.summary.calculated.t_Time = sumIntervalPtr->t_Time;
+		g_pendingBargraphRecord.summary.calculated.t = sumIntervalPtr->t;
+		g_pendingBargraphRecord.summary.calculated.t_Time = sumIntervalPtr->t_Time;
 	}
-	else if (sumIntervalPtr->t.peak == g_RamEventRecord.summary.calculated.t.peak)
+	else if (sumIntervalPtr->t.peak == g_pendingBargraphRecord.summary.calculated.t.peak)
 	{
-		if (sumIntervalPtr->t.frequency > g_RamEventRecord.summary.calculated.t.frequency)
+		if (sumIntervalPtr->t.frequency > g_pendingBargraphRecord.summary.calculated.t.frequency)
 		{
-			g_RamEventRecord.summary.calculated.t = sumIntervalPtr->t;
-			g_RamEventRecord.summary.calculated.t_Time = sumIntervalPtr->t_Time;
+			g_pendingBargraphRecord.summary.calculated.t = sumIntervalPtr->t;
+			g_pendingBargraphRecord.summary.calculated.t_Time = sumIntervalPtr->t_Time;
 		}
 	}
 
 	// ----------
 	// Vector Sum
 	// ----------
-	if (sumIntervalPtr->vectorSumPeak > g_RamEventRecord.summary.calculated.vectorSumPeak)
+	if (sumIntervalPtr->vectorSumPeak > g_pendingBargraphRecord.summary.calculated.vectorSumPeak)
 	{
-		g_RamEventRecord.summary.calculated.vectorSumPeak = sumIntervalPtr->vectorSumPeak;
-		g_RamEventRecord.summary.calculated.vs_Time = sumIntervalPtr->vs_Time;
+		g_pendingBargraphRecord.summary.calculated.vectorSumPeak = sumIntervalPtr->vectorSumPeak;
+		g_pendingBargraphRecord.summary.calculated.vs_Time = sumIntervalPtr->vs_Time;
 	}
 
-	g_RamEventRecord.summary.calculated.summariesCaptured = sumIntervalPtr->summariesCaptured;
-	g_RamEventRecord.summary.calculated.barIntervalsCaptured += sumIntervalPtr->barIntervalsCaptured;
-	g_RamEventRecord.summary.calculated.intervalEnd_Time = sumIntervalPtr->intervalEnd_Time;
-	g_RamEventRecord.summary.calculated.batteryLevel = sumIntervalPtr->batteryLevel;
-	g_RamEventRecord.summary.calculated.calcStructEndFlag = 0xEECCCCEE;
+	g_pendingBargraphRecord.summary.calculated.summariesCaptured = sumIntervalPtr->summariesCaptured;
+	g_pendingBargraphRecord.summary.calculated.barIntervalsCaptured += sumIntervalPtr->barIntervalsCaptured;
+	g_pendingBargraphRecord.summary.calculated.intervalEnd_Time = sumIntervalPtr->intervalEnd_Time;
+	g_pendingBargraphRecord.summary.calculated.batteryLevel = sumIntervalPtr->batteryLevel;
+	g_pendingBargraphRecord.summary.calculated.calcStructEndFlag = 0xEECCCCEE;
 }
 
 #if 0 // Unused
@@ -1514,7 +1513,7 @@ void MoveComboWaveformEventToFile(void)
 
 				if (sampGrpsLeft == 0)
 				{
-					g_RamEventRecord.summary.calculated.vectorSumPeak = vectorSumTotal;
+					g_pendingEventRecord.summary.calculated.vectorSumPeak = vectorSumTotal;
 
 					flashMovState = FLASH_CAL;
 				}
@@ -1546,11 +1545,15 @@ void MoveComboWaveformEventToFile(void)
 				}					
 				else // Write the file event to the SD card
 				{
-					sprintf((char*)&g_spareBuffer[0], "EVENT #%d BEING SAVED TO SD CARD (MAY TAKE A WHILE)", g_nextEventNumberToUse);
+					sprintf((char*)&g_spareBuffer[0], "COMBO WAVEFORM EVENT #%d BEING SAVED... (MAY TAKE TIME)", g_nextEventNumberToUse);
 					overlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
+#if 1 // cheat
+					g_pendingEventRecord.header.dataLength = g_wordSizeInEvent * 2;
+#endif
+
 					// Write the event record header and summary
-					fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
+					fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
 					// Write the event data, containing the pretrigger, event and cal
 					fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, g_currentEventFileHandle);
@@ -1567,7 +1570,7 @@ void MoveComboWaveformEventToFile(void)
 					storeCurrentEventNumber();
 
 					// Now store the updated event number in the universal ram storage.
-					g_RamEventRecord.summary.eventNumber = g_nextEventNumberToUse;
+					g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 				}
 
 				// Update event buffer count and pointers
@@ -1588,8 +1591,10 @@ void MoveComboWaveformEventToFile(void)
 
 				g_lastCompletedRamSummary = ramSummaryEntry;
 
+#if 0 // Leave in monitor mode menu display processing for bargraph
 				g_printOutMode = WAVEFORM_MODE;
 				raiseMenuEventFlag(RESULTS_MENU_EVENT);
+#endif
 
 				//debug("DataBuffs: Changing flash move state: %s\n", "FLASH_IDLE");
 				flashMovState = FLASH_IDLE;

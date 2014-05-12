@@ -155,10 +155,10 @@ void lcdContrastMnProc(INPUT_MSG_STRUCT msg,
 					}
 				break;
 
-			case (DOWN_ARROW_KEY): mnScroll(DOWN,SELECT_MN_WND_LNS, mn_layout_ptr); break;
-			case (UP_ARROW_KEY): mnScroll(UP,SELECT_MN_WND_LNS,mn_layout_ptr); break;
-			case (MINUS_KEY): adjustLcdContrast(DARKER); break;
-			case (PLUS_KEY): adjustLcdContrast(LIGHTER); break;
+			case (DOWN_ARROW_KEY): { mnScroll(DOWN,SELECT_MN_WND_LNS, mn_layout_ptr); break; }
+			case (UP_ARROW_KEY): { mnScroll(UP,SELECT_MN_WND_LNS,mn_layout_ptr); break; }
+			case (MINUS_KEY): { adjustLcdContrast(DARKER); break; }
+			case (PLUS_KEY): { adjustLcdContrast(LIGHTER); break; }
 
 			case (ESC_KEY):
 				ACTIVATE_USER_MENU_MSG(&configMenu, LCD_CONTRAST);

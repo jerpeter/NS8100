@@ -873,7 +873,7 @@ __attribute__((__interrupt__))
 void eic_system_irq(void)
 {
 	// Print test for verification of operation
-	debugRaw("&");
+	//debugRaw("&");
 
 #if 0
 	if (g_kpadProcessingFlag == DEACTIVATED)
@@ -1176,7 +1176,6 @@ __attribute__((__interrupt__))
 void tc_sample_irq(void);
 void tc_typematic_irq(void);
 
-#define FOSC0	66000000 // 66 MHz
 void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 {
 	volatile avr32_tc_t *tc = &AVR32_TC;
@@ -1334,6 +1333,9 @@ void tc_sample_irq(void)
 	static uint32 s_calSampleCount = 0;
 	static uint32 s_pendingCalCount = 0;
 	static uint32 s_pretriggerCount = 0;
+
+	static uint32 fakeDataIncrement = 0;
+
 	static uint16 s_consecSeismicTriggerCount = 0;
 	static uint16 s_consecAirTriggerCount = 0;
 	static uint8 s_pretriggerFull = NO;
@@ -1437,11 +1439,20 @@ void tc_sample_irq(void)
 		s_T_channelReading -= g_channelOffset.t_12bit;
 		s_A_channelReading -= g_channelOffset.a_12bit;
 
+#if 0
 		// Store the data into the pretrigger buffer
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->r = s_R_channelReading;
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->v = s_V_channelReading;
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->t = s_T_channelReading;
 		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->a = s_A_channelReading;
+#else
+		// Store the fakedata into the pretrigger buffer
+		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->r = (((fakeDataIncrement + 1) & 0x0FFF) | 0x0000);
+		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->v = (((fakeDataIncrement + 2) & 0x0FFF) | 0x0000);
+		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->t = (((fakeDataIncrement + 3) & 0x0FFF) | 0x0000);
+		((SAMPLE_DATA_STRUCT*)g_tailOfPreTrigBuff)->a = (((fakeDataIncrement + 0) & 0x0FFF) | 0x0000);
+		fakeDataIncrement++;
+#endif
 
 		//___________________________________________________________________________________________
 		//___Check if the system flag is idle
@@ -1496,11 +1507,19 @@ void tc_sample_irq(void)
 					// Mark the start of the Manual Cal pulse
 					if (g_manualCalSampleCount == MAX_CAL_SAMPLES)
 					{
+#if 0
 						// Signal the start of the Cal pulse
 						*(g_tailOfPreTrigBuff + 0) |= CAL_START;
 						*(g_tailOfPreTrigBuff + 1) |= CAL_START;
 						*(g_tailOfPreTrigBuff + 2) |= CAL_START;
 						*(g_tailOfPreTrigBuff + 3) |= CAL_START;
+#else
+						// Signal the start of the Cal pulse
+						*(g_tailOfPreTrigBuff + 0) &= 0x0FFF; *(g_tailOfPreTrigBuff + 0) |= CAL_START;
+						*(g_tailOfPreTrigBuff + 1) &= 0x0FFF; *(g_tailOfPreTrigBuff + 1) |= CAL_START;
+						*(g_tailOfPreTrigBuff + 2) &= 0x0FFF; *(g_tailOfPreTrigBuff + 2) |= CAL_START;
+						*(g_tailOfPreTrigBuff + 3) &= 0x0FFF; *(g_tailOfPreTrigBuff + 3) |= CAL_START;
+#endif
 					}
 
 					if (g_manualCalSampleCount)
@@ -1510,11 +1529,19 @@ void tc_sample_irq(void)
 						// Check if done with the Manual Cal pulse
 						if (g_manualCalSampleCount == 0)
 						{
+#if 0
 							// Mark the end of the Cal pulse
 							*(g_tailOfPreTrigBuff + 0) |= CAL_END;
 							*(g_tailOfPreTrigBuff + 1) |= CAL_END;
 							*(g_tailOfPreTrigBuff + 2) |= CAL_END;
 							*(g_tailOfPreTrigBuff + 3) |= CAL_END;
+#else
+							// Signal the start of the Cal pulse
+							*(g_tailOfPreTrigBuff + 0) &= 0x0FFF; *(g_tailOfPreTrigBuff + 0) |= CAL_END;
+							*(g_tailOfPreTrigBuff + 1) &= 0x0FFF; *(g_tailOfPreTrigBuff + 1) |= CAL_END;
+							*(g_tailOfPreTrigBuff + 2) &= 0x0FFF; *(g_tailOfPreTrigBuff + 2) |= CAL_END;
+							*(g_tailOfPreTrigBuff + 3) &= 0x0FFF; *(g_tailOfPreTrigBuff + 3) |= CAL_END;
+#endif
 						}
 					}
 
@@ -1596,16 +1623,30 @@ void tc_sample_irq(void)
 
 							//___________________________________________________________________________________________
 							//___Check if either a seismic or acoustic trigger threshold condition was achieved
+#if 0
 							if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
 								(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD))
+#else
+							if (g_testTrigger)
+#endif
 							{
+								g_testTrigger = NO;
+								
+#if 0
 								// Signal the start of a Trigger
 								*(g_tailOfPreTrigBuff + 0) |= TRIG_ONE;
 								*(g_tailOfPreTrigBuff + 1) |= TRIG_ONE;
 								*(g_tailOfPreTrigBuff + 2) |= TRIG_ONE;
 								*(g_tailOfPreTrigBuff + 3) |= TRIG_ONE;
-
-								debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
+#else
+								// Signal the start of a Trigger
+								*(g_tailOfPreTrigBuff + 0) &= 0x0FFF; *(g_tailOfPreTrigBuff + 0) |= TRIG_ONE;
+								*(g_tailOfPreTrigBuff + 1) &= 0x0FFF; *(g_tailOfPreTrigBuff + 1) |= TRIG_ONE;
+								*(g_tailOfPreTrigBuff + 2) &= 0x0FFF; *(g_tailOfPreTrigBuff + 2) |= TRIG_ONE;
+								*(g_tailOfPreTrigBuff + 3) &= 0x0FFF; *(g_tailOfPreTrigBuff + 3) |= TRIG_ONE;
+#endif
+								//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
+								usart_write_char(&AVR32_USART1, '$');
 					
 								s_consecSeismicTriggerCount = 0;
 								s_consecAirTriggerCount = 0;
@@ -1650,6 +1691,8 @@ void tc_sample_irq(void)
 							if (s_sampleCount == 0)
 							{
 								//debug("--> Recording done!\n");
+								usart_write_char(&AVR32_USART1, '%');
+
 								s_recording = NO;
 
 								// Check if maximum consecutive events have not been captured, therefore pend Cal pulse
@@ -1687,17 +1730,25 @@ void tc_sample_irq(void)
 							// Signal the start of a Cal
 							if (s_calSampleCount == MAX_CAL_SAMPLES)
 							{
+#if 0
 								*(g_tailOfPreTrigBuff + 0) |= CAL_START;
 								*(g_tailOfPreTrigBuff + 1) |= CAL_START;
 								*(g_tailOfPreTrigBuff + 2) |= CAL_START;
 								*(g_tailOfPreTrigBuff + 3) |= CAL_START;
+#else
+								*(g_tailOfPreTrigBuff + 0) &= 0x0FFF; *(g_tailOfPreTrigBuff + 0) |= CAL_START;
+								*(g_tailOfPreTrigBuff + 1) &= 0x0FFF; *(g_tailOfPreTrigBuff + 1) |= CAL_START;
+								*(g_tailOfPreTrigBuff + 2) &= 0x0FFF; *(g_tailOfPreTrigBuff + 2) |= CAL_START;
+								*(g_tailOfPreTrigBuff + 3) &= 0x0FFF; *(g_tailOfPreTrigBuff + 3) |= CAL_START;
+#endif
 							}
 
 							s_calSampleCount--;
 
 							if (s_calSampleCount == 0)
 							{
-								debug("--> Cal done!\n");
+								//debug("\n--> Cal done!\n");
+								usart_write_char(&AVR32_USART1, '&');
 						
 								// Reset all states and counters (that haven't already)
 								s_calPulse = NO;

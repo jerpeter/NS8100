@@ -109,7 +109,11 @@ BOOLEAN keypad(void)
 	s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 #endif
 
-	debug("Key Pressed: %x\n", s_keyMap[0]);
+	if (s_keyMap[0]) 
+	{ 
+		debugRaw(" (Key Pressed: %x)", s_keyMap[0]);
+	}
+	else { debugRaw(" (Key Release)", s_keyMap[0]); }
 
 	// Re-read keys and mask in to catch signal bouncing
 	//s_keyMap[0] &= *keypadAddress;
@@ -340,8 +344,18 @@ BOOLEAN keypad(void)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
+#if 1 // Test
+				if (g_sampleProcessing == ACTIVE_STATE)
+				{
+					g_testTrigger = YES;
+				}					
+
+				p_msg->cmd = 0;
+				p_msg->length = 0;
+#else
 				p_msg->cmd = BACK_LIGHT_CMD;
 				p_msg->length = 0;
+#endif
 			}
 			else // all other keys
 			{

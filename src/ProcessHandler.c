@@ -31,9 +31,11 @@
 #include "SoftTimer.h"
 #include "Keypad.h"
 #include "ProcessBargraph.h"
+#include "ProcessCombo.h"
 #include "TextTypes.h"
 #include "EventProcessing.h"
 #include "Analog.h"
+#include "M23018.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -166,6 +168,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	else if (op_mode == MANUAL_CAL_MODE)
 	{
 		debug("--- Manual Cal Mode Settings ---\n");
+		debug("\tSample Rate: %d, Channels: %d\n", trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
 	}
 
 #if 0 // Old 430 Code - Remove
@@ -211,8 +214,9 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		newMonitorLogEntry(op_mode);
 	}
 
-	if (op_mode == BARGRAPH_MODE)
+	if ((op_mode == BARGRAPH_MODE) || (op_mode == COMBO_MODE))
 	{
+		g_fileProcessActiveUsbLockout = ON;
 		bargraphForcedCalibration();
 	}
 
@@ -301,10 +305,12 @@ void startDataCollection(uint32 sampleRate)
 ****************************************/
 void stopMonitoring(uint8 mode, uint8 operation)
 {
+	overlayMessage("STATUS", "CLOSING MONITOR SESSION...", 0);
+
 	// Check if the unit is currently monitoring
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
-		if (mode == WAVEFORM_MODE)
+		if ((mode == WAVEFORM_MODE) || (mode == COMBO_MODE))
 		{
 			// Set flag to prevent any more incoming events from being processed
 			g_doneTakingEvents = YES;
@@ -314,7 +320,8 @@ void stopMonitoring(uint8 mode, uint8 operation)
 
 			// Need to stop all print jobs
 		}
-		else if ((mode == BARGRAPH_MODE) && (operation == EVENT_PROCESSING))
+		
+		if (((mode == BARGRAPH_MODE) || (mode == COMBO_MODE)) && (operation == EVENT_PROCESSING))
 		{
 			raiseSystemEventFlag(BARGRAPH_EVENT);
 		}
@@ -329,15 +336,30 @@ void stopMonitoring(uint8 mode, uint8 operation)
 		{
 			while (getSystemEventState(TRIGGER_EVENT))
 			{
-				debug("Trigger Event 1\n");
+				debug("Trigger Event Finish\n");
 				MoveWaveformEventToFlash();
 			}
 		}
-		//else if ((mode == BARGRAPH_MODE) && (operation == FINISH_PROCESSING))
-		else if (mode == BARGRAPH_MODE)
+
+		if ((mode == COMBO_MODE) && (operation == FINISH_PROCESSING))
+		{
+			while (getSystemEventState(TRIGGER_EVENT))
+			{
+				debug("Trigger Event Finish\n");
+				MoveComboWaveformEventToFile();
+			}
+		}
+
+		if (mode == BARGRAPH_MODE)
 		{
 			// Handle the end of a Bargraph event
 			EndBargraph();
+		}
+		
+		if (mode == COMBO_MODE)
+		{
+			// Handle the end of a Combo Bargraph event
+			EndCombo();
 		}
 		
 		// Check if any events are waiting to still be processed
@@ -347,6 +369,9 @@ void stopMonitoring(uint8 mode, uint8 operation)
 		}
 	}
 	
+	// Turn on the Green keypad LED
+	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
+
 	// Check if Auto Monitor is active and not in monitor mode
 	if ((g_helpRecord.auto_monitor_mode != AUTO_NO_TIMEOUT) && (operation == EVENT_PROCESSING))
 	{
@@ -638,9 +663,9 @@ void handleManualCalibration(void)
 void bargraphForcedCalibration(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	//uint32 manualCalProgressCheck = MAX_CAL_SAMPLES;
-
-	overlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
+	uint8 pendingMode = g_triggerRecord.op_mode;
+	
+	overlayMessage(getLangText(STATUS_TEXT), "PERFORMING CALIBRATION", 0);
 
 	g_bargraphForcedCal = YES;
 
@@ -672,7 +697,7 @@ void bargraphForcedCalibration(void)
 	soft_usecWait(350 * SOFT_MSECS);
 
 	// Just make absolutely sure we are done with the Cal pulse
-	while ((volatile uint32)g_manualCalSampleCount != 0) { }
+	while ((volatile uint32)g_manualCalSampleCount != 0) { /* spin */ }
 #if 0 // fix_ns8100
 	{
 		// After 350ms, the Cal pulse should have decremented the Manual Cal Sample count
@@ -717,7 +742,7 @@ void bargraphForcedCalibration(void)
 	g_bargraphForcedCal = NO;
 
 	// Reset the mode back to bargraph
-	g_triggerRecord.op_mode = BARGRAPH_MODE;
+	g_triggerRecord.op_mode = pendingMode;
 
 	updateMonitorLogEntry();
 }

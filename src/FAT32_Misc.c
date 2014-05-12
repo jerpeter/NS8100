@@ -210,6 +210,7 @@ void FATMisc_LFN_to_lfn_entry(char *filename, BYTE *buffer, int entry, BYTE sfnC
 //-----------------------------------------------------------------------------
 // FATMisc_Create_sfn_entry: Create the short filename directory entry
 //-----------------------------------------------------------------------------
+#include "RealTimeClock.h"
 #ifdef INCLUDE_WRITE_SUPPORT
 void FATMisc_Create_sfn_entry(char *shortfilename, UINT32 size, UINT32 startCluster, FAT32_ShortEntry *entry)
 {
@@ -220,15 +221,28 @@ void FATMisc_Create_sfn_entry(char *shortfilename, UINT32 size, UINT32 startClus
 		entry->Name[i] = shortfilename[i];
 
 	// Unless we have a RTC we might as well set these to 1980
+#if 0
 	entry->CrtTimeTenth = 0x00;
-	entry->CrtTime[1] = entry->CrtTime[0] = 0x00;
+	entry->CrtTime[1] = 0x00;
+	entry->CrtTime[0] = 0x00;
 	entry->CrtDate[1] = 0x00;
 	entry->CrtDate[0] = 0x20;
 	entry->LstAccDate[1] = 0x00;
 	entry->LstAccDate[0] = 0x20;
-	entry->WrtTime[1] = entry->WrtTime[0] = 0x00;
+	entry->WrtTime[1] = 0x00;
+	entry->WrtTime[0] = 0x00;
 	entry->WrtDate[1] = 0x00;
 	entry->WrtDate[0] = 0x20;	
+#else // ns8100 added
+	entry->CrtTimeTenth = 0x00;
+ 
+	convertCurrentTimeForFat(&(entry->CrtTime[0]));
+	convertCurrentDateForFat(&(entry->CrtDate[0]));
+	convertCurrentTimeForFat(&(entry->WrtTime[0]));
+	convertCurrentDateForFat(&(entry->WrtDate[0]));
+
+	convertCurrentDateForFat(&(entry->LstAccDate[0]));
+#endif
 
 	entry->Attr = FILE_TYPE_FILE;
 	entry->NTRes = 0x00;

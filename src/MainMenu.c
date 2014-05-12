@@ -85,7 +85,9 @@ void mainMn(INPUT_MSG_STRUCT msg)
 void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
+	DATE_TIME_STRUCT currentTime = getCurrentTime();
 	uint32 input;
+	uint8 length;
 
 	switch (msg.cmd)
 	{
@@ -109,6 +111,15 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 			}
 
 			loadTempMenuTable(s_mainMenuTable);
+			
+			// Add in time (hour:min) to the 2nd LCD line right justified
+			length = strlen(getLangText(SELECT_TEXT));
+			byteSet(&(g_menuPtr[1].data[length]), ' ', (12 - length));
+			sprintf((char*)&(g_menuPtr[1].data[12]), "%02d:%02d %s", (currentTime.hour % 12), currentTime.min, 
+					((currentTime.hour / 12) == 1) ? "PM" : "AM");
+
+			// Since time was added, start the menu update timer
+			assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
 			break;
 
 		case (KEYPRESS_MENU_CMD):
@@ -135,6 +146,7 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 							else
 							{
 								g_triggerRecord.op_mode = WAVEFORM_MODE;
+								clearSoftTimer(MENU_UPDATE_TIMER_NUM);
 								updateModeMenuTitle(g_triggerRecord.op_mode);
 								ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
 								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
@@ -149,6 +161,7 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 							else
 							{
 								g_triggerRecord.op_mode = BARGRAPH_MODE;
+								clearSoftTimer(MENU_UPDATE_TIMER_NUM);
 								updateModeMenuTitle(g_triggerRecord.op_mode);
 								ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
 								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
@@ -163,12 +176,15 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 							else
 							{
 								g_triggerRecord.op_mode = COMBO_MODE;
+								clearSoftTimer(MENU_UPDATE_TIMER_NUM);
 								updateModeMenuTitle(g_triggerRecord.op_mode);
 								ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
 								(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							}
 							break;
-						case (6): g_activeMenu = LOAD_REC_MENU;
+						case (6): 
+							clearSoftTimer(MENU_UPDATE_TIMER_NUM);
+							g_activeMenu = LOAD_REC_MENU;
 							ACTIVATE_MENU_MSG(); (*menufunc_ptrs[g_activeMenu]) (mn_msg);
 							break;
 						default:
@@ -193,6 +209,7 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					mn_layout_ptr->curr_ln = 3;
 					break;
 				case (HELP_KEY):
+					clearSoftTimer(MENU_UPDATE_TIMER_NUM);
 					ACTIVATE_USER_MENU_MSG(&helpMenu, CONFIG);
 					(*menufunc_ptrs[g_activeMenu]) (mn_msg);
 					break;
@@ -202,6 +219,12 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 			break;
 
 		default:
+			// Menu called without action, most likely the menu update timer
+			sprintf((char*)&(g_menuPtr[1].data[12]), "%02d:%02d %s", (currentTime.hour % 12), currentTime.min, 
+					((currentTime.hour / 12) == 1) ? "PM" : "AM");
+
+			// Since time was added, start the menu update timer
+			assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
 			break;    
 	}
 

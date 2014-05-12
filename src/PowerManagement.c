@@ -411,8 +411,10 @@ void PowerUnitOff(uint8 powerOffMode)
 	if (powerOffMode == SHUTDOWN_UNIT)
 	{
 		debug("Powering unit off (shutdown)...\n");
+#if 0 // ns7100
 		RTC_ENABLES.bit.periodicIntEnable = OFF;
 		RTC_ENABLES.bit.powerFailIntEnable = OFF;
+#endif
 	}
 	else
 	{

@@ -80,7 +80,7 @@ BOOLEAN timerModeActiveCheck(void)
 				}
 				else // User decided to stay in Timer mode
 				{
-					// TOD Alarm registers still set from previous run, TOD Alarm Mask re-enabled in InitRtc
+					// TOD Alarm registers still set from previous run, TOD Alarm Mask re-enabled in rtc init
 					// Clear TOD Alarm Mask to allow TOD Alarm interrupt to be generated
 					// ADD CODE TO CLEAR ALARM
 
@@ -94,8 +94,12 @@ BOOLEAN timerModeActiveCheck(void)
 		}
 	}
 
+#if 0 // ns7100
 	// Might as well clear flag reguardless of state
 	RTC_FLAGS.reg = RTC_FLAGS.reg;
+#else // ns8100
+	// fix_ns8100
+#endif
 
 	return (status);
 }

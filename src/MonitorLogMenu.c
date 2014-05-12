@@ -211,6 +211,7 @@ void monitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				case WAVEFORM_MODE:   length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(WAVEFORM_MODE_TEXT)); break;
 				case BARGRAPH_MODE:	  length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(BARGRAPH_MODE_TEXT)); break;
 				case MANUAL_CAL_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(CALIBRATION_TEXT)); break;
+				case COMBO_MODE:	  length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(COMBO_MODE_TEXT)); break;
 			}
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;

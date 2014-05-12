@@ -73,7 +73,9 @@ float convertedBatteryLevel(uint8 type)
 				{
 					adc_start(&AVR32_ADC);
 					adVoltageReadValue = adc_get_value(&AVR32_ADC, VIN_CHANNEL);
-					soft_usecWait(5);
+					
+					// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
+					soft_usecWait(4);
 					//debug("Ext Charge Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
 				}				
 				break;
@@ -82,7 +84,9 @@ float convertedBatteryLevel(uint8 type)
 				{
 					adc_start(&AVR32_ADC);
 					adVoltageReadValue = adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
-					soft_usecWait(5);
+
+					// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
+					soft_usecWait(4);
 					//debug("Battery Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
 				}
 				break;
@@ -225,22 +229,30 @@ void procInputMsg(INPUT_MSG_STRUCT msg)
 			break;
 #endif
 		case CTRL_CMD:
-			debug("Handling Ctrl Sequence\n");
-			handleCtrlKeyCombination((char)msg.data[0]);
+			{
+				debug("Handling Ctrl Sequence\n");
+				handleCtrlKeyCombination((char)msg.data[0]);
+			}
 			break;
 
 		case BACK_LIGHT_CMD:
-			debug("Handling Backlight Command\n");
-			setNextLcdBacklightState();
+			{
+				debug("Handling Backlight Command\n");
+				setNextLcdBacklightState();
+			}
 			break;
 
 		case KEYPRESS_MENU_CMD:
-			debug("Handling Keypress Command\n");
-			(*menufunc_ptrs[g_activeMenu])(msg);
+			{
+				debug("Handling Keypress Command\n");
+				(*menufunc_ptrs[g_activeMenu])(msg);
+			}				
 			break;
 
 		case POWER_OFF_CMD:
-			PowerUnitOff(SHUTDOWN_UNIT);
+			{
+				PowerUnitOff(SHUTDOWN_UNIT);
+			}			
 			break;
 	}
 }
@@ -649,7 +661,7 @@ void build_languageLinkTable(uint8 languageSelection)
 	}
 	else // Language file found
 	{
-		debug("Loading language table from file: %s\n", (char*)&languageFilename[0]);
+		debug("Loading language table from file: %s, Length: %d\n", (char*)&languageFilename[0], languageFile->filelength);
 
 		byteSet(&g_languageTable, '\0', sizeof(g_languageTable));
 
@@ -673,15 +685,24 @@ void build_languageLinkTable(uint8 languageSelection)
 			}
 		}
 
-		g_languageLinkTable[0] = &g_languageTable[0];
+		languageTablePtr = &g_languageTable[0];
 	}
 
+	g_languageLinkTable[0] = languageTablePtr;
+	
 	for (i = 1; i < TOTAL_TEXT_STRINGS; i++)
 	{
-		while (languageTablePtr[currIndex++] != '\0') {};
+		while (languageTablePtr[currIndex++] != '\0') { /* spin */ };
 
 		g_languageLinkTable[i] = languageTablePtr + currIndex;
 	}
+
+#if 0 // Visible check of the language table
+	for (i = 0; i < TOTAL_TEXT_STRINGS; i++)
+	{
+		debug("Check text: <%s>\n", getLangText(i));
+	}
+#endif
 
 	debug("Language Link Table built.\n");
 }

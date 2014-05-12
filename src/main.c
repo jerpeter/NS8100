@@ -528,12 +528,13 @@ void UsbDeviceManager(void)
 	}
 
 	// Check if USB Cable is plugged in and not monitoring and not handling a trigger
-	if ((Is_usb_vbus_high()) && (g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)))
+	if ((Is_usb_vbus_high()) && (g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && 
+			g_fileProcessActiveUsbLockout == OFF)
 	{
 		// Check if USB and Mass Storage driver init needs to occur
 		if (usbMassStorageState == USB_NOT_CONNECTED)
 		{
-			overlayMessage("USB STATUS", "USB CABLE WAS CONNECTED", 2 * SOFT_SECS);
+			overlayMessage("USB STATUS", "USB CABLE WAS CONNECTED", 1 * SOFT_SECS);
 
 			// Recall the current active menu to repaint the display
 			mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
@@ -559,11 +560,15 @@ void UsbDeviceManager(void)
 		{
 			if (g_sampleProcessing == ACTIVE_STATE)
 			{
-				overlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 1 * SOFT_SECS);
+				overlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 1000 * SOFT_MSECS);
+			}
+			else if (g_fileProcessActiveUsbLockout == ON)
+			{
+				overlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR FILE OPERATION", 1000 * SOFT_MSECS);
 			}
 			else
 			{
-				overlayMessage("USB STATUS", "USB CABLE WAS DISCONNECTED", 2 * SOFT_SECS);
+				overlayMessage("USB STATUS", "USB CABLE WAS DISCONNECTED", 1000 * SOFT_MSECS);
 
 				// Recall the current active menu to repaint the display
 				mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
@@ -673,30 +678,8 @@ void BootLoadManager(void)
 //=================================================================================================
 void InitSystemHardware_NS8100(void)
 {
-#if 0 // Now handled in _init_startup
-	// Logic to change the clock source to PLL 0
-    // Switch the main clock to the external oscillator 0
-    pm_switch_to_osc0(&AVR32_PM, FOSC0, OSC0_STARTUP);
-
-    // PLL = 0, Multiplier = 10 (actual 11), Divider = 1 (actually 1), OSC = 0, 16 clocks to stabilize
-	pm_pll_setup(&AVR32_PM, 0, 10, 1, 0, 16);
-    pm_pll_set_option(&AVR32_PM, 0, 1, 1, 0); // PLL = 0, Freq = 1, Div2 = 1
-
-	// Enable and lock
-    pm_pll_enable(&AVR32_PM, 0);
-    pm_wait_for_pll0_locked(&AVR32_PM);
-
-    pm_gc_setup(&AVR32_PM, 0, 1, 0, 0, 0);
-    pm_gc_enable(&AVR32_PM, 0);
-
-    gpio_enable_module_pin(AVR32_PM_GCLK_0_1_PIN, AVR32_PM_GCLK_0_1_FUNCTION);
-    pm_cksel(&AVR32_PM, 0, 0, 0, 0, 0, 0);
-    flashc_set_wait_state(1);
-    pm_switch_to_clock(&AVR32_PM, AVR32_PM_MCSEL_PLL0);
-
-    // Initialize all 4 Chip Selects, LCD, External SRAM, LAN and LAN Manager
-    //smc_init(FOSC0);
-#endif
+	//-------------------------------------------------------------------------
+	// Clock and chip selects setup in custom _init_startup
 
 	//-------------------------------------------------------------------------
 	// Set RTC Timestamp pin high
@@ -706,6 +689,7 @@ void InitSystemHardware_NS8100(void)
 	// Set LAN to Sleep
     gpio_clr_gpio_pin(AVR32_PIN_PB27);
 	
+	//-------------------------------------------------------------------------
 	// Set LAN and LAN Mem CS High
 	gpio_set_gpio_pin(AVR32_EBI_NCS_2_PIN);
 	gpio_set_gpio_pin(AVR32_EBI_NCS_3_PIN);	
@@ -716,9 +700,6 @@ void InitSystemHardware_NS8100(void)
     gpio_clr_gpio_pin(AVR32_PIN_PB09);
 
     // Setup debug serial port
-#if 0
-    init_dbg_rs232(FOSC0);
-#else
 	usart_options_t usart_1_rs232_options =
 	{
 		.baudrate = 115200,
@@ -727,7 +708,6 @@ void InitSystemHardware_NS8100(void)
 		.stopbits = USART_1_STOPBIT,
 		.channelmode = USART_NORMAL_CHMODE
 	};
-#endif
 
 	// Initialize it in RS232 mode.
 	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
@@ -738,6 +718,10 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init the SPI interface
 	SPI_init();
+	
+	//-------------------------------------------------------------------------
+	// Initialize the external RTC
+	InitExternalRtc();
 
 	//-------------------------------------------------------------------------
     // Turn on display
@@ -750,14 +734,14 @@ void InitSystemHardware_NS8100(void)
     InitDisplay();
 
 	//-------------------------------------------------------------------------
-	// Initialize the Real Time Counter
+	// Initialize the Real Time Counter for half second tick used for state processing
 	if (!rtc_init(&AVR32_RTC, 1, 0))
 	{
 		debugErr("Error initializing the RTC\n");
 		while(1);
 	}
 
-	// Set top value to 0 to generate an interrupt every second */
+	// Set top value to generate an interrupt every 1/2 second */
 	rtc_set_top_value(&AVR32_RTC, 8192);
 
 	// Enable the RTC
@@ -774,6 +758,10 @@ void InitSystemHardware_NS8100(void)
 		debugWarn("Keypad key being pressed, likely a bug. Key: %x", keyScan);
 	}
 
+	// Turn on the red keypad LED while loading
+	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
+
+	//-------------------------------------------------------------------------
 	// Enable Processor A/D
 	adc_configure(&AVR32_ADC);
 
@@ -781,6 +769,8 @@ void InitSystemHardware_NS8100(void)
 	adc_enable(&AVR32_ADC, VBAT_CHANNEL);
 	adc_enable(&AVR32_ADC, VIN_CHANNEL);
 
+	//-------------------------------------------------------------------------
+	// Power on the SD Card and init the file system
 	SD_MMC_Power_On();
 
 	// Wait for power to propogate
@@ -848,7 +838,6 @@ void InitInterrupts_NS8100(void)
 void InitSoftwareSettings_NS8100(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	char buff[50];
 
 	debug("Init Software Settings\n");
     debug("Init Version Strings...\n");
@@ -856,34 +845,27 @@ void InitSoftwareSettings_NS8100(void)
 	// Init version strings
 	initVersionStrings();
 
-    debug("Init Version Msg...\n");
-
 	// Init version msg
+    debug("Init Version Msg...\n");
 	initVersionMsg();
 
-    debug("Init Time Msg...\n");
-
 	// Init time msg
+    debug("Init Time Msg...\n");
 	initTimeMsg();
 
 	// Load current time into cache
 	updateCurrentTime();
 
-    debug("Init Get Boot Function Addr...\n");
-
 	// Get the function address passed by the bootloader
+    debug("Init Get Boot Function Addr...\n");
 	getBootFunctionAddress();
 
-    debug("Init Setup Menu Defaults...\n");
-
-	debug("Setup Menu Defaults\n");
 	// Setup defaults, load records, init the language table
+    debug("Init Setup Menu Defaults...\n");
 	setupMnDef();
 
-    debug("Init Timer Mode Check...\n");
-
-	debug("Check Timer Mode\n");
 	// Check for Timer mode activation
+    debug("Init Timer Mode Check...\n");
 	if (timerModeActiveCheck() == TRUE)
 	{
 		debug("--- Timer Mode Startup ---\n");
@@ -899,26 +881,22 @@ void InitSoftwareSettings_NS8100(void)
 		debug("--- Normal Startup ---\n");
 	}
 
-    debug("Init Cmd Msg Handler...\n");
-
-	debug("Cmd/Craft Init\n");
 	// Init the cmd message handling buffers before initialization of the ports.
+    debug("Init Cmd Msg Handler...\n");
 	cmdMessageHandlerInit();
 
-    debug("Init Craft Init Status Flags...\n");
-
 	// Init the input buffers and status flags for input craft data.
+    debug("Init Craft Init Status Flags...\n");
 	craftInitStatusFlags();
 
-    debug("Init LCD Message...\n");
-
-	debug("LCD message\n");
+#if 0 // ns7100
 	// Overlay a message to alert the user that the system is checking the sensors
+    debug("Init LCD Message...\n");
+	char buff[50];
 	byteSet(&buff[0], 0, sizeof(buff));
 	sprintf((char*)buff, "%s %s", getLangText(SENSOR_CHECK_TEXT), getLangText(ZEROING_SENSORS_TEXT));
 	overlayMessage(getLangText(STATUS_TEXT), buff, 0);
-
-    debug("Init Jump to Main Menu...\n");
+#endif
 
 	debug("Jump to Main Menu\n");
 	// Jump to the true main menu
@@ -946,21 +924,16 @@ int main(void)
 	InitKeypad();
 #endif
 
-	//debug("Unit Type: %s\n", SUPERGRAPH_UNIT ? "Supergraph" : "Minigraph");
+	// Turn on the Green keypad LED while loading
+	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
+
+	//debug("Unit Type: %s\n", "NS8100 Minigraph");
 	debug("--- System Init complete ---\n");
 
-	debug("Size Compare: EVT_RECORD: %d, HEADER: %d, SUMMARY: %d, H+S: %d\n", 
-			sizeof(EVT_RECORD), sizeof(EVENT_HEADER_STRUCT), sizeof(EVENT_SUMMARY_STRUCT), 
-			(sizeof(EVENT_HEADER_STRUCT) + sizeof(EVENT_SUMMARY_STRUCT)));
-
+#if 1
 	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;
 	Menu_Functions = (unsigned long *)Main_Menu_Functions;
 	Menu_String = (unsigned char *)&Main_Menu_Text;
-
-#if 0
-extern volatile uint32 typematic_tick;
-	Setup_8100_TC_Clock_ISR(1000, TC_TYPEMATIC_TIMER_CHANNEL);
-	Start_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
 #endif
 
  	// ==============
@@ -1003,7 +976,8 @@ extern volatile uint32 typematic_tick;
 #endif
 		}
 	}    
-	// End of NS7100 Main
+	// End of NS8100 Main
 
+	// End of the world
 	return (0);
 }

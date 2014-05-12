@@ -302,12 +302,13 @@ typedef struct
 	uint8					unused;
 } EVENT_SUMMARY_STRUCT;
 
+#pragma pack(2)
 typedef struct
 {
 	EVENT_HEADER_STRUCT 		header;
 	EVENT_SUMMARY_STRUCT		summary;
 } EVT_RECORD;
-
+#pragma pack()
 
 
 

@@ -48,6 +48,8 @@
 #define SOFT_DATE     		"6-22-2004"
 #define SOFT_TIME     		"08:35pm"
 
+#define FOSC0	66000000
+
 ///----------------------------------------------------------------------------
 ///	Macros
 ///----------------------------------------------------------------------------
@@ -228,8 +230,8 @@ void initVersionMsg(void);
 // Bootloader Function
 void getBootFunctionAddress(void);
 void jumpToBootFunction(void);
-void byteCpy(void*, void*, uint32);
-void byteSet(void*, uint8, uint32);
+void byteCpy(void* dest, void* src, uint32 size);
+void byteSet(void* dest, uint8 value, uint32 size);
 
 // Main menu prototype extensions
 void handleSystemEvents(void);
