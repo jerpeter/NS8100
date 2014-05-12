@@ -605,6 +605,9 @@ void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 #else // Updated
    eventRec->summary.parameters.airSensorType = (uint16)g_helpRecord.units_of_air;
 #endif
+	eventRec->summary.parameters.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
+	eventRec->summary.parameters.seismicUnitsOfMeasure = g_helpRecord.units_of_measure;
+	eventRec->summary.parameters.airUnitsOfMeasure = g_helpRecord.units_of_air;
 	eventRec->summary.parameters.distToSource = (uint32)(g_triggerRecord.trec.dist_to_source * 100.0);
 	eventRec->summary.parameters.weightPerDelay = (uint32)(g_triggerRecord.trec.weight_per_delay * 100.0);
 	//-----------------------
@@ -640,6 +643,8 @@ void initEventRecord(uint8 op_mode)
 {
 	EVT_RECORD* eventRec;
 	uint8 idex;
+	float tempSesmicTriggerInUnits;
+	float unitsDiv;
 
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))
 	{
@@ -662,14 +667,44 @@ void initEventRecord(uint8 op_mode)
 #if 0 // Normal
 			eventRec->summary.parameters.seismicTriggerLevel = (uint32)g_triggerRecord.trec.seismicTriggerLevel;
 #else // Adjust trigger for bit accuracy
-			eventRec->summary.parameters.seismicTriggerLevel = (uint32)(g_triggerRecord.trec.seismicTriggerLevel /= (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint));
+			if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR))
+			{
+				eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+			}
+			else
+			{
+				eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+			}
 #endif
 
 #if 0 // Normal
 			eventRec->summary.parameters.airTriggerLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 #else // Adjust trigger for bit accuracy. WARNING: Only valid if air trigger gets converted to an A/D trigger count
-			eventRec->summary.parameters.airTriggerLevel = (uint32)(g_airTriggerCount /= (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint));
+			if ((g_airTriggerCount == NO_TRIGGER_CHAR) || (g_airTriggerCount == EXTERNAL_TRIGGER_CHAR))
+			{
+				eventRec->summary.parameters.airTriggerLevel = g_airTriggerCount;
+			}
+			else
+			{
+				eventRec->summary.parameters.airTriggerLevel = g_airTriggerCount / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+			}
 #endif
+
+			// Calculate the divider used for converting stored A/D peak counts to units of measure
+			unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / 
+						(float)(g_factorySetupRecord.sensor_type);
+
+			tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
+
+			if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_helpRecord.units_of_measure == METRIC_TYPE))
+			{
+				tempSesmicTriggerInUnits *= (float)METRIC;
+			}
+
+			debug("Seismic trigger in units: %05.2f %s\n", tempSesmicTriggerInUnits, (g_helpRecord.units_of_measure == METRIC_TYPE ? "mm" : "in"));
+			eventRec->summary.parameters.seismicTriggerInUnits = (uint32)(tempSesmicTriggerInUnits * 100);
+
+			eventRec->summary.parameters.airTriggerInUnits = (uint32)g_triggerRecord.trec.airTriggerLevel;
 
 			eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
 		}	

@@ -68,7 +68,12 @@ typedef struct
 } SEISMIC_CHANNEL_INFO_STRUCT;
 
 // Parameter Information, Initial condition information and system level settings. 
+#if 0 // Prior to added fields
 #define UNUSED_PARAMETERS_SIZE	40
+#else
+#define UNUSED_PARAMETERS_SIZE	28
+#endif
+
 #pragma pack(1)
 typedef struct
 {
@@ -85,7 +90,7 @@ typedef struct
 	uint8	appMinorVersion;	// Used for modem config
 	SEISMIC_CHANNEL_INFO_STRUCT	channel[8];
 
-	// Waveform specific - Intitial conditions.
+	// Waveform specific - Initial conditions.
 	uint32	seismicTriggerLevel;
 	uint32	airTriggerLevel;
 	uint32  recordTime;
@@ -93,7 +98,7 @@ typedef struct
 	uint16	preBuffNumOfSamples;
 	uint16	calDataNumOfSamples;
 
-	// Bargraph specific - Intitial conditions.
+	// Bargraph specific - Initial conditions.
 	uint16	barInterval;
 	uint16	summaryInterval;
 
@@ -102,7 +107,18 @@ typedef struct
 	uint8	sessionLocation[SESSION_LOCATION_STRING_SIZE];
 	uint8	sessionComments[SESSION_COMMENTS_STRING_SIZE];
 	
+#if 0
 	uint8	unused[UNUSED_PARAMETERS_SIZE];		// Space for expansion, currently 40
+#else
+	uint8	adjustForTempDrift;
+	uint8	unused1;
+	uint8	seismicUnitsOfMeasure;
+	uint8	airUnitsOfMeasure;
+	uint32	seismicTriggerInUnits;
+	uint32	airTriggerInUnits;
+
+	uint8	unused[UNUSED_PARAMETERS_SIZE];		// Space for expansion, currently 28
+#endif
 } PARAMETERS_STRUCT;
 #pragma pack()
 

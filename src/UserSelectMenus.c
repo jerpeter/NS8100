@@ -833,7 +833,7 @@ void barChannelMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
-	uint16 gainFactor = (uint16)((g_triggerRecord.srec.sensitivity == LOW) ? 400 : 800);
+	uint16 gainFactor = (uint16)((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400);
 
 	if (keyPressed == ENTER_KEY)
 	{

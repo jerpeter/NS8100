@@ -86,11 +86,30 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.appBuildVersion = buildVer;
 
 	// Waveform specific - Initial conditions.
+#if 0 // Normal
 	cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
-#if 1 // Normal
+#else // Bit accuracy adjusted
+	if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR))
+	{
+		cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+	}
+	else
+	{
+		cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+	}
+#endif
+
+#if 0 // Normal
 	cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
 #else // Try
-	cfg.eventCfg.airTriggerLevel = airTriggerConvert(g_triggerRecord.trec.airTriggerLevel);
+	if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR))
+	{
+		cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+	}
+	else
+	{
+		cfg.eventCfg.airTriggerLevel = (airTriggerConvert(g_triggerRecord.trec.airTriggerLevel)) / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+	}
 #endif
 	cfg.eventCfg.recordTime = g_triggerRecord.trec.record_time;
 
@@ -104,7 +123,7 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.eventCfg.bitAccuracy = g_triggerRecord.trec.bitAccuracy;
 	cfg.eventCfg.numOfChannels = 4;
 	cfg.eventCfg.aWeighting = (uint8)g_factorySetupRecord.aweight_option;
-
+	cfg.eventCfg.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
 	cfg.eventCfg.numOfSamples = 0;				// Not used for configuration settings
 
 #if 0 // Old and incorrectly overloaded
@@ -464,6 +483,18 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 #endif
 
 		//--------------------------------
+		// A-weighting check
+		//--------------------------------
+		if ((cfg.eventCfg.aWeighting == YES) || (cfg.eventCfg.aWeighting == NO))
+		{
+			g_factorySetupRecord.aweight_option = cfg.eventCfg.aWeighting;
+		}
+		else
+		{
+			returnCode = CFG_ERR_A_WEIGHTING;
+		}
+
+		//--------------------------------
 		// Sound Trigger Level check
 		//--------------------------------
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
@@ -587,7 +618,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 #else // Updated with notes
 		// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
 		// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
-		if ((LOW == cfg.eventCfg.preBuffNumOfSamples) || (HIGH == cfg.eventCfg.preBuffNumOfSamples))
+		if ((cfg.eventCfg.preBuffNumOfSamples == LOW) || (cfg.eventCfg.preBuffNumOfSamples == HIGH))
 		{
 			g_triggerRecord.srec.sensitivity = cfg.eventCfg.preBuffNumOfSamples; // Sensitivity
 		}
@@ -642,6 +673,15 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_BIT_ACCURACY;
 		}
 		
+		if ((cfg.eventCfg.adjustForTempDrift == YES) || (cfg.eventCfg.adjustForTempDrift == NO))
+		{
+			g_triggerRecord.trec.adjustForTempDrift = cfg.eventCfg.adjustForTempDrift;
+		}
+		else
+		{
+			returnCode = CFG_ERR_TEMP_ADJUST;
+		}
+
 		// Auto Monitor Mode check
 		switch (cfg.autoCfg.auto_monitor_mode)
 		{
@@ -1021,6 +1061,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		// Check if it has all been verified and now save the data. Data in error is not saved.
 		saveRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		saveRecData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 	}
 
 	if (TRUE == timerModeModified)

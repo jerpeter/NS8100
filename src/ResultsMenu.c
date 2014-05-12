@@ -393,7 +393,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// Event specific scaling factors
     //-------------------------------------------------------------
 	
-	// Set the gain factor that was used to record the event
+	// Set the gain factor that was used to record the event (sensitivity)
 	if ((eventRecord->summary.parameters.channel[0].options & 0x01) == GAIN_SELECT_x2)
 		gainFactor = 2;
 	else

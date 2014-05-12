@@ -147,13 +147,40 @@ void newMonitorLogEntry(uint8 mode)
 	__monitorLogTbl[__monitorLogTblIndex].startEventNumber = g_nextEventNumberToUse;
 	__monitorLogTbl[__monitorLogTblIndex].status = PARTIAL_LOG_ENTRY;
 	
+#if 0 // 16-bit trigger level
 	__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
-#if 1 // Normal
-	__monitorLogTbl[__monitorLogTblIndex].soundTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
-#else // Try
-	__monitorLogTbl[__monitorLogTblIndex].soundTriggerLevel = airTriggerConvert(g_triggerRecord.trec.airTriggerLevel);
+#else // Bit accuracy adjusted trigger level
+	if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR))
+	{
+		__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+	}
+	else
+	{
+		__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+	}
 #endif
+
+#if 0 // Unit specific trigger level
+	__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+#else // Bit accuracy adjusted trigger level as A/D count
+	if ((g_airTriggerCount == NO_TRIGGER_CHAR) || (g_airTriggerCount == EXTERNAL_TRIGGER_CHAR))
+	{
+		__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_airTriggerCount;
+	}
+	else
+	{
+		__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_airTriggerCount / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+	}
+#endif
+
+#if 0 // Field no longer needed
 	__monitorLogTbl[__monitorLogTblIndex].airUnitsOfMeasure = g_helpRecord.units_of_air;
+#else
+	__monitorLogTbl[__monitorLogTblIndex].bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_10_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ?
+														ACCURACY_16_BIT : g_triggerRecord.trec.bitAccuracy;
+	__monitorLogTbl[__monitorLogTblIndex].adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
+#endif
+
 	__monitorLogTbl[__monitorLogTblIndex].sensor_type = g_factorySetupRecord.sensor_type;
 	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
 
@@ -490,9 +517,9 @@ void initMonitorLogTableFromLogFile(void)
 				debug("Found Valid Monitor Log Entry with ID: %d\n", monitorLogEntry.uniqueEntryId);
 
 #if 0 // Test
-				debug("(ID: %03d) Mode: %d, Start Event #: %d, Status: %d, Seis Trig: 0x%x, Air Trig: 0x%x, Air Units: %d, Sensor Type: %d, Gain: %d\n",
+				debug("(ID: %03d) Mode: %d, Start Event #: %d, Status: %d, Seis Trig: 0x%x, Air Trig: 0x%x, Bit Acc: %d, Temp Adj: %d, Sensor Type: %d, Gain: %d\n",
 						monitorLogEntry.uniqueEntryId, monitorLogEntry.mode, monitorLogEntry. startEventNumber, monitorLogEntry.status, 
-						monitorLogEntry.seismicTriggerLevel, monitorLogEntry.soundTriggerLevel, monitorLogEntry.airUnitsOfMeasure, 
+						monitorLogEntry.seismicTriggerLevel, monitorLogEntry.airTriggerLevel, monitorLogEntry.bitAccuracy, monitorLogEntry.adjustForTempDrift,
 						monitorLogEntry.sensor_type, monitorLogEntry.sensitivity);
 /*
 	uint16				uniqueEntryId;
@@ -504,7 +531,7 @@ void initMonitorLogTableFromLogFile(void)
 	uint16				startEventNumber;
 	#if 1 // Updated (Port lost change)
 	uint32				seismicTriggerLevel;
-	uint32				soundTriggerLevel;
+	uint32				airTriggerLevel;
 	int32				sensor_type;
 	int32				sensitivity;
 	#endif
@@ -515,7 +542,7 @@ void initMonitorLogTableFromLogFile(void)
 	__monitorLogTbl[__monitorLogTblIndex].status = PARTIAL_LOG_ENTRY;
 	
 	__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
-	__monitorLogTbl[__monitorLogTblIndex].soundTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+	__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
 	__monitorLogTbl[__monitorLogTblIndex].sensor_type =  g_factorySetupRecord.sensor_type;
 	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
 */

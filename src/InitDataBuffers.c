@@ -75,9 +75,6 @@ void InitDataBuffs(uint8 op_mode)
 	// Set up the end of the Pretrigger buffer
 	g_endOfPretriggerBuff = &(g_pretriggerBuff[pretriggerBufferSize]);
 
-	// Setup the pending event record information that is available at this time
-	initEventRecord(op_mode);
-
 	// Setup Bit Accuracy globals
 	if (g_triggerRecord.trec.bitAccuracy == ACCURACY_10_BIT) 
 		{ g_bitAccuracyMidpoint = ACCURACY_10_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_10_BIT; }
@@ -87,6 +84,9 @@ void InitDataBuffs(uint8 op_mode)
 		{ g_bitAccuracyMidpoint = ACCURACY_14_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_14_BIT; }
 	else // Default to 16-bit accuracy
 		{ g_bitAccuracyMidpoint = ACCURACY_16_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_16_BIT; } 
+
+	// Setup the pending event record information that is available at this time
+	initEventRecord(op_mode);
 
 	// Setup buffers based on mode
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))

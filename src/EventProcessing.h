@@ -95,6 +95,8 @@ void reInitSdCardAndFat32(void);
 inline void adjustSampleForBitAccuracy(void);
 void powerDownSDCard(void);
 void powerUpSDCardAndInitFat32(void);
+uint16 seisTriggerConvert(float);
+uint16 airTriggerConvert(uint32 airTriggerLevel);
 
 void cacheResultsEventInfo(EVT_RECORD* eventRecordToCache);
 

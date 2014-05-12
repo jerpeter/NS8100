@@ -307,8 +307,13 @@ typedef struct
 	uint16				startEventNumber;
 #if 1 // Updated (Port lost change)
 	uint32				seismicTriggerLevel;
-	uint32				soundTriggerLevel;
+	uint32				airTriggerLevel;
+#if 0 // No longer need this field
 	uint16				airUnitsOfMeasure;
+#else // Updated
+	uint8				bitAccuracy;
+	uint8				adjustForTempDrift;
+#endif
 	uint16				sensor_type;
 	uint32				sensitivity;
 #endif

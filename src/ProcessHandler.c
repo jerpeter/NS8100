@@ -47,8 +47,6 @@ extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-uint16 seisTriggerConvert(float);
-uint16 airTriggerConvert(uint32 airTriggerLevel);
 void dataIsrInit(void);
 void startDataCollection(uint32 sampleRate);
 
@@ -461,7 +459,7 @@ extern void processAndMoveWaveformData_ISR_Inline(void);
 uint16 seisTriggerConvert(float seismicTriggerLevel)
 {
     uint16 seisTriggerVal;
-    uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 4 : 8);
+    uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
     float convertToHex = (float)(g_factorySetupRecord.sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
     
     convertToHex = (float)ADC_RESOLUTION / (float)convertToHex;
@@ -490,7 +488,7 @@ uint16 seisTriggerConvert(float seismicTriggerLevel)
 uint16 airTriggerConvert(uint32 airTriggerToConvert)
 {
 	// Check if the air trigger level is not no trigger and not manual trigger
-	if ((airTriggerToConvert != NO_TRIGGER_CHAR) && (airTriggerToConvert != MANUAL_TRIGGER_CHAR))
+	if ((airTriggerToConvert != NO_TRIGGER_CHAR) && (airTriggerToConvert != MANUAL_TRIGGER_CHAR) && (airTriggerToConvert != EXTERNAL_TRIGGER_CHAR))
 	{
 #if 0 // Port lost change
 		// Convert the float db to an offset from 0 to 2048 and upscale to 16-bit
