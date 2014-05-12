@@ -2950,6 +2950,8 @@ void SRAM_Test_32(void)
 	testMem32((unsigned long int*)0xD0010000, (unsigned long int*)0xD0030000, 2, 10);
 	testMem32((unsigned long int*)0xD0020000, (unsigned long int*)0xD0040000, 4, 10);
 	testMem32((unsigned long int*)0xD0030000, (unsigned long int*)0xD0050000, 8, 10);
+	
+	print_dbg("Finished Testing.\nDone.\n");
 }
 
 #if 0

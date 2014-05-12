@@ -439,6 +439,7 @@ void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 	byteSet(rec_ptr, 0, sizeof(REC_HELP_MN_STRUCT));
 
 	// Set default conditions
+	rec_ptr->pretrig_buffer_div = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
 	rec_ptr->flash_wrapping = YES;
 	rec_ptr->auto_monitor_mode = AUTO_NO_TIMEOUT;
 	rec_ptr->auto_cal_mode = AUTO_NO_CAL_TIMEOUT;

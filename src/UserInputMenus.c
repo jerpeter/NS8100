@@ -129,7 +129,7 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 				RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 		}
-#else // ns8100
+#else // ns8100 - Allow both Seismic and Air trigger levels to be No Trigger (only allowing External trigger)
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 			RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 #endif

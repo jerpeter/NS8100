@@ -43,8 +43,11 @@
 #define BARGRAPH_INTERVAL_BUFFER_SIZE	4
 
 //#define PRE_TRIGGER_SIZE 				0.25
-#define PRE_TRIGGER_TIME_MSEC			250
-#define PRE_TRIGGER_TIME_SEC			0.25
+//#define PRE_TRIGGER_TIME_MSEC			250
+//#define PRE_TRIGGER_TIME_SEC			0.25
+#define PRETRIGGER_BUFFER_QUARTER_SEC_DIV	4
+#define PRETRIGGER_BUFFER_HALF_SEC_DIV		2
+#define PRETRIGGER_BUFFER_FULL_SEC_DIV		1
 
 // ===============================
 // New Event Record Sub-Structures

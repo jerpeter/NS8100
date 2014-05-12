@@ -1051,8 +1051,22 @@ void baudRateMenuHandler(uint8 keyPressed, void* data)
 				case BAUD_RATE_9600: usart_1_rs232_options.baudrate = 9600; break;
 			}
 
+#if 1 // ns8100 (Added to help Dave's Supergraphics handle Baud change)
+			//-------------------------------------------------------------------------
+			// Signal remote end that RS232 Comm is available
+			//-------------------------------------------------------------------------
+			CLEAR_RTS; CLEAR_DTR; // Init signals for ready to send and terminal ready
+#endif
+
 			// Re-Initialize the RS232 with the new baud rate
 			usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
+
+#if 1 // ns8100 (Added to help Dave's Supergraphics handle Baud change)
+			//-------------------------------------------------------------------------
+			// Signal remote end that RS232 Comm is available
+			//-------------------------------------------------------------------------
+			SET_RTS; SET_DTR; // Init signals for ready to send and terminal ready
+#endif
 
 			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 		}
@@ -2223,9 +2237,13 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 
 			// fix_ns8100 - Add in Combo mode calc that accounts for Bargraph buffers
 			g_triggerRecord.trec.record_time_max = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS -
+#if 0 // Fixed Pretrigger size
 				((g_triggerRecord.trec.sample_rate / 4) * g_sensorInfoPtr->numOfChannels) -
-					((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * g_sensorInfoPtr->numOfChannels)) /
-						(g_triggerRecord.trec.sample_rate * g_sensorInfoPtr->numOfChannels))));
+#else // Variable Pretrigger size
+				((g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div) * g_sensorInfoPtr->numOfChannels) -
+#endif
+				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * g_sensorInfoPtr->numOfChannels)) /
+				(g_triggerRecord.trec.sample_rate * g_sensorInfoPtr->numOfChannels))));
 
 			debug("New Max Record Time: %d\n", g_triggerRecord.trec.record_time_max);
 

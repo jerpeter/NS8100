@@ -848,7 +848,7 @@ void InitSystemHardware_NS8100(void)
 	//gpio_enable_gpio_pin(AVR32_PIN_PB01)
 
 	//-------------------------------------------------------------------------
-    // Set SDATA and ADATA low
+    // Set SDATA and ADATA high
 	//-------------------------------------------------------------------------
 	gpio_set_gpio_pin(AVR32_PIN_PB02);
     gpio_set_gpio_pin(AVR32_PIN_PB03);
@@ -1853,7 +1853,11 @@ int main(void)
 	BootLoadManager();
 #endif
 
-	debug("--- System Init complete ---\n");
+	int majorVer, minorVer;
+	char buildVer;
+	sscanf(&g_buildVersion[0], "%d.%d.%c", &majorVer, &minorVer, &buildVer);
+
+	debug("--- System Init complete (Version %d.%d.%c) ---\n", majorVer, minorVer, buildVer);
 
 	// Test code
 	//testSnippetsAfterInit();

@@ -651,7 +651,11 @@ void initEventRecord(uint8 op_mode)
 		eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
 
 		eventRec->summary.parameters.numOfSamples = (uint16)(g_triggerRecord.trec.sample_rate * g_triggerRecord.trec.record_time);
+#if 0 // Fixed Pretrigger size
 		eventRec->summary.parameters.preBuffNumOfSamples = (uint16)(g_triggerRecord.trec.sample_rate / 4);
+#else // Variable Pretrigger size
+		eventRec->summary.parameters.preBuffNumOfSamples = (uint16)(g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div);
+#endif
 		eventRec->summary.parameters.calDataNumOfSamples = (uint16)(CALIBRATION_NUMBER_OF_SAMPLES);
 
 		if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))

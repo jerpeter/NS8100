@@ -75,10 +75,10 @@ static uint32 s_pretrigCount = 0;
 static uint32 s_sampleCount = 0;
 static uint32 s_calSampleCount = 0;
 static uint32 s_pendingCalCount = 0;
-static uint32 s_quarterSecCount = 0;
+static uint32 s_pretriggerCount = 0;
 static uint16 s_consecSeismicTriggerCount = 0;
 static uint16 s_consecAirTriggerCount = 0;
-static uint8 s_quarterSecFull = NO;
+static uint8 s_pretriggerFull = NO;
 static uint8 s_checkTempDrift = NO;
 static uint8 s_seismicTriggerSample = NO;
 static uint8 s_airTriggerSample = NO;
@@ -780,17 +780,17 @@ void tc_typematic_irq(void)
 }
 
 // ============================================================================
-// fillQuarterSecBuffer_ISR_Inline
+// fillPretriggerBuffer_ISR_Inline
 // ============================================================================
-static inline void fillQuarterSecBuffer_ISR_Inline(void)
+static inline void fillPretriggerBuffer_ISR_Inline(void)
 {
-	s_quarterSecCount++;
+	s_pretriggerCount++;
 
-	// Check if the quarter sec count has accumulated to 1/4 of a second
-	if (s_quarterSecCount >= (g_triggerRecord.trec.sample_rate / 4)) 
+	// Check if the Pretrigger count has accumulated to 1/4 of a second
+	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / 4)) 
 	{ 
-		s_quarterSecFull = YES;
-		s_quarterSecCount = 0;
+		s_pretriggerFull = YES;
+		s_pretriggerCount = 0;
 		
 		// Save the current temperature
 		g_storedTempReading = g_currentTempReading;
@@ -869,7 +869,7 @@ static inline void processAndMoveManualCalData_ISR_Inline(void)
 	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
 
 	// Move the samples into the event buffer
-	*(SAMPLE_DATA_STRUCT*)g_currentEventSamplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+	*(SAMPLE_DATA_STRUCT*)g_currentEventSamplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 
 	g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
@@ -894,7 +894,7 @@ void processAndMoveWaveformData(void)
 {
 	uint16 processingCount = (g_triggerRecord.trec.sample_rate / 8);
 
-	while ((g_readQuarterSecBuff != g_tailOfQuarterSecBuff) && (processingCount-- > 0))
+	while ((g_readPretriggerBuff != g_tailOfPretriggerBuff) && (processingCount-- > 0))
 	{
 
 	//_____________________________________________________________________________________
@@ -968,9 +968,9 @@ void processAndMoveWaveformData(void)
 				s_pendingCalCount = 0;
 									
 				//___________________________________________________________________________________________
-				//___Copy current quarter sec buffer sample to event
+				//___Copy current Pretrigger buffer sample to event
 #if 1
-				*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+				*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 #else // Test
 				*(s_samplePtr) = 0x3333;
 				*(s_samplePtr + 1) = 0x3333;
@@ -978,12 +978,12 @@ void processAndMoveWaveformData(void)
 				*(s_samplePtr + 3) = 0x3333;
 #endif									
 				//___________________________________________________________________________________________
-				//___Copy oldest quarter sec buffer sample to pretrigger
-				if ((g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfQuarterSecBuff)
+				//___Copy oldest Pretrigger buffer sample to Pretrigger
+				if ((g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfPretriggerBuff)
 				{
 #if 1
-					// Copy first (which is currently the oldest) quarter sec buffer sample to pretrig
-					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
+					// Copy first (which is currently the oldest) Pretrigger buffer sample to pretrig
+					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfPretriggerBuff;
 #else // Test
 					*(s_pretrigPtr) = 0x1111;
 					*(s_pretrigPtr + 1) = 0x1111;
@@ -991,10 +991,10 @@ void processAndMoveWaveformData(void)
 					*(s_pretrigPtr + 3) = 0x1111;
 #endif
 				}										
-				else // Copy oldest quarter sec buffer sample to pretrigger
+				else // Copy oldest Pretrigger buffer sample to Pretrigger
 				{
 #if 1
-					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
+					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT);
 #else // Test
 					*(s_pretrigPtr) = 0x1111;
 					*(s_pretrigPtr + 1) = 0x1111;
@@ -1038,18 +1038,18 @@ void processAndMoveWaveformData(void)
 	else if ((s_recordingEvent == YES) && (s_sampleCount))
 	{
 		//___________________________________________________________________________________________
-		//___Check if pretrig data to copy
+		//___Check if Pretrigger data to copy
 		if (s_pretrigCount)
 		{
-			// Check if the end of the quarter sec buffer has been reached
-			if ((g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfQuarterSecBuff)
+			// Check if the end of the Pretrigger buffer has been reached
+			if ((g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfPretriggerBuff)
 			{
-				// Copy oldest (which is currently the first) quarter sec buffer samples to pretrig
-				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
+				// Copy oldest (which is currently the first) Pretrigger buffer samples to event Pretrigger
+				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfPretriggerBuff;
 			}										
-			else // Copy oldest quarter sec buffer samples to pretrig
+			else // Copy oldest Pretrigger buffer samples to event Pretrigger 
 			{
-				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
+				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT);
 			}										
 
 			s_pretrigPtr += NUMBER_OF_CHANNELS_DEFAULT;
@@ -1069,7 +1069,7 @@ void processAndMoveWaveformData(void)
 
 		//___________________________________________________________________________________________
 		//___Copy data samples to event buffer
-		*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+		*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 
 		s_samplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 		s_sampleCount--;
@@ -1150,7 +1150,7 @@ void processAndMoveWaveformData(void)
 				if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
 
 				// Copy cal data to the event buffer cal section
-				*(SAMPLE_DATA_STRUCT*)(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+				*(SAMPLE_DATA_STRUCT*)(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 
 #if 0 // test crap
 			if (s_calSampleCount == 100)
@@ -1167,7 +1167,7 @@ void processAndMoveWaveformData(void)
 				if (s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX] != NULL)
 				{
 					// Copy delayed cal data to event buffer cal section
-					*(SAMPLE_DATA_STRUCT*)(s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+					*(SAMPLE_DATA_STRUCT*)(s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 					s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX] += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -1175,7 +1175,7 @@ void processAndMoveWaveformData(void)
 				if (s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX] != NULL)
 				{
 					// Copy delayed cal data to event buffer cal section
-					*(SAMPLE_DATA_STRUCT*)(s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+					*(SAMPLE_DATA_STRUCT*)(s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 					s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX] += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -1220,8 +1220,8 @@ void processAndMoveWaveformData(void)
 					tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
 					tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 
-					// Invalidate the quarter sec buffer until it's filled again
-					s_quarterSecFull = NO;
+					// Invalidate the Pretrigger buffer until it's filled again
+					s_pretriggerFull = NO;
 
 					g_spi1AccessLock = AVAILABLE;
 				}																
@@ -1325,19 +1325,19 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				s_pendingCalCount = 0;
 									
 				//___________________________________________________________________________________________
-				//___Copy current quarter sec buffer sample to event
-				*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+				//___Copy current Pretrigger buffer sample to event
+				*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 
 				//___________________________________________________________________________________________
-				//___Copy oldest quarter sec buffer sample to pretrigger
-				if ((g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfQuarterSecBuff)
+				//___Copy oldest Pretrigger buffer sample to Pretrigger
+				if ((g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfPretriggerBuff)
 				{
-					// Copy first (which is currently the oldest) quarter sec buffer sample to pretrig
-					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
+					// Copy first (which is currently the oldest) Pretrigger buffer sample to Pretrigger buffer
+					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfPretriggerBuff;
 				}										
-				else // Copy oldest quarter sec buffer sample to pretrigger
+				else // Copy oldest Pretrigger buffer sample to Pretrigger
 				{
-					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
+					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT);
 				}										
 
 				//___________________________________________________________________________________________
@@ -1378,15 +1378,15 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		//___Check if pretrig data to copy
 		if (s_pretrigCount)
 		{
-			// Check if the end of the quarter sec buffer has been reached
-			if ((g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfQuarterSecBuff)
+			// Check if the end of the Pretrigger buffer has been reached
+			if ((g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfPretriggerBuff)
 			{
-				// Copy oldest (which is currently the first) quarter sec buffer samples to pretrig
-				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfQuarterSecBuff;
+				// Copy oldest (which is currently the first) Pretrigger buffer samples to event Pretrigger
+				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfPretriggerBuff;
 			}										
-			else // Copy oldest quarter sec buffer samples to pretrig
+			else // Copy oldest Pretrigger buffer samples to event Pretrigger
 			{
-				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfQuarterSecBuff + NUMBER_OF_CHANNELS_DEFAULT);
+				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT);
 			}										
 
 			s_pretrigPtr += NUMBER_OF_CHANNELS_DEFAULT;
@@ -1395,7 +1395,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 
 		//___________________________________________________________________________________________
 		//___Copy data samples to event buffer
-		*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+		*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 
 		s_samplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 		s_sampleCount--;
@@ -1465,7 +1465,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
 
 				// Copy cal data to the event buffer cal section
-				*(SAMPLE_DATA_STRUCT*)(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+				*(SAMPLE_DATA_STRUCT*)(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 
 				s_calPtr[DEFAULT_CAL_BUFFER_INDEX] += NUMBER_OF_CHANNELS_DEFAULT;
 									
@@ -1473,7 +1473,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				if (s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX] != NULL)
 				{
 					// Copy delayed cal data to event buffer cal section
-					*(SAMPLE_DATA_STRUCT*)(s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+					*(SAMPLE_DATA_STRUCT*)(s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 					s_calPtr[ONCE_DELAYED_CAL_BUFFER_INDEX] += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -1481,7 +1481,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				if (s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX] != NULL)
 				{
 					// Copy delayed cal data to event buffer cal section
-					*(SAMPLE_DATA_STRUCT*)(s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+					*(SAMPLE_DATA_STRUCT*)(s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 					s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX] += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -1519,8 +1519,8 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 					tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
 					tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 
-					// Invalidate the quarter sec buffer until it's filled again
-					s_quarterSecFull = NO;
+					// Invalidate the Pretrigger buffer until it's filled again
+					s_pretriggerFull = NO;
 
 					g_spi1AccessLock = AVAILABLE;
 				}																
@@ -1541,7 +1541,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 static inline void moveWaveformData_ISR_Inline(void)
 {
 	// Copy sample over to bargraph buffer
-	*(SAMPLE_DATA_STRUCT*) = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+	*(SAMPLE_DATA_STRUCT*) = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 
 	// Increment the write pointer
 	 += NUMBER_OF_CHANNELS_DEFAULT;
@@ -1560,7 +1560,7 @@ static inline void moveWaveformData_ISR_Inline(void)
 static inline void moveBargraphData_ISR_Inline(void)
 {
 	// Copy sample over to bargraph buffer
-	*(SAMPLE_DATA_STRUCT*)g_bargraphDataWritePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff;
+	*(SAMPLE_DATA_STRUCT*)g_bargraphDataWritePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 
 	// Increment the write pointer
 	g_bargraphDataWritePtr += NUMBER_OF_CHANNELS_DEFAULT;
@@ -1616,11 +1616,11 @@ static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 	s_T_channelReading -= g_channelOffset.t_offset;
 	s_A_channelReading -= g_channelOffset.a_offset;
 
-	// Store the raw A/D data (adjusted for zero offset) into the quarter sec buffer
-	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r = s_R_channelReading;
-	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v = s_V_channelReading;
-	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t = s_T_channelReading;
-	((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a = s_A_channelReading;
+	// Store the raw A/D data (adjusted for zero offset) into the Pretrigger buffer
+	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r = s_R_channelReading;
+	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v = s_V_channelReading;
+	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t = s_T_channelReading;
+	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->a = s_A_channelReading;
 }
 
 // ============================================================================
@@ -1753,7 +1753,7 @@ static inline void handleChannelSyncError_ISR_Inline(void)
 // ============================================================================
 void dataIsrInit(void)
 {
-	s_quarterSecFull = NO;
+	s_pretriggerFull = NO;
 	s_checkTempDrift = NO;
 }
 
@@ -1786,7 +1786,7 @@ void tc_sample_irq(void)
 		}
 
 		//___________________________________________________________________________________________
-		//___Check for temperature drift (only will start after quarter sec buffer is full initially)
+		//___Check for temperature drift (only will start after Pretrigger buffer is full initially)
 		if (s_checkTempDrift == YES)
 		{
 			checkForTemperatureDrift_ISR_Inline();
@@ -1811,10 +1811,10 @@ void tc_sample_irq(void)
 		// fix_ns8100
 	}
 	//___________________________________________________________________________________________
-	//___Check if the quarter sec buffer is not full, which is necessary for an event
-	else if (s_quarterSecFull == NO)
+	//___Check if the Pretrigger buffer is not full, which is necessary for an event
+	else if (s_pretriggerFull == NO)
 	{
-		fillQuarterSecBuffer_ISR_Inline();
+		fillPretriggerBuffer_ISR_Inline();
 	}
 	//___________________________________________________________________________________________
 	//___Check if handling a Manual Cal
@@ -1849,10 +1849,10 @@ void tc_sample_irq(void)
 
 	//___________________________________________________________________________________________
 	//___Advance to the next sample in the buffer
-	g_tailOfQuarterSecBuff += g_sensorInfoPtr->numOfChannels;
+	g_tailOfPretriggerBuff += g_sensorInfoPtr->numOfChannels;
 
-	// Check if the end of the quarter sec buffer has been reached
-	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
+	// Check if the end of the Pretrigger buffer has been reached
+	if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
 
 	// clear the interrupt flag
 	DUMMY_READ(AVR32_TC.channel[TC_SAMPLE_TIMER_CHANNEL].sr);

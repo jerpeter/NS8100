@@ -614,10 +614,10 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			byteSet(&buff[0], 0, sizeof(buff));	
 			length = (uint8)sprintf(buff," %04x %04x %04x %04x", 
-				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->r),
-				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->v),
-				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->t),
-				(((SAMPLE_DATA_STRUCT*)g_tailOfQuarterSecBuff)->a));
+				(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r),
+				(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v),
+				(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t),
+				(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->a));
 
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 

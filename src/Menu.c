@@ -123,6 +123,13 @@ void setupMnDef(void)
 		// Help Record is valid
 		debug("Help record: Found.\n");
 
+		if ((g_helpRecord.pretrig_buffer_div != PRETRIGGER_BUFFER_QUARTER_SEC_DIV) && (g_helpRecord.pretrig_buffer_div != PRETRIGGER_BUFFER_HALF_SEC_DIV) &&
+		(g_helpRecord.pretrig_buffer_div != PRETRIGGER_BUFFER_FULL_SEC_DIV))
+		{
+			g_helpRecord.pretrig_buffer_div = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
+			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		}
+
 #if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
 		// Set the baud rate to the user stored baud rate setting (initialized to 115200)
 		switch (g_helpRecord.baud_rate)

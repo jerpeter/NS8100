@@ -358,7 +358,11 @@ void sendVMLData(void)
 		dataLength = ((numOfNewMonitorLogEntries(s_vmlXferStruct.lastDlUniqueEntryId) + 1) * sizeof(MONITOR_LOG_ENTRY_STRUCT));
 
 		// Signal a message response in the message type string
+#if 0 // Port missing change
 		sprintf((char*)msgTypeStr, "%02d", MSGTYPE_RESPONSE);
+#else // Updated
+		sprintf((char*)msgTypeStr, "%02d", MSGTYPE_RESPONSE_REV1);
+#endif
 
 		// Build the outgoing message header
 		buildOutgoingSimpleHeaderBuffer((uint8*)&(s_vmlXferStruct.vmlHdr), (uint8*)"VMLx", (uint8*)msgTypeStr,

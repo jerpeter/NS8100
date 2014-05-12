@@ -239,7 +239,7 @@ typedef struct
 	uint8 alarm_one_mode;
 	uint8 alarm_two_mode;
 	uint8 print_monitor_log;
-	uint8 unused6;
+	uint8 pretrig_buffer_div;
 	uint32 alarm_one_seismic_lvl;
 	uint32 alarm_one_seismic_min_lvl;
 	uint32 alarm_one_air_lvl;

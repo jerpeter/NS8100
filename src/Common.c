@@ -686,6 +686,12 @@ void build_languageLinkTable(uint8 languageSelection)
 			sprintf((char*)&languageFilename[0], "C:\\Language\\German.tbl");
 			break;
 
+#if 0 // fix
+		case SPANISH_LANG: languageTablePtr = englishLanguageTable;
+		//      case SPANISH_LANG: languageTablePtr = spanishLanguageTable;
+		break;
+#endif
+
 		default:
 			languageTablePtr = englishLanguageTable;
 			sprintf((char*)&languageFilename[0], "C:\\Language\\English.tbl");

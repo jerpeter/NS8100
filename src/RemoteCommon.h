@@ -173,7 +173,8 @@ enum {
 	CFG_ERR_FLASH_WRAPPING,			// 42
 	CFG_ERR_BAD_CRC,				// 43
 	CFG_ERR_MODEM_CONFIG,			// 44
-	CFG_ERR_END						// 45
+	CFG_ERR_PRETRIG_BUFFER_DIV,		// 45
+	CFG_ERR_END						// 46
 };
 
 enum {
@@ -386,7 +387,11 @@ typedef struct
 	uint8 units_of_measure;
 	uint8 freq_plot_mode;
 	uint8 freq_plot_type;
+#if 0 // ns7100
 	uint8	unused[2];
+#else // ns8100 - Changed to match the padding in the ns7100
+	uint8	unused[4];
+#endif
 } PRINTER_OUTPUT_CFG;
 #pragma pack()
 
@@ -406,7 +411,11 @@ typedef struct
 	uint32 alarm_two_air_min_lvl;
 	uint32 alarm_one_time;
 	uint32 alarm_two_time;
+#if 0 // ns7100
 	uint8	unused[2];
+#else // ns8100 - Changed to match the padding in the ns7100
+	uint8	unused[4];
+#endif
 } ALARM_CFG;
 #pragma pack()
 
@@ -438,7 +447,12 @@ typedef struct
 	ALARM_CFG			alarmCfg;
 	TIMER_CFG			timerCfg;
 	uint8				flashWrapping;
+#if 0 // ns7100
 	uint8				unused[6];
+#else // ns8100 - Changed to match the padding in the ns7100
+	uint8				appBuildVersion;
+	uint8				unused[6];
+#endif
 } SYSTEM_CFG;
 #pragma pack()
 

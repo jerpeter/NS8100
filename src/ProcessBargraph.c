@@ -113,7 +113,7 @@ void EndBargraph(void)
 
 /*****************************************************************************
 * Function:		ProcessBargraphData (Step 2)
-* Purpose:		Copy A/D channel data from quarter sec buffer into event buffer
+* Purpose:		Copy A/D channel data from Pretrigger buffer into event buffer
 ******************************************************************************/
 #if 0
 void ProcessBargraphData(void)
@@ -121,11 +121,11 @@ void ProcessBargraphData(void)
 	// Check to see if we have a chunk of ram buffer to write, otherwise check for data wrapping.
 	if ((g_bargraphDataEndPtr - g_bargraphDataWritePtr) >= 4)
 	{
-		// Move from the quarter sec buffer to our large ram buffer.
-		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
-		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
-		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
-		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		// Move from the Pretrigger buffer to our large ram buffer.
+		*g_bargraphDataWritePtr++ = *g_tailOfPretriggerBuff++;
+		*g_bargraphDataWritePtr++ = *g_tailOfPretriggerBuff++;
+		*g_bargraphDataWritePtr++ = *g_tailOfPretriggerBuff++;
+		*g_bargraphDataWritePtr++ = *g_tailOfPretriggerBuff++;
 
 		// Check for the end and if so go to the top
 		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) 
@@ -133,22 +133,22 @@ void ProcessBargraphData(void)
 	}
 	else
 	{
-		// Move from the pre-trigger buffer to our large ram buffer, but check for data wrapping.
-		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		// Move from the Pretrigger buffer to our large ram buffer, but check for data wrapping.
+		*g_bargraphDataWritePtr++ = *g_tailOfPretriggerBuff++;
 		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
-		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		*g_bargraphDataWritePtr++ = *g_tailOfPretriggerBuff++;
 		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
-		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		*g_bargraphDataWritePtr++ = *g_tailOfPretriggerBuff++;
 		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
-		*g_bargraphDataWritePtr++ = *g_tailOfQuarterSecBuff++;
+		*g_bargraphDataWritePtr++ = *g_tailOfPretriggerBuff++;
 		if (g_bargraphDataWritePtr > g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 	}
 
-	// Handle quarter sec buffer pointer for circular buffer
-	//if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
+	// Handle Pretrigger buffer pointer for circular buffer
+	//if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
 	raiseSystemEventFlag(BARGRAPH_EVENT);

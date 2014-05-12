@@ -142,7 +142,7 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 							// Clear the stored offsets so that the A/D channel data is raw
 							memset(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
 							
-							// Clear the pretrigger buffer
+							// Clear the Pretrigger buffer
 							soft_usecWait(250 * SOFT_MSECS);
 							
 							//debug("Cal Menu Screen 1 selected\n");
@@ -172,7 +172,7 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 							// Restart the data collection clock
 							Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
 							
-							// Clear the pretrigger buffer
+							// Clear the Pretrigger buffer
 							soft_usecWait(250 * SOFT_MSECS);
 
 							//debug("Cal Menu Screen 2 selected\n");
@@ -279,7 +279,7 @@ void calSetupMnProc(INPUT_MSG_STRUCT msg,
 			// Hand setup A/D data collection and start the data clock
 			mnStartCal();
 			
-			// Allow pre-trigger buffer to fill up
+			// Allow Pretrigger buffer to fill up
 			soft_usecWait(250 * SOFT_MSECS);
 		break;
 
@@ -338,8 +338,8 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
-	//memcpy(&s_calPreTrigData[0], &g_startOfQuarterSecBuff[0], (256 * 4 * 2));
-	s_calibrationData = (CALIBRATION_DATA*)g_startOfQuarterSecBuff;
+	//memcpy(&s_calPreTrigData[0], &g_startOfPretriggerBuff[0], (256 * 4 * 2));
+	s_calibrationData = (CALIBRATION_DATA*)g_startOfPretriggerBuff;
 
 	// Zero the Med
 	memset(&chanMed[0][0], 0, sizeof(chanMed));

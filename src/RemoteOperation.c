@@ -69,6 +69,7 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	uint8 dcmHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
 	int majorVer, minorVer;
+	char buildVer;
 
 	UNUSED(inCmd);
 
@@ -83,10 +84,11 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.eventCfg.sampleRate = (uint16)g_triggerRecord.trec.sample_rate;
 	
 	// Scan for major and minor version from the app version string and store in the config
-	sscanf(&g_appVersion[0], "%d.%d", &majorVer, &minorVer);
+	sscanf(&g_buildVersion[0], "%d.%d.%c", &majorVer, &minorVer, &buildVer);
 	
 	cfg.eventCfg.appMajorVersion = (uint8)majorVer;
 	cfg.eventCfg.appMinorVersion = (uint8)minorVer;
+	cfg.appBuildVersion = buildVer;
 
 	// Waveform specific - Intitial conditions.
 	cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
@@ -95,18 +97,40 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	// static non changing.
 	cfg.eventCfg.seismicSensorType = (uint16)(g_factorySetupRecord.sensor_type);
+#if 0 // Port missing change
 	cfg.eventCfg.airSensorType = (uint16)0x0;
-	cfg.eventCfg.bitAccuracy = 12;
+#else // Updated
+	cfg.eventCfg.airSensorType = (uint16)(g_helpRecord.units_of_air);
+#endif
+	cfg.eventCfg.bitAccuracy = g_triggerRecord.trec.bitAccuracy;
 	cfg.eventCfg.numOfChannels = 4;
 	cfg.eventCfg.aWeighting = (uint8)g_factorySetupRecord.aweight_option;
 
 	cfg.eventCfg.numOfSamples = 0;				// Not used for configuration settings
-	// Used for setting sesitivity
+
+#if 0 // Old and incorrectly overloaded
 	cfg.eventCfg.preBuffNumOfSamples = (uint16)g_triggerRecord.srec.sensitivity;
 	cfg.eventCfg.calDataNumOfSamples = g_triggerRecord.berec.barScale;
 	cfg.eventCfg.activeChannels = g_triggerRecord.berec.barChannel;
+#else // Updated with notes
+	// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
+	// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
+	cfg.eventCfg.preBuffNumOfSamples = (uint16)g_triggerRecord.srec.sensitivity;
 
-	// Bargraph specific - Intitial conditions.
+	// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
+	// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
+	cfg.eventCfg.calDataNumOfSamples = g_triggerRecord.berec.barScale;
+
+	// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
+	// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
+	cfg.eventCfg.activeChannels = g_triggerRecord.berec.barChannel;
+
+	// *NOTE* Actual element config type is already incorrectly being overloaded (done by the original author)
+	// Using the first element of free space in this structure to transfer the real Pretrigger buffer size config
+	cfg.eventCfg.unused[0] = g_helpRecord.pretrig_buffer_div;
+#endif
+
+	// Bargraph specific - Initial conditions.
 	cfg.eventCfg.barInterval = (uint16)g_triggerRecord.bgrec.barInterval;
 	cfg.eventCfg.summaryInterval = (uint16)g_triggerRecord.bgrec.summaryInterval;
 
@@ -420,6 +444,18 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_SEISMIC_TRIG_LVL;
 		}
 		
+#if 1 // Updated (Port missing change)
+		// Update air sensor type DB or MB
+		if((uint8)cfg.eventCfg.airSensorType == MILLIBAR_TYPE)
+		{
+			g_helpRecord.units_of_air = MILLIBAR_TYPE;
+		}
+		else
+		{
+			g_helpRecord.units_of_air = DECIBEL_TYPE;
+		}
+#endif
+
 		// Sound Trigger Level check
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
 			(NO_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
@@ -436,11 +472,15 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Find Max Record time for a given sample rate. Max time is equal to
-		// Size of the (event buff - size of pre trigger buffer - size of calibration buff) 
+		// Size of the (event buff - size of Pretrigger buffer - size of calibration buff) 
 		// divided by (sample rate * number of channels).
-		// Number of channels is hardcoded to 4 = NUMBER_OF_CHANNELS_DEFAULT 
+		// Number of channels is hard coded to 4 = NUMBER_OF_CHANNELS_DEFAULT 
 		maxRecordTime = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS - 
+#if 0 // Fixed Pretrigger size
 			((g_triggerRecord.trec.sample_rate / 4) * NUMBER_OF_CHANNELS_DEFAULT) - 
+#else // Variable Pretrigger size
+				((g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div) * NUMBER_OF_CHANNELS_DEFAULT) -
+#endif
 				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * NUMBER_OF_CHANNELS_DEFAULT)) / 
 					(g_triggerRecord.trec.sample_rate * NUMBER_OF_CHANNELS_DEFAULT))));
 
@@ -502,9 +542,10 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		byteCpy((uint8*)g_triggerRecord.trec.loc, cfg.eventCfg.sessionLocation, SESSION_LOCATION_STRING_SIZE - 2);
 		byteCpy((uint8*)g_triggerRecord.trec.comments, cfg.eventCfg.sessionComments, SESSION_COMMENTS_STRING_SIZE - 2);
 
+#if 0 // Old and incorrectly overloaded
 		if ((LOW == cfg.eventCfg.preBuffNumOfSamples) || (HIGH == cfg.eventCfg.preBuffNumOfSamples))
 		{
-			g_triggerRecord.srec.sensitivity = cfg.eventCfg.preBuffNumOfSamples;		// Sesitivity
+			g_triggerRecord.srec.sensitivity = cfg.eventCfg.preBuffNumOfSamples; // Sensitivity
 		}
 		else
 		{
@@ -529,6 +570,53 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			returnCode = CFG_ERR_BAR_PRINT_CHANNEL;
 		}
+#else // Updated with notes
+		// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
+		// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
+		if ((LOW == cfg.eventCfg.preBuffNumOfSamples) || (HIGH == cfg.eventCfg.preBuffNumOfSamples))
+		{
+			g_triggerRecord.srec.sensitivity = cfg.eventCfg.preBuffNumOfSamples; // Sensitivity
+		}
+		else
+		{
+			returnCode = CFG_ERR_SENSITIVITY;
+		}
+		
+		// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
+		// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
+		if ((1 == cfg.eventCfg.calDataNumOfSamples) || (2 == cfg.eventCfg.calDataNumOfSamples) ||
+			(4 == cfg.eventCfg.calDataNumOfSamples) || (8 == cfg.eventCfg.calDataNumOfSamples))
+		{
+			g_triggerRecord.berec.barScale = (uint8)cfg.eventCfg.calDataNumOfSamples;
+		}
+		else
+		{
+			returnCode = CFG_ERR_SCALING;
+		}
+
+		// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
+		// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
+		if ((cfg.eventCfg.activeChannels >= 0) && (cfg.eventCfg.activeChannels <= BAR_AIR_CHANNEL))
+		{
+			g_triggerRecord.berec.barChannel = cfg.eventCfg.activeChannels;
+		}
+		else
+		{
+			returnCode = CFG_ERR_BAR_PRINT_CHANNEL;
+		}
+
+		// *NOTE* Actual element config type is already incorrectly being overloaded (done by the original author)
+		// Using the first element of free space in this structure to transfer the real Pretrigger buffer size config
+		if ((cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_QUARTER_SEC_DIV) || (cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_HALF_SEC_DIV) ||
+			(cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_FULL_SEC_DIV))
+		{
+			g_helpRecord.pretrig_buffer_div = cfg.eventCfg.unused[0];
+		}
+		else
+		{
+			returnCode = CFG_ERR_PRETRIG_BUFFER_DIV;
+		}
+#endif
 
 		// Auto Monitor Mode check
 		switch (cfg.autoCfg.auto_monitor_mode)
@@ -580,6 +668,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case FRENCH_LANG:
 			case ITALIAN_LANG:
 			case GERMAN_LANG:
+#if 1 // Updated (Port missing change)
+			case SPANISH_LANG:
+#endif
 				g_helpRecord.lang_mode = cfg.printerCfg.lang_mode;
 				build_languageLinkTable(g_helpRecord.lang_mode);
 				break;

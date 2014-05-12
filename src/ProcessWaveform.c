@@ -48,7 +48,7 @@
 
 //*****************************************************************************
 // Function:	ProcessWaveformData (Step 2)
-// Purpose :	Copy A/D channel data from quarter sec buffer into event buffers and
+// Purpose :	Copy A/D channel data from Pretrigger buffer into event buffers and
 //				check for command nibble				
 //*****************************************************************************
 #if 0
@@ -60,7 +60,7 @@ void ProcessWaveformData(void)
 	//static uint16 commandNibble;
 
 	// Store the command nibble for the first channel of data
-	//commandNibble = (uint16)(*(g_tailOfQuarterSecBuff) & EMBEDDED_CMD);
+	//commandNibble = (uint16)(*(g_tailOfPretriggerBuff) & EMBEDDED_CMD);
 #endif
 
 	// Check if still waiting for an event
@@ -83,36 +83,36 @@ void ProcessWaveformData(void)
 						// Change global wave state flag
 						//g_waveState = PENDING;
 
-						// Set loop counter to 1 minus the total samples to be recieved in the event body (minus the trigger data sample)
+						// Set loop counter to 1 minus the total samples to be received in the event body (minus the trigger data sample)
 						g_isTriggered = g_samplesInBody - 1;
 
 #if 0 // ns7100
-						// Save the link to the beginning of the pretrigger event data
+						// Save the link to the beginning of the Pretrigger event data
 						g_summaryTable[g_eventBufferWriteIndex].linkPtr = g_eventBufferPretrigPtr;
 #endif
-						// Copy quarter sec buffer data over to the Event body buffer
-						*(g_eventBufferBodyPtr + 0) = *(g_tailOfQuarterSecBuff + 0);
-						*(g_eventBufferBodyPtr + 1) = *(g_tailOfQuarterSecBuff + 1);
-						*(g_eventBufferBodyPtr + 2) = *(g_tailOfQuarterSecBuff + 2);
-						*(g_eventBufferBodyPtr + 3) = *(g_tailOfQuarterSecBuff + 3);
+						// Copy Pretrigger buffer data over to the Event body buffer
+						*(g_eventBufferBodyPtr + 0) = *(g_tailOfPretriggerBuff + 0);
+						*(g_eventBufferBodyPtr + 1) = *(g_tailOfPretriggerBuff + 1);
+						*(g_eventBufferBodyPtr + 2) = *(g_tailOfPretriggerBuff + 2);
+						*(g_eventBufferBodyPtr + 3) = *(g_tailOfPretriggerBuff + 3);
 
 						// Advance the pointers
 						g_eventBufferBodyPtr += 4;
-						g_tailOfQuarterSecBuff += 4;
+						g_tailOfPretriggerBuff += 4;
 
 						// Check if the number of Active channels is less than or equal to 4 (one seismic sensor)
 						if (g_sensorInfoPtr->numOfChannels <= 4)
 						{
-							// Check if the end of the quarter sec buffer buffer has been reached
-							if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
+							// Check if the end of the Pretrigger buffer buffer has been reached
+							if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
 
-							// Copy quarter sec buffer data over to the Event pretrigger buffer
-							*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | EVENT_START);
-							*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | EVENT_START);
-							*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | EVENT_START);
-							*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | EVENT_START);
+							// Copy Pretrigger buffer data over to the Event Pretrigger buffer
+							*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfPretriggerBuff + 0) & DATA_MASK) | EVENT_START);
+							*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfPretriggerBuff + 1) & DATA_MASK) | EVENT_START);
+							*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfPretriggerBuff + 2) & DATA_MASK) | EVENT_START);
+							*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfPretriggerBuff + 3) & DATA_MASK) | EVENT_START);
 
-							// Advance the pointer (Don't advance g_tailOfQuarterSecBuff since just reading quarter sec buffer data)
+							// Advance the pointer (Don't advance g_tailOfPretriggerBuff since just reading Pretrigger buffer data)
 							g_eventBufferPretrigPtr += 4;
 						}
 					}
@@ -133,15 +133,15 @@ void ProcessWaveformData(void)
 					{
 						// Received a Cal pulse after the event
 						case 1:
-							// Copy quarter sec buffer data over to the Event Cal buffer
-							*(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | CAL_START);
-							*(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | CAL_START);
-							*(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | CAL_START);
-							*(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | CAL_START);
+							// Copy Pretrigger buffer data over to the Event Cal buffer
+							*(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfPretriggerBuff + 0) & DATA_MASK) | CAL_START);
+							*(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfPretriggerBuff + 1) & DATA_MASK) | CAL_START);
+							*(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfPretriggerBuff + 2) & DATA_MASK) | CAL_START);
+							*(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfPretriggerBuff + 3) & DATA_MASK) | CAL_START);
 
 							// Advance the pointers
 							g_eventBufferCalPtr += 4;
-							g_tailOfQuarterSecBuff += 4;
+							g_tailOfPretriggerBuff += 4;
 							
 							break;
 
@@ -150,16 +150,16 @@ void ProcessWaveformData(void)
 							// Set the pointer to the second event Cal buffer
 							g_delayedOneEventBufferCalPtr = g_eventBufferCalPtr + g_wordSizeInEvent;
 
-							// Copy quarter sec buffer data over to the Event Cal buffers
-							*(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | CAL_START);
-							*(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | CAL_START);
-							*(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | CAL_START);
-							*(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | CAL_START);
+							// Copy Pretrigger buffer data over to the Event Cal buffers
+							*(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfPretriggerBuff + 0) & DATA_MASK) | CAL_START);
+							*(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfPretriggerBuff + 1) & DATA_MASK) | CAL_START);
+							*(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfPretriggerBuff + 2) & DATA_MASK) | CAL_START);
+							*(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfPretriggerBuff + 3) & DATA_MASK) | CAL_START);
 
 							// Advance the pointers
 							g_delayedOneEventBufferCalPtr += 4;
 							g_eventBufferCalPtr += 4;
-							g_tailOfQuarterSecBuff += 4;
+							g_tailOfPretriggerBuff += 4;
 							break;
 
 						// Received a Cal pulse which was delayed twice (use/copy the cal for all three events)
@@ -170,24 +170,24 @@ void ProcessWaveformData(void)
 							// Set the pointer to the third event Cal buffer
 							g_delayedTwoEventBufferCalPtr = g_delayedOneEventBufferCalPtr + g_wordSizeInEvent;
 
-							// Copy quarter sec buffer data over to the Event Cal buffers
-							*(g_delayedTwoEventBufferCalPtr + 0) = *(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | CAL_START);
-							*(g_delayedTwoEventBufferCalPtr + 1) = *(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | CAL_START);
-							*(g_delayedTwoEventBufferCalPtr + 2) = *(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | CAL_START);
-							*(g_delayedTwoEventBufferCalPtr + 3) = *(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | CAL_START);
+							// Copy Pretrigger buffer data over to the Event Cal buffers
+							*(g_delayedTwoEventBufferCalPtr + 0) = *(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfPretriggerBuff + 0) & DATA_MASK) | CAL_START);
+							*(g_delayedTwoEventBufferCalPtr + 1) = *(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfPretriggerBuff + 1) & DATA_MASK) | CAL_START);
+							*(g_delayedTwoEventBufferCalPtr + 2) = *(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfPretriggerBuff + 2) & DATA_MASK) | CAL_START);
+							*(g_delayedTwoEventBufferCalPtr + 3) = *(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfPretriggerBuff + 3) & DATA_MASK) | CAL_START);
 
 							// Advance the pointers
 							g_delayedTwoEventBufferCalPtr += 4;
 							g_delayedOneEventBufferCalPtr += 4;
 							g_eventBufferCalPtr += 4;
-							g_tailOfQuarterSecBuff += 4;
+							g_tailOfPretriggerBuff += 4;
 							break;
 					}
 					break;
 
 				default:
-					// Advance the quarter sec buffer buffer the number of active channels
-					g_tailOfQuarterSecBuff += g_sensorInfoPtr->numOfChannels;
+					// Advance the Pretrigger buffer buffer the number of active channels
+					g_tailOfPretriggerBuff += g_sensorInfoPtr->numOfChannels;
 					break;
 			}
 		}
@@ -199,15 +199,15 @@ void ProcessWaveformData(void)
 			switch (g_calTestExpected)
 			{
 				case 1:
-					// Copy quarter sec buffer data over to the Event Cal buffer
-					*(g_eventBufferCalPtr + 0) = *(g_tailOfQuarterSecBuff + 0);
-					*(g_eventBufferCalPtr + 1) = *(g_tailOfQuarterSecBuff + 1);
-					*(g_eventBufferCalPtr + 2) = *(g_tailOfQuarterSecBuff + 2);
-					*(g_eventBufferCalPtr + 3) = *(g_tailOfQuarterSecBuff + 3);
+					// Copy Pretrigger buffer data over to the Event Cal buffer
+					*(g_eventBufferCalPtr + 0) = *(g_tailOfPretriggerBuff + 0);
+					*(g_eventBufferCalPtr + 1) = *(g_tailOfPretriggerBuff + 1);
+					*(g_eventBufferCalPtr + 2) = *(g_tailOfPretriggerBuff + 2);
+					*(g_eventBufferCalPtr + 3) = *(g_tailOfPretriggerBuff + 3);
 
 					// Advance the pointers
 					g_eventBufferCalPtr += 4;
-					g_tailOfQuarterSecBuff += 4;
+					g_tailOfPretriggerBuff += 4;
           
 					if (g_processingCal == 0)
 					{
@@ -226,15 +226,15 @@ void ProcessWaveformData(void)
 					break;
 
 				case 2:
-					*(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = *(g_tailOfQuarterSecBuff + 0);
-					*(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = *(g_tailOfQuarterSecBuff + 1);
-					*(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = *(g_tailOfQuarterSecBuff + 2);
-					*(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = *(g_tailOfQuarterSecBuff + 3);
+					*(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = *(g_tailOfPretriggerBuff + 0);
+					*(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = *(g_tailOfPretriggerBuff + 1);
+					*(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = *(g_tailOfPretriggerBuff + 2);
+					*(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = *(g_tailOfPretriggerBuff + 3);
 
 					// Advance the pointers
 					g_delayedOneEventBufferCalPtr += 4;
 					g_eventBufferCalPtr += 4;
-					g_tailOfQuarterSecBuff += 4;
+					g_tailOfPretriggerBuff += 4;
           
 					if (g_processingCal == 0)
 					{
@@ -253,16 +253,16 @@ void ProcessWaveformData(void)
 					break;
 
 				case 3:
-					*(g_delayedTwoEventBufferCalPtr + 0) = *(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = *(g_tailOfQuarterSecBuff + 0);
-					*(g_delayedTwoEventBufferCalPtr + 1) = *(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = *(g_tailOfQuarterSecBuff + 1);
-					*(g_delayedTwoEventBufferCalPtr + 2) = *(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = *(g_tailOfQuarterSecBuff + 2);
-					*(g_delayedTwoEventBufferCalPtr + 3) = *(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = *(g_tailOfQuarterSecBuff + 3);
+					*(g_delayedTwoEventBufferCalPtr + 0) = *(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = *(g_tailOfPretriggerBuff + 0);
+					*(g_delayedTwoEventBufferCalPtr + 1) = *(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = *(g_tailOfPretriggerBuff + 1);
+					*(g_delayedTwoEventBufferCalPtr + 2) = *(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = *(g_tailOfPretriggerBuff + 2);
+					*(g_delayedTwoEventBufferCalPtr + 3) = *(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = *(g_tailOfPretriggerBuff + 3);
 
 					// Advance the pointers
 					g_delayedTwoEventBufferCalPtr += 4;
 					g_delayedOneEventBufferCalPtr += 4;
 					g_eventBufferCalPtr += 4;
-					g_tailOfQuarterSecBuff += 4;
+					g_tailOfPretriggerBuff += 4;
 
 					if (g_processingCal == 0)
 					{
@@ -287,46 +287,46 @@ void ProcessWaveformData(void)
 		// Check if this is the last sample of the triggered event
 		if ((g_isTriggered - 1) == 0)
 		{
-			// Copy the channel data over from the quarter sec buffer to the event buffer
+			// Copy the channel data over from the Pretrigger buffer to the event buffer
 			// Strip off the command nibble and mark the end of the event
-			*(g_eventBufferBodyPtr + 0) = (uint16)((*(g_tailOfQuarterSecBuff + 0) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferBodyPtr + 1) = (uint16)((*(g_tailOfQuarterSecBuff + 1) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferBodyPtr + 2) = (uint16)((*(g_tailOfQuarterSecBuff + 2) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferBodyPtr + 3) = (uint16)((*(g_tailOfQuarterSecBuff + 3) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferBodyPtr + 0) = (uint16)((*(g_tailOfPretriggerBuff + 0) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferBodyPtr + 1) = (uint16)((*(g_tailOfPretriggerBuff + 1) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferBodyPtr + 2) = (uint16)((*(g_tailOfPretriggerBuff + 2) & DATA_MASK) | EVENT_END);
+			*(g_eventBufferBodyPtr + 3) = (uint16)((*(g_tailOfPretriggerBuff + 3) & DATA_MASK) | EVENT_END);
 
 			// Advance the pointers
 			g_eventBufferBodyPtr += 4;
-			g_tailOfQuarterSecBuff += 4;
+			g_tailOfPretriggerBuff += 4;
 		}
 		else // Normal samples in the triggered event
 		{
-			// Copy the channel data over from the quarter sec buffer to the event buffer
-			*(g_eventBufferBodyPtr + 0) = *(g_tailOfQuarterSecBuff + 0);
-			*(g_eventBufferBodyPtr + 1) = *(g_tailOfQuarterSecBuff + 1);
-			*(g_eventBufferBodyPtr + 2) = *(g_tailOfQuarterSecBuff + 2);
-			*(g_eventBufferBodyPtr + 3) = *(g_tailOfQuarterSecBuff + 3);
+			// Copy the channel data over from the Pretrigger buffer to the event buffer
+			*(g_eventBufferBodyPtr + 0) = *(g_tailOfPretriggerBuff + 0);
+			*(g_eventBufferBodyPtr + 1) = *(g_tailOfPretriggerBuff + 1);
+			*(g_eventBufferBodyPtr + 2) = *(g_tailOfPretriggerBuff + 2);
+			*(g_eventBufferBodyPtr + 3) = *(g_tailOfPretriggerBuff + 3);
 
 			// Advance the pointers
 			g_eventBufferBodyPtr += 4;
-			g_tailOfQuarterSecBuff += 4;
+			g_tailOfPretriggerBuff += 4;
 		}
 
 		// Check if the number of Active channels is less than or equal to 4 (one seismic sensor)
 		if (g_sensorInfoPtr->numOfChannels <= 4)
 		{
-			// Check if there are still PreTrigger data samples in the quarter sec buffer buffer
+			// Check if there are still PreTrigger data samples in the Pretrigger buffer
 			if ((g_samplesInBody - g_isTriggered) < g_samplesInPretrig)
 			{
-				// Check if the end of the quarter sec buffer buffer has been reached
-				if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
+				// Check if the end of the Pretrigger buffer has been reached
+				if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
 
-				// Copy the quarter sec buffer data samples over to the pretrigger data buffer
-				*(g_eventBufferPretrigPtr + 0) = *(g_tailOfQuarterSecBuff + 0);
-				*(g_eventBufferPretrigPtr + 1) = *(g_tailOfQuarterSecBuff + 1);
-				*(g_eventBufferPretrigPtr + 2) = *(g_tailOfQuarterSecBuff + 2);
-				*(g_eventBufferPretrigPtr + 3) = *(g_tailOfQuarterSecBuff + 3);
+				// Copy the Pretrigger buffer data samples over to the Pretrigger data buffer
+				*(g_eventBufferPretrigPtr + 0) = *(g_tailOfPretriggerBuff + 0);
+				*(g_eventBufferPretrigPtr + 1) = *(g_tailOfPretriggerBuff + 1);
+				*(g_eventBufferPretrigPtr + 2) = *(g_tailOfPretriggerBuff + 2);
+				*(g_eventBufferPretrigPtr + 3) = *(g_tailOfPretriggerBuff + 3);
 
-				// Advance the pointer (Don't advance g_tailOfQuarterSecBuff since just reading quarter sec buffer data)
+				// Advance the pointer (Don't advance g_tailOfPretriggerBuff since just reading Pretrigger buffer data)
 				g_eventBufferPretrigPtr += 4;
 			}
 		}
@@ -334,7 +334,7 @@ void ProcessWaveformData(void)
 		// Decrement g_isTriggered since another event sample has been stored
 		g_isTriggered--;
 
-		// Check if all the event data from the quarter sec buffer has been moved into the event buffer
+		// Check if all the event data from the Pretrigger buffer has been moved into the event buffer
 		if (g_isTriggered == 0)
 		{
 			g_freeEventBuffers--;
@@ -355,8 +355,8 @@ void ProcessWaveformData(void)
 		}
 	}
 
-	// Check if the end of the quarter sec buffer buffer has been reached
-	if (g_tailOfQuarterSecBuff >= g_endOfQuarterSecBuff) g_tailOfQuarterSecBuff = g_startOfQuarterSecBuff;
+	// Check if the end of the Pretrigger buffer buffer has been reached
+	if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
 }
 #endif
 
@@ -405,10 +405,10 @@ void MoveWaveformEventToFlash(void)
 				sumEntry->waveShapeData.v.freq = 0;
 				sumEntry->waveShapeData.t.freq = 0;
 
-				waveformProcessingState = FLASH_PRE;
+				waveformProcessingState = FLASH_PRETRIG;
 				break;
 
-			case FLASH_PRE:
+			case FLASH_PRETRIG:
 				for (i = g_samplesInPretrig; i != 0; i--)
 				{
 					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
@@ -561,7 +561,7 @@ void MoveWaveformEventToFlash(void)
 						// Write the event record header and summary
 						fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
-						// Write the event data, containing the pretrigger, event and cal
+						// Write the event data, containing the Pretrigger, event and cal
 						fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, g_currentEventFileHandle);
 
 						// Done writing the event file, close the file handle
