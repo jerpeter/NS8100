@@ -18,6 +18,7 @@
 ///----------------------------------------------------------------------------
 #include "Summary.h"
 #include "Flash.h"
+#include "FAT32_FileLib.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -140,6 +141,9 @@ void ReclaimSpace(uint16* sectorAddr);
 uint16* getFlashDataPointer(void);
 void checkFlashDataPointer(void);
 void storeData(uint16* dataPtr, uint16 dataWords);
-FLASH_USAGE_STRUCT getFlashUsageStats(void);
+void getFlashUsageStats(FLASH_USAGE_STRUCT* usage);
+void getEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr);
+BOOLEAN validEventFile(uint16 eventNumber);
+FL_FILE* getNewEventFileHandle(uint16 eventNumber);
 
 #endif // _FLASHEVTS_H_

@@ -501,7 +501,7 @@ void handleManualCalibration(void)
 			// Check if still waiting for an event and not processing a cal and not waiting for a cal
 			if ((isTriggered == NO) && (processingCal == NO) && (gCalTestExpected == NO))
 			{
-				flashStats = getFlashUsageStats();
+				getFlashUsageStats(&flashStats);
 				
 				if ((help_rec.flash_wrapping == NO) && (flashStats.manualCalsLeft == 0))
 				{
@@ -558,7 +558,7 @@ void handleManualCalibration(void)
 	else // Performing Cal outside of monitor mode
 	{
 #if 0 // fix_ns8100
-		flashStats = getFlashUsageStats();
+		getFlashUsageStats(&flashStats);
 		
 		if ((help_rec.flash_wrapping == NO) && (flashStats.manualCalsLeft == 0))
 		{

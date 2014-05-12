@@ -259,7 +259,7 @@ int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 *******************************************************************************/
 int16 flashWrite(uint16* dest, uint16* src, uint32 length)
 {
-#if 0 // fix_ns8100
+#if 0 // ns7100
 	uint32 x;
 
 	for (x = 0; x < length; x++)
@@ -268,6 +268,12 @@ int16 flashWrite(uint16* dest, uint16* src, uint32 length)
 			return (FLASH_OP_ERROR);
 	}
 #endif
+
+#if 0 // ns8100
+extern FL_FILE* gCurrentEventFileHandle;
+	fl_fwrite(src, length, 1, gCurrentEventFileHandle);
+#endif
+
 	return (FLASH_OP_SUCCESS);
 }
 

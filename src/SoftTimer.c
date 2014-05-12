@@ -485,7 +485,7 @@ void handleMidnightEvent(void)
 			// Handle stopping 430 communication and finishing any processing
 			stopMonitoring(trig_rec.op_mode, FINISH_PROCESSING);
 
-			flashStats = getFlashUsageStats();
+			getFlashUsageStats(&flashStats);
 
 			if ((help_rec.flash_wrapping == NO) && (flashStats.manualCalsLeft == 0))
 			{

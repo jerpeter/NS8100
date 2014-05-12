@@ -449,10 +449,10 @@ void MoveWaveformEventToFlash(void)
 		switch (flashMovState)
 		{
 			case FLASH_IDLE:
-#if 0 // fix_ns8100
+#if 1
 				if (help_rec.flash_wrapping == NO)
 				{
-					flashStats = getFlashUsageStats();
+					getFlashUsageStats(&flashStats);
 					
 					if (flashStats.waveEventsLeft == 0)
 					{
@@ -469,8 +469,19 @@ void MoveWaveformEventToFlash(void)
 					debugErr("Out of Flash Summary Entrys\n");
 				}
 
+#if 0 // ns7100
 				// Set our flash event data pointer to the start of the flash event
 				advFlashDataPtrToEventData(flashSumEntry);
+#endif
+
+#if 1 // ns8100
+extern FL_FILE* gCurrentEventFileHandle;
+				// Get new file handle
+				gCurrentEventFileHandle = getNewEventFileHandle(gCurrentEventNumber);
+				
+				// Seek to beginning of where data will be stored in event
+				fl_fseek(gCurrentEventFileHandle, sizeof(EVT_RECORD), SEEK_SET);
+#endif
 
 				sumEntry = &summaryTable[gCurrentEventBuffer];
 				sumEntry->mode = WAVEFORM_MODE;
@@ -488,7 +499,8 @@ void MoveWaveformEventToFlash(void)
 				{
 					// Store entire sample
 					//debugRaw("\nEvent Pretrigger --> ");
-					storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+					//storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+					fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
 					gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 				flashMovState = FLASH_BODY_INT;
@@ -524,7 +536,8 @@ void MoveWaveformEventToFlash(void)
 
 				// Store entire sample
 				//debugRaw("\nEvent Data --> ");
-				storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+				//storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+				fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
 				gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
 				flashMovState = FLASH_BODY;
@@ -582,7 +595,8 @@ void MoveWaveformEventToFlash(void)
 
 					// Store entire sample
 					//debugRaw("\nEvent Data --> ");
-					storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+					//storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+					fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
 					gCurrentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -600,7 +614,8 @@ void MoveWaveformEventToFlash(void)
 				{
 					// Store entire sample
 					//debugRaw("\nEvent Cal --> ");
-					storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+					//storeData(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+					fl_fwrite(gCurrentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT, 2, gCurrentEventFileHandle);
 
 					// Advance the pointer using sample rate ratio to act as a filter to always scale down to a 1024 rate
 					gCurrentEventSamplePtr += ((trig_rec.trec.sample_rate/1024) * gp_SensorInfo->numOfChannels);
@@ -647,7 +662,7 @@ void MoveWaveformEventToFlash(void)
 				// Check to see if there is room for another event, if not send a signal to stop monitoring
 				if (help_rec.flash_wrapping == NO)
 				{
-					flashStats = getFlashUsageStats();
+					getFlashUsageStats(&flashStats);
 					
 					if (flashStats.waveEventsLeft == 0)
 					{

@@ -1122,7 +1122,7 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 		// The following data will be filled in when the data has been moved over to flash.
 		g_RamEventRecord.header.summaryChecksum = 0xAABB;
 		g_RamEventRecord.header.dataChecksum = 0xCCDD;
-		g_RamEventRecord.header.dataCompression = (uint16)NULL;
+		g_RamEventRecord.header.dataCompression = 0;
 
 		// We dont worry about the end of the falsh buffer because when the new flash event record is setup,
 		// a check is made so the event record is one contiguous structure, not including the event data.
@@ -1294,9 +1294,11 @@ void UpdateBargraphJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 //*****************************************************************************
 BOOLEAN checkSpaceForBarSummaryInterval(void)
 {
-	FLASH_USAGE_STRUCT flashStats = getFlashUsageStats();
+	FLASH_USAGE_STRUCT flashStats;
 	uint32 barIntervalSize;
 	BOOLEAN spaceLeft;
+
+	getFlashUsageStats(&flashStats);
 
 	barIntervalSize = (sizeof(CALCULATED_DATA_STRUCT) + (((trig_rec.bgrec.summaryInterval / trig_rec.bgrec.barInterval) + 1) * 8));
 

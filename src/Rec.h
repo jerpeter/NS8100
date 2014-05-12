@@ -34,7 +34,8 @@ enum {
 	REC_HELP_USER_MENU_TYPE,
 	REC_FACTORY_SETUP_TYPE,
 	REC_DATE_TIME_DISPLAY,
-	REC_MODEM_SETUP_TYPE
+	REC_MODEM_SETUP_TYPE,
+	REC_CURRENT_EVENT_NUM_TYPE
 };
 
 #define DEFAULT_RECORD 			0
@@ -273,6 +274,12 @@ typedef struct
 	uint8 aweight_option;
 	uint8 spare;
 } FACTORY_SETUP_STRUCT;
+
+typedef struct
+{
+	uint16 invalid;
+	uint16 currentEventNumber;
+} CURRENT_EVENT_NUMBER_STRUCT;
 
 typedef struct
 {

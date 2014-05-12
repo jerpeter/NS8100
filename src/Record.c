@@ -129,6 +129,22 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
+		case REC_CURRENT_EVENT_NUM_TYPE:
+			debug("Programing Current Event Number Configuration...\n");
+
+			((CURRENT_EVENT_NUMBER_STRUCT*)src_ptr)->invalid = 0x0000;
+
+			//rec_size = sizeof(FACTORY_SETUP_STRUCT)/2;
+			//loc = ((sizeof(REC_EVENT_MN_STRUCT)/2) * (MAX_NUM_OF_SAVED_SETUPS + 1) + (sizeof(REC_HELP_MN_STRUCT)/2));
+			//copyRecIntoFlashBk(&flash_store_bk[0], (uint16*)src_ptr, loc, rec_size);
+
+			rec_size = sizeof(CURRENT_EVENT_NUMBER_STRUCT);
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
+					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+					sizeof(FACTORY_SETUP_STRUCT));
+			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
+			break;
+
 		default: // If type doesnt match, just return
 			return;
 			break;
@@ -182,6 +198,14 @@ void getRecData(void* dst_ptr, uint32 num, uint8 type)
 					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT);
 			//byteCpy((uint8*)dst_ptr, (uint8*)mem_loc + loc, sizeof(FACTORY_SETUP_STRUCT));       
 			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(FACTORY_SETUP_STRUCT));
+			break;
+
+		case REC_CURRENT_EVENT_NUM_TYPE:
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1)) + 
+					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+					sizeof(FACTORY_SETUP_STRUCT);
+			//byteCpy((uint8*)dst_ptr, (uint8*)mem_loc + loc, sizeof(FACTORY_SETUP_STRUCT));       
+			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(CURRENT_EVENT_NUMBER_STRUCT));
 			break;
 
 		default:
@@ -619,7 +643,7 @@ void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 	
 	while(dataLength)
 	{
-		debug("SPM: Addr: %x Len: %04d -> ", startAddr, dataLength);
+		//debug("SPM: Addr: %x Len: %04d -> ", startAddr, dataLength);
 
 		// Activate write enable
 		spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);

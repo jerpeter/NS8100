@@ -28,6 +28,7 @@
 #include "FAT32_Definitions.h"
 #include "FAT32_FileLib.h"
 #include "FAT32_Access.h"
+#include "sd_mmc_spi.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -129,7 +130,7 @@ void copyValidFlashEventSummariesToRam(void)
 					((fileEventHeader.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
 					(fileEventHeader.headerLength == sizeof(EVENT_HEADER_STRUCT)))
 				{
-					debug("Found Valid Event File: %s", dirList[entriesFound].name);
+					debug("Found Valid Event File: %s\n", dirList[entriesFound].name);
 
 					fl_fread(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
 
@@ -295,23 +296,11 @@ void advFlashDataPtrToEventData(SUMMARY_DATA* currentSummary)
 //*****************************************************************************
 uint8 InitFlashEvtBuff(void)
 {
-	EVT_RECORD* storedEventPtr;
-	EVT_RECORD* tempEventPtr;
-	uint16* tempEncodeLinePtr = NULL;
-	//uint8 commentSize = 0;
 	uint16 i = 0;
-	uint32 eventSize = 0;
-	uint16 highestEventNumber = 0;
-	//EVT_RECORD storedEventRecord;
-	//EVT_RECORD tempEventRecord;
-	//EVT_RECORD* tempEventPtrAddress = NULL;
 
 	// Initialize the current ram summary index
 	currFlashSummary = 0;
 	endFlashSectorPtr = NULL;
-
-	//storedEventPtr = &storedEventRecord;
-	//tempEventPtr = &tempEventRecord;
 
 	// Find the first free ram summary entry (table should be condensed, all used entries up front)
 	for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
@@ -322,6 +311,20 @@ uint8 InitFlashEvtBuff(void)
 			break;
 		}
 	}
+
+#if 0 // ns7100
+	//EVT_RECORD* storedEventPtr;
+	//EVT_RECORD* tempEventPtr;
+	//uint16* tempEncodeLinePtr = NULL;
+	//uint8 commentSize = 0;
+	//uint32 eventSize = 0;
+	//uint16 highestEventNumber = 0;
+	//EVT_RECORD storedEventRecord;
+	//EVT_RECORD tempEventRecord;
+	//EVT_RECORD* tempEventPtrAddress = NULL;
+
+	//storedEventPtr = &storedEventRecord;
+	//tempEventPtr = &tempEventRecord;
 
 	// If the number of ram summarys is zero, initialize the pointers to the start of the flash event table
 	if (numOfFlashSummarys == 0)
@@ -388,8 +391,9 @@ uint8 InitFlashEvtBuff(void)
 	//endFlashSectorPtr = (uint16*)(((uint32)tempEventPtrAddress & 0xFFFF0000) + FLASH_SECTOR_SIZE_x8);
 
 	debug("End of Flash sector at: %p\n", endFlashSectorPtr);
+#endif
 
-#if 1
+#if 0
 	tempEncodeLinePtr = (uint16*)tempEventPtr;
 	//tempEncodeLinePtr = (uint16*)tempEventPtrAddress;
 
@@ -422,12 +426,12 @@ uint8 InitFlashEvtBuff(void)
 
 		tempEncodeLinePtr++;
 	}
-#endif
 
 	sFlashDataPtr = (uint16*)tempEventPtr;
 
 	debug("Current Flash Event Pointer: %p\n", sFlashDataPtr);
 	debug("Current Flash Sector boundary: %p\n", endFlashSectorPtr);
+#endif
 
 	return (PASSED);
 }
@@ -468,11 +472,7 @@ void InitFlashBuffs(void)
 			if (__ramFlashSummaryTbl[i].linkPtr != (uint16*)0xFFFFFFFF)
 			{
 				// Check to make sure ram values arent garbage
-				// linkPtr should be even (and long-bounded), and point to somewhere within the flash event structure
-				if (((uint32)__ramFlashSummaryTbl[i].linkPtr & 0x00000001) ||
-					((uint32)__ramFlashSummaryTbl[i].linkPtr & 0x00000003) ||
-					((uint32)__ramFlashSummaryTbl[i].linkPtr < FLASH_EVENT_START) ||
-					((uint32)__ramFlashSummaryTbl[i].linkPtr > FLASH_EVENT_END))
+				if((uint32)(__ramFlashSummaryTbl[i].linkPtr) >= g_currentEventNumber)
 				{
 					// This signals a big warning
 					//debugPrint(RAW, "Data in Ram Summary Table is garbage.\n");
@@ -481,7 +481,7 @@ void InitFlashBuffs(void)
 					dataInRamGarbage = TRUE;
 					break;
 				}
-				else if(*(__ramFlashSummaryTbl[i].linkPtr) != EVENT_RECORD_START_FLAG)
+				else if(validEventFile((uint16)((uint32)(__ramFlashSummaryTbl[i].linkPtr))) == NO)
 				{
 					//debugPrint(RAW, "Ram summary (%d) points to an invalid event.\n", i+1);
 					__ramFlashSummaryTbl[i].linkPtr = (uint16*)0xFFFFFFFF;
@@ -495,24 +495,6 @@ void InitFlashBuffs(void)
 					if(foundEmptyRamSummaryEntry == YES)
 						condenseTable = YES;
 				}
-
-#if 0 // fix_ns8100
-				ReadNandFlash((uint8*)&eventStartData, (uint32)__ramFlashSummaryTbl[i].linkPtr, sizeof(eventStartData));
-				if (eventStartData != EVENT_RECORD_START_FLAG)
-				{
-					//debugPrint(RAW, "Ram summary (%d) points to an invalid event.\n", i+1);
-					__ramFlashSummaryTbl[i].linkPtr = (uint16*)0xFFFFFFFF;
-				}
-				else
-				{
-					// Inc the total number of events found
-					numOfFlashSummarys++;
-
-					// Check if any empty entries were found before or while counting events
-					if (foundEmptyRamSummaryEntry == YES)
-						condenseTable = YES;
-				}
-#endif
 			}
 			else
 				foundEmptyRamSummaryEntry = YES;
@@ -681,12 +663,6 @@ void initEventRecord(EVT_RECORD* eventRec, uint8 op_mode)
 //*****************************************************************************
 void initCurrentEventNumber(void)
 {
-#if 0 // fix_ns8100
-	// Get the starting address of the 2nd boot sector (base + boot sector size)
-	//uint16* uniqueEventNumberStartPtr = (uint16*)(FLASH_BASE_ADDR + FLASH_BOOT_SECTOR_SIZE_x8);
-	uint16 uniqueEventNumberOffset = (FLASH_BOOT_SECTOR_SIZE_x8);
-	uint16 eventNumber = 0;
-
 #if 0 // ns7100
 	// Get the end sector address (Start of the 3rd boot sector)
 	//uint16* endPtr = (uint16*)(FLASH_BASE_ADDR + (FLASH_BOOT_SECTOR_SIZE_x8 * 2));
@@ -714,30 +690,32 @@ void initCurrentEventNumber(void)
 			GetParameterMemory((uint8*)&eventNumber, (uint16)(uniqueEventNumberOffset + 1), sizeof(eventNumber));
 		}
 
-		// Get the current event number which is the las in the list
+		// Get the current event number which is the last in the list
 		GetParameterMemory((uint8*)&eventNumber, uniqueEventNumberOffset, sizeof(eventNumber));
 
 		// Set the Current Event number to the last event number stored plus 1
 		g_currentEventNumber = (uint16)(eventNumber + 1);
 	}
-#else
-	GetParameterMemory((uint8*)&eventNumber, uniqueEventNumberOffset, sizeof(eventNumber));
+#endif
 
-	// Check if the storage location is 0xFF which indicates the unit hasn't recorded any events
-	if (eventNumber == 0xFFFF)
-	{
-		g_currentEventNumber = 1;
-	}
-	else
+#if 1 // Use config to hold Current Event Number
+	CURRENT_EVENT_NUMBER_STRUCT currentEventNumberRecord;
+
+	getRecData(&currentEventNumberRecord, DEFAULT_RECORD, REC_CURRENT_EVENT_NUM_TYPE);
+
+	// Check if the Factory Setup Record is valid
+	if (!currentEventNumberRecord.invalid)
 	{
 		// Set the Current Event number to the last event number stored plus 1
-		g_currentEventNumber = (uint16)(eventNumber + 1);
+		g_currentEventNumber = currentEventNumberRecord.currentEventNumber + 1;
 	}
-#endif
-#endif
-
-#if 1 // fix_ns8100
-	g_currentEventNumber = 1;
+	else // record is invalid
+	{
+		g_currentEventNumber = 1;
+		currentEventNumberRecord.currentEventNumber = g_currentEventNumber;
+		
+		saveRecData(&currentEventNumberRecord, DEFAULT_RECORD, REC_CURRENT_EVENT_NUM_TYPE);
+	}
 #endif
 
 	debug("Total Events stored: %d, Current Event number: %d\n",
@@ -759,10 +737,9 @@ uint16 getLastStoredEventNumber(void)
 //*****************************************************************************
 void storeCurrentEventNumber(void)
 {
+#if 0
 	//uint16* uniqueEventStorePtr = (uint16*)(FLASH_BASE_ADDR + FLASH_BOOT_SECTOR_SIZE_x8);
 	uint16 uniqueEventStoreOffset = FLASH_BOOT_SECTOR_SIZE_x8;
-
-#if 0
 	uint16 positionsToAdvance = 0;
 	uint16 eventNumber = 0;
 
@@ -822,9 +799,14 @@ void storeCurrentEventNumber(void)
 	// If we get here, then we failed a validation check
 	debugErr("Unique Event number storage doesnt match Current Event Number. (0x%x, %d)\n",
 				uniqueEventStoreOffset, g_currentEventNumber);
-#else
+#endif // end of ns7100
+
+#if 1 // Updated to use config
+	CURRENT_EVENT_NUMBER_STRUCT currentEventNumberRecord;
+
 	// Store the Current Event number as the newest Unique Event number
-	SaveParameterMemory((uint8*)&g_currentEventNumber, uniqueEventStoreOffset, sizeof(g_currentEventNumber));
+	currentEventNumberRecord.currentEventNumber = g_currentEventNumber;
+	saveRecData(&currentEventNumberRecord, DEFAULT_RECORD, REC_CURRENT_EVENT_NUM_TYPE);
 
 	// Store as the last Event recorded in AutoDialout table
 	__autoDialoutTbl.lastStoredEvent = g_currentEventNumber;
@@ -844,9 +826,117 @@ void storeCurrentEventNumber(void)
 //*****************************************************************************
 uint16 getUniqueEventNumber(SUMMARY_DATA* currentSummary)
 {
+#if 0 // ns7100	
 	EVT_RECORD* currentStoredEvent = (EVT_RECORD*)currentSummary->linkPtr;
-
 	return (currentStoredEvent->summary.eventNumber);
+#endif
+
+#if 1 // Event number is stored in ram summary
+	return (uint16)((uint32)(currentSummary->linkPtr));
+#endif
+}
+
+//*****************************************************************************
+// FUNCTION
+//  void getEventFileInfo(uint16 eventNumer)
+//*****************************************************************************
+void getEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr)
+{
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+	FL_FILE* eventFile;
+	EVENT_HEADER_STRUCT fileEventHeader;
+	EVENT_SUMMARY_STRUCT fileSummary;
+	
+	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
+	eventFile = fl_fopen(fileName, "r");
+
+	// Verify file ID
+	if (eventFile == NULL)
+		debugErr("Error: Event File %s not found!\r\n", fileName);
+	// Verify file is big enough
+	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+		debugErr("Error: Event File %s is corrupt!\r\n", fileName);
+	else
+	{
+		fl_fread(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
+
+		// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
+		if ((fileEventHeader.startFlag == EVENT_RECORD_START_FLAG) &&
+			((fileEventHeader.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
+			(fileEventHeader.headerLength == sizeof(EVENT_HEADER_STRUCT)))
+		{
+			debug("Found Valid Event File: %s\n", fileName);
+
+			fl_fread(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
+		}
+
+		fl_fclose(eventFile);
+	}
+
+	if (eventHeaderPtr != NULL)
+	{
+		byteCpy(eventHeaderPtr, &fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
+	}
+
+	if (eventSummaryPtr != NULL)
+	{
+		byteCpy(eventSummaryPtr, &fileSummary, sizeof(EVENT_HEADER_STRUCT));
+	}	
+}
+
+//*****************************************************************************
+// FUNCTION
+//  void validEventFile(uint16 eventNumer)
+//*****************************************************************************
+BOOLEAN validEventFile(uint16 eventNumber)
+{
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+	FL_FILE* eventFile;
+	EVENT_HEADER_STRUCT fileEventHeader;
+	BOOLEAN validFile = NO;
+	
+	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
+	eventFile = fl_fopen(fileName, "r");
+
+	// Verify file ID
+	if (eventFile == NULL)
+		debugErr("Error: Event File %s not found!\r\n", fileName);
+	// Verify file is big enough
+	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+		debugErr("Error: Event File %s is corrupt!\r\n", fileName);
+	else
+	{
+		fl_fread(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
+
+		// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
+		if ((fileEventHeader.startFlag == EVENT_RECORD_START_FLAG) &&
+			((fileEventHeader.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
+			(fileEventHeader.headerLength == sizeof(EVENT_HEADER_STRUCT)))
+		{
+			//debug("Found Valid Event File: %s", fileName);
+
+			validFile =  YES;
+		}
+
+		fl_fclose(eventFile);
+	}
+
+	return(validFile);
+}
+
+//*****************************************************************************
+// FUNCTION
+//  void getNewEventFileHandle(uint16 eventNumer)
+//*****************************************************************************
+FL_FILE* getNewEventFileHandle(uint16 eventNumber)
+{
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+	FL_FILE* eventFile;
+	
+	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
+	eventFile = fl_fopen(fileName, "w");
+
+	return(eventFile);
 }
 
 //*****************************************************************************
@@ -888,6 +978,7 @@ uint16 GetFlashSumEntry(SUMMARY_DATA** sumEntryPtr)
 			}
 		}
 
+#if 0 // ns7100
 		// Check if the current flash pointer address is long-bounded
 		if ((uint32)sFlashDataPtr & 0x00000003)
 		{
@@ -919,6 +1010,17 @@ uint16 GetFlashSumEntry(SUMMARY_DATA** sumEntryPtr)
 		*sumEntryPtr = &__ramFlashSummaryTbl[currFlashSummary];
 
 		debug("Ram Summary Table Entry %d: Event pointer: 0x%x\n", currFlashSummary, sFlashDataPtr);
+#endif
+
+#if 1 // ns8100
+		// Set the flash pointer address in the ram summary
+		__ramFlashSummaryTbl[currFlashSummary].linkPtr = (uint16*)((uint32)(g_currentEventNumber));
+
+		// Set the current summary pointer to the current ram summary
+		*sumEntryPtr = &__ramFlashSummaryTbl[currFlashSummary];
+
+		debug("Ram Summary Table Entry %d: Event: %d\n", currFlashSummary, g_currentEventNumber);
+#endif
 
 		// Increment the flash summary value.
 		currFlashSummary++;
@@ -956,7 +1058,10 @@ void FillInFlashSummarys(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
 {
 	//uint8 i = 0;
 	uint32 eventDataSize = 0;
+
+#if 0 // ns7100
 	EVT_RECORD* flashEventRecord = (EVT_RECORD*)flashSummPtr->linkPtr;
+#endif
 
 	//--------------------------------
 	// EVT_RECORD -
@@ -1014,7 +1119,18 @@ void FillInFlashSummarys(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
 	//--------------------------------
 	// Get the structure size as the number of words. The following will round up.
 	eventDataSize = (sizeof(EVT_RECORD) + 1) / 2;
+
+#if 0 // ns7100
 	flashWrite((uint16*)flashEventRecord, (uint16*)&(g_RamEventRecord), eventDataSize);
+#endif
+
+
+#if 1 // ns8100
+extern FL_FILE* gCurrentEventFileHandle;
+	fl_fseek(gCurrentEventFileHandle, 0, SEEK_SET);
+	fl_fwrite(&g_RamEventRecord, sizeof(EVT_RECORD), 1, gCurrentEventFileHandle);
+	fl_fclose(gCurrentEventFileHandle);
+#endif
 
 	updateMonitorLogEntry();
 
@@ -1156,20 +1272,24 @@ void storeData(uint16* dataPtr, uint16 dataWords)
 				((SAMPLE_DATA_STRUCT*)dataPtr)->t,
 				((SAMPLE_DATA_STRUCT*)dataPtr)->a);
 #endif
+
+#if 1 // Store to SD
+extern FL_FILE* gCurrentEventFileHandle;
+		fl_fwrite(dataPtr, 2, dataWords, gCurrentEventFileHandle);
+#endif
 }
 
 /*******************************************************************************
 *	Function:	flashUsage
 *	Purpose:
 *******************************************************************************/
-FLASH_USAGE_STRUCT getFlashUsageStats(void)
+void getFlashUsageStats(FLASH_USAGE_STRUCT* usage)
 {
-	FLASH_USAGE_STRUCT usage;
+	//FLASH_USAGE_STRUCT usage;
 	uint32 waveSize;
 	uint32 barSize;
 	uint32 manualCalSize;
 	uint32 newBargraphMinSize;
-	uint16 i = 0;
 
 	waveSize = sizeof(EVT_RECORD) + (100 * 8) + (uint32)(trig_rec.trec.sample_rate * 2) +
 				(uint32)(trig_rec.trec.sample_rate * trig_rec.trec.record_time * 8);
@@ -1179,16 +1299,20 @@ FLASH_USAGE_STRUCT getFlashUsageStats(void)
 	newBargraphMinSize = (manualCalSize + sizeof(EVT_RECORD) + (sizeof(CALCULATED_DATA_STRUCT) * 2) +
 							(((trig_rec.bgrec.summaryInterval / trig_rec.bgrec.barInterval) + 1) * 8 * 2));
 
+    sd_mmc_spi_get_capacity();
 
-	usage.sizeUsed = (uint32)sFlashDataPtr - FLASH_EVENT_START;
-	usage.sizeFree = FLASH_EVENT_END - (uint32)sFlashDataPtr;
-	usage.percentUsed = (uint8)((usage.sizeUsed * 100) / (FLASH_EVENT_END - FLASH_EVENT_START));
-	usage.percentFree = (uint8)(100 - usage.percentUsed);
-	usage.waveEventsLeft = (uint16)(usage.sizeFree / waveSize);
-	usage.barHoursLeft = (uint16)(usage.sizeFree / barSize);
-	usage.manualCalsLeft = (uint16)(usage.sizeFree / manualCalSize);
-	usage.wrapped = NO;
-	usage.roomForBargraph = (usage.sizeFree > newBargraphMinSize) ? YES : NO;
+	usage->sizeUsed = 0;
+	usage->sizeFree = capacity - usage->sizeUsed;
+	usage->percentUsed = (uint8)((usage->sizeUsed * 100) / capacity);
+	usage->percentFree = (uint8)(100 - usage->percentUsed);
+	usage->waveEventsLeft = (uint16)(usage->sizeFree / waveSize);
+	usage->barHoursLeft = (uint16)(usage->sizeFree / barSize);
+	usage->manualCalsLeft = (uint16)(usage->sizeFree / manualCalSize);
+	usage->wrapped = NO;
+	usage->roomForBargraph = (usage->sizeFree > newBargraphMinSize) ? YES : NO;
+
+#if 0 // ns7100
+	uint16 i = 0;
 
 	for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
 	{
@@ -1214,7 +1338,6 @@ FLASH_USAGE_STRUCT getFlashUsageStats(void)
 		usage.manualCalsLeft = (uint16)(usage.sizeFree / manualCalSize);
 		usage.roomForBargraph = (usage.sizeFree > newBargraphMinSize) ? YES : NO;
 	}
-
-	return (usage);
+#endif
 }
 

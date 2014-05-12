@@ -142,7 +142,7 @@ void setupMnDef(void)
     debug("Init Load Help Rec...\n");
 
 	// Load the Help Record
-	getRecData(&help_rec, 0, REC_HELP_USER_MENU_TYPE);
+	getRecData(&help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
     debug("Init Help Rec Defaults...\n");
 
@@ -208,7 +208,7 @@ void setupMnDef(void)
 
 	debug("Load Factory setup record\n");
 	// Load the Factory Setup Record
-	getRecData(&factory_setup_rec, 0, REC_FACTORY_SETUP_TYPE);
+	getRecData(&factory_setup_rec, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 
 	// Check if the Factory Setup Record is valid
 	if (!factory_setup_rec.invalid)
@@ -1396,10 +1396,12 @@ void displayTimerModeSettings(void)
 //=============================================================================
 void displayFlashUsageStats(void)
 {
-	FLASH_USAGE_STRUCT usage = getFlashUsageStats();
+	FLASH_USAGE_STRUCT usage;
 	char message[75];
 	char sizeUsedStr[30];
 	char sizeFreeStr[30];
+
+	getFlashUsageStats(&usage);
 
 	if (usage.sizeUsed < 1000)
 		sprintf(&sizeUsedStr[0], "USED: %3.1fKB %d%%", ((float)usage.sizeUsed / (float)1000), usage.percentUsed);

@@ -586,9 +586,11 @@ void handleGFS(CMD_BUFFER_STRUCT* inCmd)
 	uint32 dataLength;
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
 	uint8 gfsHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
-	FLASH_USAGE_STRUCT usage = getFlashUsageStats();
-
+	FLASH_USAGE_STRUCT usage;
+	
 	UNUSED(inCmd);
+
+	getFlashUsageStats(&usage);
 
 	// Transmit a carrige return line feed
 	if (modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION) == MODEM_SEND_FAILED)

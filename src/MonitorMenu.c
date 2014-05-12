@@ -152,7 +152,9 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 	REC_EVENT_MN_STRUCT temp_trig_rec;
 	REC_HELP_MN_STRUCT temp_help_rec;
 	//uint8 mbChoice = 0;
-	FLASH_USAGE_STRUCT flashStats = getFlashUsageStats();
+	FLASH_USAGE_STRUCT flashStats;
+	
+	getFlashUsageStats(&flashStats);
 
 	switch (msg.cmd)
 	{
@@ -317,7 +319,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 								stopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
 								// Restore the auto_print value just in case the user escaped from a printout
-								getRecData(&temp_help_rec, 0, REC_HELP_USER_MENU_TYPE);
+								getRecData(&temp_help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 								help_rec.auto_print = temp_help_rec.auto_print;
 
 								active_menu = MAIN_MENU;
@@ -479,7 +481,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 			stopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
 			// Restore the auto_print value just in case the user escaped from a printout
-			getRecData(&temp_help_rec, 0, REC_HELP_USER_MENU_TYPE);
+			getRecData(&temp_help_rec, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 			help_rec.auto_print = temp_help_rec.auto_print;
 
 			active_menu = MAIN_MENU;

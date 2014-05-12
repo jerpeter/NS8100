@@ -804,6 +804,19 @@ int main(void)
 	InitKeypad();
 #endif
 
+#if 0 // test
+	static uint8 paramBuff[16384];
+	uint16 i = 0, paramSize = 16384;
+	GetParameterMemory(&paramBuff[0], 0x0, 16384);
+	debugRaw("\n");
+	while(i < paramSize)
+	{
+		debugRaw("%2x ", paramBuff[i++]);
+		if (i % 16 == 0)
+			debugRaw("\n");
+	}
+#endif
+
 	//debug("Unit Type: %s\n", SUPERGRAPH_UNIT ? "Supergraph" : "Minigraph");
 	debug("--- System Init complete ---\n");
 
@@ -822,7 +835,7 @@ int main(void)
 		//debugRaw("k");
 		//testKeypad();
 
-#if 0
+#if 1
 		// Handle system events
 	    SystemEventManager();
 

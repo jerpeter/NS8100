@@ -34,6 +34,7 @@
 #include "ProcessCombo.h"
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
+#include "FAT32_FileLib.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -66,6 +67,7 @@ uint16* tailOfPreTrigBuff;
 uint16* endOfPreTrigBuff;
 uint16 gMaxEventBuffers;
 uint16 gCurrentEventNumber;
+FL_FILE* gCurrentEventFileHandle;
 uint16 gFreeEventBuffers;
 uint16 gCalTestExpected;
 uint32 gSamplesInBody;
