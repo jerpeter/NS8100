@@ -1273,7 +1273,10 @@ void tc_irq(void)
 
 	static uint32 sampleCount = 0;
 	static uint32 calSampleCount = 0;
-	static uint16 consecTriggerCount = 0;
+	static uint16 consecSeismicTriggerCount = 0;
+	static uint16 consecAirTriggerCount = 0;
+	static uint8 seismicTriggerSample = NO;
+	static uint8 airTriggerSample = NO;
 	static uint8 recording = NO;
 	static uint8 calPulse = NO;
 	static uint8 trigFound = NO;
@@ -1437,17 +1440,25 @@ void tc_irq(void)
 			{
 				if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 				{
-					if (r_chan_read > g_triggerRecord.trec.seismicTriggerLevel) consecTriggerCount++;
-					if (v_chan_read > g_triggerRecord.trec.seismicTriggerLevel) consecTriggerCount++;
-					if (t_chan_read > g_triggerRecord.trec.seismicTriggerLevel) consecTriggerCount++;
+					if (r_chan_read > g_triggerRecord.trec.seismicTriggerLevel) { seismicTriggerSample = YES; }
+					else if (v_chan_read > g_triggerRecord.trec.seismicTriggerLevel) { seismicTriggerSample = YES; }
+					else if (t_chan_read > g_triggerRecord.trec.seismicTriggerLevel) { seismicTriggerSample = YES; }
+					
+					if (seismicTriggerSample == YES) { consecSeismicTriggerCount++; seismicTriggerSample = NO; }
+					else {consecSeismicTriggerCount = 0; }
 				}
 
 				if (g_triggerRecord.trec.soundTriggerLevel != NO_TRIGGER_CHAR)
 				{
-					if (a_chan_read > g_triggerRecord.trec.soundTriggerLevel) consecTriggerCount++;
+					if (a_chan_read > g_triggerRecord.trec.soundTriggerLevel) { airTriggerSample = YES; }
+						
+					if (airTriggerSample == YES) { consecAirTriggerCount++; airTriggerSample = NO; }
+					else { consecAirTriggerCount = 0; }
 				}				
 
-				if ((consecTriggerCount >= CONSECUTIVE_TRIGGERS_THRESHOLD) && (recording == NO) && (calPulse == NO))
+				// Check if either a seismic or acoustic trigger threshold condition was achieved
+				if ((consecSeismicTriggerCount >= CONSECUTIVE_TRIGGERS_THRESHOLD) || 
+					(consecAirTriggerCount >= CONSECUTIVE_TRIGGERS_THRESHOLD))
 				{
 					// Add command nibble to signal a tigger
 					*(g_tailOfPreTrigBuff + 0) |= TRIG_ONE;
@@ -1457,7 +1468,8 @@ void tc_irq(void)
 
 					debug("--> Trigger Found! %x %x %x %x\n", r_chan_read, v_chan_read, t_chan_read, a_chan_read);
 					
-					consecTriggerCount = 0;
+					consecSeismicTriggerCount = 0;
+					consecAirTriggerCount = 0;
 					recording = YES;
 					sampleCount = g_triggerRecord.trec.record_time * g_triggerRecord.trec.sample_rate;
 				}

@@ -47,11 +47,16 @@
 ///----------------------------------------------------------------------------
 #include "Globals.h"
 extern USER_MENU_STRUCT helpMenu[];
+extern void Setup_8100_Data_Clock_ISR(uint32);
+extern void Start_Data_Clock(void);
+extern void Stop_Data_Clock(void);
+extern void AD_Init(void);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
 static uint8 s_calDisplayScreen = 0;
+static uint32 s_calSavedSampleRate = 0;
 static union {
 	int16 chan[4];
 	struct {
@@ -139,6 +144,7 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 			}
 
 			mnStopCal();
+			g_triggerRecord.trec.sample_rate = s_calSavedSampleRate;
 
 			if (messageBox(getLangText(CONFIRM_TEXT), getLangText(DO_YOU_WANT_TO_SAVE_THE_CAL_DATE_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 			{
@@ -184,7 +190,11 @@ void calSetupMnProc(INPUT_MSG_STRUCT msg,
 			mn_layout_ptr->top_ln =        CAL_SETUP_MN_TBL_START_LINE;
 
 			overlayMessage("STATUS", "PLEASE WAIT...", 0);
-			GetChannelOffsets();
+
+			// Fool ISR into filling up pretrigger
+			s_calSavedSampleRate = g_triggerRecord.trec.sample_rate;
+			g_triggerRecord.trec.sample_rate = 1024;
+			InitDataBuffs(WAVEFORM_MODE);
 
 			mnStopCal();
 			mnStartCal();
@@ -323,10 +333,12 @@ void calSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ONE;
 		wndMpWrtString(buff,wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 
+#if 0 // ns7100
 		if (g_sampleProcessing != SAMPLING_STATE)
 		{
 			return;
 		}
+#endif		
 
 		// PRINT Table separator
 		byteSet(&buff[0], 0, sizeof(buff));
@@ -490,6 +502,22 @@ void mnStartCal(void)
 
 	ISPI_SendMsg(g_msgs430.startMsg430.cmd_id);
 #endif
+
+	// fix_ns8100
+	// Add in control to adjust the gain select
+	AD_Init();
+	GetChannelOffsets();
+
+	// Setup Analog controls
+	SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1);
+	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
+	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
+
+	// Setup ISR to clock the data sampling
+	Setup_8100_Data_Clock_ISR(1024);
+
+	// Start the timer for collecting data
+	Start_Data_Clock();
 }
 
 /****************************************
@@ -498,20 +526,20 @@ void mnStartCal(void)
 ****************************************/
 void mnStopCal(void)
 {
+#if 0 // ns7100
 	if (g_sampleProcessing == SAMPLING_STATE)
 	{
-#if 0 // ns7100
 		// If IDLE, wait for IDLE state to finish
 		while (ISPI_GetISPI_State() == ISPI_IDLE){ /*spinBar()*/;}
 
 		// If not IDLE, wait for 430 data processing to finish before moving on
 		while (ISPI_GetISPI_State() != ISPI_IDLE){ /*spinBar()*/;}
-#else // fix_ns8100
-
-#endif
 	}
 
 	while (ISPI_SendMsg(STOP_TRIGGER_CMD)){;}
 
 	g_sampleProcessing = IDLE_STATE;
+#else // fix_ns8100
+	Stop_Data_Clock();
+#endif
 }

@@ -77,12 +77,9 @@ void copyValidFlashEventSummariesToRam(void)
 #if 1 // ns8100 ---------------------------------------------------------------------------------------
 	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(g_eventDataBuffer[0]);
 	uint16 entriesFound = 0;
-	char fileName[50]; // Should only be short filenames, 8.3 format + directory
-	char popupText[50];
+	char* fileName = (char*)&spareBuffer[0];
 	FL_FILE* eventFile;
-	EVENT_HEADER_STRUCT fileEventHeader;
-	EVENT_SUMMARY_STRUCT fileSummary;
-	EVT_RECORD testThisCrap;
+	EVT_RECORD tempEventRecord;
 	unsigned long int dirStartCluster;
 	
 	debug("Copying valid SD event summaries to ram...\n");
@@ -90,16 +87,10 @@ void copyValidFlashEventSummariesToRam(void)
 	fl_directory_start_cluster("C:\\Events", &dirStartCluster);
     ListDirectory(dirStartCluster, dirList, NO);
 
-	//debug("CVFESR: Dirctory list created\n");
-
 	while(dirList[entriesFound].type != FAT32_END_LIST)
 	{
-		//debug("CVFESR: Handling Next Entry...\n");
-
 		if (dirList[entriesFound].type == FAT32_FILE)
 		{
-			//debug("CVFESR: Found File Entry...\n");
-
 			sprintf(fileName, "C:\\Events\\%s", dirList[entriesFound].name);
 			eventFile = fl_fopen(fileName, "r");
 
@@ -115,41 +106,29 @@ void copyValidFlashEventSummariesToRam(void)
 			}			
 			else
 			{
-				//debug("CVFESR: Reading File Entry Header...\n");
-
-				//fl_fread(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
-				fl_fread(eventFile, (uint8*)&testThisCrap, sizeof(EVT_RECORD));
+				//fl_fread(eventFile, (uint8*)&tempEventRecord.header, sizeof(EVENT_HEADER_STRUCT));
+				fl_fread(eventFile, (uint8*)&tempEventRecord.header, sizeof(EVT_RECORD));
 
 				// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
-#if 0
-				if ((fileEventHeader.startFlag == EVENT_RECORD_START_FLAG) &&
-					((fileEventHeader.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
-					(fileEventHeader.headerLength == sizeof(EVENT_HEADER_STRUCT)))
-#else
-				fileEventHeader = fileEventHeader;
-				if ((testThisCrap.header.startFlag == EVENT_RECORD_START_FLAG) &&
-					((testThisCrap.header.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
-					(testThisCrap.header.headerLength == sizeof(EVENT_HEADER_STRUCT)))
-#endif
+				if ((tempEventRecord.header.startFlag == EVENT_RECORD_START_FLAG) &&
+					((tempEventRecord.header.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
+					(tempEventRecord.header.headerLength == sizeof(EVENT_HEADER_STRUCT)))
 				{
-					//debug("Found Valid Event File: %s\n", dirList[entriesFound].name);
-					//fl_fseek(eventFile, sizeof(EVENT_HEADER_STRUCT), SEEK_SET);
-					fl_fclose(eventFile);
-					eventFile = fl_fopen(fileName, "r");
-					fl_fseek(eventFile, sizeof(EVENT_HEADER_STRUCT), SEEK_SET);
-					fl_fread(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
+					//fl_fread(eventFile, (uint8*)&tempEventRecord.summary, sizeof(EVENT_SUMMARY_STRUCT));
+
+					debug("Found Valid Event File: %s, with Event #: %d, Mode: %d, Size: %s, RSI: %d\n", 
+							dirList[entriesFound].name, tempEventRecord.summary.eventNumber, tempEventRecord.summary.mode, 
+							(eventFile->filelength == (2 + tempEventRecord.header.headerLength + tempEventRecord.header.summaryLength + 
+							tempEventRecord.header.dataLength)) ? "Correct" : "Incorrect", ramSummaryIndex);
+					
+					__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = tempEventRecord.summary.eventNumber;
 
 #if 0
-					__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = fileSummary.eventNumber;
-#else
-					__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = testThisCrap.summary.eventNumber;
-#endif
-
-#if 1
+					char popupText[50];
 					ClearLCDscreen();
 					sprintf(popupText, "Adding Event #%d to RAM Summary Table (%d)", 
 							(int)__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum,
-							(int)fileSummary.eventNumber);
+							(int)tempEventRecord.summary.eventNumber);
 					overlayMessage(fileName, popupText, 200 * SOFT_MSECS);
 #endif
 					// Check to make sure ram summary index doesnt get out of range, if so reset to zero
@@ -489,7 +468,7 @@ void InitFlashBuffs(void)
 			if (__ramFlashSummaryTbl[i].fileEventNum != 0xFFFFFFFF)
 			{
 				// Check to make sure ram values arent garbage
-				if((uint32)(__ramFlashSummaryTbl[i].fileEventNum) >= g_currentEventNumber)
+				if((uint32)(__ramFlashSummaryTbl[i].fileEventNum) >= g_nextEventNumberToUse)
 				{
 					// This signals a big warning
 					//debugPrint(RAW, "Data in Ram Summary Table is garbage.\n");
@@ -577,7 +556,7 @@ void initEventRecord(EVT_RECORD* eventRec, uint8 op_mode)
 	//-----------------------
 	// EVENT_SUMMARY_STRUCT - Fill in the event VERSION_INFO_STRUCT data
 	eventRec->summary.mode = op_mode;
-	eventRec->summary.eventNumber = (uint16)g_currentEventNumber;
+	eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
 
 	//-----------------------
 	// EVENT_SUMMARY_STRUCT - Fill in the event VERSION_INFO_STRUCT data
@@ -689,7 +668,7 @@ void initCurrentEventNumber(void)
 	// Check if the first location is 0xFF which indicates the unit hasn't recorded any events
 	if (eventNumber == 0xFFFF)
 	{
-		g_currentEventNumber = 1;
+		g_nextEventNumberToUse = 1;
 	}
 	else // Find the last stored event number location
 	{
@@ -710,7 +689,7 @@ void initCurrentEventNumber(void)
 		GetParameterMemory((uint8*)&eventNumber, uniqueEventNumberOffset, sizeof(eventNumber));
 
 		// Set the Current Event number to the last event number stored plus 1
-		g_currentEventNumber = (uint16)(eventNumber + 1);
+		g_nextEventNumberToUse = (uint16)(eventNumber + 1);
 	}
 #endif
 
@@ -723,18 +702,20 @@ void initCurrentEventNumber(void)
 	if (!currentEventNumberRecord.invalid)
 	{
 		// Set the Current Event number to the last event number stored plus 1
-		g_currentEventNumber = currentEventNumberRecord.currentEventNumber + 1;
+		g_nextEventNumberToUse = currentEventNumberRecord.currentEventNumber + 1;
 	}
 	else // record is invalid
 	{
-		g_currentEventNumber = 1;
-		currentEventNumberRecord.currentEventNumber = g_currentEventNumber;
-		
+		g_nextEventNumberToUse = 1;
+
+#if 0 // Bad logic - Don't want to set 1 since no event has been recorded, and the eventual save will validate the record
+		currentEventNumberRecord.currentEventNumber = g_nextEventNumberToUse;
 		saveRecData(&currentEventNumberRecord, DEFAULT_RECORD, REC_UNIQUE_EVENT_ID_TYPE);
+#endif
 	}
 #endif
 
-	debug("Current Unique Event number ID to use: %d\n", g_currentEventNumber);
+	debug("Stored Event ID: %d, Next Event ID to use: %d\n", (g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
 }
 
 //*****************************************************************************
@@ -743,7 +724,7 @@ void initCurrentEventNumber(void)
 //*****************************************************************************
 uint16 getLastStoredEventNumber(void)
 {
-	return ((uint16)(g_currentEventNumber - 1));
+	return ((uint16)(g_nextEventNumberToUse - 1));
 }
 
 //*****************************************************************************
@@ -759,17 +740,17 @@ void storeCurrentEventNumber(void)
 	uint16 eventNumber = 0;
 
 	// If the Current Event Number is 0, then we have wrapped (>65535) in which case we will reinitialize
-	if (g_currentEventNumber == 0)
+	if (g_nextEventNumberToUse == 0)
 	{
 		//sectorErase(uniqueEventStorePtr, 1);
 		EraseParameterMemory(uniqueEventStoreOffset, FLASH_BOOT_SECTOR_SIZE_x8);
 		initCurrentEventNumber();
 	}
 	// Check if at the boundary of a flash sectors worth of Unique Event numbers
-	else if (((g_currentEventNumber - 1) % 4096) == 0)
+	else if (((g_nextEventNumberToUse - 1) % 4096) == 0)
 	{
 		// Check to make sure this isnt the initial (first) event number
-		if (g_currentEventNumber != 1)
+		if (g_nextEventNumberToUse != 1)
 		{
 			//sectorErase(uniqueEventStorePtr, 1);
 			EraseParameterMemory(uniqueEventStoreOffset, FLASH_BOOT_SECTOR_SIZE_x8);
@@ -778,7 +759,7 @@ void storeCurrentEventNumber(void)
 	else // Still room to store Unique Event numbers
 	{
 		// Get the positions to advance based on the current event number mod'ed by the storage size in event numbers
-		positionsToAdvance = (uint16)((g_currentEventNumber - 1) % 4096);
+		positionsToAdvance = (uint16)((g_nextEventNumberToUse - 1) % 4096);
 
 		// Set the offset to the event number positions adjusted to bytes
 		uniqueEventStoreOffset += (positionsToAdvance * 2);
@@ -796,16 +777,16 @@ void storeCurrentEventNumber(void)
 		if ((positionsToAdvance == 0) || (eventNumber != 0xFFFF))
 		{
 			// Store the Current Event number as the newest Unique Event number
-			//programWord(uniqueEventStorePtr, g_currentEventNumber);
-			SaveParameterMemory((uint8*)&g_currentEventNumber, uniqueEventStoreOffset, sizeof(g_currentEventNumber));
+			//programWord(uniqueEventStorePtr, g_nextEventNumberToUse);
+			SaveParameterMemory((uint8*)&g_nextEventNumberToUse, uniqueEventStoreOffset, sizeof(g_nextEventNumberToUse));
 
 			// Store as the last Event recorded in AutoDialout table
-			__autoDialoutTbl.lastStoredEvent = g_currentEventNumber;
+			__autoDialoutTbl.lastStoredEvent = g_nextEventNumberToUse;
 
 			// Increment to a new Event number
-			g_currentEventNumber++;
+			g_nextEventNumberToUse++;
 			debug("Unique Event numbers stored: %d, Current Event number: %d\n",
-				(g_currentEventNumber - 1), g_currentEventNumber);
+				(g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
 
 			return;
 		}
@@ -813,23 +794,22 @@ void storeCurrentEventNumber(void)
 
 	// If we get here, then we failed a validation check
 	debugErr("Unique Event number storage doesnt match Current Event Number. (0x%x, %d)\n",
-				uniqueEventStoreOffset, g_currentEventNumber);
+				uniqueEventStoreOffset, g_nextEventNumberToUse);
 #endif // end of ns7100
 
 #if 1 // Updated to use config
 	CURRENT_EVENT_NUMBER_STRUCT currentEventNumberRecord;
 
 	// Store the Current Event number as the newest Unique Event number
-	currentEventNumberRecord.currentEventNumber = g_currentEventNumber;
+	currentEventNumberRecord.currentEventNumber = g_nextEventNumberToUse;
 	saveRecData(&currentEventNumberRecord, DEFAULT_RECORD, REC_UNIQUE_EVENT_ID_TYPE);
 
 	// Store as the last Event recorded in AutoDialout table
-	__autoDialoutTbl.lastStoredEvent = g_currentEventNumber;
+	__autoDialoutTbl.lastStoredEvent = g_nextEventNumberToUse;
 
 	// Increment to a new Event number
-	g_currentEventNumber++;
-	debug("Unique Event numbers stored: %d, Current Event number: %d\n",
-		(g_currentEventNumber - 1), g_currentEventNumber);
+	g_nextEventNumberToUse++;
+	debug("Saved Event ID: %d, Next Event ID to use: %d\n", (g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
 
 	return;
 #endif
@@ -919,7 +899,6 @@ void getEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
 	FL_FILE* eventFile;
-	EVT_RECORD tempEventRecord;
 	
 	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
 	eventFile = fl_fopen(fileName, "r");
@@ -938,22 +917,17 @@ void getEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 	}	
 	else
 	{
-		fl_fread(eventFile, (uint8*)&tempEventRecord, sizeof(EVT_RECORD));
+		fl_fread(eventFile, (uint8*)eventRecord, sizeof(EVT_RECORD));
 
 		// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
-		if ((tempEventRecord.header.startFlag == EVENT_RECORD_START_FLAG) &&
-			((tempEventRecord.header.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
-			(tempEventRecord.header.headerLength == sizeof(EVENT_HEADER_STRUCT)))
+		if ((eventRecord->header.startFlag == EVENT_RECORD_START_FLAG) &&
+			((eventRecord->header.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
+			(eventRecord->header.headerLength == sizeof(EVENT_HEADER_STRUCT)))
 		{
 			debug("Found Valid Event File: %s\n", fileName);
 		}
 
 		fl_fclose(eventFile);
-	}
-
-	if (eventRecord != NULL)
-	{
-		byteCpy(eventRecord, &tempEventRecord, sizeof(EVT_RECORD));
 	}
 }
 
@@ -979,7 +953,8 @@ void deleteEventFileRecord(uint16 eventNumber)
 void deleteEventFileRecords(void)
 {
 	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(g_eventDataBuffer[0]);
-	uint16 entriesFound = 0;
+	uint16 entriesIndex = 0;
+	uint16 eventsDeleted = 0;
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
 	char popupText[50];
 	unsigned long int dirStartCluster;
@@ -989,21 +964,25 @@ void deleteEventFileRecords(void)
 	fl_directory_start_cluster("C:\\Events", &dirStartCluster);
     ListDirectory(dirStartCluster, dirList, NO);
 
-	while(dirList[entriesFound].type != FAT32_END_LIST)
+	while(dirList[entriesIndex].type != FAT32_END_LIST)
 	{
-		if (dirList[entriesFound].type == FAT32_FILE)
+		if (dirList[entriesIndex].type == FAT32_FILE)
 		{
-			sprintf(fileName, "C:\\Events\\%s", dirList[entriesFound].name);
+			sprintf(fileName, "C:\\Events\\%s", dirList[entriesIndex].name);
 			if (fl_remove(fileName) == -1)
 			{
 				overlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
 			}
+			else
+			{
+				eventsDeleted++;
+			}
 		}
-
-		entriesFound++;
+		
+		entriesIndex++;
 	}
 
-	sprintf(popupText, "REMOVED %d EVENTS", entriesFound);
+	sprintf(popupText, "REMOVED %d EVENTS", eventsDeleted);
 	overlayMessage("DELETE EVENTS", popupText, 3 * SOFT_SECS);
 }
 
@@ -1091,17 +1070,32 @@ BOOLEAN validEventFile(uint16 eventNumber)
 
 //*****************************************************************************
 // FUNCTION
-//  void getNewEventFileHandle(uint16 eventNumer)
+//  void getEventFileHandle(uint16 eventNumer)
 //*****************************************************************************
-FL_FILE* getNewEventFileHandle(uint16 newFileEventNumber)
+FL_FILE* getEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 {
-	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+	char* fileName = (char*)&spareBuffer[0];
+	char fileOption[3];
 	
 	sprintf(fileName, "C:\\Events\\Evt%d.ns8", newFileEventNumber);
 
-	debug("File to open: %s\n", fileName);
+	switch (option)
+	{
+		case CREATE_EVENT_FILE:
+			debug("File to create: %s\n", fileName);
+			strcpy(&fileOption[0], "w");
+			break;
+			
+		case READ_EVENT_FILE:
+			strcpy(&fileOption[0], "r");
+			break;
+			
+		case APPEND_EVENT_FILE:
+			strcpy(&fileOption[0], "a+");
+			break;
+	}
 
-	return(fl_fopen(fileName, "w"));
+	return (fl_fopen(fileName, fileOption));
 }
 
 //*****************************************************************************
@@ -1179,12 +1173,12 @@ uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr)
 
 #if 1 // ns8100
 		// Set the flash pointer address in the ram summary
-		__ramFlashSummaryTbl[s_currFlashSummary].fileEventNum = g_currentEventNumber;
+		__ramFlashSummaryTbl[s_currFlashSummary].fileEventNum = g_nextEventNumberToUse;
 
 		// Set the current summary pointer to the current ram summary
 		*sumEntryPtr = &__ramFlashSummaryTbl[s_currFlashSummary];
 
-		debug("Ram Summary Table Entry %d: Event: %d\n", s_currFlashSummary, g_currentEventNumber);
+		debug("Ram Summary Table Entry %d: Event ID: %d\n", s_currFlashSummary, g_nextEventNumberToUse);
 #endif
 
 		// Increment the flash summary value.

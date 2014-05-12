@@ -100,7 +100,7 @@ void InitDataBuffs(uint8 op_mode)
 		g_startOfEventBufferPtr = &(g_eventDataBuffer[0]);
 		g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr;
 		g_currentEventBuffer = 0;
-		g_currentEventNumber = 0;
+		g_eventBufferIndex = 0;
 
 		g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
 		g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
@@ -145,7 +145,7 @@ void InitDataBuffs(uint8 op_mode)
 		g_startOfEventBufferPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET]);
 		g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr; 
 		g_currentEventBuffer = 0;
-		g_currentEventNumber = 0;
+		g_eventBufferIndex = 0;
 
 		g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
 		g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;

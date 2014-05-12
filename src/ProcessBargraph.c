@@ -1011,7 +1011,7 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 		byteSet((uint8*)&(g_RamEventRecord.summary.calculated), 0, sizeof(CALCULATED_DATA_STRUCT));
 #else // ns8100
 		// Get new file handle
-		g_currentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+		g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
 		if (g_currentEventFileHandle == NULL)
 		{

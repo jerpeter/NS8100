@@ -446,7 +446,7 @@ void handleUDE(CMD_BUFFER_STRUCT* inCmd)
 	// Set the data pointer to start after the UDE character data bytes
 	uint16* dataPtr = (uint16*)(inCmd->msg + MESSAGE_HEADER_SIMPLE_LENGTH);
 
-	if(*dataPtr < g_currentEventNumber)
+	if(*dataPtr < g_nextEventNumberToUse)
 		__autoDialoutTbl.lastDownloadedEvent = *dataPtr;
 
 	// Done with the command, reset all global transfer and status fields

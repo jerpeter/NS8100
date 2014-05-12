@@ -23,32 +23,6 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-// All address in words
-//#define FLASH_BASE_ADDR          0x80000000
-//#define FLASH_WORD_SIZE          0x0007FFFF
-//#define FLASH_BYTE_SIZE          0x00100000
-
-//#define BOOT_SECTOR_WORD_SIZE    0x00001000
-//#define BOOT_SECTOR_BYTE_SIZE    0x00002000
-
-//#define SA0_ADDR                 0x00000000
-//#if 1 // Original
-//#define SA1_ADDR                 0x00004000
-//#define SA2_ADDR                 0x00006000
-//#define SA3_ADDR                 0x00008000
-//#else // Updated, but not fully tested
-//#define SA1_ADDR                 0x00002000 // was 0x00004000
-//#define SA2_ADDR                 0x00004000 // was 0x00006000
-//#define SA3_ADDR                 0x00006000 // was 0x00008000
-//#endif
-
-// Updated (based on a 4MB flash part, with 63 data sectors(not including boot sectors))
-//#define MAX_SAX                  63
-
-//#define SAX_ADDR                 0x00010000
-//#define SAX_WRD_SIZE             0x00008000
-//#define SAX_BYTE_SIZE            0x00010000
-
 #define FLASH_FULL_FLAG  			0x0000
 #define EVENT_RECORD_START_FLAG		0xA55A
 #define EVENT_RECORD_VERSION		0x0101
@@ -74,40 +48,6 @@
 	{	flashPtr = (uint16*)((uint32)flashPtr - (uint32)FLASH_EVENT_END); 	\
 		flashPtr = (uint16*)((uint32)FLASH_EVENT_START + (uint32)flashPtr); }
 
-/*
-typedef struct
-{
-	uint16 startFlag;
-	uint16 recordVersion;
-	uint16 headerLength;
-	uint16 summaryLength;
-	uint32 dataLength;
-	uint16 dataCompression;
-	uint16 summaryChecksum;
-	uint16 dataChecksum;
-	uint16 unused1;
-	uint16 unused2;
-	uint16 unused3;
-} EVENT_HEADER_STRUCT;
-
-typedef struct
-{
-	VERSION_INFO_STRUCT		version;
-	PARAMETERS_STRUCT		parameters;
-	CAPTURE_INFO_STRUCT		captured;
-	CALCULATED_DATA_STRUCT	calculated;
-	uint16 					eventNumber;
-	uint8					mode;
-	uint8					unused;
-} EVENT_SUMMARY_STRUCT;
-
-typedef struct
-{
-	EVENT_HEADER_STRUCT 		header;
-	EVENT_SUMMARY_STRUCT		summary;
-} EVT_RECORD;
-*/
-
 typedef struct
 {
 	uint32 sizeUsed;
@@ -121,6 +61,11 @@ typedef struct
 	BOOLEAN roomForBargraph;
 } FLASH_USAGE_STRUCT;
 
+typedef enum {
+	CREATE_EVENT_FILE,
+	READ_EVENT_FILE,
+	APPEND_EVENT_FILE	
+} EVENT_FILE_OPTION;
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
@@ -146,7 +91,7 @@ void getEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 void getEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
 void cacheEventDataToRam(uint16 eventNumber, uint32 dataSize);
 BOOLEAN validEventFile(uint16 eventNumber);
-FL_FILE* getNewEventFileHandle(uint16 eventNumber);
+FL_FILE* getEventFileHandle(uint16 eventNumber, EVENT_FILE_OPTION option);
 void deleteEventFileRecord(uint16 eventNumber);
 void deleteEventFileRecords(void);
 

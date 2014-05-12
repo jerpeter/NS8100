@@ -217,7 +217,7 @@ void ProcessComboSampleData(void)
 
 #if 0 // ns7100
 						// Save the link to the beginning of the pretrigger data
-						g_summaryTable[g_currentEventNumber].linkPtr = g_eventBufferPretrigPtr;
+						g_summaryTable[g_eventBufferIndex].linkPtr = g_eventBufferPretrigPtr;
 #endif
 						// Copy PreTrigger data over to the Event body buffer
 						*(g_eventBufferBodyPtr + 0) = *(g_tailOfPreTrigBuff + 0);
@@ -474,17 +474,17 @@ void ProcessComboSampleData(void)
 		if (g_isTriggered == 0)
 		{
 			g_freeEventBuffers--;
-			g_currentEventNumber++;
+			g_eventBufferIndex++;
 			g_calTestExpected++;
 
-			if (g_currentEventNumber < g_maxEventBuffers)
+			if (g_eventBufferIndex < g_maxEventBuffers)
 			{
 				g_eventBufferPretrigPtr = g_eventBufferBodyPtr + g_wordSizeInCal;
 				g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
 			}
 			else
 			{
-				g_currentEventNumber = 0;
+				g_eventBufferIndex = 0;
 				g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
 				g_eventBufferBodyPtr = g_startOfEventBufferPtr + g_wordSizeInPretrig;
 			}
@@ -1178,7 +1178,7 @@ uint8 CalculateComboData(void)
 void MoveStartOfComboEventRecordToFile(void)
 {
 	// Get new file handle
-	g_comboDualCurrentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+	g_comboDualCurrentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
 	if (g_comboDualCurrentEventFileHandle == NULL)
 		debugErr("Failed to get a new file handle for the current Combo - Bargraph event!\n");
@@ -1538,7 +1538,7 @@ void MoveComboWaveformEventToFile(void)
 				completeRamEventSummary(ramSummaryEntry, sumEntry);
 
 				// Get new event file handle
-				g_currentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+				g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 
 				if (g_currentEventFileHandle == NULL)
 				{
@@ -1562,7 +1562,7 @@ void MoveComboWaveformEventToFile(void)
 					storeCurrentEventNumber();
 
 					// Now store the updated event number in the universal ram storage.
-					g_RamEventRecord.summary.eventNumber = g_currentEventNumber;
+					g_RamEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 				}
 
 				// Update event buffer count and pointers
@@ -1582,6 +1582,7 @@ void MoveComboWaveformEventToFile(void)
 				}
 
 				g_lastCompletedRamSummary = ramSummaryEntry;
+				g_resultsRamSummaryIndex = 
 
 				g_printOutMode = WAVEFORM_MODE;
 				raiseMenuEventFlag(RESULTS_MENU_EVENT);

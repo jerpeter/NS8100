@@ -112,6 +112,7 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 		{
 			// Find the first valid summary index and set the top and current index to match
 			s_topMenuSummaryIndex = s_currentSummaryIndex = getFirstValidRamSummaryIndex();
+			debug("First valid ram summary index: %d\n", s_topMenuSummaryIndex);
 			
 			g_summaryListArrowChar = DOWN_ARROW_CHAR;
 		}
@@ -131,19 +132,23 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 					static EVT_RECORD resultsEventRecord;
 					eventRecord = &resultsEventRecord;
 	
-					debug("Summary menu: updating event record cache\n");
-					//getEventFileInfo(g_resultsRamSummaryPtr->fileEventNum, &(resultsEventRecord.header), 
-					//					&resultsEventRecord.summary, NO);
-					getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
+					getEventFileRecord(__ramFlashSummaryTbl[s_currentSummaryIndex].fileEventNum, &resultsEventRecord);
+					g_resultsRamSummaryPtr = &(__ramFlashSummaryTbl[s_currentSummaryIndex]);
+					g_resultsRamSummaryIndex = s_currentSummaryIndex;
+					g_updateResultsEventRecord = YES;
+
+					debug("Summary menu: updating event record cache for event #%d, Addr Compare: 0x%x <-> 0x%x\n",
+							__ramFlashSummaryTbl[s_currentSummaryIndex].fileEventNum, g_resultsRamSummaryPtr, g_resultsRamSummaryPtr);
 #endif
 
-					//debugPrint(RAW, "Evt: %04d, Mode: %d\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
-					//convertTimeStampToString(&dateStr[0], &(eventRecord->summary.captured.calDate), REC_DATE_TIME_TYPE);
-					//debugPrint(RAW, "\tCal Date: %s\n", dateStr);
-					//convertTimeStampToString(&dateStr[0], &(eventRecord->summary.captured.eventTime), REC_DATE_TIME_TYPE);
-					//debugPrint(RAW, "\tEvent Time: %s\n", dateStr);
-					//convertTimeStampToString(&dateStr[0], &(eventRecord->summary.captured.endTime), REC_DATE_TIME_TYPE);
-					//debugPrint(RAW, "\tStart Time: %s\n\n", dateStr);
+char dateStr[50];
+					debugRaw("\n\tEvt: %04d, Mode: %d\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
+					convertTimeStampToString(&dateStr[0], &(eventRecord->summary.captured.calDate), REC_DATE_TIME_TYPE);
+					debugRaw("\tCal Date: %s\n", dateStr);
+					convertTimeStampToString(&dateStr[0], &(eventRecord->summary.captured.eventTime), REC_DATE_TIME_TYPE);
+					debugRaw("\tEvent Time: %s\n", dateStr);
+					convertTimeStampToString(&dateStr[0], &(eventRecord->summary.captured.endTime), REC_DATE_TIME_TYPE);
+					debugRaw("\tStart Time: %s\n\n", dateStr);
 					
 					switch (eventRecord->summary.mode)
 					{
@@ -250,7 +255,7 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 		wndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		// We're done
 	}
-	else // s_topMenuSummaryIndex is a valid index indicating valid events in flash
+	else // s_topMenuSummaryIndex is a valid index indicating valid events in storage
 	{
 		tempSummaryIndex = s_topMenuSummaryIndex;
 
@@ -263,8 +268,7 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 			eventRecord = &resultsEventRecord;
 	
 			debug("Summary menu: updating event record cache\n");
-			//getEventFileInfo(g_resultsRamSummaryPtr->fileEventNum, &(resultsEventRecord.header), &resultsEventRecord.summary, NO);
-			getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
+			getEventFileRecord(__ramFlashSummaryTbl[tempSummaryIndex].fileEventNum, &resultsEventRecord);
 #endif
 
 			// Clear and setup the time stamp string for the current event

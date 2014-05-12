@@ -202,7 +202,7 @@ void alarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_helpRecord.alarm_one_air_lvl = *((uint32*)data);
 		
-		debug("Alarm 1 Air Level: %f\n", g_helpRecord.alarm_one_air_lvl);
+		debug("Alarm 1 Air Level: %d\n", g_helpRecord.alarm_one_air_lvl);
 
 		ACTIVATE_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_helpRecord.alarm_one_time,
 			ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT, 
@@ -347,7 +347,7 @@ void alarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_helpRecord.alarm_two_air_lvl = *((uint32*)data);
 		
-		debug("Alarm 2 Air Level: %f\n", g_helpRecord.alarm_two_air_lvl);
+		debug("Alarm 2 Air Level: %d\n", g_helpRecord.alarm_two_air_lvl);
 
 		ACTIVATE_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarm_two_time,
 			ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT, 
@@ -453,14 +453,7 @@ void companyMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-		{
-			ACTIVATE_USER_MENU_MSG(&modeMenu, MONITOR);
-		}
-		else
-		{
-			ACTIVATE_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
-		}
+		ACTIVATE_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
 	}
 
 	(*menufunc_ptrs[g_activeMenu]) (mn_msg);

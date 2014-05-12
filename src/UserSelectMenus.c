@@ -1749,14 +1749,7 @@ void modeMenuHandler(uint8 keyPressed, void* data)
 		}
 		else // Mode is EDIT
 		{
-			if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-			{
-				ACTIVATE_USER_MENU_MSG(&companyMenu, &g_triggerRecord.trec.client);
-			}
-			else // WAVEFORM_MODE or COMBO_MODE
-			{
-				ACTIVATE_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
-			}
+			ACTIVATE_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -1997,7 +1990,7 @@ void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 // Sample Rate Menu
 //=============================================================================
 //*****************************************************************************
-#define SAMPLE_RATE_MENU_ENTRIES 7
+#define SAMPLE_RATE_MENU_ENTRIES 9
 USER_MENU_STRUCT sampleRateMenu[SAMPLE_RATE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, SAMPLE_RATE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, SAMPLE_RATE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
@@ -2005,7 +1998,9 @@ USER_MENU_STRUCT sampleRateMenu[SAMPLE_RATE_MENU_ENTRIES] = {
 {ITEM_2, 1024, NULL_TEXT, NO_TAG, {1024}},
 {ITEM_3, 2048, NULL_TEXT, NO_TAG, {2048}},
 {ITEM_4, 4096, NULL_TEXT, NO_TAG, {4096}},
-{ITEM_5, 8192, NULL_TEXT, NO_TAG, {MAX_SAMPLE_RATE}}, // 8192
+{ITEM_5, 8192, NULL_TEXT, NO_TAG, {8192}},
+{ITEM_6, 16384, NULL_TEXT, NO_TAG, {16384}},
+{ITEM_7, 32768, NULL_TEXT, NO_TAG, {32768}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&sampleRateMenuHandler}}
 };
 
@@ -2021,7 +2016,7 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{
 		if ((sampleRateMenu[newItemIndex].data < sampleRateMenu[ITEM_1].data) || 
-			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_5].data))
+			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_7].data))
 		{
 			byteSet(&message[0], 0, sizeof(message));
 			sprintf((char*)message, "%lu %s", sampleRateMenu[newItemIndex].data,
@@ -2506,13 +2501,18 @@ void zeroEventNumberMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	uint16 newItemIndex = *((uint16*)data);
+	CURRENT_EVENT_NUMBER_STRUCT eventNumberRecord;
 
 	if (keyPressed == ENTER_KEY)
 	{
 		if (zeroEventNumberMenu[newItemIndex].data == YES)
 		{
-			//sectorErase((uint16*)(FLASH_BASE_ADDR + FLASH_BOOT_SECTOR_SIZE_x8), 1);
-			EraseParameterMemory(FLASH_BOOT_SECTOR_SIZE_x8, 4);
+#if 0 // ns7100
+			sectorErase((uint16*)(FLASH_BASE_ADDR + FLASH_BOOT_SECTOR_SIZE_x8), 1);
+#else // ns8100
+			eventNumberRecord.currentEventNumber = 0;
+			saveRecData(&eventNumberRecord, DEFAULT_RECORD, REC_UNIQUE_EVENT_ID_TYPE);
+#endif
 			initCurrentEventNumber();
 
 			__autoDialoutTbl.lastDownloadedEvent = 0;

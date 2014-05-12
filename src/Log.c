@@ -149,7 +149,7 @@ void newMonitorLogEntry(uint8 mode)
 	__monitorLogTbl[__monitorLogTblIndex].startTime = getCurrentTime();
 	__monitorLogTbl[__monitorLogTblIndex].startTime.valid = TRUE;
 	__monitorLogTbl[__monitorLogTblIndex].mode = mode;
-	__monitorLogTbl[__monitorLogTblIndex].startEventNumber = g_currentEventNumber;
+	__monitorLogTbl[__monitorLogTblIndex].startEventNumber = g_nextEventNumberToUse;
 	__monitorLogTbl[__monitorLogTblIndex].status = PARTIAL_LOG_ENTRY;
 	
 	byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
@@ -162,14 +162,14 @@ void newMonitorLogEntry(uint8 mode)
 ///----------------------------------------------------------------------------
 void updateMonitorLogEntry()
 {
-	//debugPrint(RAW, "Updating entry at Monitor Log table index: %d, event#: %d, total: %d\n", __monitorLogTblIndex, g_currentEventNumber, 
-	//			(uint16)(g_currentEventNumber - __monitorLogTbl[__monitorLogTblIndex].startEventNumber + 1));
+	//debugPrint(RAW, "Updating entry at Monitor Log table index: %d, event#: %d, total: %d\n", __monitorLogTblIndex, g_nextEventNumberToUse, 
+	//			(uint16)(g_nextEventNumberToUse - __monitorLogTbl[__monitorLogTblIndex].startEventNumber + 1));
 
 	if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
 	{
 		// Set the elements to close the current log entry
-		//__monitorLogTbl[__monitorLogTblIndex].endEventNumber = g_currentEventNumber;
-		__monitorLogTbl[__monitorLogTblIndex].eventsRecorded = (uint16)(g_currentEventNumber - __monitorLogTbl[__monitorLogTblIndex].startEventNumber + 1);
+		//__monitorLogTbl[__monitorLogTblIndex].endEventNumber = g_nextEventNumberToUse;
+		__monitorLogTbl[__monitorLogTblIndex].eventsRecorded = (uint16)(g_nextEventNumberToUse - __monitorLogTbl[__monitorLogTblIndex].startEventNumber + 1);
 	}
 }
 

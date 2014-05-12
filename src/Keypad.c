@@ -391,6 +391,10 @@ extern void BootLoadManager(void);
 						quickBootEntryJump = YES;
 						BootLoadManager();
 					}
+					else if (keyPressed == HELP_KEY)
+					{
+						copyValidFlashEventSummariesToRam();
+					}
 				}
 				else if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 				{

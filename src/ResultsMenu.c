@@ -364,12 +364,13 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	if ((g_updateResultsEventRecord == YES) || (g_bargraphForcedCal == YES))
 	{
 		debug("Results menu: updating event record cache\n");
-		//getEventFileInfo(g_resultsRamSummaryPtr->fileEventNum, &(resultsEventRecord.header), &(resultsEventRecord.summary), NO);
+		//getEventFileRecord(__ramFlashSummaryTbl[g_resultsRamSummaryIndex].fileEventNum, &resultsEventRecord);
 		getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
 		g_updateResultsEventRecord = NO;
 	}
 #endif
-	debug("File stored peaks: a:%x r:%x v:%x t:%x\n", 
+	debugRaw("\n\tResults Evt: %04d, Mode: %d\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
+	debugRaw("\tStored peaks: a:%x r:%x v:%x t:%x\n", 
 			eventRecord->summary.calculated.a.peak, 
 			eventRecord->summary.calculated.r.peak,
 			eventRecord->summary.calculated.v.peak,

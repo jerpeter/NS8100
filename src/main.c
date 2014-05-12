@@ -782,6 +782,9 @@ void InitSystemHardware_NS8100(void)
 
 	SD_MMC_Power_On();
 
+	// Wait for power to propogate
+	soft_usecWait(10 * SOFT_MSECS);
+
 	// Check if SD Detect pin 
 	if (gpio_get_pin_value(AVR32_PIN_PA02) == ON)
 	{
@@ -797,7 +800,7 @@ void InitSystemHardware_NS8100(void)
 	}
 	else
 	{
-		messageBox("ERROR", "SD CARD NOT DETECTED", MB_OK);		
+		debugErr("\n\nSD Card not detected!\n");
 	}
 
 	//-------------------------------------------------------------------------
@@ -943,11 +946,9 @@ int main(void)
 	//debug("Unit Type: %s\n", SUPERGRAPH_UNIT ? "Supergraph" : "Minigraph");
 	debug("--- System Init complete ---\n");
 
-	// Test
-	//void (*restart)(void) = 0x800000;
-	//restart();
-	//pm_switch_to_osc0(&AVR32_PM, FOSC0, 32);
-	//Long_call(0x80000000);
+	debug("Size Compare: EVT_RECORD: %d, HEADER: %d, SUMMARY: %d, H+S: %d\n", 
+			sizeof(EVT_RECORD), sizeof(EVENT_HEADER_STRUCT), sizeof(EVENT_SUMMARY_STRUCT), 
+			(sizeof(EVENT_HEADER_STRUCT) + sizeof(EVENT_SUMMARY_STRUCT)));
 
 	Menu_Items = MAIN_MENU_FUNCTIONS_ITEMS;
 	Menu_Functions = (unsigned long *)Main_Menu_Functions;

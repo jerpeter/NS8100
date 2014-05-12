@@ -97,7 +97,7 @@ void ProcessWaveformData(void)
 
 #if 0 // ns7100						
 						// Save the link to the beginning of the pretrigger data
-						g_summaryTable[g_currentEventNumber].linkPtr = g_eventBufferPretrigPtr;
+						g_summaryTable[g_eventBufferIndex].linkPtr = g_eventBufferPretrigPtr;
 #endif
 						// Copy PreTrigger data over to the Event body buffer
 						*(g_eventBufferBodyPtr + 0) = *(g_tailOfPreTrigBuff + 0);
@@ -289,20 +289,7 @@ void ProcessWaveformData(void)
 		}
 	}
 	else // g_isTriggered != 0
-	{ 
-#if 0 // ns8100 - Moved to handle only in the ISR
-		// Check if the command is a trigger two, which is the 1st warning event
-		if (commandNibble == TRIG_TWO)
-		{
-			raiseSystemEventFlag(WARNING1_EVENT);
-		}
-		// Check if the command is a trigger three, which is the 2nd warning event
-		else if (commandNibble == TRIG_THREE)
-		{
-			raiseSystemEventFlag(WARNING2_EVENT);
-		}
-#endif
-
+	{
 		// Check if this is the last sample of the triggered event
 		if ((g_isTriggered - 1) == 0)
 		{
@@ -359,17 +346,17 @@ void ProcessWaveformData(void)
 			//debugRaw("\nEvtEnd\n");
 			
 			g_freeEventBuffers--;
-			g_currentEventNumber++;
+			g_eventBufferIndex++;
 			g_calTestExpected++;
 
-			if (g_currentEventNumber < g_maxEventBuffers)
+			if (g_eventBufferIndex < g_maxEventBuffers)
 			{
 				g_eventBufferPretrigPtr = g_eventBufferBodyPtr + g_wordSizeInCal;
 				g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
 			}
 			else
 			{
-				g_currentEventNumber = 0;
+				g_eventBufferIndex = 0;
 				g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
 				g_eventBufferBodyPtr = g_startOfEventBufferPtr + g_wordSizeInPretrig;
 			}
@@ -582,7 +569,7 @@ void MoveWaveformEventToFlash(void)
 				completeRamEventSummary(ramSummaryEntry, sumEntry);
 
 				// Get new event file handle
-				g_currentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+				g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
 				if (g_currentEventFileHandle == NULL)
 				{
@@ -592,7 +579,7 @@ void MoveWaveformEventToFlash(void)
 				{
 					char tempBuffer[50];
 					
-					sprintf(&tempBuffer[0], "EVENT #%d BEING SAVED TO SD CARD (MAY TAKE A WHILE)", g_currentEventNumber);
+					sprintf(&tempBuffer[0], "EVENT #%d BEING SAVED TO SD CARD (MAY TAKE A WHILE)", g_nextEventNumberToUse);
 					overlayMessage("EVENT COMPLETE", &tempBuffer[0], 0);
 
 					// Write the event record header and summary
@@ -605,7 +592,7 @@ void MoveWaveformEventToFlash(void)
 					fl_fclose(g_currentEventFileHandle);
 					debug("Event file closed\n");
 
-					ramSummaryEntry->fileEventNum = g_currentEventNumber;
+					ramSummaryEntry->fileEventNum = g_nextEventNumberToUse;
 					
 					updateMonitorLogEntry();
 
@@ -613,7 +600,7 @@ void MoveWaveformEventToFlash(void)
 					storeCurrentEventNumber();
 
 					// Now store the updated event number in the universal ram storage.
-					g_RamEventRecord.summary.eventNumber = g_currentEventNumber;
+					g_RamEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 				}
 
 				// Update event buffer count and pointers

@@ -260,8 +260,10 @@ void startDataCollection(uint32 sampleRate)
 	debug("Raise signal to start sampling\n");
 	g_sampleProcessing = SAMPLING_STATE;
 
+#if 0 // ns7100
 	// Send message to 430
 	//ISPI_SendMsg(g_msgs430.startMsg430.cmd_id);
+#endif
 }
 
 /****************************************

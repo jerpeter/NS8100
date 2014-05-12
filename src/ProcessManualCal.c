@@ -66,7 +66,7 @@ void ProcessManuelCalPulse(void)
 			{
 				g_RamEventRecord.summary.captured.eventTime = triggerTimeStamp = getCurrentTime();
 #if 0 // ns7100
-				g_summaryTable[g_currentEventNumber].linkPtr = g_eventBufferPretrigPtr;
+				g_summaryTable[g_eventBufferIndex].linkPtr = g_eventBufferPretrigPtr;
 #endif
 				*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfPreTrigBuff + 0) & DATA_MASK) | EVENT_START);
 				*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfPreTrigBuff + 1) & DATA_MASK) | EVENT_START);
@@ -115,15 +115,15 @@ void ProcessManuelCalPulse(void)
 	if (g_manualCalFlag == FALSE)
 	{
 		g_freeEventBuffers--;
-		g_currentEventNumber++;
-		if (g_currentEventNumber < g_maxEventBuffers)
+		g_eventBufferIndex++;
+		if (g_eventBufferIndex < g_maxEventBuffers)
 		{
 				g_eventBufferPretrigPtr = g_eventBufferBodyPtr + g_wordSizeInCal;
 				g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
 		}
 		else
 		{
-			g_currentEventNumber = 0;
+			g_eventBufferIndex = 0;
 			g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
 			g_eventBufferBodyPtr = g_startOfEventBufferPtr + g_wordSizeInPretrig;
 		}
@@ -161,7 +161,7 @@ void MoveManuelCalToFlash(void)
 
 #if 1 // ns8100
 		// Get new file handle
-		g_currentEventFileHandle = getNewEventFileHandle(g_currentEventNumber);
+		g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
 		if (g_currentEventFileHandle == NULL)
 			debugErr("Failed to get a new file handle for the current Waveform event!\n");
