@@ -88,7 +88,7 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 	DATE_TIME_STRUCT currentTime = getCurrentTime();
 	uint32 input;
 	uint8 length;
-#if 1 // Test
+#if 0 // Test
 	RTC_MEM_MAP_STRUCT rtcMap;
 #endif
 
@@ -201,21 +201,21 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					break;      
 
 				case (DOWN_ARROW_KEY):
-#if 1 // Test
+#if 0 // Test
 					// Set RTC Timestamp pin high
 					gpio_clr_gpio_pin(AVR32_PIN_PB18);
 #endif
 					mainMnScroll(DOWN, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (UP_ARROW_KEY):
-#if 1 // Test
+#if 0 // Test
 					// Set RTC Timestamp pin high
 					gpio_set_gpio_pin(AVR32_PIN_PB18);
 #endif
 					mainMnScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (MINUS_KEY): 
-#if 1 // Test
+#if 0 // Test
 					//powerDownSDCard();
 				    //gpio_enable_gpio_pin(AVR32_PIN_PA19);
 					//gpio_clr_gpio_pin(AVR32_PIN_PA19);
@@ -231,7 +231,7 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 #endif
 					break;
 				case (PLUS_KEY): 
-#if 1 // Test
+#if 0 // Test
 				    //gpio_set_gpio_pin(AVR32_PIN_PB19);
 					//gpio_enable_module_pin(AVR32_PIN_PA19, AVR32_SPI1_NPCS_2_0_FUNCTION);
 					//powerUpSDCardAndInitFat32();

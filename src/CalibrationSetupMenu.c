@@ -59,7 +59,7 @@ extern void SetupADChannelConfig(uint32 sampleRate);
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
-static uint8 s_calDisplayScreen = 0;
+static uint32 s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
 static uint32 s_calSavedSampleRate = 0;
 
 #if 0
@@ -109,7 +109,6 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 	if (choice == MB_FIRST_CHOICE)
 	{
 		calSetupMnProc(msg, &wnd_layout, &mn_layout);
-		s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
 	}
 
 	if (g_activeMenu == CAL_SETUP_MENU)
@@ -146,12 +145,16 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 							// Clear the pretrigger buffer
 							soft_usecWait(250 * SOFT_MSECS);
 							
+							//debug("Cal Menu Screen 1 selected\n");
 							s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
 						{
+							//debug("Cal Menu Screen 2 selected\n");
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
 						}
+
+						key = 0;
 						break;
 
 					case DOWN_ARROW_KEY:
@@ -172,12 +175,16 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 							// Clear the pretrigger buffer
 							soft_usecWait(250 * SOFT_MSECS);
 
+							//debug("Cal Menu Screen 2 selected\n");
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
 						{
+							//debug("Cal Menu Screen 3 selected\n");
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
 						}
+
+						key = 0;
 						break;
 
 					case ENTER_KEY:
@@ -223,6 +230,10 @@ void calSetupMn(INPUT_MSG_STRUCT msg)
 
 		// Restore the previous mode
 		g_triggerRecord.op_mode = previousMode;
+
+		// Reset default screen to non calibrated
+		//debug("Cal Menu Screen 1 selected\n");
+		s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
 
 		g_activeMenu = MAIN_MENU;
 		ACTIVATE_MENU_MSG();

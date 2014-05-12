@@ -107,6 +107,12 @@ void Sleep8900(void)
    Write8900(DATA_PORT, 0x0300);          // Sleep the Ethernet-Controller
 }
 
+void Sleep8900_LedOn(void)
+{
+   Write8900(ADD_PORT, PP_SelfCTL);
+   Write8900(DATA_PORT, 0x5300);          // Sleep the Ethernet-Controller
+}
+
 void ToggleLedOn8900(void)
 {
    Write8900(ADD_PORT, PP_SelfCTL);

@@ -125,8 +125,9 @@ void init_mcp23018(unsigned char chip)
     write_mcp23018(chip, IODIRA, 0x0F);
     write_mcp23018(chip, IODIRB, 0xFF);
 
-	// Pullup (Open drain outputs only, without pullups you can't drive
-    write_mcp23018(chip, GPPUA, 0xFF);
+	// Pullup (Open drain outputs only, without pullups you can't drive)
+    //write_mcp23018(chip, GPPUA, 0xFF);
+	write_mcp23018(chip, GPPUA, 0x01); // Only LAN IRQ needs a pullup (3 other inputs have external pullups and others are outputs)
     write_mcp23018(chip, GPPUB, 0xFF);
 
 	// Polarity

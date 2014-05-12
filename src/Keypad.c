@@ -107,7 +107,7 @@ BOOLEAN keypad(void)
 	s_keyMap[0] = (uint8)(~(*keypadAddress));
 #else // ns8100
 
-#if 0 // Test - 3 reads to filter out debounce
+#if 1 // Test - 3 reads to filter out debounce
 	s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
 	s_keyMap[3] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
@@ -357,7 +357,7 @@ BOOLEAN keypad(void)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
-#if 1 // Test
+#if 0 // Test
 				if (g_sampleProcessing == ACTIVE_STATE)
 				{
 					g_testTrigger = YES;
@@ -704,7 +704,15 @@ uint8 scanKeypad(void)
 	read_mcp23018(IO_ADDRESS_KPD, INTFB);
 #endif
 
+#if 0 // Normal
 	s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+#else
+	s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	s_keyMap[3] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	
+	s_keyMap[0] = (s_keyMap[1] & s_keyMap[2] & s_keyMap[3]);
+#endif
 
 	//debug("Scan Keypad: Key: %x\n", s_keyMap[0]);
 

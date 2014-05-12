@@ -811,7 +811,7 @@ static inline void checkAlarms_ISR_Inline(void)
 		// Check if seismic is enabled for Alarm 1
 		if (g_helpRecord.alarm_one_mode & ALARM_MODE_SEISMIC)
 		{
-#if 1 // Test
+#if 0 // Test
 			debugRaw("PC Err! A1M (%d)\n", g_helpRecord.alarm_one_mode);
 #endif
 			if (s_R_channelReading > (g_helpRecord.alarm_one_seismic_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
@@ -914,7 +914,7 @@ void processAndMoveWaveformData(void)
 		if (g_testTrigger == YES)
 #endif
 		{
-#if 1 // Test
+#if 0 // Test
 			g_testTrigger = NO;
 #endif
 			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
@@ -1264,7 +1264,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		if (g_testTrigger == YES)
 #endif
 		{
-#if 1 // Test
+#if 0 // Test
 			g_testTrigger = NO;
 #endif
 			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);

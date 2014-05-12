@@ -455,6 +455,22 @@ void avr32_enable_muxed_pins(void)
 //=================================================================================================
 
 //=================================================================================================
+void initProcessorNoConnectPins(void)
+{
+	gpio_clr_gpio_pin(AVR32_PIN_PA00); // USART0_RXD
+	gpio_clr_gpio_pin(AVR32_PIN_PA01); // USART0_TXD
+	gpio_clr_gpio_pin(AVR32_PIN_PB19); // GPIO 51
+	gpio_clr_gpio_pin(AVR32_EBI_SDA10_0_PIN);
+	gpio_clr_gpio_pin(AVR32_EBI_RAS_0_PIN);
+	gpio_clr_gpio_pin(AVR32_EBI_CAS_0_PIN);
+	gpio_clr_gpio_pin(AVR32_EBI_SDWE_0_PIN);
+	gpio_clr_gpio_pin(AVR32_EBI_SDCS_0_PIN);
+	gpio_clr_gpio_pin(AVR32_EBI_NWAIT_0_PIN);
+	gpio_clr_gpio_pin(AVR32_PIN_PA22); // USB_VBOF
+}
+//=================================================================================================
+
+//=================================================================================================
 void avr32_chip_select_init(unsigned long hsb_hz)
 {
   unsigned long int hsb_mhz_up = (hsb_hz + 999999) / 1000000;
@@ -501,7 +517,7 @@ void _init_startup(void)
     flashc_set_wait_state(1);
     pm_switch_to_clock(&AVR32_PM, AVR32_PM_MCSEL_PLL0);
 
-#if 1 // Test
+#if 0 // Test
     gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
     gpio_clr_gpio_pin(AVR32_EBI_NWE1_0_PIN);
     gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
@@ -510,6 +526,13 @@ void _init_startup(void)
 	// Chip Select Initialization
 	avr32_chip_select_init(FOSC0);
 	
+	// Disable the unused and non connected clock 1
+	pm_disable_clk1(&AVR32_PM);
+
+	// With clock 1 disabled, configure GPIO lines to be outputs and low
+	gpio_clr_gpio_pin(AVR32_PM_XIN1_0_PIN);
+	gpio_clr_gpio_pin(AVR32_PM_XOUT1_0_PIN);
+
 	soft_usecWait(1000);
 }
 
@@ -790,7 +813,8 @@ void InitSystemHardware_NS8100(void)
 {
 	//-------------------------------------------------------------------------
 	// Clock and chip selects setup in custom _init_startup
-
+	initProcessorNoConnectPins();
+	
 	//-------------------------------------------------------------------------
 	// Set RTC Timestamp pin high
 	gpio_set_gpio_pin(AVR32_PIN_PB18);
@@ -831,6 +855,7 @@ void InitSystemHardware_NS8100(void)
 
 #if 1 // Normal
 extern void Sleep8900(void);
+extern void Sleep8900_LedOn(void);
 extern void ReadId8900(void);
 extern void ToggleLedOn8900(void);
 extern void ToggleLedOff8900(void);
@@ -847,11 +872,14 @@ extern void ToggleLedOff8900(void);
 	//ReadId8900();
 	//ToggleLedOn8900();
 	//soft_usecWait(1 * SOFT_SECS);
-	Sleep8900();
+
+	//Sleep8900();
+	Sleep8900_LedOn();
+
 	//ToggleLedOn8900();
 	//soft_usecWait(1 * SOFT_SECS);
 	//ToggleLedOff8900();
-	soft_usecWait(10 * SOFT_SECS);
+	//soft_usecWait(10 * SOFT_SECS);
 #endif
 
 	//-------------------------------------------------------------------------
@@ -956,7 +984,7 @@ extern void ToggleLedOff8900(void);
 	}
 
 	// Turn on the red keypad LED while loading
-#if 0 // Normal
+#if 1 // Normal
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
 #endif
 
@@ -964,7 +992,7 @@ extern void ToggleLedOff8900(void);
 	//Display_Craft_Logo();
 	//soft_usecWait(3 * SOFT_SECS);
 	
-#if 1 // Test
+#if 0 // Test
 	//debug("Closing up shop.\n\n");
 
     gpio_set_gpio_pin(AVR32_PIN_PB08);
@@ -1053,7 +1081,7 @@ void InitSoftwareSettings_NS8100(void)
 #endif
 
 	// Check for Timer mode activation
-#if 1 // fix_ns8100
+#if 1 // Normal
     debug("Init Timer Mode Check...\n");
 	if (timerModeActiveCheck() == TRUE)
 	{
@@ -1099,51 +1127,6 @@ void InitSoftwareSettings_NS8100(void)
 
 	// Assign a one second keypad led update timer
 	assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
-
-#if 0 // Logic test
-	uint8 keypadState;
-	while (1 == 1)
-	{
-		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
-		if (keypadState & GREEN_LED_PIN)
-			debug("Green LED Active\n");
-		if (keypadState & RED_LED_PIN)
-			debug("Red LED Active\n");
-
-		debug("Turning on the Green LED only\n");
-		keypadState |= GREEN_LED_PIN;
-		keypadState &= ~RED_LED_PIN;
-		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
-
-		soft_usecWait(3 * SOFT_SECS);
-
-		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
-		if (keypadState & GREEN_LED_PIN)
-			debug("Green LED Active\n");
-		if (keypadState & RED_LED_PIN)
-			debug("Red LED Active\n");
-
-		debug("Turning on the Red LED only\n");
-		keypadState &= ~GREEN_LED_PIN;
-		keypadState |= RED_LED_PIN;
-		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
-
-		soft_usecWait(3 * SOFT_SECS);
-
-		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
-		if (keypadState & GREEN_LED_PIN)
-			debug("Green LED Active\n");
-		if (keypadState & RED_LED_PIN)
-			debug("Red LED Active\n");
-
-		debug("Turning off both LEDs\n");
-		keypadState &= ~GREEN_LED_PIN;
-		keypadState &= ~RED_LED_PIN;
-		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
-
-		soft_usecWait(3 * SOFT_SECS);
-	}
-#endif
 
 	debug("Jump to Main Menu\n");
 	// Jump to the true main menu
@@ -1444,7 +1427,7 @@ unsigned int i;
 	}
 #endif
 
-#if 0 // Test
+#if 0 // Test (LCD off and Proc stop)
 	debug("\n--- System Init Complete ---\n");
 	soft_usecWait(10 * SOFT_SECS);
 	displayTimerCallBack();
@@ -1455,6 +1438,51 @@ unsigned int i;
 	SLEEP(AVR32_PM_SMODE_DEEP_STOP);
 
 	while (1) {;}
+#endif
+
+#if 0 // Test (Keypad logic test)
+	uint8 keypadState;
+	while (1 == 1)
+	{
+		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		if (keypadState & GREEN_LED_PIN)
+			debug("Green LED Active\n");
+		if (keypadState & RED_LED_PIN)
+			debug("Red LED Active\n");
+
+		debug("Turning on the Green LED only\n");
+		keypadState |= GREEN_LED_PIN;
+		keypadState &= ~RED_LED_PIN;
+		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
+
+		soft_usecWait(3 * SOFT_SECS);
+
+		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		if (keypadState & GREEN_LED_PIN)
+			debug("Green LED Active\n");
+		if (keypadState & RED_LED_PIN)
+			debug("Red LED Active\n");
+
+		debug("Turning on the Red LED only\n");
+		keypadState &= ~GREEN_LED_PIN;
+		keypadState |= RED_LED_PIN;
+		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
+
+		soft_usecWait(3 * SOFT_SECS);
+
+		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		if (keypadState & GREEN_LED_PIN)
+			debug("Green LED Active\n");
+		if (keypadState & RED_LED_PIN)
+			debug("Red LED Active\n");
+
+		debug("Turning off both LEDs\n");
+		keypadState &= ~GREEN_LED_PIN;
+		keypadState &= ~RED_LED_PIN;
+		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
+
+		soft_usecWait(3 * SOFT_SECS);
+	}
 #endif
 }
 
@@ -1519,18 +1547,21 @@ void testSnippetsExecLoop(void)
 int main(void)
 {
 	// Test code
-	testSnippetsBeforeInit();
+	//testSnippetsBeforeInit();
 
     InitSystemHardware_NS8100();
-	//InitInterrupts_NS8100();
-	//InitSoftwareSettings_NS8100();
-	//BootLoadManager();
+#if 1 // Normal
+	InitInterrupts_NS8100();
+	InitSoftwareSettings_NS8100();
+	BootLoadManager();
+#endif
 
 	debug("--- System Init complete ---\n");
 
 	// Test code
-	testSnippetsAfterInit();
+	//testSnippetsAfterInit();
 
+#if 1 // Normal
  	// ==============
 	// Executive loop
 	// ==============
@@ -1542,9 +1573,9 @@ int main(void)
 		//craftTestMenuThruDebug();
 
 		// Test code
-		testSnippetsExecLoop();
+		//testSnippetsExecLoop();
 
-#if 0 // Normal operational cycle
+#if 1 // Normal operational cycle
 		// Handle system events
 	    SystemEventManager();
 
@@ -1572,6 +1603,7 @@ int main(void)
 		}
 	}    
 	// End of NS8100 Main
+#endif
 
 	// End of the world
 	return (0);

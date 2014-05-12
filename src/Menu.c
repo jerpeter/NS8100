@@ -1328,6 +1328,7 @@ void displayTimerModeSettings(void)
 	switch (g_helpRecord.timer_mode_freq)
 	{
 		case TIMER_MODE_ONE_TIME: 	activeModeTextType = ONE_TIME_TEXT; 		break;
+		case TIMER_MODE_HOURLY: 	activeModeTextType = HOURLY_TEXT; 			break;
 		case TIMER_MODE_DAILY: 		activeModeTextType = DAILY_EVERY_DAY_TEXT; 	break;
 		case TIMER_MODE_WEEKDAYS: 	activeModeTextType = DAILY_WEEKDAYS_TEXT; 	break;
 		case TIMER_MODE_WEEKLY: 	activeModeTextType = WEEKLY_TEXT; 			break;
