@@ -657,7 +657,7 @@ void SleepManager(void)
 	if ((g_systemEventFlags.wrd == 0x0000) && (getPowerControlState(LCD_POWER_ENABLE) == OFF) &&
 	(g_modemStatus.xferState == NOP_CMD))
 	{
-#if 1 // Test
+#if 0 // Test
 		debug("Going to lunch and I'll be gone forever...\n");
 		stopExternalRTCClock();
 extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);

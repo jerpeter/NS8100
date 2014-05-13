@@ -534,10 +534,12 @@ void _init_startup(void)
 	pm_pll_enable(&AVR32_PM, 0);
 	pm_wait_for_pll0_locked(&AVR32_PM);
 
+#if 0 // Left over code for setting up the main clock
 	pm_gc_setup(&AVR32_PM, 0, 1, 0, 0, 0);
 	pm_gc_enable(&AVR32_PM, 0);
-
 	gpio_enable_module_pin(AVR32_PM_GCLK_0_1_PIN, AVR32_PM_GCLK_0_1_FUNCTION);
+#endif
+
 	pm_cksel(&AVR32_PM, 0, 0, 0, 0, 0, 0);
 	flashc_set_wait_state(1);
 	pm_switch_to_clock(&AVR32_PM, AVR32_PM_MCSEL_PLL0);
@@ -570,6 +572,13 @@ void _init_startup(void)
 	// With clock 1 disabled, configure GPIO lines to be outputs and low
 	gpio_clr_gpio_pin(AVR32_PM_XIN1_0_PIN);
 	gpio_clr_gpio_pin(AVR32_PM_XOUT1_0_PIN);
+
+#if 0 // Test
+	pm_disable_clk32(&AVR32_PM);
+	
+	gpio_clr_gpio_pin(AVR32_PM_XIN32_0_PIN);
+	gpio_clr_gpio_pin(AVR32_PM_XOUT32_0_PIN);
+#endif
 
 	soft_usecWait(1000);
 }
@@ -1190,7 +1199,11 @@ void InitSystemHardware_NS8100(void)
 	// Init and configure the A/D to prevent the unit from burning current charging internal reference (default config)
 	InitExternalAD();
 
+#if 1 // Test
+	//-------------------------------------------------------------------------
+	// Kill clocks to Internal Processor modules that aren't absolutely necessary
 	KillClocksToModules();
+#endif
 
 #if 0
 	//-------------------------------------------------------------------------
