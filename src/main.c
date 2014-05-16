@@ -651,6 +651,99 @@ void BootLoadManager(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+inline void SetupPowerSavingsBeforeSleeping(void)
+{
+#if 0
+	// Disable rs232 driver and receiver (Active low controls)
+	gpio_set_gpio_pin(AVR32_PIN_PB08);
+	gpio_set_gpio_pin(AVR32_PIN_PB09);
+#endif
+
+#if 0 // Test
+extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
+extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
+	rtc_disable_interrupt(&AVR32_RTC);
+	rtc_clear_interrupt(&AVR32_RTC);
+#endif
+
+#if 1
+/*	Reference
+	void gpio_enable_pin_pull_up(unsigned int pin)
+	{
+		volatile avr32_gpio_port_t *gpio_port = &GPIO.port[pin >> 5];
+		gpio_port->puers = 1 << (pin & 0x1F);
+	}
+*/
+	AVR32_GPIO.port[2].puers = 0xFC00; // 1111 1100 0000 0000
+	AVR32_GPIO.port[3].puers = 0x03FF; // 0000 0011 1111 1111
+/*
+	gpio_enable_pin_pull_up(AVR32_PIN_PX00); // 100 - shift 4
+	gpio_enable_pin_pull_up(AVR32_PIN_PX01); // 99 - shift 3
+	gpio_enable_pin_pull_up(AVR32_PIN_PX02); // 98 - shift 2
+	gpio_enable_pin_pull_up(AVR32_PIN_PX03); // 97 - shift 1
+	gpio_enable_pin_pull_up(AVR32_PIN_PX04); // 96 - shift 0
+	gpio_enable_pin_pull_up(AVR32_PIN_PX05); // 95 - shift 31
+	gpio_enable_pin_pull_up(AVR32_PIN_PX06); // 94 - shift 30
+	gpio_enable_pin_pull_up(AVR32_PIN_PX07); // 93 - shift 29
+	gpio_enable_pin_pull_up(AVR32_PIN_PX08); // 92 - shift 28
+	gpio_enable_pin_pull_up(AVR32_PIN_PX09); // 91 - shift 27
+	gpio_enable_pin_pull_up(AVR32_PIN_PX10); // 90 - shift 26
+	gpio_enable_pin_pull_up(AVR32_PIN_PX35); // 105 - shift 9
+	gpio_enable_pin_pull_up(AVR32_PIN_PX36); // 104 - shift 8
+	gpio_enable_pin_pull_up(AVR32_PIN_PX37); // 103 - shift 7
+	gpio_enable_pin_pull_up(AVR32_PIN_PX38); // 102 - shift 6
+	gpio_enable_pin_pull_up(AVR32_PIN_PX39); // 101 - shift 5
+*/
+#endif
+
+	g_powerSavingsForSleepEnabled = YES;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+inline void RevertPowerSavingsAfterSleeping(void)
+{
+#if 1
+	AVR32_GPIO.port[2].puerc = 0xFC00; // 1111 1100 0000 0000
+	AVR32_GPIO.port[3].puerc = 0x03FF; // 0000 0011 1111 1111
+/*
+	gpio_disable_pin_pull_up(AVR32_PIN_PX00);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX01);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX02);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX03);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX04);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX05);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX06);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX07);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX08);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX09);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX10);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX35);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX36);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX37);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX38);
+	gpio_disable_pin_pull_up(AVR32_PIN_PX39);
+*/
+#endif
+
+#if 0 // Test
+extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
+	rtc_enable_interrupt(&AVR32_RTC);
+#endif
+
+	// Enable rs232 driver and receiver (Active low controls)
+#if 0
+	gpio_clr_gpio_pin(AVR32_PIN_PB08);
+	gpio_clr_gpio_pin(AVR32_PIN_PB09);
+#endif
+
+	g_powerSavingsForSleepEnabled = NO;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void SleepManager(void)
 {
 	// Check if no System Events and LCD is off and Modem is not transferring
@@ -679,82 +772,17 @@ extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
 		}
 		else // USB is not connected and a deeper sleep mode can be used
 		{
-			// Disable rs232 driver and receiver (Active low controls)
-			//gpio_set_gpio_pin(AVR32_PIN_PB08);
-			//gpio_set_gpio_pin(AVR32_PIN_PB09);
-
-#if 0 // Test
-extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
-extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
-			rtc_disable_interrupt(&AVR32_RTC);
-			rtc_clear_interrupt(&AVR32_RTC);
-#endif
-
-#if 1
-/*
-void gpio_enable_pin_pull_up(unsigned int pin)
-{
-	volatile avr32_gpio_port_t *gpio_port = &GPIO.port[pin >> 5];
-	gpio_port->puers = 1 << (pin & 0x1F);
-}
-*/
-			AVR32_GPIO.port[2].puers = 0xFC00; // 1111 1100 0000 0000
-			AVR32_GPIO.port[3].puers = 0x03FF; // 0000 0011 1111 1111
-/*
-			gpio_enable_pin_pull_up(AVR32_PIN_PX00); // 100 - shift 4
-			gpio_enable_pin_pull_up(AVR32_PIN_PX01); // 99 - shift 3
-			gpio_enable_pin_pull_up(AVR32_PIN_PX02); // 98 - shift 2
-			gpio_enable_pin_pull_up(AVR32_PIN_PX03); // 97 - shift 1
-			gpio_enable_pin_pull_up(AVR32_PIN_PX04); // 96 - shift 0
-			gpio_enable_pin_pull_up(AVR32_PIN_PX05); // 95 - shift 31
-			gpio_enable_pin_pull_up(AVR32_PIN_PX06); // 94 - shift 30
-			gpio_enable_pin_pull_up(AVR32_PIN_PX07); // 93 - shift 29
-			gpio_enable_pin_pull_up(AVR32_PIN_PX08); // 92 - shift 28
-			gpio_enable_pin_pull_up(AVR32_PIN_PX09); // 91 - shift 27
-			gpio_enable_pin_pull_up(AVR32_PIN_PX10); // 90 - shift 26
-			gpio_enable_pin_pull_up(AVR32_PIN_PX35); // 105 - shift 9
-			gpio_enable_pin_pull_up(AVR32_PIN_PX36); // 104 - shift 8
-			gpio_enable_pin_pull_up(AVR32_PIN_PX37); // 103 - shift 7
-			gpio_enable_pin_pull_up(AVR32_PIN_PX38); // 102 - shift 6
-			gpio_enable_pin_pull_up(AVR32_PIN_PX39); // 101 - shift 5
-*/
-#endif
+			SetupPowerSavingsBeforeSleeping();
 
 			if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { SLEEP(AVR32_PM_SMODE_STANDBY); }
 			else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { SLEEP(AVR32_PM_SMODE_FROZEN); }
 			else if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { SLEEP(AVR32_PM_SMODE_IDLE); }
 
-#if 1
-			AVR32_GPIO.port[2].puerc = 0xFC00; // 1111 1100 0000 0000
-			AVR32_GPIO.port[3].puerc = 0x03FF; // 0000 0011 1111 1111
-/*
-			gpio_disable_pin_pull_up(AVR32_PIN_PX00);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX01);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX02);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX03);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX04);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX05);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX06);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX07);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX08);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX09);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX10);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX35);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX36);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX37);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX38);
-			gpio_disable_pin_pull_up(AVR32_PIN_PX39);
-*/
-#endif
-
-#if 0 // Test
-extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
-			rtc_enable_interrupt(&AVR32_RTC);
-#endif
-
-			// Enable rs232 driver and receiver (Active low controls)
-			//gpio_clr_gpio_pin(AVR32_PIN_PB08);
-			//gpio_clr_gpio_pin(AVR32_PIN_PB09);
+			// Check if needing to revert the power savings (if monitoring then the ISR will handle this operation)
+			if (g_powerSavingsForSleepEnabled == YES)
+			{
+				RevertPowerSavingsAfterSleeping();
+			}
 		}
 #endif
 	}

@@ -1709,6 +1709,16 @@ void tc_sample_irq(void)
 	}
 #endif
 
+#if 1 // Test
+	//___________________________________________________________________________________________
+	//___Revert power savings for sleep
+	if (g_powerSavingsForSleepEnabled == YES)
+	{
+extern inline void RevertPowerSavingsAfterSleeping(void);
+		RevertPowerSavingsAfterSleeping();
+	}
+#endif
+
 	//___________________________________________________________________________________________
 	//___Test timing (throw away at some point)
 	g_sampleCount++;

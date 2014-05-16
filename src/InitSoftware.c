@@ -176,6 +176,11 @@ void setupMnDef(void)
 	// Wait at least 3 seconds for the main screen to be displayed
 	soft_usecWait(3 * SOFT_SECS);
 
+#if 0 // Test - Failed
+	clearControlLinesLcdDisplay();
+	LcdClearPortReg();
+#endif
+
 	// Check if the unit is set for Mini and auto print is enabled
 	if ((MINIGRAPH_UNIT) && (g_helpRecord.auto_print == YES))
 	{

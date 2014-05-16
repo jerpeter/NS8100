@@ -1023,9 +1023,23 @@ void TestPowerDownAndStop(void)
 ///----------------------------------------------------------------------------
 void KillClocksToModules(void)
 {
+	// Leave active: SYSTIMER; Disable: OCD
+	AVR32_PM.cpumask = 0x0100;
+	
+	// Leave active: EBI, PBA & PBB BRIDGE, FLASHC; Disable: PDCA, MACB, USBB
 	AVR32_PM.hsbmask = 0x0047;
-	AVR32_PM.pbamask = 0x04FB;
+	
+	// Leave active: TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 1 & 2 & 3, PDCA
+	AVR32_PM.pbamask = 0x40FB;
+	
+	// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
 	AVR32_PM.pbbmask = 0x0015;
+
+#if 1 // Test
+	// Disable rs232 driver and receiver (Active low controls)
+	gpio_set_gpio_pin(AVR32_PIN_PB08);
+	gpio_set_gpio_pin(AVR32_PIN_PB09);
+#endif
 }
 
 ///----------------------------------------------------------------------------

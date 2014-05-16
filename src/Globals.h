@@ -49,6 +49,7 @@ extern MONTH_TABLE_STRUCT g_monthTable[];
 extern uint8 g_mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 extern uint8 g_contrast_value;
 extern uint8 g_LcdPowerState;
+extern uint8 g_powerSavingsForSleepEnabled;
 extern uint16 g_nextEventNumberToUse;
 extern uint32 __monitorLogTblKey;
 extern uint16 __monitorLogTblIndex;
