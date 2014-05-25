@@ -117,7 +117,7 @@ void setupMnDef(void)
 	debug("Init Help Rec Defaults...\n");
 
 	// Check if the Help Record is uninitialized
-	if (g_helpRecord.encode_ln != 0xA5A5)
+	if (g_helpRecord.validationKey != 0xA5A5)
 	{
 		// Set defaults in Help Record
 		debugWarn("Help record: Not found.\n");
@@ -130,16 +130,16 @@ void setupMnDef(void)
 		// Help Record is valid
 		debug("Help record: Found.\n");
 
-		if ((g_helpRecord.pretrig_buffer_div != PRETRIGGER_BUFFER_QUARTER_SEC_DIV) && (g_helpRecord.pretrig_buffer_div != PRETRIGGER_BUFFER_HALF_SEC_DIV) &&
-		(g_helpRecord.pretrig_buffer_div != PRETRIGGER_BUFFER_FULL_SEC_DIV))
+		if ((g_helpRecord.pretrigBufferDivider != PRETRIGGER_BUFFER_QUARTER_SEC_DIV) && (g_helpRecord.pretrigBufferDivider != PRETRIGGER_BUFFER_HALF_SEC_DIV) &&
+		(g_helpRecord.pretrigBufferDivider != PRETRIGGER_BUFFER_FULL_SEC_DIV))
 		{
-			g_helpRecord.pretrig_buffer_div = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
+			g_helpRecord.pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
 			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 		}
 
 		#if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
 		// Set the baud rate to the user stored baud rate setting (initialized to 115200)
-		switch (g_helpRecord.baud_rate)
+		switch (g_helpRecord.baudRate)
 		{
 			case BAUD_RATE_57600: rs232Options.baudrate = 57600; break;
 			case BAUD_RATE_38400: rs232Options.baudrate = 38400; break;
@@ -147,7 +147,7 @@ void setupMnDef(void)
 			case BAUD_RATE_9600: rs232Options.baudrate = 9600; break;
 		}
 
-		if (g_helpRecord.baud_rate != BAUD_RATE_115200)
+		if (g_helpRecord.baudRate != BAUD_RATE_115200)
 		{
 			// Re-Initialize the RS232 with the stored baud rate
 			usart_init_rs232(&AVR32_USART1, &rs232Options, FOSC0);
@@ -158,7 +158,7 @@ void setupMnDef(void)
 	debug("Init Build Language Table...\n");
 
 	// Build the language table based on the user's last language choice
-	build_languageLinkTable(g_helpRecord.lang_mode);
+	build_languageLinkTable(g_helpRecord.languageMode);
 
 	debug("Init Activate Help Rec Options...\n");
 
@@ -182,10 +182,10 @@ void setupMnDef(void)
 #endif
 
 	// Check if the unit is set for Mini and auto print is enabled
-	if ((MINIGRAPH_UNIT) && (g_helpRecord.auto_print == YES))
+	if ((MINIGRAPH_UNIT) && (g_helpRecord.autoPrint == YES))
 	{
 		// Disable Auto printing
-		g_helpRecord.auto_print = NO;
+		g_helpRecord.autoPrint = NO;
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 	}
 
@@ -272,7 +272,7 @@ void initSensorParameters(uint16 sensor_type, uint8 sensitivity)
 
 	// Sensor type information
 	g_sensorInfoPtr->numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;		// The number of channels from a sensor.
-	g_sensorInfoPtr->unitsFlag = g_helpRecord.units_of_measure;			// 0 = SAE; 1 = Metric
+	g_sensorInfoPtr->unitsFlag = g_helpRecord.unitsOfMeasure;			// 0 = SAE; 1 = Metric
 
 	g_sensorInfoPtr->sensorAccuracy = SENSOR_ACCURACY_100X_SHIFT;		// 100, sensor values are X 100 for accuaracy.
 	g_sensorInfoPtr->ADCResolution = ADC_RESOLUTION;				// Raw data Input Range, unless ADC is changed
@@ -282,7 +282,7 @@ void initSensorParameters(uint16 sensor_type, uint8 sensitivity)
 
 	g_sensorInfoPtr->sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
 
-	if((IMPERIAL_TYPE == g_helpRecord.units_of_measure) || (sensor_type == SENSOR_ACC))
+	if((IMPERIAL_TYPE == g_helpRecord.unitsOfMeasure) || (sensor_type == SENSOR_ACC))
 	{
 		g_sensorInfoPtr->measurementRatio = (float)IMPERIAL; 				// 1 = SAE; 25.4 = Metric
 	}

@@ -938,38 +938,38 @@ void GatherSampleData(void)
 			sampleCount--;
 
 			// Check if seismic is enabled for Alarm 1
-			if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC))
+			if ((g_helpRecord.alarmOneMode == ALARM_MODE_BOTH) || (g_helpRecord.alarmOneMode == ALARM_MODE_SEISMIC))
 			{
 				if (*(g_tailOfPretriggerBuff + 1) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((uint16)(*(g_tailOfPretriggerBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarmOneSeismicLevel) alarm1Found = YES;
 				}
 				else
 				{
-					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 1)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 1)) > g_helpRecord.alarmOneSeismicLevel) alarm1Found = YES;
 				}
 
 				if (*(g_tailOfPretriggerBuff + 2) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((uint16)(*(g_tailOfPretriggerBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarmOneSeismicLevel) alarm1Found = YES;
 				}
 				else
 				{
-					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 2)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 2)) > g_helpRecord.alarmOneSeismicLevel) alarm1Found = YES;
 				}
 
 				if (*(g_tailOfPretriggerBuff + 3) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((uint16)(*(g_tailOfPretriggerBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarmOneSeismicLevel) alarm1Found = YES;
 				}
 				else
 				{
-					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 3)) > g_helpRecord.alarm_one_seismic_lvl) alarm1Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 3)) > g_helpRecord.alarmOneSeismicLevel) alarm1Found = YES;
 				}
 			}
 
 			// Check if air is enabled for Alarm 1
-			if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_AIR))
+			if ((g_helpRecord.alarmOneMode == ALARM_MODE_BOTH) || (g_helpRecord.alarmOneMode == ALARM_MODE_AIR))
 			{
 				if (*(g_tailOfPretriggerBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 				{
@@ -982,38 +982,38 @@ void GatherSampleData(void)
 			}
 
 			// Check if seismic is enabled for Alarm 2
-			if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC))
+			if ((g_helpRecord.alarmTwoMode == ALARM_MODE_BOTH) || (g_helpRecord.alarmTwoMode == ALARM_MODE_SEISMIC))
 			{
 				if (*(g_tailOfPretriggerBuff + 1) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((uint16)(*(g_tailOfPretriggerBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 1) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarmTwoSeismicLevel) alarm2Found = YES;
 				}
 				else
 				{
-					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 1)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 1)) > g_helpRecord.alarmTwoSeismicLevel) alarm2Found = YES;
 				}
 
 				if (*(g_tailOfPretriggerBuff + 2) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((uint16)(*(g_tailOfPretriggerBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 2) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarmTwoSeismicLevel) alarm2Found = YES;
 				}
 				else
 				{
-					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 2)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 2)) > g_helpRecord.alarmTwoSeismicLevel) alarm2Found = YES;
 				}
 
 				if (*(g_tailOfPretriggerBuff + 3) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((uint16)(*(g_tailOfPretriggerBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 3) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarmTwoSeismicLevel) alarm2Found = YES;
 				}
 				else
 				{
-					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 3)) > g_helpRecord.alarm_two_seismic_lvl) alarm2Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 3)) > g_helpRecord.alarmTwoSeismicLevel) alarm2Found = YES;
 				}
 			}
 
 			// Check if air is enabled for Alarm 2
-			if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC))
+			if ((g_helpRecord.alarmTwoMode == ALARM_MODE_BOTH) || (g_helpRecord.alarmTwoMode == ALARM_MODE_SEISMIC))
 			{
 				if (*(g_tailOfPretriggerBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 				{

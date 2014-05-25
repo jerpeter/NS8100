@@ -128,15 +128,15 @@ void handleRST(CMD_BUFFER_STRUCT* inCmd)
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 		// Turn printing off
-		g_helpRecord.auto_print = NO;
+		g_helpRecord.autoPrint = NO;
 
 		stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 	}
 
-	if(g_helpRecord.timer_mode == ENABLED)
+	if(g_helpRecord.timerMode == ENABLED)
 	{
 		// Disable Timer mode since restarting would force a prompt for user action
-		g_helpRecord.timer_mode = DISABLED;
+		g_helpRecord.timerMode = DISABLED;
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 		overlayMessage(getLangText(WARNING_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), (2 * SOFT_SECS));
@@ -285,7 +285,7 @@ void handleVML(CMD_BUFFER_STRUCT* inCmd)
 	g_modemStatus.xferMutex = YES;
 
 	// Save off the printer state to allow the state to be reset when done with the command
-	g_modemStatus.xferPrintState = g_helpRecord.auto_print;
+	g_modemStatus.xferPrintState = g_helpRecord.autoPrint;
 }
 
 ///----------------------------------------------------------------------------
@@ -636,7 +636,7 @@ void handleDQM(CMD_BUFFER_STRUCT* inCmd)
 	g_dqmXferStructPtr->xferStateFlag = HEADER_XFER_STATE;		// This is the initial xfer state to start.
 	g_modemStatus.xferState = DQMx_CMD;							// This is the xfer command state.
 	g_modemStatus.xferMutex = YES;								// Mutex to prevent other commands.
-	g_modemStatus.xferPrintState = g_helpRecord.auto_print;
+	g_modemStatus.xferPrintState = g_helpRecord.autoPrint;
 	g_transferCount = 0;
 
 	return;
@@ -829,7 +829,7 @@ void handleDSM(CMD_BUFFER_STRUCT* inCmd)
 	g_modemStatus.xferState = DSMx_CMD;								// This is the xfer command state.
 	g_modemStatus.xferMutex = YES;									// Mutex to prevent other commands.
 
-	g_modemStatus.xferPrintState = g_helpRecord.auto_print;
+	g_modemStatus.xferPrintState = g_helpRecord.autoPrint;
 
 	g_transferCount = 0;
 
@@ -1221,7 +1221,7 @@ extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 		// Prepare the flags for the xfer command.
 		g_modemStatus.xferMutex = YES;
 		g_modemStatus.xferState = DEMx_CMD;
-		g_modemStatus.xferPrintState = g_helpRecord.auto_print;
+		g_modemStatus.xferPrintState = g_helpRecord.autoPrint;
 #endif
 	}
 

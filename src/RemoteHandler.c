@@ -345,7 +345,7 @@ void craftInitStatusFlags(void)
 	g_modemStatus.systemIsLockedFlag = YES;
 
 	g_modemStatus.ringIndicator = 0;
-	g_modemStatus.xferPrintState = g_helpRecord.auto_print;
+	g_modemStatus.xferPrintState = g_helpRecord.autoPrint;
 	
 	// Modem is being tested/debugged set debug to true.
 	g_modemStatus.testingPrintFlag = g_disableDebugPrinting;		

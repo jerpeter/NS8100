@@ -168,7 +168,7 @@ void newMonitorLogEntry(uint8 mode)
 #endif
 
 #if 0 // Field no longer needed
-	__monitorLogTbl[__monitorLogTblIndex].airUnitsOfMeasure = g_helpRecord.units_of_air;
+	__monitorLogTbl[__monitorLogTblIndex].airUnitsOfMeasure = g_helpRecord.unitsOfAir;
 #else
 	__monitorLogTbl[__monitorLogTblIndex].bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_10_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ?
 														ACCURACY_16_BIT : g_triggerRecord.trec.bitAccuracy;

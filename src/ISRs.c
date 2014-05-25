@@ -101,7 +101,7 @@ void isr_PowerOffKey(void)
 	if (g_sampleProcessing != ACTIVE_STATE)
 	{
 		// Check if timer mode is enabled and power off enable has been turned off
-		if ((g_helpRecord.timer_mode == ENABLED) && (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
+		if ((g_helpRecord.timerMode == ENABLED) && (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
 		{
 			// Signal a Power Off event
 			raiseSystemEventFlag(POWER_OFF_EVENT);
@@ -653,7 +653,7 @@ static inline void fillPretriggerBuffer_ISR_Inline(void)
 	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / 4)
 #else // Variable Pretrigger size
 	// Check if the Pretrigger count has accumulated the full number of samples (variable Pretrigger size)
-	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div)) 
+	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider))
 #endif
 	{ 
 		s_pretriggerFull = YES;
@@ -693,33 +693,33 @@ static inline void normalizeSampleData_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline void checkAlarms_ISR_Inline(void)
 {
-	if (g_helpRecord.alarm_one_mode != ALARM_MODE_OFF)
+	if (g_helpRecord.alarmOneMode != ALARM_MODE_OFF)
 	{
 		// Check if seismic is enabled for Alarm 1
-		if (g_helpRecord.alarm_one_mode & ALARM_MODE_SEISMIC)
+		if (g_helpRecord.alarmOneMode & ALARM_MODE_SEISMIC)
 		{
-			if (s_R_channelReading > (g_helpRecord.alarm_one_seismic_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
-			else if (s_V_channelReading > (g_helpRecord.alarm_one_seismic_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
-			else if (s_T_channelReading > (g_helpRecord.alarm_one_seismic_lvl)) { raiseSystemEventFlag(WARNING1_EVENT); }
+			if (s_R_channelReading > (g_helpRecord.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
+			else if (s_V_channelReading > (g_helpRecord.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
+			else if (s_T_channelReading > (g_helpRecord.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
 		}
 
 		// Check if air is enabled for Alarm 1
-		if (g_helpRecord.alarm_one_mode & ALARM_MODE_AIR)
+		if (g_helpRecord.alarmOneMode & ALARM_MODE_AIR)
 			if (s_A_channelReading > g_alarm1AirTriggerCount) { raiseSystemEventFlag(WARNING1_EVENT); }
 	}
 						
-	if (g_helpRecord.alarm_two_mode != ALARM_MODE_OFF)
+	if (g_helpRecord.alarmTwoMode != ALARM_MODE_OFF)
 	{
 		// Check if seismic is enabled for Alarm 2
-		if (g_helpRecord.alarm_two_mode & ALARM_MODE_SEISMIC)
+		if (g_helpRecord.alarmTwoMode & ALARM_MODE_SEISMIC)
 		{
-			if (s_R_channelReading > (g_helpRecord.alarm_two_seismic_lvl)) { raiseSystemEventFlag(WARNING2_EVENT); }
-			else if (s_V_channelReading > (g_helpRecord.alarm_two_seismic_lvl)) { raiseSystemEventFlag(WARNING2_EVENT); }
-			else if (s_T_channelReading > (g_helpRecord.alarm_two_seismic_lvl)) { raiseSystemEventFlag(WARNING2_EVENT); }
+			if (s_R_channelReading > (g_helpRecord.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
+			else if (s_V_channelReading > (g_helpRecord.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
+			else if (s_T_channelReading > (g_helpRecord.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
 		}
 
 		// Check if air is enabled for Alarm 2
-		if (g_helpRecord.alarm_two_mode & ALARM_MODE_AIR)
+		if (g_helpRecord.alarmTwoMode & ALARM_MODE_AIR)
 			if (s_A_channelReading > g_alarm2AirTriggerCount) { raiseSystemEventFlag(WARNING2_EVENT); }
 	}				
 }
@@ -980,7 +980,7 @@ void processAndMoveWaveformData(void)
 				s_pendingCalCount = g_triggerRecord.trec.sample_rate / 4;
 #else // Variable Pretrigger
 				// Setup delay for Cal pulse (based on Pretrigger size)
-				s_pendingCalCount = g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div;
+				s_pendingCalCount = g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider;
 #endif
 			}
 			else // Max number of events have been captured, force a Cal pulse
@@ -1310,7 +1310,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				s_pendingCalCount = g_triggerRecord.trec.sample_rate / 4;
 #else // Variable Pretrigger
 				// Setup delay for Cal pulse (based on Pretrigger size)
-				s_pendingCalCount = g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div;
+				s_pendingCalCount = g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider;
 #endif
 			}
 			else // Max number of events have been captured, force a Cal pulse
@@ -1709,6 +1709,10 @@ void tc_sample_irq(void)
 	}
 #endif
 
+#if 0 // Test
+	gpio_set_gpio_pin(AVR32_PIN_PB20);
+#endif
+
 #if 1 // Test
 	//___________________________________________________________________________________________
 	//___Revert power savings for sleep
@@ -1826,6 +1830,10 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 
 	// Check if the end of the Pretrigger buffer has been reached
 	if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
+
+#if 0 // Test
+	gpio_clr_gpio_pin(AVR32_PIN_PB20);
+#endif
 
 	// clear the interrupt flag
 #if INTERNAL_SAMPLING_SOURCE

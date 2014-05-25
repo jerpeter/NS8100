@@ -220,7 +220,7 @@ void SystemEventManager(void)
 		powerControl(ALARM_1_ENABLE, ON);
 
 		// Assign soft timer to turn the Alarm 1 signal off
-		assignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarm_one_time * 2), alarmOneOutputTimerCallback);
+		assignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarmOneTime * 2), alarmOneOutputTimerCallback);
 	}
 
 	if (getSystemEventState(WARNING2_EVENT))
@@ -231,7 +231,7 @@ void SystemEventManager(void)
 		powerControl(ALARM_2_ENABLE, ON);
 
 		// Assign soft timer to turn the Alarm 2 signal off
-		assignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarm_two_time * 2), alarmTwoOutputTimerCallback);
+		assignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarmTwoTime * 2), alarmTwoOutputTimerCallback);
 	}
 
 	if (getSystemEventState(UPDATE_OFFSET_EVENT))
@@ -359,7 +359,7 @@ void CraftManager(void)
 
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
+				g_helpRecord.autoPrint = g_modemStatus.xferPrintState;
 			}
 		}
 		else if (DSMx_CMD == g_modemStatus.xferState)
@@ -368,7 +368,7 @@ void CraftManager(void)
 
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
+				g_helpRecord.autoPrint = g_modemStatus.xferPrintState;
 			}
 		}
 		else if (DQMx_CMD == g_modemStatus.xferState)
@@ -377,7 +377,7 @@ void CraftManager(void)
 
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
+				g_helpRecord.autoPrint = g_modemStatus.xferPrintState;
 			}
 		}
 		else if (VMLx_CMD == g_modemStatus.xferState)
@@ -386,7 +386,7 @@ void CraftManager(void)
 
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				g_helpRecord.auto_print = g_modemStatus.xferPrintState;
+				g_helpRecord.autoPrint = g_modemStatus.xferPrintState;
 			}
 		}
 	}
@@ -774,9 +774,13 @@ extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
 		{
 			SetupPowerSavingsBeforeSleeping();
 
+#if 1 // Normal
 			if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { SLEEP(AVR32_PM_SMODE_STANDBY); }
 			else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { SLEEP(AVR32_PM_SMODE_FROZEN); }
 			else if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { SLEEP(AVR32_PM_SMODE_IDLE); }
+#else // Test
+			SLEEP(AVR32_PM_SMODE_STOP);
+#endif
 
 			// Check if needing to revert the power savings (if monitoring then the ISR will handle this operation)
 			if (g_powerSavingsForSleepEnabled == YES)

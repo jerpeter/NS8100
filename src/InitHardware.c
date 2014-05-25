@@ -521,6 +521,10 @@ void _init_startup(void)
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_ASSERT | AVR32_WDT_DISABLE_VALUE);
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_DEASSERT | AVR32_WDT_DISABLE_VALUE);
 	
+#if 0 // Test external 12 MHz oscillator
+	pm_enable_osc0_ext_clock(&AVR32_PM);
+#endif
+
 	// Switch the main clock to the external oscillator 0 (12 MHz)
 	pm_switch_to_osc0(&AVR32_PM, FOSC0, OSC0_STARTUP);
 
@@ -693,10 +697,10 @@ void InitSerial232(void)
 	getRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 	// Check if the Help Record is valid
-	if (g_helpRecord.encode_ln == 0xA5A5)
+	if (g_helpRecord.validationKey == 0xA5A5)
 	{
 		// Set the baud rate to the user stored baud rate setting (initialized to 115200)
-		switch (g_helpRecord.baud_rate)
+		switch (g_helpRecord.baudRate)
 		{
 			case BAUD_RATE_57600: usart_1_rs232_options.baudrate = 57600; break;
 			case BAUD_RATE_38400: usart_1_rs232_options.baudrate = 38400; break;

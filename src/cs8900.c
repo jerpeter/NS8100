@@ -200,7 +200,7 @@ void WriteFrame8900(unsigned int Data)
 ///----------------------------------------------------------------------------
 void CopyToFrame8900(void *Source, unsigned int Size)
 {
-	// copies bytes from MCU-memory to frame port
+	// Copies bytes from MCU-memory to frame port
 	// NOTES: * an odd number of byte may only be transfered
 	//          if the frame is written to the end!
 	//        * MCU-memory MUST start at word-boundary
@@ -298,7 +298,7 @@ unsigned int ReadHB1ST8900(unsigned short *Address)
 ///----------------------------------------------------------------------------
 void CopyFromFrame8900(void *Dest, unsigned int Size)
 {
-	// copies bytes from frame port to MCU-memory
+	// Copies bytes from frame port to MCU-memory
 	// NOTES: * an odd number of byte may only be transfered
 	//          if the frame is read to the end!
 	//        * MCU-memory MUST start at word-boundary

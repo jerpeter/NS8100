@@ -599,11 +599,11 @@ void MoveWaveformEventToFlash(void)
 					if (getPowerControlState(LCD_POWER_ENABLE) == OFF)
 					{
 						assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
-						assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+						assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 					}
 
 					// Check to see if there is room for another event, if not send a signal to stop monitoring
-					if (g_helpRecord.flash_wrapping == NO)
+					if (g_helpRecord.flashWrapping == NO)
 					{
 						getFlashUsageStats(&flashStats);
 

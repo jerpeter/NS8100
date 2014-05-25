@@ -568,7 +568,7 @@ void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	//-----------------------
 	eventRec->summary.captured.endTime = getCurrentTime();
 	eventRec->summary.captured.batteryLevel = (uint32)(100.0 * getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
-	eventRec->summary.captured.printerStatus = (uint8)(g_helpRecord.auto_print);
+	eventRec->summary.captured.printerStatus = (uint8)(g_helpRecord.autoPrint);
 	eventRec->summary.captured.calDate = g_factorySetupRecord.cal_date;
 	//-----------------------
 	byteSet(&(eventRec->summary.parameters.companyName[0]), 0, COMPANY_NAME_STRING_SIZE);
@@ -595,11 +595,11 @@ void clearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 #if 0 // Port lost change
 	eventRec->summary.parameters.airSensorType = (uint16)0x0;
 #else // Updated
-   eventRec->summary.parameters.airSensorType = (uint16)g_helpRecord.units_of_air;
+   eventRec->summary.parameters.airSensorType = (uint16)g_helpRecord.unitsOfAir;
 #endif
 	eventRec->summary.parameters.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
-	eventRec->summary.parameters.seismicUnitsOfMeasure = g_helpRecord.units_of_measure;
-	eventRec->summary.parameters.airUnitsOfMeasure = g_helpRecord.units_of_air;
+	eventRec->summary.parameters.seismicUnitsOfMeasure = g_helpRecord.unitsOfMeasure;
+	eventRec->summary.parameters.airUnitsOfMeasure = g_helpRecord.unitsOfAir;
 	eventRec->summary.parameters.distToSource = (uint32)(g_triggerRecord.trec.dist_to_source * 100.0);
 	eventRec->summary.parameters.weightPerDelay = (uint32)(g_triggerRecord.trec.weight_per_delay * 100.0);
 	//-----------------------
@@ -649,7 +649,7 @@ void initEventRecord(uint8 op_mode)
 #if 0 // Fixed Pretrigger size
 		eventRec->summary.parameters.preBuffNumOfSamples = (uint16)(g_triggerRecord.trec.sample_rate / 4);
 #else // Variable Pretrigger size
-		eventRec->summary.parameters.preBuffNumOfSamples = (uint16)(g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div);
+		eventRec->summary.parameters.preBuffNumOfSamples = (uint16)(g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider);
 #endif
 		eventRec->summary.parameters.calDataNumOfSamples = (uint16)(CALIBRATION_NUMBER_OF_SAMPLES);
 
@@ -687,12 +687,12 @@ void initEventRecord(uint8 op_mode)
 
 			tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
 
-			if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_helpRecord.units_of_measure == METRIC_TYPE))
+			if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE))
 			{
 				tempSesmicTriggerInUnits *= (float)METRIC;
 			}
 
-			debug("Seismic trigger in units: %05.2f %s\n", tempSesmicTriggerInUnits, (g_helpRecord.units_of_measure == METRIC_TYPE ? "mm" : "in"));
+			debug("Seismic trigger in units: %05.2f %s\n", tempSesmicTriggerInUnits, (g_helpRecord.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
 			eventRec->summary.parameters.seismicTriggerInUnits = (uint32)(tempSesmicTriggerInUnits * 100);
 
 			eventRec->summary.parameters.airTriggerInUnits = (uint32)g_triggerRecord.trec.airTriggerLevel;
@@ -1571,7 +1571,7 @@ void ReclaimSpace(uint16* sectorAddr)
 	{
 		debug("Attempting to reclaim space from flash event table (sector addr: 0x%x)\n", sectorAddr);
 
-		if (g_helpRecord.flash_wrapping == NO)
+		if (g_helpRecord.flashWrapping == NO)
 		{
 			overlayMessage(getLangText(WARNING_TEXT), "WRAPPING DISABLED BUT FORCED TO ERASE SOME FLASH", (5 * SOFT_SECS));
 		}

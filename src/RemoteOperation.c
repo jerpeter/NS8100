@@ -109,7 +109,7 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 #if 0 // Port missing change
 	cfg.eventCfg.airSensorType = (uint16)0x0;
 #else // Updated
-	cfg.eventCfg.airSensorType = (uint16)(g_helpRecord.units_of_air);
+	cfg.eventCfg.airSensorType = (uint16)(g_helpRecord.unitsOfAir);
 #endif
 	cfg.eventCfg.bitAccuracy = g_triggerRecord.trec.bitAccuracy;
 	cfg.eventCfg.numOfChannels = 4;
@@ -136,7 +136,7 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	// *NOTE* Actual element config type is already incorrectly being overloaded (done by the original author)
 	// Using the first element of free space in this structure to transfer the real Pretrigger buffer size config
-	cfg.eventCfg.unused[0] = g_helpRecord.pretrig_buffer_div;
+	cfg.eventCfg.unused[0] = g_helpRecord.pretrigBufferDivider;
 #endif
 
 	// Bargraph specific - Initial conditions.
@@ -148,58 +148,58 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	byteCpy((uint8*)cfg.eventCfg.sessionLocation, g_triggerRecord.trec.loc, SESSION_LOCATION_STRING_SIZE - 2);
 	byteCpy((uint8*)cfg.eventCfg.sessionComments, g_triggerRecord.trec.comments, SESSION_COMMENTS_STRING_SIZE - 2);
 	
-	cfg.autoCfg.auto_monitor_mode = g_helpRecord.auto_monitor_mode;
-	cfg.autoCfg.auto_cal_mode = g_helpRecord.auto_cal_mode;
+	cfg.autoCfg.autoMonitorMode = g_helpRecord.autoMonitorMode;
+	cfg.autoCfg.autoCalMode = g_helpRecord.autoCalMode;
 
-	cfg.printerCfg.auto_print = g_helpRecord.auto_print;
-	cfg.printerCfg.lang_mode = g_helpRecord.lang_mode;
-	cfg.printerCfg.vector_sum = g_helpRecord.vector_sum;
-	cfg.printerCfg.units_of_measure = g_helpRecord.units_of_measure;
-	cfg.printerCfg.freq_plot_mode = g_helpRecord.freq_plot_mode;
-	cfg.printerCfg.freq_plot_type = g_helpRecord.freq_plot_type;
+	cfg.printerCfg.autoPrint = g_helpRecord.autoPrint;
+	cfg.printerCfg.languageMode = g_helpRecord.languageMode;
+	cfg.printerCfg.vectorSum = g_helpRecord.vectorSum;
+	cfg.printerCfg.unitsOfMeasure = g_helpRecord.unitsOfMeasure;
+	cfg.printerCfg.freqPlotMode = g_helpRecord.freqPlotMode;
+	cfg.printerCfg.freqPlotType = g_helpRecord.freqPlotType;
 
-	cfg.alarmCfg.alarm_one_mode = g_helpRecord.alarm_one_mode;
-	cfg.alarmCfg.alarm_two_mode = g_helpRecord.alarm_two_mode;
-	cfg.alarmCfg.alarm_one_seismic_lvl = g_helpRecord.alarm_one_seismic_lvl;
-	cfg.alarmCfg.alarm_one_seismic_min_lvl = g_helpRecord.alarm_one_seismic_min_lvl;
-	cfg.alarmCfg.alarm_one_air_lvl = g_helpRecord.alarm_one_air_lvl;
-	cfg.alarmCfg.alarm_one_air_min_lvl = g_helpRecord.alarm_one_air_min_lvl;
-	cfg.alarmCfg.alarm_two_seismic_lvl = g_helpRecord.alarm_two_seismic_lvl;
-	cfg.alarmCfg.alarm_two_seismic_min_lvl = g_helpRecord.alarm_two_seismic_min_lvl;
-	cfg.alarmCfg.alarm_two_air_lvl = g_helpRecord.alarm_two_air_lvl;
-	cfg.alarmCfg.alarm_two_air_min_lvl = g_helpRecord.alarm_two_air_min_lvl;
-	cfg.alarmCfg.alarm_one_time = (uint32)(g_helpRecord.alarm_one_time * (float)100.0);
-	cfg.alarmCfg.alarm_two_time = (uint32)(g_helpRecord.alarm_two_time * (float)100.0);
+	cfg.alarmCfg.alarmOneMode = g_helpRecord.alarmOneMode;
+	cfg.alarmCfg.alarmTwoMode = g_helpRecord.alarmTwoMode;
+	cfg.alarmCfg.alarmOneSeismicLevel = g_helpRecord.alarmOneSeismicLevel;
+	cfg.alarmCfg.alarmOneSeismicMinLevel = g_helpRecord.alarmOneSeismicMinLevel;
+	cfg.alarmCfg.alarmOneAirLevel = g_helpRecord.alarmOneAirLevel;
+	cfg.alarmCfg.alarmOneAirMinLevel = g_helpRecord.alarmOneAirMinLevel;
+	cfg.alarmCfg.alarmTwoSeismicLevel = g_helpRecord.alarmTwoSeismicLevel;
+	cfg.alarmCfg.alarmTwoSeismicMinLevel = g_helpRecord.alarmTwoSeismicMinLevel;
+	cfg.alarmCfg.alarmTwoAirLevel = g_helpRecord.alarmTwoAirLevel;
+	cfg.alarmCfg.alarmTwoAirMinLevel = g_helpRecord.alarmTwoAirMinLevel;
+	cfg.alarmCfg.alarmOneTime = (uint32)(g_helpRecord.alarmOneTime * (float)100.0);
+	cfg.alarmCfg.alarmTwoTime = (uint32)(g_helpRecord.alarmTwoTime * (float)100.0);
 
-	cfg.timerCfg.timer_mode = g_helpRecord.timer_mode;
-	cfg.timerCfg.timer_mode_freq = g_helpRecord.timer_mode_freq;
+	cfg.timerCfg.timerMode = g_helpRecord.timerMode;
+	cfg.timerCfg.timerModeFrequency = g_helpRecord.timerModeFrequency;
 #if 1 // fix_ns8100 - Size changed to uint32 however this field isn't needed
-	cfg.timerCfg.timer_mode_active_minutes = (uint16)g_helpRecord.timer_mode_active_minutes;
+	cfg.timerCfg.timerModeActiveMinutes = (uint16)g_helpRecord.timerModeActiveMinutes;
 #endif
 
-	if (DISABLED == g_helpRecord.timer_mode) 
+	if (DISABLED == g_helpRecord.timerMode)
 	{
 		cfg.timerCfg.timer_stop = cfg.timerCfg.timer_start = getCurrentTime();
 	}
 	else
 	{
-		cfg.timerCfg.timer_start.hour = g_helpRecord.tm_start_time.hour;
-		cfg.timerCfg.timer_start.min = g_helpRecord.tm_start_time.min;
-		cfg.timerCfg.timer_start.sec = g_helpRecord.tm_start_time.sec;
-		cfg.timerCfg.timer_start.day = g_helpRecord.tm_start_date.day;
-		cfg.timerCfg.timer_start.month = g_helpRecord.tm_start_date.month;
-		cfg.timerCfg.timer_start.year = g_helpRecord.tm_start_date.year;
+		cfg.timerCfg.timer_start.hour = g_helpRecord.timerStartTime.hour;
+		cfg.timerCfg.timer_start.min = g_helpRecord.timerStartTime.min;
+		cfg.timerCfg.timer_start.sec = g_helpRecord.timerStartTime.sec;
+		cfg.timerCfg.timer_start.day = g_helpRecord.timerStartDate.day;
+		cfg.timerCfg.timer_start.month = g_helpRecord.timerStartDate.month;
+		cfg.timerCfg.timer_start.year = g_helpRecord.timerStartDate.year;
 
-		cfg.timerCfg.timer_stop.hour = g_helpRecord.tm_stop_time.hour;
-		cfg.timerCfg.timer_stop.min = g_helpRecord.tm_stop_time.min;
-		cfg.timerCfg.timer_stop.sec = g_helpRecord.tm_stop_time.sec;
-		cfg.timerCfg.timer_stop.day = g_helpRecord.tm_stop_date.day;
-		cfg.timerCfg.timer_stop.month = g_helpRecord.tm_stop_date.month;
-		cfg.timerCfg.timer_stop.year = g_helpRecord.tm_stop_date.year;
+		cfg.timerCfg.timer_stop.hour = g_helpRecord.timerStopTime.hour;
+		cfg.timerCfg.timer_stop.min = g_helpRecord.timerStopTime.min;
+		cfg.timerCfg.timer_stop.sec = g_helpRecord.timerStopTime.sec;
+		cfg.timerCfg.timer_stop.day = g_helpRecord.timerStopDate.day;
+		cfg.timerCfg.timer_stop.month = g_helpRecord.timerStopDate.month;
+		cfg.timerCfg.timer_stop.year = g_helpRecord.timerStopDate.year;
 	}
 	
 	// Add in the flash wrapping option
-	cfg.flashWrapping = g_helpRecord.flash_wrapping;
+	cfg.flashWrapping = g_helpRecord.flashWrapping;
 
 	// Spare fields, just use as a data marker
 	cfg.unused[0] = 0x0A;
@@ -361,7 +361,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			else
 			{
 				setRtcDate(&(cfg.currentTime));
-				g_helpRecord.timer_mode = DISABLED;
+				g_helpRecord.timerMode = DISABLED;
 				// Disable Power Off protection
 				powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 				
@@ -379,7 +379,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			else
 			{
 				setRtcTime(&(cfg.currentTime));
-				g_helpRecord.timer_mode = DISABLED;
+				g_helpRecord.timerMode = DISABLED;
 				
 				// Disable Power Off protection
 				powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
@@ -447,8 +447,8 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			  (cfg.eventCfg.seismicTriggerLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
 		{
 			g_triggerRecord.trec.seismicTriggerLevel = cfg.eventCfg.seismicTriggerLevel;
-			g_helpRecord.alarm_one_seismic_min_lvl = g_triggerRecord.trec.seismicTriggerLevel;
-			g_helpRecord.alarm_two_seismic_min_lvl = g_triggerRecord.trec.seismicTriggerLevel;
+			g_helpRecord.alarmOneSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
+			g_helpRecord.alarmTwoSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
 		}
 		else
 		{
@@ -461,11 +461,11 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//--------------------------------
 		if ((uint8)cfg.eventCfg.airSensorType == MILLIBAR_TYPE)
 		{
-			g_helpRecord.units_of_air = MILLIBAR_TYPE;
+			g_helpRecord.unitsOfAir = MILLIBAR_TYPE;
 		}
 		else
 		{
-			g_helpRecord.units_of_air = DECIBEL_TYPE;
+			g_helpRecord.unitsOfAir = DECIBEL_TYPE;
 		}
 #endif
 
@@ -494,8 +494,8 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 #endif
 		{
 			g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
-			g_helpRecord.alarm_one_air_min_lvl = g_triggerRecord.trec.airTriggerLevel;
-			g_helpRecord.alarm_two_air_min_lvl = g_triggerRecord.trec.airTriggerLevel;
+			g_helpRecord.alarmOneAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
+			g_helpRecord.alarmTwoAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
 		}
 		else
 		{
@@ -512,7 +512,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 #if 0 // Fixed Pretrigger size
 			((g_triggerRecord.trec.sample_rate / 4) * NUMBER_OF_CHANNELS_DEFAULT) - 
 #else // Variable Pretrigger size
-				((g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div) * NUMBER_OF_CHANNELS_DEFAULT) -
+				((g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider) * NUMBER_OF_CHANNELS_DEFAULT) -
 #endif
 				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * NUMBER_OF_CHANNELS_DEFAULT)) / 
 					(g_triggerRecord.trec.sample_rate * NUMBER_OF_CHANNELS_DEFAULT))));
@@ -642,7 +642,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		if ((cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_QUARTER_SEC_DIV) || (cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_HALF_SEC_DIV) ||
 			(cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_FULL_SEC_DIV))
 		{
-			g_helpRecord.pretrig_buffer_div = cfg.eventCfg.unused[0];
+			g_helpRecord.pretrigBufferDivider = cfg.eventCfg.unused[0];
 		}
 		else
 		{
@@ -670,13 +670,13 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Auto Monitor Mode check
-		switch (cfg.autoCfg.auto_monitor_mode)
+		switch (cfg.autoCfg.autoMonitorMode)
 		{
 			case AUTO_TWO_MIN_TIMEOUT:
 			case AUTO_THREE_MIN_TIMEOUT:
 			case AUTO_FOUR_MIN_TIMEOUT:
 			case AUTO_NO_TIMEOUT:
-				g_helpRecord.auto_monitor_mode = cfg.autoCfg.auto_monitor_mode;
+				g_helpRecord.autoMonitorMode = cfg.autoCfg.autoMonitorMode;
 				break;
 				
 			default:
@@ -685,13 +685,13 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Auto Monitor Mode check
-		switch (cfg.autoCfg.auto_cal_mode)
+		switch (cfg.autoCfg.autoCalMode)
 		{	
 			case AUTO_24_HOUR_TIMEOUT:
 			case AUTO_48_HOUR_TIMEOUT:
 			case AUTO_72_HOUR_TIMEOUT:
 			case AUTO_NO_CAL_TIMEOUT:
-				g_helpRecord.auto_cal_mode = cfg.autoCfg.auto_cal_mode;
+				g_helpRecord.autoCalMode = cfg.autoCfg.autoCalMode;
 				break;
 				
 			default:
@@ -700,11 +700,11 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Auto print
-		if ((YES == cfg.printerCfg.auto_print) || (NO == cfg.printerCfg.auto_print))
+		if ((YES == cfg.printerCfg.autoPrint) || (NO == cfg.printerCfg.autoPrint))
 		{
 			if (SUPERGRAPH_UNIT)
 			{
-				g_helpRecord.auto_print = cfg.printerCfg.auto_print;
+				g_helpRecord.autoPrint = cfg.printerCfg.autoPrint;
 			}
 		}
 		else
@@ -713,7 +713,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 		
 		// Language Mode	
-		switch (cfg.printerCfg.lang_mode)
+		switch (cfg.printerCfg.languageMode)
 		{
 			case ENGLISH_LANG:
 			case FRENCH_LANG:
@@ -722,8 +722,8 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 #if 1 // Updated (Port missing change)
 			case SPANISH_LANG:
 #endif
-				g_helpRecord.lang_mode = cfg.printerCfg.lang_mode;
-				build_languageLinkTable(g_helpRecord.lang_mode);
+				g_helpRecord.languageMode = cfg.printerCfg.languageMode;
+				build_languageLinkTable(g_helpRecord.languageMode);
 				break;
 					
 			default:
@@ -732,9 +732,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Vector Sum check
-		if ((YES == cfg.printerCfg.vector_sum) || (NO == cfg.printerCfg.vector_sum))
+		if ((YES == cfg.printerCfg.vectorSum) || (NO == cfg.printerCfg.vectorSum))
 		{
-			g_helpRecord.vector_sum = cfg.printerCfg.vector_sum;
+			g_helpRecord.vectorSum = cfg.printerCfg.vectorSum;
 		}
 		else
 		{
@@ -742,10 +742,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 		
 		// Units of Measure check
-		if ((IMPERIAL_TYPE == cfg.printerCfg.units_of_measure) || 
-			(METRIC_TYPE == cfg.printerCfg.units_of_measure))
+		if ((IMPERIAL_TYPE == cfg.printerCfg.unitsOfMeasure) || (METRIC_TYPE == cfg.printerCfg.unitsOfMeasure))
 		{
-			g_helpRecord.units_of_measure = cfg.printerCfg.units_of_measure;
+			g_helpRecord.unitsOfMeasure = cfg.printerCfg.unitsOfMeasure;
 		}
 		else
 		{
@@ -754,10 +753,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		
 #if 0 // fix_ns8100
 		// Units of Air check
-		if ((DECIBEL_TYPE == cfg.printerCfg.units_of_measure) || 
-			(MILLIBAR_TYPE == cfg.printerCfg.units_of_measure))
+		if ((DECIBEL_TYPE == cfg.printerCfg.unitsOfMeasure) || (MILLIBAR_TYPE == cfg.printerCfg.unitsOfMeasure))
 		{
-			g_helpRecord.units_of_air = cfg.printerCfg.units_of_air;
+			g_helpRecord.unitsOfAir = cfg.printerCfg.unitsOfAir;
 		}
 		else
 		{
@@ -766,9 +764,9 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 #endif
 
 		// Frequency plot mode , Yes or No or On or Off
-		if ((YES == cfg.printerCfg.freq_plot_mode) || (NO == cfg.printerCfg.freq_plot_mode))
+		if ((YES == cfg.printerCfg.freqPlotMode) || (NO == cfg.printerCfg.freqPlotMode))
 		{
-			g_helpRecord.freq_plot_mode = cfg.printerCfg.freq_plot_mode;
+			g_helpRecord.freqPlotMode = cfg.printerCfg.freqPlotMode;
 		}
 		else
 		{
@@ -777,14 +775,14 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 
 		// Frequency plot mode , Yes or No or On or Off
-		switch (cfg.printerCfg.freq_plot_type)
+		switch (cfg.printerCfg.freqPlotType)
 		{
 			case FREQ_PLOT_US_BOM_STANDARD:
 			case FREQ_PLOT_FRENCH_STANDARD:
 			case FREQ_PLOT_DIN_4150_STANDARD:
 			case FREQ_PLOT_BRITISH_7385_STANDARD:
 			case FREQ_PLOT_SPANISH_STANDARD:
-				g_helpRecord.freq_plot_type = cfg.printerCfg.freq_plot_type;
+				g_helpRecord.freqPlotType = cfg.printerCfg.freqPlotType;
 				break;
 					
 			default:
@@ -792,40 +790,40 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				break;	
 		}
 
-		if (ALARM_MODE_OFF == cfg.alarmCfg.alarm_one_mode)
+		if (ALARM_MODE_OFF == cfg.alarmCfg.alarmOneMode)
 		{
-			g_helpRecord.alarm_one_mode = ALARM_MODE_OFF;
+			g_helpRecord.alarmOneMode = ALARM_MODE_OFF;
 		}
 		else
 		{
 			// Alarm One mode
-			switch (cfg.alarmCfg.alarm_one_mode)
+			switch (cfg.alarmCfg.alarmOneMode)
 			{
 				case ALARM_MODE_OFF:
 				case ALARM_MODE_SEISMIC:
 				case ALARM_MODE_AIR:
 				case ALARM_MODE_BOTH:
-					g_helpRecord.alarm_one_mode = cfg.alarmCfg.alarm_one_mode;
+					g_helpRecord.alarmOneMode = cfg.alarmCfg.alarmOneMode;
 					break;
 						
 				default:
-					g_helpRecord.alarm_one_mode = ALARM_MODE_OFF;
+					g_helpRecord.alarmOneMode = ALARM_MODE_OFF;
 					returnCode = CFG_ERR_ALARM_ONE_MODE;
 					break;	
 			}
 
-			g_helpRecord.alarm_one_seismic_lvl = NO_TRIGGER_CHAR;
-			g_helpRecord.alarm_one_air_lvl = NO_TRIGGER_CHAR;
+			g_helpRecord.alarmOneSeismicLevel = NO_TRIGGER_CHAR;
+			g_helpRecord.alarmOneAirLevel = NO_TRIGGER_CHAR;
 
-			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_one_mode) ||
-				(ALARM_MODE_SEISMIC == g_helpRecord.alarm_one_mode))    
+			if ((ALARM_MODE_BOTH == g_helpRecord.alarmOneMode) ||
+				(ALARM_MODE_SEISMIC == g_helpRecord.alarmOneMode))
 			{
 				// Alarm One Seismic trigger level check.
-				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_one_seismic_lvl) 	||
-					((cfg.alarmCfg.alarm_one_seismic_lvl >= g_triggerRecord.trec.seismicTriggerLevel) &&
-					  (cfg.alarmCfg.alarm_one_seismic_lvl <= SEISMIC_TRIGGER_MAX_VALUE)))
+				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneSeismicLevel) 	||
+					((cfg.alarmCfg.alarmOneSeismicLevel >= g_triggerRecord.trec.seismicTriggerLevel) &&
+					  (cfg.alarmCfg.alarmOneSeismicLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
 				{
-					g_helpRecord.alarm_one_seismic_lvl = cfg.alarmCfg.alarm_one_seismic_lvl;
+					g_helpRecord.alarmOneSeismicLevel = cfg.alarmCfg.alarmOneSeismicLevel;
 				}
 				else
 				{					
@@ -833,18 +831,18 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				}
 			}
 
-			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_one_mode) || (ALARM_MODE_AIR == g_helpRecord.alarm_one_mode))    
+			if ((ALARM_MODE_BOTH == g_helpRecord.alarmOneMode) || (ALARM_MODE_AIR == g_helpRecord.alarmOneMode))
 			{
 	            // Alarm One Air trigger level check DB/MB.
-				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_one_air_lvl) 	||
-					((cfg.alarmCfg.alarm_one_air_lvl >= g_triggerRecord.trec.airTriggerLevel) &&
+				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) 	||
+					((cfg.alarmCfg.alarmOneAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
 #if 0 // Port lost change					  
-					(cfg.alarmCfg.alarm_one_air_lvl <= AIR_TRIGGER_MAX_VALUE)))
+					(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_VALUE)))
 #else // Updated
-					(cfg.alarmCfg.alarm_one_air_lvl <= AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
+					(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
 #endif
 				{
-					g_helpRecord.alarm_one_air_lvl = cfg.alarmCfg.alarm_one_air_lvl;
+					g_helpRecord.alarmOneAirLevel = cfg.alarmCfg.alarmOneAirLevel;
 				}
 				else
 				{
@@ -853,7 +851,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			}
 
 			// Alarm One Time check
-			timeAlarmFloat = (float)((float)cfg.alarmCfg.alarm_one_time/(float)100.0);
+			timeAlarmFloat = (float)((float)cfg.alarmCfg.alarmOneTime/(float)100.0);
 			if (	(timeAlarmFloat >= (float)ALARM_OUTPUT_TIME_MIN) && 
 				(timeAlarmFloat <= (float)ALARM_OUTPUT_TIME_MAX))
 			{
@@ -861,7 +859,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				timeCheckFloat = (float)timeAlarmFloat - (float)timeCheck;
 				if ((timeCheckFloat == (float)0.0) || (timeCheckFloat == (float)0.5))
 				{
-					g_helpRecord.alarm_one_time = (float)timeAlarmFloat;
+					g_helpRecord.alarmOneTime = (float)timeAlarmFloat;
 				}
 				else
 				{
@@ -876,41 +874,41 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 
 
-		if (ALARM_MODE_OFF == cfg.alarmCfg.alarm_two_mode)
+		if (ALARM_MODE_OFF == cfg.alarmCfg.alarmTwoMode)
 		{
-			g_helpRecord.alarm_two_mode = ALARM_MODE_OFF;
+			g_helpRecord.alarmTwoMode = ALARM_MODE_OFF;
 		}
 		else
 		{
 
 			// Alarm Two mode
-			switch (cfg.alarmCfg.alarm_two_mode)
+			switch (cfg.alarmCfg.alarmTwoMode)
 			{
 				case ALARM_MODE_OFF:
 				case ALARM_MODE_SEISMIC:
 				case ALARM_MODE_AIR:
 				case ALARM_MODE_BOTH:
-					g_helpRecord.alarm_two_mode = cfg.alarmCfg.alarm_two_mode;
+					g_helpRecord.alarmTwoMode = cfg.alarmCfg.alarmTwoMode;
 					break;
 						
 				default:
-					g_helpRecord.alarm_two_mode = ALARM_MODE_OFF;
+					g_helpRecord.alarmTwoMode = ALARM_MODE_OFF;
 					returnCode = CFG_ERR_ALARM_TWO_MODE;
 					break;	
 			}
 
-			g_helpRecord.alarm_two_seismic_lvl = NO_TRIGGER_CHAR;
-			g_helpRecord.alarm_two_air_lvl = NO_TRIGGER_CHAR;
+			g_helpRecord.alarmTwoSeismicLevel = NO_TRIGGER_CHAR;
+			g_helpRecord.alarmTwoAirLevel = NO_TRIGGER_CHAR;
 
-			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_two_mode) ||
-				(ALARM_MODE_SEISMIC == g_helpRecord.alarm_two_mode))    
+			if ((ALARM_MODE_BOTH == g_helpRecord.alarmTwoMode) ||
+				(ALARM_MODE_SEISMIC == g_helpRecord.alarmTwoMode))
 			{
 				// Alarm Two Seismic trigger level check.
-				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_two_seismic_lvl) 	||
-					((cfg.alarmCfg.alarm_two_seismic_lvl >= g_triggerRecord.trec.seismicTriggerLevel) &&
-					  (cfg.alarmCfg.alarm_two_seismic_lvl <= SEISMIC_TRIGGER_MAX_VALUE)))
+				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoSeismicLevel) 	||
+					((cfg.alarmCfg.alarmTwoSeismicLevel >= g_triggerRecord.trec.seismicTriggerLevel) &&
+					  (cfg.alarmCfg.alarmTwoSeismicLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
 				{
-					g_helpRecord.alarm_two_seismic_lvl = cfg.alarmCfg.alarm_two_seismic_lvl;
+					g_helpRecord.alarmTwoSeismicLevel = cfg.alarmCfg.alarmTwoSeismicLevel;
 				}
 				else
 				{
@@ -918,18 +916,18 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				}
 			}
 			
-			if ((ALARM_MODE_BOTH == g_helpRecord.alarm_two_mode) || (ALARM_MODE_AIR == g_helpRecord.alarm_two_mode))    
+			if ((ALARM_MODE_BOTH == g_helpRecord.alarmTwoMode) || (ALARM_MODE_AIR == g_helpRecord.alarmTwoMode))
 			{
 	            // Alarm Two Air trigger level check DB/MB.
-				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarm_two_air_lvl) 	||
-					((cfg.alarmCfg.alarm_two_air_lvl >= g_triggerRecord.trec.airTriggerLevel) &&
+				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) 	||
+					((cfg.alarmCfg.alarmTwoAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
 #if 0 // Port lost change
-					(cfg.alarmCfg.alarm_two_air_lvl <= AIR_TRIGGER_MAX_VALUE)))
+					(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_VALUE)))
 #else // Updated
-					(cfg.alarmCfg.alarm_two_air_lvl <= AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
+					(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
 #endif
 				{
-					g_helpRecord.alarm_two_air_lvl = cfg.alarmCfg.alarm_two_air_lvl;
+					g_helpRecord.alarmTwoAirLevel = cfg.alarmCfg.alarmTwoAirLevel;
 				}
 				else
 				{
@@ -938,7 +936,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			}
 
 			// Alarm Two Time check
-			timeAlarmFloat = (float)((float)cfg.alarmCfg.alarm_two_time/(float)100.0);
+			timeAlarmFloat = (float)((float)cfg.alarmCfg.alarmTwoTime/(float)100.0);
 			if (	(timeAlarmFloat >= (float)ALARM_OUTPUT_TIME_MIN) && 
 				(timeAlarmFloat <= (float)ALARM_OUTPUT_TIME_MAX))
 			{
@@ -946,7 +944,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				timeCheckFloat = (float)timeAlarmFloat - (float)timeCheck;
 				if ((timeCheckFloat == (float)0.0) || (timeCheckFloat == (float)0.5))
 				{
-					g_helpRecord.alarm_two_time = timeAlarmFloat;
+					g_helpRecord.alarmTwoTime = timeAlarmFloat;
 				}
 				else
 				{
@@ -959,15 +957,15 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			}
 		}
 
-		if (!((DISABLED == cfg.timerCfg.timer_mode) && (DISABLED == g_helpRecord.timer_mode)))
+		if (!((DISABLED == cfg.timerCfg.timerMode) && (DISABLED == g_helpRecord.timerMode)))
 		{
 			timerModeModified = TRUE;
 			
 			// Timer Mode check
-			if (ENABLED == cfg.timerCfg.timer_mode)
+			if (ENABLED == cfg.timerCfg.timerMode)
 			{
 				// Timer Mode Frequency check
-				switch (cfg.timerCfg.timer_mode_freq)
+				switch (cfg.timerCfg.timerModeFrequency)
 				{
 					case TIMER_MODE_ONE_TIME:
 					case TIMER_MODE_DAILY:
@@ -1003,26 +1001,26 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				if ((CFG_ERR_START_TIME != returnCode) && (CFG_ERR_STOP_TIME != returnCode) &&
 					(CFG_ERR_TIMER_MODE_FREQ != returnCode))
 				{
-					g_helpRecord.timer_mode_freq = cfg.timerCfg.timer_mode_freq;
-					g_helpRecord.tm_stop_time.hour = cfg.timerCfg.timer_stop.hour;
-					g_helpRecord.tm_stop_time.min = cfg.timerCfg.timer_stop.min;
-					g_helpRecord.tm_stop_date.day = cfg.timerCfg.timer_stop.day;
-					g_helpRecord.tm_stop_date.month = cfg.timerCfg.timer_stop.month;
-					g_helpRecord.tm_stop_date.year = cfg.timerCfg.timer_stop.year;
+					g_helpRecord.timerModeFrequency = cfg.timerCfg.timerModeFrequency;
+					g_helpRecord.timerStopTime.hour = cfg.timerCfg.timer_stop.hour;
+					g_helpRecord.timerStopTime.min = cfg.timerCfg.timer_stop.min;
+					g_helpRecord.timerStopDate.day = cfg.timerCfg.timer_stop.day;
+					g_helpRecord.timerStopDate.month = cfg.timerCfg.timer_stop.month;
+					g_helpRecord.timerStopDate.year = cfg.timerCfg.timer_stop.year;
 
-					g_helpRecord.tm_start_time.hour = cfg.timerCfg.timer_start.hour;
-					g_helpRecord.tm_start_time.min = cfg.timerCfg.timer_start.min;
-					g_helpRecord.tm_start_date.day = cfg.timerCfg.timer_start.day;
-					g_helpRecord.tm_start_date.month = cfg.timerCfg.timer_start.month;
-					g_helpRecord.tm_start_date.year = cfg.timerCfg.timer_start.year;
+					g_helpRecord.timerStartTime.hour = cfg.timerCfg.timer_start.hour;
+					g_helpRecord.timerStartTime.min = cfg.timerCfg.timer_start.min;
+					g_helpRecord.timerStartDate.day = cfg.timerCfg.timer_start.day;
+					g_helpRecord.timerStartDate.month = cfg.timerCfg.timer_start.month;
+					g_helpRecord.timerStartDate.year = cfg.timerCfg.timer_start.year;
 
-					g_helpRecord.timer_mode = cfg.timerCfg.timer_mode;	
+					g_helpRecord.timerMode = cfg.timerCfg.timerMode;
 				}					
 			}
-			else if (DISABLED == cfg.timerCfg.timer_mode)
+			else if (DISABLED == cfg.timerCfg.timerMode)
 			{
 				// Setting it to disabled, no error check needed.
-				g_helpRecord.timer_mode = cfg.timerCfg.timer_mode;
+				g_helpRecord.timerMode = cfg.timerCfg.timerMode;
 			}
 			else
 			{	
@@ -1036,7 +1034,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			if ((cfg.flashWrapping == NO) || (cfg.flashWrapping == YES))
 			{			
-				g_helpRecord.flash_wrapping = cfg.flashWrapping;
+				g_helpRecord.flashWrapping = cfg.flashWrapping;
 			}
 			else
 			{
@@ -1055,7 +1053,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 	{
 		processTimerModeSettings(NO_PROMPT);
 		// If the user wants to enable, but it is now disable send an error.
-		if (DISABLED == g_helpRecord.timer_mode)
+		if (DISABLED == g_helpRecord.timerMode)
 		{
 			returnCode = CFG_ERR_TIMER_MODE;
 		}

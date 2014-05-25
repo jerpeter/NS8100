@@ -1399,11 +1399,11 @@ void Backlight_Low( void )
 void Reset_Contrast( void )
 {
 
-    /*turn off lcd_sleep and lcd_contrast*/
+    /*turn off lcd_sleep and lcdContrast*/
 	gpio_clr_gpio_pin(AVR32_PIN_PB21); //ctrl
 	gpio_clr_gpio_pin(AVR32_PIN_PB22); //adjust
 
-    /*turn off lcd_sleep and lcd_contrast*/
+    /*turn off lcd_sleep and lcdContrast*/
     gpio_set_gpio_pin(AVR32_PIN_PB22); //adjust
     gpio_set_gpio_pin(AVR32_PIN_PB21); //adjust
 }

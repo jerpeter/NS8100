@@ -70,6 +70,7 @@ extern USER_MENU_STRUCT peakAccMenu[];
 extern USER_MENU_STRUCT pretriggerSizeMenu[];
 extern USER_MENU_STRUCT printerEnableMenu[];
 extern USER_MENU_STRUCT printMonitorLogMenu[];
+extern USER_MENU_STRUCT powerProfileMenu[];
 extern USER_MENU_STRUCT recalibrateMenu[];
 extern USER_MENU_STRUCT recordTimeMenu[];
 extern USER_MENU_STRUCT saveRecordMenu[];
@@ -126,13 +127,13 @@ void airScaleMenuHandler(uint8 keyPressed, void* data)
 		if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 		{
 			// If alarm mode is off, the proceed to save setup
-			if ((g_helpRecord.alarm_one_mode == ALARM_MODE_OFF) && (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF))
+			if ((g_helpRecord.alarmOneMode == ALARM_MODE_OFF) && (g_helpRecord.alarmTwoMode == ALARM_MODE_OFF))
 			{
 				SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
 			}
 			else // Goto Alarm setup menus
 			{
-				SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+				SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarmOneMode);
 			}
 		}
 		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
@@ -183,7 +184,7 @@ void airSetupMenuHandler(uint8 keyPressed, void* data)
 		g_factorySetupRecord.aweight_option = (uint8)airSetupMenu[newItemIndex].data;
 
 #if 0 // ns7100
-		SETUP_USER_MENU_MSG(&unitsOfAirMenu, g_helpRecord.units_of_air);
+		SETUP_USER_MENU_MSG(&unitsOfAirMenu, g_helpRecord.unitsOfAir);
 #else // ns8100
 		SETUP_MENU_MSG(CAL_SETUP_MENU);
 #endif
@@ -222,15 +223,15 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.alarm_one_mode = (uint8)alarmOneMenu[newItemIndex].data;
+		g_helpRecord.alarmOneMode = (uint8)alarmOneMenu[newItemIndex].data;
 
-		switch (g_helpRecord.alarm_one_mode)
+		switch (g_helpRecord.alarmOneMode)
 		{
 			case (ALARM_MODE_OFF):
-				g_helpRecord.alarm_one_seismic_lvl = NO_TRIGGER_CHAR;
-				g_helpRecord.alarm_one_air_lvl = NO_TRIGGER_CHAR;
+				g_helpRecord.alarmOneSeismicLevel = NO_TRIGGER_CHAR;
+				g_helpRecord.alarmOneAirLevel = NO_TRIGGER_CHAR;
 
-				SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+				SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarmTwoMode);
 			break;
 
 			case (ALARM_MODE_SEISMIC):
@@ -238,42 +239,42 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "SEISMIC TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+					SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarmOneMode);
 				}
 				else
 				{
-					g_helpRecord.alarm_one_air_lvl = NO_TRIGGER_CHAR;
+					g_helpRecord.alarmOneAirLevel = NO_TRIGGER_CHAR;
 
 					// Setup Alarm One Seismic Level
-					if (g_helpRecord.alarm_one_seismic_lvl == NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmOneSeismicLevel == NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_one_seismic_lvl = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
+						g_helpRecord.alarmOneSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
 					}
 
 					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 					{
-						g_helpRecord.alarm_one_seismic_min_lvl = g_triggerRecord.trec.seismicTriggerLevel;
+						g_helpRecord.alarmOneSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
 
-						if (g_helpRecord.alarm_one_seismic_lvl < g_triggerRecord.trec.seismicTriggerLevel)
+						if (g_helpRecord.alarmOneSeismicLevel < g_triggerRecord.trec.seismicTriggerLevel)
 						{
-							g_helpRecord.alarm_one_seismic_lvl = g_triggerRecord.trec.seismicTriggerLevel;
+							g_helpRecord.alarmOneSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
-						g_helpRecord.alarm_one_seismic_min_lvl = ALARM_SEIS_MIN_VALUE;
+						g_helpRecord.alarmOneSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
 
 					// Call Alarm One Seismic Level
 #if 1 // ns8100 - Down convert to current bit accuracy setting
-					if (g_helpRecord.alarm_one_seismic_lvl != NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_one_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+						g_helpRecord.alarmOneSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
 #endif
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
-						(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarmOneSeismicLevel,
+						(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+						(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						g_bitAccuracyMidpoint);
 				}
 			break;
@@ -283,59 +284,59 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+					SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarmOneMode);
 				}
 				else
 				{
-					g_helpRecord.alarm_one_seismic_lvl = NO_TRIGGER_CHAR;
+					g_helpRecord.alarmOneSeismicLevel = NO_TRIGGER_CHAR;
 
 					// Setup Alarm One Air Level
-					if (g_helpRecord.alarm_one_air_lvl == NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmOneAirLevel == NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_one_air_lvl = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
+						g_helpRecord.alarmOneAirLevel = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
 					}
 
 					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 					{
-						g_helpRecord.alarm_one_air_min_lvl = (uint32)g_triggerRecord.trec.airTriggerLevel;
+						g_helpRecord.alarmOneAirMinLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 
-						if (g_helpRecord.alarm_one_air_lvl < (uint32)g_triggerRecord.trec.airTriggerLevel)
+						if (g_helpRecord.alarmOneAirLevel < (uint32)g_triggerRecord.trec.airTriggerLevel)
 						{
-							g_helpRecord.alarm_one_air_lvl = (uint32)g_triggerRecord.trec.airTriggerLevel;
+							g_helpRecord.alarmOneAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
 #if 0 // Port lost change
-						g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MIN_VALUE;
+						g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;
 #else // Updated
-						if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+						if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 						{
-							g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MIN_VALUE;
+							g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;
 						}
 						else
 						{
-							g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MB_MIN_VALUE;
+							g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
 						}
 #endif
 					}
 
 #if 0 // Port lost change
 					// Call Alarm One Air Level
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
-						g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel,
+						g_helpRecord.alarmOneAirMinLevel, g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
-					if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+					if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 					{
 						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl, 
-														g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
+														g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
 					}
 					else
 					{
 						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl,
-														g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
+														g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
 					}
 #endif
 				}
@@ -347,71 +348,71 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "SEISMIC OR AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+					SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarmOneMode);
 				}
 				else
 				{
 					// Setup Alarm One Seismic Level
-					if (g_helpRecord.alarm_one_seismic_lvl == NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmOneSeismicLevel == NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_one_seismic_lvl = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
+						g_helpRecord.alarmOneSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
 					}
 
 					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 					{
-						g_helpRecord.alarm_one_seismic_min_lvl = g_triggerRecord.trec.seismicTriggerLevel;
+						g_helpRecord.alarmOneSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
 
-						if (g_helpRecord.alarm_one_seismic_lvl < g_triggerRecord.trec.seismicTriggerLevel)
+						if (g_helpRecord.alarmOneSeismicLevel < g_triggerRecord.trec.seismicTriggerLevel)
 						{
-							g_helpRecord.alarm_one_seismic_lvl = g_triggerRecord.trec.seismicTriggerLevel;
+							g_helpRecord.alarmOneSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
-						g_helpRecord.alarm_one_seismic_min_lvl = ALARM_SEIS_MIN_VALUE;
+						g_helpRecord.alarmOneSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
 
 					// Setup Alarm One Air Level
-					if (g_helpRecord.alarm_one_air_lvl == NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmOneAirLevel == NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_one_air_lvl = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
+						g_helpRecord.alarmOneAirLevel = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
 					}
 
 					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 					{
-						g_helpRecord.alarm_one_air_min_lvl = (uint16)g_triggerRecord.trec.airTriggerLevel;
+						g_helpRecord.alarmOneAirMinLevel = (uint16)g_triggerRecord.trec.airTriggerLevel;
 
-						if (g_helpRecord.alarm_one_air_lvl < (uint32)g_triggerRecord.trec.airTriggerLevel)
+						if (g_helpRecord.alarmOneAirLevel < (uint32)g_triggerRecord.trec.airTriggerLevel)
 						{
-							g_helpRecord.alarm_one_air_lvl = (uint32)g_triggerRecord.trec.airTriggerLevel;
+							g_helpRecord.alarmOneAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
 #if 0 // Port lost change
-						g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MIN_VALUE;
+						g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;
 #else // Updated
-						if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+						if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 						{
-							g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MIN_VALUE;
+							g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;
 						}
 						else
 						{
-							g_helpRecord.alarm_one_air_min_lvl = ALARM_AIR_MB_MIN_VALUE;
+							g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
 						}
 #endif
 					}
 
 					// Call Alarm One Seismic Level
 #if 1 // ns8100 - Down convert to current bit accuracy setting
-					if (g_helpRecord.alarm_one_seismic_lvl != NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_one_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+						g_helpRecord.alarmOneSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
 #endif
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
-						(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarmOneSeismicLevel,
+						(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+						(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						g_bitAccuracyMidpoint);
 				}
 			break;
@@ -433,7 +434,7 @@ void alarmOneMenuHandler(uint8 keyPressed, void* data)
 		}
 		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 		{
-		     SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vector_sum);
+		     SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vectorSum);
 		}
 	}
 
@@ -466,13 +467,13 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.alarm_two_mode = (uint8)alarmTwoMenu[newItemIndex].data;
+		g_helpRecord.alarmTwoMode = (uint8)alarmTwoMenu[newItemIndex].data;
 
-		switch (g_helpRecord.alarm_two_mode)
+		switch (g_helpRecord.alarmTwoMode)
 		{
 			case (ALARM_MODE_OFF):
-				g_helpRecord.alarm_two_seismic_lvl = NO_TRIGGER_CHAR;
-				g_helpRecord.alarm_two_air_lvl = NO_TRIGGER_CHAR;
+				g_helpRecord.alarmTwoSeismicLevel = NO_TRIGGER_CHAR;
+				g_helpRecord.alarmTwoAirLevel = NO_TRIGGER_CHAR;
 
 				saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -484,42 +485,42 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "SEISMIC TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarmTwoMode);
 				}
 				else
 				{
-					g_helpRecord.alarm_two_air_lvl = NO_TRIGGER_CHAR;
+					g_helpRecord.alarmTwoAirLevel = NO_TRIGGER_CHAR;
 
 					// Setup Alarm Two Seismic Level
-					if (g_helpRecord.alarm_two_seismic_lvl == NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmTwoSeismicLevel == NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_two_seismic_lvl = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
+						g_helpRecord.alarmTwoSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
 					}
 
 					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 					{
-						g_helpRecord.alarm_two_seismic_min_lvl = g_triggerRecord.trec.seismicTriggerLevel;
+						g_helpRecord.alarmTwoSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
 
-						if (g_helpRecord.alarm_two_seismic_lvl < g_triggerRecord.trec.seismicTriggerLevel)
+						if (g_helpRecord.alarmTwoSeismicLevel < g_triggerRecord.trec.seismicTriggerLevel)
 						{
-							g_helpRecord.alarm_two_seismic_lvl = g_triggerRecord.trec.seismicTriggerLevel;
+							g_helpRecord.alarmTwoSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
-						g_helpRecord.alarm_two_seismic_min_lvl = ALARM_SEIS_MIN_VALUE;
+						g_helpRecord.alarmTwoSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
 
 					// Call Alarm Two Seismic Level
 #if 1 // ns8100 - Down convert to current bit accuracy setting
-					if (g_helpRecord.alarm_two_seismic_lvl != NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_two_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+						g_helpRecord.alarmTwoSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
 #endif
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
-						(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarmTwoSeismicLevel,
+						(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+						(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						g_bitAccuracyMidpoint);
 				}
 			break;
@@ -529,59 +530,59 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarmTwoMode);
 				}
 				else
 				{
-					g_helpRecord.alarm_two_seismic_lvl = NO_TRIGGER_CHAR;
+					g_helpRecord.alarmTwoSeismicLevel = NO_TRIGGER_CHAR;
 
 					// Setup Alarm Two Air Level
-					if (g_helpRecord.alarm_two_air_lvl == NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmTwoAirLevel == NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_two_air_lvl = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
+						g_helpRecord.alarmTwoAirLevel = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
 					}
 
 					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 					{
-						g_helpRecord.alarm_two_air_min_lvl = (uint16)g_triggerRecord.trec.airTriggerLevel;
+						g_helpRecord.alarmTwoAirMinLevel = (uint16)g_triggerRecord.trec.airTriggerLevel;
 
-						if (g_helpRecord.alarm_two_air_lvl < (uint32)g_triggerRecord.trec.airTriggerLevel)
+						if (g_helpRecord.alarmTwoAirLevel < (uint32)g_triggerRecord.trec.airTriggerLevel)
 						{
-							g_helpRecord.alarm_two_air_lvl = (uint32)g_triggerRecord.trec.airTriggerLevel;
+							g_helpRecord.alarmTwoAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
 #if 0 // Port lost change
-						g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MIN_VALUE;
+						g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;
 #else // Updated
-						if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+						if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 						{
-							g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MIN_VALUE;
+							g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;
 						}
 						else
 						{
-							g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MB_MIN_VALUE;
+							g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
 						}
 #endif
 					}
 
 #if 0 // Port lost change
 					// Call Alarm One Air Level
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
-						g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel,
+						g_helpRecord.alarmTwoAirMinLevel, g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
-					if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+					if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 					{
 						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
-														g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
+														g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
 					}
 					else
 					{
 						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
-														g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
+														g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
 					}
 #endif
 				}
@@ -593,71 +594,71 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 				{
 					messageBox(getLangText(WARNING_TEXT), "SEISMIC OR AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
-					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarmTwoMode);
 				}
 				else
 				{
 					// Setup Alarm Two Seismic Level
-					if (g_helpRecord.alarm_two_seismic_lvl == NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmTwoSeismicLevel == NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_two_seismic_lvl = ALARM_TWO_SEIS_DEFAULT_TRIG_LVL;
+						g_helpRecord.alarmTwoSeismicLevel = ALARM_TWO_SEIS_DEFAULT_TRIG_LVL;
 					}
 
 					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 					{
-						g_helpRecord.alarm_two_seismic_min_lvl = g_triggerRecord.trec.seismicTriggerLevel;
+						g_helpRecord.alarmTwoSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
 
-						if (g_helpRecord.alarm_two_seismic_lvl < g_triggerRecord.trec.seismicTriggerLevel)
+						if (g_helpRecord.alarmTwoSeismicLevel < g_triggerRecord.trec.seismicTriggerLevel)
 						{
-							g_helpRecord.alarm_two_seismic_lvl = g_triggerRecord.trec.seismicTriggerLevel;
+							g_helpRecord.alarmTwoSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
-						g_helpRecord.alarm_two_seismic_min_lvl = ALARM_SEIS_MIN_VALUE;
+						g_helpRecord.alarmTwoSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
 
 					// Setup Alarm Two Air Level
-					if (g_helpRecord.alarm_two_air_lvl == NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmTwoAirLevel == NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_two_air_lvl = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
+						g_helpRecord.alarmTwoAirLevel = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
 					}
 
 					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 					{
-						g_helpRecord.alarm_two_air_min_lvl = (uint16)g_triggerRecord.trec.airTriggerLevel;
+						g_helpRecord.alarmTwoAirMinLevel = (uint16)g_triggerRecord.trec.airTriggerLevel;
 
-						if (g_helpRecord.alarm_two_air_lvl < (uint32)g_triggerRecord.trec.airTriggerLevel)
+						if (g_helpRecord.alarmTwoAirLevel < (uint32)g_triggerRecord.trec.airTriggerLevel)
 						{
-							g_helpRecord.alarm_two_air_lvl = (uint32)g_triggerRecord.trec.airTriggerLevel;
+							g_helpRecord.alarmTwoAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
 #if 0 // Port lost change
-						g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MIN_VALUE;
+						g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;
 #else // Updated
-						if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+						if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 						{
-							g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MIN_VALUE;
+							g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;
 						}
 						else
 						{
-							g_helpRecord.alarm_two_air_min_lvl = ALARM_AIR_MB_MIN_VALUE;
+							g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
 						}
 #endif
 					}
 
 					// Call Alarm Two Seismic Level
 #if 1 // ns8100 - Down convert to current bit accuracy setting
-					if (g_helpRecord.alarm_two_seismic_lvl != NO_TRIGGER_CHAR)
+					if (g_helpRecord.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 					{
-						g_helpRecord.alarm_two_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+						g_helpRecord.alarmTwoSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
 #endif
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
-						(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarmTwoSeismicLevel,
+						(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+						(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 						g_bitAccuracyMidpoint);
 				}
 			break;
@@ -665,13 +666,13 @@ void alarmTwoMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (g_helpRecord.alarm_one_mode == ALARM_MODE_OFF)
+		if (g_helpRecord.alarmOneMode == ALARM_MODE_OFF)
 		{
-			SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+			SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarmOneMode);
 		}
 		else
 		{
-			SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_helpRecord.alarm_one_time,
+			SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_helpRecord.alarmOneTime,
 				ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT,
 				ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 		}
@@ -704,8 +705,8 @@ void alarmOutputMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.alarm_one_mode = (uint8)alarmOutputMenu[newItemIndex].data;
-		g_helpRecord.alarm_two_mode = (uint8)alarmOutputMenu[newItemIndex].data;
+		g_helpRecord.alarmOneMode = (uint8)alarmOutputMenu[newItemIndex].data;
+		g_helpRecord.alarmTwoMode = (uint8)alarmOutputMenu[newItemIndex].data;
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -745,9 +746,9 @@ void autoCalMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.auto_cal_mode = (uint8)autoCalMenu[newItemIndex].data;
+		g_helpRecord.autoCalMode = (uint8)autoCalMenu[newItemIndex].data;
 
-		if (g_helpRecord.auto_cal_mode == AUTO_NO_CAL_TIMEOUT)
+		if (g_helpRecord.autoCalMode == AUTO_NO_CAL_TIMEOUT)
 		{
 			g_autoCalDaysToWait = 0;
 		}
@@ -794,9 +795,9 @@ void autoMonitorMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.auto_monitor_mode = (uint8)autoMonitorMenu[newItemIndex].data;
+		g_helpRecord.autoMonitorMode = (uint8)autoMonitorMenu[newItemIndex].data;
 
-		assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.auto_monitor_mode * TICKS_PER_MIN), autoMonitorTimerCallBack);
+		assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), autoMonitorTimerCallBack);
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -849,7 +850,7 @@ void barChannelMenuHandler(uint8 keyPressed, void* data)
 			sprintf((char*)&g_menuTags[BAR_SCALE_EIGHTH_TAG].text, " 12%% (%.0f mg)",
 					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_EIGHTH));
 		}
-		else if (g_helpRecord.units_of_measure == IMPERIAL)
+		else if (g_helpRecord.unitsOfMeasure == IMPERIAL)
 		{
 			sprintf((char*)&g_menuTags[BAR_SCALE_FULL_TAG].text, "100%% (%.2f in/s)",
 					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_FULL));
@@ -860,7 +861,7 @@ void barChannelMenuHandler(uint8 keyPressed, void* data)
 			sprintf((char*)&g_menuTags[BAR_SCALE_EIGHTH_TAG].text, " 12%% (%.2f in/s)",
 					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_EIGHTH));
 		}
-		else // g_helpRecord.units_of_measure == METRIC
+		else // g_helpRecord.unitsOfMeasure == METRIC
 		{
 			sprintf((char*)&g_menuTags[BAR_SCALE_FULL_TAG].text, "100%% (%lu mm/s)",
 					(uint32)((float)g_factorySetupRecord.sensor_type * (float)25.4 /
@@ -1032,7 +1033,7 @@ void barResultMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.vector_sum = (uint8)barResultMenu[newItemIndex].data;
+		g_helpRecord.vectorSum = (uint8)barResultMenu[newItemIndex].data;
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 		// If Combo mode, jump back over to waveform specific settings
@@ -1060,13 +1061,13 @@ void barResultMenuHandler(uint8 keyPressed, void* data)
 				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
 		}
-		else if ((g_helpRecord.alarm_one_mode == ALARM_MODE_OFF) && (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF))
+		else if ((g_helpRecord.alarmOneMode == ALARM_MODE_OFF) && (g_helpRecord.alarmTwoMode == ALARM_MODE_OFF))
 		{
 			SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
 		}
 		else
 		{
-			SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+			SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarmOneMode);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -1113,9 +1114,9 @@ void baudRateMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		if (g_helpRecord.baud_rate != baudRateMenu[newItemIndex].data)
+		if (g_helpRecord.baudRate != baudRateMenu[newItemIndex].data)
 		{
-			g_helpRecord.baud_rate = (uint8)baudRateMenu[newItemIndex].data;
+			g_helpRecord.baudRate = (uint8)baudRateMenu[newItemIndex].data;
 
 			switch (baudRateMenu[newItemIndex].data)
 			{
@@ -1232,7 +1233,7 @@ void bitAccuracyMenuHandler(uint8 keyPressed, void* data)
 #if 0 // Port lost change
 #define CONFIG_MENU_ENTRIES 27
 #else // Updated
-#define CONFIG_MENU_ENTRIES 29
+#define CONFIG_MENU_ENTRIES 30
 #endif
 #endif
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
@@ -1261,6 +1262,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, MODEM_SETUP_TEXT,			NO_TAG, {MODEM_SETUP}},
 {NO_TAG, 0, MONITOR_LOG_TEXT,			NO_TAG, {MONITOR_LOG}},
 {NO_TAG, 0, PRETRIGGER_SIZE_TEXT,		NO_TAG, {PRETRIGGER_SIZE}},
+{NO_TAG, 0, POWER_PROFILE_TEXT,			NO_TAG, {POWER_PROFILE}},
 #if 0 // ns7100
 {NO_TAG, 0, PRINTER_TEXT,				NO_TAG, {PRINTER}},
 {NO_TAG, 0, PRINT_MONITOR_LOG_TEXT,		NO_TAG, {PRINT_MONITOR_LOG}},
@@ -1293,11 +1295,11 @@ void configMenuHandler(uint8 keyPressed, void* data)
 		switch (configMenu[newItemIndex].data)
 		{
 			case (ALARM_OUTPUT_MODE):
-				SETUP_USER_MENU_MSG(&alarmOutputMenu, (g_helpRecord.alarm_one_mode | g_helpRecord.alarm_two_mode));
+				SETUP_USER_MENU_MSG(&alarmOutputMenu, (g_helpRecord.alarmOneMode | g_helpRecord.alarmTwoMode));
 			break;
 
 			case (AUTO_CALIBRATION):
-				SETUP_USER_MENU_MSG(&autoCalMenu, g_helpRecord.auto_cal_mode);
+				SETUP_USER_MENU_MSG(&autoCalMenu, g_helpRecord.autoCalMode);
 			break;
 
 			case (AUTO_DIAL_INFO):
@@ -1305,7 +1307,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (AUTO_MONITOR):
-				SETUP_USER_MENU_MSG(&autoMonitorMenu, g_helpRecord.auto_monitor_mode);
+				SETUP_USER_MENU_MSG(&autoMonitorMenu, g_helpRecord.autoMonitorMode);
 			break;
 
 			case (BATTERY):
@@ -1313,7 +1315,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (BAUD_RATE):
-				SETUP_USER_MENU_MSG(&baudRateMenu, g_helpRecord.baud_rate);
+				SETUP_USER_MENU_MSG(&baudRateMenu, g_helpRecord.baudRate);
 			break;
 
 			case (CALIBRATION_DATE):
@@ -1341,7 +1343,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (FLASH_WRAPPING):
-				SETUP_USER_MENU_MSG(&flashWrappingMenu, g_helpRecord.flash_wrapping);
+				SETUP_USER_MENU_MSG(&flashWrappingMenu, g_helpRecord.flashWrapping);
 			break;
 
 			case (FLASH_STATS):
@@ -1351,7 +1353,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			case (FREQUENCY_PLOT):
 				if (SUPERGRAPH_UNIT)
 				{
-					SETUP_USER_MENU_MSG(&freqPlotMenu, g_helpRecord.freq_plot_mode);
+					SETUP_USER_MENU_MSG(&freqPlotMenu, g_helpRecord.freqPlotMode);
 				}
 				else // MINIGRAPH_UNIT
 				{
@@ -1360,7 +1362,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (LANGUAGE):
-				SETUP_USER_MENU_MSG(&languageMenu, g_helpRecord.lang_mode);
+				SETUP_USER_MENU_MSG(&languageMenu, g_helpRecord.languageMode);
 			break;
 
 			case (LCD_CONTRAST):
@@ -1368,7 +1370,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (LCD_TIMEOUT):
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdTimeoutMenu, &g_helpRecord.lcd_timeout,
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdTimeoutMenu, &g_helpRecord.lcdTimeout,
 					LCD_TIMEOUT_DEFAULT_VALUE, LCD_TIMEOUT_MIN_VALUE, LCD_TIMEOUT_MAX_VALUE);
 			break;
 
@@ -1381,13 +1383,13 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (PRETRIGGER_SIZE):
-				SETUP_USER_MENU_MSG(&pretriggerSizeMenu, g_helpRecord.pretrig_buffer_div);
+				SETUP_USER_MENU_MSG(&pretriggerSizeMenu, g_helpRecord.pretrigBufferDivider);
 			break;
 
 			case (PRINTER):
 				if (SUPERGRAPH_UNIT)
 				{
-					SETUP_USER_MENU_MSG(&printerEnableMenu, g_helpRecord.auto_print);
+					SETUP_USER_MENU_MSG(&printerEnableMenu, g_helpRecord.autoPrint);
 				}
 				else // MINIGRAPH_UNIT
 				{
@@ -1398,7 +1400,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			case (PRINT_MONITOR_LOG):
 				if (SUPERGRAPH_UNIT)
 				{
-					SETUP_USER_MENU_MSG(&printMonitorLogMenu, g_helpRecord.print_monitor_log);
+					SETUP_USER_MENU_MSG(&printMonitorLogMenu, g_helpRecord.printMonitorLog);
 				}
 				else
 				{
@@ -1406,13 +1408,17 @@ void configMenuHandler(uint8 keyPressed, void* data)
 				}
 			break;
 
+			case (POWER_PROFILE):
+				SETUP_USER_MENU_MSG(&powerProfileMenu, g_helpRecord.powerProfile);
+			break;
+
 			case (REPORT_DISPLACEMENT):
-				SETUP_USER_MENU_MSG(&displacementMenu, g_helpRecord.report_displacement);
+				SETUP_USER_MENU_MSG(&displacementMenu, g_helpRecord.reportDisplacement);
 			break;
 
 #if 1 // Updated (Port lost change)
 			case (REPORT_PEAK_ACC):
-				SETUP_USER_MENU_MSG(&peakAccMenu, g_helpRecord.report_peak_acceleration);
+				SETUP_USER_MENU_MSG(&peakAccMenu, g_helpRecord.reportPeakAcceleration);
 			break;
 #endif
 
@@ -1429,7 +1435,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (TIMER_MODE):
-				if (g_helpRecord.timer_mode == ENABLED)
+				if (g_helpRecord.timerMode == ENABLED)
 				{
 					// Show current Timer Mode settings
 					displayTimerModeSettings();
@@ -1437,7 +1443,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 					// Check if the user wants to cancel the current timer mode
 					if (messageBox(getLangText(STATUS_TEXT), getLangText(CANCEL_TIMER_MODE_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 					{
-						g_helpRecord.timer_mode = DISABLED;
+						g_helpRecord.timerMode = DISABLED;
 
 						// Disable power off protection
 						powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
@@ -1447,7 +1453,7 @@ void configMenuHandler(uint8 keyPressed, void* data)
 
 						saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-						SETUP_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timer_mode);
+						SETUP_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timerMode);
 					}
 					else // User did not cancel timer mode
 					{
@@ -1456,24 +1462,24 @@ void configMenuHandler(uint8 keyPressed, void* data)
 				}
 				else // Timer mode is disabled
 				{
-					SETUP_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timer_mode);
+					SETUP_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timerMode);
 				}
 			break;
 
 			case (UNITS_OF_MEASURE):
-				SETUP_USER_MENU_MSG(&unitsOfMeasureMenu, g_helpRecord.units_of_measure);
+				SETUP_USER_MENU_MSG(&unitsOfMeasureMenu, g_helpRecord.unitsOfMeasure);
 			break;
 
 			case (UNITS_OF_AIR):
-				SETUP_USER_MENU_MSG(&unitsOfAirMenu, g_helpRecord.units_of_air);
+				SETUP_USER_MENU_MSG(&unitsOfAirMenu, g_helpRecord.unitsOfAir);
 			break;
 
 			case (VECTOR_SUM):
-				SETUP_USER_MENU_MSG(&vectorSumMenu, g_helpRecord.vector_sum);
+				SETUP_USER_MENU_MSG(&vectorSumMenu, g_helpRecord.vectorSum);
 			break;
 
 			case (WAVEFORM_AUTO_CAL):
-				SETUP_USER_MENU_MSG(&waveformAutoCalMenu, g_helpRecord.auto_cal_in_waveform);
+				SETUP_USER_MENU_MSG(&waveformAutoCalMenu, g_helpRecord.autoCalForWaveform);
 			break;
 		}
 	}
@@ -1509,7 +1515,7 @@ void displacementMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.report_displacement = (uint8)displacementMenu[newItemIndex].data;
+		g_helpRecord.reportDisplacement = (uint8)displacementMenu[newItemIndex].data;
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -1691,7 +1697,7 @@ void flashWrappingMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.flash_wrapping = (uint8)(flashWrappingMenu[newItemIndex].data);
+		g_helpRecord.flashWrapping = (uint8)(flashWrappingMenu[newItemIndex].data);
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -1729,11 +1735,11 @@ void freqPlotMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.freq_plot_mode = (uint8)freqPlotMenu[newItemIndex].data;
+		g_helpRecord.freqPlotMode = (uint8)freqPlotMenu[newItemIndex].data;
 
-		if (g_helpRecord.freq_plot_mode == YES)
+		if (g_helpRecord.freqPlotMode == YES)
 		{
-			SETUP_USER_MENU_MSG(&freqPlotStandardMenu, g_helpRecord.freq_plot_type);
+			SETUP_USER_MENU_MSG(&freqPlotStandardMenu, g_helpRecord.freqPlotType);
 		}
 		else
 		{
@@ -1778,7 +1784,7 @@ void freqPlotStandardMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.freq_plot_type = (uint8)freqPlotStandardMenu[newItemIndex].data;
+		g_helpRecord.freqPlotType = (uint8)freqPlotStandardMenu[newItemIndex].data;
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -1786,7 +1792,7 @@ void freqPlotStandardMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&freqPlotMenu, g_helpRecord.freq_plot_mode);
+		SETUP_USER_MENU_MSG(&freqPlotMenu, g_helpRecord.freqPlotMode);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -1930,8 +1936,8 @@ void languageMenuHandler(uint8 keyPressed, void* data)
 			case ITALIAN_LANG:
 			case GERMAN_LANG:
 			case SPANISH_LANG:
-					g_helpRecord.lang_mode = (uint8)languageMenu[newItemIndex].data;
-					build_languageLinkTable(g_helpRecord.lang_mode);
+					g_helpRecord.languageMode = (uint8)languageMenu[newItemIndex].data;
+					build_languageLinkTable(g_helpRecord.languageMode);
 					saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 					break;
 
@@ -2128,7 +2134,7 @@ void peakAccMenuHandler(uint8 keyPressed, void* data)
 
 	if(keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.report_peak_acceleration = (uint8)peakAccMenu[newItemIndex].data;
+		g_helpRecord.reportPeakAcceleration = (uint8)peakAccMenu[newItemIndex].data;
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -2167,9 +2173,9 @@ void pretriggerSizeMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.pretrig_buffer_div = (uint8)pretriggerSizeMenu[newItemIndex].data;
+		g_helpRecord.pretrigBufferDivider = (uint8)pretriggerSizeMenu[newItemIndex].data;
 
-		debug("New Pretrigger divider: %d\n", g_helpRecord.pretrig_buffer_div);
+		debug("New Pretrigger divider: %d\n", g_helpRecord.pretrigBufferDivider);
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -2207,7 +2213,7 @@ void printerEnableMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.auto_print = (uint8)printerEnableMenu[newItemIndex].data;
+		g_helpRecord.autoPrint = (uint8)printerEnableMenu[newItemIndex].data;
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -2290,7 +2296,7 @@ void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.print_monitor_log = (uint8)printMonitorLogMenu[newItemIndex].data;
+		g_helpRecord.printMonitorLog = (uint8)printMonitorLogMenu[newItemIndex].data;
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -2299,6 +2305,44 @@ void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&configMenu, PRINT_MONITOR_LOG);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Power Profile Menu
+//=============================================================================
+//*****************************************************************************
+#define POWER_PROFILE_MENU_ENTRIES 4
+USER_MENU_STRUCT powerProfileMenu[POWER_PROFILE_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, POWER_PROFILE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, POWER_PROFILE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, YES_TEXT,	NO_TAG, {YES}},
+{ITEM_2, 0, NO_TEXT,	NO_TAG, {NO}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&powerProfileMenuHandler}}
+};
+
+//---------------------------------------
+// Power Profile Menu Handler
+//---------------------------------------
+void powerProfileMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_helpRecord.powerProfile = (uint8)powerProfileMenu[newItemIndex].data;
+
+		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu, POWER_PROFILE);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -2418,7 +2462,7 @@ void sampleRateMenuHandler(uint8 keyPressed, void* data)
 #if 0 // Fixed Pretrigger size
 				((g_triggerRecord.trec.sample_rate / 4) * g_sensorInfoPtr->numOfChannels) -
 #else // Variable Pretrigger size
-				((g_triggerRecord.trec.sample_rate / g_helpRecord.pretrig_buffer_div) * g_sensorInfoPtr->numOfChannels) -
+				((g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider) * g_sensorInfoPtr->numOfChannels) -
 #endif
 				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * g_sensorInfoPtr->numOfChannels)) /
 				(g_triggerRecord.trec.sample_rate * g_sensorInfoPtr->numOfChannels))));
@@ -2480,8 +2524,8 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 		{
 			case WAVEFORM_MODE:
 			case COMBO_MODE:
-				if ((g_helpRecord.alarm_one_mode == ALARM_MODE_OFF) &&
-					(g_helpRecord.alarm_two_mode == ALARM_MODE_OFF))
+				if ((g_helpRecord.alarmOneMode == ALARM_MODE_OFF) &&
+					(g_helpRecord.alarmTwoMode == ALARM_MODE_OFF))
 				{
 					if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
 					{
@@ -2495,13 +2539,13 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 				}
 				else
 				{
-					if (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF)
+					if (g_helpRecord.alarmTwoMode == ALARM_MODE_OFF)
 					{
-						SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+						SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarmTwoMode);
 					}
 					else
 					{
-						SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarm_two_time,
+						SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarmTwoTime,
 							ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT,
 							ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 					}
@@ -2509,20 +2553,20 @@ void saveSetupMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case BARGRAPH_MODE:
-				if ((g_helpRecord.alarm_one_mode == ALARM_MODE_OFF) &&
-					(g_helpRecord.alarm_two_mode == ALARM_MODE_OFF))
+				if ((g_helpRecord.alarmOneMode == ALARM_MODE_OFF) &&
+					(g_helpRecord.alarmTwoMode == ALARM_MODE_OFF))
 				{
-					SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vector_sum);
+					SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vectorSum);
 				}
 				else
 				{
-					if (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF)
+					if (g_helpRecord.alarmTwoMode == ALARM_MODE_OFF)
 					{
-						SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+						SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarmTwoMode);
 					}
 					else
 					{
-						SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarm_two_time,
+						SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarmTwoTime,
 							ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT,
 							ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 					}
@@ -2677,11 +2721,11 @@ void timerModeMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.timer_mode = (uint8)timerModeMenu[newItemIndex].data;
+		g_helpRecord.timerMode = (uint8)timerModeMenu[newItemIndex].data;
 
-		if (g_helpRecord.timer_mode == ENABLED)
+		if (g_helpRecord.timerMode == ENABLED)
 		{
-			SETUP_USER_MENU_MSG(&timerModeFreqMenu, g_helpRecord.timer_mode_freq);
+			SETUP_USER_MENU_MSG(&timerModeFreqMenu, g_helpRecord.timerModeFrequency);
 		}
 		else
 		{
@@ -2692,9 +2736,9 @@ void timerModeMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (g_helpRecord.timer_mode == ENABLED)
+		if (g_helpRecord.timerMode == ENABLED)
 		{
-			g_helpRecord.timer_mode = DISABLED;
+			g_helpRecord.timerMode = DISABLED;
 
 			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -2739,11 +2783,11 @@ void timerModeFreqMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.timer_mode_freq = (uint8)timerModeFreqMenu[newItemIndex].data;
+		g_helpRecord.timerModeFrequency = (uint8)timerModeFreqMenu[newItemIndex].data;
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-		if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
+		if (g_helpRecord.timerModeFrequency == TIMER_MODE_HOURLY)
 		{
 			messageBox("TIMER MODE", "FOR HOURLY MODE THE HOURS AND MINUTES FIELDS ARE INDEPENDENT", MB_OK);
 			messageBox("TIMER MODE HOURLY", "HOURS = ACTIVE HOURS, MINS = ACTIVE MIN RANGE EACH HOUR", MB_OK);
@@ -2753,7 +2797,7 @@ void timerModeFreqMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timer_mode);
+		SETUP_USER_MENU_MSG(&timerModeMenu, g_helpRecord.timerMode);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -2783,9 +2827,9 @@ void unitsOfMeasureMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.units_of_measure = (uint8)unitsOfMeasureMenu[newItemIndex].data;
+		g_helpRecord.unitsOfMeasure = (uint8)unitsOfMeasureMenu[newItemIndex].data;
 
-		if (g_helpRecord.units_of_measure == IMPERIAL_TYPE)
+		if (g_helpRecord.unitsOfMeasure == IMPERIAL_TYPE)
 		{
 			g_sensorInfoPtr->unitsFlag = IMPERIAL_TYPE;
 			g_sensorInfoPtr->measurementRatio = (float)IMPERIAL;
@@ -2833,16 +2877,16 @@ void unitsOfAirMenuHandler(uint8 keyPressed, void* data)
 #if 0 // Port lost change
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.units_of_air = (uint8)unitsOfAirMenu[newItemIndex].data;
+		g_helpRecord.unitsOfAir = (uint8)unitsOfAirMenu[newItemIndex].data;
 #else // Updated
 	if(keyPressed == ENTER_KEY)
 	{
-		if (g_helpRecord.units_of_air != (uint8)unitsOfAirMenu[newItemIndex].data)
+		if (g_helpRecord.unitsOfAir != (uint8)unitsOfAirMenu[newItemIndex].data)
 		{
-			g_helpRecord.units_of_air = (uint8)unitsOfAirMenu[newItemIndex].data;
+			g_helpRecord.unitsOfAir = (uint8)unitsOfAirMenu[newItemIndex].data;
 
 			// Check if the units of air was changed to dB, which means the prior mb values need to be converted
-			if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+			if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{
 				g_sensorInfoPtr->airUnitsFlag = DB_TYPE;
 				g_sensorInfoPtr->ameasurementRatio = (float)DECIBEL;
@@ -2850,14 +2894,14 @@ void unitsOfAirMenuHandler(uint8 keyPressed, void* data)
 				debug("Units of Air: Convert from MB value %f\n", (float)((float)g_triggerRecord.trec.airTriggerLevel / (float)10000));
 
 				g_triggerRecord.trec.airTriggerLevel = convertMBtoDB(g_triggerRecord.trec.airTriggerLevel);
-				g_helpRecord.alarm_one_air_min_lvl = convertMBtoDB(g_helpRecord.alarm_one_air_min_lvl);
-				g_helpRecord.alarm_two_air_min_lvl = convertMBtoDB(g_helpRecord.alarm_two_air_min_lvl);
-				g_helpRecord.alarm_one_air_lvl = convertMBtoDB(g_helpRecord.alarm_one_air_lvl);
-				g_helpRecord.alarm_two_air_lvl = convertMBtoDB(g_helpRecord.alarm_two_air_lvl);
+				g_helpRecord.alarmOneAirMinLevel = convertMBtoDB(g_helpRecord.alarmOneAirMinLevel);
+				g_helpRecord.alarmTwoAirMinLevel = convertMBtoDB(g_helpRecord.alarmTwoAirMinLevel);
+				g_helpRecord.alarmOneAirLevel = convertMBtoDB(g_helpRecord.alarmOneAirLevel);
+				g_helpRecord.alarmTwoAirLevel = convertMBtoDB(g_helpRecord.alarmTwoAirLevel);
 
 				debug("Units of Air: Convert to DB value %d\n", g_triggerRecord.trec.airTriggerLevel);
 			}
-			else // g_helpRecord.units_of_air == MILLIBAR_TYPE, units of air now mb, change from prior dB
+			else // g_helpRecord.unitsOfAir == MILLIBAR_TYPE, units of air now mb, change from prior dB
 			{
 				g_sensorInfoPtr->airUnitsFlag = MB_TYPE;
 				g_sensorInfoPtr->ameasurementRatio = (float)MILLIBAR;
@@ -2865,10 +2909,10 @@ void unitsOfAirMenuHandler(uint8 keyPressed, void* data)
 				debug("Units of Air: Convert from DB value %d\n", g_triggerRecord.trec.airTriggerLevel);
 
 				g_triggerRecord.trec.airTriggerLevel = convertDBtoMB(g_triggerRecord.trec.airTriggerLevel);
-				g_helpRecord.alarm_one_air_min_lvl = convertDBtoMB(g_helpRecord.alarm_one_air_min_lvl);
-				g_helpRecord.alarm_two_air_min_lvl = convertDBtoMB(g_helpRecord.alarm_two_air_min_lvl);
-				g_helpRecord.alarm_one_air_lvl = convertDBtoMB(g_helpRecord.alarm_one_air_lvl);
-				g_helpRecord.alarm_two_air_lvl = convertDBtoMB(g_helpRecord.alarm_two_air_lvl);
+				g_helpRecord.alarmOneAirMinLevel = convertDBtoMB(g_helpRecord.alarmOneAirMinLevel);
+				g_helpRecord.alarmTwoAirMinLevel = convertDBtoMB(g_helpRecord.alarmTwoAirMinLevel);
+				g_helpRecord.alarmOneAirLevel = convertDBtoMB(g_helpRecord.alarmOneAirLevel);
+				g_helpRecord.alarmTwoAirLevel = convertDBtoMB(g_helpRecord.alarmTwoAirLevel);
 
 				debug("Units of Air: Convert to MB value %f\n", (float)((float)g_triggerRecord.trec.airTriggerLevel / (float)10000));
 			}
@@ -2919,7 +2963,7 @@ void vectorSumMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.vector_sum = (uint8)vectorSumMenu[newItemIndex].data;
+		g_helpRecord.vectorSum = (uint8)vectorSumMenu[newItemIndex].data;
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -2957,7 +3001,7 @@ void waveformAutoCalMenuHandler(uint8 keyPressed, void* data)
 
 	if(keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.auto_cal_in_waveform = (uint8)waveformAutoCalMenu[newItemIndex].data;
+		g_helpRecord.autoCalForWaveform = (uint8)waveformAutoCalMenu[newItemIndex].data;
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 

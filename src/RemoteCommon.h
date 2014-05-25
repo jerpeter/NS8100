@@ -369,8 +369,8 @@ typedef struct
 #pragma pack(1)
 typedef struct
 {
-	uint8	auto_monitor_mode;
-	uint8	auto_cal_mode;
+	uint8	autoMonitorMode;
+	uint8	autoCalMode;
 	uint8	unused[2];
 } AUTO_CAL_MON_CFG;
 #pragma pack()
@@ -379,12 +379,12 @@ typedef struct
 #pragma pack(1)
 typedef struct
 {
-	uint8 auto_print;
-	uint8 lang_mode;
-	uint8 vector_sum;
-	uint8 units_of_measure;
-	uint8 freq_plot_mode;
-	uint8 freq_plot_type;
+	uint8 autoPrint;
+	uint8 languageMode;
+	uint8 vectorSum;
+	uint8 unitsOfMeasure;
+	uint8 freqPlotMode;
+	uint8 freqPlotType;
 #if 0 // ns7100
 	uint8	unused[2];
 #else // ns8100 - Changed to match the padding in the ns7100
@@ -397,18 +397,18 @@ typedef struct
 #pragma pack(1)
 typedef struct
 {
-	uint8 alarm_one_mode;
-	uint8 alarm_two_mode;
-	uint32 alarm_one_seismic_lvl;
-	uint32 alarm_one_seismic_min_lvl;
-	uint32 alarm_one_air_lvl;
-	uint32 alarm_one_air_min_lvl;
-	uint32 alarm_two_seismic_lvl;
-	uint32 alarm_two_seismic_min_lvl;
-	uint32 alarm_two_air_lvl;
-	uint32 alarm_two_air_min_lvl;
-	uint32 alarm_one_time;
-	uint32 alarm_two_time;
+	uint8 alarmOneMode;
+	uint8 alarmTwoMode;
+	uint32 alarmOneSeismicLevel;
+	uint32 alarmOneSeismicMinLevel;
+	uint32 alarmOneAirLevel;
+	uint32 alarmOneAirMinLevel;
+	uint32 alarmTwoSeismicLevel;
+	uint32 alarmTwoSeismicMinLevel;
+	uint32 alarmTwoAirLevel;
+	uint32 alarmTwoAirMinLevel;
+	uint32 alarmOneTime;
+	uint32 alarmTwoTime;
 #if 0 // ns7100
 	uint8	unused[2];
 #else // ns8100 - Changed to match the padding in the ns7100
@@ -421,10 +421,10 @@ typedef struct
 #pragma pack(1)
 typedef struct
 {
-	uint8 	timer_mode;
-	uint8 	timer_mode_freq;
+	uint8 	timerMode;
+	uint8 	timerModeFrequency;
 #if 1 // fix_ns8100 - Size changed to uint32, however this field isn't needed
-	uint16 	timer_mode_active_minutes;
+	uint16 	timerModeActiveMinutes;
 #endif
 	DATE_TIME_STRUCT  timer_start;
 	DATE_TIME_STRUCT  timer_stop;

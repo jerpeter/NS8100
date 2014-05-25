@@ -102,7 +102,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 			g_monitorOperationMode = (uint8)msg.data[0];
 
 			// Check if flash wrapping is disabled and if there is space left in flash
-			if (g_helpRecord.flash_wrapping == NO)
+			if (g_helpRecord.flashWrapping == NO)
 			{
 				if (((g_monitorOperationMode == WAVEFORM_MODE) && (flashStats.waveEventsLeft == 0)) ||
 					((g_monitorOperationMode == BARGRAPH_MODE) && (flashStats.roomForBargraph == NO)) ||
@@ -135,12 +135,12 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					// Set the default display mode to be the summary interval results
 					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
 					
-					if(g_helpRecord.vector_sum == DISABLED)
+					if(g_helpRecord.vectorSum == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 					
-					if(g_helpRecord.report_displacement == DISABLED)
+					if(g_helpRecord.reportDisplacement == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
@@ -184,12 +184,12 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					// Set the default display mode to be the summary interval results
 					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
 					
-					if(g_helpRecord.vector_sum == DISABLED)
+					if(g_helpRecord.vectorSum == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 					
-					if(g_helpRecord.report_displacement == DISABLED)
+					if(g_helpRecord.reportDisplacement == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
@@ -258,9 +258,9 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 							{
 								stopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
-								// Restore the auto_print value just in case the user escaped from a printout
+								// Restore the autoPrint value just in case the user escaped from a printout
 								getRecData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-								g_helpRecord.auto_print = temp_g_helpRecord.auto_print;
+								g_helpRecord.autoPrint = temp_g_helpRecord.autoPrint;
 
 								SETUP_MENU_MSG(MAIN_MENU);
 								JUMP_TO_ACTIVE_MENU();
@@ -361,14 +361,14 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 #if 0 // Port lost change
 							if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 							{
-								if(g_helpRecord.vector_sum == ENABLED)				
+								if(g_helpRecord.vectorSum == ENABLED)
 									g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 							}
 							else
 							{
-								if(g_helpRecord.report_displacement == ENABLED)
+								if(g_helpRecord.reportDisplacement == ENABLED)
 									g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
-								else if(g_helpRecord.vector_sum == ENABLED)
+								else if(g_helpRecord.vectorSum == ENABLED)
 									g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 							}
 #else
@@ -385,7 +385,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 						
 						case PEAK_DISPLACEMENT_RESULTS:
 #if 0 // Port lost change
-							if(g_helpRecord.vector_sum == ENABLED)
+							if(g_helpRecord.vectorSum == ENABLED)
 								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 							else
 								g_displayAlternateResultState = DEFAULT_RESULTS;
@@ -409,9 +409,9 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					{
 						case DEFAULT_RESULTS: 
 #if 0 // Port lost change
-							if(g_helpRecord.vector_sum == ENABLED)
+							if(g_helpRecord.vectorSum == ENABLED)
 								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-							else if((g_helpRecord.report_displacement == ENABLED) && (g_displayBargraphResultsMode != IMPULSE_RESULTS))
+							else if((g_helpRecord.reportDisplacement == ENABLED) && (g_displayBargraphResultsMode != IMPULSE_RESULTS))
 								g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
 #else // Updated
 			               g_displayAlternateResultState = VECTOR_SUM_RESULTS;
@@ -426,7 +426,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 							}
 							else
 							{
-								if(g_helpRecord.report_displacement == ENABLED)
+								if(g_helpRecord.reportDisplacement == ENABLED)
 									g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
 								else
 									g_displayAlternateResultState = DEFAULT_RESULTS;
@@ -466,9 +466,9 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
         case STOP_MONITORING_CMD:
 			stopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
-			// Restore the auto_print value just in case the user escaped from a printout
+			// Restore the autoPrint value just in case the user escaped from a printout
 			getRecData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-			g_helpRecord.auto_print = temp_g_helpRecord.auto_print;
+			g_helpRecord.autoPrint = temp_g_helpRecord.autoPrint;
 
 			SETUP_MENU_MSG(MAIN_MENU);
 			JUMP_TO_ACTIVE_MENU();
@@ -1125,7 +1125,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
 #if 1 // Port lost change
-					if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
+					if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 #else // Incorrect - Updated
 					if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
 #endif
@@ -1150,7 +1150,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 							}
 
 #if 1 // Port lost change
-							if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
+							if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 #else // Incorrect - Updated
 							if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
 #endif
@@ -1171,7 +1171,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 							}
 
 #if 1 // Port lost change
-							if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
+							if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 #else // Incorrect - Updated
 							if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
 #endif
@@ -1192,7 +1192,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 									((float)((g_aJobFreq * 2) - 1)));
 						}
 
-						if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
+						if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 						{
 							sprintf(buff, "AIR %0.3f mb ", hexToMB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 						}

@@ -144,12 +144,12 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 							time.hour, time.min, time.sec, time.hundredths);
 
 					// Check if Timer mode is enabled
-					if (g_helpRecord.timer_mode == ENABLED)
+					if (g_helpRecord.timerMode == ENABLED)
 					{
 						// Cancel Timer mode
 						messageBox(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), MB_OK);
 
-						g_helpRecord.timer_mode = DISABLED;
+						g_helpRecord.timerMode = DISABLED;
 
 						// Disable the Power Off Protection
 						powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);

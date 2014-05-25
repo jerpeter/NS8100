@@ -1075,10 +1075,10 @@ void displayTimerModeSettings(void)
 	byteSet(&activeTime[0], 0, sizeof(activeTime));
 	byteSet(&activeDates[0], 0, sizeof(activeDates));
 
-	sprintf((char*)activeTime, "%02d:%02d -> %02d:%02d", g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min,
-			g_helpRecord.tm_stop_time.hour, g_helpRecord.tm_stop_time.min);
+	sprintf((char*)activeTime, "%02d:%02d -> %02d:%02d", g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min,
+			g_helpRecord.timerStopTime.hour, g_helpRecord.timerStopTime.min);
 
-	switch (g_helpRecord.timer_mode_freq)
+	switch (g_helpRecord.timerModeFrequency)
 	{
 		case TIMER_MODE_ONE_TIME: 	activeModeTextType = ONE_TIME_TEXT; 		break;
 		case TIMER_MODE_HOURLY: 	activeModeTextType = HOURLY_TEXT; 			break;
@@ -1089,10 +1089,10 @@ void displayTimerModeSettings(void)
 		default:					activeModeTextType = ERROR_TEXT;			break;
 	}
 
-	sprintf((char*)activeDates, "%02d-%s-%02d -> %02d-%s-%02d", g_helpRecord.tm_start_date.day,
-			(char*)&(g_monthTable[(uint8)(g_helpRecord.tm_start_date.month)].name[0]), g_helpRecord.tm_start_date.year,
-			g_helpRecord.tm_stop_date.day, (char*)&(g_monthTable[(uint8)(g_helpRecord.tm_stop_date.month)].name[0]),
-			g_helpRecord.tm_stop_date.year);
+	sprintf((char*)activeDates, "%02d-%s-%02d -> %02d-%s-%02d", g_helpRecord.timerStartDate.day,
+			(char*)&(g_monthTable[(uint8)(g_helpRecord.timerStartDate.month)].name[0]), g_helpRecord.timerStartDate.year,
+			g_helpRecord.timerStopDate.day, (char*)&(g_monthTable[(uint8)(g_helpRecord.timerStopDate.month)].name[0]),
+			g_helpRecord.timerStopDate.year);
 
 	// Display SAVED SETTINGS, ACTIVE TIME PERIOD HH:MM -> HH:MM
 	sprintf((char*)message, "%s, %s: %s", getLangText(SAVED_SETTINGS_TEXT),
@@ -1135,7 +1135,7 @@ void displayFlashUsageStats(void)
 
 	messageBox("FLASH USAGE STATS", (char*)message, MB_OK);
 
-	if (g_helpRecord.flash_wrapping == NO)
+	if (g_helpRecord.flashWrapping == NO)
 		sprintf(&message[0], "SPACE REMAINING (CURR. SETTINGS) WAVEFORMS: %d, BAR HOURS: ~%d",
 				usage.waveEventsLeft, usage.barHoursLeft);
 	else // Wrapping is on
@@ -1162,7 +1162,7 @@ void displayFlashUsageStats(void)
 
 	messageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
 
-	if (g_helpRecord.flash_wrapping == NO)
+	if (g_helpRecord.flashWrapping == NO)
 		sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(SPACE_REMAINING_TEXT),getLangText(WAVEFORMS_TEXT),usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT),usage.barHoursLeft);
 	else // Wrapping is on
 		sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(BEFORE_OVERWRITE_TEXT),getLangText(WAVEFORMS_TEXT),usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT),usage.barHoursLeft);

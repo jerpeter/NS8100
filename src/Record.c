@@ -56,7 +56,7 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 		case REC_HELP_USER_MENU_TYPE:
 			debug("Programming Help Record...\n");
 
-			((REC_HELP_MN_STRUCT *)src_ptr)->encode_ln = 0xA5A5;
+			((REC_HELP_MN_STRUCT *)src_ptr)->validationKey = 0xA5A5;
 
 			rec_size = sizeof(REC_HELP_MN_STRUCT);
 			loc = (sizeof(REC_EVENT_MN_STRUCT)) * (MAX_NUM_OF_SAVED_SETUPS + 1);
@@ -425,51 +425,51 @@ void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 	byteSet(rec_ptr, 0, sizeof(REC_HELP_MN_STRUCT));
 
 	// Set default conditions
-	rec_ptr->pretrig_buffer_div = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
-	rec_ptr->flash_wrapping = YES;
-	rec_ptr->auto_monitor_mode = AUTO_NO_TIMEOUT;
-	rec_ptr->auto_cal_mode = AUTO_NO_CAL_TIMEOUT;
-	rec_ptr->alarm_one_mode = ALARM_MODE_OFF;
-	rec_ptr->alarm_two_mode = ALARM_MODE_OFF;
-	rec_ptr->alarm_one_seismic_lvl = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
-	rec_ptr->alarm_one_air_lvl     = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
-	rec_ptr->alarm_two_seismic_lvl = ALARM_TWO_SEIS_DEFAULT_TRIG_LVL;
-	rec_ptr->alarm_two_air_lvl     = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
-	rec_ptr->alarm_one_time  = ALARM_OUTPUT_TIME_DEFAULT;
-	rec_ptr->alarm_two_time  = ALARM_OUTPUT_TIME_DEFAULT;
+	rec_ptr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
+	rec_ptr->flashWrapping = YES;
+	rec_ptr->autoMonitorMode = AUTO_NO_TIMEOUT;
+	rec_ptr->autoCalMode = AUTO_NO_CAL_TIMEOUT;
+	rec_ptr->alarmOneMode = ALARM_MODE_OFF;
+	rec_ptr->alarmTwoMode = ALARM_MODE_OFF;
+	rec_ptr->alarmOneSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
+	rec_ptr->alarmOneAirLevel     = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
+	rec_ptr->alarmTwoSeismicLevel = ALARM_TWO_SEIS_DEFAULT_TRIG_LVL;
+	rec_ptr->alarmTwoAirLevel     = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
+	rec_ptr->alarmOneTime  = ALARM_OUTPUT_TIME_DEFAULT;
+	rec_ptr->alarmTwoTime  = ALARM_OUTPUT_TIME_DEFAULT;
 #if 0 // ns7100
-	rec_ptr->baud_rate = BAUD_RATE_38400;
+	rec_ptr->baudRate = BAUD_RATE_38400;
 #else // ns8100
-	rec_ptr->baud_rate = BAUD_RATE_115200;
+	rec_ptr->baudRate = BAUD_RATE_115200;
 #endif
 	rec_ptr->copies = 1;
-	rec_ptr->freq_plot_type = 1;
-	rec_ptr->lang_mode = ENGLISH_LANG;
-	rec_ptr->lcd_contrast = DEFUALT_CONTRAST;
-	rec_ptr->lcd_timeout = 2;
-	rec_ptr->timer_mode = DISABLED;
-	rec_ptr->units_of_measure = IMPERIAL_TYPE;
+	rec_ptr->freqPlotType = 1;
+	rec_ptr->languageMode = ENGLISH_LANG;
+	rec_ptr->lcdContrast = DEFUALT_CONTRAST;
+	rec_ptr->lcdTimeout = 2;
+	rec_ptr->timerMode = DISABLED;
+	rec_ptr->unitsOfMeasure = IMPERIAL_TYPE;
 #if 1 // Updated (Port missing change)
-	rec_ptr->units_of_air = DECIBEL_TYPE;
+	rec_ptr->unitsOfAir = DECIBEL_TYPE;
 #endif
-	rec_ptr->vector_sum = DISABLED;
-	rec_ptr->report_displacement = DISABLED;
+	rec_ptr->vectorSum = DISABLED;
+	rec_ptr->reportDisplacement = DISABLED;
 #if 1 // Updated (Port missing change)
-	rec_ptr->report_peak_acceleration = DISABLED;
+	rec_ptr->reportPeakAcceleration = DISABLED;
 #endif
-	rec_ptr->auto_cal_in_waveform = NO;
+	rec_ptr->autoCalForWaveform = NO;
 
 	if (SUPERGRAPH_UNIT)
 	{
-		rec_ptr->auto_print = ON;
-		rec_ptr->freq_plot_mode = ON;
-		rec_ptr->print_monitor_log = YES;
+		rec_ptr->autoPrint = ON;
+		rec_ptr->freqPlotMode = ON;
+		rec_ptr->printMonitorLog = YES;
 	}
 	else // Mini unit
 	{
-		rec_ptr->auto_print = OFF;
-		rec_ptr->freq_plot_mode = OFF;
-		rec_ptr->print_monitor_log = NO;
+		rec_ptr->autoPrint = OFF;
+		rec_ptr->freqPlotMode = OFF;
+		rec_ptr->printMonitorLog = NO;
 	}
 }
 
@@ -478,33 +478,33 @@ void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 ///----------------------------------------------------------------------------
 void activateHelpRecordOptions(void)
 {
-	g_contrast_value = g_helpRecord.lcd_contrast;
+	g_contrast_value = g_helpRecord.lcdContrast;
 
 	if ((g_contrast_value < MIN_CONTRAST) || (g_contrast_value > MAX_CONTRAST))
 	{
-		g_helpRecord.lcd_contrast = g_contrast_value = DEFUALT_CONTRAST;
+		g_helpRecord.lcdContrast = g_contrast_value = DEFUALT_CONTRAST;
 	}               
 
 	setLcdContrast(g_contrast_value);
 
 	// The choices are between metric and sae measurement systems.
-	g_sensorInfoPtr->unitsFlag = g_helpRecord.units_of_measure;
+	g_sensorInfoPtr->unitsFlag = g_helpRecord.unitsOfMeasure;
 #if 1 // Updated (Port missing change)
-	g_sensorInfoPtr->airUnitsFlag = g_helpRecord.units_of_air;
+	g_sensorInfoPtr->airUnitsFlag = g_helpRecord.unitsOfAir;
 #endif
 
 	assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
 
-	if ((g_helpRecord.lcd_timeout < LCD_TIMEOUT_MIN_VALUE) || (g_helpRecord.lcd_timeout > LCD_TIMEOUT_MAX_VALUE))
+	if ((g_helpRecord.lcdTimeout < LCD_TIMEOUT_MIN_VALUE) || (g_helpRecord.lcdTimeout > LCD_TIMEOUT_MAX_VALUE))
 	{
-		g_helpRecord.lcd_timeout = LCD_TIMEOUT_DEFAULT_VALUE;
+		g_helpRecord.lcdTimeout = LCD_TIMEOUT_DEFAULT_VALUE;
 	}
-	assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcd_timeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+	assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), lcdPwTimerCallBack);
 
-	debug("Auto Monitor Mode: %s\n", (g_helpRecord.auto_monitor_mode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
-    assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.auto_monitor_mode * TICKS_PER_MIN), autoMonitorTimerCallBack);     
+	debug("Auto Monitor Mode: %s\n", (g_helpRecord.autoMonitorMode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
+    assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), autoMonitorTimerCallBack);
 
-	if (g_helpRecord.auto_cal_mode != AUTO_NO_CAL_TIMEOUT)
+	if (g_helpRecord.autoCalMode != AUTO_NO_CAL_TIMEOUT)
 	{
 		g_autoCalDaysToWait = 1;
 	}

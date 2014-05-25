@@ -768,7 +768,7 @@ void build_languageLinkTable(uint8 languageSelection)
 		default:
 			languageTablePtr = englishLanguageTable;
 			sprintf((char*)&languageFilename[0], "C:\\Language\\English.tbl");
-			g_helpRecord.lang_mode = ENGLISH_LANG;
+			g_helpRecord.languageMode = ENGLISH_LANG;
 			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 			break;
 	}
@@ -850,15 +850,15 @@ void jumpToBootFunction(void)
 		if (g_sampleProcessing == ACTIVE_STATE)
 		{
 			// Check if auto monitor is disabled
-			if (g_helpRecord.auto_monitor_mode == AUTO_NO_TIMEOUT)
+			if (g_helpRecord.autoMonitorMode == AUTO_NO_TIMEOUT)
 			{
-				g_helpRecord.auto_monitor_mode = AUTO_TWO_MIN_TIMEOUT;
+				g_helpRecord.autoMonitorMode = AUTO_TWO_MIN_TIMEOUT;
 
 				saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 			}
 
 			// Turn printing off
-			g_helpRecord.auto_print = NO;
+			g_helpRecord.autoPrint = NO;
 
 			stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 		}

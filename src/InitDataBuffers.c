@@ -69,7 +69,7 @@ void InitDataBuffs(uint8 op_mode)
 	// Set the Pretrigger buffer size in words, 1/4 sec @ sample rate * number of channels, plus 1 sample (1/4 sec plus actual trigger sample)
 	pretriggerBufferSize = ((uint32)(sampleRate / 4) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
 #else // Variable Pretrigger size in words; sample rate / Pretrigger buffer divider times channels plus 1 extra sample (to ensure a full Pretrigger plus a trigger sample)
-	pretriggerBufferSize = ((uint32)(sampleRate / g_helpRecord.pretrig_buffer_div) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
+	pretriggerBufferSize = ((uint32)(sampleRate / g_helpRecord.pretrigBufferDivider) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
 #endif
 	// Set up the end of the Pretrigger buffer
 	g_endOfPretriggerBuff = &(g_pretriggerBuff[pretriggerBufferSize]);
@@ -94,7 +94,7 @@ void InitDataBuffs(uint8 op_mode)
 #if 0 // Fixed Pretrigger size
 		g_samplesInPretrig = (uint32)(sampleRate / 4);
 #else // Variable Pretrigger size
-		g_samplesInPretrig  = (uint32)(sampleRate / g_helpRecord.pretrig_buffer_div);
+		g_samplesInPretrig  = (uint32)(sampleRate / g_helpRecord.pretrigBufferDivider);
 #endif
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
 		g_samplesInCal = (uint32)MAX_CAL_SAMPLES;

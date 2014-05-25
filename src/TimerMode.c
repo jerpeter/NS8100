@@ -45,35 +45,35 @@ BOOLEAN timerModeActiveCheck(void)
 	DATE_TIME_STRUCT time = getRtcTime();
 	uint8 choice;
 
-	if (g_helpRecord.encode_ln == 0xA5A5)
+	if (g_helpRecord.validationKey == 0xA5A5)
 	{
 		// Check if timer mode is enabled
-		if (g_helpRecord.timer_mode == ENABLED)
+		if (g_helpRecord.timerMode == ENABLED)
 		{
 			debug("Timer Mode active\n");
 
 			// Check if the timer mode settings match the current hour and minute meaning the unit powered itself on
-			if ((g_helpRecord.tm_start_time.hour == time.hour) && (g_helpRecord.tm_start_time.min == time.min))
+			if ((g_helpRecord.timerStartTime.hour == time.hour) && (g_helpRecord.timerStartTime.min == time.min))
 			{
 				debug("Timer Mode Check: Matched Timer settings...\n");
 				status = TRUE;
 			}
 			// Check again if settings match current hour and near minute meaning unit powered itself on but suffered from long startup
-			else if ((g_helpRecord.tm_start_time.hour == time.hour) && 
-					((((g_helpRecord.tm_start_time.min + 1) == 60) && (time.min == 0)) || ((g_helpRecord.tm_start_time.min + 1) == time.min)))
+			else if ((g_helpRecord.timerStartTime.hour == time.hour) &&
+					((((g_helpRecord.timerStartTime.min + 1) == 60) && (time.min == 0)) || ((g_helpRecord.timerStartTime.min + 1) == time.min)))
 			{
 				debug("Timer Mode Check: Matched Timer settings (long startup)...\n");
 				status = TRUE;
 			}
 			// Check specialty hourly mode and if current minute matches and the current hour is within range
-			else if ((g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY) && (g_helpRecord.tm_start_time.min == time.min) &&
+			else if ((g_helpRecord.timerModeFrequency == TIMER_MODE_HOURLY) && (g_helpRecord.timerStartTime.min == time.min) &&
 					// Check if the start and stop hours match meaning hourly mode runs every hour
-					((g_helpRecord.tm_start_time.hour == g_helpRecord.tm_stop_time.hour) ||
+					((g_helpRecord.timerStartTime.hour == g_helpRecord.timerStopTime.hour) ||
 					// OR Check if hourly mode does not cross a 24 hour boundary and the current hour is within range
-					((g_helpRecord.tm_start_time.hour < g_helpRecord.tm_stop_time.hour) && (time.hour >= g_helpRecord.tm_start_time.hour) &&
-					(time.hour <= g_helpRecord.tm_stop_time.hour)) ||
+					((g_helpRecord.timerStartTime.hour < g_helpRecord.timerStopTime.hour) && (time.hour >= g_helpRecord.timerStartTime.hour) &&
+					(time.hour <= g_helpRecord.timerStopTime.hour)) ||
 					// OR Check if the current hour is within range with an hourly mode that does cross a 24 hour boundary
-					((time.hour >= g_helpRecord.tm_start_time.hour) || (time.hour <= g_helpRecord.tm_stop_time.hour))))
+					((time.hour >= g_helpRecord.timerStartTime.hour) || (time.hour <= g_helpRecord.timerStopTime.hour))))
 			{
 				debug("Timer Mode Check: Matched Timer settings (hourly)...\n");
 				status = TRUE;
@@ -85,7 +85,7 @@ BOOLEAN timerModeActiveCheck(void)
 
 				if (choice == MB_FIRST_CHOICE)
 				{
-					g_helpRecord.timer_mode = DISABLED;
+					g_helpRecord.timerMode = DISABLED;
 
 					// Save help record
 					saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
@@ -127,19 +127,19 @@ void processTimerMode(void)
 
 	// Check if the Timer mode activated after stop date
 	if (// First Check for past year
-		(currTime.year > g_helpRecord.tm_stop_date.year) ||
+		(currTime.year > g_helpRecord.timerStopDate.year) ||
 
 		// Second check for equal year but past month
-		((currTime.year == g_helpRecord.tm_stop_date.year) && (currTime.month > g_helpRecord.tm_stop_date.month)) ||
+		((currTime.year == g_helpRecord.timerStopDate.year) && (currTime.month > g_helpRecord.timerStopDate.month)) ||
 
 		// Third check for equal year, equal month, but past day
-		((currTime.year == g_helpRecord.tm_stop_date.year) && (currTime.month == g_helpRecord.tm_stop_date.month) &&
-		(currTime.day > g_helpRecord.tm_stop_date.day)))
+		((currTime.year == g_helpRecord.timerStopDate.year) && (currTime.month == g_helpRecord.timerStopDate.month) &&
+		(currTime.day > g_helpRecord.timerStopDate.day)))
 	{
 		// Disable alarm output generation
 		debug("Timer Mode: Activated after date...\n");
 		debug("Timer Mode: Disabling...\n");
-		g_helpRecord.timer_mode = DISABLED;
+		g_helpRecord.timerMode = DISABLED;
 
 		// Save help record
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
@@ -153,14 +153,14 @@ void processTimerMode(void)
 	}
 	// Check if the Timer mode activated before start date
 	else if (// First Check for before year
-		(currTime.year < g_helpRecord.tm_start_date.year) ||
+		(currTime.year < g_helpRecord.timerStartDate.year) ||
 
 		// Second check for equal year but before month
-		((currTime.year == g_helpRecord.tm_start_date.year) && (currTime.month < g_helpRecord.tm_start_date.month)) ||
+		((currTime.year == g_helpRecord.timerStartDate.year) && (currTime.month < g_helpRecord.timerStartDate.month)) ||
 
 		// Third check for equal year, equal month, but before day
-		((currTime.year == g_helpRecord.tm_start_date.year) && (currTime.month == g_helpRecord.tm_start_date.month) &&
-		(currTime.day < g_helpRecord.tm_start_date.day)))
+		((currTime.year == g_helpRecord.timerStartDate.year) && (currTime.month == g_helpRecord.timerStartDate.month) &&
+		(currTime.day < g_helpRecord.timerStartDate.day)))
 	{
 		debug("Timer Mode: Activated before date...\n");
 		resetTimeOfDayAlarm();
@@ -170,7 +170,7 @@ void processTimerMode(void)
 		PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
 	}
 	// Check if the Timer mode activated during active dates but on an off day
-	else if ((g_helpRecord.timer_mode_freq == TIMER_MODE_WEEKDAYS) && ((currTime.weekday == SAT) || (currTime.weekday == SUN)))
+	else if ((g_helpRecord.timerModeFrequency == TIMER_MODE_WEEKDAYS) && ((currTime.weekday == SAT) || (currTime.weekday == SUN)))
 	{
 		debug("Timer Mode: Activated on an off day (weekday freq)...\n");
 		resetTimeOfDayAlarm();
@@ -180,7 +180,7 @@ void processTimerMode(void)
 		PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
 	}
 	// Check if the Timer mode activated during active dates but on an off day
-	else if ((g_helpRecord.timer_mode_freq == TIMER_MODE_MONTHLY) && (currTime.day != g_helpRecord.tm_start_date.day))
+	else if ((g_helpRecord.timerModeFrequency == TIMER_MODE_MONTHLY) && (currTime.day != g_helpRecord.timerStartDate.day))
 	{
 		debug("Timer Mode: Activated on off day (monthly freq)...\n");
 		resetTimeOfDayAlarm();
@@ -190,14 +190,14 @@ void processTimerMode(void)
 		PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
 	}
 	// Check if the Timer mode activated on end date (and not hourly mode)
-	else if ((g_helpRecord.timer_mode_freq != TIMER_MODE_HOURLY) && (currTime.year == g_helpRecord.tm_stop_date.year) && 
-			(currTime.month == g_helpRecord.tm_stop_date.month) && (currTime.day == g_helpRecord.tm_stop_date.day))
+	else if ((g_helpRecord.timerModeFrequency != TIMER_MODE_HOURLY) && (currTime.year == g_helpRecord.timerStopDate.year) &&
+			(currTime.month == g_helpRecord.timerStopDate.month) && (currTime.day == g_helpRecord.timerStopDate.day))
 	{
 		// Disable alarm output generation
 		debug("Timer Mode: Activated on end date...\n");
 #if 0 // ns7100
 		debug("Timer Mode: Disabling...\n");
-		g_helpRecord.timer_mode = DISABLED;
+		g_helpRecord.timerMode = DISABLED;
 
 		// Save help record
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
@@ -210,15 +210,15 @@ void processTimerMode(void)
 	    DisableRtcAlarm();
 	}
 	// Check if the Timer mode activated on end date and end hour (hourly mode)
-	else if ((g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY) && (currTime.year == g_helpRecord.tm_stop_date.year) && 
-			(currTime.month == g_helpRecord.tm_stop_date.month) && (currTime.day == g_helpRecord.tm_stop_date.day) &&
-			(currTime.hour == g_helpRecord.tm_stop_time.hour))
+	else if ((g_helpRecord.timerModeFrequency == TIMER_MODE_HOURLY) && (currTime.year == g_helpRecord.timerStopDate.year) &&
+			(currTime.month == g_helpRecord.timerStopDate.month) && (currTime.day == g_helpRecord.timerStopDate.day) &&
+			(currTime.hour == g_helpRecord.timerStopTime.hour))
 	{
 		// Disable alarm output generation
 		debug("Timer Mode: Activated on end date...\n");
 #if 0 // ns7100
 		debug("Timer Mode: Disabling...\n");
-		g_helpRecord.timer_mode = DISABLED;
+		g_helpRecord.timerMode = DISABLED;
 
 		// Save help record
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
@@ -232,7 +232,7 @@ void processTimerMode(void)
 	}
 	else // Timer mode started during the active dates on a day it's supposed to run
 	{
-		if (g_helpRecord.timer_mode_freq == TIMER_MODE_ONE_TIME)
+		if (g_helpRecord.timerModeFrequency == TIMER_MODE_ONE_TIME)
 		{
 			// Signal the timer mode end of session timer to stop timer mode due to this being the last run
 			g_timerModeLastRun = YES;
@@ -252,7 +252,7 @@ void processTimerMode(void)
 	raiseTimerEventFlag(TIMER_MODE_TIMER_EVENT);
 
 	// Setup soft timer to turn system off when timer mode is finished for the day (minus the expired secs in the current minute
-	assignSoftTimer(POWER_OFF_TIMER_NUM, ((g_helpRecord.timer_mode_active_minutes * 60 * 2) - (currTime.sec * 2)), powerOffTimerCallback);
+	assignSoftTimer(POWER_OFF_TIMER_NUM, ((g_helpRecord.timerModeActiveMinutes * 60 * 2) - (currTime.sec * 2)), powerOffTimerCallback);
 
 	debug("Timer mode: running...\n");
 }
@@ -274,7 +274,7 @@ void handleUserPowerOffDuringTimerMode(void)
 	// User decided to cancel Timer mode
 	if (choice == MB_FIRST_CHOICE)
 	{
-		g_helpRecord.timer_mode = DISABLED;
+		g_helpRecord.timerMode = DISABLED;
 
 		// Disable the Power Off timer
 		clearSoftTimer(POWER_OFF_TIMER_NUM);
@@ -323,7 +323,7 @@ void resetTimeOfDayAlarm(void)
 
 	//___________________________________________________________________________________________
 	//___TIMER_MODE_DAILY
-	if (g_helpRecord.timer_mode_freq == TIMER_MODE_DAILY)
+	if (g_helpRecord.timerModeFrequency == TIMER_MODE_DAILY)
 	{
 #if 1 // Normal
 		// Get the current day and add one
@@ -337,21 +337,21 @@ void resetTimeOfDayAlarm(void)
 		}
 
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
-				g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, startDay);
+				g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, startDay);
 #else // Test
 		// Loop test on and off in a cycle
 		startDay = currTime.day;
 		
-		g_helpRecord.tm_start_time.min += 3;
+		g_helpRecord.timerStartTime.min += 3;
 		
-		if (g_helpRecord.tm_start_time.min >= 60)
+		if (g_helpRecord.timerStartTime.min >= 60)
 		{
-			g_helpRecord.tm_start_time.min -= 60;
-			g_helpRecord.tm_start_time.hour	+= 1;
+			g_helpRecord.timerStartTime.min -= 60;
+			g_helpRecord.timerStartTime.hour	+= 1;
 			
-			if (g_helpRecord.tm_start_time.hour >= 24)
+			if (g_helpRecord.timerStartTime.hour >= 24)
 			{
-				g_helpRecord.tm_start_time.hour = 0;
+				g_helpRecord.timerStartTime.hour = 0;
 				startDay = currTime.day + 1; // Ignore month boundary for testing
 			}
 		}
@@ -360,20 +360,20 @@ void resetTimeOfDayAlarm(void)
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
-				g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, startDay);
+				g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, startDay);
 #endif
 
-		EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
+		EnableRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
 	}
 	//___________________________________________________________________________________________
 	//___TIMER_MODE_HOURLY
-	else if (g_helpRecord.timer_mode_freq == TIMER_MODE_HOURLY)
+	else if (g_helpRecord.timerModeFrequency == TIMER_MODE_HOURLY)
 	{
 		// Establish most common value for the start day
 		startDay = currTime.day;
 		
 		// Check if another hour time slot to run again today
-		if (currTime.hour != g_helpRecord.tm_stop_time.hour)
+		if (currTime.hour != g_helpRecord.timerStopTime.hour)
 		{
 			// Set alarm for the next hour
 			startHour = currTime.hour + 1;
@@ -397,10 +397,10 @@ void resetTimeOfDayAlarm(void)
 		else // Last hour time slot to run today, set alarm for next hour grouping
 		{
 			// Establish the most common value for the start hour
-			startHour = g_helpRecord.tm_start_time.hour;
+			startHour = g_helpRecord.timerStartTime.hour;
 
 			// Check if the setup time did not cross the midnight boundary
-			if (g_helpRecord.tm_start_time.hour < g_helpRecord.tm_stop_time.hour)
+			if (g_helpRecord.timerStartTime.hour < g_helpRecord.timerStopTime.hour)
 			{
 				// Set to the following day
 				startDay++;
@@ -413,7 +413,7 @@ void resetTimeOfDayAlarm(void)
 				}
 			}
 			// Check if start and stop hour are the same meaning hourly mode runs every hour of every day
-			else if (g_helpRecord.tm_start_time.hour == g_helpRecord.tm_stop_time.hour)
+			else if (g_helpRecord.timerStartTime.hour == g_helpRecord.timerStopTime.hour)
 			{
 				// Current hour matches start and stop, need to set start hour to the following hour slot
 				startHour = (currTime.hour + 1);
@@ -439,13 +439,13 @@ void resetTimeOfDayAlarm(void)
 		}
 
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
-				startHour, g_helpRecord.tm_start_time.min, startDay);
+				startHour, g_helpRecord.timerStartTime.min, startDay);
 
-		EnableRtcAlarm(startDay, startHour, g_helpRecord.tm_start_time.min, 0);
+		EnableRtcAlarm(startDay, startHour, g_helpRecord.timerStartTime.min, 0);
 	}
 	//___________________________________________________________________________________________
 	//___TIMER_MODE_WEEKDAYS
-	else if (g_helpRecord.timer_mode_freq == TIMER_MODE_WEEKDAYS)
+	else if (g_helpRecord.timerModeFrequency == TIMER_MODE_WEEKDAYS)
 	{
 		// Get the current day
 		startDay = currTime.day;
@@ -474,13 +474,13 @@ void resetTimeOfDayAlarm(void)
 		}
 
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start ay) %d\n",
-				g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, startDay);
+				g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, startDay);
 
-		EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
+		EnableRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
 	}
 	//___________________________________________________________________________________________
 	//___TIMER_MODE_WEEKLY
-	else if (g_helpRecord.timer_mode_freq == TIMER_MODE_WEEKLY)
+	else if (g_helpRecord.timerModeFrequency == TIMER_MODE_WEEKLY)
 	{
 		// Set the start day to the current day + 7 days
 		startDay = (uint8)(currTime.day + 7);
@@ -493,13 +493,13 @@ void resetTimeOfDayAlarm(void)
 		}
 
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
-				g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, startDay);
+				g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, startDay);
 
-		EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
+		EnableRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
 	}
 	//___________________________________________________________________________________________
 	//___TIMER_MODE_MONTHLY
-	else if (g_helpRecord.timer_mode_freq == TIMER_MODE_MONTHLY)
+	else if (g_helpRecord.timerModeFrequency == TIMER_MODE_MONTHLY)
 	{
 		// Check if advancing a month is still within the same year
 		if (currTime.month + 1 <= 12)
@@ -522,8 +522,8 @@ void resetTimeOfDayAlarm(void)
 		}
 
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
-				g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, startDay);
+				g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, startDay);
 
-		EnableRtcAlarm(startDay, g_helpRecord.tm_start_time.hour, g_helpRecord.tm_start_time.min, 0);
+		EnableRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
 	}
 }

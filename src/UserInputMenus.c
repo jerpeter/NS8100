@@ -104,7 +104,7 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 		}
 		else
 		{
-			if (g_helpRecord.units_of_air == DECIBEL_TYPE) 
+			if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{ 
 				debug("Air Trigger: %d dB\n", g_triggerRecord.trec.airTriggerLevel);
 			}
@@ -189,41 +189,41 @@ void alarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		g_helpRecord.alarm_one_seismic_lvl = *((uint32*)data);
+		g_helpRecord.alarmOneSeismicLevel = *((uint32*)data);
 		
-		if (g_helpRecord.alarm_one_seismic_lvl == NO_TRIGGER_CHAR)
+		if (g_helpRecord.alarmOneSeismicLevel == NO_TRIGGER_CHAR)
 		{
 			debug("Alarm 1 Seismic Trigger: No Trigger\n");
 		}
 		else
 		{
 #if 1 // ns8100 - Up convert to 16-bit
-			g_helpRecord.alarm_one_seismic_lvl *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+			g_helpRecord.alarmOneSeismicLevel *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 #endif
-			debug("Alarm 1 Seismic Level Count: %d\n", g_helpRecord.alarm_one_seismic_lvl);
+			debug("Alarm 1 Seismic Level Count: %d\n", g_helpRecord.alarmOneSeismicLevel);
 		}
 
-		if (g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH)
+		if (g_helpRecord.alarmOneMode == ALARM_MODE_BOTH)
 		{
 #if 0 // Port lost change
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
-				g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel,
+				g_helpRecord.alarmOneAirMinLevel, g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
-			if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+			if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl,
-													g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
+													g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
 			}
 			else
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl,
-													g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
+													g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
 			}
 #endif
 		}
-		else // g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC
+		else // g_helpRecord.alarmOneMode == ALARM_MODE_SEISMIC
 		{
-			SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_helpRecord.alarm_one_time,
+			SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_helpRecord.alarmOneTime,
 				ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT, 
 				ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 		}
@@ -231,13 +231,13 @@ void alarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 #if 1 // ns8100 - Up convert to 16-bit
-		if (g_helpRecord.alarm_one_seismic_lvl != NO_TRIGGER_CHAR)
+		if (g_helpRecord.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 		{
-			g_helpRecord.alarm_one_seismic_lvl *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+			g_helpRecord.alarmOneSeismicLevel *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 		}		
 #endif
 
-		SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+		SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarmOneMode);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -270,32 +270,32 @@ void alarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		g_helpRecord.alarm_one_air_lvl = *((uint32*)data);
+		g_helpRecord.alarmOneAirLevel = *((uint32*)data);
 		
-		debug("Alarm 1 Air Level: %d\n", g_helpRecord.alarm_one_air_lvl);
+		debug("Alarm 1 Air Level: %d\n", g_helpRecord.alarmOneAirLevel);
 
-		SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_helpRecord.alarm_one_time,
+		SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_helpRecord.alarmOneTime,
 			ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT, 
 			ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH)
+		if (g_helpRecord.alarmOneMode == ALARM_MODE_BOTH)
 		{
 #if 1 // ns8100 - Down convert to current bit accuracy setting
-			if (g_helpRecord.alarm_one_seismic_lvl != NO_TRIGGER_CHAR)
+			if (g_helpRecord.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_helpRecord.alarm_one_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_helpRecord.alarmOneSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
-				(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-				(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarmOneSeismicLevel,
+				(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+				(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
 		}
 		else
 		{
-			SETUP_USER_MENU_MSG(&alarmOneMenu, &g_helpRecord.alarm_one_mode);
+			SETUP_USER_MENU_MSG(&alarmOneMenu, &g_helpRecord.alarmOneMode);
 		}
 	}
 
@@ -325,48 +325,48 @@ void alarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		g_helpRecord.alarm_one_time = *((float*)data);
+		g_helpRecord.alarmOneTime = *((float*)data);
 		
-		debug("Alarm 1 Time: %f\n", g_helpRecord.alarm_one_time);
+		debug("Alarm 1 Time: %f\n", g_helpRecord.alarmOneTime);
 
-		SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+		SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarmTwoMode);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if ((g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_one_mode == ALARM_MODE_AIR))
+		if ((g_helpRecord.alarmOneMode == ALARM_MODE_BOTH) || (g_helpRecord.alarmOneMode == ALARM_MODE_AIR))
 		{
 #if 0 // Port lost change
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl,
-				g_helpRecord.alarm_one_air_min_lvl, g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel,
+				g_helpRecord.alarmOneAirMinLevel, g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
-			if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+			if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl,
-												g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
+												g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
 			}
 			else
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarm_one_air_lvl, g_helpRecord.alarm_one_air_min_lvl,
-												g_helpRecord.alarm_one_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
+												g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
 			}
 #endif
 		}
-		else if (g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC)
+		else if (g_helpRecord.alarmOneMode == ALARM_MODE_SEISMIC)
 		{
 #if 1 // ns8100 - Down convert to current bit accuracy setting
-			if (g_helpRecord.alarm_one_seismic_lvl != NO_TRIGGER_CHAR)
+			if (g_helpRecord.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_helpRecord.alarm_one_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_helpRecord.alarmOneSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarm_one_seismic_lvl,
-				(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-				(g_helpRecord.alarm_one_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarmOneSeismicLevel,
+				(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+				(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
 		}
-		else // g_helpRecord.alarm_one_mode == ALARM_MODE_OFF
+		else // g_helpRecord.alarmOneMode == ALARM_MODE_OFF
 		{
-			SETUP_USER_MENU_MSG(&alarmOneMenu, &g_helpRecord.alarm_one_mode);
+			SETUP_USER_MENU_MSG(&alarmOneMenu, &g_helpRecord.alarmOneMode);
 		}
 	}
 
@@ -397,41 +397,41 @@ void alarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		g_helpRecord.alarm_two_seismic_lvl = *((uint32*)data);
+		g_helpRecord.alarmTwoSeismicLevel = *((uint32*)data);
 		
-		if (g_helpRecord.alarm_two_seismic_lvl == NO_TRIGGER_CHAR)
+		if (g_helpRecord.alarmTwoSeismicLevel == NO_TRIGGER_CHAR)
 		{
 			debug("Alarm 2 Seismic Trigger: No Trigger\n");
 		}
 		else
 		{
 #if 1 // ns8100 - Up convert to 16-bit
-			g_helpRecord.alarm_two_seismic_lvl *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+			g_helpRecord.alarmTwoSeismicLevel *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 #endif
-			debug("Alarm 2 Seismic Level Count: %d\n", g_helpRecord.alarm_two_seismic_lvl);
+			debug("Alarm 2 Seismic Level Count: %d\n", g_helpRecord.alarmTwoSeismicLevel);
 		}
 
-		if (g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH)
+		if (g_helpRecord.alarmTwoMode == ALARM_MODE_BOTH)
 		{
 #if 0 // Port lost change
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
-				g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel,
+				g_helpRecord.alarmTwoAirMinLevel, g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
-			if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+			if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
-													g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
+													g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
 			}
 			else
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
-													g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
+													g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
 			}
 #endif
 		}
-		else // g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC
+		else // g_helpRecord.alarmTwoMode == ALARM_MODE_SEISMIC
 		{
-			SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarm_two_time,
+			SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarmTwoTime,
 				ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT, 
 				ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 		}
@@ -439,13 +439,13 @@ void alarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 #if 1 // ns8100 - Up convert to 16-bit
-		if (g_helpRecord.alarm_two_seismic_lvl != NO_TRIGGER_CHAR)
+		if (g_helpRecord.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 		{
-			g_helpRecord.alarm_two_seismic_lvl *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+			g_helpRecord.alarmTwoSeismicLevel *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 		}		
 #endif
 
-		SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarm_two_mode);
+		SETUP_USER_MENU_MSG(&alarmTwoMenu, g_helpRecord.alarmTwoMode);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -478,32 +478,32 @@ void alarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		g_helpRecord.alarm_two_air_lvl = *((uint32*)data);
+		g_helpRecord.alarmTwoAirLevel = *((uint32*)data);
 		
-		debug("Alarm 2 Air Level: %d\n", g_helpRecord.alarm_two_air_lvl);
+		debug("Alarm 2 Air Level: %d\n", g_helpRecord.alarmTwoAirLevel);
 
-		SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarm_two_time,
+		SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_helpRecord.alarmTwoTime,
 			ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT, 
 			ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH)
+		if (g_helpRecord.alarmTwoMode == ALARM_MODE_BOTH)
 		{
 #if 1 // ns8100 - Down convert to current bit accuracy setting
-			if (g_helpRecord.alarm_two_seismic_lvl != NO_TRIGGER_CHAR)
+			if (g_helpRecord.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_helpRecord.alarm_two_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_helpRecord.alarmTwoSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
-				(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-				(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarmTwoSeismicLevel,
+				(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+				(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
 		}
 		else
 		{
-			SETUP_USER_MENU_MSG(&alarmTwoMenu, &g_helpRecord.alarm_two_mode);
+			SETUP_USER_MENU_MSG(&alarmTwoMenu, &g_helpRecord.alarmTwoMode);
 		}
 	}
 
@@ -533,9 +533,9 @@ void alarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		g_helpRecord.alarm_two_time = *((float*)data);
+		g_helpRecord.alarmTwoTime = *((float*)data);
 		
-		debug("Alarm 2 Time: %f\n", g_helpRecord.alarm_two_time);
+		debug("Alarm 2 Time: %f\n", g_helpRecord.alarmTwoTime);
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -543,40 +543,40 @@ void alarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if ((g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH) || (g_helpRecord.alarm_two_mode == ALARM_MODE_AIR))
+		if ((g_helpRecord.alarmTwoMode == ALARM_MODE_BOTH) || (g_helpRecord.alarmTwoMode == ALARM_MODE_AIR))
 		{
 #if 0 // Port lost change
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl,
-				g_helpRecord.alarm_two_air_min_lvl, g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel,
+				g_helpRecord.alarmTwoAirMinLevel, g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
-			if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+			if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
-												g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
+												g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
 			}
 			else
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarm_two_air_lvl, g_helpRecord.alarm_two_air_min_lvl,
-												g_helpRecord.alarm_two_air_min_lvl, ALARM_AIR_MB_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
+												g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
 			}
 #endif
 		}
-		else if (g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC)
+		else if (g_helpRecord.alarmTwoMode == ALARM_MODE_SEISMIC)
 		{
 #if 1 // ns8100 - Down convert to current bit accuracy setting
-			if (g_helpRecord.alarm_two_seismic_lvl != NO_TRIGGER_CHAR)
+			if (g_helpRecord.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_helpRecord.alarm_two_seismic_lvl /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_helpRecord.alarmTwoSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarm_two_seismic_lvl,
-				(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-				(g_helpRecord.alarm_two_seismic_min_lvl / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarmTwoSeismicLevel,
+				(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+				(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
 		}
-		else // g_helpRecord.alarm_two_mode == ALARM_MODE_OFF
+		else // g_helpRecord.alarmTwoMode == ALARM_MODE_OFF
 		{
-			SETUP_USER_MENU_MSG(&alarmTwoMenu, &g_helpRecord.alarm_two_mode);
+			SETUP_USER_MENU_MSG(&alarmTwoMenu, &g_helpRecord.alarmTwoMode);
 		}
 	}
 
@@ -699,7 +699,7 @@ void distanceToSourceMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_triggerRecord.trec.dist_to_source = *((float*)data);
 
-		if (g_helpRecord.units_of_measure == METRIC_TYPE)
+		if (g_helpRecord.unitsOfMeasure == METRIC_TYPE)
 			g_triggerRecord.trec.dist_to_source *= FT_PER_METER;
 
 		debug("Distance to Source: %f ft\n", g_triggerRecord.trec.dist_to_source);
@@ -752,7 +752,7 @@ void lcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 
 		saveRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
-		SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vector_sum);
+		SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vectorSum);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
@@ -785,9 +785,9 @@ void lcdTimeoutMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		g_helpRecord.lcd_timeout = *((uint8*)data);
+		g_helpRecord.lcdTimeout = *((uint8*)data);
 
-		debug("LCD Timeout: %d\n", g_helpRecord.lcd_timeout);
+		debug("LCD Timeout: %d\n", g_helpRecord.lcdTimeout);
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -1069,14 +1069,14 @@ void operatorMenuHandler(uint8 keyPressed, void* data)
 			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.0fmg)", 
 					(float)g_factorySetupRecord.sensor_type / (float)400);
 		}
-		else if (g_helpRecord.units_of_measure == IMPERIAL)
+		else if (g_helpRecord.unitsOfMeasure == IMPERIAL)
 		{
 			sprintf((char*)&g_menuTags[LOW_SENSITIVITY_MAX_TAG].text, " (%.2fin)", 
 					(float)g_factorySetupRecord.sensor_type / (float)200);
 			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.2fin)", 
 					(float)g_factorySetupRecord.sensor_type / (float)400);
 		}
-		else // g_helpRecord.units_of_measure == METRIC
+		else // g_helpRecord.unitsOfMeasure == METRIC
 		{
 			sprintf((char*)&g_menuTags[LOW_SENSITIVITY_MAX_TAG].text, " (%.2fmm)", 
 					(float)g_factorySetupRecord.sensor_type * (float)25.4 / (float)200);
@@ -1138,13 +1138,13 @@ void recordTimeMenuHandler(uint8 keyPressed, void* data)
 		else
 		{
 			// If alarm mode is off, then proceed to save setup
-			if ((g_helpRecord.alarm_one_mode == ALARM_MODE_OFF) && (g_helpRecord.alarm_two_mode == ALARM_MODE_OFF))
+			if ((g_helpRecord.alarmOneMode == ALARM_MODE_OFF) && (g_helpRecord.alarmTwoMode == ALARM_MODE_OFF))
 			{
 				SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
 			}
 			else // Goto Alarm setup menus
 			{
-				SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarm_one_mode);
+				SETUP_USER_MENU_MSG(&alarmOneMenu, g_helpRecord.alarmOneMode);
 			}
 		}
 	}
@@ -1154,7 +1154,7 @@ void recordTimeMenuHandler(uint8 keyPressed, void* data)
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel,
 			AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
 #else // Updated
-		if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+		if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel, AIR_TRIGGER_DEFAULT_VALUE,
 												AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
@@ -1362,7 +1362,7 @@ void seismicTriggerMenuHandler(uint8 keyPressed, void* data)
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel,
 			AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
 #else // Updated
-		if(g_helpRecord.units_of_air == DECIBEL_TYPE)
+		if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel, AIR_TRIGGER_DEFAULT_VALUE,
 											AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
@@ -1385,7 +1385,7 @@ void seismicTriggerMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_triggerRecord.op_mode == COMBO_MODE)
 		{
-			SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vector_sum);
+			SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vectorSum);
 		}		
 		else // WAVEFORM_MODE
 		{
@@ -1458,7 +1458,7 @@ void weightPerDelayMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_triggerRecord.trec.weight_per_delay = *((float*)data);
 
-		if (g_helpRecord.units_of_measure == METRIC_TYPE)
+		if (g_helpRecord.unitsOfMeasure == METRIC_TYPE)
 			g_triggerRecord.trec.weight_per_delay *= LBS_PER_KG;
 
 		debug("Weight per Delay: %.1f lbs\n", g_triggerRecord.trec.weight_per_delay);

@@ -416,6 +416,7 @@ enum {
 	PRINT_MONITOR_LOG,
 	REPORT_DISPLACEMENT,
 	REPORT_PEAK_ACC,
+	POWER_PROFILE,
 	SENSOR_GAIN_TYPE,
 	SERIAL_NUMBER,
 	SUMMARIES_EVENTS,
@@ -861,7 +862,8 @@ void peakAccMenuHandler(uint8 key, void* data);
 void pretriggerSizeMenuHandler(uint8 key, void* data);
 void printerEnableMenuHandler(uint8 key, void* data);
 void printOutMenuHandler(uint8 key, void* data);
-void printMonitorLogMenuHandler(uint8 keyPressed, void* data);
+void printMonitorLogMenuHandler(uint8 key, void* data);
+void powerProfileMenuHandler(uint8 key, void* data);
 void recalibrateMenuHandler(uint8 key, void* data);
 void sampleRateMenuHandler(uint8 key, void* data);
 void saveSetupMenuHandler(uint8 key, void* data);

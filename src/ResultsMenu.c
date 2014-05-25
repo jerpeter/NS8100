@@ -125,7 +125,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 				g_enterMonitorModeAfterMidnightCal = NO;
 
 				// Check if Auto Cal is enabled
-				if (g_helpRecord.auto_cal_in_waveform == YES)
+				if (g_helpRecord.autoCalForWaveform == YES)
 				{
 					// Set flag to skip auto calibration at start of waveform
 					g_skipAutoCalInWaveformAfterMidnightCal = YES;
@@ -171,9 +171,9 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 						{
 							stopMonitoring(g_triggerRecord.op_mode, EVENT_PROCESSING);
 
-							// Restore the auto_print just in case the user escaped from the printout
+							// Restore the autoPrint just in case the user escaped from the printout
 							getRecData(&temp_g_helpRecord, 0, REC_HELP_USER_MENU_TYPE);
-							g_helpRecord.auto_print = temp_g_helpRecord.auto_print;
+							g_helpRecord.autoPrint = temp_g_helpRecord.autoPrint;
 
 							SETUP_MENU_MSG(MAIN_MENU);
 							JUMP_TO_ACTIVE_MENU();
@@ -605,8 +605,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			calResults = FAILED;
 	}
 
-    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) &&
-    	(g_helpRecord.units_of_measure == METRIC_TYPE))
+    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE))
     {
     	normalize_max_peak *= (float)METRIC;
     }
@@ -633,8 +632,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			calResults = FAILED;
 	}
 
-    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) &&
-    	(g_helpRecord.units_of_measure == METRIC_TYPE))
+    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE))
     {
     	normalize_max_peak *= (float)METRIC;
 	}
@@ -661,8 +659,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			calResults = FAILED;
 	}
 
-    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) &&
-    	(g_helpRecord.units_of_measure == METRIC_TYPE))
+    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE))
     {
     	normalize_max_peak *= (float)METRIC;
 	}
@@ -940,7 +937,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    byteSet(&buff[0], 0, sizeof(buff));
 
 #if 1 // Port lost change
-		if (g_helpRecord.units_of_air == MILLIBAR_TYPE)
+		if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 #else // Updated
 		if(eventRecord->summary.parameters.airSensorType == MILLIBAR_TYPE)
 #endif

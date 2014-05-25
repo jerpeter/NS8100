@@ -358,7 +358,7 @@ void powerOffTimerCallback(void)
 	if (g_timerModeLastRun == YES)
 	{
 		debug("Timer Mode: Ending last session, now disabling...\n");
-		g_helpRecord.timer_mode = DISABLED;
+		g_helpRecord.timerMode = DISABLED;
 
 		// Save help record
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
@@ -498,7 +498,7 @@ void procTimerEvents(void)
 		// Need to stop print jobs
 
 		// Voltage is low, turn printing off
-		g_helpRecord.auto_print = OFF;
+		g_helpRecord.autoPrint = OFF;
 
 		// Handle and finish monitoring
 		stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
@@ -542,7 +542,7 @@ void handleMidnightEvent(void)
 		JUMP_TO_ACTIVE_MENU();
 	}
 	// Check if Auto Cal is active
-	else if (g_helpRecord.auto_cal_mode != AUTO_NO_CAL_TIMEOUT)
+	else if (g_helpRecord.autoCalMode != AUTO_NO_CAL_TIMEOUT)
 	{
 		// Decrement days to wait
 		if (g_autoCalDaysToWait > 0) g_autoCalDaysToWait--;
@@ -553,7 +553,7 @@ void handleMidnightEvent(void)
 			// Perform Auto Cal logic
 
 			// Reset the days to wait count
-			switch (g_helpRecord.auto_cal_mode)
+			switch (g_helpRecord.autoCalMode)
 			{
 				case AUTO_24_HOUR_TIMEOUT: g_autoCalDaysToWait = 1; break;
 				case AUTO_48_HOUR_TIMEOUT: g_autoCalDaysToWait = 2; break;
@@ -569,7 +569,7 @@ void handleMidnightEvent(void)
 
 			getFlashUsageStats(&flashStats);
 
-			if ((g_helpRecord.flash_wrapping == NO) && (flashStats.manualCalsLeft == 0))
+			if ((g_helpRecord.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
 			{
 				g_enterMonitorModeAfterMidnightCal = NO;
 

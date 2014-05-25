@@ -115,14 +115,14 @@ void lcdContrastMnProc(INPUT_MSG_STRUCT msg,
 						case (1): // Lighter
 							if ((g_contrast_value - CONTRAST_STEPPING) >= MIN_CONTRAST)
 							{
-								g_helpRecord.lcd_contrast = g_contrast_value -= CONTRAST_STEPPING;
+								g_helpRecord.lcdContrast = g_contrast_value -= CONTRAST_STEPPING;
 							}
 
 							setLcdContrast(g_contrast_value);
 							break;
 
 						case (2): // Default
-							g_helpRecord.lcd_contrast = g_contrast_value = DEFUALT_CONTRAST;
+							g_helpRecord.lcdContrast = g_contrast_value = DEFUALT_CONTRAST;
 
 							setLcdContrast(g_contrast_value);
 							break;
@@ -130,7 +130,7 @@ void lcdContrastMnProc(INPUT_MSG_STRUCT msg,
 						case (3): // Darker
 							if ((g_contrast_value + CONTRAST_STEPPING) <= MAX_CONTRAST)
 							{
-								g_helpRecord.lcd_contrast  = g_contrast_value += CONTRAST_STEPPING;
+								g_helpRecord.lcdContrast  = g_contrast_value += CONTRAST_STEPPING;
 							}
 
 							setLcdContrast(g_contrast_value);

@@ -89,43 +89,43 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	// This is for error checking, If these checks are true, the defaults are not being set.
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
 	{
-		if ((g_helpRecord.alarm_one_mode == ALARM_MODE_SEISMIC) || (g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH))
+		if ((g_helpRecord.alarmOneMode == ALARM_MODE_SEISMIC) || (g_helpRecord.alarmOneMode == ALARM_MODE_BOTH))
 		{
-			if (g_helpRecord.alarm_one_seismic_lvl < trig_mn.seismicTriggerLevel)
+			if (g_helpRecord.alarmOneSeismicLevel < trig_mn.seismicTriggerLevel)
 			{
-				g_helpRecord.alarm_one_seismic_lvl = trig_mn.seismicTriggerLevel;
+				g_helpRecord.alarmOneSeismicLevel = trig_mn.seismicTriggerLevel;
 			}
 		}
 
-		if ((g_helpRecord.alarm_two_mode == ALARM_MODE_SEISMIC) || (g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH))
+		if ((g_helpRecord.alarmTwoMode == ALARM_MODE_SEISMIC) || (g_helpRecord.alarmTwoMode == ALARM_MODE_BOTH))
 		{
-			if (g_helpRecord.alarm_two_seismic_lvl < trig_mn.seismicTriggerLevel)
+			if (g_helpRecord.alarmTwoSeismicLevel < trig_mn.seismicTriggerLevel)
 			{
-				g_helpRecord.alarm_two_seismic_lvl = trig_mn.seismicTriggerLevel;
+				g_helpRecord.alarmTwoSeismicLevel = trig_mn.seismicTriggerLevel;
 			}
 		}
 
-		if ((g_helpRecord.alarm_one_mode == ALARM_MODE_AIR) || (g_helpRecord.alarm_one_mode == ALARM_MODE_BOTH))
+		if ((g_helpRecord.alarmOneMode == ALARM_MODE_AIR) || (g_helpRecord.alarmOneMode == ALARM_MODE_BOTH))
 		{
-			if (g_helpRecord.alarm_one_air_lvl < (uint32)trig_mn.airTriggerLevel)
+			if (g_helpRecord.alarmOneAirLevel < (uint32)trig_mn.airTriggerLevel)
 			{
-				g_helpRecord.alarm_one_air_lvl = (uint32)trig_mn.airTriggerLevel;
+				g_helpRecord.alarmOneAirLevel = (uint32)trig_mn.airTriggerLevel;
 			}
 		}
 
-		if ((g_helpRecord.alarm_two_mode == ALARM_MODE_AIR) || (g_helpRecord.alarm_two_mode == ALARM_MODE_BOTH))
+		if ((g_helpRecord.alarmTwoMode == ALARM_MODE_AIR) || (g_helpRecord.alarmTwoMode == ALARM_MODE_BOTH))
 		{
-			if (g_helpRecord.alarm_two_air_lvl < (uint32)trig_mn.airTriggerLevel)
+			if (g_helpRecord.alarmTwoAirLevel < (uint32)trig_mn.airTriggerLevel)
 			{
-				g_helpRecord.alarm_two_air_lvl = (uint32)trig_mn.airTriggerLevel;
+				g_helpRecord.alarmTwoAirLevel = (uint32)trig_mn.airTriggerLevel;
 			}
 		}
 	}
 
 	// Convert Air trigger from stored DB (log) to a linear count for A/D comparison
 	g_airTriggerCount = airTriggerConvert(trig_mn.airTriggerLevel);
-	g_alarm1AirTriggerCount = airTriggerConvert(g_helpRecord.alarm_one_air_lvl);
-	g_alarm2AirTriggerCount = airTriggerConvert(g_helpRecord.alarm_two_air_lvl);
+	g_alarm1AirTriggerCount = airTriggerConvert(g_helpRecord.alarmOneAirLevel);
+	g_alarm2AirTriggerCount = airTriggerConvert(g_helpRecord.alarmTwoAirLevel);
 	
 	//-------------------------
 	// Debug Information
@@ -136,7 +136,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		debug("--- Waveform Mode Settings ---\n");
 		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
 
-		if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+		if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
 			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, trig_mn.airTriggerLevel, g_airTriggerCount);
 		}
@@ -155,7 +155,7 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		debug("--- Combo Mode Settings ---\n");
 		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
 
-		if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+		if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
 			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, trig_mn.airTriggerLevel, g_airTriggerCount);
 		}
@@ -291,7 +291,7 @@ void startDataCollection(uint32 sampleRate)
 	g_sampleProcessing = ACTIVE_STATE;
 
 	// Test - Throw away at some point
-	//debugRaw("\nA1M (%d)\n", g_helpRecord.alarm_one_mode);
+	//debugRaw("\nA1M (%d)\n", g_helpRecord.alarmOneMode);
 }
 
 ///----------------------------------------------------------------------------
@@ -382,9 +382,9 @@ void stopMonitoring(uint8 mode, uint8 operation)
 	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
 
 	// Check if Auto Monitor is active and not in monitor mode
-	if ((g_helpRecord.auto_monitor_mode != AUTO_NO_TIMEOUT) && (operation == EVENT_PROCESSING))
+	if ((g_helpRecord.autoMonitorMode != AUTO_NO_TIMEOUT) && (operation == EVENT_PROCESSING))
 	{
-		assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.auto_monitor_mode * TICKS_PER_MIN), autoMonitorTimerCallBack);
+		assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), autoMonitorTimerCallBack);
 	}
 }
 
@@ -410,7 +410,7 @@ void stopDataCollection(void)
 #endif
 
 	// Check if not in Timer Mode and if the Power Off protection is enabled
-	if ((g_helpRecord.timer_mode != ENABLED) && (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
+	if ((g_helpRecord.timerMode != ENABLED) && (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
 	{
 		// Disable power off protection
 		debug("Stop Trigger: Disabling Power Off Protection\n");
@@ -504,7 +504,7 @@ uint16 airTriggerConvert(uint32 airTriggerToConvert)
 		// Convert the float db to an offset from 0 to 2048 and upscale to 16-bit
 		airTriggerToConvert = (dbToHex(airTriggerToConvert) * 16);
 #else // Updated
-		if (g_helpRecord.units_of_air == DECIBEL_TYPE)
+		if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
 			// Convert dB to an offset from 0 to 2048 and upscale to 16-bit
 			airTriggerToConvert = (uint32)(dbToHex(airTriggerToConvert) * 16);
@@ -542,7 +542,7 @@ void handleManualCalibration(void)
 				getFlashUsageStats(&flashStats);
 				
 				// fix_ns8100
-				if ((g_helpRecord.flash_wrapping == NO) && (flashStats.manualCalsLeft == 0))
+				if ((g_helpRecord.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
 				{
 					overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 				}
@@ -595,7 +595,7 @@ void handleManualCalibration(void)
 		getFlashUsageStats(&flashStats);
 		
 		// fix_ns8100
-		if ((g_helpRecord.flash_wrapping == NO) && (flashStats.manualCalsLeft == 0))
+		if ((g_helpRecord.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
 		{
 			overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 		}
