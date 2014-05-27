@@ -210,6 +210,13 @@ enum {
 	KEYPAD_LED_STATE_ACTIVE_CHARGE_RED_ON
 };
 
+enum {
+	POWER_SAVINGS_NONE = 0,
+	POWER_SAVINGS_MINIMUM,
+	POWER_SAVINGS_MOST,
+	POWER_SAVINGS_MAX
+};
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
@@ -217,6 +224,9 @@ enum {
 float getExternalVoltageLevelAveraged(uint8 type);
 BOOLEAN checkExternalChargeVoltagePresent(void);
 //uint8 adjustedRawBatteryLevel(void);
+
+// Power Savings
+void AdjustPowerSavings(void);
 
 // Math routines
 uint16 isqrt (uint32 x);

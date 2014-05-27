@@ -526,7 +526,11 @@ void _init_startup(void)
 #endif
 
 	// Switch the main clock to the external oscillator 0 (12 MHz)
+#if 0 // Normal
 	pm_switch_to_osc0(&AVR32_PM, FOSC0, OSC0_STARTUP);
+#else // Test
+	pm_switch_to_osc0(&AVR32_PM, FOSC0, AVR32_PM_OSCCTRL0_STARTUP_0_RCOSC);
+#endif
 
 #if 1 // Normal (Set clock to 66 MHz)
 	// Logic to change the clock source to PLL 0
@@ -1039,7 +1043,11 @@ void KillClocksToModules(void)
 	// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
 	AVR32_PM.pbbmask = 0x0015;
 
-#if 1 // Test
+#if 0 // Enable USART1 for debug
+	AVR32_PM.pbamask = 0x42FB;
+#endif
+
+#if 0 // Test
 	// Disable rs232 driver and receiver (Active low controls)
 	gpio_set_gpio_pin(AVR32_PIN_PB08);
 	gpio_set_gpio_pin(AVR32_PIN_PB09);
@@ -1217,11 +1225,15 @@ void InitSystemHardware_NS8100(void)
 	// Init and configure the A/D to prevent the unit from burning current charging internal reference (default config)
 	InitExternalAD();
 
-#if 1 // Test
+#if 0 // Test
 	//-------------------------------------------------------------------------
 	// Kill clocks to Internal Processor modules that aren't absolutely necessary
 	KillClocksToModules();
 #endif
+
+	//-------------------------------------------------------------------------
+	// Set the power savings mode based on the saved setting
+	AdjustPowerSavings();
 
 #if 0
 	//-------------------------------------------------------------------------

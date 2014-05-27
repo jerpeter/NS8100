@@ -918,6 +918,111 @@ void byteSet(void* dest, uint8 value, uint32 size)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void AdjustPowerSavings(void)
+{
+	// Check if the Help Record is not valid since there's a chance it's referenced before it's loaded
+	if (g_helpRecord.validationKey != 0xA5A5)
+	{
+		// Load the Help Record to get the stored Power Savings setting
+		getRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	}
+
+	// Check if the Help Record is valid
+	if (g_helpRecord.validationKey == 0xA5A5)
+	{
+		switch (g_helpRecord.powerSavings)
+		{
+			//----------------------------------------------------------------------------
+			case POWER_SAVINGS_MINIMUM:
+			//----------------------------------------------------------------------------
+				// Leave active: SYSTIMER; Disable: OCD
+				AVR32_PM.cpumask = 0x0100;
+
+				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC, USBB; Disable: PDCA, MACB
+				AVR32_PM.hsbmask = 0x004F;
+
+				// Leave active: USART 1, USART 3, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 2, PDCA
+				AVR32_PM.pbamask = 0x4AFB;
+
+				// Leave active: SMC, FLASHC, HMATRIX, USBB; Disable: SDRAMC, MACB
+				AVR32_PM.pbbmask = 0x0017;
+
+				// Enable rs232 driver and receiver (Active low controls)
+				gpio_clr_gpio_pin(AVR32_PIN_PB08);
+				gpio_clr_gpio_pin(AVR32_PIN_PB09);
+			break;
+
+			//----------------------------------------------------------------------------
+			case POWER_SAVINGS_MOST:
+			//----------------------------------------------------------------------------
+				// Leave active: SYSTIMER; Disable: OCD
+				AVR32_PM.cpumask = 0x0100;
+
+				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC; Disable: PDCA, MACB, USBB
+				AVR32_PM.hsbmask = 0x0047;
+
+				// Leave active: USART1, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 2 & 3, PDCA
+				AVR32_PM.pbamask = 0x42FB;
+
+				// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
+				AVR32_PM.pbbmask = 0x0015;
+
+				// Enable rs232 driver and receiver (Active low controls)
+				gpio_clr_gpio_pin(AVR32_PIN_PB08);
+				gpio_clr_gpio_pin(AVR32_PIN_PB09);
+			break;
+
+			//----------------------------------------------------------------------------
+			case POWER_SAVINGS_MAX:
+			//----------------------------------------------------------------------------
+#if 1 // Test
+				// Delay to allow serial to finish
+				soft_usecWait(500 * SOFT_MSECS);
+#endif
+
+				// Leave active: SYSTIMER; Disable: OCD
+				AVR32_PM.cpumask = 0x0100;
+
+				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC; Disable: PDCA, MACB, USBB
+				AVR32_PM.hsbmask = 0x0047;
+
+				// Leave active: TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 1 & 2 & 3, PDCA
+				AVR32_PM.pbamask = 0x40FB;
+
+				// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
+				AVR32_PM.pbbmask = 0x0015;
+
+				// Disable rs232 driver and receiver (Active low controls)
+				gpio_set_gpio_pin(AVR32_PIN_PB08);
+				gpio_set_gpio_pin(AVR32_PIN_PB09);
+			break;
+
+			//----------------------------------------------------------------------------
+			default: // POWER_SAVINGS_NONE
+			//----------------------------------------------------------------------------
+				// Leave active: All; Disable: None
+				AVR32_PM.cpumask = 0x0102;
+
+				// Leave active: All; Disable: None
+				AVR32_PM.hsbmask = 0x007F;
+
+				// Leave active: All; Disable: None
+				AVR32_PM.pbamask = 0xFFFF;
+
+				// Leave active: All; Disable: None
+				AVR32_PM.pbbmask = 0x003F;
+
+				// Enable rs232 driver and receiver (Active low controls)
+				gpio_clr_gpio_pin(AVR32_PIN_PB08);
+				gpio_clr_gpio_pin(AVR32_PIN_PB09);
+			break;
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void getDateString(char* buff, uint8 monthNum, uint8 bufSize)
 {
 	if (bufSize > 3)

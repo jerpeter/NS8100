@@ -653,10 +653,13 @@ void BootLoadManager(void)
 ///----------------------------------------------------------------------------
 inline void SetupPowerSavingsBeforeSleeping(void)
 {
-#if 0
-	// Disable rs232 driver and receiver (Active low controls)
-	gpio_set_gpio_pin(AVR32_PIN_PB08);
-	gpio_set_gpio_pin(AVR32_PIN_PB09);
+#if 1
+	if (g_helpRecord.powerSavings != POWER_SAVINGS_NONE)
+	{
+		// Disable rs232 driver and receiver (Active low controls)
+		gpio_set_gpio_pin(AVR32_PIN_PB08);
+		gpio_set_gpio_pin(AVR32_PIN_PB09);
+	}
 #endif
 
 #if 0 // Test
@@ -732,10 +735,13 @@ extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
 	rtc_enable_interrupt(&AVR32_RTC);
 #endif
 
-	// Enable rs232 driver and receiver (Active low controls)
-#if 0
-	gpio_clr_gpio_pin(AVR32_PIN_PB08);
-	gpio_clr_gpio_pin(AVR32_PIN_PB09);
+#if 1
+	if ((g_helpRecord.powerSavings == POWER_SAVINGS_MINIMUM) || (g_helpRecord.powerSavings == POWER_SAVINGS_MOST))
+	{
+		// Enable rs232 driver and receiver (Active low controls)
+		gpio_clr_gpio_pin(AVR32_PIN_PB08);
+		gpio_clr_gpio_pin(AVR32_PIN_PB09);
+	}
 #endif
 
 	g_powerSavingsForSleepEnabled = NO;
@@ -955,7 +961,7 @@ int main(void)
 	BootLoadManager();
 	DisplayVersionToCraft();
 
-#if 1 // Test
+#if 0 // Test
 	// Disable rs232 driver and receiver (Active low controls)
 	gpio_set_gpio_pin(AVR32_PIN_PB08);
 	gpio_set_gpio_pin(AVR32_PIN_PB09);

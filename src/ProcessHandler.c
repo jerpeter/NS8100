@@ -283,7 +283,11 @@ void startDataCollection(uint32 sampleRate)
 #if INTERNAL_SAMPLING_SOURCE
 	Start_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
+#if 1 // Normal
 	startExternalRTCClock(sampleRate);
+#else
+	startExternalRTCClock(1);
+#endif
 #endif
 
 	// Change state to start processing the samples

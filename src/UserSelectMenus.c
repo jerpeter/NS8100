@@ -70,7 +70,7 @@ extern USER_MENU_STRUCT peakAccMenu[];
 extern USER_MENU_STRUCT pretriggerSizeMenu[];
 extern USER_MENU_STRUCT printerEnableMenu[];
 extern USER_MENU_STRUCT printMonitorLogMenu[];
-extern USER_MENU_STRUCT powerProfileMenu[];
+extern USER_MENU_STRUCT powerSavingsMenu[];
 extern USER_MENU_STRUCT recalibrateMenu[];
 extern USER_MENU_STRUCT recordTimeMenu[];
 extern USER_MENU_STRUCT saveRecordMenu[];
@@ -1262,7 +1262,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, MODEM_SETUP_TEXT,			NO_TAG, {MODEM_SETUP}},
 {NO_TAG, 0, MONITOR_LOG_TEXT,			NO_TAG, {MONITOR_LOG}},
 {NO_TAG, 0, PRETRIGGER_SIZE_TEXT,		NO_TAG, {PRETRIGGER_SIZE}},
-{NO_TAG, 0, POWER_PROFILE_TEXT,			NO_TAG, {POWER_PROFILE}},
+{NO_TAG, 0, POWER_SAVINGS_TEXT,			NO_TAG, {POWER_SAVINGS}},
 #if 0 // ns7100
 {NO_TAG, 0, PRINTER_TEXT,				NO_TAG, {PRINTER}},
 {NO_TAG, 0, PRINT_MONITOR_LOG_TEXT,		NO_TAG, {PRINT_MONITOR_LOG}},
@@ -1408,8 +1408,8 @@ void configMenuHandler(uint8 keyPressed, void* data)
 				}
 			break;
 
-			case (POWER_PROFILE):
-				SETUP_USER_MENU_MSG(&powerProfileMenu, g_helpRecord.powerProfile);
+			case (POWER_SAVINGS):
+				SETUP_USER_MENU_MSG(&powerSavingsMenu, g_helpRecord.powerSavings);
 			break;
 
 			case (REPORT_DISPLACEMENT):
@@ -2312,29 +2312,33 @@ void printMonitorLogMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
-// Power Profile Menu
+// Power Savings Menu
 //=============================================================================
 //*****************************************************************************
-#define POWER_PROFILE_MENU_ENTRIES 4
-USER_MENU_STRUCT powerProfileMenu[POWER_PROFILE_MENU_ENTRIES] = {
-{TITLE_PRE_TAG, 0, POWER_PROFILE_TEXT, TITLE_POST_TAG,
+#define POWER_PROFILE_MENU_ENTRIES 6
+USER_MENU_STRUCT powerSavingsMenu[POWER_PROFILE_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, POWER_SAVINGS_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, POWER_PROFILE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 0, YES_TEXT,	NO_TAG, {YES}},
-{ITEM_2, 0, NO_TEXT,	NO_TAG, {NO}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&powerProfileMenuHandler}}
+{ITEM_1, 0, NONE_TEXT,	NO_TAG, {POWER_SAVINGS_NONE}},
+{ITEM_2, 0, MINIMUM_TEXT,	NO_TAG, {POWER_SAVINGS_MINIMUM}},
+{ITEM_3, 0, MOST_TEXT,	NO_TAG, {POWER_SAVINGS_MOST}},
+{ITEM_4, 0, MAX_TEXT,	NO_TAG, {POWER_SAVINGS_MAX}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&powerSavingsMenuHandler}}
 };
 
 //---------------------------------------
-// Power Profile Menu Handler
+// Power Savings Menu Handler
 //---------------------------------------
-void powerProfileMenuHandler(uint8 keyPressed, void* data)
+void powerSavingsMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.powerProfile = (uint8)powerProfileMenu[newItemIndex].data;
+		g_helpRecord.powerSavings = (uint8)powerSavingsMenu[newItemIndex].data;
+
+		AdjustPowerSavings();
 
 		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
@@ -2342,7 +2346,7 @@ void powerProfileMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&configMenu, POWER_PROFILE);
+		SETUP_USER_MENU_MSG(&configMenu, POWER_SAVINGS);
 	}
 
 	JUMP_TO_ACTIVE_MENU();

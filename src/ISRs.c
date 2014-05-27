@@ -1691,6 +1691,13 @@ void dataIsrInit(void)
 __attribute__((__interrupt__))
 void tc_sample_irq(void)
 {
+#if 0 // Test
+	static uint32 isrCounter = 0;
+
+	isrCounter++;
+	debugRaw("I(%d)", isrCounter);
+#endif
+
 #if EXTERNAL_SAMPLING_SOURCE
 	static uint8 skipProcessingFor512 = 0;
 	

@@ -228,7 +228,7 @@ typedef struct
 {
 	uint16 validationKey;
 	uint8 baudRate;
-	uint8 powerProfile;
+	uint8 powerSavings;
 	uint8 unused1;
 	uint8 unused2;
 	uint8 unused3;
