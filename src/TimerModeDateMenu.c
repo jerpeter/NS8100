@@ -59,37 +59,37 @@ extern USER_MENU_STRUCT configMenu[];
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void timerModeDateMn (INPUT_MSG_STRUCT);
-void timerModeDateMnProc(INPUT_MSG_STRUCT, REC_MN_STRUCT*, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
-void dsplyTimerModeDateMn(REC_MN_STRUCT*, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
-void loadTimerModeDateMnDefRec(REC_MN_STRUCT*, DATE_TIME_STRUCT*);
-void timerModeDateDvScroll(char dir_key, REC_MN_STRUCT*);
-void timerModeActiveMinutes(void);
-void timerModeDateScroll(char, MN_LAYOUT_STRUCT*);
-uint8 validateTimerModeSettings(void);
+void TimerModeDateMenu(INPUT_MSG_STRUCT);
+void TimerModeDateMenuProc(INPUT_MSG_STRUCT, REC_MN_STRUCT*, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
+void TimerModeDateMenuDisplay(REC_MN_STRUCT*, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
+void LoadTimerModeDateMnDefRec(REC_MN_STRUCT*, DATE_TIME_STRUCT*);
+void TimerModeDateMenuDvScroll(char dir_key, REC_MN_STRUCT*);
+void TimerModeActiveMinutes(void);
+void TimerModeDateMenuScroll(char, MN_LAYOUT_STRUCT*);
+uint8 ValidateTimerModeSettings(void);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void timerModeDateMn (INPUT_MSG_STRUCT msg)
+void TimerModeDateMenu (INPUT_MSG_STRUCT msg)
 {
     static WND_LAYOUT_STRUCT wnd_layout;
     static MN_LAYOUT_STRUCT mn_layout;
     static REC_MN_STRUCT mn_rec[6];
 
-    timerModeDateMnProc(msg, mn_rec, &wnd_layout, &mn_layout);
+    TimerModeDateMenuProc(msg, mn_rec, &wnd_layout, &mn_layout);
 
     if (g_activeMenu == TIMER_MODE_DATE_MENU)
     {
-        dsplyTimerModeDateMn(mn_rec, &wnd_layout, &mn_layout);
-        writeMapToLcd(g_mmap);
+        TimerModeDateMenuDisplay(mn_rec, &wnd_layout, &mn_layout);
+        WriteMapToLcd(g_mmap);
     }
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void timerModeDateMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
+void TimerModeDateMenuProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 
 	INPUT_MSG_STRUCT mn_msg;
@@ -109,8 +109,8 @@ void timerModeDateMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOU
             mn_layout_ptr->top_ln =     0;
             mn_layout_ptr->sub_ln =     0;
 
-            time = getCurrentTime();
-            loadTimerModeDateMnDefRec(rec_ptr, &time);
+            time = GetCurrentTime();
+            LoadTimerModeDateMnDefRec(rec_ptr, &time);
             rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
             break;
 
@@ -127,7 +127,7 @@ void timerModeDateMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOU
 					g_helpRecord.timerStopDate.month = (char)rec_ptr[TMD_STOP_MONTH].numrec.tindex;
 					g_helpRecord.timerStopDate.year = (char)rec_ptr[TMD_STOP_YEAR].numrec.tindex;
 
-					processTimerModeSettings(PROMPT);
+					ProcessTimerModeSettings(PROMPT);
 
 					SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 					JUMP_TO_ACTIVE_MENU();
@@ -135,23 +135,23 @@ void timerModeDateMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOU
                case (DOWN_ARROW_KEY):
                      if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
                      {
-                        timerModeDateDvScroll(DOWN, &rec_ptr[mn_layout_ptr->curr_ln]);
+                        TimerModeDateMenuDvScroll(DOWN, &rec_ptr[mn_layout_ptr->curr_ln]);
                      }
                      break;
                case (UP_ARROW_KEY):
                      if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
                      {
-                        timerModeDateDvScroll(UP, &rec_ptr[mn_layout_ptr->curr_ln]);
+                        TimerModeDateMenuDvScroll(UP, &rec_ptr[mn_layout_ptr->curr_ln]);
                      }
                      break;
                case (PLUS_KEY):
                      rec_ptr[mn_layout_ptr->curr_ln].enterflag = FALSE;
-                     timerModeDateScroll(DOWN, mn_layout_ptr);
+                     TimerModeDateMenuScroll(DOWN, mn_layout_ptr);
                      rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
                      break;
                case (MINUS_KEY):
                      rec_ptr[mn_layout_ptr->curr_ln].enterflag = FALSE;
-                     timerModeDateScroll(UP, mn_layout_ptr);
+                     TimerModeDateMenuScroll(UP, mn_layout_ptr);
                      rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
                      break;
                case (ESC_KEY):
@@ -172,7 +172,7 @@ void timerModeDateMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOU
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void timerModeDateScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
+void TimerModeDateMenuScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
    switch (direction)
    {
@@ -195,7 +195,7 @@ void timerModeDateScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void timerModeDateDvScroll(char dir_key, REC_MN_STRUCT *rec_ptr)
+void TimerModeDateMenuDvScroll(char dir_key, REC_MN_STRUCT *rec_ptr)
 {
 	switch (dir_key)
 	{
@@ -226,49 +226,49 @@ void timerModeDateDvScroll(char dir_key, REC_MN_STRUCT *rec_ptr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void dsplyTimerModeDateMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
+void TimerModeDateMenuDisplay(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	uint8 sbuff[50];
 	uint8 top;
 	uint8 menu_ln;
 	uint8 length = 0;
 
-	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	menu_ln = 0;
 	top = (uint8)mn_layout_ptr->top_ln;
 
 	// Add in a title for the menu
-	byteSet(&sbuff[0], 0, sizeof(sbuff));
+	ByteSet(&sbuff[0], 0, sizeof(sbuff));
 	sprintf((char*)sbuff, "-%s-", getLangText(ACTIVE_DATE_PERIOD_TEXT));
 	length = (uint8)strlen((char*)sbuff);
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// Add in a title for the menu
-	byteSet(&sbuff[0], 0, sizeof(sbuff));
+	ByteSet(&sbuff[0], 0, sizeof(sbuff));
 	sprintf((char*)sbuff, "(%s)", getLangText(DAY_MONTH_YEAR_TEXT));
 	length = (uint8)strlen((char*)sbuff);
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ONE;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-	byteSet(&sbuff[0], 0, sizeof(sbuff));
+	ByteSet(&sbuff[0], 0, sizeof(sbuff));
 
 	wnd_layout_ptr->curr_row =   wnd_layout_ptr->start_row;
 	wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
 	wnd_layout_ptr->next_row =   wnd_layout_ptr->start_row;
 	wnd_layout_ptr->next_col =   wnd_layout_ptr->start_col;
 
-	rec_ptr[TMD_START_DAY].numrec.nmax = getDaysPerMonth((uint8)(rec_ptr[TMD_START_MONTH].numrec.tindex),
+	rec_ptr[TMD_START_DAY].numrec.nmax = GetDaysPerMonth((uint8)(rec_ptr[TMD_START_MONTH].numrec.tindex),
 																(uint8)(rec_ptr[TMD_START_YEAR].numrec.tindex));
 	if (rec_ptr[TMD_START_DAY].numrec.tindex > rec_ptr[TMD_START_DAY].numrec.nmax)
 		rec_ptr[TMD_START_DAY].numrec.tindex = rec_ptr[TMD_START_DAY].numrec.nmax;
 
-	rec_ptr[TMD_STOP_DAY].numrec.nmax = getDaysPerMonth((uint8)(rec_ptr[TMD_STOP_MONTH].numrec.tindex),
+	rec_ptr[TMD_STOP_DAY].numrec.nmax = GetDaysPerMonth((uint8)(rec_ptr[TMD_STOP_MONTH].numrec.tindex),
 																(uint8)(rec_ptr[TMD_STOP_YEAR].numrec.tindex));
 	if (rec_ptr[TMD_STOP_DAY].numrec.tindex > rec_ptr[TMD_STOP_DAY].numrec.nmax)
 		rec_ptr[TMD_STOP_DAY].numrec.tindex = rec_ptr[TMD_STOP_DAY].numrec.nmax;
@@ -281,30 +281,30 @@ void dsplyTimerModeDateMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_
 
 	// Display the start date text
 	sprintf((char*)sbuff, "%s: ", getLangText(START_DATE_TEXT));
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((9 * SIX_COL_SIZE)/2));
 
 	// Display the day
 	sprintf((char*)sbuff, "%02d", (uint16)(uint16)rec_ptr[TMD_START_DAY].numrec.tindex);
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_START_DAY) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_START_DAY) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
-	wndMpWrtString((uint8*)("-"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString((uint8*)("-"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the month text
 	sprintf((char*)sbuff, "%s", (char*)&(g_monthTable[(uint8)(rec_ptr[TMD_START_MONTH].numrec.tindex)].name[0]));
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_START_MONTH) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_START_MONTH) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
-	wndMpWrtString((uint8*)("-"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString((uint8*)("-"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the year
 	sprintf((char*)sbuff, "%02d", (uint16)(uint16)rec_ptr[TMD_START_YEAR].numrec.tindex);
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_START_YEAR) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_START_YEAR) ? CURSOR_LN : REG_LN);
 
 	// ---------------------------------------------------------------------------------
 	// Write out the stop date line which includes the stop date text, day, month, and year values
@@ -314,36 +314,36 @@ void dsplyTimerModeDateMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_
 
 	// Display the date text
 	sprintf((char*)sbuff, "%s: ", getLangText(STOP_DATE_TEXT));
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((9 * SIX_COL_SIZE)/2));
 
 	// Display the day
 	sprintf((char*)sbuff, "%02d", (uint16)(uint16)rec_ptr[TMD_STOP_DAY].numrec.tindex);
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_STOP_DAY) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_STOP_DAY) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
-	wndMpWrtString((uint8*)("-"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString((uint8*)("-"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the month text
 	sprintf((char*)sbuff, "%s", (char*)&(g_monthTable[(uint8)(rec_ptr[TMD_STOP_MONTH].numrec.tindex)].name[0]));
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_STOP_MONTH) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_STOP_MONTH) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
-	wndMpWrtString((uint8*)("-"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString((uint8*)("-"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the year
 	sprintf((char*)sbuff, "%02d", (uint16)(uint16)rec_ptr[TMD_STOP_YEAR].numrec.tindex);
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_STOP_YEAR) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMD_STOP_YEAR) ? CURSOR_LN : REG_LN);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void loadTimerModeDateMnDefRec(REC_MN_STRUCT *rec_ptr, DATE_TIME_STRUCT *time_ptr)
+void LoadTimerModeDateMnDefRec(REC_MN_STRUCT *rec_ptr, DATE_TIME_STRUCT *time_ptr)
 {
     // START DAY
     rec_ptr[TMD_START_DAY].enterflag = FALSE;
@@ -415,7 +415,7 @@ void loadTimerModeDateMnDefRec(REC_MN_STRUCT *rec_ptr, DATE_TIME_STRUCT *time_pt
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void timerModeActiveMinutes(void)
+void TimerModeActiveMinutes(void)
 {
 	// Find the Time mode active time period in minutes
 
@@ -425,59 +425,59 @@ void timerModeActiveMinutes(void)
 		// Check if the stop min is greater than the start min
 		if (g_helpRecord.timerStopTime.min > g_helpRecord.timerStartTime.min)
 		{
-			g_helpRecord.timerModeActiveMinutes = (g_helpRecord.timerStopTime.min - g_helpRecord.timerStartTime.min);
+			g_helpRecord.TimerModeActiveMinutes = (g_helpRecord.timerStopTime.min - g_helpRecord.timerStartTime.min);
 		}
 		else // The timer mode hourly active period will cross the hour boundary
 		{
-			g_helpRecord.timerModeActiveMinutes = (60 + g_helpRecord.timerStopTime.min - g_helpRecord.timerStartTime.min);
+			g_helpRecord.TimerModeActiveMinutes = (60 + g_helpRecord.timerStopTime.min - g_helpRecord.timerStartTime.min);
 		}
 		
 		// In order to restart up every hour, the active minutes needs to be less than 60, 1 min for shutdown + 1 min for being off
-		if (g_helpRecord.timerModeActiveMinutes > 58)
-			g_helpRecord.timerModeActiveMinutes = 58;
+		if (g_helpRecord.TimerModeActiveMinutes > 58)
+			g_helpRecord.TimerModeActiveMinutes = 58;
 	}
 	// Check if the stop time (in minutes resolution) is greater than the start time, thus running the same day
 	else if (((g_helpRecord.timerStopTime.hour * 60) + g_helpRecord.timerStopTime.min) >
 		((g_helpRecord.timerStartTime.hour * 60) + g_helpRecord.timerStartTime.min))
 	{
 		// Set active minutes as the difference in the stop and start times
-		g_helpRecord.timerModeActiveMinutes = (uint16)(((g_helpRecord.timerStopTime.hour * 60) + g_helpRecord.timerStopTime.min) -
+		g_helpRecord.TimerModeActiveMinutes = (uint16)(((g_helpRecord.timerStopTime.hour * 60) + g_helpRecord.timerStopTime.min) -
 												((g_helpRecord.timerStartTime.hour * 60) + g_helpRecord.timerStartTime.min));
 
 		// Check for specialty case one time
 		if (g_helpRecord.timerModeFrequency == TIMER_MODE_ONE_TIME)
 		{
 			// Calculate the number of days to run consecutively (Days * Hours in a day * Minutes in an hour) and add to the active minutes
-			g_helpRecord.timerModeActiveMinutes += (24 * 60 * (getTotalDaysFromReference(g_helpRecord.timerStopDate) -
-														getTotalDaysFromReference(g_helpRecord.timerStartDate)));
+			g_helpRecord.TimerModeActiveMinutes += (24 * 60 * (GetTotalDaysFromReference(g_helpRecord.timerStopDate) -
+														GetTotalDaysFromReference(g_helpRecord.timerStartDate)));
 		}
 	}
 	else // The timer mode active period will see midnight, thus running 2 consecutive days
 	{
 		// Set active minutes as the difference from midnight and the start time, plus the stop time the next day
-		g_helpRecord.timerModeActiveMinutes = (uint16)((24 * 60) - ((g_helpRecord.timerStartTime.hour * 60) + g_helpRecord.timerStartTime.min) +
+		g_helpRecord.TimerModeActiveMinutes = (uint16)((24 * 60) - ((g_helpRecord.timerStartTime.hour * 60) + g_helpRecord.timerStartTime.min) +
 												((g_helpRecord.timerStopTime.hour * 60) + g_helpRecord.timerStopTime.min));
 
 		// Check for specialty case one time
 		if (g_helpRecord.timerModeFrequency == TIMER_MODE_ONE_TIME)
 		{
 			// Calculate the number of days to run consecutively (Days * Hours in a day * Minutes in an hour) minus crossover day and add to the active minutes
-			g_helpRecord.timerModeActiveMinutes += (24 * 60 * (getTotalDaysFromReference(g_helpRecord.timerStopDate) -
-														getTotalDaysFromReference(g_helpRecord.timerStartDate) - 1));
+			g_helpRecord.TimerModeActiveMinutes += (24 * 60 * (GetTotalDaysFromReference(g_helpRecord.timerStopDate) -
+														GetTotalDaysFromReference(g_helpRecord.timerStartDate) - 1));
 		}
 	}
 
-	debug("Timer Active Minutes: %d\n", g_helpRecord.timerModeActiveMinutes);
+	debug("Timer Active Minutes: %d\n", g_helpRecord.TimerModeActiveMinutes);
 
-    saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+    SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 validateTimerModeSettings(void)
+uint8 ValidateTimerModeSettings(void)
 {
-	DATE_TIME_STRUCT time = getCurrentTime();
+	DATE_TIME_STRUCT time = GetCurrentTime();
 
 	char start_min = g_helpRecord.timerStartTime.min;
 	char start_hour = g_helpRecord.timerStartTime.hour;
@@ -549,36 +549,36 @@ uint8 validateTimerModeSettings(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void processTimerModeSettings(uint8 mode)
+void ProcessTimerModeSettings(uint8 mode)
 {
 	//uint8 dayOfWeek = 0;
 	uint8 startDay = 0;
 	uint8 startHour = 0;
 	char stringBuff[75];
 	uint16 minutesLeft = 0;
-	DATE_TIME_STRUCT currentTime = getCurrentTime();
-	uint8 status = validateTimerModeSettings();
+	DATE_TIME_STRUCT currentTime = GetCurrentTime();
+	uint8 status = ValidateTimerModeSettings();
 
 	// Check if the timer mode settings check failed or if the timer mode setting has been disabled
 	if ((status == FAILED) || (g_helpRecord.timerMode == DISABLED))
 	{
 		g_helpRecord.timerMode = DISABLED;
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 		// Disable the Power Off timer in case it's set
-		clearSoftTimer(POWER_OFF_TIMER_NUM);
+		ClearSoftTimer(POWER_OFF_TIMER_NUM);
 
 		if (mode == PROMPT)
 		{
-			byteSet(&stringBuff[0], 0, sizeof(stringBuff));
+			ByteSet(&stringBuff[0], 0, sizeof(stringBuff));
 			sprintf(stringBuff, "%s %s", getLangText(TIMER_SETTINGS_INVALID_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT));
-			messageBox(getLangText(ERROR_TEXT), stringBuff, MB_OK);
+			MessageBox(getLangText(ERROR_TEXT), stringBuff, MB_OK);
 		}
 	}
 	else // status == PASSED || status == IN_PROGRESS
 	{
 		// Calculate timer mode active run time in minutes
-		timerModeActiveMinutes();
+		TimerModeActiveMinutes();
 
 #if 0 // ns7100
 		RTC_FLAGS.reg = RTC_FLAGS.reg;
@@ -646,26 +646,26 @@ void processTimerModeSettings(uint8 mode)
 					}					
 				}
 				
-				EnableRtcAlarm(startDay, startHour, g_helpRecord.timerStartTime.min, 0);
+				EnableExternalRtcAlarm(startDay, startHour, g_helpRecord.timerStartTime.min, 0);
 			}
 			else // This is the last hour time slot to run today, set alarm for next day
 			{
 				// startDay calculated correctly in above previous status == IN_PROGRESS logic
-				EnableRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
+				EnableExternalRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
 			}
 		}
 		else // All other timer modes
 		{
-			EnableRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
+			EnableExternalRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
 		}
 
 		if (status == PASSED)
 		{
 			if (mode == PROMPT)
 			{
-				byteSet(&stringBuff[0], 0, sizeof(stringBuff));
+				ByteSet(&stringBuff[0], 0, sizeof(stringBuff));
 				sprintf(stringBuff, "%s %s", getLangText(TIMER_MODE_NOW_ACTIVE_TEXT), getLangText(PLEASE_POWER_OFF_UNIT_TEXT));
-				messageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
+				MessageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
 			}
 
 			// Check if start time is greater than the current time
@@ -686,7 +686,7 @@ void processTimerModeSettings(uint8 mode)
 			// Check if the start time is within the next minute
 			if (minutesLeft <= 1)
 			{
-				overlayMessage(getLangText(WARNING_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 2 * SOFT_SECS);
+				OverlayMessage(getLangText(WARNING_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 2 * SOFT_SECS);
 
 				// Need to shutdown the unit now, otherwise the start time window will be missed
 				PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
@@ -697,19 +697,19 @@ void processTimerModeSettings(uint8 mode)
 				minutesLeft -= 1;
 
 				// Set the Power off soft timer to prevent the unit from staying on past the Timer mode start time
-				assignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)(minutesLeft * 60 * 2), powerOffTimerCallback);
+				AssignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)(minutesLeft * 60 * 2), PowerOffTimerCallback);
 			}
 		}
 		else // status == IN_PROGRESS
 		{
 			// Enable power off protection
-			powerControl(POWER_OFF_PROTECTION_ENABLE, ON);
+			PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
 
 			if (mode == PROMPT)
 			{
-				byteSet(&stringBuff[0], 0, sizeof(stringBuff));
+				ByteSet(&stringBuff[0], 0, sizeof(stringBuff));
 				sprintf(stringBuff, "%s", getLangText(TIMER_MODE_NOW_ACTIVE_TEXT));
-				messageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
+				MessageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
 			}
 
 			// Check if specialty mode hourly
@@ -747,7 +747,7 @@ void processTimerModeSettings(uint8 mode)
 			debug("Timer Mode: In progress, minutes left before power off: %d (Expired secs this min: %d)\n", minutesLeft, currentTime.sec);
 
 			// Setup soft timer to turn system off when timer mode is finished for the day
-			assignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)((minutesLeft * 60 * 2) - (currentTime.sec	* 2)), powerOffTimerCallback);
+			AssignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)((minutesLeft * 60 * 2) - (currentTime.sec	* 2)), PowerOffTimerCallback);
 		}
 	}
 }

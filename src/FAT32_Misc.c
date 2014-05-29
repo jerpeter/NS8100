@@ -236,12 +236,12 @@ void FATMisc_Create_sfn_entry(char *shortfilename, UINT32 size, UINT32 startClus
 #else // ns8100 added
 	entry->CrtTimeTenth = 0x00;
  
-	convertCurrentTimeForFat(&(entry->CrtTime[0]));
-	convertCurrentDateForFat(&(entry->CrtDate[0]));
-	convertCurrentTimeForFat(&(entry->WrtTime[0]));
-	convertCurrentDateForFat(&(entry->WrtDate[0]));
+	ConvertCurrentTimeForFat(&(entry->CrtTime[0]));
+	ConvertCurrentDateForFat(&(entry->CrtDate[0]));
+	ConvertCurrentTimeForFat(&(entry->WrtTime[0]));
+	ConvertCurrentDateForFat(&(entry->WrtDate[0]));
 
-	convertCurrentDateForFat(&(entry->LstAccDate[0]));
+	ConvertCurrentDateForFat(&(entry->LstAccDate[0]));
 #endif
 
 	entry->Attr = FILE_TYPE_FILE;

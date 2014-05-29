@@ -84,13 +84,13 @@ USER_MENU_STRUCT airTriggerMenu[AIR_TRIGGER_MENU_ENTRIES] = {
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, MB_TYPE)}},
 #endif
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&airTriggerMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AirTriggerMenuHandler}}
 };
 
 //-------------------------
 // Air Trigger Menu Handler
 //-------------------------
-void airTriggerMenuHandler(uint8 keyPressed, void* data)
+void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -117,7 +117,7 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 #if 0 // ns7100
 		if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) && g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR)
 		{
-			messageBox(getLangText(WARNING_TEXT), "BOTH SEISMIC AND AIR SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
+			MessageBox(getLangText(WARNING_TEXT), "BOTH SEISMIC AND AIR SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 			
 #if 1 // ns8100 - Down convert to current bit accuracy setting
 			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
@@ -140,7 +140,7 @@ void airTriggerMenuHandler(uint8 keyPressed, void* data)
 #if 1 // Updated (Port lost change)
 		if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) && g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR)
 		{
-			messageBox(getLangText(WARNING_TEXT), "UNIT SET FOR EXTERNAL TRIGGER.", MB_OK);
+			MessageBox(getLangText(WARNING_TEXT), "UNIT SET FOR EXTERNAL TRIGGER.", MB_OK);
 		}
 #endif
 
@@ -177,13 +177,13 @@ USER_MENU_STRUCT alarmOneSeismicLevelMenu[ALARM_ONE_SEISMIC_LEVEL_MENU_ENTRIES] 
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(IN_TYPE, MM_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmOneSeismicLevelMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AlarmOneSeismicLevelMenuHandler}}
 };
 
 //-------------------------------------
 // Alarm One Seismic Level Menu Handler
 //-------------------------------------
-void alarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
+void AlarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -258,13 +258,13 @@ USER_MENU_STRUCT alarmOneAirLevelMenu[ALARM_ONE_AIR_LEVEL_MENU_ENTRIES] = {
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, MB_TYPE)}},
 #endif
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmOneAirLevelMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AlarmOneAirLevelMenuHandler}}
 };
 
 //---------------------------------
 // Alarm One Air Level Menu Handler
 //---------------------------------
-void alarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
+void AlarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -313,13 +313,13 @@ USER_MENU_STRUCT alarmOneTimeMenu[ALARM_ONE_TIME_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(FLOAT_TYPE, ALARM_ONE_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(SECS_TYPE, NO_ALT_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmOneTimeMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AlarmOneTimeMenuHandler}}
 };
 
 //----------------------------
 // Alarm One Time Menu Handler
 //----------------------------
-void alarmOneTimeMenuHandler(uint8 keyPressed, void* data)
+void AlarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -385,13 +385,13 @@ USER_MENU_STRUCT alarmTwoSeismicLevelMenu[ALARM_TWO_SEISMIC_LEVEL_MENU_ENTRIES] 
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(IN_TYPE, MM_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmTwoSeismicLevelMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AlarmTwoSeismicLevelMenuHandler}}
 };
 
 //-------------------------------------
 // Alarm Two Seismic Level Menu Handler
 //-------------------------------------
-void alarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
+void AlarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -466,13 +466,13 @@ USER_MENU_STRUCT alarmTwoAirLevelMenu[ALARM_TWO_AIR_LEVEL_MENU_ENTRIES] = {
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(DB_TYPE, MB_TYPE)}},
 #endif
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmTwoAirLevelMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AlarmTwoAirLevelMenuHandler}}
 };
 
 //---------------------------------
 // Alarm Two Air Level Menu Handler
 //---------------------------------
-void alarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
+void AlarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -521,13 +521,13 @@ USER_MENU_STRUCT alarmTwoTimeMenu[ALARM_TWO_TIME_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(FLOAT_TYPE, ALARM_TWO_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(SECS_TYPE, NO_ALT_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&alarmTwoTimeMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AlarmTwoTimeMenuHandler}}
 };
 
 //----------------------------
 // Alarm Two Time Menu Handler
 //----------------------------
-void alarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
+void AlarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -537,7 +537,7 @@ void alarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 		
 		debug("Alarm 2 Time: %f\n", g_helpRecord.alarmTwoTime);
 
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 		SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
 	}
@@ -596,13 +596,13 @@ USER_MENU_STRUCT companyMenu[COMPANY_MENU_ENTRIES] = {
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_COMPANY_CHARS}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&companyMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&CompanyMenuHandler}}
 };
 
 //---------------------
 // Company Menu Handler
 //---------------------
-void companyMenuHandler(uint8 keyPressed, void* data)
+void CompanyMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -639,13 +639,13 @@ USER_MENU_STRUCT copiesMenu[COPIES_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(INTEGER_BYTE_TYPE, COPIES_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(NO_TYPE, NO_ALT_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&copiesMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&CopiesMenuHandler}}
 };
 
 //--------------------
 // Copies Menu Handler
 //--------------------
-void copiesMenuHandler(uint8 keyPressed, void* data)
+void CopiesMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -661,7 +661,7 @@ void copiesMenuHandler(uint8 keyPressed, void* data)
 			g_helpRecord.copies = *((uint8*)data);
 			debug("Copies: %d\n", g_helpRecord.copies);
 
-			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+			SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 			SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 		}
@@ -685,13 +685,13 @@ USER_MENU_STRUCT distanceToSourceMenu[DISTANCE_TO_SOURCE_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(FLOAT_WITH_N_TYPE, DISTANCE_TO_SOURCE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(FT_TYPE, M_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&distanceToSourceMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&DistanceToSourceMenuHandler}}
 };
 
 //--------------------------------
 // Distance to Source Menu Handler
 //--------------------------------
-void distanceToSourceMenuHandler(uint8 keyPressed, void* data)
+void DistanceToSourceMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -734,13 +734,13 @@ USER_MENU_STRUCT lcdImpulseTimeMenu[LCD_IMPULSE_TIME_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(INTEGER_BYTE_TYPE, LCD_IMPULSE_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(SECS_TYPE, NO_ALT_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&lcdImpulseTimeMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&LcdImpulseTimeMenuHandler}}
 };
 
 //------------------------------
 // Lcd Impulse Time Menu Handler
 //------------------------------
-void lcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
+void LcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -750,7 +750,7 @@ void lcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 
 		debug("LCD Impulse Menu Update Seconds: %d\n", g_triggerRecord.berec.impulseMenuUpdateSecs);
 
-		saveRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
+		SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 		SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vectorSum);
 	}
@@ -773,13 +773,13 @@ USER_MENU_STRUCT lcdTimeoutMenu[LCD_TIMEOUT_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(INTEGER_BYTE_TYPE, LCD_TIMEOUT_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(MINS_TYPE, NO_ALT_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&lcdTimeoutMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&LcdTimeoutMenuHandler}}
 };
 
 //-------------------------
 // Lcd Timeout Menu Handler
 //-------------------------
-void lcdTimeoutMenuHandler(uint8 keyPressed, void* data)
+void LcdTimeoutMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -789,7 +789,7 @@ void lcdTimeoutMenuHandler(uint8 keyPressed, void* data)
 
 		debug("LCD Timeout: %d\n", g_helpRecord.lcdTimeout);
 
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
@@ -814,13 +814,13 @@ USER_MENU_STRUCT modemDialMenu[MODEM_DIAL_MENU_ENTRIES] = {
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_MODEM_DIAL_CHARS}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&modemDialMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&ModemDialMenuHandler}}
 };
 
 //------------------------
 // Modem Dial Menu Handler
 //------------------------
-void modemDialMenuHandler(uint8 keyPressed, void* data)
+void ModemDialMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -853,13 +853,13 @@ USER_MENU_STRUCT modemInitMenu[MODEM_INIT_MENU_ENTRIES] = {
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&modemInitMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&ModemInitMenuHandler}}
 };
 
 //------------------------
 // Modem Init Menu Handler
 //------------------------
-void modemInitMenuHandler(uint8 keyPressed, void* data)
+void ModemInitMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -927,13 +927,13 @@ USER_MENU_STRUCT modemRetryMenu[MODEM_RETRY_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(INTEGER_BYTE_TYPE, MODEM_RETRY_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(NO_TYPE, NO_ALT_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&modemRetryMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&ModemRetryMenuHandler}}
 };
 
 //-------------------------
 // Modem Retry Menu Handler
 //-------------------------
-void modemRetryMenuHandler(uint8 keyPressed, void* data)
+void ModemRetryMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -964,13 +964,13 @@ USER_MENU_STRUCT modemRetryTimeMenu[MODEM_RETRY_TIME_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(INTEGER_BYTE_TYPE, MODEM_RETRY_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(MINS_TYPE, NO_ALT_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&modemRetryTimeMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&ModemRetryTimeMenuHandler}}
 };
 
 //------------------------------
 // Modem Retry Time Menu Handler
 //------------------------------
-void modemRetryTimeMenuHandler(uint8 keyPressed, void* data)
+void ModemRetryTimeMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -1007,13 +1007,13 @@ USER_MENU_STRUCT notesMenu[NOTES_MENU_ENTRIES] = {
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&notesMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&NotesMenuHandler}}
 };
 
 //-------------------
 // Notes Menu Handler
 //-------------------
-void notesMenuHandler(uint8 keyPressed, void* data)
+void NotesMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -1047,13 +1047,13 @@ USER_MENU_STRUCT operatorMenu[OPERATOR_MENU_ENTRIES] = {
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_OPERATOR_CHARS}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&operatorMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&OperatorMenuHandler}}
 };
 
 //----------------------
 // Operator Menu Handler
 //----------------------
-void operatorMenuHandler(uint8 keyPressed, void* data)
+void OperatorMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -1116,13 +1116,13 @@ USER_MENU_STRUCT recordTimeMenu[RECORD_TIME_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(INTEGER_LONG_TYPE, RECORD_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(SECS_TYPE, NO_ALT_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&recordTimeMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&RecordTimeMenuHandler}}
 };
 
 //-------------------------
 // Record Time Menu Handler
 //-------------------------
-void recordTimeMenuHandler(uint8 keyPressed, void* data)
+void RecordTimeMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -1182,13 +1182,13 @@ USER_MENU_STRUCT saveRecordMenu[SAVE_RECORD_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(STRING_TYPE, SAVE_RECORD_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_SAVE_RECORD_CHARS}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&saveRecordMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SaveRecordMenuHandler}}
 };
 
 //-------------------------
 // Save Record Menu Handler
 //-------------------------
-void saveRecordMenuHandler(uint8 keyPressed, void* data)
+void SaveRecordMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint8 availableLocation = 0;
@@ -1201,17 +1201,17 @@ void saveRecordMenuHandler(uint8 keyPressed, void* data)
 		if (strlen((char*)data) != 0)
 		{
 			debug("Save Record Name: <%s>\n", (char*)data);
-			availableLocation = checkForAvailableTriggerRecordEntry((char*)data, &match);
+			availableLocation = CheckForAvailableTriggerRecordEntry((char*)data, &match);
 
 			if (match == YES)
 			{
 				// Found another saved record with the same name
 
 				// Prompt to alert the user the name has been used already
-				overlayMessage(getLangText(WARNING_TEXT), getLangText(NAME_ALREADY_USED_TEXT), 2 * SOFT_SECS);
+				OverlayMessage(getLangText(WARNING_TEXT), getLangText(NAME_ALREADY_USED_TEXT), 2 * SOFT_SECS);
 				
 				// Ask if they want to overwrite the saved setup
-				choice = messageBox(getLangText(WARNING_TEXT), getLangText(OVERWRITE_SETTINGS_TEXT), MB_YESNO);
+				choice = MessageBox(getLangText(WARNING_TEXT), getLangText(OVERWRITE_SETTINGS_TEXT), MB_YESNO);
 				
 				// Check if user selected YES
 				if (choice == MB_FIRST_CHOICE)
@@ -1220,13 +1220,13 @@ void saveRecordMenuHandler(uint8 keyPressed, void* data)
 					strcpy((char*)g_triggerRecord.name, (char*)data);
 
 					// Save the trigger record in the available location
-					saveRecData(&g_triggerRecord, availableLocation, REC_TRIGGER_USER_MENU_TYPE);
+					SaveRecordData(&g_triggerRecord, availableLocation, REC_TRIGGER_USER_MENU_TYPE);
 
 					// Also save the trigger record in the default record for future use
-					saveRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
+					SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 					// Update the title based on the current mode
-					updateModeMenuTitle(g_triggerRecord.op_mode);
+					UpdateModeMenuTitle(g_triggerRecord.op_mode);
 					SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 				}
 				else
@@ -1239,9 +1239,9 @@ void saveRecordMenuHandler(uint8 keyPressed, void* data)
 			else if (availableLocation == 0)
 			{
 				// Prompt to alert the user that the saved settings are full
-				byteSet(&message[0], 0, sizeof(message));
+				ByteSet(&message[0], 0, sizeof(message));
 				sprintf(message, "%s %s", getLangText(SAVED_SETTINGS_TEXT), getLangText(FULL_TEXT));
-				overlayMessage(getLangText(WARNING_TEXT), message, 2 * SOFT_SECS);
+				OverlayMessage(getLangText(WARNING_TEXT), message, 2 * SOFT_SECS);
 
 				// Copy over the record name
 				strcpy((char*)g_triggerRecord.name, (char*)data);
@@ -1255,19 +1255,19 @@ void saveRecordMenuHandler(uint8 keyPressed, void* data)
 				strcpy((char*)g_triggerRecord.name, (char*)data);
 
 				// Save the trigger record in the available location
-				saveRecData(&g_triggerRecord, availableLocation, REC_TRIGGER_USER_MENU_TYPE);
+				SaveRecordData(&g_triggerRecord, availableLocation, REC_TRIGGER_USER_MENU_TYPE);
 
 				// Also save the trigger record in the default record for future use
-				saveRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
+				SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 				// Update the title based on the current mode
-				updateModeMenuTitle(g_triggerRecord.op_mode);
+				UpdateModeMenuTitle(g_triggerRecord.op_mode);
 				SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 			}
 		}
 		else // Name was empty, don't allow it to be saved
 		{
-			messageBox(getLangText(WARNING_TEXT), getLangText(NAME_MUST_HAVE_AT_LEAST_ONE_CHARACTER_TEXT), MB_OK);
+			MessageBox(getLangText(WARNING_TEXT), getLangText(NAME_MUST_HAVE_AT_LEAST_ONE_CHARACTER_TEXT), MB_OK);
 			
 			// Let the code recall the current menu
 			// If that doesn't work, then uncomment the following line to call the menu from start
@@ -1295,13 +1295,13 @@ USER_MENU_STRUCT seismicLocationMenu[SEISMIC_LOCATION_MENU_ENTRIES] = {
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_SEISMIC_LOCATION_CHARS}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&seismicLocationMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SeismicLocationMenuHandler}}
 };
 
 //------------------------------
 // Seismic Location Menu Handler
 //------------------------------
-void seismicLocationMenuHandler(uint8 keyPressed, void* data)
+void SeismicLocationMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -1332,13 +1332,13 @@ USER_MENU_STRUCT seismicTriggerMenu[SEISMIC_TRIGGER_MENU_ENTRIES] = {
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(IN_TYPE, MM_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&seismicTriggerMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SeismicTriggerMenuHandler}}
 };
 
 //-----------------------------
 // Seismic Trigger Menu Handler
 //-----------------------------
-void seismicTriggerMenuHandler(uint8 keyPressed, void* data)
+void SeismicTriggerMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -1408,13 +1408,13 @@ USER_MENU_STRUCT serialNumberMenu[SERIAL_NUMBER_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(STRING_TYPE, SERIAL_NUMBER_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_SERIAL_NUMBER_CHARS}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&serialNumberMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SerialNumberMenuHandler}}
 };
 
 //---------------------------
 // Serial Number Menu Handler
 //---------------------------
-void serialNumberMenuHandler(uint8 keyPressed, void* data)
+void SerialNumberMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -1444,13 +1444,13 @@ USER_MENU_STRUCT weightPerDelayMenu[WEIGHT_PER_DELAY_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(FLOAT_WITH_N_TYPE, WEIGHT_PER_DELAY_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(LBS_TYPE, KG_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&weightPerDelayMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&WeightPerDelayMenuHandler}}
 };
 
 //------------------------------
 // Weight per Delay Menu Handler
 //------------------------------
-void weightPerDelayMenuHandler(uint8 keyPressed, void* data)
+void WeightPerDelayMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -1486,13 +1486,13 @@ USER_MENU_STRUCT unlockCodeMenu[UNLOCK_CODE_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(INTEGER_WORD_FIXED_TYPE, UNLOCK_CODE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(NO_TYPE, NO_ALT_TYPE)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&unlockCodeMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&UnlockCodeMenuHandler}}
 };
 
 //-------------------------
 // Unlock Code Menu Handler
 //-------------------------
-void unlockCodeMenuHandler(uint8 keyPressed, void* data)
+void UnlockCodeMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -1502,11 +1502,11 @@ void unlockCodeMenuHandler(uint8 keyPressed, void* data)
 
 		debug("Modem Unlock Code: %4d\n", g_modemSetupRecord.unlockCode);
 
-		saveRecData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
+		SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
 
 		if (READ_DCD == NO_CONNECTION)
 		{
-			craftInitStatusFlags();
+			CraftInitStatusFlags();
 		}
 
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);

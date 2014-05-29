@@ -37,48 +37,48 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 parseIncommingMsgHeader(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* incommingHdr)
+uint8 ParseIncommingMsgHeader(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* incommingHdr)
 {
 	uint8 errCode = NO;
 	char* msgPtr = (char*)inCmd->msg;			// A tempPtr into the message buffer.
 
 	// clear the incomming header data.
-	byteSet((uint8*)incommingHdr, 0, sizeof(COMMAND_MESSAGE_HEADER));
+	ByteSet((uint8*)incommingHdr, 0, sizeof(COMMAND_MESSAGE_HEADER));
 
 	if (strlen(msgPtr) >= HDR_CMD_LEN)
 	{
 		// Parse the string into a header data struct.
-		byteCpy(incommingHdr->cmd, msgPtr, HDR_CMD_LEN);
+		ByteCpy(incommingHdr->cmd, msgPtr, HDR_CMD_LEN);
 		msgPtr += HDR_CMD_LEN;
 	}
 
 	if (strlen(msgPtr) >= HDR_TYPE_LEN)
 	{
-		byteCpy(incommingHdr->type, msgPtr, HDR_TYPE_LEN);
+		ByteCpy(incommingHdr->type, msgPtr, HDR_TYPE_LEN);
 		msgPtr += HDR_TYPE_LEN;
 	}
 
 	if (strlen((char*)inCmd->msg) >= MESSAGE_HEADER_LENGTH)
 	{
-		byteCpy(incommingHdr->dataLength, msgPtr, HDR_DATALENGTH_LEN);
+		ByteCpy(incommingHdr->dataLength, msgPtr, HDR_DATALENGTH_LEN);
 		msgPtr += HDR_DATALENGTH_LEN;
 
-		byteCpy(incommingHdr->unitModel, msgPtr, HDR_UNITMODEL_LEN);
+		ByteCpy(incommingHdr->unitModel, msgPtr, HDR_UNITMODEL_LEN);
 		msgPtr += HDR_UNITMODEL_LEN;
 
-		byteCpy(incommingHdr->unitSn, msgPtr, HDR_SERIALNUMBER_LEN);
+		ByteCpy(incommingHdr->unitSn, msgPtr, HDR_SERIALNUMBER_LEN);
 		msgPtr += HDR_SERIALNUMBER_LEN;
 
-		byteCpy(incommingHdr->compressCrcFlags, msgPtr, HDR_COMPRESSCRC_LEN);
+		ByteCpy(incommingHdr->compressCrcFlags, msgPtr, HDR_COMPRESSCRC_LEN);
 		msgPtr += HDR_COMPRESSCRC_LEN;
 
-		byteCpy(incommingHdr->softwareVersion, msgPtr, HDR_SOFTWAREVERSION_LEN);
+		ByteCpy(incommingHdr->softwareVersion, msgPtr, HDR_SOFTWAREVERSION_LEN);
 		msgPtr += HDR_SOFTWAREVERSION_LEN;
 
-		byteCpy(incommingHdr->dataVersion, msgPtr, HDR_DATAVERSION_LEN);
+		ByteCpy(incommingHdr->dataVersion, msgPtr, HDR_DATAVERSION_LEN);
 		msgPtr += HDR_DATAVERSION_LEN;
 
-		byteCpy(incommingHdr->spare, msgPtr, HDR_SPARE_LEN);
+		ByteCpy(incommingHdr->spare, msgPtr, HDR_SPARE_LEN);
 		msgPtr += HDR_SPARE_LEN;
 	}
 	else
@@ -92,18 +92,18 @@ uint8 parseIncommingMsgHeader(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 parseIncommingMsgCmd(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* incommingHdr)
+uint8 ParseIncommingMsgCmd(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* incommingHdr)
 {
 	uint8 errCode = NO;
 	char* msgPtr = (char*)inCmd->msg;			// A tempPtr into the message buffer.
 
 	// clear the incomming header data.
-	byteSet((uint8*)incommingHdr, 0, sizeof(COMMAND_MESSAGE_HEADER));
+	ByteSet((uint8*)incommingHdr, 0, sizeof(COMMAND_MESSAGE_HEADER));
 
 	if (strlen(msgPtr) >= HDR_CMD_LEN)
 	{
 		// Parse the string into a header data struct.
-		byteCpy(incommingHdr->cmd, msgPtr, HDR_CMD_LEN);
+		ByteCpy(incommingHdr->cmd, msgPtr, HDR_CMD_LEN);
 		msgPtr += HDR_CMD_LEN;
 	}
 	else
@@ -118,38 +118,38 @@ uint8 parseIncommingMsgCmd(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* inc
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void buildOutgoingHeaderBuffer(COMMAND_MESSAGE_HEADER* msgHdrData, uint8* msgHdrBuf)
+void BuildOutgoingHeaderBuffer(COMMAND_MESSAGE_HEADER* msgHdrData, uint8* msgHdrBuf)
 {
 	uint8* bufPtr = msgHdrBuf;
 
-	byteSet(bufPtr, 0, MESSAGE_HEADER_LENGTH+1);
+	ByteSet(bufPtr, 0, MESSAGE_HEADER_LENGTH+1);
 
 	// Parse the string into a header data struct.
-	byteCpy(bufPtr, msgHdrData->cmd, HDR_CMD_LEN);
+	ByteCpy(bufPtr, msgHdrData->cmd, HDR_CMD_LEN);
 	bufPtr += HDR_CMD_LEN;
 
-	byteCpy(bufPtr, msgHdrData->type, HDR_TYPE_LEN);
+	ByteCpy(bufPtr, msgHdrData->type, HDR_TYPE_LEN);
 	bufPtr += HDR_TYPE_LEN;
 
-	byteCpy(bufPtr, msgHdrData->dataLength, HDR_DATALENGTH_LEN);
+	ByteCpy(bufPtr, msgHdrData->dataLength, HDR_DATALENGTH_LEN);
 	bufPtr += HDR_DATALENGTH_LEN;
 
-	byteCpy(bufPtr, msgHdrData->unitModel, HDR_UNITMODEL_LEN);
+	ByteCpy(bufPtr, msgHdrData->unitModel, HDR_UNITMODEL_LEN);
 	bufPtr += HDR_UNITMODEL_LEN;
 
-	byteCpy(bufPtr, msgHdrData->unitSn, HDR_SERIALNUMBER_LEN);
+	ByteCpy(bufPtr, msgHdrData->unitSn, HDR_SERIALNUMBER_LEN);
 	bufPtr += HDR_SERIALNUMBER_LEN;
 
-	byteCpy(bufPtr, msgHdrData->compressCrcFlags, HDR_COMPRESSCRC_LEN);
+	ByteCpy(bufPtr, msgHdrData->compressCrcFlags, HDR_COMPRESSCRC_LEN);
 	bufPtr += HDR_COMPRESSCRC_LEN;
 
-	byteCpy(bufPtr, msgHdrData->softwareVersion, HDR_SOFTWAREVERSION_LEN);
+	ByteCpy(bufPtr, msgHdrData->softwareVersion, HDR_SOFTWAREVERSION_LEN);
 	bufPtr += HDR_SOFTWAREVERSION_LEN;
 
-	byteCpy(bufPtr, msgHdrData->dataVersion, HDR_DATAVERSION_LEN);
+	ByteCpy(bufPtr, msgHdrData->dataVersion, HDR_DATAVERSION_LEN);
 	bufPtr += HDR_DATAVERSION_LEN;
 
-	byteCpy(bufPtr, msgHdrData->spare, HDR_SPARE_LEN);
+	ByteCpy(bufPtr, msgHdrData->spare, HDR_SPARE_LEN);
 	bufPtr += HDR_SPARE_LEN;
 
 }
@@ -157,7 +157,7 @@ void buildOutgoingHeaderBuffer(COMMAND_MESSAGE_HEADER* msgHdrData, uint8* msgHdr
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void buildOutgoingSimpleHeaderBuffer(uint8* msgHdrBuf,
+void BuildOutgoingSimpleHeaderBuffer(uint8* msgHdrBuf,
 	uint8* msgCmd, uint8* msgType, uint32 dataLength,
 	uint8 verFlag, uint8 crcFlag)
 {
@@ -167,16 +167,16 @@ void buildOutgoingSimpleHeaderBuffer(uint8* msgHdrBuf,
 	UNUSED(verFlag);
 	UNUSED(crcFlag);
 
-	byteSet(bufPtr, 0, MESSAGE_HEADER_SIMPLE_LENGTH);
+	ByteSet(bufPtr, 0, MESSAGE_HEADER_SIMPLE_LENGTH);
 
 	// Parse the string into a header data struct.
-	byteCpy(bufPtr, msgCmd, HDR_CMD_LEN);
+	ByteCpy(bufPtr, msgCmd, HDR_CMD_LEN);
 	bufPtr += HDR_CMD_LEN;
 
-	byteCpy(bufPtr, msgType, HDR_TYPE_LEN);
+	ByteCpy(bufPtr, msgType, HDR_TYPE_LEN);
 	bufPtr += HDR_TYPE_LEN;
 
-	buildIntDataField((char*)bufPtr, dataLength, FIELD_LEN_08);
+	BuildIntDataField((char*)bufPtr, dataLength, FIELD_LEN_08);
 	bufPtr += HDR_DATALENGTH_LEN;
 
 	// Put in the version number and if the data message has a crcFlag.
@@ -189,34 +189,34 @@ void buildOutgoingSimpleHeaderBuffer(uint8* msgHdrBuf,
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void sendErrorMsg(uint8* msgCmd, uint8* msgType)
+void SendErrorMsg(uint8* msgCmd, uint8* msgType)
 {
 	uint32 msgCRC = 0;
 	uint8 errHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
 
-	buildOutgoingSimpleHeaderBuffer(errHdr, msgCmd, msgType,
+	BuildOutgoingSimpleHeaderBuffer(errHdr, msgCmd, msgType,
 		MESSAGE_SIMPLE_TOTAL_LENGTH, COMPRESS_NONE, CRC_NONE);
 
 	// Send Starting CRLF
-	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 	// Send Simple header
-	modem_puts((uint8*)errHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
+	ModemPuts((uint8*)errHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
 	// Send Ending Footer
-	modem_puts((uint8*)&msgCRC, 4, NO_CONVERSION);
-	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	ModemPuts((uint8*)&msgCRC, 4, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 getInt16Field(uint8* dataPtr)
+uint16 GetInt16Field(uint8* dataPtr)
 {
 	uint16 int16Data = 0;
 	uint8 dataStr[DATA_FIELD_LEN+1];
 
-	byteSet(dataStr, 0, sizeof(dataStr));
-	byteCpy(dataStr, dataPtr, DATA_FIELD_LEN);
-	int16Data = (uint16)dataLengthStrToUint32(dataStr);
+	ByteSet(dataStr, 0, sizeof(dataStr));
+	ByteCpy(dataStr, dataPtr, DATA_FIELD_LEN);
+	int16Data = (uint16)DataLengthStrToUint32(dataStr);
 
 
 	return (int16Data);
@@ -225,7 +225,7 @@ uint16 getInt16Field(uint8* dataPtr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void buildIntDataField(char* strBuffer, uint32 data, uint8 fieldLen)
+void BuildIntDataField(char* strBuffer, uint32 data, uint8 fieldLen)
 {
 	if (fieldLen == FIELD_LEN_08)
 	{
@@ -248,7 +248,7 @@ void buildIntDataField(char* strBuffer, uint32 data, uint8 fieldLen)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint32 dataLengthStrToUint32(uint8* dataLengthStr)
+uint32 DataLengthStrToUint32(uint8* dataLengthStr)
 {
 	uint32 dataLength = 0;
 	uint8 strDex = 0;
@@ -258,7 +258,7 @@ uint32 dataLengthStrToUint32(uint8* dataLengthStr)
 	uint8* dataBuf = dataLenBuf;
 
 
-	byteSet(&dataLenBuf[0], 0, sizeof(dataLenBuf));
+	ByteSet(&dataLenBuf[0], 0, sizeof(dataLenBuf));
 
 	// Look and clear all leading zeros and non digits.
 	while (((*dataStr <= '0') 	||
@@ -291,7 +291,7 @@ uint32 dataLengthStrToUint32(uint8* dataLengthStr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void writeCompressedData(uint8 compressedData)
+void WriteCompressedData(uint8 compressedData)
 {
 	g_demXferStructPtr->xmitBuffer[g_demXferStructPtr->xmitSize] = compressedData;
 	g_demXferStructPtr->xmitSize++;
@@ -300,7 +300,7 @@ void writeCompressedData(uint8 compressedData)
 	{
 		g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
 
-		if (modem_puts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
+		if (ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
 		{
 			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
 		}
@@ -313,13 +313,13 @@ void writeCompressedData(uint8 compressedData)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void initAutoDialout(void)
+void InitAutoDialout(void)
 {
 	// Check if the table key is not valid
 	if (__autoDialoutTblKey != VALID_AUTODIALOUT_TABLE_KEY)
 	{
 		// Clear AutoDialout Log table
-		byteSet(&__autoDialoutTbl, 0x0, sizeof(AUTODIALOUT_STRUCT));
+		ByteSet(&__autoDialoutTbl, 0x0, sizeof(AUTODIALOUT_STRUCT));
 
 		// No need to set the following since the memset takes care of this
 		//__autoDialoutTbl.lastDownloadedEvent = 0;
@@ -329,13 +329,13 @@ void initAutoDialout(void)
 	}
 
 	// Update the last stored event
-	__autoDialoutTbl.lastStoredEvent = getLastStoredEventNumber();
+	__autoDialoutTbl.lastStoredEvent = GetLastStoredEventNumber();
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void checkAutoDialoutStatus(void)
+void CheckAutoDialoutStatus(void)
 {
 	if ((g_autoDialoutState == AUTO_DIAL_IDLE) && (READ_DCD == NO_CONNECTION) &&
 		(g_modemSetupRecord.modemStatus == YES) && strlen((char*)&(g_modemSetupRecord.dial[0])) != 0)
@@ -347,7 +347,7 @@ void checkAutoDialoutStatus(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void startAutoDialoutProcess(void)
+void StartAutoDialoutProcess(void)
 {
 	if (READ_DCD == NO_CONNECTION)
 	{
@@ -359,7 +359,7 @@ void startAutoDialoutProcess(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void autoDialoutStateMachine(void)
+void AutoDialoutStateMachine(void)
 {
 	static uint32 timer = 0;
 	CMD_BUFFER_STRUCT msg;
@@ -373,10 +373,10 @@ void autoDialoutStateMachine(void)
 			// Issue dial command and dial string
 			if((g_modemSetupRecord.dial[0] >= '0') && (g_modemSetupRecord.dial[0] <= '9'))
 			{
-				uart_puts((char *)"ATDT", CRAFT_COM_PORT);
+				UartPuts((char *)"ATDT", CRAFT_COM_PORT);
 			}
-			uart_puts((char *)(g_modemSetupRecord.dial), CRAFT_COM_PORT);
-			uart_puts((char *)&g_CRLF, CRAFT_COM_PORT);
+			UartPuts((char *)(g_modemSetupRecord.dial), CRAFT_COM_PORT);
+			UartPuts((char *)&g_CRLF, CRAFT_COM_PORT);
 
 			// Update timer to current tick count
 			timer = g_rtcSoftTimerTickCount;
@@ -517,7 +517,7 @@ void autoDialoutStateMachine(void)
 				g_autoRetries--;
 
 				// Unable to successfully connect to remote end, start retry with modem reset
-				modemResetProcess();
+				ModemResetProcess();
 
 				// Update timer to current tick count
 				timer = g_rtcSoftTimerTickCount;
@@ -576,7 +576,7 @@ void autoDialoutStateMachine(void)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_FINISH:
 			// Done with Auto Dialout processing, issue a modem reset
-			modemResetProcess();
+			ModemResetProcess();
 
 			// Place in Idle state
 			g_autoDialoutState = AUTO_DIAL_IDLE;

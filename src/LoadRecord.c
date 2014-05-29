@@ -46,30 +46,30 @@ static TEMP_MENU_DATA_STRUCT s_loadRecordMenuTable [LOAD_REC_MN_TABLE_SIZE] = {
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void loadRecMn (INPUT_MSG_STRUCT);
-void loadRecMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
+void LoadRecordMenu(INPUT_MSG_STRUCT);
+void LoadRecordMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void loadRecMn(INPUT_MSG_STRUCT msg)
+void LoadRecordMenu(INPUT_MSG_STRUCT msg)
 { 
     static WND_LAYOUT_STRUCT wnd_layout;
     static MN_LAYOUT_STRUCT mn_layout;
   
-    loadRecMnProc(msg, &wnd_layout, &mn_layout);           
+    LoadRecordMenuProc(msg, &wnd_layout, &mn_layout);
 
     if (g_activeMenu == LOAD_REC_MENU)
     {
-        dsplySelMn(&wnd_layout, &mn_layout, TITLE_CENTERED);
-        writeMapToLcd(g_mmap);
+        DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
+        WriteMapToLcd(g_mmap);
     }
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void loadRecMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
+void LoadRecordMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	uint8 buff[20];
 	REC_EVENT_MN_STRUCT temp_rec;
@@ -89,11 +89,11 @@ void loadRecMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_L
 			mn_layout_ptr->curr_ln =    1;
 			mn_layout_ptr->top_ln =     1; 
 
-			loadTempMenuTable(s_loadRecordMenuTable);
+			LoadTempMenuTable(s_loadRecordMenuTable);
 
 			for (i = 1; i <= MAX_NUM_OF_SAVED_SETUPS; i++)
 			{
-				getRecData(&temp_rec, i, REC_TRIGGER_USER_MENU_TYPE);
+				GetRecordData(&temp_rec, i, REC_TRIGGER_USER_MENU_TYPE);
 
 				if (temp_rec.validRecord == YES)
 				{
@@ -140,14 +140,14 @@ void loadRecMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_L
 					switch (mn_layout_ptr->curr_ln)
 					{
 						case (1): 
-							loadTrigRecordDefaults(&g_triggerRecord, WAVEFORM_MODE);
+							LoadTrigRecordDefaults(&g_triggerRecord, WAVEFORM_MODE);
 							break; 
 						case (2): 
-							loadTrigRecordDefaults(&g_triggerRecord, BARGRAPH_MODE);
+							LoadTrigRecordDefaults(&g_triggerRecord, BARGRAPH_MODE);
 							break;
 						case (3):
-							messageBox(getLangText(STATUS_TEXT), getLangText(COMBO_MODE_NOT_IMPLEMENTED_TEXT), MB_OK);
-							messageBox(getLangText(STATUS_TEXT), getLangText(SETTINGS_WILL_NOT_BE_LOADED_TEXT), MB_OK);
+							MessageBox(getLangText(STATUS_TEXT), getLangText(COMBO_MODE_NOT_IMPLEMENTED_TEXT), MB_OK);
+							MessageBox(getLangText(STATUS_TEXT), getLangText(SETTINGS_WILL_NOT_BE_LOADED_TEXT), MB_OK);
 
 							// Do nothing
 							return;
@@ -161,12 +161,12 @@ void loadRecMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_L
 							}
 							else
 							{
-								getRecData(&g_triggerRecord, (uint32)(mn_layout_ptr->curr_ln - 3), REC_TRIGGER_USER_MENU_TYPE);
+								GetRecordData(&g_triggerRecord, (uint32)(mn_layout_ptr->curr_ln - 3), REC_TRIGGER_USER_MENU_TYPE);
 							}
 							break;
 					}
 
-					updateModeMenuTitle(g_triggerRecord.op_mode);
+					UpdateModeMenuTitle(g_triggerRecord.op_mode);
 					SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 					JUMP_TO_ACTIVE_MENU();
 					break;      
@@ -175,19 +175,19 @@ void loadRecMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_L
 					// Check if the current line is beyond the default entries
 					if (mn_layout_ptr->curr_ln > 3)
 					{
-						getRecData(&temp_rec, (uint32)(mn_layout_ptr->curr_ln - 3), REC_TRIGGER_USER_MENU_TYPE);
+						GetRecordData(&temp_rec, (uint32)(mn_layout_ptr->curr_ln - 3), REC_TRIGGER_USER_MENU_TYPE);
 
 						if (temp_rec.validRecord == YES)
 						{
-							byteSet(&message[0], 0, sizeof(message));
+							ByteSet(&message[0], 0, sizeof(message));
 							sprintf(message, "%s (%s)", getLangText(DELETE_SAVED_SETUP_Q_TEXT), temp_rec.name);
 
-							if (messageBox(getLangText(WARNING_TEXT), message, MB_YESNO) == MB_FIRST_CHOICE)					
+							if (MessageBox(getLangText(WARNING_TEXT), message, MB_YESNO) == MB_FIRST_CHOICE)
 							{
-								byteSet(&temp_rec.name, 0, sizeof(temp_rec.name));
+								ByteSet(&temp_rec.name, 0, sizeof(temp_rec.name));
 								temp_rec.validRecord = NO;
 
-								saveRecData(&temp_rec, (uint32)(mn_layout_ptr->curr_ln - 3), REC_TRIGGER_USER_MENU_TYPE);
+								SaveRecordData(&temp_rec, (uint32)(mn_layout_ptr->curr_ln - 3), REC_TRIGGER_USER_MENU_TYPE);
 								
 								sprintf((char*)&(g_menuPtr[mn_layout_ptr->curr_ln].data[0]), "<%s>", getLangText(EMPTY_TEXT));
 							}
@@ -196,7 +196,7 @@ void loadRecMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_L
 					break;
 
 				case (DOWN_ARROW_KEY): 
-					mnScroll(DOWN, SELECT_MN_WND_LNS, mn_layout_ptr);
+					MenuScroll(DOWN, SELECT_MN_WND_LNS, mn_layout_ptr);
 
 					// Prevent the cursor from selecting the "<END>" text
 					if (mn_layout_ptr->curr_ln == 18)
@@ -205,7 +205,7 @@ void loadRecMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_L
 					}
 					break;
 				case (UP_ARROW_KEY): 
-					mnScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
+					MenuScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (ESC_KEY):
 					SETUP_MENU_MSG(MAIN_MENU); mn_msg.data[0] = ESC_KEY;

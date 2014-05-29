@@ -59,16 +59,16 @@ uint8 OneWireReset(uint8 sensor)
 	reg_PORTE.reg &= ~sensor;
 
 	// Hold low for 500us
-	//soft_usecWait(400);
-	soft_usecWait(500);
+	//SoftUsecWait(400);
+	SoftUsecWait(500);
 
 	// Release line (allow pullup to take affect)
 	//reg_DDRE.reg &= ~sensor;
 	reg_PORTE.reg |= sensor;
 
 	// Wait 30us + 50us (80us total)
-	//soft_usecWait(64);
-	soft_usecWait(80);
+	//SoftUsecWait(64);
+	SoftUsecWait(80);
 
 	if ((reg_PORTQB.reg & READ_SENSOR) == LOW)
 	{
@@ -76,8 +76,8 @@ uint8 OneWireReset(uint8 sensor)
 	}
 
 	// Wait 100us make sure device is not driving the line
-	//soft_usecWait(80);
-	soft_usecWait(100);
+	//SoftUsecWait(80);
+	SoftUsecWait(100);
 
 	return (presenceDetect);
 }
@@ -102,30 +102,30 @@ void OneWireWriteByte(uint8 sensor, uint8 data)
 		if (data & 0x01)
 		{
 			// Hold low for 5us
-			//soft_usecWait(4);
-			soft_usecWait(5);
+			//SoftUsecWait(4);
+			SoftUsecWait(5);
 
 			// Release the line
 			//reg_DDRE.reg &= ~sensor;
 			reg_PORTE.reg |= sensor;
 
 			// Wait for 65us, recovery time
-			//soft_usecWait(52);
-			soft_usecWait(65);
+			//SoftUsecWait(52);
+			SoftUsecWait(65);
 		}
 		else
 		{
 			// Hold low for 65us
-			//soft_usecWait(52);
-			soft_usecWait(65);
+			//SoftUsecWait(52);
+			SoftUsecWait(65);
 
 			// Release the line
 			//reg_DDRE.reg &= ~sensor;
 			reg_PORTE.reg |= sensor;
 
 			// Wait for 5us, recovery time
-			//soft_usecWait(4);
-			soft_usecWait(5);
+			//SoftUsecWait(4);
+			SoftUsecWait(5);
 		}
 
 		// Shift the data over 1 bit
@@ -151,16 +151,16 @@ uint8 OneWireReadByte(uint8 sensor)
 		reg_PORTE.reg &= ~sensor;
 
 		// Hold low for 5us
-		//soft_usecWait(4);
-		soft_usecWait(5);
+		//SoftUsecWait(4);
+		SoftUsecWait(5);
 
 		// Release the line
 		//reg_DDRE.reg &= ~sensor;
 		reg_PORTE.reg |= sensor;
 
 		// Wait for 5us
-		//soft_usecWait(4);
-		soft_usecWait(5);
+		//SoftUsecWait(4);
+		SoftUsecWait(5);
 
 		// Shift the data over 1 bit
 		data >>= 1;
@@ -178,8 +178,8 @@ uint8 OneWireReadByte(uint8 sensor)
 		}
 
 		// Hold for 60us, recovery time
-		//soft_usecWait(48);
-		soft_usecWait(60);
+		//SoftUsecWait(48);
+		SoftUsecWait(60);
 	}
 
 	return (data);
@@ -204,28 +204,28 @@ void OneWireTest(uint8 sensor)
 			romData[i] = OneWireReadByte(sensor);
 		}
 
-		crc = calcCrc8(&romData[0], 7, 0x00);
+		crc = CalcCrc8(&romData[0], 7, 0x00);
 
-		debugPrint(RAW, "\nOne Wire Rom Data: ");
+		DebugPrint(RAW, "\nOne Wire Rom Data: ");
 
 		for (i = 0; i < 8; i++)
 		{
-			debugPrint(RAW, "0x%x ", romData[i]);
+			DebugPrint(RAW, "0x%x ", romData[i]);
 		}
 
 		if (crc == romData[7])
 		{
-			debugPrint(RAW, "(CRC: %x, success)\n", crc);
+			DebugPrint(RAW, "(CRC: %x, success)\n", crc);
 			OneWireFunctions(sensor);
 		}
 		else
 		{
-			debugPrint(RAW, "(CRC: %x, fail)\n", crc);
+			DebugPrint(RAW, "(CRC: %x, fail)\n", crc);
 		}
 	}
 	else
 	{
-		debugPrint(RAW, "\nOne Wire device not found!\n");
+		DebugPrint(RAW, "\nOne Wire device not found!\n");
 	}
 }
 
@@ -239,7 +239,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Memory (0xF0), Address: 0x00 -> 0x1F (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		debugPrint(RAW, "Read Memory\n");
+		DebugPrint(RAW, "Read Memory\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -250,13 +250,13 @@ void OneWireFunctions(uint8 sensor)
 		// Address
 		OneWireWriteByte(sensor, 0x00);
 
-		debugPrint(RAW, "  Data:");
+		DebugPrint(RAW, "  Data:");
 
 		// Data
 		for (i = 0; i < 32; i++)
-			debugPrint(RAW, "%x ", OneWireReadByte(sensor));
+			DebugPrint(RAW, "%x ", OneWireReadByte(sensor));
 
-		debugPrint(RAW, "\n");
+		DebugPrint(RAW, "\n");
 
 		OneWireReset(sensor);
 	}
@@ -265,7 +265,7 @@ void OneWireFunctions(uint8 sensor)
 	// Write Scratchpad (0x0F), Address: 0x00 -> 0x1F (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		debugPrint(RAW, "Write Scratchpad\n");
+		DebugPrint(RAW, "Write Scratchpad\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -289,7 +289,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Scratchpad (0xAA), Address: 0x00 -> 0x1F (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		debugPrint(RAW, "Read Scratchpad\n");
+		DebugPrint(RAW, "Read Scratchpad\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -300,13 +300,13 @@ void OneWireFunctions(uint8 sensor)
 		// Address
 		OneWireWriteByte(sensor, 0x00);
 
-		debugPrint(RAW, "  Data:");
+		DebugPrint(RAW, "  Data:");
 
 		// Data
 		for (i = 0; i < 32; i++)
-			debugPrint(RAW, "%x ", OneWireReadByte(sensor));
+			DebugPrint(RAW, "%x ", OneWireReadByte(sensor));
 
-		debugPrint(RAW, "\n");
+		DebugPrint(RAW, "\n");
 
 		OneWireReset(sensor);
 	}
@@ -315,7 +315,7 @@ void OneWireFunctions(uint8 sensor)
 	// Copy Scratchpad (0x55), Validation key: 0xA5, Data line held for 10ms
 	if (OneWireReset(sensor) == YES)
 	{
-		debugPrint(RAW, "Copy Scratchpad\n");
+		DebugPrint(RAW, "Copy Scratchpad\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -326,7 +326,7 @@ void OneWireFunctions(uint8 sensor)
 		// Validation Key
 		OneWireWriteByte(sensor, 0xA5);
 
-		soft_usecWait(10 * SOFT_MSECS);
+		SoftUsecWait(10 * SOFT_MSECS);
 
 		OneWireReset(sensor);
 	}
@@ -335,7 +335,7 @@ void OneWireFunctions(uint8 sensor)
 	// Write Application Register (0x99), Address: 0x00 -> 0x07 (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		debugPrint(RAW, "Write App Register\n");
+		DebugPrint(RAW, "Write App Register\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -359,7 +359,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Status Register (0x66), Validation key: 0x00
 	if (OneWireReset(sensor) == YES)
 	{
-		debugPrint(RAW, "Read Status Register\n");
+		DebugPrint(RAW, "Read Status Register\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -370,10 +370,10 @@ void OneWireFunctions(uint8 sensor)
 		// Validation key
 		OneWireWriteByte(sensor, 0x00);
 
-		debugPrint(RAW, "  Data:");
+		DebugPrint(RAW, "  Data:");
 
 		// Data
-		debugPrint(RAW, "%x\n", OneWireReadByte(sensor));
+		DebugPrint(RAW, "%x\n", OneWireReadByte(sensor));
 
 		OneWireReset(sensor);
 	}
@@ -382,7 +382,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Application Register (0xC3), Address: 0x00 -> 0x07 (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		debugPrint(RAW, "Read App Register\n");
+		DebugPrint(RAW, "Read App Register\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -393,15 +393,15 @@ void OneWireFunctions(uint8 sensor)
 		// Address
 		OneWireWriteByte(sensor, 0x00);
 
-		debugPrint(RAW, "  Data:");
+		DebugPrint(RAW, "  Data:");
 
 		// Data
 		for (i = 0; i < 8; i++)
 		{
-			debugPrint(RAW, "%x ", OneWireReadByte(sensor));
+			DebugPrint(RAW, "%x ", OneWireReadByte(sensor));
 		}
 
-		debugPrint(RAW, "\n");
+		DebugPrint(RAW, "\n");
 
 		OneWireReset(sensor);
 	}
@@ -431,23 +431,23 @@ uint8 OneWireReadROM(uint8 sensor)
 			romData[i] = OneWireReadByte(sensor);
 		}
 
-		crc = calcCrc8(&romData[0], 7, 0x00);
+		crc = CalcCrc8(&romData[0], 7, 0x00);
 
-		debugPrint(RAW, "\nOne Wire Rom Data: ");
+		DebugPrint(RAW, "\nOne Wire Rom Data: ");
 
 		for (i = 0; i < 8; i++)
 		{
-			debugPrint(RAW, "0x%x ", romData[i]);
+			DebugPrint(RAW, "0x%x ", romData[i]);
 		}
 
 		if (crc == romData[7])
 		{
-			debugPrint(RAW, "(CRC: %x, success)\n", crc);
+			DebugPrint(RAW, "(CRC: %x, success)\n", crc);
 			OneWireFunctions(sensor);
 		}
 		else
 		{
-			debugPrint(RAW, "(CRC: %x, fail)\n", crc);
+			DebugPrint(RAW, "(CRC: %x, fail)\n", crc);
 		}
 
 		OneWireReset(sensor);
@@ -589,7 +589,7 @@ uint8 OneWireCopyScratchpad(uint8 sensor)
 		// Validation Key
 		OneWireWriteByte(sensor, 0xA5);
 
-		soft_usecWait(10 * SOFT_MSECS);
+		SoftUsecWait(10 * SOFT_MSECS);
 
 		OneWireReset(sensor);
 
@@ -732,7 +732,7 @@ uint8 OneWireCopyAndLockAppRegister(uint8 sensor)
 				// Validation Key
 				OneWireWriteByte(sensor, 0xA5);
 
-				soft_usecWait(10 * SOFT_MSECS);
+				SoftUsecWait(10 * SOFT_MSECS);
 
 				OneWireReset(sensor);
 

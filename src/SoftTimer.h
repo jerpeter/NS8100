@@ -62,26 +62,26 @@ typedef struct
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void assignSoftTimer(uint16 timerNum, uint32 timeout, void* callback);
-void resetSoftTimer(uint16 timerNum);
-void clearSoftTimer(uint16 timerNum);
-void checkSoftTimers(void);
-void procTimerEvents(void);
-void processTimerMode(void);
-void handleMidnightEvent(void);
-BOOLEAN timerModeActiveCheck(void);
-void resetTimeOfDayAlarm(void);
-void handleUserPowerOffDuringTimerMode(void);
-void displayTimerCallBack(void);
-void lcdPwTimerCallBack(void);
-void autoMonitorTimerCallBack(void);
-void menuUpdateTimerCallBack(void);
-void keypadLedUpdateTimerCallBack(void);
-void alarmOneOutputTimerCallback(void);
-void alarmTwoOutputTimerCallback(void);
-void powerOffTimerCallback(void);
-void modemDelayTimerCallback(void);
-void modemResetTimerCallback(void);
-void autoCalInWaveformTimerCallback(void);
+void AssignSoftTimer(uint16 timerNum, uint32 timeout, void* callback);
+void ResetSoftTimer(uint16 timerNum);
+void ClearSoftTimer(uint16 timerNum);
+void CheckSoftTimers(void);
+void ProcessTimerEvents(void);
+void ProcessTimerMode(void);
+void HandleMidnightEvent(void);
+BOOLEAN TimerModeActiveCheck(void);
+void ResetTimeOfDayAlarm(void);
+void HandleUserPowerOffDuringTimerMode(void);
+void DisplayTimerCallBack(void);
+void LcdPwTimerCallBack(void);
+void AutoMonitorTimerCallBack(void);
+void MenuUpdateTimerCallBack(void);
+void KeypadLedUpdateTimerCallBack(void);
+void AlarmOneOutputTimerCallback(void);
+void AlarmTwoOutputTimerCallback(void);
+void PowerOffTimerCallback(void);
+void ModemDelayTimerCallback(void);
+void ModemResetTimerCallback(void);
+void AutoCalInWaveformTimerCallback(void);
 
 #endif // _SOFT_TIMER_H_

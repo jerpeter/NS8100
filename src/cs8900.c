@@ -54,7 +54,7 @@ extern unsigned char TCPTimer;                          // inc'd each 262ms
 ///	Function Break
 ///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
-static void compare_irq_handler(void)
+static void Compare_irq_handler(void)
 {
   // Count the number of times this IRQ handler is called.
 //  u32NbCompareIrqTrigger++;
@@ -67,7 +67,7 @@ static void compare_irq_handler(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void counter_init(void)
+void Counter_init(void)
 {
    U32 u32CompareVal;
    U32 u32CountVal;
@@ -76,7 +76,7 @@ void counter_init(void)
 
    u32CompareVal = u32CountVal + NB_CLOCK_CYCLE_DELAY_SHORT; // WARNING: MUST FIT IN 32bits.
 
-   INTC_register_interrupt(&compare_irq_handler, AVR32_CORE_COMPARE_IRQ, AVR32_INTC_INT2);
+   INTC_register_interrupt(&Compare_irq_handler, AVR32_CORE_COMPARE_IRQ, AVR32_INTC_INT2);
 
    Set_sys_compare(u32CompareVal); // GO
 }

@@ -44,9 +44,9 @@
 #define RED_LED_PIN		0x20
 #define NO_LED_PINS		0x00
 
-void init_mcp23018(unsigned char chip);
-void write_mcp23018(unsigned char chip, unsigned char address, unsigned char data);
-void write_mcp23018_bytes(unsigned char chip, unsigned char address,  unsigned char *data, unsigned char length);
-unsigned char read_mcp23018(unsigned char chip, unsigned char address);
+void InitMcp23018(unsigned char chip);
+void WriteMcp23018(unsigned char chip, unsigned char address, unsigned char data);
+void WriteMcp23018Bytes(unsigned char chip, unsigned char address,  unsigned char *data, unsigned char length);
+unsigned char ReadMcp23018(unsigned char chip, unsigned char address);
 
 #endif /* M23018_H_ */

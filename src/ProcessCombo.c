@@ -55,11 +55,11 @@ void StartNewCombo(void)
 	}
 
 	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
-	byteSet(&(g_comboBarInterval[0]), 0, (sizeof(BARGRAPH_BAR_INTERVAL_DATA) * NUM_OF_BAR_INTERVAL_BUFFERS));
-	byteSet(&(g_comboSummaryInterval[0]), 0, (SUMMARY_INTERVAL_SIZE_IN_BYTES * NUM_OF_SUM_INTERVAL_BUFFERS));
+	ByteSet(&(g_comboBarInterval[0]), 0, (sizeof(BARGRAPH_BAR_INTERVAL_DATA) * NUM_OF_BAR_INTERVAL_BUFFERS));
+	ByteSet(&(g_comboSummaryInterval[0]), 0, (SUMMARY_INTERVAL_SIZE_IN_BYTES * NUM_OF_SUM_INTERVAL_BUFFERS));
 
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
-	byteSet(&g_comboFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
+	ByteSet(&g_comboFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
 
 	g_summaryCount = 0;
 	g_oneSecondCnt = 0;			// Count the secs so that we can increment the sum capture rate.
@@ -74,14 +74,14 @@ void StartNewCombo(void)
 	g_comboSumIntervalReadPtr = &(g_comboSummaryInterval[0]);
 
 	// Clear out the Bar Interval buffer to be used next
-	byteSet(g_comboBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
+	ByteSet(g_comboBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
-	byteSet(g_comboSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
+	ByteSet(g_comboSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
 
 	MoveStartOfComboEventRecordToFile();
 
 	// Update the current monitor log entry
-	updateMonitorLogEntry();
+	UpdateMonitorLogEntry();
 }
 
 ///----------------------------------------------------------------------------
@@ -94,12 +94,12 @@ void EndCombo(void)
 	while (CalculateComboData() == BG_BUFFER_NOT_EMPTY) {}
 
 	// For the last time, put the data into the event buffer.
-	barIntervalsStored = moveComboBarIntervalDataToFile();
+	barIntervalsStored = MoveComboBarIntervalDataToFile();
 
 	// Check if bar intervals were stored or a summery interval is present
 	if ((barIntervalsStored) || (g_summaryIntervalCnt))
 	{
-		moveComboSummaryIntervalDataToFile();
+		MoveComboSummaryIntervalDataToFile();
 	}
 
 	MoveEndOfComboEventRecordToFile();
@@ -201,7 +201,7 @@ void ProcessComboSampleData(void)
 					if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
 					{
 						// Store the exact time we received the trigger data sample
-						g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
+						g_pendingEventRecord.summary.captured.eventTime = GetCurrentTime();
 
 						// Set loop counter to 1 minus the total samples to be received in the event body (minus the trigger data sample)
 						g_isTriggered = g_samplesInBody - 1;
@@ -490,7 +490,7 @@ void ProcessComboSampleData(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint32 moveComboBarIntervalDataToFile(void)
+uint32 MoveComboBarIntervalDataToFile(void)
 {
 	uint32 accumulatedBarIntervalCount = g_barIntervalCnt;
 
@@ -504,10 +504,10 @@ uint32 moveComboBarIntervalDataToFile(void)
 		g_pendingBargraphRecord.header.dataLength += sizeof(BARGRAPH_BAR_INTERVAL_DATA);
 
 		// Advance the Bar Interval global buffer pointer
-		advanceBarIntervalBufPtr(WRITE_PTR);
+		AdvanceBarIntervalBufPtr(WRITE_PTR);
 
 		// Clear out the Bar Interval buffer to be used next
-		byteSet(g_comboBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
+		ByteSet(g_comboBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 
 		// Count the total number of intervals captured.
 		g_comboSumIntervalWritePtr->barIntervalsCaptured++;
@@ -520,7 +520,7 @@ uint32 moveComboBarIntervalDataToFile(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void moveComboSummaryIntervalDataToFile(void)
+void MoveComboSummaryIntervalDataToFile(void)
 {
 	float rFreq, vFreq, tFreq;
 
@@ -537,9 +537,9 @@ void moveComboSummaryIntervalDataToFile(void)
 	// Store timestamp for the end of the summary interval
 	g_summaryCount++;
 	g_comboSumIntervalWritePtr->summariesCaptured = g_summaryCount;
-	g_comboSumIntervalWritePtr->intervalEnd_Time = getCurrentTime();
+	g_comboSumIntervalWritePtr->intervalEnd_Time = GetCurrentTime();
 	g_comboSumIntervalWritePtr->batteryLevel =
-		(uint32)(100.0 * getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
+		(uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 	g_comboSumIntervalWritePtr->calcStructEndFlag = 0xEECCCCEE;	// End structure flag
 
 	// Reset summary interval count
@@ -552,11 +552,11 @@ void moveComboSummaryIntervalDataToFile(void)
 	UpdateComboJobTotals(g_comboSumIntervalWritePtr);
 
 	// Advance the Summary Interval global buffer pointer
-	advanceSumIntervalBufPtr(WRITE_PTR);
+	AdvanceSumIntervalBufPtr(WRITE_PTR);
 
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
-	byteSet(g_comboSumIntervalWritePtr, 0, sizeof(CALCULATED_DATA_STRUCT));
-	byteSet(&g_comboFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
+	ByteSet(g_comboSumIntervalWritePtr, 0, sizeof(CALCULATED_DATA_STRUCT));
+	ByteSet(&g_comboFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
 }
 
 ///----------------------------------------------------------------------------
@@ -668,14 +668,14 @@ uint8 CalculateComboData(void)
 				// Sample matches current max, set match flag
 				g_comboFreqCalcBuffer.a.matchFlag = TRUE;
 				// Store timestamp in case this is the max (and count) we want to keep
-				aTempTime = getCurrentTime();
+				aTempTime = GetCurrentTime();
 			}
 			else
 			{
 				// Copy over new max
 				g_comboSumIntervalWritePtr->a.peak = aTempNorm;
 				// Update timestamp
-				g_comboSumIntervalWritePtr->a_Time = getCurrentTime();
+				g_comboSumIntervalWritePtr->a_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_comboFreqCalcBuffer.a.matchFlag = FALSE;
 			}
@@ -709,14 +709,14 @@ uint8 CalculateComboData(void)
 				// Sample matches current max, set match flag
 				g_comboFreqCalcBuffer.r.matchFlag = TRUE;
 				// Store timestamp in case this is the max (and count) we want to keep
-				rTempTime = getCurrentTime();
+				rTempTime = GetCurrentTime();
 			}
 			else
 			{
 				// Copy over new max
 				g_comboSumIntervalWritePtr->r.peak = rTempNorm;
 				// Update timestamp
-				g_comboSumIntervalWritePtr->r_Time = getCurrentTime();
+				g_comboSumIntervalWritePtr->r_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_comboFreqCalcBuffer.r.matchFlag = FALSE;
 			}
@@ -750,14 +750,14 @@ uint8 CalculateComboData(void)
 				// Sample matches current max, set match flag
 				g_comboFreqCalcBuffer.v.matchFlag = TRUE;
 				// Store timestamp in case this is the max (and count) we want to keep
-				vTempTime = getCurrentTime();
+				vTempTime = GetCurrentTime();
 			}
 			else
 			{
 				// Copy over new max
 				g_comboSumIntervalWritePtr->v.peak = vTempNorm;
 				// Update timestamp
-				g_comboSumIntervalWritePtr->v_Time = getCurrentTime();
+				g_comboSumIntervalWritePtr->v_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_comboFreqCalcBuffer.v.matchFlag = FALSE;
 			}
@@ -791,14 +791,14 @@ uint8 CalculateComboData(void)
 				// Sample matches current max, set match flag
 				g_comboFreqCalcBuffer.t.matchFlag = TRUE;
 				// Store timestamp in case this is the max (and count) we want to keep
-				tTempTime = getCurrentTime();
+				tTempTime = GetCurrentTime();
 			}
 			else
 			{
 				// Copy over new max
 				g_comboSumIntervalWritePtr->t.peak = tTempNorm;
 				// Update timestamp
-				g_comboSumIntervalWritePtr->t_Time = getCurrentTime();
+				g_comboSumIntervalWritePtr->t_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_comboFreqCalcBuffer.t.matchFlag = FALSE;
 			}
@@ -829,7 +829,7 @@ uint8 CalculateComboData(void)
 			// Store max vector sum
 			g_comboSumIntervalWritePtr->vectorSumPeak = vsTemp;
 			// Store timestamp
-			g_comboSumIntervalWritePtr->vs_Time = getCurrentTime();
+			g_comboSumIntervalWritePtr->vs_Time = GetCurrentTime();
 
 			if (vsTemp > g_vsJobPeak)
 			{
@@ -1089,7 +1089,7 @@ uint8 CalculateComboData(void)
 		//=================================================
 		if (++g_barIntervalCnt >= (uint32)(g_triggerRecord.bgrec.barInterval * g_triggerRecord.trec.sample_rate))
 		{
-			moveComboBarIntervalDataToFile();
+			MoveComboBarIntervalDataToFile();
 
 			//=================================================
 			// End of Summary Interval
@@ -1097,7 +1097,7 @@ uint8 CalculateComboData(void)
 			if (++g_summaryIntervalCnt >=
 				(uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
 			{
-				moveComboSummaryIntervalDataToFile();
+				MoveComboSummaryIntervalDataToFile();
 			}
 		}
 
@@ -1119,7 +1119,7 @@ uint8 CalculateComboData(void)
 void MoveStartOfComboEventRecordToFile(void)
 {
 	// Get new file handle
-	g_comboDualCurrentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+	g_comboDualCurrentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
 	if (g_comboDualCurrentEventFileHandle == NULL) { debugErr("Failed to get a new file handle for the current Combo - Bargraph event!\n"); }
 
@@ -1128,7 +1128,7 @@ void MoveStartOfComboEventRecordToFile(void)
 
 	// ns8100 - *NOTE* With Combo and keeping consistant with event numbers, save now instead of at the end of bargraph
 	// Combo - Bargraph event created, inc event number for potential Combo - Waveform events
-	storeCurrentEventNumber();
+	StoreCurrentEventNumber();
 	
 	// Update the Waveform pending record with the new event number to use
 	g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
@@ -1144,7 +1144,7 @@ void MoveEndOfComboEventRecordToFile(void)
 	g_pendingBargraphRecord.header.dataChecksum = 0xCCDD;
 	g_pendingBargraphRecord.header.dataCompression = 0;
 
-	g_pendingBargraphRecord.summary.captured.endTime = getCurrentTime();
+	g_pendingBargraphRecord.summary.captured.endTime = GetCurrentTime();
 
 	// Make sure at the beginning of the file
 	fl_fseek(g_comboDualCurrentEventFileHandle, 0, SEEK_SET);
@@ -1157,14 +1157,14 @@ void MoveEndOfComboEventRecordToFile(void)
 
 #if 0 // ns8100 - *NOTE* With Combo and keeping consistant with event numbers, save moved to start instead of at the end of bargraph
 	// Store and increment the event number even if we do not save the event header information.
-	storeCurrentEventNumber();
+	StoreCurrentEventNumber();
 #endif
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void advanceComboBarIntervalBufPtr(uint8 bufferType)
+void AdvanceComboBarIntervalBufPtr(uint8 bufferType)
 {
 	if (bufferType == READ_PTR)
 	{
@@ -1183,7 +1183,7 @@ void advanceComboBarIntervalBufPtr(uint8 bufferType)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void advanceComboSumIntervalBufPtr(uint8 bufferType)
+void AdvanceComboSumIntervalBufPtr(uint8 bufferType)
 {
 
 	if (bufferType == READ_PTR)
@@ -1294,13 +1294,13 @@ void UpdateComboJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-BOOLEAN checkSpaceForComboBarSummaryInterval(void)
+BOOLEAN CheckSpaceForComboBarSummaryInterval(void)
 {
 	FLASH_USAGE_STRUCT flashStats;
 	uint32 barIntervalSize;
 	BOOLEAN spaceLeft;
 	
-	getFlashUsageStats(&flashStats);
+	GetFlashUsageStats(&flashStats);
 
 	barIntervalSize = (sizeof(CALCULATED_DATA_STRUCT) + (((g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval) + 1) * 8));
 
@@ -1346,7 +1346,7 @@ void MoveComboWaveformEventToFile(void)
 
 				// Added temporarily to prevent SPI access issues
 				// fix_ns8100
-				g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
+				g_pendingEventRecord.summary.captured.eventTime = GetCurrentTime();
 
 				sumEntry = &g_summaryTable[g_eventBufferReadIndex];
 				sumEntry->mode = WAVEFORM_MODE;
@@ -1363,7 +1363,7 @@ void MoveComboWaveformEventToFile(void)
 			case FLASH_PRETRIG:
 				for (i = g_samplesInPretrig; i != 0; i--)
 				{
-					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+					if (g_bitShiftForAccuracy) AdjustSampleForBitAccuracy();
 
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
@@ -1374,7 +1374,7 @@ void MoveComboWaveformEventToFile(void)
 			case FLASH_BODY_INT:
 				sampGrpsLeft = (g_samplesInBody - 1);
 
-				if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+				if (g_bitShiftForAccuracy) AdjustSampleForBitAccuracy();
 
 				// A channel
 				sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
@@ -1411,7 +1411,7 @@ void MoveComboWaveformEventToFile(void)
 				{
 					sampGrpsLeft--;
 
-					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+					if (g_bitShiftForAccuracy) AdjustSampleForBitAccuracy();
 
 					// A channel
 					sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
@@ -1472,7 +1472,7 @@ void MoveComboWaveformEventToFile(void)
 			case FLASH_CAL:
 				for (i = g_samplesInCal; i != 0; i--)
 				{
-					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+					if (g_bitShiftForAccuracy) AdjustSampleForBitAccuracy();
 					
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
@@ -1492,23 +1492,23 @@ void MoveComboWaveformEventToFile(void)
 					sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 					sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 
-					completeRamEventSummary(ramSummaryEntry, sumEntry);
-					cacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
+					CompleteRamEventSummary(ramSummaryEntry, sumEntry);
+					CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 
 					// Get new event file handle
-					g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+					g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 
 					if (g_currentEventFileHandle == NULL)
 					{
 						debugErr("Failed to get a new file handle for the current Combo - Waveform event!\n");
 
-						//reInitSdCardAndFat32();
-						//g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+						//ReInitSdCardAndFat32();
+						//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 					}					
 					else // Write the file event to the SD card
 					{
 						sprintf((char*)&g_spareBuffer[0], "COMBO WAVEFORM EVENT #%d BEING SAVED... (MAY TAKE TIME)", g_nextEventNumberToUse);
-						overlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
+						OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
 						// Write the event record header and summary
 						fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
@@ -1522,10 +1522,10 @@ void MoveComboWaveformEventToFile(void)
 
 						ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 					
-						updateMonitorLogEntry();
+						UpdateMonitorLogEntry();
 
 						// After event numbers have been saved, store current event number in persistent storage.
-						storeCurrentEventNumber();
+						StoreCurrentEventNumber();
 
 						// Now store the updated event number in the universal ram storage.
 						g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
@@ -1557,16 +1557,16 @@ void MoveComboWaveformEventToFile(void)
 					waveformProcessingState = FLASH_IDLE;
 					g_freeEventBuffers++;
 
-					if (getPowerControlState(LCD_POWER_ENABLE) == OFF)
+					if (GetPowerControlState(LCD_POWER_ENABLE) == OFF)
 					{
-						assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
-						assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+						AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
+						AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 					}
 
 					// Check to see if there is room for another event, if not send a signal to stop monitoring
 					if (g_helpRecord.flashWrapping == NO)
 					{
-						getFlashUsageStats(&flashStats);
+						GetFlashUsageStats(&flashStats);
 
 						if (flashStats.waveEventsLeft == 0)
 						{
@@ -1577,7 +1577,7 @@ void MoveComboWaveformEventToFile(void)
 					}
 
 					// Check if AutoDialout is enabled and signal the system if necessary
-					checkAutoDialoutStatus();
+					CheckAutoDialoutStatus();
 
 					g_spi1AccessLock = AVAILABLE;
 				}				
@@ -1593,7 +1593,7 @@ void MoveComboWaveformEventToFile(void)
 		{
  			// There were queued event buffers after monitoring was stopped
  			// Close the monitor log entry now since all events have been stored
-			closeMonitorLogEntry();
+			CloseMonitorLogEntry();
 		}
 	}
 }

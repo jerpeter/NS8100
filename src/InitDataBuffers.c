@@ -85,7 +85,7 @@ void InitDataBuffs(uint8 op_mode)
 		{ g_bitAccuracyMidpoint = ACCURACY_16_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_16_BIT; } 
 
 	// Setup the pending event record information that is available at this time
-	initEventRecord(op_mode);
+	InitEventRecord(op_mode);
 
 	// Setup buffers based on mode
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))

@@ -37,7 +37,7 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void saveRecData(void* src_ptr, uint32 num, uint8 type)
+void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 {        
 	uint16 loc;
 	uint16 rec_size;
@@ -46,7 +46,7 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 	{
 		case REC_TRIGGER_USER_MENU_TYPE:
 			debug("Programming Trigger Record...\n");
-			((REC_EVENT_MN_STRUCT *)src_ptr)->time_stamp = getCurrentTime();
+			((REC_EVENT_MN_STRUCT *)src_ptr)->time_stamp = GetCurrentTime();
 
 			rec_size = sizeof(REC_EVENT_MN_STRUCT);
 			loc = (uint16)(sizeof(REC_EVENT_MN_STRUCT) * num);
@@ -118,7 +118,7 @@ void saveRecData(void* src_ptr, uint32 num, uint8 type)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void getRecData(void* dst_ptr, uint32 num, uint8 type)
+void GetRecordData(void* dst_ptr, uint32 num, uint8 type)
 { 
 	uint16 loc;
 
@@ -171,14 +171,14 @@ void getRecData(void* dst_ptr, uint32 num, uint8 type)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void convertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
+void ConvertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 {        
 	REC_EVENT_MN_STRUCT *ttemp;
 	DATE_TIME_STRUCT *tempTime;
 	uint8 tbuff[5];
 
 	// Clear the buffer.
-	byteSet(&tbuff[0], 0, sizeof(tbuff));
+	ByteSet(&tbuff[0], 0, sizeof(tbuff));
 
 	switch (type)
 	{
@@ -289,7 +289,7 @@ void convertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void copyFlashBlock(uint16* dst, uint16* src, uint32 len)
+void CopyFlashBlock(uint16* dst, uint16* src, uint32 len)
 {
 	while (len > 0)
 	{
@@ -310,16 +310,16 @@ void copyFlashBlock(uint16* dst, uint16* src, uint32 len)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void copyRecIntoFlashBk(uint16* dst,uint16* src, uint32 loc, uint32 len)
+void CopyRecordIntoFlashBk(uint16* dst,uint16* src, uint32 loc, uint32 len)
 {
-	//debugPrint(RAW, "\n CRIFBK -> ");
+	//DebugPrint(RAW, "\n CRIFBK -> ");
 
 	while (len > 0)
 	{
 		// Copy src data into dest offset by loc
 		*(dst + loc) = *src;
 
-		//debugPrint(RAW, "%x ", *(dst + loc));
+		//DebugPrint(RAW, "%x ", *(dst + loc));
 
 		// Increment dest and src pointers
 		dst++;
@@ -333,7 +333,7 @@ void copyRecIntoFlashBk(uint16* dst,uint16* src, uint32 loc, uint32 len)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 checkForAvailableTriggerRecordEntry(char* name, uint8* match)
+uint8 CheckForAvailableTriggerRecordEntry(char* name, uint8* match)
 {
 	REC_EVENT_MN_STRUCT temp_rec;
 	uint8 i;
@@ -343,7 +343,7 @@ uint8 checkForAvailableTriggerRecordEntry(char* name, uint8* match)
 	for (i = 1; i <= MAX_NUM_OF_SAVED_SETUPS; i++)
 	{
 		// Load the temp record with the saved setup
-		getRecData(&temp_rec, i, REC_TRIGGER_USER_MENU_TYPE);
+		GetRecordData(&temp_rec, i, REC_TRIGGER_USER_MENU_TYPE);
 
 		// Check if any of the saved setups have the same name (8 is the max number of chars that can be input)
 		if (strncmp((char*)temp_rec.name, name, 8) == 0)
@@ -373,7 +373,7 @@ uint8 checkForAvailableTriggerRecordEntry(char* name, uint8* match)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void loadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
+void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 {
 	// General components
 	rec_ptr->validRecord = YES;
@@ -392,10 +392,10 @@ void loadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 	rec_ptr->berec.impulseMenuUpdateSecs = 1;
 
 	// Clear strings
-	byteSet((char*)rec_ptr->trec.client, 0, sizeof(rec_ptr->trec.client));
-	byteSet((char*)rec_ptr->trec.loc, 0, sizeof(rec_ptr->trec.loc));
-	byteSet((char*)rec_ptr->trec.comments, 0, sizeof(rec_ptr->trec.comments));
-	byteSet((char*)rec_ptr->trec.oper, 0, sizeof(rec_ptr->trec.oper));
+	ByteSet((char*)rec_ptr->trec.client, 0, sizeof(rec_ptr->trec.client));
+	ByteSet((char*)rec_ptr->trec.loc, 0, sizeof(rec_ptr->trec.loc));
+	ByteSet((char*)rec_ptr->trec.comments, 0, sizeof(rec_ptr->trec.comments));
+	ByteSet((char*)rec_ptr->trec.oper, 0, sizeof(rec_ptr->trec.oper));
 
 	// Mode specific 
 	switch (op_mode)
@@ -419,10 +419,10 @@ void loadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
+void LoadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 {  
 	// Initialize the help record
-	byteSet(rec_ptr, 0, sizeof(REC_HELP_MN_STRUCT));
+	ByteSet(rec_ptr, 0, sizeof(REC_HELP_MN_STRUCT));
 
 	// Set default conditions
 	rec_ptr->powerSavings = POWER_SAVINGS_NONE;
@@ -477,7 +477,7 @@ void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void activateHelpRecordOptions(void)
+void ActivateHelpRecordOptions(void)
 {
 	g_contrast_value = g_helpRecord.lcdContrast;
 
@@ -486,7 +486,7 @@ void activateHelpRecordOptions(void)
 		g_helpRecord.lcdContrast = g_contrast_value = DEFUALT_CONTRAST;
 	}               
 
-	setLcdContrast(g_contrast_value);
+	SetLcdContrast(g_contrast_value);
 
 	// The choices are between metric and sae measurement systems.
 	g_sensorInfoPtr->unitsFlag = g_helpRecord.unitsOfMeasure;
@@ -494,16 +494,16 @@ void activateHelpRecordOptions(void)
 	g_sensorInfoPtr->airUnitsFlag = g_helpRecord.unitsOfAir;
 #endif
 
-	assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
+	AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 
 	if ((g_helpRecord.lcdTimeout < LCD_TIMEOUT_MIN_VALUE) || (g_helpRecord.lcdTimeout > LCD_TIMEOUT_MAX_VALUE))
 	{
 		g_helpRecord.lcdTimeout = LCD_TIMEOUT_DEFAULT_VALUE;
 	}
-	assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+	AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
 	debug("Auto Monitor Mode: %s\n", (g_helpRecord.autoMonitorMode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
-    assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), autoMonitorTimerCallBack);
+    AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 
 	if (g_helpRecord.autoCalMode != AUTO_NO_CAL_TIMEOUT)
 	{
@@ -514,10 +514,10 @@ void activateHelpRecordOptions(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void loadModemSetupRecordDefaults()
+void LoadModemSetupRecordDefaults()
 {
 	// Initialize the help record
-	byteSet(&g_modemSetupRecord, 0, sizeof(MODEM_SETUP_STRUCT));
+	ByteSet(&g_modemSetupRecord, 0, sizeof(MODEM_SETUP_STRUCT));
 
 	g_modemSetupRecord.modemStatus = NO;
 	g_modemSetupRecord.retries = MODEM_RETRY_DEFAULT_VALUE;
@@ -533,7 +533,7 @@ void loadModemSetupRecordDefaults()
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void validateModemSetupParameters(void)
+void ValidateModemSetupParameters(void)
 {
 	uint8 updated = NO;
 
@@ -552,7 +552,7 @@ void validateModemSetupParameters(void)
 	if (updated)
 	{
 		// Save the Modem Setup Record
-		saveRecData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
+		SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
 	}
 }
 
@@ -654,7 +654,7 @@ void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 		}
 
 		spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
-		soft_usecWait(5 * SOFT_MSECS);
+		SoftUsecWait(5 * SOFT_MSECS);
 	}
 }
 
@@ -696,11 +696,11 @@ void EraseParameterMemory(uint16 startAddr, uint16 dataLength)
 		{
 			spi_write(EEPROM_SPI, tempData);
 			
-			soft_usecWait(1 * SOFT_MSECS);
+			SoftUsecWait(1 * SOFT_MSECS);
 		}
 
 		spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
-		soft_usecWait(5 * SOFT_MSECS);
+		SoftUsecWait(5 * SOFT_MSECS);
 	}
 }
 

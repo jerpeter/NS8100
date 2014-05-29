@@ -52,42 +52,42 @@ static USER_TYPE_STRUCT unitTypes[TOTAL_TYPES] = {
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void userMn(INPUT_MSG_STRUCT);
-void userMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
-void advanceInputChar(uint32 dir);
-void copyMenuToCache(USER_MENU_STRUCT* currentMenu);
-void copyDataToCache(void* data);
-void copyDataToMenu(MN_LAYOUT_STRUCT*);
-uint16 findCurrentItemEntry(uint32 item);
-void advanceInputNumber(uint32 dir);
-void removeExtraSpaces(void);
+void UserMenu(INPUT_MSG_STRUCT);
+void UserMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
+void AdvanceInputChar(uint32 dir);
+void CopyMenuToCache(USER_MENU_STRUCT* currentMenu);
+void CopyDataToCache(void* data);
+void CopyDataToMenu(MN_LAYOUT_STRUCT*);
+uint16 FindCurrentItemEntry(uint32 item);
+void AdvanceInputNumber(uint32 dir);
+void RemoveExtraSpaces(void);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void userMn(INPUT_MSG_STRUCT msg)
+void UserMenu(INPUT_MSG_STRUCT msg)
 { 
     static WND_LAYOUT_STRUCT wnd_layout;
     static MN_LAYOUT_STRUCT mn_layout;
      
 	// Handle all the preprocessing to setup the menu before it is displayed
-    userMnProc(msg, &wnd_layout,&mn_layout);
+    UserMenuProc(msg, &wnd_layout,&mn_layout);
     
 	// Verify that the active menu is still the User Menu
     if (g_activeMenu == USER_MENU)
     {
 		// Setup the LCD map with the title position set inside the menu structure
-        displayUserMenu(&wnd_layout, &mn_layout, USER_MENU_TITLE_POSITION(g_userMenuCachePtr));
+        DisplayUserMenu(&wnd_layout, &mn_layout, USER_MENU_TITLE_POSITION(g_userMenuCachePtr));
 
 		// Write the LCD map to the screen
-        writeMapToLcd(g_mmap);
+        WriteMapToLcd(g_mmap);
     }
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
+void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	uint32 input;
@@ -107,13 +107,13 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 			mn_layout_ptr->sub_ln =     0;
 
 			// Copy the static menu data into the user menu display and set the user menu handler
-			copyMenuToCache((USER_MENU_STRUCT*)msg.data[CURRENT_USER_MENU]);
+			CopyMenuToCache((USER_MENU_STRUCT*)msg.data[CURRENT_USER_MENU]);
 
 			// Check if the current menu is a select type
 			if (USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE)
 			{
 				// Get the current item and set the current line to be highlighted
-				mn_layout_ptr->curr_ln = findCurrentItemEntry(msg.data[CURRENT_ITEM_VALUE]);
+				mn_layout_ptr->curr_ln = FindCurrentItemEntry(msg.data[CURRENT_ITEM_VALUE]);
 
 				// Adjust top line if current line is below the first screen's worth of text
 				if (mn_layout_ptr->curr_ln > 6)
@@ -126,10 +126,10 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 				mn_layout_ptr->curr_ln = USER_MENU_DEFAULT_ROW(g_userMenuCachePtr);
 
 				// Copy the (passed by pointer) variable menu data to the user menu data cache
-				copyDataToCache((void*)msg.data[CURRENT_DATA_POINTER]);
+				CopyDataToCache((void*)msg.data[CURRENT_DATA_POINTER]);
 
 				// Copy the variable data from the user menu data cache to the user menu display
-				copyDataToMenu(mn_layout_ptr);
+				CopyDataToMenu(mn_layout_ptr);
 			}
 
 			debug("User Menu <%s>, Displayable Items: %d\n", g_userMenuCachePtr[MENU_INFO].text, USER_MENU_DISPLAY_ITEMS(g_userMenuCachePtr));
@@ -175,7 +175,7 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 						else if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
 						{
 							// Remove any extra spaces as the end of the string
-							removeExtraSpaces();
+							RemoveExtraSpaces();
 
 							// Call the user menu handler, passing the key and the address of the string
 							(*g_userMenuHandler)(ENTER_KEY, &g_userMenuCacheData.text);
@@ -227,7 +227,7 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					if (USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE)
 					{
 						// Scroll the highlighted menu item up or down based on the key used
-						userMenuScroll((uint8)input, SELECT_MN_WND_LNS, mn_layout_ptr);
+						UserMenuScroll((uint8)input, SELECT_MN_WND_LNS, mn_layout_ptr);
 					}
 					else if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
 					{
@@ -241,20 +241,20 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 						else
 						{
 							// Handle advancing the character up or down based on the key used
-							advanceInputChar(input);
+							AdvanceInputChar(input);
 						}
 
 						// Copy the string data to the user menu display
-						copyDataToMenu(mn_layout_ptr);
+						CopyDataToMenu(mn_layout_ptr);
 					}
 					else // INTEGER_BYTE_TYPE, INTEGER_WORD_TYPE, INTEGER_WORD_FIXED_TYPE, INTEGER_LONG_TYPE, 
 							// INTEGER_SPECIAL_TYPE, INTEGER_COUNT_TYPE, FLOAT_TYPE, FLOAT_SPECIAL_TYPE, FLOAT_WITH_N_TYPE
 					{
 						// Handle advancing the numerical data up or down based on the key used
-						advanceInputNumber(input);
+						AdvanceInputNumber(input);
 
 						// Copy the numerical data to the user menu display
-						copyDataToMenu(mn_layout_ptr);
+						CopyDataToMenu(mn_layout_ptr);
 					}
 				break;
 
@@ -262,7 +262,7 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					if (USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE)
 					{
 						// Change the contrast
-						adjustLcdContrast(LIGHTER);					
+						AdjustLcdContrast(LIGHTER);
 					}
 					else if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
 					{
@@ -285,7 +285,7 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 							}
 
 							// Copy the string data to the user menu display							
-							copyDataToMenu(mn_layout_ptr);
+							CopyDataToMenu(mn_layout_ptr);
 						}
 					}
 				break;
@@ -294,7 +294,7 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					if (USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE)
 					{
 						// Change the contrast
-						adjustLcdContrast(DARKER);
+						AdjustLcdContrast(DARKER);
 					}
 					else if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
 					{
@@ -319,7 +319,7 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 							}
 
 							// Copy the string data to the user menu display
-							copyDataToMenu(mn_layout_ptr);
+							CopyDataToMenu(mn_layout_ptr);
 #if 0 // Unneeded check on unsigned value (end bracket)
 						}
 #endif
@@ -352,7 +352,7 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 						}
 
 						// Copy the string data to the user menu display
-						copyDataToMenu(mn_layout_ptr);
+						CopyDataToMenu(mn_layout_ptr);
 					}
 				break;
 				
@@ -367,7 +367,7 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 						}	
 
 						// Copy the string data to the user menu display
-						copyDataToMenu(mn_layout_ptr);
+						CopyDataToMenu(mn_layout_ptr);
 					}
 				break;
 			}
@@ -378,7 +378,7 @@ void userMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void advanceInputChar(uint32 direction)
+void AdvanceInputChar(uint32 direction)
 {
 	// Store the char at the current index
 	char currVal = g_userMenuCacheData.text[g_userMenuCachePtr[CURRENT_TEXT_INDEX].data];
@@ -438,7 +438,7 @@ void advanceInputChar(uint32 direction)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void advanceInputNumber(uint32 direction)
+void AdvanceInputNumber(uint32 direction)
 {
 	// Check if direction is an up arrow to increment the number
 	if (direction == UP_ARROW_KEY)
@@ -785,7 +785,7 @@ void advanceInputNumber(uint32 direction)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void copyMenuToCache(USER_MENU_STRUCT* currentMenu)
+void CopyMenuToCache(USER_MENU_STRUCT* currentMenu)
 {
 	int i;
 	
@@ -793,7 +793,7 @@ void copyMenuToCache(USER_MENU_STRUCT* currentMenu)
 	g_userMenuHandler = (void*)currentMenu[(USER_MENU_TOTAL_ITEMS(currentMenu) - 1)].data;
 
 	// Clear the user menu display cache
-	byteSet(&g_userMenuCache, 0, sizeof(g_userMenuCache));
+	ByteSet(&g_userMenuCache, 0, sizeof(g_userMenuCache));
 
 	// Copy the menu contents over to the user menu display cache (minus the last line with the menu handler)
 	for (i = 0; i < USER_MENU_DISPLAY_ITEMS(currentMenu); i++)
@@ -824,14 +824,14 @@ void copyMenuToCache(USER_MENU_STRUCT* currentMenu)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void copyDataToCache(void* data)
+void CopyDataToCache(void* data)
 {
 	// Switch on the menu type
 	switch (USER_MENU_TYPE(g_userMenuCachePtr))
 	{
 		case STRING_TYPE:
 			// Clear the data cache text string
-			byteSet(&(g_userMenuCacheData.text[0]), 0, sizeof(g_userMenuCacheData.text));
+			ByteSet(&(g_userMenuCacheData.text[0]), 0, sizeof(g_userMenuCacheData.text));
 		
 			// Check to make sure the data pointer isn't null
 			if (data != NULL)
@@ -1043,7 +1043,7 @@ void copyDataToCache(void* data)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
+void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 {
 	uint32 charLen = 0;
 	int tempRow = USER_MENU_DEFAULT_ROW(g_userMenuCachePtr);
@@ -1061,7 +1061,7 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 			for (i = tempRow; i < USER_MENU_DISPLAY_ITEMS(g_userMenuCachePtr); i++)
 			{
 				// Clear the user menu display cache
-				byteSet(&(g_userMenuCachePtr[i].text[0]), 0, MAX_CHAR_PER_LN);
+				ByteSet(&(g_userMenuCachePtr[i].text[0]), 0, MAX_CHAR_PER_LN);
 			}
 
 			// get the string length
@@ -1339,7 +1339,7 @@ void copyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 findCurrentItemEntry(uint32 item)
+uint16 FindCurrentItemEntry(uint32 item)
 {
 	uint16 i;
 	uint16 totalMenuElements = (uint8)(USER_MENU_DISPLAY_ITEMS(g_userMenuCachePtr));
@@ -1359,7 +1359,7 @@ uint16 findCurrentItemEntry(uint32 item)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void removeExtraSpaces(void)
+void RemoveExtraSpaces(void)
 {
 	uint16 i = (uint16)strlen(g_userMenuCacheData.text);
 

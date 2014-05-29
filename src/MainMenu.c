@@ -51,34 +51,34 @@ static TEMP_MENU_DATA_STRUCT s_mainMenuTable[MAIN_MN_TABLE_SIZE] = {
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void mainMn(INPUT_MSG_STRUCT);
-void mainMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
-void mainMnScroll(char, char, MN_LAYOUT_STRUCT*);
+void MainMenu(INPUT_MSG_STRUCT);
+void MainMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
+void MainMenuScroll(char, char, MN_LAYOUT_STRUCT*);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void mainMn(INPUT_MSG_STRUCT msg)
+void MainMenu(INPUT_MSG_STRUCT msg)
 { 
     static WND_LAYOUT_STRUCT wnd_layout;
     static MN_LAYOUT_STRUCT mn_layout;
   
-    mainMnProc(msg, &wnd_layout, &mn_layout);           
+    MainMenuProc(msg, &wnd_layout, &mn_layout);
 
     if (g_activeMenu == MAIN_MENU)
     {
-        dsplySelMn(&wnd_layout, &mn_layout, TITLE_CENTERED);
-        writeMapToLcd(g_mmap);
+        DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
+        WriteMapToLcd(g_mmap);
     }
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
+void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	DATE_TIME_STRUCT currentTime = getCurrentTime();
+	DATE_TIME_STRUCT currentTime = GetCurrentTime();
 	uint32 input;
 	uint8 length;
 #if 0 // Test (Storage for override of main menu keys)
@@ -106,18 +106,18 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 				mn_layout_ptr->top_ln = (uint16)(mn_layout_ptr->curr_ln - 5);
 			}
 
-			loadTempMenuTable(s_mainMenuTable);
+			LoadTempMenuTable(s_mainMenuTable);
 			
 			// Add in time (hour:min) to the 2nd LCD line right justified
 			length = strlen(getLangText(SELECT_TEXT));
-			byteSet(&(g_menuPtr[1].data[length]), ' ', (12 - length));
+			ByteSet(&(g_menuPtr[1].data[length]), ' ', (12 - length));
 			sprintf((char*)&(g_menuPtr[1].data[12]), "%02d:%02d %s", ((currentTime.hour % 12) == 0) ? 12 : (currentTime.hour % 12),
 					currentTime.min, ((currentTime.hour / 12) == 1) ? "PM" : "AM");
 
 			sprintf((char*)&(g_menuPtr[2].data[0]), "_____________________");
 
 			// Since time was added, start the menu update timer
-			assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
+			AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
 			break;
 
 		case (KEYPRESS_MENU_CMD):
@@ -139,13 +139,13 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 							if (g_factorySetupRecord.invalid)
 							{
 								debugWarn("Factory setup record not found.\n");
-								messageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
+								MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
 							}
 							else
 							{
 								g_triggerRecord.op_mode = WAVEFORM_MODE;
-								clearSoftTimer(MENU_UPDATE_TIMER_NUM);
-								updateModeMenuTitle(g_triggerRecord.op_mode);
+								ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
+								UpdateModeMenuTitle(g_triggerRecord.op_mode);
 								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 								JUMP_TO_ACTIVE_MENU();
 							}
@@ -155,13 +155,13 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 							if (g_factorySetupRecord.invalid)
 							{
 								debugWarn("Factory setup record not found.\n");
-								messageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
+								MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
 							}
 							else
 							{
 								g_triggerRecord.op_mode = BARGRAPH_MODE;
-								clearSoftTimer(MENU_UPDATE_TIMER_NUM);
-								updateModeMenuTitle(g_triggerRecord.op_mode);
+								ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
+								UpdateModeMenuTitle(g_triggerRecord.op_mode);
 								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 								JUMP_TO_ACTIVE_MENU();
 							}
@@ -171,20 +171,20 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 							if (g_factorySetupRecord.invalid)
 							{
 								debugWarn("Factory setup record not found.\n");
-								messageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
+								MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
 							}
 							else
 							{
 								g_triggerRecord.op_mode = COMBO_MODE;
-								clearSoftTimer(MENU_UPDATE_TIMER_NUM);
-								updateModeMenuTitle(g_triggerRecord.op_mode);
+								ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
+								UpdateModeMenuTitle(g_triggerRecord.op_mode);
 								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 								JUMP_TO_ACTIVE_MENU();
 							}
 							break;
 
 						case (DEFAULT_ROW_6): // Load Saved Record
-							clearSoftTimer(MENU_UPDATE_TIMER_NUM);
+							ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 							SETUP_MENU_MSG(LOAD_REC_MENU);
 							JUMP_TO_ACTIVE_MENU();
 							break;
@@ -198,45 +198,45 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					// Set RTC Timestamp pin high
 					gpio_clr_gpio_pin(AVR32_PIN_PB18);
 #endif
-					mainMnScroll(DOWN, SELECT_MN_WND_LNS, mn_layout_ptr);
+					MainMenuScroll(DOWN, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (UP_ARROW_KEY):
 #if 0 // Test (Override of the key for testing)
 					// Set RTC Timestamp pin high
 					gpio_set_gpio_pin(AVR32_PIN_PB18);
 #endif
-					mainMnScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
+					MainMenuScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (MINUS_KEY): 
 #if 0 // Test (Override of the key for testing)
-					//powerDownSDCard();
+					//PowerDownSDCard();
 				    //gpio_enable_gpio_pin(AVR32_PIN_PA19);
 					//gpio_clr_gpio_pin(AVR32_PIN_PA19);
 
-					rtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
+					ExternalRtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
 					debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
 					rtcMap.control_1 &= ~(0x10);
 					rtcMap.control_2 = RTC_ALARM_INT_ENABLE;
 					debug("RTC New Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
-					rtcWrite(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
+					ExternalRtcWrite(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
 #else
-					adjustLcdContrast(DARKER);
+					AdjustLcdContrast(DARKER);
 #endif
 					break;
 				case (PLUS_KEY): 
 #if 0 // Test (Override of the key for testing)
 				    //gpio_set_gpio_pin(AVR32_PIN_PB19);
 					//gpio_enable_module_pin(AVR32_PIN_PA19, AVR32_SPI1_NPCS_2_0_FUNCTION);
-					//powerUpSDCardAndInitFat32();
+					//PowerUpSDCardAndInitFat32();
 
-					rtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
+					ExternalRtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
 					debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
 					rtcMap.control_1 &= ~(0x10);
 					rtcMap.control_2 = (RTC_ALARM_INT_ENABLE | RTC_TIMESTAMP_INT_ENABLE);
 					debug("RTC New Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
-					rtcWrite(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
+					ExternalRtcWrite(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
 #else
-					adjustLcdContrast(LIGHTER); 
+					AdjustLcdContrast(LIGHTER);
 #endif
 					break;
 				case (ESC_KEY):
@@ -244,7 +244,7 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					mn_layout_ptr->curr_ln = 3;
 					break;
 				case (HELP_KEY):
-					clearSoftTimer(MENU_UPDATE_TIMER_NUM);
+					ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 					SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
 					JUMP_TO_ACTIVE_MENU();
 					break;
@@ -259,7 +259,7 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 					currentTime.min, ((currentTime.hour / 12) == 1) ? "PM" : "AM");
 
 			// Since time was added, start the menu update timer
-			assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
+			AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
 			break;    
 	}
 
@@ -268,7 +268,7 @@ void mainMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYO
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void mainMnScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT * mn_layout_ptr)
+void MainMenuScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT * mn_layout_ptr)
 {   
    uint8 buff[50];
    

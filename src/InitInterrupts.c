@@ -65,14 +65,14 @@
 #include "Globals.h"
 
 extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
-extern void eic_keypad_irq(void);
-extern void eic_system_irq(void);
-extern void eic_external_rtc_irq(void);
-extern void tc_sample_irq(void);
-extern void usart_1_rs232_irq(void);
-extern void soft_timer_tick_irq(void);
-extern void tc_sample_irq(void);
-extern void tc_typematic_irq(void);
+extern void Eic_keypad_irq(void);
+extern void Eic_system_irq(void);
+extern void Eic_external_rtc_irq(void);
+extern void Tc_sample_irq(void);
+extern void Usart_1_rs232_irq(void);
+extern void Soft_timer_tick_irq(void);
+extern void Tc_sample_irq(void);
+extern void Tc_typematic_irq(void);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -97,7 +97,7 @@ void Setup_8100_EIC_Keypad_ISR(void)
 	AVR32_EIC.EN.int5 = 1;
 
 	// Register the RTC interrupt handler to the interrupt controller.
-	INTC_register_interrupt(&eic_keypad_irq, AVR32_EIC_IRQ_5, 0);
+	INTC_register_interrupt(&Eic_keypad_irq, AVR32_EIC_IRQ_5, 0);
 
 #if 0 // Some residual wrongly executed code
 	// Enable the interrupt
@@ -126,7 +126,7 @@ void Setup_8100_EIC_System_ISR(void)
 	AVR32_EIC.EN.int4 = 1;
 
 	// Register the RTC interrupt handler to the interrupt controller.
-	INTC_register_interrupt(&eic_system_irq, AVR32_EIC_IRQ_4, 0);
+	INTC_register_interrupt(&Eic_system_irq, AVR32_EIC_IRQ_4, 0);
 
 #if 0 // Some residual wrongly executed code
 	// Enable the interrupt
@@ -156,9 +156,9 @@ void Setup_8100_EIC_External_RTC_ISR(void)
 
 	// Register the RTC interrupt handler to the interrupt controller.
 	#if 0 // Test
-	INTC_register_interrupt(&eic_external_rtc_irq, AVR32_EIC_IRQ_1, 0);
+	INTC_register_interrupt(&Eic_external_rtc_irq, AVR32_EIC_IRQ_1, 0);
 	#else // Hook in the External RTC interrupt to the actual sample processing interrupt handler
-	INTC_register_interrupt(&tc_sample_irq, AVR32_EIC_IRQ_1, 0);
+	INTC_register_interrupt(&Tc_sample_irq, AVR32_EIC_IRQ_1, 0);
 	#endif
 
 	#if 1
@@ -173,7 +173,7 @@ void Setup_8100_EIC_External_RTC_ISR(void)
 ///----------------------------------------------------------------------------
 void Setup_8100_Usart_RS232_ISR(void)
 {
-	INTC_register_interrupt(&usart_1_rs232_irq, AVR32_USART1_IRQ, 1);
+	INTC_register_interrupt(&Usart_1_rs232_irq, AVR32_USART1_IRQ, 1);
 
 	// Enable Receive Ready, Overrun, Parity and Framing error interrupts
 	AVR32_USART1.ier = (AVR32_USART_IER_RXRDY_MASK | AVR32_USART_IER_OVRE_MASK |
@@ -186,7 +186,7 @@ void Setup_8100_Usart_RS232_ISR(void)
 void Setup_8100_Soft_Timer_Tick_ISR(void)
 {
 	// Register the RTC interrupt handler to the interrupt controller.
-	INTC_register_interrupt(&soft_timer_tick_irq, AVR32_RTC_IRQ, 0);
+	INTC_register_interrupt(&Soft_timer_tick_irq, AVR32_RTC_IRQ, 0);
 	
 	// Enable half second tick
 	rtc_enable_interrupt(&AVR32_RTC);
@@ -239,17 +239,17 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 	{
 		case TC_SAMPLE_TIMER_CHANNEL:
 		// Register the RTC interrupt handler to the interrupt controller.
-		INTC_register_interrupt(&tc_sample_irq, AVR32_TC_IRQ0, 3);
+		INTC_register_interrupt(&Tc_sample_irq, AVR32_TC_IRQ0, 3);
 		break;
 		
 		case TC_CALIBRATION_TIMER_CHANNEL:
 		// Register the RTC interrupt handler to the interrupt controller.
-		INTC_register_interrupt(&tc_sample_irq, AVR32_TC_IRQ1, 3);
+		INTC_register_interrupt(&Tc_sample_irq, AVR32_TC_IRQ1, 3);
 		break;
 		
 		case TC_TYPEMATIC_TIMER_CHANNEL:
 		// Register the RTC interrupt handler to the interrupt controller.
-		INTC_register_interrupt(&tc_typematic_irq, AVR32_TC_IRQ2, 0);
+		INTC_register_interrupt(&Tc_typematic_irq, AVR32_TC_IRQ2, 0);
 		break;
 	}
 
@@ -288,7 +288,7 @@ void InitInterrupts_NS8100(void)
 	Setup_8100_EIC_System_ISR();
 
 	#if 0 // Moved interrupt setup to the end of the BootloaderManager to allow for searching for Ctrl-B
-	initCraftInterruptBuffers();
+	InitCraftInterruptBuffers();
 	Setup_8100_Usart_RS232_ISR();
 	#endif
 	

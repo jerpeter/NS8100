@@ -65,7 +65,7 @@ extern void InitKeypad(void);
 extern void InitSystemHardware_NS8100(void);
 extern void InitInterrupts_NS8100(void);
 extern void InitSoftwareSettings_NS8100(void);
-extern void testSnippetsAfterInit(void);
+extern void TestSnippetsAfterInit(void);
 extern void Setup_8100_Usart_RS232_ISR(void);
 
 ///----------------------------------------------------------------------------
@@ -118,11 +118,11 @@ void SystemEventManager(void)
 			debug("Keypad Event\n");
 			clearSystemEventFlag(KEYPAD_EVENT);
 
-			keypad(KEY_SOURCE_IRQ);
+			KeypadProcessing(KEY_SOURCE_IRQ);
 		}
 		else
 		{
-			keypad(KEY_SOURCE_TIMER);
+			KeypadProcessing(KEY_SOURCE_TIMER);
 		}
 
 	}
@@ -132,7 +132,7 @@ void SystemEventManager(void)
 		debug("Power Off Event\n");
 		clearSystemEventFlag(POWER_OFF_EVENT);
 
-		handleUserPowerOffDuringTimerMode();
+		HandleUserPowerOffDuringTimerMode();
 	}
 
 	if (getSystemEventState(CYCLIC_EVENT))
@@ -142,7 +142,7 @@ void SystemEventManager(void)
 
 		#if 1 // Test (ISR/Exec Cycles)
 		//sprintf((char*)&g_spareBuffer[0], "%d (%s) %d", (int)g_execCycles, ((g_channelSyncError == YES) ? "YES" : "NO"), (int)(g_sampleCount / 4));
-		//overlayMessage("EXEC CYCLES", (char*)&g_spareBuffer[0], 500 * SOFT_MSECS);
+		//OverlayMessage("EXEC CYCLES", (char*)&g_spareBuffer[0], 500 * SOFT_MSECS);
 		debugRaw("ISR Ticks/sec: %d (E:%s), Exec: %d\n", (g_sampleCountHold / 4), ((g_channelSyncError == YES) ? "YES" : "NO"), g_execCycles);
 		g_sampleCountHold = 0;
 		g_execCycles = 0;
@@ -171,7 +171,7 @@ void SystemEventManager(void)
 		}
 		#endif
 
-		procTimerEvents();
+		ProcessTimerEvents();
 	}
 
 	if (getSystemEventState(MIDNIGHT_EVENT))
@@ -179,13 +179,13 @@ void SystemEventManager(void)
 		debug("Midnight Event\n");
 		clearSystemEventFlag(MIDNIGHT_EVENT);
 
-		handleMidnightEvent();
+		HandleMidnightEvent();
 	}
 
 	if (getSystemEventState(UPDATE_TIME_EVENT))
 	{
 		clearSystemEventFlag(UPDATE_TIME_EVENT);
-		updateCurrentTime();
+		UpdateCurrentTime();
 	}
 
 	if (getSystemEventState(BARGRAPH_EVENT))
@@ -217,10 +217,10 @@ void SystemEventManager(void)
 		debug("Warning Event 1\n");
 		clearSystemEventFlag(WARNING1_EVENT);
 
-		powerControl(ALARM_1_ENABLE, ON);
+		PowerControl(ALARM_1_ENABLE, ON);
 
 		// Assign soft timer to turn the Alarm 1 signal off
-		assignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarmOneTime * 2), alarmOneOutputTimerCallback);
+		AssignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarmOneTime * 2), AlarmOneOutputTimerCallback);
 	}
 
 	if (getSystemEventState(WARNING2_EVENT))
@@ -228,10 +228,10 @@ void SystemEventManager(void)
 		debug("Warning Event 2\n");
 		clearSystemEventFlag(WARNING2_EVENT);
 
-		powerControl(ALARM_2_ENABLE, ON);
+		PowerControl(ALARM_2_ENABLE, ON);
 
 		// Assign soft timer to turn the Alarm 2 signal off
-		assignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarmTwoTime * 2), alarmTwoOutputTimerCallback);
+		AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarmTwoTime * 2), AlarmTwoOutputTimerCallback);
 	}
 
 	if (getSystemEventState(UPDATE_OFFSET_EVENT))
@@ -243,7 +243,7 @@ void SystemEventManager(void)
 	{
 		clearSystemEventFlag(AUTO_DIALOUT_EVENT);
 
-		startAutoDialoutProcess();
+		StartAutoDialoutProcess();
 	}
 }
 
@@ -276,7 +276,7 @@ void MenuEventManager(void)
 		clearTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
 
 		// Handle and process software timers
-		checkSoftTimers();
+		CheckSoftTimers();
 	}
 
 	if (getTimerEventState(TIMER_MODE_TIMER_EVENT))
@@ -312,7 +312,7 @@ void CraftManager(void)
 					g_modemStatus.numberOfRings = 0;
 
 					// Assign timer to process modem init
-					assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_QUICK_DELAY, modemDelayTimerCallback);
+					AssignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_QUICK_DELAY, ModemDelayTimerCallback);
 				}
 			}
 
@@ -325,7 +325,7 @@ void CraftManager(void)
 			if (CONNECTED == g_modemStatus.firstConnection)
 			{
 				g_modemStatus.firstConnection = NOP_CMD;
-				assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_QUICK_DELAY, modemDelayTimerCallback);
+				AssignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_QUICK_DELAY, ModemDelayTimerCallback);
 			}
 		}
 		else
@@ -339,7 +339,7 @@ void CraftManager(void)
 		{
 			g_modemStatus.connectionState = NOP_CMD;
 			g_modemStatus.systemIsLockedFlag = YES;
-			assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_DELAY, modemDelayTimerCallback);
+			AssignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_DELAY, ModemDelayTimerCallback);
 		}
 	}
 
@@ -347,7 +347,7 @@ void CraftManager(void)
 	if (g_autoDialoutState != AUTO_DIAL_IDLE)
 	{
 		// Run the Auto Dialout State machine
-		autoDialoutStateMachine();
+		AutoDialoutStateMachine();
 	}
 
 	// Are we transfering data, if so process the correct command.
@@ -395,14 +395,14 @@ void CraftManager(void)
 	if (YES == g_modemStatus.craftPortRcvFlag)
 	{
 		g_modemStatus.craftPortRcvFlag = NO;
-		processCraftData();
+		ProcessCraftData();
 	}
 
 	// Did we raise the craft data port flag, if so process the incomming data.
 	if (getSystemEventState(CRAFT_PORT_EVENT))
 	{
 		clearSystemEventFlag(CRAFT_PORT_EVENT);
-		cmdMessageProcessing();
+		RemoteCmdMessageProcessing();
 	}
 }
 
@@ -414,12 +414,12 @@ void MessageManager(void)
 	INPUT_MSG_STRUCT input_msg;
 
 	// Check if there is a message in the queue
-	if (ckInputMsg(&input_msg) != INPUT_BUFFER_EMPTY)
+	if (CheckInputMsg(&input_msg) != INPUT_BUFFER_EMPTY)
 	{
 		debug("Processing message...\n");
 
 		// Process message
-		procInputMsg(input_msg);
+		ProcessInputMsg(input_msg);
 	}
 }
 
@@ -436,8 +436,8 @@ void FactorySetupManager(void)
 	{
 		g_factorySetupSequence = PROCESS_FACTORY_SETUP;
 
-		keypressEventMgr();
-		messageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
+		KeypressEventMgr();
+		MessageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
 
 		SETUP_MENU_MSG(DATE_TIME_MENU);
 		JUMP_TO_ACTIVE_MENU();
@@ -447,8 +447,8 @@ void FactorySetupManager(void)
 	{
 		g_factorySetupSequence = PROCESS_FACTORY_SETUP;
 
-		keypressEventMgr();
-		messageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
+		KeypressEventMgr();
+		MessageBox(getLangText(STATUS_TEXT), getLangText(YOU_HAVE_ENTERED_THE_FACTORY_SETUP_TEXT), MB_OK);
 
 		SETUP_MENU_MSG(DATE_TIME_MENU);
 		JUMP_TO_ACTIVE_MENU();
@@ -459,7 +459,7 @@ void FactorySetupManager(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleSystemEvents(void)
+void HandleSystemEvents(void)
 {
 	if (g_systemEventFlags.wrd)
 	SystemEventManager();
@@ -509,7 +509,7 @@ void UsbDeviceManager(void)
 		// Check if USB and Mass Storage driver init needs to occur
 		if (usbMassStorageState == USB_NOT_CONNECTED)
 		{
-			overlayMessage("USB STATUS", "USB CABLE WAS CONNECTED", 1 * SOFT_SECS);
+			OverlayMessage("USB STATUS", "USB CABLE WAS CONNECTED", 1 * SOFT_SECS);
 
 			// Recall the current active menu to repaint the display
 			mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
@@ -535,15 +535,15 @@ void UsbDeviceManager(void)
 		{
 			if (g_sampleProcessing == ACTIVE_STATE)
 			{
-				overlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 1000 * SOFT_MSECS);
+				OverlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 1000 * SOFT_MSECS);
 			}
 			else if (g_fileProcessActiveUsbLockout == ON)
 			{
-				overlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR FILE OPERATION", 1000 * SOFT_MSECS);
+				OverlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR FILE OPERATION", 1000 * SOFT_MSECS);
 			}
 			else
 			{
-				overlayMessage("USB STATUS", "USB CABLE WAS DISCONNECTED", 1000 * SOFT_MSECS);
+				OverlayMessage("USB STATUS", "USB CABLE WAS DISCONNECTED", 1000 * SOFT_MSECS);
 
 				// Recall the current active menu to repaint the display
 				mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
@@ -590,10 +590,10 @@ void BootLoadManager(void)
 	{
 #if 1
 		if (quickBootEntryJump == YES)
-			overlayMessage("BOOTLOADER", "HIDDEN ENTRY...", 2 * SOFT_SECS);
+			OverlayMessage("BOOTLOADER", "HIDDEN ENTRY...", 2 * SOFT_SECS);
 		else
 #endif
-		overlayMessage("BOOTLOADER", "FOUND CTRL_B...", 2 * SOFT_SECS);
+		OverlayMessage("BOOTLOADER", "FOUND CTRL_B...", 2 * SOFT_SECS);
 
 		sprintf(textBuffer,"C:\\System\\%s", default_boot_name);
 		file = fl_fopen(textBuffer, "r");
@@ -601,14 +601,14 @@ void BootLoadManager(void)
 		while (file == NULL)
 		{
 			//WriteLCD_smText( 0, 64, (unsigned char *)"Connect USB..", NORMAL_LCD);
-			overlayMessage("BOOTLOADER", "BOOT FILE NOT FOUND. CONNECT THE USB CABLE", 0);
+			OverlayMessage("BOOTLOADER", "BOOT FILE NOT FOUND. CONNECT THE USB CABLE", 0);
 
 			usb_task_init();
 			device_mass_storage_task_init();
 
 			while(!Is_usb_vbus_high()) {}
 
-			overlayMessage("BOOTLOADER", "WRITE BOOT.S TO SYSTEM DIR (REMOVE CABLE WHEN DONE)", 0);
+			OverlayMessage("BOOTLOADER", "WRITE BOOT.S TO SYSTEM DIR (REMOVE CABLE WHEN DONE)", 0);
 
 			usb_task_init();
 			device_mass_storage_task_init();
@@ -619,7 +619,7 @@ void BootLoadManager(void)
 				device_mass_storage_task();
 			}
 			
-			soft_usecWait(250 * SOFT_MSECS);
+			SoftUsecWait(250 * SOFT_MSECS);
 			
 			file = fl_fopen(textBuffer, "r");
 		}
@@ -627,11 +627,11 @@ void BootLoadManager(void)
 		// Display initializing message
 		debug("Starting Boot..\n");
 
-		overlayMessage("BOOTLOADER", "STARTING BOOTLOADER...", 2 * SOFT_SECS);
+		OverlayMessage("BOOTLOADER", "STARTING BOOTLOADER...", 2 * SOFT_SECS);
 
-		clearLcdDisplay();
+		ClearLcdDisplay();
 
-		if (unpack_srec(file) == -1)
+		if (Unpack_srec(file) == -1)
 		{
 			debugErr("SREC unpack unsuccessful!\n");
 		}
@@ -644,7 +644,7 @@ void BootLoadManager(void)
 		func();
 	}
 	
-	initCraftInterruptBuffers();
+	InitCraftInterruptBuffers();
 	Setup_8100_Usart_RS232_ISR();
 }
 
@@ -753,12 +753,12 @@ extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
 void SleepManager(void)
 {
 	// Check if no System Events and LCD is off and Modem is not transferring
-	if ((g_systemEventFlags.wrd == 0x0000) && (getPowerControlState(LCD_POWER_ENABLE) == OFF) &&
+	if ((g_systemEventFlags.wrd == 0x0000) && (GetPowerControlState(LCD_POWER_ENABLE) == OFF) &&
 	(g_modemStatus.xferState == NOP_CMD))
 	{
 #if 0 // Test
 		debug("Going to lunch and I'll be gone forever...\n");
-		stopExternalRTCClock();
+		StopExternalRtcClock();
 extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
 extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
 		rtc_disable_interrupt(&AVR32_RTC);
@@ -815,11 +815,11 @@ void DisplayVersionToCraft(void)
 ///----------------------------------------------------------------------------
 void TestExternalSamplingSource(void)
 {
-extern void startExternalRTCClock(uint16 sampleRate);
+extern void StartExternalRtcClock(uint16 sampleRate);
 	g_updateCounter = 1;
 	uint16 sampleRate = 1024;
 
-	startExternalRTCClock(sampleRate);
+	StartExternalRtcClock(sampleRate);
 
 	while (1==1)
 	{

@@ -63,7 +63,7 @@ void TCPLowLevelInit(void)
   SocketStatus = 0;
 
   // Initialize the network counter.
-  counter_init();
+  Counter_init();
 }
 
 

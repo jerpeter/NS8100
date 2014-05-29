@@ -49,31 +49,31 @@ static EVT_RECORD resultsEventRecord;
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void resultsMnDsply(WND_LAYOUT_STRUCT*);
-void resultsMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
-EVT_RECORD* getResultsEventInfoFromCache(uint32 fileEventNumber);
+void ResultsMenuDisplay(WND_LAYOUT_STRUCT*);
+void ResultsMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
+EVT_RECORD* GetResultsEventInfoFromCache(uint32 fileEventNumber);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void resultsMn(INPUT_MSG_STRUCT msg)
+void ResultsMenu(INPUT_MSG_STRUCT msg)
 {
 	static WND_LAYOUT_STRUCT wnd_layout;
 	static MN_LAYOUT_STRUCT mn_layout;
 
-	resultsMnProc(msg, &wnd_layout, &mn_layout);
+	ResultsMenuProc(msg, &wnd_layout, &mn_layout);
 
 	if (g_activeMenu == RESULTS_MENU)
 	{
-		resultsMnDsply(&wnd_layout);
-		writeMapToLcd(g_mmap);
+		ResultsMenuDisplay(&wnd_layout);
+		WriteMapToLcd(g_mmap);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void resultsMnProc(INPUT_MSG_STRUCT msg,
+void ResultsMenuProc(INPUT_MSG_STRUCT msg,
                   WND_LAYOUT_STRUCT *wnd_layout_ptr,
                   MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
@@ -102,8 +102,8 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 		g_resultsRamSummaryPtr = g_lastCompletedRamSummaryIndex;
 		g_updateResultsEventRecord = YES;
 		
-		s_monitorSessionFirstEvent = getStartingEventNumberForCurrentMonitorLog();
-		s_monitorSessionLastEvent = getUniqueEventNumber(g_resultsRamSummaryPtr);
+		s_monitorSessionFirstEvent = GetStartingEventNumberForCurrentMonitorLog();
+		s_monitorSessionLastEvent = GetUniqueEventNumber(g_resultsRamSummaryPtr);
 
 		// Check if we have recorded enough events to wrap the ram summary table
 		if ((s_monitorSessionLastEvent - s_monitorSessionFirstEvent) >= TOTAL_RAM_SUMMARIES)
@@ -132,7 +132,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 				}
 
 				// Assign a timer to re-enter monitor mode
-				assignSoftTimer(AUTO_MONITOR_TIMER_NUM, delay, autoMonitorTimerCallBack);
+				AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, delay, AutoMonitorTimerCallBack);
 			}
 		}
 	}
@@ -169,10 +169,10 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 					{
 						if (g_monitorModeActiveChoice == MB_FIRST_CHOICE)
 						{
-							stopMonitoring(g_triggerRecord.op_mode, EVENT_PROCESSING);
+							StopMonitoring(g_triggerRecord.op_mode, EVENT_PROCESSING);
 
 							// Restore the autoPrint just in case the user escaped from the printout
-							getRecData(&temp_g_helpRecord, 0, REC_HELP_USER_MENU_TYPE);
+							GetRecordData(&temp_g_helpRecord, 0, REC_HELP_USER_MENU_TYPE);
 							g_helpRecord.autoPrint = temp_g_helpRecord.autoPrint;
 
 							SETUP_MENU_MSG(MAIN_MENU);
@@ -221,7 +221,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 						}
 						else // MINIGRAPH_UNIT
 						{
-							messageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
+							MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 						}
 					}
     	        break;
@@ -283,7 +283,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 					{
 						if (msg.data[0] == DOWN_ARROW_KEY)
 						{
-							if (getUniqueEventNumber(g_resultsRamSummaryPtr) < s_monitorSessionLastEvent)
+							if (GetUniqueEventNumber(g_resultsRamSummaryPtr) < s_monitorSessionLastEvent)
 							{
 								g_resultsRamSummaryPtr++;
 								g_updateResultsEventRecord = YES;
@@ -296,7 +296,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 						}
 						else // msg.data[0] == UP_ARROW_KEY
 						{
-							if (getUniqueEventNumber(g_resultsRamSummaryPtr) > s_monitorSessionFirstEvent)
+							if (GetUniqueEventNumber(g_resultsRamSummaryPtr) > s_monitorSessionFirstEvent)
 							{
 								g_resultsRamSummaryPtr--;
 								g_updateResultsEventRecord = YES;
@@ -316,12 +316,12 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 						mn_msg.length = 1;
 						mn_msg.cmd = KEYPRESS_MENU_CMD;
 						mn_msg.data[0] = msg.data[0];
-						sendInputMsg(&mn_msg);
+						SendInputMsg(&mn_msg);
 
 						mn_msg.length = 1;
 						mn_msg.cmd = KEYPRESS_MENU_CMD;
 						mn_msg.data[0] = ENTER_KEY;
-						sendInputMsg(&mn_msg);
+						SendInputMsg(&mn_msg);
 					}
 				break;
 
@@ -335,7 +335,7 @@ void resultsMnProc(INPUT_MSG_STRUCT msg,
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
+void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	static uint8 dotState = 0;
 	uint8 adjust;
@@ -364,14 +364,14 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if (g_summaryListMenuActive == YES)
 		{
 			debug("Results menu: updating event record cache\n");
-			getEventFileRecord(g_summaryEventNumber, &resultsEventRecord);
+			GetEventFileRecord(g_summaryEventNumber, &resultsEventRecord);
 		}			
 		else
 		{
-			getResultsEventInfoFromCache(g_resultsRamSummaryPtr->fileEventNum);
+			GetResultsEventInfoFromCache(g_resultsRamSummaryPtr->fileEventNum);
 
 			// Old and too slow - Throw away at some point
-			//getEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
+			//GetEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
 		}		
 
 		g_updateResultsEventRecord = NO;
@@ -384,7 +384,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				eventRecord->summary.calculated.t.peak);
 	}
 
-	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
     //-------------------------------------------------------------
 	// Event specific scaling factors
@@ -418,8 +418,8 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
-		byteSet(&buff[0], 0, sizeof(buff));
-		byteSet(&dotBuff[0], 0, sizeof(dotBuff));
+		ByteSet(&buff[0], 0, sizeof(buff));
+		ByteSet(&dotBuff[0], 0, sizeof(dotBuff));
 
 		for (i = 0; i < dotState; i++)		dotBuff[i] = '.';
 		for (; i < (TOTAL_DOTS-1); i++)		dotBuff[i] = ' ';
@@ -483,7 +483,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
 	// Write string to screen
-	wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
+	WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
 
 	// Next line after title
 	// Check if monitoring
@@ -491,10 +491,10 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		if (g_monitorOperationMode == WAVEFORM_MODE)
 		{
-			//if (getUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionFirstEvent)
+			//if (GetUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionFirstEvent)
 			if (eventRecord->summary.eventNumber == s_monitorSessionFirstEvent)
 				arrowChar = DOWN_ARROW_CHAR;
-			//else if (getUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionLastEvent)
+			//else if (GetUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionLastEvent)
 			else if (eventRecord->summary.eventNumber == s_monitorSessionLastEvent)
 				arrowChar = UP_ARROW_CHAR;
 			else
@@ -504,7 +504,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				sprintf(buff, "%c", arrowChar);
 			    wnd_layout_ptr->curr_col = 120;
-			    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			}
 		}
 	}
@@ -514,7 +514,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			sprintf(buff, "%c", g_summaryListArrowChar);
 		    wnd_layout_ptr->curr_col = 120;
-		    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
 	}
 
@@ -524,13 +524,13 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	if ((g_sampleProcessing == ACTIVE_STATE) && (eventRecord->summary.mode != MANUAL_CAL_MODE))
 	{
 		// Date & Time
-		time = getCurrentTime();
-	    byteSet(&buff[0], 0, sizeof(buff));
+		time = GetCurrentTime();
+	    ByteSet(&buff[0], 0, sizeof(buff));
 		length = (uint8)sprintf(buff,"(%02d:%02d:%02d)", time.hour, time.min, time.sec);
 
 		// Setup current column, Write string to screen, Advance to next row
 		wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-		wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
+		WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
 
@@ -545,27 +545,27 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
     //-------------------------------------------------------------
     // Date Time Info
-    byteSet(&buff[0], 0, sizeof(buff));
-    convertTimeStampToString(
+    ByteSet(&buff[0], 0, sizeof(buff));
+    ConvertTimeStampToString(
     	buff, (void*)(&eventRecord->summary.captured.eventTime), REC_DATE_TIME_DISPLAY);
 
-    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
     wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
     //-------------------------------------------------------------
     // Event number
-    byteSet(&buff[0], 0, sizeof(buff));
+    ByteSet(&buff[0], 0, sizeof(buff));
 
 	// Remove commented code assuming display works
 	//if (g_summaryListMenuActive == YES)
 		sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), eventRecord->summary.eventNumber);
-	//else sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), getUniqueEventNumber(g_resultsRamSummaryPtr));
+	//else sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), GetUniqueEventNumber(g_resultsRamSummaryPtr));
 
-    wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
+    WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
 
     //-------------------------------------------------------------
     // Units inches or millimeters LABEL
-    byteSet(&buff[0], 0, sizeof(buff));
+    ByteSet(&buff[0], 0, sizeof(buff));
 	if (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
 	{
 		sprintf(buff, "mg/s");
@@ -581,17 +581,17 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	// Setup current column, Write string to screen, Advance to next row
     wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 12);
-    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
     wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
     //-------------------------------------------------------------
     // R LABEL, T LABEL, V LABEL
-    byteSet(&buff[0], 0, sizeof(buff));
+    ByteSet(&buff[0], 0, sizeof(buff));
     sprintf(buff,"   R      T      V");
 
 	// Setup current column, Write string to screen,
     wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
     wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
     //-------------------------------------------------------------
@@ -610,7 +610,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     	normalize_max_peak *= (float)METRIC;
     }
 
-    byteSet(&buff[0], 0, sizeof(buff));
+    ByteSet(&buff[0], 0, sizeof(buff));
     if (normalize_max_peak >= 100)
         sprintf(buff, "%05.2f", normalize_max_peak);
     else if (normalize_max_peak >= 10)
@@ -620,7 +620,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	// Setup current column, Write string to screen,
     wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
     //-------------------------------------------------------------
     // T DATA
@@ -637,7 +637,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     	normalize_max_peak *= (float)METRIC;
 	}
 
-    byteSet(&buff[0], 0, sizeof(buff));
+    ByteSet(&buff[0], 0, sizeof(buff));
     if (normalize_max_peak >= 100)
         sprintf(buff, "%05.2f", normalize_max_peak);
     else if (normalize_max_peak >= 10)
@@ -647,7 +647,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	// Setup current column, Write string to screen,
     wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 6);
-    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
     //-------------------------------------------------------------
     // V DATA
@@ -664,7 +664,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     	normalize_max_peak *= (float)METRIC;
 	}
 
-    byteSet(&buff[0], 0, sizeof(buff));
+    ByteSet(&buff[0], 0, sizeof(buff));
     if (normalize_max_peak >= 100)
         sprintf(buff, "%05.2f", normalize_max_peak);
     else if (normalize_max_peak >= 10)
@@ -674,12 +674,12 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	// Setup current column, Write string to screen, Advance to next row
     wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 6);
-    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
     wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
     //-------------------------------------------------------------
     // R FREQ, T FREQ, V FREQ
-	byteSet(&buff[0], 0, sizeof(buff));
+	ByteSet(&buff[0], 0, sizeof(buff));
 	if ((eventRecord->summary.mode == BARGRAPH_MODE) || 
 			((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
 	{
@@ -698,13 +698,13 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	// Setup current column, Write string to screen,
     wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
     wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 	if (g_displayAlternateResultState == VECTOR_SUM_RESULTS)
 	{
-	    byteSet(&buff[0], 0, sizeof(buff));
-		byteSet(&displayFormat[0], 0, sizeof(displayFormat));
+	    ByteSet(&buff[0], 0, sizeof(buff));
+		ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
 
 		tempVS = sqrtf((float)eventRecord->summary.calculated.vectorSumPeak) / (float)div;
 
@@ -724,14 +724,14 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		sprintf(buff,"VS %.2f %s", tempVS, displayFormat);
 	    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-		wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
 #if 0 // Port lost change
 	else if (g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
 	{
-	    byteSet(&buff[0], 0, sizeof(buff));
-		byteSet(&displayFormat[0], 0, sizeof(displayFormat));
+	    ByteSet(&buff[0], 0, sizeof(buff));
+		ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
 
 		if (eventRecord->summary.calculated.r.peak > eventRecord->summary.calculated.v.peak)
 		{
@@ -822,14 +822,14 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		sprintf(buff,"PEAK DISP %6f %s", tempPeakDisp, displayFormat);
 	    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-		wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
 #else // Updated
 	else if(g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
 	{
-		byteSet(&buff[0], 0, sizeof(buff));
-		byteSet(&displayFormat[0], 0, sizeof(displayFormat));
+		ByteSet(&buff[0], 0, sizeof(buff));
+		ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
 
 		if(eventRecord->summary.calculated.r.displacement > eventRecord->summary.calculated.v.displacement)
 		{
@@ -873,7 +873,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		sprintf(buff,"PEAK DISP %5.4f %s", tempPeakDisp, displayFormat);
 		wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-		wndMpWrtString((uint8*)buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
 	else if(g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS)
@@ -919,7 +919,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		sprintf(buff,"PEAK ACC %5.4f %s", tempPeakAcc, displayFormat);
 		wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-		wndMpWrtString((uint8*)buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
 #endif
@@ -927,14 +927,14 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 	    //-------------------------------------------------------------
 	    // AIR
-	    byteSet(&buff[0], 0, sizeof(buff));
+	    ByteSet(&buff[0], 0, sizeof(buff));
 	    sprintf(buff, "%s", getLangText(AIR_TEXT));
 	    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-	    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	    //-------------------------------------------------------------
 	    // Air
-	    byteSet(&buff[0], 0, sizeof(buff));
+	    ByteSet(&buff[0], 0, sizeof(buff));
 
 #if 1 // Port lost change
 		if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
@@ -942,11 +942,11 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if(eventRecord->summary.parameters.airSensorType == MILLIBAR_TYPE)
 #endif
 		{
-		    sprintf(buff,"%0.3f mb", hexToMB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+		    sprintf(buff,"%0.3f mb", HexToMB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}
 		else // Report Air in DB
 		{
-		    sprintf(buff,"%0.1f dB", hexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+		    sprintf(buff,"%0.1f dB", HexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}
 
 	    adjust = (uint8)strlen(buff);
@@ -957,11 +957,11 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		// Setup current column, Write string to screen,
 	    wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 4);
-	    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 		//-------------------------------------------------------------
 		// A FREQ
-		byteSet(&buff[0], 0, sizeof(buff));
+		ByteSet(&buff[0], 0, sizeof(buff));
 
 		if ((eventRecord->summary.mode == BARGRAPH_MODE) ||
 				((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
@@ -976,7 +976,7 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		// Setup current column, Write string to screen,
 	    wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 6 - adjust);
-	    wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	}
 
 	if (eventRecord->summary.mode == MANUAL_CAL_MODE)
@@ -993,36 +993,36 @@ void resultsMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 
 		wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-		wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	}
 
 	if (g_promtForCancelingPrintJobs == TRUE)
 	{
-		messageBorder();
-		messageTitle(getLangText(VERIFY_TEXT));
-		messageText(getLangText(CANCEL_ALL_PRINT_JOBS_Q_TEXT));
-		messageChoice(MB_YESNO);
+		MessageBorder();
+		MessageTitle(getLangText(VERIFY_TEXT));
+		MessageText(getLangText(CANCEL_ALL_PRINT_JOBS_Q_TEXT));
+		MessageChoice(MB_YESNO);
 
 		if (g_monitorModeActiveChoice == MB_SECOND_CHOICE)
-			messageChoiceActiveSwap(MB_YESNO);
+			MessageChoiceActiveSwap(MB_YESNO);
 	}
 
 	if (g_promtForLeavingMonitorMode == TRUE)
 	{
-		messageBorder();
-		messageTitle(getLangText(WARNING_TEXT));
-		messageText(getLangText(DO_YOU_WANT_TO_LEAVE_MONITOR_MODE_Q_TEXT));
-		messageChoice(MB_YESNO);
+		MessageBorder();
+		MessageTitle(getLangText(WARNING_TEXT));
+		MessageText(getLangText(DO_YOU_WANT_TO_LEAVE_MONITOR_MODE_Q_TEXT));
+		MessageChoice(MB_YESNO);
 
 		if (g_monitorModeActiveChoice == MB_SECOND_CHOICE)
-			messageChoiceActiveSwap(MB_YESNO);
+			MessageChoiceActiveSwap(MB_YESNO);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-EVT_RECORD* getResultsEventInfoFromCache(uint32 fileEventNumber)
+EVT_RECORD* GetResultsEventInfoFromCache(uint32 fileEventNumber)
 {
 	uint32 i = 0;
 
@@ -1034,7 +1034,7 @@ EVT_RECORD* getResultsEventInfoFromCache(uint32 fileEventNumber)
 			debug("Results menu: Found cached event record info\n");
 			//return (&g_resultsEventCache[i]);
 
-			byteCpy(&resultsEventRecord, &g_resultsEventCache[i], sizeof(EVT_RECORD));
+			ByteCpy(&resultsEventRecord, &g_resultsEventCache[i], sizeof(EVT_RECORD));
 
 			return (NULL);
 		}
@@ -1044,7 +1044,7 @@ EVT_RECORD* getResultsEventInfoFromCache(uint32 fileEventNumber)
 
 	// If here, no cache entry was found, load the event file to get the event record info
 	debug("Summary menu: Adding event record info to cache\n");
-	getEventFileRecord(fileEventNumber, &resultsEventRecord);
+	GetEventFileRecord(fileEventNumber, &resultsEventRecord);
 
 	//return (&resultsEventRecord);
 	return (NULL);
@@ -1053,9 +1053,9 @@ EVT_RECORD* getResultsEventInfoFromCache(uint32 fileEventNumber)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void cacheResultsEventInfo(EVT_RECORD* eventRecordToCache)
+void CacheResultsEventInfo(EVT_RECORD* eventRecordToCache)
 {
-	byteCpy(&g_resultsEventCache[g_resultsCacheIndex], eventRecordToCache, sizeof(EVT_RECORD));
+	ByteCpy(&g_resultsEventCache[g_resultsCacheIndex], eventRecordToCache, sizeof(EVT_RECORD));
 	
 	if (++g_resultsCacheIndex >= 50) { g_resultsCacheIndex = 0; }
 }

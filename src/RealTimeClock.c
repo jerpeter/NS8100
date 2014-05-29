@@ -52,32 +52,32 @@ BOOLEAN InitExternalRtc(void)
 
 	//debug("Init Soft timer\n");
 	// Initialize the softtimer array.
-	byteSet(&g_rtcTimerBank[0], 0, (sizeof(SOFT_TIMER_STRUCT) * NUM_OF_SOFT_TIMERS));
+	ByteSet(&g_rtcTimerBank[0], 0, (sizeof(SOFT_TIMER_STRUCT) * NUM_OF_SOFT_TIMERS));
 
 	debug("\r\n\n______________________________________________________________________________________\n");
 	debug("External RTC Init...\n");
 
 	// Get the base of the external RTC memory map
-	rtcRead(RTC_CONTROL_1_ADDR, 10, (uint8*)&rtcMap);
+	ExternalRtcRead(RTC_CONTROL_1_ADDR, 10, (uint8*)&rtcMap);
 	
 	if ((rtcMap.seconds & RTC_CLOCK_INTEGRITY) || (rtcMap.control_1 & RTC_CLOCK_STOPPED))
 	{
 		debug("Init RTC: Clock integrity not guaranteed or Clock stopped, setting default time and date\n");
 
 		rtcMap.control_1 |= RTC_24_HOUR_MODE;
-		rtcWrite(RTC_CONTROL_1_ADDR, 1, &rtcMap.control_1);
+		ExternalRtcWrite(RTC_CONTROL_1_ADDR, 1, &rtcMap.control_1);
 
 		// Setup an initial date and time
 		time.year = 12;
 		time.month = 8;
 		time.day = 1;
-		time.weekday = getDayOfWeek(time.year, time.month, time.day);
+		time.weekday = GetDayOfWeek(time.year, time.month, time.day);
 		time.hour = 8;
 		time.min = 1;
 		time.sec = 1;
 
-		setRtcDate(&time);
-		setRtcTime(&time);
+		SetExternalRtcDate(&time);
+		SetExternalRtcTime(&time);
 	}
 	else
 	{
@@ -87,14 +87,14 @@ BOOLEAN InitExternalRtc(void)
 #if 1 // Normal
 	// Clear all flags (write 0's) and disable interrupt generation for all but timestamp pin
 	rtcMap.control_2 = (RTC_ALARM_INT_ENABLE);
-	rtcWrite(RTC_CONTROL_2_ADDR, 1, &rtcMap.control_2);
+	ExternalRtcWrite(RTC_CONTROL_2_ADDR, 1, &rtcMap.control_2);
 #else // Test
 	// Disable alarm settings and clear flags 
-	DisableRtcAlarm();
+	DisableExternalRtcAlarm();
 #endif
 
 	// Need to initialize the global Current Time
-	updateCurrentTime();
+	UpdateCurrentTime();
 
 	// Check for RTC reset
 	if ((g_currentTime.year == 0) || (g_currentTime.month == 0) || (g_currentTime.day == 0))
@@ -105,12 +105,12 @@ BOOLEAN InitExternalRtc(void)
 		g_currentTime.month = 0x08;
 		g_currentTime.day = 0x01;
 
-		setRtcDate(&g_currentTime);
+		SetExternalRtcDate(&g_currentTime);
 	}
 
 	// Set the clock out control to turn off any clock interrupt generation
 	rtcMap.clock_out_control = (0x07);
-	rtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
+	ExternalRtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
 
 	return (TRUE);
 }
@@ -118,7 +118,7 @@ BOOLEAN InitExternalRtc(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void startExternalRTCClock(uint16 sampleRate)
+void StartExternalRtcClock(uint16 sampleRate)
 {
 	RTC_MEM_MAP_STRUCT rtcMap;
 	uint8 clockRate;
@@ -138,13 +138,13 @@ void startExternalRTCClock(uint16 sampleRate)
 	}
 
 	rtcMap.clock_out_control = (clockRate);
-	rtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
+	ExternalRtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void stopExternalRTCClock(void)
+void StopExternalRtcClock(void)
 {
 	RTC_MEM_MAP_STRUCT rtcMap;
 
@@ -152,13 +152,13 @@ void stopExternalRTCClock(void)
 
 	// Set the clock out control to turn off any clock interrupt generation
 	rtcMap.clock_out_control = (0x07);
-	rtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
+	ExternalRtcWrite(RTC_CLOCK_OUT_CONTROL_ADDR, 1, &rtcMap.clock_out_control);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 setRtcTime(DATE_TIME_STRUCT* time)
+uint8 SetExternalRtcTime(DATE_TIME_STRUCT* time)
 {
 	RTC_TIME_STRUCT rtcTime;
 	uint8 status = FAILED;
@@ -172,7 +172,7 @@ uint8 setRtcTime(DATE_TIME_STRUCT* time)
 		rtcTime.minutes = UINT8_CONVERT_TO_BCD(time->min, RTC_BCD_MINUTES_MASK);
 		rtcTime.seconds = UINT8_CONVERT_TO_BCD(time->sec, RTC_BCD_SECONDS_MASK);
 
-		rtcWrite(RTC_SECONDS_ADDR_TEMP, 3, (uint8*)&rtcTime);
+		ExternalRtcWrite(RTC_SECONDS_ADDR_TEMP, 3, (uint8*)&rtcTime);
 	}
 
 	return (status);
@@ -181,7 +181,7 @@ uint8 setRtcTime(DATE_TIME_STRUCT* time)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 setRtcDate(DATE_TIME_STRUCT* time)
+uint8 SetExternalRtcDate(DATE_TIME_STRUCT* time)
 {
 	RTC_DATE_STRUCT rtcDate;
 	uint8 status = FAILED;
@@ -201,11 +201,11 @@ uint8 setRtcDate(DATE_TIME_STRUCT* time)
 			rtcDate.days = UINT8_CONVERT_TO_BCD(time->day, RTC_BCD_DAYS_MASK);
 
 			// Calculate the weekday based on the new date
-			rtcDate.weekdays = getDayOfWeek(time->year, time->month, time->day);
+			rtcDate.weekdays = GetDayOfWeek(time->year, time->month, time->day);
 
 			//debug("Ext RTC: Apply Date: %x-%x-%x\n", rtcDate.months, rtcDate.days, rtcDate.years);
 
-			rtcWrite(RTC_DAYS_ADDR, 4, (uint8*)&rtcDate);
+			ExternalRtcWrite(RTC_DAYS_ADDR, 4, (uint8*)&rtcDate);
 		}
 	}
 
@@ -215,19 +215,19 @@ uint8 setRtcDate(DATE_TIME_STRUCT* time)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-DATE_TIME_STRUCT getRtcTime(void)
+DATE_TIME_STRUCT GetExternalRtcTime(void)
 {
 	DATE_TIME_STRUCT time;
 	RTC_DATE_TIME_STRUCT translateTime;
 
-	rtcRead(RTC_SECONDS_ADDR_TEMP, 7, (uint8*)&translateTime);
+	ExternalRtcRead(RTC_SECONDS_ADDR_TEMP, 7, (uint8*)&translateTime);
 
 	// Get time and date registers (24 Hour settings), BCD format
 	time.year = BCD_CONVERT_TO_UINT8(translateTime.years, RTC_BCD_YEARS_MASK);
 	time.month = BCD_CONVERT_TO_UINT8(translateTime.months, RTC_BCD_MONTHS_MASK);
 	time.day = BCD_CONVERT_TO_UINT8(translateTime.days, RTC_BCD_DAYS_MASK);
 #if 0 // ns7100
-	time.weekday = getDayOfWeek(time.year, time.month, time.day);
+	time.weekday = GetDayOfWeek(time.year, time.month, time.day);
 #else // ns8100
 	time.weekday = BCD_CONVERT_TO_UINT8(translateTime.weekdays, RTC_BCD_WEEKDAY_MASK);
 #endif
@@ -243,16 +243,16 @@ DATE_TIME_STRUCT getRtcTime(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void updateCurrentTime(void)
+void UpdateCurrentTime(void)
 {
 	g_rtcCurrentTickCount = 0;
-	g_currentTime = getRtcTime();
+	g_currentTime = GetExternalRtcTime();
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-DATE_TIME_STRUCT getCurrentTime(void)
+DATE_TIME_STRUCT GetCurrentTime(void)
 {
 	DATE_TIME_STRUCT currentTime = g_currentTime;
 	uint16 expiredSecs = (uint16)(g_rtcCurrentTickCount / 2);
@@ -261,7 +261,7 @@ DATE_TIME_STRUCT getCurrentTime(void)
 	if (expiredSecs >= 60)
 	{
 		// Unlikely this case will ever occur. It's been over a minute, just re-read the real time
-		updateCurrentTime();
+		UpdateCurrentTime();
 		currentTime = g_currentTime;
 	}
 	// Check if the amount of expired seconds results in a minute change
@@ -274,7 +274,7 @@ DATE_TIME_STRUCT getCurrentTime(void)
 			if ((currentTime.hour + 1) > 23)
 			{
 				// Quit fooling around, and re-read the real time
-				updateCurrentTime();
+				UpdateCurrentTime();
 				currentTime = g_currentTime;
 			}
 			else // Still within the day
@@ -306,9 +306,9 @@ DATE_TIME_STRUCT getCurrentTime(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void convertCurrentTimeForFat(uint8* fatTimeField)
+void ConvertCurrentTimeForFat(uint8* fatTimeField)
 {
-	DATE_TIME_STRUCT currentTime = getCurrentTime();
+	DATE_TIME_STRUCT currentTime = GetCurrentTime();
 	uint16 conversionTime;
 	
 /*
@@ -332,9 +332,9 @@ void convertCurrentTimeForFat(uint8* fatTimeField)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void convertCurrentDateForFat(uint8* fatDateField)
+void ConvertCurrentDateForFat(uint8* fatDateField)
 {
-	DATE_TIME_STRUCT currentDate = getCurrentTime();
+	DATE_TIME_STRUCT currentDate = GetCurrentTime();
 	uint16 conversionDate;
 
 /*
@@ -358,7 +358,7 @@ void convertCurrentDateForFat(uint8* fatDateField)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void DisableRtcAlarm(void)
+void DisableExternalRtcAlarm(void)
 {
 	RTC_ALARM_STRUCT disableAlarm;
 
@@ -371,17 +371,17 @@ void DisableRtcAlarm(void)
 	disableAlarm.weekday_alarm = RTC_DISABLE_ALARM;
 	
 	// Turn off all the alarm enable flags
-	rtcWrite(RTC_SECOND_ALARM_ADDR, 5, (uint8*)&disableAlarm);
+	ExternalRtcWrite(RTC_SECOND_ALARM_ADDR, 5, (uint8*)&disableAlarm);
 	
 	// Clear the Alarm flag
-	rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+	ExternalRtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
 }
 
 #if 1 // Normal
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
+void EnableExternalRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 {
 	RTC_ALARM_STRUCT enableAlarm;
 
@@ -393,10 +393,10 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 	enableAlarm.second_alarm = (UINT8_CONVERT_TO_BCD(second, RTC_BCD_SECONDS_MASK) | RTC_ENABLE_ALARM);
 	enableAlarm.weekday_alarm = RTC_DISABLE_ALARM;
 	
-	rtcWrite(RTC_SECOND_ALARM_ADDR, 5, (uint8*)&enableAlarm);
+	ExternalRtcWrite(RTC_SECOND_ALARM_ADDR, 5, (uint8*)&enableAlarm);
 
 	// Clear the Alarm flag
-	rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+	ExternalRtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
 	
 	debug("Enable RTC Alarm with Day: %d, Hour: %d, Minute: %d and Second: %d\n", day, hour, minute, second);
 }
@@ -404,7 +404,7 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
+void EnableExternalRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 {
 	RTC_ALARM_STRUCT enableAlarm;
 
@@ -416,31 +416,31 @@ void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 	enableAlarm.second_alarm = (UINT8_CONVERT_TO_BCD(second, RTC_BCD_SECONDS_MASK) | RTC_ENABLE_ALARM);
 	enableAlarm.weekday_alarm = RTC_DISABLE_ALARM;
 	
-	rtcWrite(RTC_SECOND_ALARM_ADDR, 5, (uint8*)&enableAlarm);
+	ExternalRtcWrite(RTC_SECOND_ALARM_ADDR, 5, (uint8*)&enableAlarm);
 
 	// Clear the Alarm flag
-	rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+	ExternalRtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
 }
 #endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void rtcWrite(uint8 registerAddress, int length, uint8* data)
+void ExternalRtcWrite(uint8 registerAddress, int length, uint8* data)
 {
 	uint16 dataContainer = 0;
 
 	spi_selectChip(&AVR32_SPI1, RTC_SPI_NPCS);
 
 	// Small delay before the RTC device is accessible
-	soft_usecWait(RTC_ACCESS_DELAY);
+	SoftUsecWait(RTC_ACCESS_DELAY);
 
 	spi_write(&AVR32_SPI1, (RTC_WRITE_CMD | (registerAddress & 0x1F)));
 
 	while (length--)
 	{
 		// Small delay before the RTC device is accessible
-		soft_usecWait(RTC_ACCESS_DELAY);
+		SoftUsecWait(RTC_ACCESS_DELAY);
 
 		dataContainer = *data++;
 		spi_write(&AVR32_SPI1, dataContainer);
@@ -452,21 +452,21 @@ void rtcWrite(uint8 registerAddress, int length, uint8* data)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void rtcRead(uint8 registerAddress, int length, uint8* data)
+void ExternalRtcRead(uint8 registerAddress, int length, uint8* data)
 {
 	uint16 dataContainer = 0;
 
 	spi_selectChip(&AVR32_SPI1, RTC_SPI_NPCS);
 
 	// Small delay before the RTC device is accessible
-	soft_usecWait(RTC_ACCESS_DELAY);
+	SoftUsecWait(RTC_ACCESS_DELAY);
 
 	spi_write(&AVR32_SPI1, (RTC_READ_CMD | (registerAddress & 0x1F)));
 
 	while (length--)
 	{
 		// Small delay before the RTC device is accessible
-		soft_usecWait(RTC_ACCESS_DELAY);
+		SoftUsecWait(RTC_ACCESS_DELAY);
 
 		spi_write(&AVR32_SPI1, 0xFF);
 		spi_read(&AVR32_SPI1, &dataContainer);
@@ -481,12 +481,12 @@ void rtcRead(uint8 registerAddress, int length, uint8* data)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-static DATE_TIME_STRUCT timestampEventCache[10];
-static uint16 timestampEventIndex = 0;
+static DATE_TIME_STRUCT TimestampEventCache[10];
+static uint16 TimestampEventIndex = 0;
 
-void timestampEvent(void)
+void TimestampEvent(void)
 {
-	if (timestampEventFlag = YES)
+	if (TimestampEventFlag = YES)
 	{
 		
 	}

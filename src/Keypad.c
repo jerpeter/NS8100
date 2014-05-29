@@ -64,7 +64,7 @@ void CycleSleepMode(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-BOOLEAN keypad(uint8 keySource)
+BOOLEAN KeypadProcessing(uint8 keySource)
 {
 	INPUT_MSG_STRUCT msg;
 	INPUT_MSG_STRUCT* p_msg = &msg;
@@ -89,7 +89,7 @@ BOOLEAN keypad(uint8 keySource)
 	if (g_disableDebugPrinting)
 	{
 		// Wait to make sure key is still depressed (not a bouncing signal on release)
-		soft_usecWait(3 * SOFT_MSECS);
+		SoftUsecWait(3 * SOFT_MSECS);
 	}
 
 	s_keyMap[0] = (uint8)(~(*keypadAddress));
@@ -102,23 +102,23 @@ BOOLEAN keypad(uint8 keySource)
 	{
 #if 0 // Test
 		// Dealing with a key release, need to check for a debouncing key
-		s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-		soft_usecWait(5 * SOFT_MSECS);
-		s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-		soft_usecWait(5 * SOFT_MSECS);
-		s_keyMap[3] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+		s_keyMap[1] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
+		SoftUsecWait(5 * SOFT_MSECS);
+		s_keyMap[2] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
+		SoftUsecWait(5 * SOFT_MSECS);
+		s_keyMap[3] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 	
 		// Logic AND all the keypad reads to filter any signal flopping
 		s_keyMap[0] = (s_keyMap[1] & s_keyMap[2] & s_keyMap[3]);
 #else
-		s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+		s_keyMap[0] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 
 		if (s_keyMap[0])
 		{
 			for (i = 0; i < DEBOUNCE_READS; i++)
 			{
-				s_keyMap[0] &= read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-				soft_usecWait(i * 50);
+				s_keyMap[0] &= ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
+				SoftUsecWait(i * 50);
 			}
 		}
 #endif
@@ -126,7 +126,7 @@ BOOLEAN keypad(uint8 keySource)
 	else // Keypad interrupt and key timer hasn't been started, or key processing source was the timer
 	{
 		// Key is being pressed, and only one read should be sufficient for detecting the key
-		s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+		s_keyMap[0] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 	}
 #endif
 
@@ -193,7 +193,7 @@ BOOLEAN keypad(uint8 keySource)
 		while (g_kpadInterruptWhileProcessing == YES)
 		{
 			g_kpadInterruptWhileProcessing = NO;
-			read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+			ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 		}
 
 #if 0 // ns7100
@@ -308,7 +308,7 @@ BOOLEAN keypad(uint8 keySource)
 
 			if (shiftKeyPressed == ON)
 			{
-				p_msg->data[0] = getShiftChar(keyPressed);
+				p_msg->data[0] = GetShiftChar(keyPressed);
 				//debug("Keypad: Shifted key: %c\n", (char)p_msg->data[0]);
 			}
 			else
@@ -330,7 +330,7 @@ BOOLEAN keypad(uint8 keySource)
 		}
 
 		// Enqueue the message
-		sendInputMsg(p_msg);
+		SendInputMsg(p_msg);
 
 		// Done processing repeating key
 	}
@@ -400,11 +400,11 @@ BOOLEAN keypad(uint8 keySource)
 				else
 				{
 					//RTC_MEM_MAP_STRUCT rtcMap;
-					//rtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
+					//ExternalRtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
 					//debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
 
 					//__monitorLogTblKey = 0;
-					//initMonitorLog();
+					//InitMonitorLog();
 					
 					//g_triggerRecord.trec.sample_rate += 1024;
 					//debug("New sample rate: %d\n", g_triggerRecord.trec.sample_rate);
@@ -434,7 +434,7 @@ BOOLEAN keypad(uint8 keySource)
 
 					if (shiftKeyPressed == ON)
 					{
-						p_msg->data[0] = getShiftChar(keyPressed);
+						p_msg->data[0] = GetShiftChar(keyPressed);
 						//debug("Keypad: Shifted key: %c\n", (char)p_msg->data[0]);
 					}
 					else
@@ -480,7 +480,7 @@ BOOLEAN keypad(uint8 keySource)
 				if ((reg_EPPDR.bit.EPPD0 == 0x00) && (keyPressed == ENTER_KEY))
 #else // ns8100
 				// Check if the On key is being pressed
-				if (read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0x04)
+				if (ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0x04)
 #endif
 				{
 					// Reset the factory setup process
@@ -530,15 +530,15 @@ extern void BootLoadManager(void);
 					}
 					else if (keyPressed == KEY_BACKLIGHT)
 					{
-						displayTimerCallBack();
-						lcdPwTimerCallBack();
+						DisplayTimerCallBack();
+						LcdPwTimerCallBack();
 						
 						g_kpadProcessingFlag = DEACTIVATED;
 
 						while (g_kpadInterruptWhileProcessing == YES)
 						{
 							g_kpadInterruptWhileProcessing = NO;
-							read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+							ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 						}
 
 						return(PASSED);
@@ -552,7 +552,7 @@ extern void BootLoadManager(void);
 				}
 
 				// Enqueue the message
-				sendInputMsg(p_msg);
+				SendInputMsg(p_msg);
 			}
 		}
 	}
@@ -562,7 +562,7 @@ extern void BootLoadManager(void);
 	while (g_kpadInterruptWhileProcessing == YES)
 	{
 		g_kpadInterruptWhileProcessing = NO;
-		read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+		ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 	}
 
 	return(PASSED);
@@ -571,53 +571,53 @@ extern void BootLoadManager(void);
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void keypressEventMgr(void)
+void KeypressEventMgr(void)
 {
 	// Check if the LCD Power was turned off
 	if (g_lcdPowerFlag == DISABLED)
 	{
 		g_lcdPowerFlag = ENABLED;
 		raiseSystemEventFlag(UPDATE_MENU_EVENT);
-		setLcdContrast(g_contrast_value);
-		powerControl(LCD_POWER_ENABLE, ON);
-		initLcdDisplay();					// Setup LCD segments and clear display buffer
-		assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+		SetLcdContrast(g_contrast_value);
+		PowerControl(LCD_POWER_ENABLE, ON);
+		InitLcdDisplay();					// Setup LCD segments and clear display buffer
+		AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
 		// Check if the unit is monitoring, if so, reassign the monitor update timer
 		if (g_sampleProcessing == ACTIVE_STATE)
 		{
 			debug("Keypress Timer Mgr: enabling Monitor Update Timer.\n");
-			assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
+			AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
 		}
 	}
 	else // Reassign the LCD Power countdown timer
 	{
-		assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+		AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 	}
 
 	// Check if the LCD Backlight was turned off
 	if (g_lcdBacklightFlag == DISABLED)
 	{
 		g_lcdBacklightFlag = ENABLED;
-		setLcdBacklightState(BACKLIGHT_DIM);
-		assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
+		SetLcdBacklightState(BACKLIGHT_DIM);
+		AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 	}
 	else // Reassign the LCD Backlight countdown timer
 	{
-		assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
+		AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 	}
 
 	// Check if Auto Monitor is active and not in monitor mode
 	if ((g_helpRecord.autoMonitorMode != AUTO_NO_TIMEOUT) && (g_sampleProcessing != ACTIVE_STATE))
 	{
-		assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), autoMonitorTimerCallBack);
+		AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 getShiftChar(uint8 inputChar)
+uint8 GetShiftChar(uint8 inputChar)
 {
 	switch (inputChar)
 	{
@@ -649,7 +649,7 @@ uint8 getShiftChar(uint8 inputChar)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 handleCtrlKeyCombination(uint8 inputChar)
+uint8 HandleCtrlKeyCombination(uint8 inputChar)
 {
 	switch (inputChar)
 	{
@@ -658,7 +658,7 @@ uint8 handleCtrlKeyCombination(uint8 inputChar)
 
 		case 'C':
 			{
-				handleManualCalibration();
+				HandleManualCalibration();
 			}
 		break;
 
@@ -672,7 +672,7 @@ uint8 handleCtrlKeyCombination(uint8 inputChar)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 getKeypadKey(uint8 mode)
+uint8 GetKeypadKey(uint8 mode)
 {
 	//uint8 columnSelection = 0;
 	//uint8 columnIndex = 0;
@@ -685,36 +685,36 @@ uint8 getKeypadKey(uint8 mode)
 
 	if (mode == WAIT_FOR_KEY)
 	{
-		keyPressed = scanKeypad();
+		keyPressed = ScanKeypad();
 		// If there is a key, wait until it's depressed
 		while (keyPressed != KEY_NONE)
 		{
-			soft_usecWait(1000);
-			keyPressed = scanKeypad();
+			SoftUsecWait(1000);
+			keyPressed = ScanKeypad();
 		}
 
 		// Wait for a key to be pressed
-		keyPressed = scanKeypad();
+		keyPressed = ScanKeypad();
 		while (keyPressed == KEY_NONE)
 		{
-			soft_usecWait(1000);
-			keyPressed = scanKeypad();
+			SoftUsecWait(1000);
+			keyPressed = ScanKeypad();
 		}
 
 		// Wait for a key to be pressed
-		while (scanKeypad() != KEY_NONE)
+		while (ScanKeypad() != KEY_NONE)
 		{
-			soft_usecWait(1000);
+			SoftUsecWait(1000);
 		}
 	}
 	else // mode = CHECK_ONCE_FOR_KEY
 	{
 		// Check once if there is a key depressed
-		keyPressed = scanKeypad();
+		keyPressed = ScanKeypad();
 
 		if (keyPressed == KEY_NONE)
 		{
-			soft_usecWait(1000);
+			SoftUsecWait(1000);
 
 			g_kpadProcessingFlag = DEACTIVATED;
 			clearSystemEventFlag(KEYPAD_EVENT);
@@ -722,20 +722,20 @@ uint8 getKeypadKey(uint8 mode)
 			while (g_kpadInterruptWhileProcessing == YES)
 			{
 				g_kpadInterruptWhileProcessing = NO;
-				read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+				ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 			}
 
 			return (0);
 		}
 	}
 
-	soft_usecWait(1000);
+	SoftUsecWait(1000);
 
 	// Reassign the LCD Power countdown timer
-	assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+	AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
 	// Reassign the LCD Backlight countdown timer
-	assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
+	AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 
 	g_kpadProcessingFlag = DEACTIVATED;
 
@@ -745,7 +745,7 @@ uint8 getKeypadKey(uint8 mode)
 	while (g_kpadInterruptWhileProcessing == YES)
 	{
 		g_kpadInterruptWhileProcessing = NO;
-		read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+		ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 	}
 
 	return (keyPressed);
@@ -754,9 +754,7 @@ uint8 getKeypadKey(uint8 mode)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 messageBoxKeyInput = 0;
-extern uint8 messageBoxActiveFlag;
-uint8 scanKeypad(void)
+uint8 ScanKeypad(void)
 {
 	uint8 rowMask = 0;
 	uint8 keyPressed = KEY_NONE;
@@ -764,18 +762,18 @@ uint8 scanKeypad(void)
 
 	//debug("MB: Reading keypad...\n");
 
-	//soft_usecWait(250 * SOFT_MSECS);
+	//SoftUsecWait(250 * SOFT_MSECS);
 	
 #if 0 // Test (Keypad read before hardware mod in attempt to find a keypress)
-	read_mcp23018(IO_ADDRESS_KPD, INTFB);
+	ReadMcp23018(IO_ADDRESS_KPD, INTFB);
 #endif
 
 #if 0 // Normal
-	s_keyMap[0] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	s_keyMap[0] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 #else // Test
-	s_keyMap[1] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-	s_keyMap[2] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
-	s_keyMap[3] = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	s_keyMap[1] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
+	s_keyMap[2] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
+	s_keyMap[3] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 	
 	s_keyMap[0] = (s_keyMap[1] & s_keyMap[2] & s_keyMap[3]);
 #endif
@@ -791,13 +789,6 @@ uint8 scanKeypad(void)
 		}
 
 		rowMask <<= 1;
-	}
-
-	if (messageBoxActiveFlag == YES)
-	{
-#if 0 // ns7100
-		keyPressed = messageBoxKeyInput;
-#endif
 	}
 
 	return (keyPressed);

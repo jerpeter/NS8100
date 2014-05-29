@@ -160,9 +160,9 @@ MODEM_STATUS_STRUCT g_modemStatus;			// Record for modem data processing.
 CMD_BUFFER_STRUCT g_isrMessageBufferStruct;
 CMD_BUFFER_STRUCT* g_isrMessageBufferPtr = &g_isrMessageBufferStruct;
 void (*menufunc_ptrs[TOTAL_NUMBER_OF_MENUS]) (INPUT_MSG_STRUCT) = {
-		mainMn, loadRecMn, summaryMn, monitorMn, resultsMn,
-		overWriteMn, batteryMn, dateTimeMn, lcdContrastMn, timerModeTimeMn,
-		timerModeDateMn, calSetupMn, userMn, monitorLogMn
+		MainMenu, LoadRecordMenu, SummaryMenu, MonitorMenu, ResultsMenu,
+		OverwriteMenu, BatteryMn, DateTimeMn, LcdContrastMn, TimerModeTimeMenu,
+		TimerModeDateMenu, CalSetupMn, UserMenu, MonitorLogMn
 };
 MN_MEM_DATA_STRUCT g_menuPtr[DEFAULT_MN_SIZE];
 USER_MENU_TAGS_STRUCT g_menuTags[TOTAL_TAGS] = {

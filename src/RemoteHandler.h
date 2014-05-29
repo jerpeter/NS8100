@@ -22,19 +22,19 @@
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-//	Procedure: cmdMessageHandler() - Start determining the type of command.
-uint8 cmdMessageHandler(CMD_BUFFER_STRUCT* inCmd);
+//	Procedure: RemoteCmdMessageHandler() - Start determining the type of command.
+uint8 RemoteCmdMessageHandler(CMD_BUFFER_STRUCT* inCmd);
 
 
-//	Procedure: cmdMessageHandlerInit() - Initialize the buffer variables
-void cmdMessageHandlerInit(void);
+//	Procedure: RemoteCmdMessageHandlerInit() - Initialize the buffer variables
+void RemoteCmdMessageHandlerInit(void);
 
-//	Procedure: cmdMessageProcessing() Processing the incomming data 
+//	Procedure: RemoteCmdMessageProcessing() Processing the incomming data
 //	string and determine if a valid cmd has been received. 
-void cmdMessageProcessing(void);
-void processCraftData(void);
-void craftInitStatusFlags(void);
-void initCraftInterruptBuffers(void);
+void RemoteCmdMessageProcessing(void);
+void ProcessCraftData(void);
+void CraftInitStatusFlags(void);
+void InitCraftInterruptBuffers(void);
 
 #endif // _REMOTE_COMMON_H_
 

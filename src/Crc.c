@@ -135,7 +135,7 @@ static const uint32 s_CCITT32[TABLE_SIZE] =
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 calcCrc8(uint8* data, uint32 length, uint8 seed)
+uint8 CalcCrc8(uint8* data, uint32 length, uint8 seed)
 {
     uint32 i;
 

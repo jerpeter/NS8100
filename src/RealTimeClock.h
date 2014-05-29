@@ -1198,18 +1198,18 @@ typedef struct
 ///	Prototypes
 ///----------------------------------------------------------------------------
 BOOLEAN InitExternalRtc(void);
-uint8 setRtcTime(DATE_TIME_STRUCT* time);
-uint8 setRtcDate(DATE_TIME_STRUCT* time);
-DATE_TIME_STRUCT getRtcTime(void);
-void updateCurrentTime(void);
-DATE_TIME_STRUCT getCurrentTime(void);
-void DisableRtcAlarm(void);
-void EnableRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second);
-void convertCurrentTimeForFat(uint8* fatTimeField);
-void convertCurrentDateForFat(uint8* fatTimeDate);
-void rtcWrite(uint8 register_address, int length, uint8* data);
-void rtcRead(uint8 register_address, int length, uint8* data);
-void startExternalRTCClock(uint16 sampleRate);
-void stopExternalRTCClock(void);
+uint8 SetExternalRtcTime(DATE_TIME_STRUCT* time);
+uint8 SetExternalRtcDate(DATE_TIME_STRUCT* time);
+DATE_TIME_STRUCT GetExternalRtcTime(void);
+void UpdateCurrentTime(void);
+DATE_TIME_STRUCT GetCurrentTime(void);
+void DisableExternalRtcAlarm(void);
+void EnableExternalRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second);
+void ConvertCurrentTimeForFat(uint8* fatTimeField);
+void ConvertCurrentDateForFat(uint8* fatTimeDate);
+void ExternalRtcWrite(uint8 register_address, int length, uint8* data);
+void ExternalRtcRead(uint8 register_address, int length, uint8* data);
+void StartExternalRtcClock(uint16 sampleRate);
+void StopExternalRtcClock(void);
 
 #endif // _RTC_H_

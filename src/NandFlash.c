@@ -39,7 +39,7 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void writeNandData(uint8 data)
+void WriteNandData(uint8 data)
 {
 	*(uint8*)(NAND_FLASH_ADDRESS + NAND_DATA_ADDRESS) = data;
 }
@@ -47,7 +47,7 @@ void writeNandData(uint8 data)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void writeNandCommand(uint8 data)
+void WriteNandCommand(uint8 data)
 {
 	*(uint8*)(NAND_FLASH_ADDRESS + NAND_COMMAND_ADDRESS) = data;
 }
@@ -55,7 +55,7 @@ void writeNandCommand(uint8 data)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void writeNandAddress(uint8 data)
+void WriteNandAddress(uint8 data)
 {
 	*(uint8*)(NAND_FLASH_ADDRESS + NAND_ADDRESS_ADDRESS) = data;
 }
@@ -63,30 +63,30 @@ void writeNandAddress(uint8 data)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void writeNandFullAddress(uint32 data)
+void WriteNandFullAddress(uint32 data)
 {
-	writeNandAddress((uint8)(data));
-	writeNandAddress((uint8)(data >> 9));
-	writeNandAddress((uint8)(data >> 17));
-	writeNandAddress((uint8)(data >> 25));
+	WriteNandAddress((uint8)(data));
+	WriteNandAddress((uint8)(data >> 9));
+	WriteNandAddress((uint8)(data >> 17));
+	WriteNandAddress((uint8)(data >> 25));
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void writeNandAddressParts(uint8 block, uint8 page, uint8 byte);
-void writeNandAddressParts(uint8 block, uint8 page, uint8 byte)
+void WriteNandAddressParts(uint8 block, uint8 page, uint8 byte);
+void WriteNandAddressParts(uint8 block, uint8 page, uint8 byte)
 {
-	writeNandAddress((uint8)(byte));
-	writeNandAddress((uint8)((block << 5) | page));
-	writeNandAddress((uint8)(block >> 3));
-	writeNandAddress((uint8)(block >> 11));
+	WriteNandAddress((uint8)(byte));
+	WriteNandAddress((uint8)((block << 5) | page));
+	WriteNandAddress((uint8)(block >> 3));
+	WriteNandAddress((uint8)(block >> 11));
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 readNandData(void)
+uint8 ReadNandData(void)
 {
 	uint8 data;
 
@@ -98,18 +98,18 @@ uint8 readNandData(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 readNandAddress(uint8 type, uint32 address)
+uint8 ReadNandAddress(uint8 type, uint32 address)
 {
-	writeNandCommand(type);
+	WriteNandCommand(type);
 
-	soft_usecWait(50);
+	SoftUsecWait(50);
 
-	writeNandFullAddress(address);
+	WriteNandFullAddress(address);
 
-	//soft_usecWait(12);
-	soft_usecWait(50);
+	//SoftUsecWait(12);
+	SoftUsecWait(50);
 
-	return (readNandData());
+	return (ReadNandData());
 }
 
 ///----------------------------------------------------------------------------
@@ -121,7 +121,7 @@ void ReadNandFlash(uint8* dest, uint32 address, uint32 length)
 
 	for (i=0; i<length; i++)
 	{
-		*dest = readNandAddress((uint8)(address & 0x10), address);
+		*dest = ReadNandAddress((uint8)(address & 0x10), address);
 
 		dest++;
 		address++;
@@ -137,7 +137,7 @@ void WriteNandFlash(uint8* src, uint32 address, uint32 length)
 
 	for (i=0; i<length; i++)
 	{
-		pageProgramNand((uint8)(address & 0x10), address, src, 1);
+		PageProgramNand((uint8)(address & 0x10), address, src, 1);
 
 		src++;
 		address++;
@@ -147,20 +147,20 @@ void WriteNandFlash(uint8* src, uint32 address, uint32 length)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 readNandID(void)
+uint8 ReadNandID(void)
 {
 	uint8 manfCode;
 	uint8 deviceCode;
 
-	writeNandCommand(0x90);
-	writeNandFullAddress(0x00);
+	WriteNandCommand(0x90);
+	WriteNandFullAddress(0x00);
 
-	soft_usecWait(10);
+	SoftUsecWait(10);
 
-	manfCode = readNandData();
-	deviceCode = readNandData();
+	manfCode = ReadNandData();
+	deviceCode = ReadNandData();
 
-	debugPrint(RAW, "Nand Flash Device: Manufacturer Code: 0x%x, Device Code: 0x%x\n", manfCode, deviceCode);
+	DebugPrint(RAW, "Nand Flash Device: Manufacturer Code: 0x%x, Device Code: 0x%x\n", manfCode, deviceCode);
 
 	if (manfCode == 0x20)
 		return (PASSED);
@@ -171,18 +171,18 @@ uint8 readNandID(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void readNandStatus(void)
+void ReadNandStatus(void)
 {
 	uint8 status;
 
-	writeNandCommand(0x70);
+	WriteNandCommand(0x70);
 
-	soft_usecWait(1);
+	SoftUsecWait(1);
 
-	status = readNandData();
+	status = ReadNandData();
 
-	debugPrint(RAW, "Reading Staus register returns data: 0x%x\n  ", status);
-	debugPrint(RAW, "Write Protect: %s, Device Status: %s, Last Operation: %s\n  ",
+	DebugPrint(RAW, "Reading Staus register returns data: 0x%x\n  ", status);
+	DebugPrint(RAW, "Write Protect: %s, Device Status: %s, Last Operation: %s\n  ",
 				(status & NAND_WRITE_PROTECTION_DISABLED_BIT) ? "Disabled" : "Enabled",
 				(status & NAND_DEVICE_READY_BIT) ? "Ready" : "Busy",
 				(status & NAND_OPERATION_FAILED) ? "Failed" : "Successful");
@@ -193,12 +193,12 @@ void readNandStatus(void)
 ///----------------------------------------------------------------------------
 void waitWhileBusyNand(void)
 {
-	writeNandCommand(0x70);
+	WriteNandCommand(0x70);
 
-	//soft_usecWait(1);
-	soft_usecWait(50);
+	//SoftUsecWait(1);
+	SoftUsecWait(50);
 
-	while ((readNandData() & NAND_DEVICE_READY_BIT) == 0x00)
+	while ((ReadNandData() & NAND_DEVICE_READY_BIT) == 0x00)
 	{
 		// Do nothing
 	}
@@ -207,71 +207,71 @@ void waitWhileBusyNand(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void issueNandReset(void)
+void IssueNandReset(void)
 {
-	writeNandCommand(0xFF);
+	WriteNandCommand(0xFF);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void blockEraseNand(uint32 blockAddress)
+void BlockEraseNand(uint32 blockAddress)
 {
-	writeNandCommand(0x60);
+	WriteNandCommand(0x60);
 
-	writeNandAddress((uint8)(blockAddress >> 9));
-	writeNandAddress((uint8)(blockAddress >> 17));
-	writeNandAddress((uint8)(blockAddress >> 25));
+	WriteNandAddress((uint8)(blockAddress >> 9));
+	WriteNandAddress((uint8)(blockAddress >> 17));
+	WriteNandAddress((uint8)(blockAddress >> 25));
 
-	writeNandCommand(0xD0);
+	WriteNandCommand(0xD0);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void pageProgramNand(uint8 type, uint32 address, uint8* data, uint16 length)
+void PageProgramNand(uint8 type, uint32 address, uint8* data, uint16 length)
 {
 	uint16 i = 0;
 
-	writeNandCommand(type);
+	WriteNandCommand(type);
 
-	soft_usecWait(50);
+	SoftUsecWait(50);
 
-	writeNandCommand(0x80);
+	WriteNandCommand(0x80);
 
-	soft_usecWait(50);
+	SoftUsecWait(50);
 
-	writeNandFullAddress(address);
+	WriteNandFullAddress(address);
 
-	soft_usecWait(50);
+	SoftUsecWait(50);
 
 	for(i = 0; i < length; i++)
 	{
-		writeNandData(data[i]);
+		WriteNandData(data[i]);
 
-		soft_usecWait(50);
+		SoftUsecWait(50);
 	}
 
-	writeNandCommand(0x10);
+	WriteNandCommand(0x10);
 
-	soft_usecWait(500);
+	SoftUsecWait(500);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void copyBackNand(uint32 readAddress, uint32 writeAddress)
+void CopyBackNand(uint32 readAddress, uint32 writeAddress)
 {
 	//uint16 i = 0;
 
-	writeNandCommand(0x00);
+	WriteNandCommand(0x00);
 
-	writeNandFullAddress(readAddress);
+	WriteNandFullAddress(readAddress);
 
-	writeNandCommand(0x8A);
+	WriteNandCommand(0x8A);
 
-	writeNandFullAddress(writeAddress);
+	WriteNandFullAddress(writeAddress);
 
-	writeNandCommand(0x10);
+	WriteNandCommand(0x10);
 }
 

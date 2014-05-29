@@ -57,18 +57,18 @@ enum debugModes {RAW, NORM, WARN, ERR};
 
 // Print all debug statements
 #if (GLOBAL_DEBUG_PRINT_ENABLED == ALL_DEBUG)
-#define debugRaw(...) 	debugPrint(RAW, __VA_ARGS__)
-#define debug(...)    	debugPrint(NORM, __VA_ARGS__)
-#define debugWarn(...) 	debugPrint(WARN, __VA_ARGS__)
-#define debugErr(...) 	debugPrint(ERR, __VA_ARGS__)
-#define debugChar(x) 	debugPrintChar(x)
+#define debugRaw(...) 	DebugPrint(RAW, __VA_ARGS__)
+#define debug(...)    	DebugPrint(NORM, __VA_ARGS__)
+#define debugWarn(...) 	DebugPrint(WARN, __VA_ARGS__)
+#define debugErr(...) 	DebugPrint(ERR, __VA_ARGS__)
+#define debugChar(x) 	DebugPrintChar(x)
 
 // Print just warning and error debug statements
 #elif (GLOBAL_DEBUG_PRINT_ENABLED == WARNINGS_AND_ERRORS)
 #define debugRaw(...) 	;
 #define debug(...)    	;
-#define debugWarn(...) 	debugPrint(WARN, __VA_ARGS__)
-#define debugErr(...) 	debugPrint(ERR, __VA_ARGS__)
+#define debugWarn(...) 	DebugPrint(WARN, __VA_ARGS__)
+#define debugErr(...) 	DebugPrint(ERR, __VA_ARGS__)
 #define debugChar(x) 	;
 
 // Print just error debug statements
@@ -76,7 +76,7 @@ enum debugModes {RAW, NORM, WARN, ERR};
 #define debugRaw(...) 	;
 #define debug(...)    	;
 #define debugWarn(...) 	;
-#define debugErr(...) 	debugPrint(ERR, __VA_ARGS__)
+#define debugErr(...) 	DebugPrint(ERR, __VA_ARGS__)
 #define debugChar(x) 	;
 
 // Print no debug statements

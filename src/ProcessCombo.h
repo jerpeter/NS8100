@@ -30,17 +30,17 @@ void ProcessComboBargraphData(void);
 void UpdateComboJobTotals(CALCULATED_DATA_STRUCT *);
 void EndCombo(void);
 
-uint32 moveComboBarIntervalDataToFile(void);
-void moveComboSummaryIntervalDataToFile(void);
+uint32 MoveComboBarIntervalDataToFile(void);
+void MoveComboSummaryIntervalDataToFile(void);
 void MoveComboWaveformEventToFile(void);
 void MoveStartOfComboEventRecordToFile(void);
 void MoveEndOfComboEventRecordToFile(void);
 
-void advanceComboBarIntervalBufPtr(uint8);
-void advanceComboSumIntervalBufPtr(uint8);
+void AdvanceComboBarIntervalBufPtr(uint8);
+void AdvanceComboSumIntervalBufPtr(uint8);
 
 #if 0 // Unused
-BOOLEAN checkSpaceForComboBarSummaryInterval(void);
+BOOLEAN CheckSpaceForComboBarSummaryInterval(void);
 #endif
 
 #endif //_DATABUFFS_H_

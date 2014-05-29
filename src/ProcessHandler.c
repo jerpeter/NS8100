@@ -48,13 +48,13 @@ extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void dataIsrInit(void);
-void startDataCollection(uint32 sampleRate);
+void DataIsrInit(void);
+void StartDataCollection(uint32 sampleRate);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mode)
+void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mode)
 { 
 	UNUSED(cmd_id);
 
@@ -68,22 +68,22 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	}
 
 	// Display a message to be patient while the software disables the power off key and setups up parameters
-	overlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
+	OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
 
-	if (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == OFF)
+	if (GetPowerControlState(POWER_OFF_PROTECTION_ENABLE) == OFF)
 	{
 		debug("Start Trigger: Enabling Power Off Protection\n");
 
 		// Enable power off protection
-		powerControl(POWER_OFF_PROTECTION_ENABLE, ON);
+		PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
 	}
 
 	// Assign a one second menu update timer
-	assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
+	AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
 
 #if 0 	// Moved to system init
 	// Assign a one second menu keypad led update timer
-	//assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
+	//AssignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, KeypadLedUpdateTimerCallBack);
 #endif
 
 	// This is for error checking, If these checks are true, the defaults are not being set.
@@ -123,9 +123,9 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 	}
 
 	// Convert Air trigger from stored DB (log) to a linear count for A/D comparison
-	g_airTriggerCount = airTriggerConvert(trig_mn.airTriggerLevel);
-	g_alarm1AirTriggerCount = airTriggerConvert(g_helpRecord.alarmOneAirLevel);
-	g_alarm2AirTriggerCount = airTriggerConvert(g_helpRecord.alarmTwoAirLevel);
+	g_airTriggerCount = AirTriggerConvert(trig_mn.airTriggerLevel);
+	g_alarm1AirTriggerCount = AirTriggerConvert(g_helpRecord.alarmOneAirLevel);
+	g_alarm2AirTriggerCount = AirTriggerConvert(g_helpRecord.alarmTwoAirLevel);
 	
 	//-------------------------
 	// Debug Information
@@ -192,13 +192,13 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		g_manualCalSampleCount = 0;
 
 		// Create a new monitor log entry
-		newMonitorLogEntry(op_mode);
+		NewMonitorLogEntry(op_mode);
 	}
 
 	if ((op_mode == BARGRAPH_MODE) || (op_mode == COMBO_MODE))
 	{
 		g_fileProcessActiveUsbLockout = ON;
-		bargraphForcedCalibration();
+		BargraphForcedCalibration();
 	}
 
 	// Initialize buffers and settings and gp_ramEventRecord
@@ -232,11 +232,11 @@ void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 
 #if 0 // Necessary? Probably need 1 sec for changes, however 1 sec worth of samples thrown away with getting channel offsets 
 	// Delay for Analog cutoff and gain select changes to propagate
-	soft_usecWait(500 * SOFT_MSECS);
+	SoftUsecWait(500 * SOFT_MSECS);
 #endif
 
 	// Monitor some data.. oh yeah
-	startDataCollection(trig_mn.sample_rate);
+	StartDataCollection(trig_mn.sample_rate);
 }
 
 #if 1
@@ -248,21 +248,21 @@ extern void Setup_8100_EIC_External_RTC_ISR(void);
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void startDataCollection(uint32 sampleRate)
+void StartDataCollection(uint32 sampleRate)
 {
 	// Enable the A/D
 	debug("Enable the A/D\n");
-	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
 
 	// Delay to allow AD to power up/stabilize
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 
 	// Setup the A/D Channel configuration
 	SetupADChannelConfig(sampleRate);
 	
 	// Get current A/D offsets for normalization
 	debug("Getting channel offsets...\n");
-	//overlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), 0);
+	//OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), 0);
 	GetChannelOffsets(sampleRate);
 
 	debug("Setup TC clocks...\n");
@@ -276,7 +276,7 @@ void startDataCollection(uint32 sampleRate)
 #endif
 
 	// Init a few key values for data collection
-	dataIsrInit();
+	DataIsrInit();
 
 	debug("Start sampling...\n");
 	// Start the timer for collecting data
@@ -284,9 +284,9 @@ void startDataCollection(uint32 sampleRate)
 	Start_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
 #if 1 // Normal
-	startExternalRTCClock(sampleRate);
+	StartExternalRtcClock(sampleRate);
 #else
-	startExternalRTCClock(1);
+	StartExternalRtcClock(1);
 #endif
 #endif
 
@@ -301,9 +301,9 @@ void startDataCollection(uint32 sampleRate)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void stopMonitoring(uint8 mode, uint8 operation)
+void StopMonitoring(uint8 mode, uint8 operation)
 {
-	overlayMessage(getLangText(STATUS_TEXT), "CLOSING MONITOR SESSION...", 0);
+	OverlayMessage(getLangText(STATUS_TEXT), "CLOSING MONITOR SESSION...", 0);
 
 	// Check if the unit is currently monitoring
 	if (g_sampleProcessing == ACTIVE_STATE)
@@ -314,7 +314,7 @@ void stopMonitoring(uint8 mode, uint8 operation)
 			g_doneTakingEvents = PENDING;
 
 			// Wait for any triggered events to finish sending
-			waitForEventProcessingToFinish();
+			WaitForEventProcessingToFinish();
 		}
 		
 #if 0 // ns7100 (Serves no useful purpose)
@@ -325,7 +325,7 @@ void stopMonitoring(uint8 mode, uint8 operation)
 #endif
 
 		// Stop the data transfers
-		stopDataCollection();
+		StopDataCollection();
 
 		// Reset the Waveform flag
 		g_doneTakingEvents = NO;
@@ -365,7 +365,7 @@ void stopMonitoring(uint8 mode, uint8 operation)
 		// Check if any events are waiting to still be processed
 		if (!getSystemEventState(TRIGGER_EVENT))
 		{
-			closeMonitorLogEntry();
+			CloseMonitorLogEntry();
 		}
 		
 #if 0 // Test (Display LCD message with mode for timer mode ending)
@@ -378,76 +378,76 @@ void stopMonitoring(uint8 mode, uint8 operation)
 		else if (mode == COMBO_MODE)
 			sprintf(&modeBuff[0], "%s", getLangText(COMBO_MODE_TEXT));
 		sprintf(&msgBuff[0], "%s MONITORING AND EVENT CLOSURE COMPLETE", modeBuff);
-		overlayMessage(getLangText(TIMER_MODE_TEXT), msgBuff, 3 * SOFT_SECS);
+		OverlayMessage(getLangText(TIMER_MODE_TEXT), msgBuff, 3 * SOFT_SECS);
 #endif		
 	}
 	
 	// Turn on the Green keypad LED
-	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
+	WriteMcp23018(IO_ADDRESS_KPD, GPIOA, ((ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
 
 	// Check if Auto Monitor is active and not in monitor mode
 	if ((g_helpRecord.autoMonitorMode != AUTO_NO_TIMEOUT) && (operation == EVENT_PROCESSING))
 	{
-		assignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), autoMonitorTimerCallBack);
+		AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void stopDataCollection(void)
+void StopDataCollection(void)
 {
 	g_sampleProcessing = IDLE_STATE;
 
 #if INTERNAL_SAMPLING_SOURCE
 	Stop_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-	stopExternalRTCClock();
+	StopExternalRtcClock();
 #endif
 
-	powerControl(ANALOG_SLEEP_ENABLE, ON);		
+	PowerControl(ANALOG_SLEEP_ENABLE, ON);
 
-	clearSoftTimer(MENU_UPDATE_TIMER_NUM);
+	ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 	
 #if 0 // Moved to system init
-	//clearSoftTimer(KEYPAD_LED_TIMER_NUM);
+	//ClearSoftTimer(KEYPAD_LED_TIMER_NUM);
 #endif
 
 	// Check if not in Timer Mode and if the Power Off protection is enabled
-	if ((g_helpRecord.timerMode != ENABLED) && (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
+	if ((g_helpRecord.timerMode != ENABLED) && (GetPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
 	{
 		// Disable power off protection
 		debug("Stop Trigger: Disabling Power Off Protection\n");
-		powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+		PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void stopDataClock(void)
+void StopDataClock(void)
 {
 	g_sampleProcessing = IDLE_STATE;
 
 #if INTERNAL_SAMPLING_SOURCE
 	Stop_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-	stopExternalRTCClock();
+	StopExternalRtcClock();
 #endif
 
-	powerControl(ANALOG_SLEEP_ENABLE, ON);		
+	PowerControl(ANALOG_SLEEP_ENABLE, ON);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void waitForEventProcessingToFinish(void)
+void WaitForEventProcessingToFinish(void)
 {
 	if (g_doneTakingEvents == PENDING)
 	{
 		debug("ISR Monitor process is still pending\n");
 		
-		overlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
+		OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
 
 		while (g_doneTakingEvents == PENDING)
 		{
@@ -461,7 +461,7 @@ extern void processAndMoveWaveformData_ISR_Inline(void);
 			}		
 #else // Normal
 			// Just wait for the cal and end immediately afterwards
-			soft_usecWait(250);
+			SoftUsecWait(250);
 #endif
 		}
 	}
@@ -471,7 +471,7 @@ extern void processAndMoveWaveformData_ISR_Inline(void);
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 seisTriggerConvert(float seismicTriggerLevel)
+uint16 SeismicTriggerConvert(float seismicTriggerLevel)
 {
     uint16 seisTriggerVal;
     uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
@@ -484,7 +484,7 @@ uint16 seisTriggerConvert(float seismicTriggerLevel)
 		// Convert the trigger level into a hex value for the 430 processor board.
 		seisTriggerVal = (uint16)(((float)convertToHex * (float)seismicTriggerLevel) + (float)0.5);	
 			
-		//debug("seisTriggerConvert: seismicTriggerLevel=%f seisTriggerVal = 0x%x convertToHex=%d\n", 
+		//debug("SeismicTriggerConvert: seismicTriggerLevel=%f seisTriggerVal = 0x%x convertToHex=%d\n",
 		//	seismicTriggerLevel, seisTriggerVal, convertToHex);
 	}
 	else
@@ -492,31 +492,31 @@ uint16 seisTriggerConvert(float seismicTriggerLevel)
 		seisTriggerVal = (uint16)seismicTriggerLevel;
 	}
 
-	return (swapInt(seisTriggerVal));
+	return (SwapInt(seisTriggerVal));
 }
 #endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 airTriggerConvert(uint32 airTriggerToConvert)
+uint16 AirTriggerConvert(uint32 airTriggerToConvert)
 {
 	// Check if the air trigger level is not no trigger and not manual trigger
 	if ((airTriggerToConvert != NO_TRIGGER_CHAR) && (airTriggerToConvert != MANUAL_TRIGGER_CHAR) && (airTriggerToConvert != EXTERNAL_TRIGGER_CHAR))
 	{
 #if 0 // Port lost change
 		// Convert the float db to an offset from 0 to 2048 and upscale to 16-bit
-		airTriggerToConvert = (dbToHex(airTriggerToConvert) * 16);
+		airTriggerToConvert = (DbToHex(airTriggerToConvert) * 16);
 #else // Updated
 		if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
 			// Convert dB to an offset from 0 to 2048 and upscale to 16-bit
-			airTriggerToConvert = (uint32)(dbToHex(airTriggerToConvert) * 16);
+			airTriggerToConvert = (uint32)(DbToHex(airTriggerToConvert) * 16);
 		}
 		else
 		{
 			// Convert mb to an offset from 0 to 2048 and upscale to 16-bit
-			airTriggerToConvert = (uint32)(mbToHex(airTriggerToConvert) * 16);
+			airTriggerToConvert = (uint32)(MbToHex(airTriggerToConvert) * 16);
 		}
 #endif
 	}
@@ -527,7 +527,7 @@ uint16 airTriggerConvert(uint32 airTriggerToConvert)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleManualCalibration(void)
+void HandleManualCalibration(void)
 {
 	FLASH_USAGE_STRUCT flashStats;
 	//uint32 manualCalProgressCheck = MAX_CAL_SAMPLES;
@@ -543,20 +543,20 @@ void handleManualCalibration(void)
 			// Check if still waiting for an event and not processing a cal and not waiting for a cal
 			if (g_busyProcessingEvent == NO)
 			{
-				getFlashUsageStats(&flashStats);
+				GetFlashUsageStats(&flashStats);
 				
 				// fix_ns8100
 				if ((g_helpRecord.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
 				{
-					overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
+					OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 				}
 				else
 				{
 					// Stop data transfer
-					stopDataClock();
+					StopDataClock();
 
 					// Perform Cal while in monitor mode
-					overlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
+					OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
 
 					InitDataBuffs(MANUAL_CAL_MODE);
 					g_manualCalFlag = TRUE;
@@ -565,16 +565,16 @@ void handleManualCalibration(void)
 					// Make sure Cal pulse is generated at low sensitivity
 					SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 
-					startDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
+					StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
 
 					// Wait for the Cal Pulse to complete, 250ms + 100ms
-					soft_usecWait(350 * SOFT_MSECS);
+					SoftUsecWait(350 * SOFT_MSECS);
 
 					// Just make absolutely sure we are done with the Cal pulse
 					while ((volatile uint32)g_manualCalSampleCount != 0) { }
 
 					// Stop data transfer
-					stopDataClock();
+					StopDataClock();
 
 					if (getSystemEventState(MANUEL_CAL_EVENT))
 						MoveManuelCalToFlash();
@@ -589,23 +589,23 @@ void handleManualCalibration(void)
 						SetSeismicGainSelect(SEISMIC_GAIN_HIGH);
 					}
 
-					startDataCollection(g_triggerRecord.trec.sample_rate);
+					StartDataCollection(g_triggerRecord.trec.sample_rate);
 				}
 			}
 		}					
 	}
 	else // Performing Cal outside of monitor mode
 	{
-		getFlashUsageStats(&flashStats);
+		GetFlashUsageStats(&flashStats);
 		
 		// fix_ns8100
 		if ((g_helpRecord.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
 		{
-			overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
+			OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 		}
 		else
 		{
-			overlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
+			OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
 
 			InitDataBuffs(MANUAL_CAL_MODE);
 			g_manualCalFlag = TRUE;
@@ -614,16 +614,16 @@ void handleManualCalibration(void)
 			// Make sure Cal pulse is generated at low sensitivity
 			SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 
-			startDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
+			StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
 			
 			// Wait for the Cal Pulse to complete, 250ms + 100ms
-			soft_usecWait(350 * SOFT_MSECS);
+			SoftUsecWait(350 * SOFT_MSECS);
 
 			// Just make absolutely sure we are done with the Cal pulse
 			while ((volatile uint32)g_manualCalSampleCount != 0) { }
 
 			// Stop data transfer
-			stopDataClock();
+			StopDataClock();
 
 			if (getSystemEventState(MANUEL_CAL_EVENT))
 				MoveManuelCalToFlash();
@@ -637,12 +637,12 @@ void handleManualCalibration(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void bargraphForcedCalibration(void)
+void BargraphForcedCalibration(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	uint8 pendingMode = g_triggerRecord.op_mode;
 	
-	overlayMessage(getLangText(STATUS_TEXT), "PERFORMING CALIBRATION", 0);
+	OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING CALIBRATION", 0);
 
 	g_bargraphForcedCal = YES;
 
@@ -664,20 +664,20 @@ void bargraphForcedCalibration(void)
 	// Send message to 430
 	//ISPI_SendMsg(MANUAL_CAL_PULSE_CMD);
 #else // ns8100
-	startDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
+	StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
 #endif
 
 	// No longer needed, handled in the ISR for Cal
 	//GenerateCalSignal();
 
 	// Wait for the Cal Pulse to complete, 250ms + 100ms
-	soft_usecWait(350 * SOFT_MSECS);
+	SoftUsecWait(350 * SOFT_MSECS);
 
 	// Just make absolutely sure we are done with the Cal pulse
 	while ((volatile uint32)g_manualCalSampleCount != 0) { /* spin */ }
 
 	// Stop data transfer
-	stopDataClock();
+	StopDataClock();
 
 	g_manualCalFlag = FALSE;
 	g_manualCalSampleCount = 0;
@@ -699,7 +699,7 @@ void bargraphForcedCalibration(void)
 	}
 
 	// Wait until after the Cal Pulse has completed
-	soft_usecWait(1 * SOFT_SECS);
+	SoftUsecWait(1 * SOFT_SECS);
 
 	g_activeMenu = MONITOR_MENU;
 
@@ -708,5 +708,5 @@ void bargraphForcedCalibration(void)
 	// Reset the mode back to Bargraph
 	g_triggerRecord.op_mode = pendingMode;
 
-	updateMonitorLogEntry();
+	UpdateMonitorLogEntry();
 }

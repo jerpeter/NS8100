@@ -59,7 +59,7 @@ void ProcessManuelCalPulse(void)
 			s_manualCalInProgess = TRUE;
 			if (g_freeEventBuffers != 0)
 			{
-				g_pendingEventRecord.summary.captured.eventTime = triggerTimeStamp = getCurrentTime();
+				g_pendingEventRecord.summary.captured.eventTime = triggerTimeStamp = GetCurrentTime();
 #if 0 // ns7100
 				g_summaryTable[g_eventBufferWriteIndex].linkPtr = g_eventBufferPretrigPtr;
 #endif
@@ -173,7 +173,7 @@ void MoveManuelCalToFlash(void)
 		
 		for (i = (uint16)g_samplesInCal; i != 0; i--)
 		{
-			if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+			if (g_bitShiftForAccuracy) AdjustSampleForBitAccuracy();
 
 			//=========================================================
 			// First channel - A
@@ -237,7 +237,7 @@ void MoveManuelCalToFlash(void)
 
 #if 0 // ns7100
 			// Store entire sample
-			storeData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
+			StoreData(g_currentEventSamplePtr, NUMBER_OF_CHANNELS_DEFAULT);
 #endif
 			
 			g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
@@ -253,25 +253,25 @@ void MoveManuelCalToFlash(void)
 		sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);   
 		sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);       
 
-		completeRamEventSummary(ramSummaryEntry, sumEntry);
-		cacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
+		CompleteRamEventSummary(ramSummaryEntry, sumEntry);
+		CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 
 		// Get new event file handle
-		g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+		g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
 		if (g_currentEventFileHandle == NULL)
 		{
 			debugErr("Failed to get a new file handle for the Manual Cal event!\n");
 			
-			//reInitSdCardAndFat32();
-			//g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+			//ReInitSdCardAndFat32();
+			//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 		}					
 		else // Write the file event to the SD card
 		{
 			char tempBuffer[50];
 					
 			sprintf(&tempBuffer[0], "CALIBRATION EVENT #%d BEING SAVED...", g_nextEventNumberToUse);
-			overlayMessage("EVENT COMPLETE", &tempBuffer[0], 0);
+			OverlayMessage("EVENT COMPLETE", &tempBuffer[0], 0);
 
 			// Write the event record header and summary
 			fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
@@ -286,10 +286,10 @@ void MoveManuelCalToFlash(void)
 			ramSummaryEntry->fileEventNum = g_nextEventNumberToUse;
 					
 			// Don't log a monitor entry for Manual Cal
-			//updateMonitorLogEntry();
+			//UpdateMonitorLogEntry();
 
 			// After event numbers have been saved, store current event number in persistent storage.
-			storeCurrentEventNumber();
+			StoreCurrentEventNumber();
 
 			// Now store the updated event number in the universal ram storage.
 			g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;

@@ -53,8 +53,8 @@ uint8 CalculateBargraphData(void);
 void UpdateBargraphJobTotals(CALCULATED_DATA_STRUCT *);
 void EndBargraph(void);
 
-uint32 moveBarIntervalDataToFile(void);
-void moveSummaryIntervalDataToFile(void);
+uint32 MoveBarIntervalDataToFile(void);
+void MoveSummaryIntervalDataToFile(void);
 
 #if 0 // ns7100
 void MoveBargraphEventDataToFlash(void);
@@ -63,9 +63,9 @@ void MoveBargraphEventDataToFlash(void);
 void MoveStartOfBargraphEventRecordToFlash(void);
 void MoveEndOfBargraphEventRecordToFlash(void);
 
-void advanceBarIntervalBufPtr(uint8);
-void advanceSumIntervalBufPtr(uint8);
+void AdvanceBarIntervalBufPtr(uint8);
+void AdvanceSumIntervalBufPtr(uint8);
 
-BOOLEAN checkSpaceForBarSummaryInterval(void);
+BOOLEAN CheckSpaceForBarSummaryInterval(void);
 
 #endif //_DATABUFFS_H_

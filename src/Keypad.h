@@ -86,12 +86,12 @@ enum {
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-BOOLEAN keypad(uint8 keySource);
-void keypressEventMgr(void);
-uint8 getShiftChar(uint8 inputChar);
-uint8 handleCtrlKeyCombination(uint8 inputChar);
-uint8 getKeypadKey(uint8 mode);
-uint8 scanKeypad(void);
+BOOLEAN KeypadProcessing(uint8 keySource);
+void KeypressEventMgr(void);
+uint8 GetShiftChar(uint8 inputChar);
+uint8 HandleCtrlKeyCombination(uint8 inputChar);
+uint8 GetKeypadKey(uint8 mode);
+uint8 ScanKeypad(void);
 
 #endif /* _KEYPAD_CMMN_H_ */
 

@@ -52,11 +52,11 @@ void StartNewBargraph(void)
 	}
 
 	// Initialize the Bar and Summary Interval buffer pointers to keep in sync
-	byteSet(&(g_bargraphBarInterval[0]), 0, (sizeof(BARGRAPH_BAR_INTERVAL_DATA) * NUM_OF_BAR_INTERVAL_BUFFERS));
-	byteSet(&(g_bargraphSummaryInterval[0]), 0, (SUMMARY_INTERVAL_SIZE_IN_BYTES * NUM_OF_SUM_INTERVAL_BUFFERS));
+	ByteSet(&(g_bargraphBarInterval[0]), 0, (sizeof(BARGRAPH_BAR_INTERVAL_DATA) * NUM_OF_BAR_INTERVAL_BUFFERS));
+	ByteSet(&(g_bargraphSummaryInterval[0]), 0, (SUMMARY_INTERVAL_SIZE_IN_BYTES * NUM_OF_SUM_INTERVAL_BUFFERS));
 
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
-	byteSet(&g_bargraphFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
+	ByteSet(&g_bargraphFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
 
 	g_summaryCount = 0;
 	g_oneSecondCnt = 0;			// Count the secs so that we can increment the sum capture rate.
@@ -71,14 +71,14 @@ void StartNewBargraph(void)
 	g_bargraphSumIntervalReadPtr = &(g_bargraphSummaryInterval[0]);
 
 	// Clear out the Bar Interval buffer to be used next
-	byteSet(g_bargraphBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
+	ByteSet(g_bargraphBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
-	byteSet(g_bargraphSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
+	ByteSet(g_bargraphSumIntervalWritePtr, 0, SUMMARY_INTERVAL_SIZE_IN_BYTES);
 
 	MoveStartOfBargraphEventRecordToFlash();
 
 	// Update the current monitor log entry
-	updateMonitorLogEntry();
+	UpdateMonitorLogEntry();
 }
 
 ///----------------------------------------------------------------------------
@@ -91,12 +91,12 @@ void EndBargraph(void)
 	while (CalculateBargraphData() == BG_BUFFER_NOT_EMPTY) {}
 
 	// For the last time, put the data into the event buffer.
-	eventDataFlag = moveBarIntervalDataToFile();
+	eventDataFlag = MoveBarIntervalDataToFile();
 
 	// If no data, both flags are zero, then skip, end of record.
 	if ((eventDataFlag > 0) || (g_summaryIntervalCnt>0))
 	{
-		moveSummaryIntervalDataToFile();
+		MoveSummaryIntervalDataToFile();
 	}
 
 	MoveEndOfBargraphEventRecordToFlash();
@@ -149,7 +149,7 @@ void ProcessBargraphData(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint32 moveBarIntervalDataToFile(void)
+uint32 MoveBarIntervalDataToFile(void)
 {
 	uint32 accumulatedBarIntervalCount = g_barIntervalCnt;
 
@@ -163,10 +163,10 @@ uint32 moveBarIntervalDataToFile(void)
 		g_pendingBargraphRecord.header.dataLength += sizeof(BARGRAPH_BAR_INTERVAL_DATA);
 
 		// Advance the Bar Interval global buffer pointer
-		advanceBarIntervalBufPtr(WRITE_PTR);
+		AdvanceBarIntervalBufPtr(WRITE_PTR);
 
 		// Clear out the Bar Interval buffer to be used next
-		byteSet(g_bargraphBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
+		ByteSet(g_bargraphBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 
 		// Count the total number of intervals captured.
 		g_bargraphSumIntervalWritePtr->barIntervalsCaptured++;
@@ -179,7 +179,7 @@ uint32 moveBarIntervalDataToFile(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void moveSummaryIntervalDataToFile(void)
+void MoveSummaryIntervalDataToFile(void)
 {
 #if 0 // Port lost change
 	float rFreq, vFreq, tFreq;
@@ -226,9 +226,9 @@ void moveSummaryIntervalDataToFile(void)
 	// Store timestamp for the end of the summary interval
 	g_summaryCount++;
 	g_bargraphSumIntervalWritePtr->summariesCaptured = g_summaryCount;
-	g_bargraphSumIntervalWritePtr->intervalEnd_Time = getCurrentTime();
+	g_bargraphSumIntervalWritePtr->intervalEnd_Time = GetCurrentTime();
 	g_bargraphSumIntervalWritePtr->batteryLevel =
-		(uint32)(100.0 * getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
+		(uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 	g_bargraphSumIntervalWritePtr->calcStructEndFlag = 0xEECCCCEE;	// End structure flag
 
 	// Reset summary interval count
@@ -241,11 +241,11 @@ void moveSummaryIntervalDataToFile(void)
 	UpdateBargraphJobTotals(g_bargraphSumIntervalWritePtr);
 
 	// Advance the Summary Interval global buffer pointer
-	advanceSumIntervalBufPtr(WRITE_PTR);
+	AdvanceSumIntervalBufPtr(WRITE_PTR);
 
 	// Clear out the Summary Interval and Freq Calc buffer to be used next
-	byteSet(g_bargraphSumIntervalWritePtr, 0, sizeof(CALCULATED_DATA_STRUCT));
-	byteSet(&g_bargraphFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
+	ByteSet(g_bargraphSumIntervalWritePtr, 0, sizeof(CALCULATED_DATA_STRUCT));
+	ByteSet(&g_bargraphFreqCalcBuffer, 0, sizeof(BARGRAPH_FREQ_CALC_BUFFER));
 }
 
 ///----------------------------------------------------------------------------
@@ -357,14 +357,14 @@ uint8 CalculateBargraphData(void)
 				// Sample matches current max, set match flag
 				g_bargraphFreqCalcBuffer.a.matchFlag = TRUE;
 				// Store timestamp in case this is the max (and count) we want to keep
-				aTempTime = getCurrentTime();
+				aTempTime = GetCurrentTime();
 			}
 			else
 			{
 				// Copy over new max
 				g_bargraphSumIntervalWritePtr->a.peak = aTempNorm;
 				// Update timestamp
-				g_bargraphSumIntervalWritePtr->a_Time = getCurrentTime();
+				g_bargraphSumIntervalWritePtr->a_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_bargraphFreqCalcBuffer.a.matchFlag = FALSE;
 			}
@@ -398,14 +398,14 @@ uint8 CalculateBargraphData(void)
 				// Sample matches current max, set match flag
 				g_bargraphFreqCalcBuffer.r.matchFlag = TRUE;
 				// Store timestamp in case this is the max (and count) we want to keep
-				rTempTime = getCurrentTime();
+				rTempTime = GetCurrentTime();
 			}
 			else
 			{
 				// Copy over new max
 				g_bargraphSumIntervalWritePtr->r.peak = rTempNorm;
 				// Update timestamp
-				g_bargraphSumIntervalWritePtr->r_Time = getCurrentTime();
+				g_bargraphSumIntervalWritePtr->r_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_bargraphFreqCalcBuffer.r.matchFlag = FALSE;
 			}
@@ -439,14 +439,14 @@ uint8 CalculateBargraphData(void)
 				// Sample matches current max, set match flag
 				g_bargraphFreqCalcBuffer.v.matchFlag = TRUE;
 				// Store timestamp in case this is the max (and count) we want to keep
-				vTempTime = getCurrentTime();
+				vTempTime = GetCurrentTime();
 			}
 			else
 			{
 				// Copy over new max
 				g_bargraphSumIntervalWritePtr->v.peak = vTempNorm;
 				// Update timestamp
-				g_bargraphSumIntervalWritePtr->v_Time = getCurrentTime();
+				g_bargraphSumIntervalWritePtr->v_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_bargraphFreqCalcBuffer.v.matchFlag = FALSE;
 			}
@@ -480,14 +480,14 @@ uint8 CalculateBargraphData(void)
 				// Sample matches current max, set match flag
 				g_bargraphFreqCalcBuffer.t.matchFlag = TRUE;
 				// Store timestamp in case this is the max (and count) we want to keep
-				tTempTime = getCurrentTime();
+				tTempTime = GetCurrentTime();
 			}
 			else
 			{
 				// Copy over new max
 				g_bargraphSumIntervalWritePtr->t.peak = tTempNorm;
 				// Update timestamp
-				g_bargraphSumIntervalWritePtr->t_Time = getCurrentTime();
+				g_bargraphSumIntervalWritePtr->t_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_bargraphFreqCalcBuffer.t.matchFlag = FALSE;
 			}
@@ -518,7 +518,7 @@ uint8 CalculateBargraphData(void)
 			// Store max vector sum
 			g_bargraphSumIntervalWritePtr->vectorSumPeak = vsTemp;
 			// Store timestamp
-			g_bargraphSumIntervalWritePtr->vs_Time = getCurrentTime();
+			g_bargraphSumIntervalWritePtr->vs_Time = GetCurrentTime();
 
 			if (vsTemp > g_vsJobPeak)
 			{
@@ -792,14 +792,14 @@ uint8 CalculateBargraphData(void)
 		//=================================================
 		if (++g_barIntervalCnt >= (uint32)(g_triggerRecord.bgrec.barInterval * g_triggerRecord.trec.sample_rate))
 		{
-			moveBarIntervalDataToFile();
+			MoveBarIntervalDataToFile();
 
 			//=================================================
 			// End of Summary Interval
 			//=================================================
 			if (++g_summaryIntervalCnt >= (uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
 			{
-				moveSummaryIntervalDataToFile();
+				MoveSummaryIntervalDataToFile();
 			}
 		}
 
@@ -826,7 +826,7 @@ void MoveBargraphEventDataToFlash(void)
 	{
 		// Write in data (alternates between Air and RVT max normalized values) for a bar interval
 #if 0 // ns7100
-		storeData(g_bargraphEventDataReadPtr, 1);
+		StoreData(g_bargraphEventDataReadPtr, 1);
 #else // ns8100
 		fl_fwrite(g_bargraphEventDataReadPtr, 1, 2, g_currentEventFileHandle);
 #endif
@@ -845,7 +845,7 @@ void MoveBargraphEventDataToFlash(void)
 void MoveStartOfBargraphEventRecordToFlash(void)
 {
 	// Get new file handle
-	g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+	g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
 	if (g_currentEventFileHandle == NULL)
 	{
@@ -866,7 +866,7 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 	g_pendingBargraphRecord.header.dataChecksum = 0xCCDD;
 	g_pendingBargraphRecord.header.dataCompression = 0;
 
-	g_pendingBargraphRecord.summary.captured.endTime = getCurrentTime();
+	g_pendingBargraphRecord.summary.captured.endTime = GetCurrentTime();
 
 	// Make sure at the beginning of the file
 	fl_fseek(g_currentEventFileHandle, 0, SEEK_SET);
@@ -878,13 +878,13 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 	debug("Bargraph event file closed\n");
 
 	// Store and increment the event number even if we do not save the event header information.
-	storeCurrentEventNumber();
+	StoreCurrentEventNumber();
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void advanceBarIntervalBufPtr(uint8 bufferType)
+void AdvanceBarIntervalBufPtr(uint8 bufferType)
 {
 	if (bufferType == READ_PTR)
 	{
@@ -903,7 +903,7 @@ void advanceBarIntervalBufPtr(uint8 bufferType)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void advanceSumIntervalBufPtr(uint8 bufferType)
+void AdvanceSumIntervalBufPtr(uint8 bufferType)
 {
 
 	if (bufferType == READ_PTR)
@@ -1013,13 +1013,13 @@ void UpdateBargraphJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-BOOLEAN checkSpaceForBarSummaryInterval(void)
+BOOLEAN CheckSpaceForBarSummaryInterval(void)
 {
 	FLASH_USAGE_STRUCT flashStats;
 	uint32 barIntervalSize;
 	BOOLEAN spaceLeft;
 
-	getFlashUsageStats(&flashStats);
+	GetFlashUsageStats(&flashStats);
 
 	barIntervalSize = (sizeof(CALCULATED_DATA_STRUCT) + (((g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval) + 1) * 8));
 

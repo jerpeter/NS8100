@@ -35,13 +35,13 @@ static char s_uartBuffer[256];
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-uint16 auto_baud(int32 channel)
+uint16 UartAutoBaud(int32 channel)
 {
 	volatile MMC2114_IMM *imm = mmc2114_get_immp();
 	uint16 testCharacter;
 	uint16 i,baud;
 
-	testCharacter = uart_getc(channel, UART_BLOCK);
+	testCharacter = UartGetc(channel, UART_BLOCK);
 	if (testCharacter == 0x55)
 	{
 		baud = 57600;
@@ -75,7 +75,7 @@ uint16 auto_baud(int32 channel)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0
-void uart_init(uint32 baudrate, int32 channel)
+void UartInit(uint32 baudrate, int32 channel)
 {
 	volatile MMC2114_IMM *imm = mmc2114_get_immp();
 	uint8  temp;
@@ -140,7 +140,7 @@ void uart_init(uint32 baudrate, int32 channel)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0
-void uartControl(uint8 control, int8 channel)
+void UartControl(uint8 control, int8 channel)
 {
 	volatile MMC2114_IMM *imm = mmc2114_get_immp();
 	uint8 temp;
@@ -201,7 +201,7 @@ void uartControl(uint8 control, int8 channel)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 nibbleToA(uint8 hexData)
+uint8 NibbleToA(uint8 hexData)
 {
 	uint8 hexNib = (uint8)(0x0F & hexData);
 
@@ -225,7 +225,7 @@ uint8 nibbleToA(uint8 hexData)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 modem_putc(uint8 byteData, uint8 convertAsciiFlag)
+uint8 ModemPutc(uint8 byteData, uint8 convertAsciiFlag)
 {
 	uint8 status = MODEM_SEND_FAILED;
 	uint8 hexData;
@@ -253,22 +253,22 @@ uint8 modem_putc(uint8 byteData, uint8 convertAsciiFlag)
 			{
 				// Convert the top nibble to hex
 				hexData = (uint8)((0xF0 & byteData) >> 4);
-				asciiData = nibbleToA(hexData);
+				asciiData = NibbleToA(hexData);
 
 				// Send the top nibble
-				uart_putc(asciiData,CRAFT_COM_PORT);
+				UartPutc(asciiData,CRAFT_COM_PORT);
 
 				// Convert the bottom nibble to hex
 				hexData = (uint8)(0x0F & byteData);
-				asciiData = nibbleToA(hexData);
+				asciiData = NibbleToA(hexData);
 
 				// Send the bottom nibble
-				uart_putc(asciiData, CRAFT_COM_PORT);
+				UartPutc(asciiData, CRAFT_COM_PORT);
 			}
 			else
 			{
 				// Send the byte of data
-				uart_putc(byteData, CRAFT_COM_PORT);
+				UartPutc(byteData, CRAFT_COM_PORT);
 			}
 
 			// Set status to success because data has been sent
@@ -282,7 +282,7 @@ uint8 modem_putc(uint8 byteData, uint8 convertAsciiFlag)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 modem_puts(uint8* byteData, uint32 dataLength, uint8 convertAsciiFlag)
+uint8 ModemPuts(uint8* byteData, uint32 dataLength, uint8 convertAsciiFlag)
 {
 	uint16 dataDex;
 	uint8* theData = byteData;
@@ -292,7 +292,7 @@ uint8 modem_puts(uint8* byteData, uint32 dataLength, uint8 convertAsciiFlag)
 
 	for (dataDex = 0; dataDex < dataLength; dataDex++)
 	{
-		if (MODEM_SEND_FAILED == modem_putc(*theData, convertAsciiFlag))
+		if (MODEM_SEND_FAILED == ModemPutc(*theData, convertAsciiFlag))
 		{
 			return (MODEM_SEND_FAILED);
 		}
@@ -313,7 +313,7 @@ extern int usart_write_char(volatile avr32_usart_t *usart, int c);
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void uart_putc(uint8 c, int32 channel)
+void UartPutc(uint8 c, int32 channel)
 {
 #if 0 // ns7100
 	volatile MMC2114_IMM *imm = mmc2114_get_immp();
@@ -362,31 +362,31 @@ void uart_putc(uint8 c, int32 channel)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void uart_write(void* b, int32 n, int32 channel)
+void UartWrite(void* b, int32 n, int32 channel)
 {
     char* s = (char*)b;
     while (n--)
     {
         if (*s == '\n')
         {
-            uart_putc('\r', channel);
+            UartPutc('\r', channel);
         }
-        uart_putc(*s++, channel);
+        UartPutc(*s++, channel);
     }
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void uart_puts(char* s, int32 channel)
+void UartPuts(char* s, int32 channel)
 {
     while (*s)
     {
         if (*s == '\n')
         {
-            uart_putc('\r', channel);
+            UartPutc('\r', channel);
         }
-        uart_putc(*s++, channel);
+        UartPutc(*s++, channel);
     }
 }
 
@@ -394,7 +394,7 @@ void uart_puts(char* s, int32 channel)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0
-BOOLEAN uart_char_waiting(int32 channel)
+BOOLEAN UartCharWaiting(int32 channel)
 {
     BOOLEAN charWaiting = FALSE;
 
@@ -417,14 +417,14 @@ BOOLEAN uart_char_waiting(int32 channel)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0
-uint8 uart_getc(int32 channel, uint8 mode)
+uint8 UartGetc(int32 channel, uint8 mode)
 {
     volatile MMC2114_IMM *imm = mmc2114_get_immp();
     volatile uint32 uartTimeout = UART_TIMEOUT_COUNT;
 
     if (channel == CRAFT_COM_PORT)
     {
-        while (!uart_char_waiting(channel))
+        while (!UartCharWaiting(channel))
         {
 			if ((mode == UART_TIMEOUT) && (uartTimeout-- == 0))
 				return (UART_TIMED_OUT);
@@ -434,7 +434,7 @@ uint8 uart_getc(int32 channel, uint8 mode)
     }
     else if (channel == RS485_COM_PORT)
     {
-        while (!uart_char_waiting(channel))
+        while (!UartCharWaiting(channel))
         {
 			if ((mode == UART_TIMEOUT) && (uartTimeout-- == 0))
 				return (UART_TIMED_OUT);
@@ -450,7 +450,7 @@ uint8 uart_getc(int32 channel, uint8 mode)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-char* uart_gets(char* s, int32 channel)
+char* UartGets(char* s, int32 channel)
 {
     char* b = s;
     BOOLEAN end = FALSE;
@@ -459,7 +459,7 @@ char* uart_gets(char* s, int32 channel)
 
     do
     {
-        data = uart_getc(channel, UART_BLOCK);
+        data = UartGetc(channel, UART_BLOCK);
         switch (data)
         {
             case '\b':
@@ -470,7 +470,7 @@ char* uart_gets(char* s, int32 channel)
                     b--;
                     if (channel != CRAFT_COM_PORT)
                     {
-                        uart_puts("\b \b", channel);
+                        UartPuts("\b \b", channel);
 					}
                 }
                 break;
@@ -481,7 +481,7 @@ char* uart_gets(char* s, int32 channel)
                     *b = 0;
                     if (channel != CRAFT_COM_PORT)
                     {
-                        uart_puts("\r\n", channel);
+                        UartPuts("\r\n", channel);
 					}
                     end = TRUE;
                 }
@@ -498,7 +498,7 @@ char* uart_gets(char* s, int32 channel)
                     *b++ = (char)data;
                     if (channel != CRAFT_COM_PORT)
                     {
-                        uart_putc((uint8)data, channel); // Echo the data back
+                        UartPutc((uint8)data, channel); // Echo the data back
                     }
                 }
                 break;
@@ -514,7 +514,7 @@ char* uart_gets(char* s, int32 channel)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-short craft(char* fmt, ...)
+short Craft(char* fmt, ...)
 {
     va_list arg_ptr;
     short l;
@@ -539,7 +539,7 @@ short craft(char* fmt, ...)
 		{
 			// Print the repeat count of the previous repeated string
 			sprintf(repeatCountStr, "(%d)\n", (int)repeatingBuf);
-			uart_puts(repeatCountStr, CRAFT_COM_PORT);
+			UartPuts(repeatCountStr, CRAFT_COM_PORT);
 
 			// Reset the counter
 			repeatingBuf = 0;
@@ -549,7 +549,7 @@ short craft(char* fmt, ...)
 		strncpy(s_uartBuffer, buf, l);
 
 		// Print the new string
-    	uart_write(buf, l, CRAFT_COM_PORT);
+		UartWrite(buf, l, CRAFT_COM_PORT);
 	}
 	else // Strings are equal
 	{
@@ -557,7 +557,7 @@ short craft(char* fmt, ...)
 		repeatingBuf++;
 
 		// Print a '!' (bang) so signify that the output was repeated
-		uart_putc('!', CRAFT_COM_PORT);
+		UartPutc('!', CRAFT_COM_PORT);
 	}
 
 	// Return the number of characters
@@ -567,7 +567,7 @@ short craft(char* fmt, ...)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-short debugPrint(uint8 mode, char* fmt, ...)
+short DebugPrint(uint8 mode, char* fmt, ...)
 {
     va_list arg_ptr;
     short length = 0;
@@ -582,7 +582,7 @@ short debugPrint(uint8 mode, char* fmt, ...)
 	//	return (0);
 
 	// Initialize the buffer
-	byteSet(&buf[0], 0, sizeof(buf));
+	ByteSet(&buf[0], 0, sizeof(buf));
 
 	// Initialize arg_ptr to the begenning of the variable argument list
     va_start(arg_ptr, fmt);
@@ -618,7 +618,7 @@ short debugPrint(uint8 mode, char* fmt, ...)
 	if (mode == RAW)
 	{
 		// Print the raw string
-    	uart_write(buf, length, CRAFT_COM_PORT);
+		UartWrite(buf, length, CRAFT_COM_PORT);
 	}
 	// Check if the current string to be printed was different than the last
 	else if (strncmp(buf, s_uartBuffer, length))
@@ -628,7 +628,7 @@ short debugPrint(uint8 mode, char* fmt, ...)
 		{
 			// Print the repeat count of the previous repeated string
 			sprintf(repeatCountStr, "(%d)\n", (int)repeatingBuf);
-			uart_puts(repeatCountStr, CRAFT_COM_PORT);
+			UartPuts(repeatCountStr, CRAFT_COM_PORT);
 
 			// Reset the counter
 			repeatingBuf = 0;
@@ -636,8 +636,8 @@ short debugPrint(uint8 mode, char* fmt, ...)
 		else if (strippedNewline == YES)
 		{
 			// Issue a carrige return and a line feed
-			uart_putc('\r', CRAFT_COM_PORT);
-			uart_putc('\n', CRAFT_COM_PORT);
+			UartPutc('\r', CRAFT_COM_PORT);
+			UartPutc('\n', CRAFT_COM_PORT);
 
 			// Reset the flag
 			strippedNewline = NO;
@@ -683,7 +683,7 @@ short debugPrint(uint8 mode, char* fmt, ...)
 		}
 
 		// Print the new string
-    	uart_write(buf, length, CRAFT_COM_PORT);
+		UartWrite(buf, length, CRAFT_COM_PORT);
 	}
 	else // Strings are equal
 	{
@@ -691,7 +691,7 @@ short debugPrint(uint8 mode, char* fmt, ...)
 		repeatingBuf++;
 
 		// Print a '!' (bang) so signify that the output was repeated
-		uart_putc('!', CRAFT_COM_PORT);
+		UartPutc('!', CRAFT_COM_PORT);
 	}
 
 	// Return the number of characters
@@ -701,10 +701,10 @@ short debugPrint(uint8 mode, char* fmt, ...)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void debugPrintChar(uint8 charData)
+void DebugPrintChar(uint8 charData)
 {
 	if (g_disableDebugPrinting == NO)
 	{
-		uart_putc(charData, CRAFT_COM_PORT);
+		UartPutc(charData, CRAFT_COM_PORT);
 	}
 }

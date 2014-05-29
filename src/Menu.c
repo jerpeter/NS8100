@@ -45,7 +45,7 @@ extern USER_MENU_STRUCT modeMenu[];
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
-static MB_CHOICE s_messageChoices[MB_TOTAL_CHOICES] =
+static MB_CHOICE s_MessageChoices[MB_TOTAL_CHOICES] =
 {
 	//{Num Choices,		1st/Single,	2nd Choice,	}
 	//{MB_ONE_CHOICE,	"OK\0",		"\0"		},
@@ -54,13 +54,13 @@ static MB_CHOICE s_messageChoices[MB_TOTAL_CHOICES] =
 	{MB_ONE_CHOICE,		OK_TEXT,	NULL_TEXT	},
 	{MB_TWO_CHOICES,	YES_TEXT,	NO_TEXT		},
 	{MB_TWO_CHOICES,	OK_TEXT,	CANCEL_TEXT	}
-	// Add new s_messageChoices entry for new choices aboove this line
+	// Add new s_MessageChoices entry for new choices aboove this line
 };
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void loadTempMenuTable(TEMP_MENU_DATA_STRUCT* currentMenu)
+void LoadTempMenuTable(TEMP_MENU_DATA_STRUCT* currentMenu)
 {
 	uint16 i = 0;
 
@@ -77,7 +77,7 @@ void loadTempMenuTable(TEMP_MENU_DATA_STRUCT* currentMenu)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void mnScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
+void MenuScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
 	uint8 buff[50];
 
@@ -121,7 +121,7 @@ void mnScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void userMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
+void UserMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
 	char buff[50];
 
@@ -161,14 +161,14 @@ void userMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void dsplySelMn(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr, uint8 titlePosition)
+void DisplaySelectMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr, uint8 titlePosition)
 {
    uint8 buff[50];
    uint8 top;
    uint8 menu_ln;
    uint32 length;
 
-   byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+   ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
    menu_ln = 0;
    top = 0;
@@ -185,7 +185,7 @@ void dsplySelMn(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_p
    		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
    	}
 
-   wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+   WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
    menu_ln = 0;
    top = (uint8)mn_layout_ptr->top_ln;
@@ -203,17 +203,17 @@ void dsplySelMn(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_p
          {
 			if (mn_layout_ptr->sub_ln == 0)
 			{
-	            wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
+	            WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
 			}
 			else
 			{
 				wnd_layout_ptr->index = mn_layout_ptr->sub_ln;
-	            wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_CHAR);
+	            WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_CHAR);
 			}
          }
          else
          {
-            wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+            WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
          }
       }
       else
@@ -227,7 +227,7 @@ void dsplySelMn(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_p
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void displayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr, uint8 titlePosition)
+void DisplayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr, uint8 titlePosition)
 {
 	uint8 buff[50]; /* made it bigger then NUM_CHAR_PER_LN just in case someone trys to make a big string.*/
 	uint16 top;
@@ -235,7 +235,7 @@ void displayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_lay
 	uint32 length;
 
 	// Clear out LCD map buffer
-	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Init var's
 	menu_ln = 0;
@@ -261,7 +261,7 @@ void displayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_lay
 	}
 
 	// Write string to LCD map
-	wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// Reset var's... purpose?
 	menu_ln = 0;
@@ -288,18 +288,18 @@ void displayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_lay
 				if (mn_layout_ptr->sub_ln == 0)
 				{
 					// Write the text to the LCD map highlighted
-		            wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
+		            WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
 				}
 				else
 				{
 					// Write just one char highlighted
 					wnd_layout_ptr->index = mn_layout_ptr->sub_ln;
-		            wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_CHAR);
+		            WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_CHAR);
 				}
 			}
 			else // Write text as a regular line
 			{
-				wndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			}
 		}
 		else // Reached end of menu text
@@ -316,7 +316,7 @@ void displayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_lay
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void wndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, int ln_type)
+void WndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, int ln_type)
 {
    const uint8 (*fmap_ptr)[FONT_MAX_COL_SIZE];
    uint8 mmcurr_row;
@@ -484,7 +484,7 @@ void wndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void messageBorder(void)
+void MessageBorder(void)
 {
 	uint8 i = 0;
 
@@ -526,7 +526,7 @@ void messageBorder(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void messageTitle(char* titleString)
+void MessageTitle(char* titleString)
 {
 	uint8 i = 0, j = 0;
 	uint8 length = 0;
@@ -559,7 +559,7 @@ void messageTitle(char* titleString)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void messageText(char* textString)
+void MessageText(char* textString)
 {
 	uint8 i = 0, j = 0;
 	uint8 textPosition = 0;
@@ -694,7 +694,7 @@ void messageText(char* textString)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void messageChoice(MB_CHOICE_TYPE choiceType)
+void MessageChoice(MB_CHOICE_TYPE choiceType)
 {
 	uint8 i = 0, j = 0;
 	uint8 text1Position = 0, text2Position = 0, startPosition = 0;
@@ -702,8 +702,8 @@ void messageChoice(MB_CHOICE_TYPE choiceType)
 	char firstChoiceText[18];
 	char secondChoiceText[18];
 
-	strcpy((char*)firstChoiceText, getLangText(s_messageChoices[choiceType].firstTextEntry));
-	strcpy((char*)secondChoiceText, getLangText(s_messageChoices[choiceType].secondTextEntry));
+	strcpy((char*)firstChoiceText, getLangText(s_MessageChoices[choiceType].firstTextEntry));
+	strcpy((char*)secondChoiceText, getLangText(s_MessageChoices[choiceType].secondTextEntry));
 
 	// 64 = half screen, char len * 3 = char width*6(pixel width)/2(half)
 	text1Position = (uint8)(64 - strlen((char*)firstChoiceText) * 3);
@@ -712,9 +712,9 @@ void messageChoice(MB_CHOICE_TYPE choiceType)
 	// Find starting pixel position with extra char space, 6 = extra char space in pixel width
 	startPosition = (uint8)((text1Position < text2Position ? text1Position : text2Position) - 6);
 
-	if (s_messageChoices[choiceType].numChoices == MB_ONE_CHOICE)
+	if (s_MessageChoices[choiceType].numChoices == MB_ONE_CHOICE)
 		startRow = 6;
-	else // s_messageChoices[choiceType].numChoices == MB_TWO_CHOICES
+	else // s_MessageChoices[choiceType].numChoices == MB_TWO_CHOICES
 		startRow = 5;
 
 	// Clear out unused portion of first choice row in case message text ran long
@@ -751,7 +751,7 @@ void messageChoice(MB_CHOICE_TYPE choiceType)
 	g_mmap[startRow][128 - startPosition] = 0x7f;
 	g_mmap[startRow][128 - startPosition + 1] = 0x3e;
 
-	if (s_messageChoices[choiceType].numChoices == MB_TWO_CHOICES)
+	if (s_MessageChoices[choiceType].numChoices == MB_TWO_CHOICES)
 	{
 		// Display second choice
 		i = 0;
@@ -768,15 +768,15 @@ void messageChoice(MB_CHOICE_TYPE choiceType)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void messageChoiceActiveSwap(MB_CHOICE_TYPE choiceType)
+void MessageChoiceActiveSwap(MB_CHOICE_TYPE choiceType)
 {
 	uint8 i = 0;
 	uint8 text1Position = 0, text2Position = 0, startPosition = 0;
 	char firstChoiceText[18];
 	char secondChoiceText[18];
 
-	strcpy((char*)firstChoiceText, getLangText(s_messageChoices[choiceType].firstTextEntry));
-	strcpy((char*)secondChoiceText, getLangText(s_messageChoices[choiceType].secondTextEntry));
+	strcpy((char*)firstChoiceText, getLangText(s_MessageChoices[choiceType].firstTextEntry));
+	strcpy((char*)secondChoiceText, getLangText(s_MessageChoices[choiceType].secondTextEntry));
 
 	// 64 = half screen, char len * 3 = char width*6(pixel width)/2(half)
 	text1Position = (uint8)(64 - strlen((char*)firstChoiceText) * 3);
@@ -809,24 +809,18 @@ void messageChoiceActiveSwap(MB_CHOICE_TYPE choiceType)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 messageBoxActiveFlag = NO;
-uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
+uint8 MessageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 {
 	uint8 activeChoice = MB_FIRST_CHOICE;
 	volatile uint8 key = 0;
 
-	// fix_ns8100
-	// Temp flag for key processing from serial port
-	//messageBoxActiveFlag = YES;
-	// End of temp code
-
 	// Build MessageBox into g_mmap with the following calls
-	messageBorder();
-	messageTitle(titleString);
-	messageText(textString);
-	messageChoice(choiceType);
+	MessageBorder();
+	MessageTitle(titleString);
+	MessageText(textString);
+	MessageChoice(choiceType);
 
-	writeMapToLcd(g_mmap);
+	WriteMapToLcd(g_mmap);
 
 	debug("MB: Look for a key\n");
 
@@ -834,10 +828,10 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 	while ((key != ENTER_KEY) && (key != ESC_KEY))
 	{
 		// Blocking call to wait for a key to be pressed on the keypad
-		key = getKeypadKey(WAIT_FOR_KEY);
+		key = GetKeypadKey(WAIT_FOR_KEY);
 
 		// Check if there are two choices
-		if (s_messageChoices[choiceType].numChoices == MB_TWO_CHOICES)
+		if (s_MessageChoices[choiceType].numChoices == MB_TWO_CHOICES)
 		{
 			switch (key)
 			{
@@ -846,8 +840,8 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 					if (activeChoice == MB_SECOND_CHOICE)
 					{
 						// Swap the active choice
-						messageChoiceActiveSwap(choiceType);
-						writeMapToLcd(g_mmap);
+						MessageChoiceActiveSwap(choiceType);
+						WriteMapToLcd(g_mmap);
 
 						activeChoice = MB_FIRST_CHOICE;
 					}
@@ -857,8 +851,8 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 					if (activeChoice == MB_FIRST_CHOICE)
 					{
 						// Swap the active choice
-						messageChoiceActiveSwap(choiceType);
-						writeMapToLcd(g_mmap);
+						MessageChoiceActiveSwap(choiceType);
+						WriteMapToLcd(g_mmap);
 
 						activeChoice = MB_SECOND_CHOICE;
 					}
@@ -868,12 +862,8 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 	}
 
 	// Clear LCD map buffer to remove message from showing up
-	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
-	writeMapToLcd(g_mmap);
-
-	// Temp flag for key processing from serial port
-	messageBoxActiveFlag = NO;
-	// End of temp code
+	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	WriteMapToLcd(g_mmap);
 
 	if (key == ENTER_KEY)
 		return (activeChoice);
@@ -884,20 +874,20 @@ uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void overlayMessage(char* titleString, char* textString, uint32 displayTime)
+void OverlayMessage(char* titleString, char* textString, uint32 displayTime)
 {
-	messageBorder();
-	messageTitle(titleString);
-	messageText(textString);
+	MessageBorder();
+	MessageTitle(titleString);
+	MessageText(textString);
 
-	writeMapToLcd(g_mmap);
-	soft_usecWait(displayTime);
+	WriteMapToLcd(g_mmap);
+	SoftUsecWait(displayTime);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void updateModeMenuTitle(uint8 mode)
+void UpdateModeMenuTitle(uint8 mode)
 {
 	switch (mode)
 	{
@@ -920,7 +910,7 @@ void updateModeMenuTitle(uint8 mode)
 ///----------------------------------------------------------------------------
 uint8 testg_mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 
-void displaySplashScreen(void)
+void DisplaySplashScreen(void)
 {
 	WND_LAYOUT_STRUCT wnd_layout;
 	uint8 buff[50];
@@ -930,12 +920,12 @@ void displaySplashScreen(void)
 	wnd_layout.end_col = DEFAULT_END_COL;
 
 	// Clear cached LCD memory map
-	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	//----------------------------------------------------------------------------------------
 	// Add in a title for the menu
 	//----------------------------------------------------------------------------------------
-	byteSet(&buff[0], 0, sizeof(buff));
+	ByteSet(&buff[0], 0, sizeof(buff));
 
 	if (SUPERGRAPH_UNIT)
 	{
@@ -949,81 +939,81 @@ void displaySplashScreen(void)
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_ONE;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
 
 	//----------------------------------------------------------------------------------------
 	// Add in Software Version
 	//----------------------------------------------------------------------------------------
-	byteSet(&buff[0], 0, sizeof(buff));
+	ByteSet(&buff[0], 0, sizeof(buff));
 	sprintf((char*)(&buff[0]), "%s %s", getLangText(SOFTWARE_VER_TEXT), (char*)g_buildVersion);
 	length = (uint8)strlen((char*)(&buff[0]));
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_THREE;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
 
 	//----------------------------------------------------------------------------------------
 	// Add in Software Date and Time
 	//----------------------------------------------------------------------------------------
-	byteSet(&buff[0], 0, sizeof(buff));
+	ByteSet(&buff[0], 0, sizeof(buff));
 	sprintf((char*)(&buff[0]), "%s", (char*)g_buildDate);
 	length = (uint8)strlen((char*)buff);
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_FOUR;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
 
 	//----------------------------------------------------------------------------------------
 	// Add in Battery Voltage
 	//----------------------------------------------------------------------------------------
-	byteSet(&buff[0], 0, sizeof(buff));
-	sprintf((char*)(&buff[0]), "%s: %.2f", getLangText(BATT_VOLTAGE_TEXT), getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
+	ByteSet(&buff[0], 0, sizeof(buff));
+	sprintf((char*)(&buff[0]), "%s: %.2f", getLangText(BATT_VOLTAGE_TEXT), GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 	length = (uint8)strlen((char*)(&buff[0]));
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_SIX;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
 
     debug("Init Write Splash Screen to LCD...\n");
 
 	// Write the map to the LCD
-	writeMapToLcd(g_mmap);
+	WriteMapToLcd(g_mmap);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void displayCalDate(void)
+void DisplayCalDate(void)
 {
 	char dateString[35];
 	char mesage[75];
 
 	if (!g_factorySetupRecord.invalid)
 	{
-		byteSet(&dateString[0], 0, sizeof(dateString));
-		byteSet(&mesage[0], 0, sizeof(mesage));
-		convertTimeStampToString(dateString, &g_factorySetupRecord.cal_date, REC_DATE_TIME_TYPE);
+		ByteSet(&dateString[0], 0, sizeof(dateString));
+		ByteSet(&mesage[0], 0, sizeof(mesage));
+		ConvertTimeStampToString(dateString, &g_factorySetupRecord.cal_date, REC_DATE_TIME_TYPE);
 
 		sprintf((char*)mesage, "%s: %s", getLangText(CALIBRATION_DATE_TEXT), (char*)dateString);
-		messageBox(getLangText(STATUS_TEXT), (char*)mesage, MB_OK);
+		MessageBox(getLangText(STATUS_TEXT), (char*)mesage, MB_OK);
 	}
 	else
 	{
-		messageBox(getLangText(STATUS_TEXT), getLangText(CALIBRATION_DATE_NOT_SET_TEXT), MB_OK);
+		MessageBox(getLangText(STATUS_TEXT), getLangText(CALIBRATION_DATE_NOT_SET_TEXT), MB_OK);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void displaySensorType(void)
+void DisplaySensorType(void)
 {
 	uint16 sensorType = NULL_TEXT;
 	char message[75];
 
 	if (!g_factorySetupRecord.invalid)
 	{
-		byteSet(&message[0], 0, sizeof(message));
+		ByteSet(&message[0], 0, sizeof(message));
 		switch (g_factorySetupRecord.sensor_type)
 		{
 			case SENSOR_20_IN	: sensorType = X1_20_IPS_TEXT; break;
@@ -1034,46 +1024,46 @@ void displaySensorType(void)
 		}
 
 		sprintf((char*)message, "%s: %s", getLangText(SENSOR_GAIN_TYPE_TEXT), getLangText(sensorType));
-		messageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
+		MessageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
 	}
 	else
 	{
-		messageBox(getLangText(STATUS_TEXT), getLangText(SENSOR_GAIN_TYPE_NOT_SET_TEXT), MB_OK);
+		MessageBox(getLangText(STATUS_TEXT), getLangText(SENSOR_GAIN_TYPE_NOT_SET_TEXT), MB_OK);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void displaySerialNumber(void)
+void DisplaySerialNumber(void)
 {
 	char message[75];
 
 	if (!g_factorySetupRecord.invalid)
 	{
-		byteSet(&message[0], 0, sizeof(message));
+		ByteSet(&message[0], 0, sizeof(message));
 		sprintf((char*)message, "%s: %s", getLangText(SERIAL_NUMBER_TEXT), (char*)g_factorySetupRecord.serial_num);
-		messageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
+		MessageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
 	}
 	else
 	{
-		messageBox(getLangText(STATUS_TEXT), getLangText(SERIAL_NUMBER_NOT_SET_TEXT), MB_OK);
+		MessageBox(getLangText(STATUS_TEXT), getLangText(SERIAL_NUMBER_NOT_SET_TEXT), MB_OK);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void displayTimerModeSettings(void)
+void DisplayTimerModeSettings(void)
 {
 	char message[75];
 	char activeTime[15];
 	char activeDates[25];
 	uint16 activeModeTextType;
 
-	byteSet(&message[0], 0, sizeof(message));
-	byteSet(&activeTime[0], 0, sizeof(activeTime));
-	byteSet(&activeDates[0], 0, sizeof(activeDates));
+	ByteSet(&message[0], 0, sizeof(message));
+	ByteSet(&activeTime[0], 0, sizeof(activeTime));
+	ByteSet(&activeDates[0], 0, sizeof(activeDates));
 
 	sprintf((char*)activeTime, "%02d:%02d -> %02d:%02d", g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min,
 			g_helpRecord.timerStopTime.hour, g_helpRecord.timerStopTime.min);
@@ -1097,24 +1087,24 @@ void displayTimerModeSettings(void)
 	// Display SAVED SETTINGS, ACTIVE TIME PERIOD HH:MM -> HH:MM
 	sprintf((char*)message, "%s, %s: %s", getLangText(SAVED_SETTINGS_TEXT),
 			getLangText(ACTIVE_TIME_PERIOD_TEXT), activeTime);
-	messageBox(getLangText(TIMER_MODE_TEXT), (char*)message, MB_OK);
+	MessageBox(getLangText(TIMER_MODE_TEXT), (char*)message, MB_OK);
 
 	// Display MODE, HH:MM -> HH:MM
 	sprintf((char*)message, "%s, %s", getLangText(activeModeTextType), activeDates);
-	messageBox(getLangText(TIMER_MODE_TEXT), (char*)message, MB_OK);
+	MessageBox(getLangText(TIMER_MODE_TEXT), (char*)message, MB_OK);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void displayFlashUsageStats(void)
+void DisplayFlashUsageStats(void)
 {
 	FLASH_USAGE_STRUCT usage;
 	char message[75];
 	char sizeUsedStr[30];
 	char sizeFreeStr[30];
 
-	getFlashUsageStats(&usage);
+	GetFlashUsageStats(&usage);
 
 #if 0 // Port lost change
 	if (usage.sizeUsed < 1000)
@@ -1133,7 +1123,7 @@ void displayFlashUsageStats(void)
 
 	sprintf(&message[0], "EVENT DATA       %s %s WRAPPED: %s", sizeUsedStr, sizeFreeStr, (usage.wrapped == YES) ? "YES" : "NO");
 
-	messageBox("FLASH USAGE STATS", (char*)message, MB_OK);
+	MessageBox("FLASH USAGE STATS", (char*)message, MB_OK);
 
 	if (g_helpRecord.flashWrapping == NO)
 		sprintf(&message[0], "SPACE REMAINING (CURR. SETTINGS) WAVEFORMS: %d, BAR HOURS: ~%d",
@@ -1142,7 +1132,7 @@ void displayFlashUsageStats(void)
 		sprintf(&message[0], "BEFORE OVERWRITE (CURR. SETTINGS) WAVEFORMS: %d, BAR HOURS: ~%d",
 				usage.waveEventsLeft, usage.barHoursLeft);
 
-	messageBox("FLASH USAGE STATS", (char*)message, MB_OK);
+	MessageBox("FLASH USAGE STATS", (char*)message, MB_OK);
 #else // Updated
 	if (usage.sizeUsed < 1000)
 		sprintf(&sizeUsedStr[0], "%s: %3.1fKB %d%%", getLangText(USED_TEXT),((float)usage.sizeUsed / (float)1000), usage.percentUsed);
@@ -1160,21 +1150,21 @@ void displayFlashUsageStats(void)
 
 	sprintf(&message[0], "%s       %s %s %s: %s", getLangText(EVENT_DATA_TEXT),sizeUsedStr, sizeFreeStr, getLangText(WRAPPED_TEXT),(usage.wrapped == YES) ? "YES" : "NO");
 
-	messageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
+	MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
 
 	if (g_helpRecord.flashWrapping == NO)
 		sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(SPACE_REMAINING_TEXT),getLangText(WAVEFORMS_TEXT),usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT),usage.barHoursLeft);
 	else // Wrapping is on
 		sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(BEFORE_OVERWRITE_TEXT),getLangText(WAVEFORMS_TEXT),usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT),usage.barHoursLeft);
 
-	messageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
+	MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
 #endif
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void displayAutoDialInfo(void)
+void DisplayAutoDialInfo(void)
 {
 	char message[75];
 	char dateStr[35];
@@ -1196,13 +1186,13 @@ void displayAutoDialInfo(void)
 
 #if 0 // Port lost change
 	sprintf(&message[0], "LAST DL EVT: %d, LAST REC: %d, LAST CONNECT: %s",
-			__autoDialoutTbl.lastDownloadedEvent, getLastStoredEventNumber(), dateStr);
+			__autoDialoutTbl.lastDownloadedEvent, GetLastStoredEventNumber(), dateStr);
 
-	messageBox("AUTO DIALOUT INFO", (char*)message, MB_OK);
+	MessageBox("AUTO DIALOUT INFO", (char*)message, MB_OK);
 #else // Updated
 	sprintf(&message[0], "%s: %d, %s: %d, %s: %s", getLangText(LAST_DIAL_EVENT_TEXT),__autoDialoutTbl.lastDownloadedEvent,
-			getLangText(LAST_RECEIVED_TEXT), getLastStoredEventNumber(), getLangText(LAST_CONNECTED_TEXT),dateStr);
+			getLangText(LAST_RECEIVED_TEXT), GetLastStoredEventNumber(), getLangText(LAST_CONNECTED_TEXT),dateStr);
 
-	messageBox(getLangText(AUTO_DIALOUT_INFO_TEXT), (char*)message, MB_OK);
+	MessageBox(getLangText(AUTO_DIALOUT_INFO_TEXT), (char*)message, MB_OK);
 #endif
 }

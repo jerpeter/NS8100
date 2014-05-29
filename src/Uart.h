@@ -215,20 +215,20 @@ enum {
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-short craft(char* fmt, ...);
-short debugPrint(uint8 mode, char* fmt, ...);
-void debugPrintChar(uint8 charData);
-char* uart_gets(char* s, int32 channel);
-uint8 uart_getc(int32 channel, uint8 mode);
-uint8 nibbleToA(uint8 hexData);
-uint8 modem_putc(uint8 , uint8);
-uint8 modem_puts(uint8* , uint32 , uint8);
-void uart_puts(char* s, int32 channel);
-void uart_write(void* b, int32 n, int32 channel);
-void uart_putc(uint8 c, int32 channel);
-void uart_init(uint32 BaudRate, int32 channel);
-void uartControl(uint8 control, int8 channel);
-uint16 auto_baud(int32 channel);
-BOOLEAN uart_char_waiting(int32 channel);
+short Craft(char* fmt, ...);
+short DebugPrint(uint8 mode, char* fmt, ...);
+void DebugPrintChar(uint8 charData);
+char* UartGets(char* s, int32 channel);
+uint8 UartGetc(int32 channel, uint8 mode);
+uint8 NibbleToA(uint8 hexData);
+uint8 ModemPutc(uint8 , uint8);
+uint8 ModemPuts(uint8* , uint32 , uint8);
+void UartPuts(char* s, int32 channel);
+void UartWrite(void* b, int32 n, int32 channel);
+void UartPutc(uint8 c, int32 channel);
+void UartInit(uint32 BaudRate, int32 channel);
+void UartControl(uint8 control, int8 channel);
+uint16 UartAutoBaud(int32 channel);
+BOOLEAN UartCharWaiting(int32 channel);
 
 #endif // _UART_H_

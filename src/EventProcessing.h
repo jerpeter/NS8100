@@ -65,39 +65,39 @@ typedef enum {
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void initRamSummaryTbl(void);
-void copyValidFlashEventSummariesToRam(void);
-void condenseRamSummaryTable(void);
-void advFlashDataPtrToEventData(SUMMARY_DATA*);
+void InitRamSummaryTbl(void);
+void CopyValidFlashEventSummariesToRam(void);
+void CondenseRamSummaryTable(void);
+void AdvFlashDataPtrToEventData(SUMMARY_DATA*);
 uint8 InitFlashEvtBuff(void);
 void InitFlashBuffs(void);
-void initEventRecord(uint8 op_mode);
-void initCurrentEventNumber(void);
-uint16 getLastStoredEventNumber(void);
-void storeCurrentEventNumber(void);
-uint16 getUniqueEventNumber(SUMMARY_DATA* currentSummary);
+void InitEventRecord(uint8 op_mode);
+void InitCurrentEventNumber(void);
+uint16 GetLastStoredEventNumber(void);
+void StoreCurrentEventNumber(void);
+uint16 GetUniqueEventNumber(SUMMARY_DATA* currentSummary);
 uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr);
-void completeRamEventSummary(SUMMARY_DATA* , SUMMARY_DATA*);
+void CompleteRamEventSummary(SUMMARY_DATA* , SUMMARY_DATA*);
 void ReclaimSpace(uint16* sectorAddr);
-uint16* getFlashDataPointer(void);
-void checkFlashDataPointer(void);
-void storeData(uint16* dataPtr, uint16 dataWords);
-void getFlashUsageStats(FLASH_USAGE_STRUCT* usage);
-void getEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
-void getEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
-void cacheEventDataToRam(uint16 eventNumber, uint32 dataSize);
-void cacheEventToRam(uint16 eventNumber);
-BOOLEAN validEventFile(uint16 eventNumber);
-FL_FILE* getEventFileHandle(uint16 eventNumber, EVENT_FILE_OPTION option);
-void deleteEventFileRecord(uint16 eventNumber);
-void deleteEventFileRecords(void);
-void reInitSdCardAndFat32(void);
-inline void adjustSampleForBitAccuracy(void);
-void powerDownSDCard(void);
-void powerUpSDCardAndInitFat32(void);
-uint16 seisTriggerConvert(float);
-uint16 airTriggerConvert(uint32 airTriggerLevel);
+uint16* GetFlashDataPointer(void);
+void CheckFlashDataPointer(void);
+void StoreData(uint16* dataPtr, uint16 dataWords);
+void GetFlashUsageStats(FLASH_USAGE_STRUCT* usage);
+void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
+void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
+void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize);
+void CacheEventToRam(uint16 eventNumber);
+BOOLEAN CheckValidEventFile(uint16 eventNumber);
+FL_FILE* GetEventFileHandle(uint16 eventNumber, EVENT_FILE_OPTION option);
+void DeleteEventFileRecord(uint16 eventNumber);
+void DeleteEventFileRecords(void);
+void ReInitSdCardAndFat32(void);
+inline void AdjustSampleForBitAccuracy(void);
+void PowerDownSDCard(void);
+void PowerUpSDCardAndInitFat32(void);
+uint16 SeismicTriggerConvert(float);
+uint16 AirTriggerConvert(uint32 airTriggerLevel);
 
-void cacheResultsEventInfo(EVT_RECORD* eventRecordToCache);
+void CacheResultsEventInfo(EVT_RECORD* eventRecordToCache);
 
 #endif // _FLASHEVTS_H_

@@ -43,11 +43,11 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void assignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
+void AssignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 {
 	if (timerNum >= NUM_OF_SOFT_TIMERS)
 	{
-		debugErr("assignSoftTimer Error: Timer Number not valid: %d\n", timerNum);
+		debugErr("AssignSoftTimer Error: Timer Number not valid: %d\n", timerNum);
 		return;
 	}
 
@@ -66,11 +66,11 @@ void assignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void resetSoftTimer(uint16 timerNum)
+void ResetSoftTimer(uint16 timerNum)
 {
 	if (timerNum >= NUM_OF_SOFT_TIMERS)
 	{
-		debugErr("assignSoftTimer Error: Timer Number not valid: %d\n", timerNum);
+		debugErr("AssignSoftTimer Error: Timer Number not valid: %d\n", timerNum);
 		return;
 	}
 
@@ -86,11 +86,11 @@ void resetSoftTimer(uint16 timerNum)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void clearSoftTimer(uint16 timerNum)
+void ClearSoftTimer(uint16 timerNum)
 {
 	if (timerNum >= NUM_OF_SOFT_TIMERS)
 	{
-		debugErr("clearSoftTimer Error: Timer Number not valid: %d\n", timerNum);
+		debugErr("ClearSoftTimer Error: Timer Number not valid: %d\n", timerNum);
 		return;
 	}
 
@@ -104,7 +104,7 @@ void clearSoftTimer(uint16 timerNum)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void checkSoftTimers(void)
+void CheckSoftTimers(void)
 {
 	uint16 softTimerIndex;
 
@@ -135,7 +135,7 @@ void checkSoftTimers(void)
 						}
 						else
 						{
-							debug("checkSoftTimers:Error function call is NULL\n");
+							debug("CheckSoftTimers:Error function call is NULL\n");
 						}
 					}
 				}
@@ -159,7 +159,7 @@ void checkSoftTimers(void)
 					}
 					else
 					{
-						debug("checkSoftTimers:Error function call is NULL\n");
+						debug("CheckSoftTimers:Error function call is NULL\n");
 					}
 				}
 			}
@@ -172,58 +172,58 @@ void checkSoftTimers(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void displayTimerCallBack(void)
+void DisplayTimerCallBack(void)
 {
 	debug("LCD Backlight Timer callback: activated.\n");
 
 	g_lcdBacklightFlag = DISABLED;
-	setLcdBacklightState(BACKLIGHT_OFF);
+	SetLcdBacklightState(BACKLIGHT_OFF);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void alarmOneOutputTimerCallback(void)
+void AlarmOneOutputTimerCallback(void)
 {
 	// Deactivate alarm 1 signal
-	powerControl(ALARM_1_ENABLE, OFF);
+	PowerControl(ALARM_1_ENABLE, OFF);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void alarmTwoOutputTimerCallback(void)
+void AlarmTwoOutputTimerCallback(void)
 {
 	// Deactivate alarm 2 signal
-	powerControl(ALARM_2_ENABLE, OFF);
+	PowerControl(ALARM_2_ENABLE, OFF);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void lcdPwTimerCallBack(void)
+void LcdPwTimerCallBack(void)
 {
 	debug("LCD Power Timer callback: activated.\n");
 
 	g_lcdPowerFlag = DISABLED;
 
-	powerControl(LCD_CONTRAST_ENABLE, OFF);
-	clearLcdDisplay();
-	clearControlLinesLcdDisplay();
+	PowerControl(LCD_CONTRAST_ENABLE, OFF);
+	ClearLcdDisplay();
+	ClearControlLinesLcdDisplay();
 	LcdClearPortReg();
-	powerControl(LCD_POWER_ENABLE, OFF);
+	PowerControl(LCD_POWER_ENABLE, OFF);
 
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 		debug("LCD Power Timer callback: disabling Monitor Update Timer.\n");
-		clearSoftTimer(MENU_UPDATE_TIMER_NUM);
+		ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void menuUpdateTimerCallBack(void)
+void MenuUpdateTimerCallBack(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 
@@ -233,18 +233,18 @@ void menuUpdateTimerCallBack(void)
 	// Recall the current active menu to repaint the display
 	JUMP_TO_ACTIVE_MENU();
 
-	assignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, menuUpdateTimerCallBack);
+	AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void keypadLedUpdateTimerCallBack(void)
+void KeypadLedUpdateTimerCallBack(void)
 {
 	static uint8 ledState = KEYPAD_LED_STATE_UNKNOWN;
 	uint8 lastLedState;
-	uint8 config; // = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
-	BOOLEAN externalChargePresent = checkExternalChargeVoltagePresent();
+	uint8 config; // = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
+	BOOLEAN externalChargePresent = CheckExternalChargeVoltagePresent();
 
 	// States
 	// 1) Init complete, not monitoring, not charging --> Static Green
@@ -315,7 +315,7 @@ void keypadLedUpdateTimerCallBack(void)
 	// Check if the state changed
 	if (ledState != lastLedState)
 	{
-		config = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		config = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 		
 		switch (ledState)
 		{
@@ -339,21 +339,21 @@ void keypadLedUpdateTimerCallBack(void)
 				break;
 		}
 
-		write_mcp23018(IO_ADDRESS_KPD, GPIOA, config);
+		WriteMcp23018(IO_ADDRESS_KPD, GPIOA, config);
 	}
 
-	assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
+	AssignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, KeypadLedUpdateTimerCallBack);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void powerOffTimerCallback(void)
+void PowerOffTimerCallback(void)
 {
 	debug("Power Off Timer callback: activated.\n");
 
 	// Handle and finish any processing
-	stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+	StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 	if (g_timerModeLastRun == YES)
 	{
@@ -361,13 +361,13 @@ void powerOffTimerCallback(void)
 		g_helpRecord.timerMode = DISABLED;
 
 		// Save help record
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 	}
 		
-	overlayMessage(getLangText(TIMER_MODE_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 3 * SOFT_SECS);
+	OverlayMessage(getLangText(TIMER_MODE_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 3 * SOFT_SECS);
 
 	// Disable Power Off Protection
-	powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+	PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 
 	// Power the unit off
 	debug("Timer mode: Finished for the day, sleep time.\n");
@@ -378,17 +378,17 @@ void powerOffTimerCallback(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void modemDelayTimerCallback(void)
+void ModemDelayTimerCallback(void)
 {
 	if (YES == g_modemStatus.modemAvailable)
 	{
 		if ((READ_DSR == MODEM_CONNECTED) && (READ_DCD == NO_CONNECTION))
 		{
-			modemInitProcess();
+			ModemInitProcess();
 		}
 		else
 		{
-			assignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_DELAY, modemDelayTimerCallback);
+			AssignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_DELAY, ModemDelayTimerCallback);
 		}
 	}
 }
@@ -396,50 +396,50 @@ void modemDelayTimerCallback(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void autoCalInWaveformTimerCallback(void)
+void AutoCalInWaveformTimerCallback(void)
 {
-	handleManualCalibration();
+	HandleManualCalibration();
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void modemResetTimerCallback(void)
+void ModemResetTimerCallback(void)
 {
 	if (g_modemResetStage == 0)
 	{
 		// If for some reason this executes, make sure the timer is disabled
-		clearSoftTimer(MODEM_RESET_TIMER_NUM);
+		ClearSoftTimer(MODEM_RESET_TIMER_NUM);
 	}
 	else if (g_modemResetStage == 1)
 	{
 		SET_DTR;
 
-		assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), modemResetTimerCallback);
+		AssignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), ModemResetTimerCallback);
 		g_modemResetStage = 2;
 	}
 	else if (g_modemResetStage == 2)
 	{
-		uart_puts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT);
-		assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), modemResetTimerCallback);
+		UartPuts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT);
+		AssignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), ModemResetTimerCallback);
 		g_modemResetStage = 3;
 	}
 	else if (g_modemResetStage == 3)
 	{
-		uart_puts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT);
-		assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), modemResetTimerCallback);
+		UartPuts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT);
+		AssignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), ModemResetTimerCallback);
 		g_modemResetStage = 4;
 	}
 	else if (g_modemResetStage == 4)
 	{
-		uart_puts((char*)(ATH_CMD_STRING), CRAFT_COM_PORT);
-		uart_puts((char*)&g_CRLF, CRAFT_COM_PORT);
-		assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), modemResetTimerCallback);
+		UartPuts((char*)(ATH_CMD_STRING), CRAFT_COM_PORT);
+		UartPuts((char*)&g_CRLF, CRAFT_COM_PORT);
+		AssignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), ModemResetTimerCallback);
 		g_modemResetStage = 5;
 	}
 	else if (g_modemResetStage == 5)
 	{
-		modemInitProcess();
+		ModemInitProcess();
 		g_modemResetStage = 0;
 	}
 }
@@ -447,14 +447,14 @@ void modemResetTimerCallback(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void autoMonitorTimerCallBack(void)
+void AutoMonitorTimerCallBack(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 
 	debug("Auto Monitor Timer callback: activated.\n");
 
 	// Make sure the Auto Monitor timer is disabled
-	clearSoftTimer(AUTO_MONITOR_TIMER_NUM);
+	ClearSoftTimer(AUTO_MONITOR_TIMER_NUM);
 
 	// Check if the unit is not alread monitoring
 	if (g_sampleProcessing != ACTIVE_STATE)
@@ -468,10 +468,10 @@ void autoMonitorTimerCallBack(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void procTimerEvents(void)
+void ProcessTimerEvents(void)
 {
 	static uint8 processingMidnight = NO;
-	DATE_TIME_STRUCT currentTime = getCurrentTime();
+	DATE_TIME_STRUCT currentTime = GetCurrentTime();
 	INPUT_MSG_STRUCT mn_msg;
 	char msgBuffer[25];
 
@@ -490,10 +490,10 @@ void procTimerEvents(void)
 	}
 
 	// Check if the unit is in monitor mode and if battery voltage has dropped below a certain voltage
-	if ((g_sampleProcessing == ACTIVE_STATE) && (getExternalVoltageLevelAveraged(BATTERY_VOLTAGE) < LOW_VOLTAGE_THRESHOLD))
+	if ((g_sampleProcessing == ACTIVE_STATE) && (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE) < LOW_VOLTAGE_THRESHOLD))
 	{
 		// Disable the monitor menu update timer
-		clearSoftTimer(MENU_UPDATE_TIMER_NUM);
+		ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 
 		// Need to stop print jobs
 
@@ -501,14 +501,14 @@ void procTimerEvents(void)
 		g_helpRecord.autoPrint = OFF;
 
 		// Handle and finish monitoring
-		stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+		StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 		// Clear and setup the message buffer
-		byteSet(&(msgBuffer[0]), 0, sizeof(msgBuffer));
+		ByteSet(&(msgBuffer[0]), 0, sizeof(msgBuffer));
 		sprintf(msgBuffer, "%s %s", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT));
 
 		// Overlay a "Battery Voltage Low" message
-		overlayMessage(getLangText(WARNING_TEXT), msgBuffer, (2 * SOFT_SECS));
+		OverlayMessage(getLangText(WARNING_TEXT), msgBuffer, (2 * SOFT_SECS));
 
 		// Jump to the main menu
 		SETUP_MENU_MSG(MAIN_MENU);
@@ -519,7 +519,7 @@ void procTimerEvents(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMidnightEvent(void)
+void HandleMidnightEvent(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	char message[50];
@@ -530,12 +530,12 @@ void handleMidnightEvent(void)
 		// Do not handle midnight calibration since a manual cal is forced at the beginning of Bargraph
 
 		// Overlay a message that the current bargraph has ended
-		byteSet(&message[0], 0, sizeof(message));
+		ByteSet(&message[0], 0, sizeof(message));
 		sprintf(message, "%s %s", getLangText(MONITOR_BARGRAPH_TEXT), getLangText(END_TEXT));
-		overlayMessage(getLangText(STATUS_TEXT), message, 0);
+		OverlayMessage(getLangText(STATUS_TEXT), message, 0);
 
 		// Handle stopping the current bargraph
-		stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+		StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 		// Start up a new Bargraph
 		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
@@ -565,9 +565,9 @@ void handleMidnightEvent(void)
 				g_enterMonitorModeAfterMidnightCal = YES;
 
 			// Handle and finish any processing
-			stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
-			getFlashUsageStats(&flashStats);
+			GetFlashUsageStats(&flashStats);
 
 			if ((g_helpRecord.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
 			{
@@ -577,21 +577,21 @@ void handleMidnightEvent(void)
 				SETUP_MENU_MSG(MAIN_MENU);
 				JUMP_TO_ACTIVE_MENU();
 
-				overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
+				OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 			}
 			else
 			{
 				// Overlay a message that calibration is taking place
-				overlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), (2 * SOFT_SECS));
+				OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), (2 * SOFT_SECS));
 
 				// Issue a Cal Pulse message
-	            startMonitoring(g_triggerRecord.trec, MANUAL_CAL_PULSE_CMD, MANUAL_CAL_MODE);
+	            StartMonitoring(g_triggerRecord.trec, MANUAL_CAL_PULSE_CMD, MANUAL_CAL_MODE);
 
 				// Wait until after the Cal Pulse has completed, 250ms to be safe (just less than 100 ms to complete)
-				soft_usecWait(250 * SOFT_MSECS);
+				SoftUsecWait(250 * SOFT_MSECS);
 
 				// Stop data transfer
-	            stopDataCollection();
+	            StopDataCollection();
 
 				// Done processing Auto Cal logic at this point, just return
 				// Results menu will pick up the Cal event and re-enter monitor mode
@@ -604,7 +604,7 @@ void handleMidnightEvent(void)
 	{
 		// At midnight reset the modem (to better handle problems with USR modems)
 		g_autoRetries = 0;
-		modemResetProcess();
+		ModemResetProcess();
 	}
 }
 

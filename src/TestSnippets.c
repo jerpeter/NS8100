@@ -72,7 +72,7 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void testSnippetsBeforeInit(void)
+void TestSnippetsBeforeInit(void)
 {
 	#if 0 // Test (Enable serial and put processor in deep stop)
 	gpio_clr_gpio_pin(AVR32_PIN_PB08);
@@ -105,13 +105,13 @@ void testSnippetsBeforeInit(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void testSnippetsAfterInit(void)
+void TestSnippetsAfterInit(void)
 {
 
 	#if 0
 	CMD_BUFFER_STRUCT inCmd;
 	inCmd.msg[MESSAGE_HEADER_SIMPLE_LENGTH] = 0;
-	handleVML(&inCmd);
+	HandleVML(&inCmd);
 	#endif
 
 	#if 0 // Craft Test
@@ -134,12 +134,12 @@ void testSnippetsAfterInit(void)
 		debug("SPI1 SDMMC CS Active (0)\n");
 		spi_selectChip(&AVR32_SPI1, 2);
 		spi_write(&AVR32_SPI1, 0x0000);
-		soft_usecWait(5 * SOFT_SECS);
+		SoftUsecWait(5 * SOFT_SECS);
 
 
 		debug("SPI1 SDMMC CS Inactive (1)\n");
 		spi_unselectChip(&AVR32_SPI1, 2);
-		soft_usecWait(5 * SOFT_SECS);
+		SoftUsecWait(5 * SOFT_SECS);
 	}
 	#endif
 
@@ -166,7 +166,7 @@ void testSnippetsAfterInit(void)
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		debug("SDMMC Cycles to enter idle state: %d\n", retry);
 		
-		soft_usecWait(5 * SOFT_SECS);
+		SoftUsecWait(5 * SOFT_SECS);
 		//----------------------------------------------------------------------
 		
 		//---Init and idle-------------------------------------------------------------------
@@ -175,7 +175,7 @@ void testSnippetsAfterInit(void)
 		sd_mmc_spi_internal_init();
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 
-		soft_usecWait(5 * SOFT_SECS);
+		SoftUsecWait(5 * SOFT_SECS);
 		//----------------------------------------------------------------------
 		
 		//---Idle low power-------------------------------------------------------------------
@@ -191,7 +191,7 @@ void testSnippetsAfterInit(void)
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		debug("SDMMC Cycles to enter idle state: %d\n", retry);
 
-		soft_usecWait(5 * SOFT_SECS);
+		SoftUsecWait(5 * SOFT_SECS);
 		//----------------------------------------------------------------------
 
 		//---Init and FAT32 Cycle-------------------------------------------------------------------
@@ -225,7 +225,7 @@ void testSnippetsAfterInit(void)
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		debug("SDMMC Cycles to enter idle state: %d\n", retry);
 
-		soft_usecWait(5 * SOFT_SECS);
+		SoftUsecWait(5 * SOFT_SECS);
 		//----------------------------------------------------------------------
 
 		//---Init and Read cycle-------------------------------------------------------------------
@@ -265,7 +265,7 @@ void testSnippetsAfterInit(void)
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		debug("SDMMC Cycles to enter idle state: %d\n", retry);
 
-		soft_usecWait(5 * SOFT_SECS);
+		SoftUsecWait(5 * SOFT_SECS);
 		//----------------------------------------------------------------------
 
 		//---Init and Write cycle-------------------------------------------------------------------
@@ -312,16 +312,16 @@ void testSnippetsAfterInit(void)
 
 		spi_selectChip(&AVR32_SPI1, 2);
 		// Small delay before the RTC device is accessible
-		soft_usecWait(500);
+		SoftUsecWait(500);
 		unsigned int i;
 		for (i = 0; i < 10000; i++)
 		spi_write(&AVR32_SPI1, 0x0000);
 		spi_unselectChip(&AVR32_SPI1, 2);
 
 		__monitorLogTblKey = 0;
-		initMonitorLog();
+		InitMonitorLog();
 
-		soft_usecWait(3 * SOFT_SECS);
+		SoftUsecWait(3 * SOFT_SECS);
 
 		debug("SPI1 CS's 1\n");
 		//gpio_set_gpio_pin(AVR32_PIN_PB14);
@@ -329,28 +329,28 @@ void testSnippetsAfterInit(void)
 		//gpio_set_gpio_pin(AVR32_PIN_PB19);
 		//gpio_set_gpio_pin(AVR32_PIN_PB20);
 
-		soft_usecWait(3 * SOFT_SECS);
+		SoftUsecWait(3 * SOFT_SECS);
 	}
 
 	#endif
 
 	#if 0 // Test (Timer mode)
-	EnableRtcAlarm(0, 0, 0, 0);
+	EnableExternalRtcAlarm(0, 0, 0, 0);
 
 	static RTC_MEM_MAP_STRUCT rtcMap;
 	static uint8 clearAlarmFlag = 0x03; //0xEF; // Logic 0 on the bit will clear Alarm flag, bit 4
 	static uint32 counter = 0;
 
-	rtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
+	ExternalRtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
 	
 	if (rtcMap.control_2 & 0x10)
 	{
 		debug("RTC Alarm Flag indicates alarm condition raised. (0x%x, 0x%x, 0x%x)\n", rtcMap.control_1, rtcMap.control_2, rtcMap.control_3);
 		
-		rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+		ExternalRtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
 		debug("RTC Alarm Flag being cleared\n");
 
-		rtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
+		ExternalRtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
 
 		if (rtcMap.control_2 & 0x10)
 		{
@@ -363,17 +363,17 @@ void testSnippetsAfterInit(void)
 	}
 	else
 	{
-		rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+		ExternalRtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
 		debug("RTC Alarm Flag does not show an alarm condition. (0x%x, 0x%x, 0x%x)\n", rtcMap.control_1, rtcMap.control_2, rtcMap.control_3);
 	}
 	#endif
 
 	#if 0 // Test (LCD off and Proc stop)
 	debug("\n--- System Init Complete ---\n");
-	soft_usecWait(10 * SOFT_SECS);
-	displayTimerCallBack();
-	lcdPwTimerCallBack();
-	soft_usecWait(10 * SOFT_SECS);
+	SoftUsecWait(10 * SOFT_SECS);
+	DisplayTimerCallBack();
+	LcdPwTimerCallBack();
+	SoftUsecWait(10 * SOFT_SECS);
 	debug("--- System Deep Stop ---\n");
 
 	SLEEP(AVR32_PM_SMODE_DEEP_STOP);
@@ -385,7 +385,7 @@ void testSnippetsAfterInit(void)
 	uint8 keypadState;
 	while (1 == 1)
 	{
-		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		keypadState = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 		if (keypadState & GREEN_LED_PIN)
 		debug("Green LED Active\n");
 		if (keypadState & RED_LED_PIN)
@@ -394,11 +394,11 @@ void testSnippetsAfterInit(void)
 		debug("Turning on the Green LED only\n");
 		keypadState |= GREEN_LED_PIN;
 		keypadState &= ~RED_LED_PIN;
-		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
+		WriteMcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
 
-		soft_usecWait(3 * SOFT_SECS);
+		SoftUsecWait(3 * SOFT_SECS);
 
-		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		keypadState = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 		if (keypadState & GREEN_LED_PIN)
 		debug("Green LED Active\n");
 		if (keypadState & RED_LED_PIN)
@@ -407,11 +407,11 @@ void testSnippetsAfterInit(void)
 		debug("Turning on the Red LED only\n");
 		keypadState &= ~GREEN_LED_PIN;
 		keypadState |= RED_LED_PIN;
-		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
+		WriteMcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
 
-		soft_usecWait(3 * SOFT_SECS);
+		SoftUsecWait(3 * SOFT_SECS);
 
-		keypadState = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+		keypadState = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 		if (keypadState & GREEN_LED_PIN)
 		debug("Green LED Active\n");
 		if (keypadState & RED_LED_PIN)
@@ -420,9 +420,9 @@ void testSnippetsAfterInit(void)
 		debug("Turning off both LEDs\n");
 		keypadState &= ~GREEN_LED_PIN;
 		keypadState &= ~RED_LED_PIN;
-		write_mcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
+		WriteMcp23018(IO_ADDRESS_KPD, GPIOA, keypadState);
 
-		soft_usecWait(3 * SOFT_SECS);
+		SoftUsecWait(3 * SOFT_SECS);
 	}
 	#endif
 }
@@ -430,7 +430,7 @@ void testSnippetsAfterInit(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void testSnippetsExecLoop(void)
+void TestSnippetsExecLoop(void)
 {
 	#if 0 // Test (Timer mode)
 	if (counter)
@@ -439,10 +439,10 @@ void testSnippetsExecLoop(void)
 		
 		if (counter == 0)
 		{
-			rtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
+			ExternalRtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
 			debug("RTC Alarm Flag being cleared\n");
 
-			rtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
+			ExternalRtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
 
 			if (rtcMap.control_2 & 0x10)
 			{
@@ -456,7 +456,7 @@ void testSnippetsExecLoop(void)
 	}
 	else
 	{
-		rtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
+		ExternalRtcRead(RTC_CONTROL_1_ADDR, 3, (uint8*)&rtcMap);
 		
 		if (rtcMap.control_2 & 0x10)
 		{

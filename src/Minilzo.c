@@ -1036,7 +1036,7 @@ unsigned char compressedDataCacheBuffer[2];
 unsigned long compressedDataLen;
 
 // Handles incrementing the data length, sending data and managing the temp compressed data buffer
-#define SEND_COMPRESSED_DATA()	compressedDataLen++; if (compressedDataLen > 2) writeCompressedData(compressedDataCacheBuffer[0]); compressedDataCacheBuffer[0] = compressedDataCacheBuffer[1];
+#define SEND_COMPRESSED_DATA()	compressedDataLen++; if (compressedDataLen > 2) WriteCompressedData(compressedDataCacheBuffer[0]); compressedDataCacheBuffer[0] = compressedDataCacheBuffer[1];
 
 // Compression subroutine (main algorithm)
 static __lzo_noinline lzo_uint
@@ -1062,7 +1062,7 @@ do_compress (const lzo_bytep in, lzo_uint in_len)
 		// Every so often, handle system events
 		if ((compressedDataLen > 255) && ((compressedDataLen % 256) == 0))
 		{
-			handleSystemEvents();
+			HandleSystemEvents();
 		}
 
         DINDEX1(dindex, ip);

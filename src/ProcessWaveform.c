@@ -71,7 +71,7 @@ void ProcessWaveformData(void)
 					if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
 					{
 						// Store the exact time we received the trigger data sample
-						//g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
+						//g_pendingEventRecord.summary.captured.eventTime = GetCurrentTime();
 
 						// Change global wave state flag
 						//g_waveState = PENDING;
@@ -386,7 +386,7 @@ void MoveWaveformEventToFlash(void)
 
 				// Added temporarily to prevent SPI access issues
 				// fix_ns8100
-				g_pendingEventRecord.summary.captured.eventTime = getCurrentTime();
+				g_pendingEventRecord.summary.captured.eventTime = GetCurrentTime();
 
 				sumEntry = &g_summaryTable[g_eventBufferReadIndex];
 				sumEntry->mode = WAVEFORM_MODE;
@@ -403,7 +403,7 @@ void MoveWaveformEventToFlash(void)
 			case FLASH_PRETRIG:
 				for (i = g_samplesInPretrig; i != 0; i--)
 				{
-					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+					if (g_bitShiftForAccuracy) AdjustSampleForBitAccuracy();
 					
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
@@ -414,7 +414,7 @@ void MoveWaveformEventToFlash(void)
 			case FLASH_BODY_INT:
 				sampGrpsLeft = (g_samplesInBody - 1);
 
-				if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+				if (g_bitShiftForAccuracy) AdjustSampleForBitAccuracy();
 
 				// A channel
 				sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
@@ -451,7 +451,7 @@ void MoveWaveformEventToFlash(void)
 				{
 					sampGrpsLeft--;
 
-					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+					if (g_bitShiftForAccuracy) AdjustSampleForBitAccuracy();
 
 					// A channel
 					sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
@@ -512,7 +512,7 @@ void MoveWaveformEventToFlash(void)
 			case FLASH_CAL:
 				for (i = g_samplesInCal; i != 0; i--)
 				{
-					if (g_bitShiftForAccuracy) adjustSampleForBitAccuracy();
+					if (g_bitShiftForAccuracy) AdjustSampleForBitAccuracy();
 					
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
@@ -532,23 +532,23 @@ void MoveWaveformEventToFlash(void)
 					sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 					sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 
-					completeRamEventSummary(ramSummaryEntry, sumEntry);
-					cacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
+					CompleteRamEventSummary(ramSummaryEntry, sumEntry);
+					CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 					
 					// Get new event file handle
-					g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+					g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 
 					if (g_currentEventFileHandle == NULL)
 					{
 						debugErr("Failed to get a new file handle for the current Waveform event!\n");
 						
-						//reInitSdCardAndFat32();
-						//g_currentEventFileHandle = getEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+						//ReInitSdCardAndFat32();
+						//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 					}					
 					else // Write the file event to the SD card
 					{
 						sprintf((char*)&g_spareBuffer[0], "WAVEFORM EVENT #%d BEING SAVED... (MAY TAKE TIME)", g_nextEventNumberToUse);
-						overlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
+						OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
 						// Write the event record header and summary
 						fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
@@ -562,10 +562,10 @@ void MoveWaveformEventToFlash(void)
 
 						ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 					
-						updateMonitorLogEntry();
+						UpdateMonitorLogEntry();
 
 						// After event numbers have been saved, store current event number in persistent storage.
-						storeCurrentEventNumber();
+						StoreCurrentEventNumber();
 
 						// Now store the updated event number in the universal ram storage.
 						g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
@@ -596,16 +596,16 @@ void MoveWaveformEventToFlash(void)
 					waveformProcessingState = FLASH_IDLE;
 					g_freeEventBuffers++;
 
-					if (getPowerControlState(LCD_POWER_ENABLE) == OFF)
+					if (GetPowerControlState(LCD_POWER_ENABLE) == OFF)
 					{
-						assignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, displayTimerCallBack);
-						assignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), lcdPwTimerCallBack);
+						AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
+						AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 					}
 
 					// Check to see if there is room for another event, if not send a signal to stop monitoring
 					if (g_helpRecord.flashWrapping == NO)
 					{
-						getFlashUsageStats(&flashStats);
+						GetFlashUsageStats(&flashStats);
 
 						if (flashStats.waveEventsLeft == 0)
 						{
@@ -616,7 +616,7 @@ void MoveWaveformEventToFlash(void)
 					}
 
 					// Check if AutoDialout is enabled and signal the system if necessary
-					checkAutoDialoutStatus();
+					CheckAutoDialoutStatus();
 
 					g_spi1AccessLock = AVAILABLE;
 				}
@@ -632,7 +632,7 @@ void MoveWaveformEventToFlash(void)
 		{
  			// There were queued event buffers after monitoring was stopped
  			// Close the monitor log entry now since all events have been stored
-			closeMonitorLogEntry();
+			CloseMonitorLogEntry();
 		}
 	}
 }

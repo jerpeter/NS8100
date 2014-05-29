@@ -741,12 +741,12 @@ typedef struct {
 	uint16 secondTextEntry;
 } MB_CHOICE;
 
-// This enum serves as an index for messageChoices (in the c file to prevent multiple definitions)
+// This enum serves as an index for MessageChoices (in the c file to prevent multiple definitions)
 typedef enum {
 	MB_OK = 0,
 	MB_YESNO,
 	MB_OKCANCEL,
-	// Add a new MessageBox choice type above this line and then fill in a corresponding messageChoices entry
+	// Add a new MessageBox choice type above this line and then fill in a corresponding MessageChoices entry
 	MB_TOTAL_CHOICES
 } MB_CHOICE_TYPE;
 
@@ -813,70 +813,70 @@ enum {
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void mainMn(INPUT_MSG_STRUCT);
-void loadRecMn (INPUT_MSG_STRUCT);
-void summaryMn (INPUT_MSG_STRUCT);
-void monitorMn (INPUT_MSG_STRUCT);
-void resultsMn (INPUT_MSG_STRUCT);
-void overWriteMn (INPUT_MSG_STRUCT);
-void batteryMn (INPUT_MSG_STRUCT);
-void dateTimeMn (INPUT_MSG_STRUCT);
-void lcdContrastMn (INPUT_MSG_STRUCT);
-void timerModeTimeMn (INPUT_MSG_STRUCT msg);
-void timerModeDateMn (INPUT_MSG_STRUCT msg);
-void calSetupMn (INPUT_MSG_STRUCT msg);
-void userMn (INPUT_MSG_STRUCT msg);
-void monitorLogMn (INPUT_MSG_STRUCT msg);
+void MainMenu(INPUT_MSG_STRUCT);
+void LoadRecordMenu (INPUT_MSG_STRUCT);
+void SummaryMenu (INPUT_MSG_STRUCT);
+void MonitorMenu (INPUT_MSG_STRUCT);
+void ResultsMenu (INPUT_MSG_STRUCT);
+void OverwriteMenu (INPUT_MSG_STRUCT);
+void BatteryMn (INPUT_MSG_STRUCT);
+void DateTimeMn (INPUT_MSG_STRUCT);
+void LcdContrastMn (INPUT_MSG_STRUCT);
+void TimerModeTimeMenu (INPUT_MSG_STRUCT msg);
+void TimerModeDateMenu (INPUT_MSG_STRUCT msg);
+void CalSetupMn (INPUT_MSG_STRUCT msg);
+void UserMenu (INPUT_MSG_STRUCT msg);
+void MonitorLogMn (INPUT_MSG_STRUCT msg);
 void setupMnDef(void);
 
 //----------------------------------------
 // User Select Menu Enter and Esc Handlers
 //----------------------------------------
-void airScaleMenuHandler(uint8 key, void* data);
-void airSetupMenuHandler(uint8 key, void* data);
-void alarmOneMenuHandler(uint8 key, void* data);
-void alarmTwoMenuHandler(uint8 key, void* data);
-void alarmOutputMenuHandler(uint8 key, void* data);
-void autoCalMenuHandler(uint8 key, void* data);
-void autoMonitorMenuHandler(uint8 key, void* data);
-void barChannelMenuHandler(uint8 key, void* data);
-void barIntervalMenuHandler(uint8 key, void* data);
-void barScaleMenuHandler(uint8 key, void* data);
-void barResultMenuHandler(uint8 key, void* data);
-void baudRateMenuHandler(uint8 key, void* data);
-void bitAccuracyMenuHandler(uint8 key, void* data);
-void configMenuHandler(uint8 key, void* data);
-void displacementMenuHandler(uint8 key, void* data);
-void eraseEventsMenuHandler(uint8 key, void* data);
-void eraseSettingsMenuHandler(uint8 key, void* data);
-void flashWrappingMenuHandler(uint8 key, void* data);
-void freqPlotMenuHandler(uint8 key, void* data);
-void freqPlotStandardMenuHandler(uint8 key, void* data);
-void helpMenuHandler(uint8 key, void* data);
-void infoMenuHandler(uint8 key, void* data);
-void languageMenuHandler(uint8 key, void* data);
-void modeMenuHandler(uint8 key, void* data);
-void modemSetupMenuHandler(uint8 key, void* data);
-void monitorLogMenuHandler(uint8 key, void* data);
-void peakAccMenuHandler(uint8 key, void* data);
-void pretriggerSizeMenuHandler(uint8 key, void* data);
-void printerEnableMenuHandler(uint8 key, void* data);
-void printOutMenuHandler(uint8 key, void* data);
-void printMonitorLogMenuHandler(uint8 key, void* data);
-void powerSavingsMenuHandler(uint8 key, void* data);
-void recalibrateMenuHandler(uint8 key, void* data);
-void sampleRateMenuHandler(uint8 key, void* data);
-void saveSetupMenuHandler(uint8 key, void* data);
-void sensitivityMenuHandler(uint8 key, void* data);
-void sensorTypeMenuHandler(uint8 key, void* data);
-void summaryIntervalMenuHandler(uint8 key, void* data);
-void timerModeMenuHandler(uint8 key, void* data);
-void timerModeFreqMenuHandler(uint8 key, void* data);
-void unitsOfMeasureMenuHandler(uint8 key, void* data);
-void unitsOfAirMenuHandler(uint8 key, void* data);
-void vectorSumMenuHandler(uint8 key, void* data);
-void waveformAutoCalMenuHandler(uint8 key, void* data);
-void zeroEventNumberMenuHandler(uint8 key, void* data);
+void AirScaleMenuHandler(uint8 key, void* data);
+void AirSetupMenuHandler(uint8 key, void* data);
+void AlarmOneMenuHandler(uint8 key, void* data);
+void AlarmTwoMenuHandler(uint8 key, void* data);
+void AlarmOutputMenuHandler(uint8 key, void* data);
+void AutoCalMenuHandler(uint8 key, void* data);
+void AutoMonitorMenuHandler(uint8 key, void* data);
+void BarChannelMenuHandler(uint8 key, void* data);
+void BarIntervalMenuHandler(uint8 key, void* data);
+void BarScaleMenuHandler(uint8 key, void* data);
+void BarResultMenuHandler(uint8 key, void* data);
+void BaudRateMenuHandler(uint8 key, void* data);
+void BitAccuracyMenuHandler(uint8 key, void* data);
+void ConfigMenuHandler(uint8 key, void* data);
+void DisplacementMenuHandler(uint8 key, void* data);
+void EraseEventsMenuHandlerz(uint8 key, void* data);
+void EraseSettingsMenuHandler(uint8 key, void* data);
+void FlashWrappingMenuHandler(uint8 key, void* data);
+void FreqPlotMenuHandler(uint8 key, void* data);
+void FreqPlotStandardMenuHandler(uint8 key, void* data);
+void HelpMenuHandler(uint8 key, void* data);
+void InfoMenuHandler(uint8 key, void* data);
+void LanguageMenuHandler(uint8 key, void* data);
+void ModeMenuHandler(uint8 key, void* data);
+void ModemSetupMenuHandler(uint8 key, void* data);
+void MonitorLogMenuHandler(uint8 key, void* data);
+void PeakAccMenuHandler(uint8 key, void* data);
+void PretriggerSizeMenuHandler(uint8 key, void* data);
+void PrinterEnableMenuHandler(uint8 key, void* data);
+void PrintOutMenuHandler(uint8 key, void* data);
+void PrintMonitorLogMenuHandler(uint8 key, void* data);
+void PowerSavingsMenuHandler(uint8 key, void* data);
+void RecalibrateMenuHandler(uint8 key, void* data);
+void SampleRateMenuHandler(uint8 key, void* data);
+void SaveSetupMenuHandler(uint8 key, void* data);
+void SensitivityMenuHandler(uint8 key, void* data);
+void SensorTypeMenuHandler(uint8 key, void* data);
+void SummaryIntervalMenuHandler(uint8 key, void* data);
+void TimerModeMenuHandler(uint8 key, void* data);
+void TimerModeFreqMenuHandler(uint8 key, void* data);
+void UnitsOfMeasureMenuHandler(uint8 key, void* data);
+void UnitsOfAirMenuHandler(uint8 key, void* data);
+void VectorSumMenuHandler(uint8 key, void* data);
+void WaveformAutoCalMenuHandler(uint8 key, void* data);
+void ZeroEventNumberMenuHandler(uint8 key, void* data);
 //----------------------------------------
 // End of User Select Menu Handlers
 //----------------------------------------
@@ -884,32 +884,32 @@ void zeroEventNumberMenuHandler(uint8 key, void* data);
 //----------------------------------------
 // User Input Menu Enter and Esc Handlers
 //----------------------------------------
-void airTriggerMenuHandler(uint8 key, void* data);
-void alarmOneSeismicLevelMenuHandler(uint8 key, void* data);
-void alarmOneAirLevelMenuHandler(uint8 key, void* data);
-void alarmOneTimeMenuHandler(uint8 key, void* data);
-void alarmTwoSeismicLevelMenuHandler(uint8 key, void* data);
-void alarmTwoAirLevelMenuHandler(uint8 key, void* data);
-void alarmTwoTimeMenuHandler(uint8 key, void* data);
-void companyMenuHandler(uint8 key, void* data);
-void copiesMenuHandler(uint8 key, void* data);
-void distanceToSourceMenuHandler(uint8 key, void* data);
-void lcdImpulseTimeMenuHandler(uint8 key, void* data);
-void lcdTimeoutMenuHandler(uint8 key, void* data);
-void modemDialMenuHandler(uint8 key, void* data);
-void modemInitMenuHandler(uint8 key, void* data);
+void AirTriggerMenuHandler(uint8 key, void* data);
+void AlarmOneSeismicLevelMenuHandler(uint8 key, void* data);
+void AlarmOneAirLevelMenuHandler(uint8 key, void* data);
+void AlarmOneTimeMenuHandler(uint8 key, void* data);
+void AlarmTwoSeismicLevelMenuHandler(uint8 key, void* data);
+void AlarmTwoAirLevelMenuHandler(uint8 key, void* data);
+void AlarmTwoTimeMenuHandler(uint8 key, void* data);
+void CompanyMenuHandler(uint8 key, void* data);
+void CopiesMenuHandler(uint8 key, void* data);
+void DistanceToSourceMenuHandler(uint8 key, void* data);
+void LcdImpulseTimeMenuHandler(uint8 key, void* data);
+void LcdTimeoutMenuHandler(uint8 key, void* data);
+void ModemDialMenuHandler(uint8 key, void* data);
+void ModemInitMenuHandler(uint8 key, void* data);
 void modemResetMenuHandler(uint8 key, void* data);
-void modemRetryMenuHandler(uint8 key, void* data);
-void modemRetryTimeMenuHandler(uint8 key, void* data);
-void notesMenuHandler(uint8 key, void* data);
-void operatorMenuHandler(uint8 key, void* data);
-void recordTimeMenuHandler(uint8 key, void* data);
-void saveRecordMenuHandler(uint8 key, void* data);
-void seismicLocationMenuHandler(uint8 key, void* data);
-void seismicTriggerMenuHandler(uint8 key, void* data);
-void serialNumberMenuHandler(uint8 key, void* data);
-void unlockCodeMenuHandler(uint8 key, void* data);
-void weightPerDelayMenuHandler(uint8 key, void* data);
+void ModemRetryMenuHandler(uint8 key, void* data);
+void ModemRetryTimeMenuHandler(uint8 key, void* data);
+void NotesMenuHandler(uint8 key, void* data);
+void OperatorMenuHandler(uint8 key, void* data);
+void RecordTimeMenuHandler(uint8 key, void* data);
+void SaveRecordMenuHandler(uint8 key, void* data);
+void SeismicLocationMenuHandler(uint8 key, void* data);
+void SeismicTriggerMenuHandler(uint8 key, void* data);
+void SerialNumberMenuHandler(uint8 key, void* data);
+void UnlockCodeMenuHandler(uint8 key, void* data);
+void WeightPerDelayMenuHandler(uint8 key, void* data);
 //----------------------------------------
 // End of Menu Handlers
 //----------------------------------------
@@ -918,37 +918,37 @@ void weightPerDelayMenuHandler(uint8 key, void* data);
 ///	Other Prototypes
 ///----------------------------------------------------------------------------
 // MessageBox headers and helper routines
-void messageBorder(void);
-void messageTitle(char* titleString);
-void messageText(char* textString);
-void messageChoice(MB_CHOICE_TYPE choiceType);
-void messageChoiceActiveSwap(MB_CHOICE_TYPE choiceType);
-uint8 messageBox(char* titleString, char* textString, MB_CHOICE_TYPE messageType);
-void overlayMessage(char* titleString, char* textString, uint32 displayTime);
+void MessageBorder(void);
+void MessageTitle(char* titleString);
+void MessageText(char* textString);
+void MessageChoice(MB_CHOICE_TYPE choiceType);
+void MessageChoiceActiveSwap(MB_CHOICE_TYPE choiceType);
+uint8 MessageBox(char* titleString, char* textString, MB_CHOICE_TYPE messageType);
+void OverlayMessage(char* titleString, char* textString, uint32 displayTime);
 
 // Prototypes needed across menus
-void loadTempMenuTable(TEMP_MENU_DATA_STRUCT* currentMenu);
-void wndMpWrtString(uint8*, WND_LAYOUT_STRUCT*, int, int);
-void mnScroll(char, char, MN_LAYOUT_STRUCT*);
-void userMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr);
-void displayUserMenu(WND_LAYOUT_STRUCT* wnd_layout_ptr, MN_LAYOUT_STRUCT* mn_layout_ptr, uint8 titlePosition);
-void dsplySelMn(WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*, uint8 titlePosition);
-void stopDataCollection(void);
-void stopDataClock(void);
-void startMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mode);
-void stopMonitoring(uint8 mode, uint8 operation);
-void handleManualCalibration(void);
-void bargraphForcedCalibration(void);
-void processTimerModeSettings(uint8 mode);
-void waitForEventProcessingToFinish(void);
-void updateModeMenuTitle(uint8 mode);
-void displaySplashScreen(void);
-void displaySensorType(void);
-void displayCalDate(void);
-void displaySerialNumber(void);
-void displayTimerModeSettings(void);
-void displayFlashUsageStats(void);
-void displayAutoDialInfo(void);
-void initSensorParameters(uint16 sensor_type, uint8 sensitivity);
+void LoadTempMenuTable(TEMP_MENU_DATA_STRUCT* currentMenu);
+void WndMpWrtString(uint8*, WND_LAYOUT_STRUCT*, int, int);
+void MenuScroll(char, char, MN_LAYOUT_STRUCT*);
+void UserMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr);
+void DisplayUserMenu(WND_LAYOUT_STRUCT* wnd_layout_ptr, MN_LAYOUT_STRUCT* mn_layout_ptr, uint8 titlePosition);
+void DisplaySelectMenu(WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*, uint8 titlePosition);
+void StopDataCollection(void);
+void StopDataClock(void);
+void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mode);
+void StopMonitoring(uint8 mode, uint8 operation);
+void HandleManualCalibration(void);
+void BargraphForcedCalibration(void);
+void ProcessTimerModeSettings(uint8 mode);
+void WaitForEventProcessingToFinish(void);
+void UpdateModeMenuTitle(uint8 mode);
+void DisplaySplashScreen(void);
+void DisplayCalDate(void);
+void DisplaySensorType(void);
+void DisplaySerialNumber(void);
+void DisplayTimerModeSettings(void);
+void DisplayFlashUsageStats(void);
+void DisplayAutoDialInfo(void);
+void InitSensorParameters(uint16 sensor_type, uint8 sensitivity);
 
 #endif // _MENU_H_

@@ -29,7 +29,7 @@
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-int16 chipErase(void)
+int16 ChipErase(void)
 {
 	//uint16* addr = NULL;
 	//uint32 i = 0;
@@ -51,38 +51,38 @@ int16 chipErase(void)
 	*addr = 0x0010;
 
 	// Check if flash command did not complete successfully
-	if (flashCmdCompletePolling((volatile uint16*)FLASH_BASE_ADDR)
+	if (FlashCmdCompletePolling((volatile uint16*)FLASH_BASE_ADDR)
 		!= FLASH_OP_SUCCESS)
 	{
-		issueReset();
-		debugErr("Flash chipErase: CmdComplete failed.\n");
+		IssueFlashReset();
+		debugErr("Flash ChipErase: CmdComplete failed.\n");
 		return (FLASH_OP_ERROR);
 	}
 
 	// Check if flash data is not correct
-	if (flashDataPolling((volatile uint16*)FLASH_BASE_ADDR, 0xffff) != FLASH_OP_SUCCESS)
+	if (FlashDataPolling((volatile uint16*)FLASH_BASE_ADDR, 0xffff) != FLASH_OP_SUCCESS)
 	{
-		issueReset();
-		debugErr("Flash chipErase: DataPolling failed.\n");
+		IssueFlashReset();
+		debugErr("Flash ChipErase: DataPolling failed.\n");
 		return (FLASH_OP_ERROR);
 	}
 
 	for (i = 0; i < TOTAL_FLASH_SIZE_x16; i++)
 	{
 		if (*flashPtr != 0xffff)
-			debugErr("Flash chipErase: Erase failure, address: 0x%x, data: 0x%x\n", flashPtr, *flashPtr);
+			debugErr("Flash ChipErase: Erase failure, address: 0x%x, data: 0x%x\n", flashPtr, *flashPtr);
 		flashPtr++;
 	}
 
 #else // New command set
 	// Check if an Atmel flash
-	if(verifyAtmelFlashDevice() == YES)
+	if(VerifyAtmelFlashDevice() == YES)
 	{
-		sectorErase((uint16*)FLASH_BASE_ADDR, TOTAL_FLASH_SECTORS);
+		SectorErase((uint16*)FLASH_BASE_ADDR, TOTAL_FLASH_SECTORS);
 	}
 	else
 	{
-		sectorErase((uint16*)FLASH_BASE_ADDR, (15 + 1 + 8)); // 15 - 64K, 1 - 32K, 8 - 8K
+		SectorErase((uint16*)FLASH_BASE_ADDR, (15 + 1 + 8)); // 15 - 64K, 1 - 32K, 8 - 8K
 	}
 #endif
 
@@ -94,7 +94,7 @@ int16 chipErase(void)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
+int16 SectorErase(uint16* sectorAddr, uint16 numSectors)
 {
 	//uint16* addr = NULL;
 	uint32 i = 0;
@@ -103,14 +103,14 @@ int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 
 	if (numSectors < 1)
 	{
-		debugWarn("Flash sectorErase: Number of sectors invalid.\n");
+		debugWarn("Flash SectorErase: Number of sectors invalid.\n");
 		return (FLASH_OP_ERROR);
 	}
 
 	while (numSectors--)
 
 	{
-		//debug("Flash sectorErase: Sector to erase = 0x%x\n", sectorAddr);
+		//debug("Flash SectorErase: Sector to erase = 0x%x\n", sectorAddr);
 
 #if 0 // Old command set
 		// Issue command to perform a sector erase (Addresses shifted, Processor A1 connected to Flash Device A0)
@@ -128,18 +128,18 @@ int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 		*addr = 0x0030;
 
 		// Check if flash command did not complete successfully
-		if (flashCmdCompletePolling((volatile uint16*)sectorAddr) != FLASH_OP_SUCCESS)
+		if (FlashCmdCompletePolling((volatile uint16*)sectorAddr) != FLASH_OP_SUCCESS)
 		{
-			issueReset();
-			debugErr("Flash sectorErase: CmdComplete failed.\n");
+			IssueFlashReset();
+			debugErr("Flash SectorErase: CmdComplete failed.\n");
 			return (FLASH_OP_ERROR);
 		}
 
 		// Check if flash data is not correct
-		if (flashDataPolling((volatile uint16*)sectorAddr, 0xffff) != FLASH_OP_SUCCESS)
+		if (FlashDataPolling((volatile uint16*)sectorAddr, 0xffff) != FLASH_OP_SUCCESS)
 		{
-			issueReset();
-			debugErr("Flash sectorErase: DataPolling failed.\n");
+			IssueFlashReset();
+			debugErr("Flash SectorErase: DataPolling failed.\n");
 			return (FLASH_OP_ERROR);
 		}
 
@@ -168,7 +168,7 @@ int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 #endif
 
 		// Check if an Atmel flash
-		if(verifyAtmelFlashDevice() == YES)
+		if(VerifyAtmelFlashDevice() == YES)
 		{
 			// Check if in the Boot sector range
 			if (sectorAddr < (uint16*)(FLASH_BASE_ADDR | FLASH_BOOT_SIZE_x8))
@@ -224,7 +224,7 @@ int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 			// Check if a flash cell location is not erased
 			if (*flashPtr != 0xffff)
 			{
-				debugErr("Flash sectorErase: Erase failure, address: 0x%x, data: 0x%x\n", flashPtr, *flashPtr);
+				debugErr("Flash SectorErase: Erase failure, address: 0x%x, data: 0x%x\n", flashPtr, *flashPtr);
 				debugErr("Skipping rest of sector\n");
 				break;
 			}
@@ -243,14 +243,14 @@ int16 sectorErase(uint16* sectorAddr, uint16 numSectors)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-int16 flashWrite(uint16* dest, uint16* src, uint32 length)
+int16 FlashWrite(uint16* dest, uint16* src, uint32 length)
 {
 #if 0 // ns7100
 	uint32 x;
 
 	for (x = 0; x < length; x++)
 	{
-		if (programWord((uint16*)(dest + x), src[x]) == FLASH_OP_ERROR)
+		if (ProgramFlashWord((uint16*)(dest + x), src[x]) == FLASH_OP_ERROR)
 			return (FLASH_OP_ERROR);
 	}
 #else // Remove warnings
@@ -271,22 +271,22 @@ extern FL_FILE* g_currentEventFileHandle;
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-int16 programWord(uint16* destAddr, uint16 data)
+int16 ProgramFlashWord(uint16* destAddr, uint16 data)
 {
 	//uint16* addr = NULL;
 	uint16 currData = *destAddr;
 
 	// Check if addr is not in valid range
-	if (verifyFlashAddr(destAddr) != FLASH_OP_SUCCESS)
+	if (VerifyFlashAddr(destAddr) != FLASH_OP_SUCCESS)
 	{
-		debugErr("Flash programWord: Addr check failed, address: 0x%x is out of range\n", destAddr);
+		debugErr("Flash ProgramFlashWord: Addr check failed, address: 0x%x is out of range\n", destAddr);
 		return (FLASH_OP_ERROR);
 	}
 
 	// Check if trying to write/toggle any bits to 1's when the stored bits are 0
 	if (((~currData) & data) != 0)
 	{
-		debugErr("Flash programWord: Data check failed, address: 0x%x, current data: 0x%x, new data: 0x%x\n",
+		debugErr("Flash ProgramFlashWord: Data check failed, address: 0x%x, current data: 0x%x, new data: 0x%x\n",
 			destAddr, currData, data);
 		return (FLASH_OP_ERROR);
 	}
@@ -303,10 +303,10 @@ int16 programWord(uint16* destAddr, uint16 data)
 	*addr = data;
 
 	// Check if flash data is not correct
-	if (flashDataPolling((volatile uint16*)destAddr, data) != FLASH_OP_SUCCESS)
+	if (FlashDataPolling((volatile uint16*)destAddr, data) != FLASH_OP_SUCCESS)
 	{
-		issueReset();
-		debugErr("Flash programWord: DataPolling failed, address: 0x%x, data: 0x%x (data before write: 0x%x).\n",
+		IssueFlashReset();
+		debugErr("Flash ProgramFlashWord: DataPolling failed, address: 0x%x, data: 0x%x (data before write: 0x%x).\n",
 			destAddr, data, currData);
 		return (FLASH_OP_ERROR);
 	}
@@ -339,7 +339,7 @@ int16 programWord(uint16* destAddr, uint16 data)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-int16 programByte(uint8* destAddr, uint8 data)
+int16 ProgramFlashByte(uint8* destAddr, uint8 data)
 {
 	//uint16* addr = NULL;
 	uint16* wordAddr;
@@ -347,9 +347,9 @@ int16 programByte(uint8* destAddr, uint8 data)
 	uint16 checkWord;
 
 	// Check if addr is not in valid range
-	if (verifyFlashAddr((uint16*)destAddr) != FLASH_OP_SUCCESS)
+	if (VerifyFlashAddr((uint16*)destAddr) != FLASH_OP_SUCCESS)
 	{
-		debugErr("Flash programWord: Addr check failed, address: 0x%x is out of range\n", destAddr);
+		debugErr("Flash ProgramFlashWord: Addr check failed, address: 0x%x is out of range\n", destAddr);
 		return (FLASH_OP_ERROR);
 	}
 
@@ -361,7 +361,7 @@ int16 programByte(uint8* destAddr, uint8 data)
 	{
 		if ((checkWord & 0x00ff) != 0x00ff)
 		{
-			debugErr("Flash programByte: Data check failed, address: 0x%x, data in flash: 0x%x\n",
+			debugErr("Flash ProgramFlashByte: Data check failed, address: 0x%x, data in flash: 0x%x\n",
 				destAddr, (uint8)(checkWord & 0x00ff));
 			return (FLASH_OP_ERROR);
 		}
@@ -375,7 +375,7 @@ int16 programByte(uint8* destAddr, uint8 data)
 	{
 		if ((checkWord & 0xff00) != 0xff00)
 		{
-			debugErr("Flash programByte: Data check failed, address: 0x%x, data in flash: 0x%x\n",
+			debugErr("Flash ProgramFlashByte: Data check failed, address: 0x%x, data in flash: 0x%x\n",
 				destAddr, (uint8)(checkWord >> 8));
 			return (FLASH_OP_ERROR);
 		}
@@ -398,10 +398,10 @@ int16 programByte(uint8* destAddr, uint8 data)
 	*addr = wordData;
 
 	// Check if flash data is not correct
-	if (flashDataPolling((volatile uint16*)wordAddr, wordData) != FLASH_OP_SUCCESS)
+	if (FlashDataPolling((volatile uint16*)wordAddr, wordData) != FLASH_OP_SUCCESS)
 	{
-		issueReset();
-		debugErr("Flash programByte: DataPolling failed, address: 0x%x, data: 0x%x (data before write: 0x%x).\n",
+		IssueFlashReset();
+		debugErr("Flash ProgramFlashByte: DataPolling failed, address: 0x%x, data: 0x%x (data before write: 0x%x).\n",
 			wordAddr, wordData, checkWord);
 		return (FLASH_OP_ERROR);
 	}
@@ -434,7 +434,7 @@ int16 programByte(uint8* destAddr, uint8 data)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-void issueReset(void)
+void IssueFlashReset(void)
 {
 	uint16* addr;
 
@@ -469,16 +469,16 @@ void waitWhileFlashOperationBusy(void)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-int16 flashCmdCompletePolling(volatile uint16* addr)
+int16 FlashCmdCompletePolling(volatile uint16* addr)
 {
 	uint16 savedVal;
 	uint16 currentVal;
 	uint32 counter = 0;
 
 	// Check if addr is not in valid range
-	if (verifyFlashAddr((uint16*)addr) != FLASH_OP_SUCCESS)
+	if (VerifyFlashAddr((uint16*)addr) != FLASH_OP_SUCCESS)
 	{
-		debugErr("Flash programWord: Addr check failed, address: 0x%x is out of range\n", addr);
+		debugErr("Flash ProgramFlashWord: Addr check failed, address: 0x%x is out of range\n", addr);
 		return (FLASH_OP_ERROR);
 	}
 
@@ -505,7 +505,7 @@ int16 flashCmdCompletePolling(volatile uint16* addr)
 		}
 
 		// Small delay since erase operations are on the order of seconds to complete
-		soft_usecWait(1000);
+		SoftUsecWait(1000);
 
 		savedVal = currentVal;
 		currentVal = *addr;
@@ -528,16 +528,16 @@ int16 flashCmdCompletePolling(volatile uint16* addr)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-int16 flashDataPolling(volatile uint16* addr, uint16 data)
+int16 FlashDataPolling(volatile uint16* addr, uint16 data)
 {
 	int32 counter = 0;
 	int32 currentVal = 0;
 	uint16 flashVal;
 
 	// Check if addr is not in valid range
-	if (verifyFlashAddr((uint16*)addr) != FLASH_OP_SUCCESS)
+	if (VerifyFlashAddr((uint16*)addr) != FLASH_OP_SUCCESS)
 	{
-		debugErr("Flash programWord: Addr check failed, address: 0x%x is out of range\n", addr);
+		debugErr("Flash ProgramFlashWord: Addr check failed, address: 0x%x is out of range\n", addr);
 		return (FLASH_OP_ERROR);
 	}
 
@@ -574,7 +574,7 @@ int16 flashDataPolling(volatile uint16* addr, uint16 data)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-int16 verifyFlashAddr(uint16* addr)
+int16 VerifyFlashAddr(uint16* addr)
 {
 	if (((uint32)addr >= FLASH_BASE_ADDR) &&
 		((uint32)addr < FLASH_END_ADDR))
@@ -588,7 +588,7 @@ int16 verifyFlashAddr(uint16* addr)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-int16 verifyFlashDevice(uint8 printResults)
+int16 VerifyFlashDevice(uint8 printResults)
 {
 	volatile uint16* addr = (uint16*)FLASH_BASE_ADDR;
 	uint16 manfId;
@@ -622,7 +622,7 @@ int16 verifyFlashDevice(uint8 printResults)
 	// Read Device Code
 	deviceCode = *addr;
 
-	//debugPrint(RAW, "Flash Device: Manufacturer ID: 0x%x, Device Code: 0x%x\n", manfId, deviceCode);
+	//DebugPrint(RAW, "Flash Device: Manufacturer ID: 0x%x, Device Code: 0x%x\n", manfId, deviceCode);
 
 #if 0
 	addr = (uint16*)(FLASH_BASE_ADDR + 0x04);
@@ -630,7 +630,7 @@ int16 verifyFlashDevice(uint8 printResults)
 	{
 		protection = *addr;
 
-		//debugPrint(RAW, "  Sector %d at (%p) has protection bits: 0x%x\n", i, addr, protection);
+		//DebugPrint(RAW, "  Sector %d at (%p) has protection bits: 0x%x\n", i, addr, protection);
 
 		// Check if in the Boot sector range
 		if (addr < (uint16*)(FLASH_BASE_ADDR | FLASH_BOOT_SIZE_x8))
@@ -650,7 +650,7 @@ int16 verifyFlashDevice(uint8 printResults)
 
 	if(printResults == YES)
 	{
-		debugPrint(RAW, "  Flash Manf ID: 0x%x, Device ID: 0x%x\n", manfId, deviceCode);
+		DebugPrint(RAW, "  Flash Manf ID: 0x%x, Device ID: 0x%x\n", manfId, deviceCode);
 	}
 
 	if ((manfId == FLASH_MANF_ID) && ((deviceCode == FLASH_DEVICE_CODE) ||
@@ -665,7 +665,7 @@ int16 verifyFlashDevice(uint8 printResults)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0 // ns7100
-uint8 verifyAtmelFlashDevice(void)
+uint8 VerifyAtmelFlashDevice(void)
 {
 	volatile uint16* addr = (uint16*)FLASH_BASE_ADDR;
 	uint8 atmelFlashPart = NO;

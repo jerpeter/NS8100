@@ -212,17 +212,17 @@
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-int16 chipErase(void);
-int16 sectorErase(uint16* sectorAddr, uint16 numSectors);
-int16 flashWrite(uint16* dest, uint16* src, uint32 length);
-int16 programWord(uint16* destAddr, uint16 data);
-int16 programByte(uint8* destAddr, uint8 data);
-void issueReset(void);
+int16 ChipErase(void);
+int16 SectorErase(uint16* sectorAddr, uint16 numSectors);
+int16 FlashWrite(uint16* dest, uint16* src, uint32 length);
+int16 ProgramFlashWord(uint16* destAddr, uint16 data);
+int16 ProgramFlashByte(uint8* destAddr, uint8 data);
+void IssueFlashReset(void);
 void waitWhileFlashOperationBusy(void);
-int16 verifyFlashAddr(uint16* addr);
-int16 verifyFlashDevice(uint8 printResults);
-int16 flashCmdCompletePolling(volatile uint16* addr);
-int16 flashDataPolling(volatile uint16* addr, uint16 data);
-uint8 verifyAtmelFlashDevice(void);
+int16 VerifyFlashAddr(uint16* addr);
+int16 VerifyFlashDevice(uint8 printResults);
+int16 FlashCmdCompletePolling(volatile uint16* addr);
+int16 FlashDataPolling(volatile uint16* addr, uint16 data);
+uint8 VerifyAtmelFlashDevice(void);
 
 #endif // _EXT_FLASH_H_

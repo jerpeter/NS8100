@@ -17,7 +17,7 @@
 ///	Defines
 ///----------------------------------------------------------------------------
 #define MIN_SAMPLE_RATE				512
-#define MAX_SAMPLE_RATE				8192 // fix_ns8100
+#define MAX_SAMPLE_RATE				16384
 
 #define SAMPLE_RATE_512		512
 #define SAMPLE_RATE_1K		1024
@@ -40,7 +40,7 @@
 #define LARGEST_PRETIRGGER_SIZE_IN_BYTES	(MAX_DATA_PER_SECOND)
 #endif
 
-#define LARGEST_EVENT_SIZE_IN_BYTES			(MAX_DATA_PER_SECOND * 100) // 655360 = MAX_DATA_PER_SECOND * 5 seconds
+#define LARGEST_EVENT_SIZE_IN_BYTES			(MAX_DATA_PER_SECOND * 50) // Determined by max data and ram storage available
 #define LARGEST_CAL_SIZE_IN_BYTES			(MAX_DATA_PER_SAMPLE * MAX_CAL_SAMPLES) // 1600
 #define SPARE_SIZE_IN_BYTES					24000 // Leftover to match old event buffer size
 

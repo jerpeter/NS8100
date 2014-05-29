@@ -424,7 +424,7 @@ typedef struct
 	uint8 	timerMode;
 	uint8 	timerModeFrequency;
 #if 1 // fix_ns8100 - Size changed to uint32, however this field isn't needed
-	uint16 	timerModeActiveMinutes;
+	uint16 	TimerModeActiveMinutes;
 #endif
 	DATE_TIME_STRUCT  timer_start;
 	DATE_TIME_STRUCT  timer_stop;
@@ -523,20 +523,20 @@ enum CMD_MESSAGE_INDEX {
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-uint8 parseIncommingMsgHeader(CMD_BUFFER_STRUCT*, COMMAND_MESSAGE_HEADER*);
-uint8 parseIncommingMsgCmd(CMD_BUFFER_STRUCT*, COMMAND_MESSAGE_HEADER*);
+uint8 ParseIncommingMsgHeader(CMD_BUFFER_STRUCT*, COMMAND_MESSAGE_HEADER*);
+uint8 ParseIncommingMsgCmd(CMD_BUFFER_STRUCT*, COMMAND_MESSAGE_HEADER*);
 
-void buildOutgoingHeaderBuffer(COMMAND_MESSAGE_HEADER*, uint8*);
-void buildOutgoingSimpleHeaderBuffer(uint8*, uint8*, uint8*, uint32, uint8, uint8);
-void sendErrorMsg(uint8*, uint8*);
-uint16 getInt16Field(uint8*);
-void buildIntDataField(char*, uint32, uint8);
-uint32 dataLengthStrToUint32(uint8*);
-void writeCompressedData(uint8 compressedData);
-void initAutoDialout(void);
-void checkAutoDialoutStatus(void);
-void startAutoDialoutProcess(void);
-void autoDialoutStateMachine(void);
+void BuildOutgoingHeaderBuffer(COMMAND_MESSAGE_HEADER*, uint8*);
+void BuildOutgoingSimpleHeaderBuffer(uint8*, uint8*, uint8*, uint32, uint8, uint8);
+void SendErrorMsg(uint8*, uint8*);
+uint16 GetInt16Field(uint8*);
+void BuildIntDataField(char*, uint32, uint8);
+uint32 DataLengthStrToUint32(uint8*);
+void WriteCompressedData(uint8 compressedData);
+void InitAutoDialout(void);
+void CheckAutoDialoutStatus(void);
+void StartAutoDialoutProcess(void);
+void AutoDialoutStateMachine(void);
 
 #endif // _REMOTE_COMMON_H_
 

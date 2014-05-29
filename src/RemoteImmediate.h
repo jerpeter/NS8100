@@ -17,17 +17,17 @@
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-// Function: handleUNL - Unlock unit.
-void handleUNL(CMD_BUFFER_STRUCT* inCmd);
+// Function: HandleUNL - Unlock unit.
+void HandleUNL(CMD_BUFFER_STRUCT* inCmd);
 
 // Function: handleRST - Reset the unit.
 void handleRST(CMD_BUFFER_STRUCT* inCmd);
 
-// Function: handleDDP - Toggle debug printing.
-void handleDDP(CMD_BUFFER_STRUCT* inCmd);
+// Function: HandleDDP - Toggle debug printing.
+void HandleDDP(CMD_BUFFER_STRUCT* inCmd);
 
-// Function: handleDAI - Download Application Image.
-void handleDAI(CMD_BUFFER_STRUCT* inCmd);
+// Function: HandleDAI - Download Application Image.
+void HandleDAI(CMD_BUFFER_STRUCT* inCmd);
 
 
 // Function: handleESM - Erase summary memory.
@@ -42,12 +42,12 @@ void handleECM(CMD_BUFFER_STRUCT* inCmd);
 // Function: handleECM - Start a Trigger.
 void handleTRG(CMD_BUFFER_STRUCT* inCmd);
 
-// Function: handleVML - View Monitor Log
-void handleVML(CMD_BUFFER_STRUCT* inCmd);
+// Function: HandleVML - View Monitor Log
+void HandleVML(CMD_BUFFER_STRUCT* inCmd);
 void sendVMLData(void);
 
-// Function: handleUDE - Update last Downloaded Event number
-void handleUDE(CMD_BUFFER_STRUCT* inCmd);
+// Function: HandleUDE - Update last Downloaded Event number
+void HandleUDE(CMD_BUFFER_STRUCT* inCmd);
 
 // Function: handleGAD - Get Auto-dialout/Download information
 void handleGAD(CMD_BUFFER_STRUCT* inCmd);
@@ -55,16 +55,16 @@ void handleGAD(CMD_BUFFER_STRUCT* inCmd);
 // Function: handleGFS - Get flash stats
 void handleGFS(CMD_BUFFER_STRUCT* inCmd);
 
-// Function: handleDQS - Download Quick Summary Memory.
-void handleDQM(CMD_BUFFER_STRUCT* inCmd);
+// Function: HandleDQS - Download Quick Summary Memory.
+void HandleDQM(CMD_BUFFER_STRUCT* inCmd);
 uint8 sendDQMData(void);
 
-// Function: handleDSM - Download summary memory.
-void handleDSM(CMD_BUFFER_STRUCT* inCmd);
+// Function: HandleDSM - Download summary memory.
+void HandleDSM(CMD_BUFFER_STRUCT* inCmd);
 uint8 sendDSMData(void);
 
-// Function: handleDEM - Download event memory.
-void handleDEM(CMD_BUFFER_STRUCT* inCmd);
+// Function: HandleDEM - Download event memory.
+void HandleDEM(CMD_BUFFER_STRUCT* inCmd);
 void prepareDEMDataToSend(EVT_RECORD*, COMMAND_MESSAGE_HEADER*);
 uint8 sendDEMData(void);
 uint8* sendDataNoFlashWrapCheck(uint8*, uint8*);

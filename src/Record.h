@@ -263,7 +263,7 @@ typedef struct
 	uint32 alarmTwoAirMinLevel;
 	float alarmOneTime;
 	float alarmTwoTime;
-	uint32 timerModeActiveMinutes;
+	uint32 TimerModeActiveMinutes;
 	uint8 timerMode;
 	uint8 timerModeFrequency;
 	TM_TIME_STRUCT timerStartTime;
@@ -340,34 +340,34 @@ typedef struct
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void saveRecData(void*, uint32, uint8);
-void getRecData(void*, uint32, uint8);
-void convertTimeStampToString(char*, void*, uint8);
-void copyFlashBlock(uint16* src, uint16* dst, uint32 len);
-void copyRecIntoFlashBk(uint16*, uint16*, uint32, uint32);
-uint8 checkForAvailableTriggerRecordEntry(char* name, uint8* match);
-void loadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode);
-void loadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr);
-void activateHelpRecordOptions(void);
-void loadModemSetupRecordDefaults(void);
-void validateModemSetupParameters(void);
+void SaveRecordData(void*, uint32, uint8);
+void GetRecordData(void*, uint32, uint8);
+void ConvertTimeStampToString(char*, void*, uint8);
+void CopyFlashBlock(uint16* src, uint16* dst, uint32 len);
+void CopyRecordIntoFlashBk(uint16*, uint16*, uint32, uint32);
+uint8 CheckForAvailableTriggerRecordEntry(char* name, uint8* match);
+void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode);
+void LoadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr);
+void ActivateHelpRecordOptions(void);
+void LoadModemSetupRecordDefaults(void);
+void ValidateModemSetupParameters(void);
 
 // Monitor Log prototypes
-void initMonitorLog(void);
-void advanceMonitorLogIndex(void);
-uint16 getStartingMonitorLogTableIndex(void);
-uint16 getStartingEventNumberForCurrentMonitorLog(void);
-void clearMonitorLogEntry(void);
-void newMonitorLogEntry(uint8 mode);
-void updateMonitorLogEntry();
-void closeMonitorLogEntry();
+void InitMonitorLog(void);
+void AdvanceMonitorLogIndex(void);
+uint16 GetStartingMonitorLogTableIndex(void);
+uint16 GetStartingEventNumberForCurrentMonitorLog(void);
+void ClearMonitorLogEntry(void);
+void NewMonitorLogEntry(uint8 mode);
+void UpdateMonitorLogEntry();
+void CloseMonitorLogEntry();
 void printMonitorLogEntry(uint8 mode, MONITOR_LOG_ENTRY_STRUCT* logEntry);
-void initMonitorLogUniqueEntryId(void);
-void storeMonitorLogUniqueEntryId(void);
-uint8 getNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, MONITOR_LOG_ENTRY_STRUCT* logEntry);
-uint16 numOfNewMonitorLogEntries(uint16 uid);
-void appendMonitorLogEntryFile(void);
-void initMonitorLogTableFromLogFile(void);
+void InitMonitorLogUniqueEntryId(void);
+void StoreMonitorLogUniqueEntryId(void);
+uint8 GetNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, MONITOR_LOG_ENTRY_STRUCT* logEntry);
+uint16 NumOfNewMonitorLogEntries(uint16 uid);
+void AppendMonitorLogEntryFile(void);
+void InitMonitorLogTableFromLogFile(void);
 
 // Parameter Memory
 void GetParameterMemory(uint8* dest, uint16 address, uint16 size);

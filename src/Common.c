@@ -48,7 +48,7 @@ static void (*s_bootloader)(void) = NULL;
 ///	Function Break
 ///----------------------------------------------------------------------------
 #define AD_VOLTAGE_READ_LOOP_COUNT	15
-float getExternalVoltageLevelAveraged(uint8 type)
+float GetExternalVoltageLevelAveraged(uint8 type)
 {
 	uint32 adVoltageReadValue = 0;
 	uint32 adChannelSum = 0;
@@ -68,7 +68,7 @@ float getExternalVoltageLevelAveraged(uint8 type)
 					adVoltageReadValue = adc_get_value(&AVR32_ADC, VIN_CHANNEL);
 					
 					// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
-					soft_usecWait(4);
+					SoftUsecWait(4);
 					//debug("Ext Charge Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
 				}				
 				break;
@@ -79,7 +79,7 @@ float getExternalVoltageLevelAveraged(uint8 type)
 					adVoltageReadValue = adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
 
 					// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
-					soft_usecWait(4);
+					SoftUsecWait(4);
 					//debug("Battery Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
 				}
 				break;
@@ -119,7 +119,7 @@ float getExternalVoltageLevelAveraged(uint8 type)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-BOOLEAN checkExternalChargeVoltagePresent(void)
+BOOLEAN CheckExternalChargeVoltagePresent(void)
 {
 	float adVoltageLevel = (float)0.0;
 	BOOLEAN	externalChargePresent = NO;
@@ -139,7 +139,7 @@ BOOLEAN checkExternalChargeVoltagePresent(void)
 	//debug("Ext Charge Voltage A/D Reading: 0x%x, Value: %f\n", adVoltageReadValue, adVoltageLevel);
 
 #if 0 // Test
-	debug("Battery Voltage: %f\n", getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
+	debug("Battery Voltage: %f\n", GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 #endif
 
 	if (adVoltageLevel > 5.0)
@@ -151,7 +151,7 @@ BOOLEAN checkExternalChargeVoltagePresent(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 adjustedRawBatteryLevel(void)
+uint8 AdjustedRawBatteryLevel(void)
 {
 	uint8 adjustedRawBattLevel = 0;
 #if 0 // Unused
@@ -191,7 +191,7 @@ uint8 adjustedRawBatteryLevel(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 ckInputMsg(INPUT_MSG_STRUCT *msg_ptr)
+uint16 CheckInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 {
 	uint16 data_index;
 
@@ -226,9 +226,9 @@ uint16 ckInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void procInputMsg(INPUT_MSG_STRUCT mn_msg)
+void ProcessInputMsg(INPUT_MSG_STRUCT mn_msg)
 {
-	keypressEventMgr();
+	KeypressEventMgr();
 
 	// Check if the LCD power is off
 	if (getSystemEventState(UPDATE_MENU_EVENT))
@@ -258,14 +258,14 @@ void procInputMsg(INPUT_MSG_STRUCT mn_msg)
 		case CTRL_CMD:
 			{
 				debug("Handling Ctrl Sequence\n");
-				handleCtrlKeyCombination((char)mn_msg.data[0]);
+				HandleCtrlKeyCombination((char)mn_msg.data[0]);
 			}
 			break;
 
 		case BACK_LIGHT_CMD:
 			{
 				debug("Handling Backlight Command\n");
-				setNextLcdBacklightState();
+				SetNextLcdBacklightState();
 			}
 			break;
 
@@ -287,7 +287,7 @@ void procInputMsg(INPUT_MSG_STRUCT mn_msg)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 sendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
+uint16 SendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 {
     uint16 data_index;
 
@@ -336,7 +336,7 @@ uint16 sendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void soft_usecWait(uint32 usecs)
+void SoftUsecWait(uint32 usecs)
 {
 #if 0 // ns7100
 	volatile uint32 i = 0;
@@ -362,7 +362,7 @@ void soft_usecWait(uint32 usecs)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void spinBar(void)
+void SpinBar(void)
 {
 	static uint8 BarPos = 0;
 
@@ -378,7 +378,7 @@ void spinBar(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 swapInt(uint16 Scr)
+uint16 SwapInt(uint16 Scr)
 {
   uint16 swap1;
   uint16 swap2;
@@ -393,11 +393,11 @@ uint16 swapInt(uint16 Scr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-float hexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
+float HexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
 	float tempValue;
 
-	tempValue =  hexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint) * (float)DB_CONVERSION_VALUE;
+	tempValue =  HexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint) * (float)DB_CONVERSION_VALUE;
 
 	if (tempValue > 0)
 	{
@@ -410,7 +410,7 @@ float hexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-float hexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
+float HexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
 	float millibars;
 
@@ -438,11 +438,11 @@ float hexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-float hexToPsi(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
+float HexToPsi(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
 	float psi;
 
-	psi =  hexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint);
+	psi =  HexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint);
 
 	psi = (float)((psi * (float)14.7)/(float)1013.25);
 
@@ -452,7 +452,7 @@ float hexToPsi(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 dbToHex(uint16 db)
+uint16 DbToHex(uint16 db)
 {
 	// This is the inverse log of base 10.
 	double dbValue = (double)pow((double)10, ((double)db/(double)20.0));
@@ -470,7 +470,7 @@ uint16 dbToHex(uint16 db)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 mbToHex(float mb)
+uint16 MbToHex(float mb)
 {
 	// Range is from 0 to 2048. Incoming mb is adjusted up by 10,000. Divide by 25 to bring to the correct range.
 	uint16 mbValue = ceil(mb / ADJUSTED_MB_TO_HEX_VALUE);
@@ -481,7 +481,7 @@ uint16 mbToHex(float mb)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint32 convertDBtoMB(uint32 level)
+uint32 ConvertDBtoMB(uint32 level)
 {
 #if 0 // Poor
 	uint16 hexData;
@@ -489,8 +489,8 @@ uint32 convertDBtoMB(uint32 level)
 
 	if (level != NO_TRIGGER_CHAR)
 	{
-		hexData = dbToHex(level);
-		level = (uint32)(10000 * hexToMB((uint16)hexData, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+		hexData = DbToHex(level);
+		level = (uint32)(10000 * HexToMB((uint16)hexData, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 		remainder = level % AIR_TRIGGER_MB_INC_VALUE;
 		hexData = (uint16)(level - remainder);
 	}
@@ -525,7 +525,7 @@ uint32 convertDBtoMB(uint32 level)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint32 convertMBtoDB(uint32 level)
+uint32 ConvertMBtoDB(uint32 level)
 {
 #if 0 // Poor
 	uint16 hexData;
@@ -533,8 +533,8 @@ uint32 convertMBtoDB(uint32 level)
 
 	if (level != NO_TRIGGER_CHAR)
 	{
-		hexData = mbToHex((float) level);
-		returnData = (uint16)hexToDB((uint16)hexData, DATA_NORMALIZED, g_bitAccuracyMidpoint);
+		hexData = MbToHex((float) level);
+		returnData = (uint16)HexToDB((uint16)hexData, DATA_NORMALIZED, g_bitAccuracyMidpoint);
 	}
 	
 	return(returnData);
@@ -566,7 +566,7 @@ uint32 convertMBtoDB(uint32 level)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 isqrt(uint32 x)
+uint16 Isqrt(uint32 x)
 {
 	register uint32 xroot, m2, x2;
 
@@ -595,127 +595,7 @@ uint16 isqrt(uint32 x)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 0 // ns7100
-void startPitTimer(PIT_TIMER timer)
-{
-	// Enable the specified PIT timer
-	if (timer == KEYPAD_TIMER)
-	{
-		reg_PCSR1.reg |= 0x0001;
-	}
-	else // PIT 2 timer
-	{
-		reg_PCSR2.reg |= 0x0001;
-	}
-}
-#endif
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-#if 0 // ns7100
-void stopPitTimer(PIT_TIMER timer)
-{
-	// Disable the specified PIT timer
-	if (timer == KEYPAD_TIMER)
-	{
-		reg_PCSR1.reg &= ~0x0001;
-	}
-	else // PIT 2 timer
-	{
-		reg_PCSR2.reg &= ~0x0001;
-	}
-}
-#endif
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-#if 0 // ns7100
-BOOLEAN checkPitTimer(PIT_TIMER timer)
-{
-	if (timer == KEYPAD_TIMER)
-	{
-		if (reg_PCSR1.reg & 0x0001)
-			return (ENABLED);
-		else
-			return (DISABLED);
-	}
-	else // PIT 2 timer
-	{
-		if (reg_PCSR2.reg & 0x0001)
-			return (ENABLED);
-		else
-			return (DISABLED);
-	}
-}
-#endif
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-#if 0 // ns7100
-void configPitTimer(PIT_TIMER timer, uint16 clockDivider, uint16 modulus)
-{
-	if (timer == KEYPAD_TIMER)
-	{
-		reg_PCSR1.bit.PRE = clockDivider;
-		reg_PMR1 = modulus;
-	}
-	else // PIT 2 timer
-	{
-		reg_PCSR2.bit.PRE = clockDivider;
-		reg_PMR2 = modulus;
-	}
-}
-#endif
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-#if 0 // ns7100
-void initVersionStrings(void)
-{
-	uint8 length = 0;
-	char tempDate[15];
-	uint8 month = 0;
-
-	byteSet(&g_appVersion[0], 0, sizeof(g_appVersion));
-	byteSet(&g_appDate[0], 0, sizeof(g_appDate));
-	byteSet(&g_appTime[0], 0, sizeof(g_appTime));
-	byteSet(&tempDate[0], 0, sizeof(tempDate));
-
-	// Scan the Date and Time into buffers
-	sscanf((char*)&applicationDate, "$Date: %s %s", (char*)&tempDate, (char*)&g_appTime);
-
-	// Copy over version number string from the app version string starting at position 11
-	sprintf((char*)&g_appVersion, "%s", (char*)&(applicationVersion[11]));
-
-	// Get the length of the version number string
-	length = (uint8)strlen(g_appVersion);
-
-	// Set the null 2 characters from the end of the string to get rid of the " $"
-	g_appVersion[length-2] = '\0';
-
-	// Copy over the Day
-	g_appDate[0] = tempDate[8];
-	g_appDate[1] = tempDate[9];
-	g_appDate[2] = ' ';
-
-	// Copy over the Month converted from the month number to the shortened month text
-	month = (uint8)(atoi((char*)&(tempDate[5])));
-	strcpy((char*)&(g_appDate[3]), (char*)g_monthTable[month].name);
-	g_appDate[6] = ' ';
-
-	// Copy over the Year
-	strncpy((char*)&(g_appDate[7]), (char*)&(tempDate[0]), 4);
-}
-#endif
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void initVersionMsg(void)
+void InitVersionMsg(void)
 {
 #if 0 // ns7100
 	debugRaw("\n\n");
@@ -734,7 +614,7 @@ void initVersionMsg(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void build_languageLinkTable(uint8 languageSelection)
+void BuildLanguageLinkTable(uint8 languageSelection)
 {
 	uint16 i, currIndex = 0;
 	char* languageTablePtr;
@@ -761,7 +641,7 @@ void build_languageLinkTable(uint8 languageSelection)
 
 #if 1 // Updated (Port lost change)
 		case SPANISH_LANG: languageTablePtr = spanishLanguageTable;
-			//sprintf((char*)&languageFilename[0], "C:\\Language\\Spanish.tbl"); // fix_ns8100
+			sprintf((char*)&languageFilename[0], "C:\\Language\\Spanish.tbl");
 			break;
 #endif
 
@@ -769,7 +649,7 @@ void build_languageLinkTable(uint8 languageSelection)
 			languageTablePtr = englishLanguageTable;
 			sprintf((char*)&languageFilename[0], "C:\\Language\\English.tbl");
 			g_helpRecord.languageMode = ENGLISH_LANG;
-			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+			SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 			break;
 	}
 
@@ -787,12 +667,11 @@ void build_languageLinkTable(uint8 languageSelection)
 	{
 		debug("Loading language table from file: %s, Length: %d\n", (char*)&languageFilename[0], languageFile->filelength);
 
-		byteSet(&g_languageTable, '\0', sizeof(g_languageTable));
+		ByteSet(&g_languageTable, '\0', sizeof(g_languageTable));
 
 		if (languageFile->filelength > LANGUAGE_TABLE_MAX_SIZE)
 		{
-			// fix_ns8100 - Clean up error case
-			// Error case - Read the maximum buffer size and pray
+			// Error case - Just read the maximum buffer size and pray
 			fl_fread(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
 		}
 		else
@@ -834,7 +713,7 @@ void build_languageLinkTable(uint8 languageSelection)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void getBootFunctionAddress(void)
+void GetBootFunctionAddress(void)
 {
 	s_bootloader = NULL;
 }
@@ -842,7 +721,7 @@ void getBootFunctionAddress(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void jumpToBootFunction(void)
+void JumpToBootFunction(void)
 {
 	if (s_bootloader != NULL)
 	{
@@ -854,33 +733,33 @@ void jumpToBootFunction(void)
 			{
 				g_helpRecord.autoMonitorMode = AUTO_TWO_MIN_TIMEOUT;
 
-				saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+				SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 			}
 
 			// Turn printing off
 			g_helpRecord.autoPrint = NO;
 
-			stopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 		}
 
 		// Check if the LCD is currently powered
-		if (getPowerControlState(LCD_POWER_ENABLE) == ON)
+		if (GetPowerControlState(LCD_POWER_ENABLE) == ON)
 		{
 			// Turn on the LCD power
-			powerControl(LCD_POWER_ENABLE, ON);
+			PowerControl(LCD_POWER_ENABLE, ON);
 
 			// Set contrast
-			setLcdContrast(g_contrast_value);
+			SetLcdContrast(g_contrast_value);
 
 			// Setup LCD segments and clear display buffer
-			initLcdDisplay();
+			InitLcdDisplay();
 
 			// Turn the backlight on and set to low
-			setLcdBacklightState(BACKLIGHT_DIM);
+			SetLcdBacklightState(BACKLIGHT_DIM);
 		}
 
 		// Wait a second
-		soft_usecWait(1 * SOFT_SECS);
+		SoftUsecWait(1 * SOFT_SECS);
 
 		// Disable interrupts to prevent access to ISR's while in boot
 #if 0 // ns7100
@@ -896,7 +775,7 @@ void jumpToBootFunction(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void byteCpy(void* dest, void* src, uint32 size)
+void ByteCpy(void* dest, void* src, uint32 size)
 {
 	while ((int32)size-- > 0)
 	{
@@ -907,7 +786,7 @@ void byteCpy(void* dest, void* src, uint32 size)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void byteSet(void* dest, uint8 value, uint32 size)
+void ByteSet(void* dest, uint8 value, uint32 size)
 {
 	while ((int32)size-- > 0)
 	{
@@ -924,7 +803,7 @@ void AdjustPowerSavings(void)
 	if (g_helpRecord.validationKey != 0xA5A5)
 	{
 		// Load the Help Record to get the stored Power Savings setting
-		getRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		GetRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 	}
 
 	// Check if the Help Record is valid
@@ -977,7 +856,7 @@ void AdjustPowerSavings(void)
 			//----------------------------------------------------------------------------
 #if 1 // Test
 				// Delay to allow serial to finish
-				soft_usecWait(500 * SOFT_MSECS);
+				SoftUsecWait(500 * SOFT_MSECS);
 #endif
 
 				// Leave active: SYSTIMER; Disable: OCD
@@ -1023,7 +902,7 @@ void AdjustPowerSavings(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void getDateString(char* buff, uint8 monthNum, uint8 bufSize)
+void GetDateString(char* buff, uint8 monthNum, uint8 bufSize)
 {
 	if (bufSize > 3)
 	{
@@ -1032,7 +911,7 @@ void getDateString(char* buff, uint8 monthNum, uint8 bufSize)
 			monthNum = 1;
 		}
 
-		byteSet(buff, 0, bufSize);
+		ByteSet(buff, 0, bufSize);
 		strcpy((char*)buff, (char*)g_monthTable[monthNum].name);
 	}
 }
@@ -1040,7 +919,7 @@ void getDateString(char* buff, uint8 monthNum, uint8 bufSize)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 getDaysPerMonth(uint8 month, uint16 year)
+uint8 GetDaysPerMonth(uint8 month, uint16 year)
 {
 	uint8 daysInTheMonth = 0;
 
@@ -1059,10 +938,10 @@ uint8 getDaysPerMonth(uint8 month, uint16 year)
 }
 
 ///----------------------------------------------------------------------------
-///	Function:	getDayOfWeek
+///	Function:	GetDayOfWeek
 ///	Purpose:
 ///----------------------------------------------------------------------------
-uint8 getDayOfWeek(uint8 year, uint8 month, uint8 day)
+uint8 GetDayOfWeek(uint8 year, uint8 month, uint8 day)
 {
 	uint16 numOfDaysPassed = 0;
 	uint8 dayOfWeek = 0;
@@ -1117,7 +996,7 @@ uint8 getDayOfWeek(uint8 year, uint8 month, uint8 day)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 getTotalDaysFromReference(TM_DATE_STRUCT date)
+uint16 GetTotalDaysFromReference(TM_DATE_STRUCT date)
 {
 	uint16 numOfDaysPassed = 0;
 
@@ -1161,11 +1040,11 @@ uint16 getTotalDaysFromReference(TM_DATE_STRUCT date)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void initTimeMsg(void)
+void InitTimeMsg(void)
 {
 #if (GLOBAL_DEBUG_PRINT_ENABLED == ALL_DEBUG)
-	//DATE_TIME_STRUCT time = getCurrentTime();
-	DATE_TIME_STRUCT time = getRtcTime();
+	//DATE_TIME_STRUCT time = GetCurrentTime();
+	DATE_TIME_STRUCT time = GetExternalRtcTime();
 #endif
 
 	debug("RTC: Current Date: %s %02d, %4d\n", g_monthTable[time.month].name,	time.day, (time.year + 2000));

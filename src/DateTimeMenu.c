@@ -58,41 +58,41 @@ extern USER_MENU_STRUCT configMenu[];
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void dateTimeMn (INPUT_MSG_STRUCT);
-void dateTimeMnProc(INPUT_MSG_STRUCT,
+void DateTimeMn(INPUT_MSG_STRUCT);
+void DateTimeMnProc(INPUT_MSG_STRUCT,
                     REC_MN_STRUCT *,
                     WND_LAYOUT_STRUCT *,
                     MN_LAYOUT_STRUCT *);
-void dsplyDateTimeMn(REC_MN_STRUCT *,
+void DisplayDateTimeMn(REC_MN_STRUCT *,
                      WND_LAYOUT_STRUCT *,
                      MN_LAYOUT_STRUCT *);
-void loadDateTimeMnDefRec(REC_MN_STRUCT *,
+void LoadDateTimeMnDefRec(REC_MN_STRUCT *,
                           DATE_TIME_STRUCT *);
-void dateTimeDvScroll(char, REC_MN_STRUCT *);
-void dateTimeScroll(char, MN_LAYOUT_STRUCT *);
+void DateTimeDvScroll(char, REC_MN_STRUCT *);
+void DateTimeScroll(char, MN_LAYOUT_STRUCT *);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void dateTimeMn (INPUT_MSG_STRUCT msg)
+void DateTimeMn (INPUT_MSG_STRUCT msg)
 {
 	static WND_LAYOUT_STRUCT wnd_layout;
 	static MN_LAYOUT_STRUCT mn_layout;
 	static REC_MN_STRUCT mn_rec[6];
 
-	dateTimeMnProc(msg, mn_rec, &wnd_layout, &mn_layout);
+	DateTimeMnProc(msg, mn_rec, &wnd_layout, &mn_layout);
 
 	if (g_activeMenu == DATE_TIME_MENU)
 	{
-		dsplyDateTimeMn(mn_rec, &wnd_layout, &mn_layout);
-		writeMapToLcd(g_mmap);
+		DisplayDateTimeMn(mn_rec, &wnd_layout, &mn_layout);
+		WriteMapToLcd(g_mmap);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
+void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
                     WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -111,13 +111,13 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 			mn_layout_ptr->top_ln =     0;
 			mn_layout_ptr->sub_ln =     0;
 
-			time = getRtcTime();
+			time = GetExternalRtcTime();
 
 			debug("Date/Time Menu: Current Date: %d-%d-%d  Current Time: %d:%d:%d.%d \n",
 				time.day, time.month, time.year,
 					time.hour, time.min, time.sec, time.hundredths);
 
-			loadDateTimeMnDefRec(rec_ptr, &time);
+			LoadDateTimeMnDefRec(rec_ptr, &time);
 			rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
 
 			break;
@@ -135,9 +135,9 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 					time.year = (char)rec_ptr[DTM_YEAR].numrec.tindex;
 
 					// Set the new time in the clock. ALSO get the time to reset the globals.
-					setRtcTime(&time);
-					setRtcDate(&time);
-					updateCurrentTime();
+					SetExternalRtcTime(&time);
+					SetExternalRtcDate(&time);
+					UpdateCurrentTime();
 
 					debug("Date/Time Menu: New Date: %d-%d-%d  New Time: %d:%d:%d.%d \n",
 						time.day, time.month, time.year,
@@ -147,17 +147,17 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 					if (g_helpRecord.timerMode == ENABLED)
 					{
 						// Cancel Timer mode
-						messageBox(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), MB_OK);
+						MessageBox(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), MB_OK);
 
 						g_helpRecord.timerMode = DISABLED;
 
 						// Disable the Power Off Protection
-						powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+						PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 
 						// Disable the Power Off timer if it's set
-						clearSoftTimer(POWER_OFF_TIMER_NUM);
+						ClearSoftTimer(POWER_OFF_TIMER_NUM);
 
-						saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+						SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 					}
 
 					if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
@@ -178,29 +178,29 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 				case (DOWN_ARROW_KEY):
 					if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
 					{
-						dateTimeDvScroll(DOWN,&rec_ptr[mn_layout_ptr->curr_ln]);
+						DateTimeDvScroll(DOWN,&rec_ptr[mn_layout_ptr->curr_ln]);
 					}
 					break;
 				case (UP_ARROW_KEY):
 					if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
 					{
-						dateTimeDvScroll(UP,&rec_ptr[mn_layout_ptr->curr_ln]);
+						DateTimeDvScroll(UP,&rec_ptr[mn_layout_ptr->curr_ln]);
 					}
 					break;
 				case (PLUS_KEY):
 					rec_ptr[mn_layout_ptr->curr_ln].enterflag = FALSE;
-					dateTimeScroll(DOWN, mn_layout_ptr);
+					DateTimeScroll(DOWN, mn_layout_ptr);
 					rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
 					break;
 				case (MINUS_KEY):
 					rec_ptr[mn_layout_ptr->curr_ln].enterflag = FALSE;
-					dateTimeScroll(UP, mn_layout_ptr);
+					DateTimeScroll(UP, mn_layout_ptr);
 					rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
 					break;
 				case (ESC_KEY):
 					if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
 					{
-						if (messageBox(getLangText(WARNING_TEXT), getLangText(PROCEED_WITHOUT_SETTING_DATE_AND_TIME_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
+						if (MessageBox(getLangText(WARNING_TEXT), getLangText(PROCEED_WITHOUT_SETTING_DATE_AND_TIME_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 						{
 							if (!g_factorySetupRecord.invalid)
 								tempPtr = &g_factorySetupRecord.serial_num;
@@ -234,7 +234,7 @@ void dateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void dateTimeScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
+void DateTimeScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
 	if (direction == DOWN)
 	{
@@ -255,7 +255,7 @@ void dateTimeScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void dateTimeDvScroll(char dir_key, REC_MN_STRUCT *rec_ptr)
+void DateTimeDvScroll(char dir_key, REC_MN_STRUCT *rec_ptr)
 {
 	switch (dir_key)
 	{
@@ -286,15 +286,15 @@ void dateTimeDvScroll(char dir_key, REC_MN_STRUCT *rec_ptr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void dsplyDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
+void DisplayDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	uint8 sbuff[50];
 	uint8 top;
 	uint8 menu_ln;
 	uint8 length = 0;
 
-	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
-	byteSet(&sbuff[0], 0, sizeof(sbuff));
+	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	ByteSet(&sbuff[0], 0, sizeof(sbuff));
 
 	menu_ln = 0;
 	top = (uint8)mn_layout_ptr->top_ln;
@@ -305,9 +305,9 @@ void dsplyDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-	byteSet(&sbuff[0], 0, sizeof(sbuff));
+	ByteSet(&sbuff[0], 0, sizeof(sbuff));
 
 	wnd_layout_ptr->curr_row =   wnd_layout_ptr->start_row;
 	wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
@@ -315,7 +315,7 @@ void dsplyDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 	wnd_layout_ptr->next_col =   wnd_layout_ptr->start_col;
 
 	// Get the days per month, pass in the month num and the year for leap year
-	rec_ptr[DTM_DAY].numrec.nmax = getDaysPerMonth((uint8)rec_ptr[DTM_MONTH].numrec.tindex,
+	rec_ptr[DTM_DAY].numrec.nmax = GetDaysPerMonth((uint8)rec_ptr[DTM_MONTH].numrec.tindex,
 													(uint8)rec_ptr[DTM_YEAR].numrec.tindex);
 	if (rec_ptr[DTM_DAY].numrec.tindex > rec_ptr[DTM_DAY].numrec.nmax)
 		rec_ptr[DTM_DAY].numrec.tindex = rec_ptr[DTM_DAY].numrec.nmax;
@@ -327,28 +327,28 @@ void dsplyDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 
 	// Display the time text
 	sprintf((char*)sbuff, "%s: ", getLangText(TIME_TEXT));
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the hour
 	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[DTM_HOUR].numrec.tindex);
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_HOUR) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_HOUR) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
-	wndMpWrtString((uint8*)":", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString((uint8*)":", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the min
 	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[DTM_MIN].numrec.tindex);
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_MIN) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_MIN) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
-	wndMpWrtString((uint8*)":", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString((uint8*)":", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the sec
 	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[DTM_SEC].numrec.tindex);
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_SEC) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_SEC) ? CURSOR_LN : REG_LN);
 
 	// ---------------------------------------------------------------------------------
 	// Write out the date line which includes the date text, day, month, and year values
@@ -358,36 +358,36 @@ void dsplyDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 
 	// Display the date text
 	sprintf((char*)sbuff, "%s: ", getLangText(DATE_TEXT));
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the day
 	sprintf((char*)sbuff, "%02d", (uint16)(uint16)rec_ptr[DTM_DAY].numrec.tindex);
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_DAY) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_DAY) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
-	wndMpWrtString((uint8*)"-", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString((uint8*)"-", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the month text
 	sprintf((char*)sbuff, "%s", (char*)&(g_monthTable[(uint8)(rec_ptr[DTM_MONTH].numrec.tindex)].name[0]));
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_MONTH) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_MONTH) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
-	wndMpWrtString((uint8*)"-", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString((uint8*)"-", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the year
 	sprintf((char*)sbuff, "%02d", (uint16)(uint16)rec_ptr[DTM_YEAR].numrec.tindex);
-	wndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_YEAR) ? CURSOR_LN : REG_LN);
+	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_YEAR) ? CURSOR_LN : REG_LN);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void loadDateTimeMnDefRec(REC_MN_STRUCT *rec_ptr,DATE_TIME_STRUCT *time_ptr)
+void LoadDateTimeMnDefRec(REC_MN_STRUCT *rec_ptr,DATE_TIME_STRUCT *time_ptr)
 {
-	byteSet(rec_ptr, 0, (sizeof(REC_MN_STRUCT) * 6));
+	ByteSet(rec_ptr, 0, (sizeof(REC_MN_STRUCT) * 6));
 
 	// HOURS
 	rec_ptr[DTM_HOUR].enterflag = FALSE;

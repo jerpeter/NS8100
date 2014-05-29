@@ -40,7 +40,7 @@ Version 1.3:  Includes a fix for the off key processing while monitoring with th
 				mini unit. Fixed the display of the date on startup to now be
 				"day month year". The forced off condition in case of a lockup
 				now uses the ESC key for both unit types. Also moved power off
-				control to outside of monitor processing. Added a messageBox when
+				control to outside of monitor processing. Added a MessageBox when
 				the user selects "YES" in the Erase Events menu to verify the 
 				operation.
 Version 1.4:  Fix a bug where comparing the decrementing value of an integer or a 

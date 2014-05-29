@@ -39,10 +39,10 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-BOOLEAN timerModeActiveCheck(void)
+BOOLEAN TimerModeActiveCheck(void)
 {
 	BOOLEAN status = FALSE;
-	DATE_TIME_STRUCT time = getRtcTime();
+	DATE_TIME_STRUCT time = GetExternalRtcTime();
 	uint8 choice;
 
 	if (g_helpRecord.validationKey == 0xA5A5)
@@ -80,17 +80,17 @@ BOOLEAN timerModeActiveCheck(void)
 			}
 			else
 			{
-				messageBox(getLangText(STATUS_TEXT), getLangText(UNIT_IS_IN_TIMER_MODE_TEXT), MB_OK);
-				choice = messageBox(getLangText(WARNING_TEXT), getLangText(CANCEL_TIMER_MODE_Q_TEXT), MB_YESNO);
+				MessageBox(getLangText(STATUS_TEXT), getLangText(UNIT_IS_IN_TIMER_MODE_TEXT), MB_OK);
+				choice = MessageBox(getLangText(WARNING_TEXT), getLangText(CANCEL_TIMER_MODE_Q_TEXT), MB_YESNO);
 
 				if (choice == MB_FIRST_CHOICE)
 				{
 					g_helpRecord.timerMode = DISABLED;
 
 					// Save help record
-					saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+					SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
-					overlayMessage(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), 2 * SOFT_SECS);
+					OverlayMessage(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), 2 * SOFT_SECS);
 				}
 				else // User decided to stay in Timer mode
 				{
@@ -98,7 +98,7 @@ BOOLEAN timerModeActiveCheck(void)
 					// Clear TOD Alarm Mask to allow TOD Alarm interrupt to be generated
 					// ADD CODE TO CLEAR ALARM
 
-					overlayMessage(getLangText(WARNING_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 2 * SOFT_SECS);
+					OverlayMessage(getLangText(WARNING_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 2 * SOFT_SECS);
 
 					// Turn unit off/sleep
 					debug("Timer mode: Staying in Timer mode. Powering off now...\n");
@@ -121,9 +121,9 @@ BOOLEAN timerModeActiveCheck(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void processTimerMode(void)
+void ProcessTimerMode(void)
 {
-	DATE_TIME_STRUCT currTime = getRtcTime();
+	DATE_TIME_STRUCT currTime = GetExternalRtcTime();
 
 	// Check if the Timer mode activated after stop date
 	if (// First Check for past year
@@ -142,10 +142,10 @@ void processTimerMode(void)
 		g_helpRecord.timerMode = DISABLED;
 
 		// Save help record
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 	    // Deactivate alarm interrupts
-	    DisableRtcAlarm();
+	    DisableExternalRtcAlarm();
 
 		// Turn unit off/sleep
 		debug("Timer mode: Powering unit off...\n");
@@ -163,7 +163,7 @@ void processTimerMode(void)
 		(currTime.day < g_helpRecord.timerStartDate.day)))
 	{
 		debug("Timer Mode: Activated before date...\n");
-		resetTimeOfDayAlarm();
+		ResetTimeOfDayAlarm();
 
 		// Turn unit off/sleep
 		debug("Timer mode: Powering unit off...\n");
@@ -173,7 +173,7 @@ void processTimerMode(void)
 	else if ((g_helpRecord.timerModeFrequency == TIMER_MODE_WEEKDAYS) && ((currTime.weekday == SAT) || (currTime.weekday == SUN)))
 	{
 		debug("Timer Mode: Activated on an off day (weekday freq)...\n");
-		resetTimeOfDayAlarm();
+		ResetTimeOfDayAlarm();
 
 		// Turn unit off/sleep
 		debug("Timer mode: Powering unit off...\n");
@@ -183,7 +183,7 @@ void processTimerMode(void)
 	else if ((g_helpRecord.timerModeFrequency == TIMER_MODE_MONTHLY) && (currTime.day != g_helpRecord.timerStartDate.day))
 	{
 		debug("Timer Mode: Activated on off day (monthly freq)...\n");
-		resetTimeOfDayAlarm();
+		ResetTimeOfDayAlarm();
 
 		// Turn unit off/sleep
 		debug("Timer mode: Powering unit off...\n");
@@ -200,14 +200,14 @@ void processTimerMode(void)
 		g_helpRecord.timerMode = DISABLED;
 
 		// Save help record
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 #else // ns8100
 		// Signal the timer mode end of session timer to stop timer mode due to this being the last run
 		g_timerModeLastRun = YES;
 #endif
 
 	    // Deactivate alarm interrupts
-	    DisableRtcAlarm();
+	    DisableExternalRtcAlarm();
 	}
 	// Check if the Timer mode activated on end date and end hour (hourly mode)
 	else if ((g_helpRecord.timerModeFrequency == TIMER_MODE_HOURLY) && (currTime.year == g_helpRecord.timerStopDate.year) &&
@@ -221,14 +221,14 @@ void processTimerMode(void)
 		g_helpRecord.timerMode = DISABLED;
 
 		// Save help record
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 #else // ns8100
 		// Signal the timer mode end of session timer to stop timer mode due to this being the last run
 		g_timerModeLastRun = YES;
 #endif
 
 	    // Deactivate alarm interrupts
-	    DisableRtcAlarm();
+	    DisableExternalRtcAlarm();
 	}
 	else // Timer mode started during the active dates on a day it's supposed to run
 	{
@@ -238,21 +238,21 @@ void processTimerMode(void)
 			g_timerModeLastRun = YES;
 
 			// Deactivate alarm interrupts
-			DisableRtcAlarm();
+			DisableExternalRtcAlarm();
 		}
 		else // All other timer modes
 		{
 			// Reset the Time of Day Alarm to wake the unit up again
-			resetTimeOfDayAlarm();
+			ResetTimeOfDayAlarm();
 		}
 	}
 
-	overlayMessage(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_NOW_ACTIVE_TEXT), (2 * SOFT_SECS));
+	OverlayMessage(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_NOW_ACTIVE_TEXT), (2 * SOFT_SECS));
 
 	raiseTimerEventFlag(TIMER_MODE_TIMER_EVENT);
 
 	// Setup soft timer to turn system off when timer mode is finished for the day (minus the expired secs in the current minute
-	assignSoftTimer(POWER_OFF_TIMER_NUM, ((g_helpRecord.timerModeActiveMinutes * 60 * 2) - (currTime.sec * 2)), powerOffTimerCallback);
+	AssignSoftTimer(POWER_OFF_TIMER_NUM, ((g_helpRecord.TimerModeActiveMinutes * 60 * 2) - (currTime.sec * 2)), PowerOffTimerCallback);
 
 	debug("Timer mode: running...\n");
 }
@@ -260,16 +260,16 @@ void processTimerMode(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleUserPowerOffDuringTimerMode(void)
+void HandleUserPowerOffDuringTimerMode(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	uint8 choice;
 
 	// Simulate a keypress if the user pressed the off key, which doesn't register as a keypess
-	keypressEventMgr();
+	KeypressEventMgr();
 
-	messageBox(getLangText(STATUS_TEXT), getLangText(UNIT_IS_IN_TIMER_MODE_TEXT), MB_OK);
-	choice = messageBox(getLangText(WARNING_TEXT), getLangText(CANCEL_TIMER_MODE_Q_TEXT), MB_YESNO);
+	MessageBox(getLangText(STATUS_TEXT), getLangText(UNIT_IS_IN_TIMER_MODE_TEXT), MB_OK);
+	choice = MessageBox(getLangText(WARNING_TEXT), getLangText(CANCEL_TIMER_MODE_Q_TEXT), MB_YESNO);
 
 	// User decided to cancel Timer mode
 	if (choice == MB_FIRST_CHOICE)
@@ -277,27 +277,27 @@ void handleUserPowerOffDuringTimerMode(void)
 		g_helpRecord.timerMode = DISABLED;
 
 		// Disable the Power Off timer
-		clearSoftTimer(POWER_OFF_TIMER_NUM);
+		ClearSoftTimer(POWER_OFF_TIMER_NUM);
 
 		// Save help record
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 		// Disable power off protection
-		powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+		PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 
-		overlayMessage(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), 2 * SOFT_SECS);
+		OverlayMessage(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), 2 * SOFT_SECS);
 	}
 	else // User decided to stay in Timer mode
 	{
-		choice = messageBox(getLangText(STATUS_TEXT), getLangText(POWER_UNIT_OFF_EARLY_Q_TEXT), MB_YESNO);
+		choice = MessageBox(getLangText(STATUS_TEXT), getLangText(POWER_UNIT_OFF_EARLY_Q_TEXT), MB_YESNO);
 
 		if (choice == MB_FIRST_CHOICE)
 		{
-			messageBox(getLangText(STATUS_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), MB_OK);
-			messageBox(getLangText(STATUS_TEXT), getLangText(PLEASE_PRESS_ENTER_TEXT), MB_OK);
+			MessageBox(getLangText(STATUS_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), MB_OK);
+			MessageBox(getLangText(STATUS_TEXT), getLangText(PLEASE_PRESS_ENTER_TEXT), MB_OK);
 
 			// Enable power off protection
-			powerControl(POWER_OFF_PROTECTION_ENABLE, ON);
+			PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
 
 			// Turn unit off/sleep
 			debug("Timer mode: Shutting down unit early due to user request. Powering off now...\n");
@@ -312,9 +312,9 @@ void handleUserPowerOffDuringTimerMode(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void resetTimeOfDayAlarm(void)
+void ResetTimeOfDayAlarm(void)
 {
-	DATE_TIME_STRUCT currTime = getRtcTime();
+	DATE_TIME_STRUCT currTime = GetExternalRtcTime();
 	uint8 startDay = 0;
 	uint8 startHour = 0;
 	uint8 month;
@@ -357,13 +357,13 @@ void resetTimeOfDayAlarm(void)
 		}
 		
 		// Save new testing timer mode adjustments
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
 				g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, startDay);
 #endif
 
-		EnableRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
+		EnableExternalRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
 	}
 	//___________________________________________________________________________________________
 	//___TIMER_MODE_HOURLY
@@ -441,7 +441,7 @@ void resetTimeOfDayAlarm(void)
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
 				startHour, g_helpRecord.timerStartTime.min, startDay);
 
-		EnableRtcAlarm(startDay, startHour, g_helpRecord.timerStartTime.min, 0);
+		EnableExternalRtcAlarm(startDay, startHour, g_helpRecord.timerStartTime.min, 0);
 	}
 	//___________________________________________________________________________________________
 	//___TIMER_MODE_WEEKDAYS
@@ -476,7 +476,7 @@ void resetTimeOfDayAlarm(void)
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start ay) %d\n",
 				g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, startDay);
 
-		EnableRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
+		EnableExternalRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
 	}
 	//___________________________________________________________________________________________
 	//___TIMER_MODE_WEEKLY
@@ -495,7 +495,7 @@ void resetTimeOfDayAlarm(void)
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
 				g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, startDay);
 
-		EnableRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
+		EnableExternalRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
 	}
 	//___________________________________________________________________________________________
 	//___TIMER_MODE_MONTHLY
@@ -524,6 +524,6 @@ void resetTimeOfDayAlarm(void)
 		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
 				g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, startDay);
 
-		EnableRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
+		EnableExternalRtcAlarm(startDay, g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min, 0);
 	}
 }

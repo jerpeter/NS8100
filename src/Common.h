@@ -221,34 +221,34 @@ enum {
 ///	Prototypes
 ///----------------------------------------------------------------------------
 // Battery routines
-float getExternalVoltageLevelAveraged(uint8 type);
-BOOLEAN checkExternalChargeVoltagePresent(void);
-//uint8 adjustedRawBatteryLevel(void);
+float GetExternalVoltageLevelAveraged(uint8 type);
+BOOLEAN CheckExternalChargeVoltagePresent(void);
+//uint8 AdjustedRawBatteryLevel(void);
 
 // Power Savings
 void AdjustPowerSavings(void);
 
 // Math routines
-uint16 isqrt (uint32 x);
+uint16 Isqrt (uint32 x);
 
 // Input message routines
-uint16 ckInputMsg(INPUT_MSG_STRUCT *);
-void procInputMsg (INPUT_MSG_STRUCT);
-uint16 sendInputMsg(INPUT_MSG_STRUCT *);
+uint16 CheckInputMsg(INPUT_MSG_STRUCT *);
+void ProcessInputMsg (INPUT_MSG_STRUCT);
+uint16 SendInputMsg(INPUT_MSG_STRUCT *);
 
 // Delay timing
-void soft_usecWait(uint32 usecs);
-void spinBar(void);
+void SoftUsecWait(uint32 usecs);
+void SpinBar(void);
 
 // Conversion routines
-uint16 swapInt(uint16);
-float hexToDB(uint16, uint8, uint16);
-float hexToMB(uint16, uint8, uint16);
-float hexToPsi(uint16, uint8, uint16);
-uint16 dbToHex(uint16);
-uint16 mbToHex(float);
-uint32 convertDBtoMB(uint32);
-uint32 convertMBtoDB(uint32);
+uint16 SwapInt(uint16);
+float HexToDB(uint16, uint8, uint16);
+float HexToMB(uint16, uint8, uint16);
+float HexToPsi(uint16, uint8, uint16);
+uint16 DbToHex(uint16);
+uint16 MbToHex(float);
+uint32 ConvertDBtoMB(uint32);
+uint32 ConvertMBtoDB(uint32);
 
 // PIT timers
 void startPitTimer(PIT_TIMER timer);
@@ -257,26 +257,26 @@ BOOLEAN checkPitTimer(PIT_TIMER timer);
 void configPitTimer(PIT_TIMER timer, uint16 clockDivider, uint16 modulus);
 
 // Language translation
-void build_languageLinkTable(uint8 languageSelection);
+void BuildLanguageLinkTable(uint8 languageSelection);
 
 // Version routine
 //void initVersionStrings(void);
-void initVersionMsg(void);
+void InitVersionMsg(void);
 
 // Bootloader Function
-void getBootFunctionAddress(void);
-void jumpToBootFunction(void);
-void byteCpy(void* dest, void* src, uint32 size);
-void byteSet(void* dest, uint8 value, uint32 size);
+void GetBootFunctionAddress(void);
+void JumpToBootFunction(void);
+void ByteCpy(void* dest, void* src, uint32 size);
+void ByteSet(void* dest, uint8 value, uint32 size);
 
 // Main menu prototype extensions
-void handleSystemEvents(void);
+void HandleSystemEvents(void);
 
 // Time routines
-uint8 getDayOfWeek(uint8 year, uint8 month, uint8 day);
-uint16 getTotalDaysFromReference(TM_DATE_STRUCT date);
-void getDateString(char*, uint8, uint8);
-uint8 getDaysPerMonth(uint8, uint16);
-void initTimeMsg(void);
+uint8 GetDayOfWeek(uint8 year, uint8 month, uint8 day);
+uint16 GetTotalDaysFromReference(TM_DATE_STRUCT date);
+void GetDateString(char*, uint8, uint8);
+uint8 GetDaysPerMonth(uint8, uint16);
+void InitTimeMsg(void);
 
 #endif // _COMMON_H_

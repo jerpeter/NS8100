@@ -27,20 +27,20 @@
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void writeNandData(uint8 data);
-void writeNandCommand(uint8 data);
-void writeNandAddress(uint8 data);
-void writeNandFullAddress(uint32 data);
-uint8 readNandData(void);
-uint8 readNandAddress(uint8 type, uint32 address);
+void WriteNandData(uint8 data);
+void WriteNandCommand(uint8 data);
+void WriteNandAddress(uint8 data);
+void WriteNandFullAddress(uint32 data);
+uint8 ReadNandData(void);
+uint8 ReadNandAddress(uint8 type, uint32 address);
 void ReadNandFlash(uint8* dest, uint32 address, uint32 length);
 void WriteNandFlash(uint8* src, uint32 address, uint32 length);
-uint8 readNandID(void);
-void readNandStatus(void);
+uint8 ReadNandID(void);
+void ReadNandStatus(void);
 void waitWhileBusyNand(void);
-void issueNandReset(void);
-void blockEraseNand(uint32 blockAddress);
-void pageProgramNand(uint8 type, uint32 address, uint8* data, uint16 length);
-void copyBackNand(uint32 readAddress, uint32 writeAddress);
+void IssueNandReset(void);
+void BlockEraseNand(uint32 blockAddress);
+void PageProgramNand(uint8 type, uint32 address, uint8* data, uint16 length);
+void CopyBackNand(uint32 readAddress, uint32 writeAddress);
 
 #endif // _NAND_FLASH_H_

@@ -85,13 +85,13 @@ void setupMnDef(void)
 	debug("Init Power on LCD...\n");
 
 	// Turn the LCD on
-	powerControl(LCD_POWER_ENABLE, ON);
+	PowerControl(LCD_POWER_ENABLE, ON);
 
 	debug("Init Load Trig Rec...\n");
 
 	// Load Trig Record 0 to get the last settings
 	debug("Trigger Record: Loading stored settings into cache\n");
-	getRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
+	GetRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 	debug("Init Trig Rec Defaults...\n");
 
@@ -101,7 +101,7 @@ void setupMnDef(void)
 	{
 		debugWarn("Trigger Record: Operation Mode not set\n");
 		debug("Trigger Record: Loading defaults and setting mode to Waveform\n");
-		loadTrigRecordDefaults((REC_EVENT_MN_STRUCT*)&g_triggerRecord, WAVEFORM_MODE);
+		LoadTrigRecordDefaults((REC_EVENT_MN_STRUCT*)&g_triggerRecord, WAVEFORM_MODE);
 	}
 	else
 	{
@@ -112,7 +112,7 @@ void setupMnDef(void)
 	debug("Init Load Help Rec...\n");
 
 	// Load the Help Record
-	getRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	GetRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 	debug("Init Help Rec Defaults...\n");
 
@@ -122,8 +122,8 @@ void setupMnDef(void)
 		// Set defaults in Help Record
 		debugWarn("Help record: Not found.\n");
 		debug("Loading Help Menu Defaults\n");
-		loadHelpRecordDefaults((REC_HELP_MN_STRUCT*)&g_helpRecord);
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		LoadHelpRecordDefaults((REC_HELP_MN_STRUCT*)&g_helpRecord);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 	}
 	else
 	{
@@ -134,7 +134,7 @@ void setupMnDef(void)
 		(g_helpRecord.pretrigBufferDivider != PRETRIGGER_BUFFER_FULL_SEC_DIV))
 		{
 			g_helpRecord.pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
-			saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+			SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 		}
 
 		#if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
@@ -158,26 +158,26 @@ void setupMnDef(void)
 	debug("Init Build Language Table...\n");
 
 	// Build the language table based on the user's last language choice
-	build_languageLinkTable(g_helpRecord.languageMode);
+	BuildLanguageLinkTable(g_helpRecord.languageMode);
 
 	debug("Init Activate Help Rec Options...\n");
 
 	debug("Activate help record items\n");
 	// Initialize Help Record items such as contrast, timers
-	activateHelpRecordOptions();
+	ActivateHelpRecordOptions();
 
 	// Wait 1/2 second for the LCD power to settle
-	soft_usecWait(500 * SOFT_MSECS);
+	SoftUsecWait(500 * SOFT_MSECS);
 
 	debug("Display Splash screen\n");
 	// Display the Splash screen
-	displaySplashScreen();
+	DisplaySplashScreen();
 
 	// Wait at least 3 seconds for the main screen to be displayed
-	soft_usecWait(3 * SOFT_SECS);
+	SoftUsecWait(3 * SOFT_SECS);
 
 #if 0 // Test - Failed
-	clearControlLinesLcdDisplay();
+	ClearControlLinesLcdDisplay();
 	LcdClearPortReg();
 #endif
 
@@ -186,21 +186,21 @@ void setupMnDef(void)
 	{
 		// Disable Auto printing
 		g_helpRecord.autoPrint = NO;
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 	}
 
 	debug("Init Load Factory Setup Rec...\n");
 
 	debug("Load Factory setup record\n");
 	// Load the Factory Setup Record
-	getRecData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+	GetRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 
 	// Check if the Factory Setup Record is valid
 	if (!g_factorySetupRecord.invalid)
 	{
 		// Print the Factory Setup Record to the console
-		byteSet(&buff[0], 0, sizeof(buff));
-		convertTimeStampToString(buff, &g_factorySetupRecord.cal_date, REC_DATE_TIME_TYPE);
+		ByteSet(&buff[0], 0, sizeof(buff));
+		ConvertTimeStampToString(buff, &g_factorySetupRecord.cal_date, REC_DATE_TIME_TYPE);
 
 		debug("Factory Setup: Serial #: %s\n", g_factorySetupRecord.serial_num);
 		debug("Factory Setup: Cal Date: %s\n", buff);
@@ -212,14 +212,14 @@ void setupMnDef(void)
 	{
 		// Warn the user
 		debugWarn("Factory setup record not found.\n");
-		//messageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
+		//MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
 	}
 
 	debug("Init Load Modem Setup Rec...\n");
 
 	debug("Load Modem Setup record\n");
 	// Load the Modem Setup Record
-	getRecData(&g_modemSetupRecord, 0, REC_MODEM_SETUP_TYPE);
+	GetRecordData(&g_modemSetupRecord, 0, REC_MODEM_SETUP_TYPE);
 
 	// Check if the Modem Setup Record is invalid
 	if (g_modemSetupRecord.invalid)
@@ -228,30 +228,30 @@ void setupMnDef(void)
 		debugWarn("Modem setup record not found.\n");
 
 		// Initialize the Modem Setup Record
-		loadModemSetupRecordDefaults();
+		LoadModemSetupRecordDefaults();
 
 		// Save the Modem Setup Record
-		saveRecData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
+		SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
 	}
 	else
 	{
-		validateModemSetupParameters();
+		ValidateModemSetupParameters();
 	}
 
 	debug("Init Current Event Number...\n");
 
 	// Init Global Unique Event Number
-	initCurrentEventNumber();
+	InitCurrentEventNumber();
 
 	debug("Init Auto Dialout...\n");
 
 	// Init AutoDialout
-	initAutoDialout();
+	InitAutoDialout();
 
 	debug("Init Monitor Log...\n");
 
 	// Init Monitor Log
-	initMonitorLog();
+	InitMonitorLog();
 
 	debug("Init Flash Buffers...\n");
 
@@ -260,13 +260,13 @@ void setupMnDef(void)
 
 	debug("Init Sensor Parameters...\n");
 
-	initSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
+	InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void initSensorParameters(uint16 sensor_type, uint8 sensitivity)
+void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
 {
 	uint8 gainFactor = (uint8)((sensitivity == LOW) ? 2 : 4);
 
@@ -323,24 +323,24 @@ void InitSoftwareSettings_NS8100(void)
 	// Init version msg
 	//-------------------------------------------------------------------------
 	debug("Init Version Msg...\n");
-	initVersionMsg();
+	InitVersionMsg();
 
 	//-------------------------------------------------------------------------
 	// Init time msg
 	//-------------------------------------------------------------------------
 	debug("Init Time Msg...\n");
-	initTimeMsg();
+	InitTimeMsg();
 
 	//-------------------------------------------------------------------------
 	// Load current time into cache
 	//-------------------------------------------------------------------------
-	updateCurrentTime();
+	UpdateCurrentTime();
 
 	//-------------------------------------------------------------------------
 	// Get the function address passed by the bootloader
 	//-------------------------------------------------------------------------
 	debug("Init Get Boot Function Addr...\n");
-	getBootFunctionAddress();
+	GetBootFunctionAddress();
 
 	//-------------------------------------------------------------------------
 	// Setup defaults, load records, init the language table
@@ -360,15 +360,15 @@ void InitSoftwareSettings_NS8100(void)
 	// Check for Timer mode activation
 	//-------------------------------------------------------------------------
 	debug("Init Timer Mode Check...\n");
-	if (timerModeActiveCheck() == TRUE)
+	if (TimerModeActiveCheck() == TRUE)
 	{
 		debug("--- Timer Mode Startup ---\n");
-		processTimerMode();
+		ProcessTimerMode();
 
 		// If here, the unit is in Timer mode, but did not power itself off yet
 		// Enabling power off protection
 		debug("Timer Mode: Enabling Power Off Protection\n");
-		powerControl(POWER_OFF_PROTECTION_ENABLE, ON);
+		PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
 	}
 	else
 	{
@@ -379,21 +379,21 @@ void InitSoftwareSettings_NS8100(void)
 	// Init the cmd message handling buffers before initialization of the ports.
 	//-------------------------------------------------------------------------
 	debug("Init Cmd Msg Handler...\n");
-	cmdMessageHandlerInit();
+	RemoteCmdMessageHandlerInit();
 
 	//-------------------------------------------------------------------------
 	// Init the input buffers and status flags for input craft data.
 	//-------------------------------------------------------------------------
 	debug("Init Craft Init Status Flags...\n");
-	craftInitStatusFlags();
+	CraftInitStatusFlags();
 
 #if 0 // ns7100
 	// Overlay a message to alert the user that the system is checking the sensors
 	debug("Init LCD Message...\n");
 	char buff[50];
-	byteSet(&buff[0], 0, sizeof(buff));
+	ByteSet(&buff[0], 0, sizeof(buff));
 	sprintf((char*)buff, "%s %s", getLangText(SENSOR_CHECK_TEXT), getLangText(ZEROING_SENSORS_TEXT));
-	overlayMessage(getLangText(STATUS_TEXT), buff, 0);
+	OverlayMessage(getLangText(STATUS_TEXT), buff, 0);
 	#endif
 
 	//-------------------------------------------------------------------------
@@ -404,19 +404,19 @@ void InitSoftwareSettings_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Reset LCD timers
 	//-------------------------------------------------------------------------
-	resetSoftTimer(DISPLAY_ON_OFF_TIMER_NUM);
-	resetSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM);
+	ResetSoftTimer(DISPLAY_ON_OFF_TIMER_NUM);
+	ResetSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM);
 
 	//-------------------------------------------------------------------------
 	// Turn on the Green keypad LED when system init complete
 	//-------------------------------------------------------------------------
 	debug("Init complete, turning Kepypad LED Green...\n");
-	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
+	WriteMcp23018(IO_ADDRESS_KPD, GPIOA, ((ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | GREEN_LED_PIN));
 
 	//-------------------------------------------------------------------------
 	// Assign a one second keypad led update timer
 	//-------------------------------------------------------------------------
-	assignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, keypadLedUpdateTimerCallBack);
+	AssignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, KeypadLedUpdateTimerCallBack);
 
 	//-------------------------------------------------------------------------
 	// Jump to the true main menu

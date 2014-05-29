@@ -120,8 +120,8 @@ void GenerateCalSignal(void);
 void GetChannelOffsets(uint32 sampleRate);
 void UpdateChannelOffsetsForTempChange(void);
 void GatherSampleData(void);
-void adSetCalSignalLow(void);
-void adSetCalSignalHigh(void);
-void adSetCalSignalOff(void);
+void AdSetCalSignalLow(void);
+void AdSetCalSignalHigh(void);
+void AdSetCalSignalOff(void);
 
 #endif //_ANALOG_H_

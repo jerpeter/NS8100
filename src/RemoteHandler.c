@@ -33,70 +33,70 @@
 static uint8 s_msgReadIndex;
 static uint8 s_msgWriteIndex;
 static const COMMAND_MESSAGE_STRUCT s_cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] = {
-	{ 'A', 'A', 'A', handleAAA },	// Dummy function call.
-	{ 'M', 'R', 'S', handleMRS },		// Modem reset.
+	{ 'A', 'A', 'A', HandleAAA },	// Dummy function call.
+	{ 'M', 'R', 'S', HandleMRS },		// Modem reset.
 
 #if 0	
-	{ 'M', 'V', 'S', handleMVS },		// Modem view settings.
-	{ 'M', 'P', 'O', handleMPO },		// Toggle modem on/off.
-	{ 'M', 'M', 'O', handleMMO },		// Toggle modem mode transmit/receive.
-	{ 'M', 'N', 'O', handleMNO },		// Toggle modem phone number A/B/C.
-	{ 'M', 'T', 'O', handleMTO },		// Toggle modem log on/off.
-	{ 'M', 'S', 'D', handleMSD },		// Modem set default initialization string.
-	{ 'M', 'S', 'R', handleMSR },		// Modem set receive initialization string.
-	{ 'M', 'S', 'T', handleMST },		// Modem set transmit initialization string.
-	{ 'M', 'S', 'A', handleMSA },		// Modem set phone number A.
-	{ 'M', 'S', 'B', handleMSB },		// Modem set phone number B.
-	{ 'M', 'S', 'C', handleMSC },		// Modem set phone number C.
-	{ 'M', 'V', 'I', handleMVI },		// Modem view last call in detail.
-	{ 'M', 'V', 'O', handleMVO },		// Modem view last call out detail.
-	{ 'V', 'T', 'I', handleVTI },		// View time.
-	{ 'S', 'T', 'I', handleSTI },		// Set time.
-	{ 'V', 'D', 'A', handleVDA },		// View date.
-	{ 'S', 'D', 'A', handleSDA },		// Set date.
+	{ 'M', 'V', 'S', HandleMVS },		// Modem view settings.
+	{ 'M', 'P', 'O', HandleMPO },		// Toggle modem on/off.
+	{ 'M', 'M', 'O', HandleMMO },		// Toggle modem mode transmit/receive.
+	{ 'M', 'N', 'O', HandleMNO },		// Toggle modem phone number A/B/C.
+	{ 'M', 'T', 'O', HandleMTO },		// Toggle modem log on/off.
+	{ 'M', 'S', 'D', HandleMSD },		// Modem set default initialization string.
+	{ 'M', 'S', 'R', HandleMSR },		// Modem set receive initialization string.
+	{ 'M', 'S', 'T', HandleMST },		// Modem set transmit initialization string.
+	{ 'M', 'S', 'A', HandleMSA },		// Modem set phone number A.
+	{ 'M', 'S', 'B', HandleMSB },		// Modem set phone number B.
+	{ 'M', 'S', 'C', HandleMSC },		// Modem set phone number C.
+	{ 'M', 'V', 'I', HandleMVI },		// Modem view last call in detail.
+	{ 'M', 'V', 'O', HandleMVO },		// Modem view last call out detail.
+	{ 'V', 'T', 'I', HandleVTI },		// View time.
+	{ 'S', 'T', 'I', HandleSTI },		// Set time.
+	{ 'V', 'D', 'A', HandleVDA },		// View date.
+	{ 'S', 'D', 'A', HandleSDA },		// Set date.
 #endif
 
 	// Immediate commands
-	{ 'U', 'N', 'L', handleUNL },		// Unlock unit.
+	{ 'U', 'N', 'L', HandleUNL },		// Unlock unit.
 	{ 'R', 'S', 'T', handleRST },		// Reset the unit.
-	{ 'D', 'D', 'P', handleDDP },		// Disable Debug printing.
-	{ 'D', 'A', 'I', handleDAI },		// Download App Image.
+	{ 'D', 'D', 'P', HandleDDP },		// Disable Debug printing.
+	{ 'D', 'A', 'I', HandleDAI },		// Download App Image.
 
 #if 0
-	{ 'Z', 'R', 'O', handleZRO },		// Zero sensors.
+	{ 'Z', 'R', 'O', HandleZRO },		// Zero sensors.
 	{ 'T', 'T', 'O', handleTTO },		// Toggle test mode on/off.
-	{ 'C', 'A', 'L', handleCAL },		// Calibrate sensors with cal pulse.
-	{ 'V', 'O', 'L', handleVOL },		// View on/off log.
-	{ 'V', 'C', 'G', handleVCG },		// View command log.
-	{ 'V', 'S', 'L', handleVSL },		// View summary log.
-	{ 'V', 'E', 'L', handleVEL },		// View event log.
+	{ 'C', 'A', 'L', HandleCAL },		// Calibrate sensors with cal pulse.
+	{ 'V', 'O', 'L', HandleVOL },		// View on/off log.
+	{ 'V', 'C', 'G', HandleVCG },		// View command log.
+	{ 'V', 'S', 'L', HandleVSL },		// View summary log.
+	{ 'V', 'E', 'L', HandleVEL },		// View event log.
 	{ 'E', 'S', 'M', handleESM },		// Erase summary memory.
 	{ 'E', 'C', 'M', handleECM },		// Erase configuration memory.
 	{ 'T', 'R', 'G', handleTRG },		// Trigger an event.
 #endif
 
-	{ 'V', 'M', 'L', handleVML },		// View Monitor log
-	{ 'D', 'Q', 'M', handleDQM },		// Download summary memory.
-	{ 'D', 'S', 'M', handleDSM },		// Download summary memory.
-	{ 'D', 'E', 'M', handleDEM },		// Download event memory.
+	{ 'V', 'M', 'L', HandleVML },		// View Monitor log
+	{ 'D', 'Q', 'M', HandleDQM },		// Download summary memory.
+	{ 'D', 'S', 'M', HandleDSM },		// Download summary memory.
+	{ 'D', 'E', 'M', HandleDEM },		// Download event memory.
 	{ 'E', 'E', 'M', handleEEM },		// Erase event memory.
-	{ 'D', 'C', 'M', handleDCM },		// Download configuration memory.
-	{ 'U', 'C', 'M', handleUCM },		// Upload configuration memory.
-	{ 'D', 'M', 'M', handleDMM },		// Download modem configuration memory.
-	{ 'U', 'M', 'M', handleUMM },		// Upload modem configuration memory.
+	{ 'D', 'C', 'M', HandleDCM },		// Download configuration memory.
+	{ 'U', 'C', 'M', HandleUCM },		// Upload configuration memory.
+	{ 'D', 'M', 'M', HandleDMM },		// Download modem configuration memory.
+	{ 'U', 'M', 'M', HandleUMM },		// Upload modem configuration memory.
 	{ 'G', 'M', 'N', handleGMN },		// Start Monitoring waveform/bargraph/combo.
 	{ 'H', 'L', 'T', handleHLT },		// Halt Monitoring waveform/bargraph/combo.
 	{ 'G', 'A', 'D', handleGAD },		// Get Auto-Dialout/Download information
 	{ 'G', 'F', 'S', handleGFS },		// Get Flash Stats
-	{ 'Z', 'Z', 'Z', handleAAA }		// Help on menus.
+	{ 'Z', 'Z', 'Z', HandleAAA }		// Help on menus.
 };
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void initCraftInterruptBuffers(void)
+void InitCraftInterruptBuffers(void)
 {
-	byteSet(g_isrMessageBufferPtr, 0, sizeof(CMD_BUFFER_STRUCT));
+	ByteSet(g_isrMessageBufferPtr, 0, sizeof(CMD_BUFFER_STRUCT));
 	g_isrMessageBufferPtr->status = CMD_MSG_NO_ERR;
 	g_isrMessageBufferPtr->overRunCheck = 0xBADD;
 	g_isrMessageBufferPtr->writePtr = g_isrMessageBufferPtr->readPtr = g_isrMessageBufferPtr->msg;
@@ -105,7 +105,7 @@ void initCraftInterruptBuffers(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 cmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
+uint8 RemoteCmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 {
 	uint8 cmdIndex = 0;
 		
@@ -122,7 +122,7 @@ uint8 cmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 		(cmdMsg->msg[1] == 'N') &&
 		(cmdMsg->msg[2] == 'L'))
 	{
-		handleUNL(cmdMsg);
+		HandleUNL(cmdMsg);
 		
 		// If the system is now locked and there is a xfer in progress, 
 		// halt the xfer. This is used as a break command.
@@ -177,13 +177,13 @@ uint8 cmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void cmdMessageProcessing()
+void RemoteCmdMessageProcessing()
 {
 	// Check if there is a potentially fatal error.
 	if (0xBADD != g_msgPool[s_msgReadIndex].overRunCheck)
 	{
 		g_msgPool[s_msgReadIndex].overRunCheck = 0xBADD;
-		overlayMessage(getLangText(STATUS_TEXT), "CRAFT MESSAGE OVERRUN", 0);
+		OverlayMessage(getLangText(STATUS_TEXT), "CRAFT MESSAGE OVERRUN", 0);
 	}
 
 	// NOTE: Need a different message if the command comming across contains
@@ -191,9 +191,9 @@ void cmdMessageProcessing()
 	// assuming that only 3 char cmds are being sent. If data or a field is
 	// sent with the incomming command we need to deal with it differently.
 
-	cmdMessageHandler(&(g_msgPool[s_msgReadIndex]));
+	RemoteCmdMessageHandler(&(g_msgPool[s_msgReadIndex]));
 
-	byteSet(g_msgPool[s_msgReadIndex].msg, 0, sizeof(CMD_BUFFER_SIZE));
+	ByteSet(g_msgPool[s_msgReadIndex].msg, 0, sizeof(CMD_BUFFER_SIZE));
 	g_msgPool[s_msgReadIndex].size = 0;	
 	g_msgPool[s_msgReadIndex].readPtr = g_msgPool[s_msgReadIndex].msg;	
 	g_msgPool[s_msgReadIndex].writePtr = g_msgPool[s_msgReadIndex].msg;
@@ -218,7 +218,7 @@ void cmdMessageProcessing()
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void processCraftData()			
+void ProcessCraftData()
 {
 	uint8 newPoolBuffer = NO;
 
@@ -229,14 +229,14 @@ void processCraftData()
 	if (CMD_MSG_OVERFLOW_ERR == g_isrMessageBufferPtr->status)
 	{
 		g_isrMessageBufferPtr->status = CMD_MSG_NO_ERR;
-		overlayMessage(getLangText(STATUS_TEXT), "MODEM SYNC FAILED", 0);
+		OverlayMessage(getLangText(STATUS_TEXT), "MODEM SYNC FAILED", 0);
 	}
 
 	// Check status and then reset it to no error.
 	if (0xBADD != g_isrMessageBufferPtr->overRunCheck)
 	{
 		g_isrMessageBufferPtr->overRunCheck = 0xBADD;
-		overlayMessage(getLangText(STATUS_TEXT), "CRAFT OVERRUN ERROR", 0);
+		OverlayMessage(getLangText(STATUS_TEXT), "CRAFT OVERRUN ERROR", 0);
 	}
 
 	while (g_isrMessageBufferPtr->readPtr != g_isrMessageBufferPtr->writePtr)
@@ -297,10 +297,10 @@ void processCraftData()
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void cmdMessageHandlerInit()
+void RemoteCmdMessageHandlerInit()
 {	
 	// Clear and set up the addresses for the ptrs from the buffer array.
-	byteSet(g_msgPool, 0, (sizeof(CMD_BUFFER_STRUCT) * CMD_MSG_POOL_SIZE));
+	ByteSet(g_msgPool, 0, (sizeof(CMD_BUFFER_STRUCT) * CMD_MSG_POOL_SIZE));
 
 	for (s_msgWriteIndex = 0; s_msgWriteIndex < CMD_MSG_POOL_SIZE; s_msgWriteIndex++)
 	{	
@@ -318,9 +318,9 @@ void cmdMessageHandlerInit()
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void craftInitStatusFlags(void)
+void CraftInitStatusFlags(void)
 {
-	byteSet(&g_modemStatus, 0, sizeof(MODEM_STATUS_STRUCT));
+	ByteSet(&g_modemStatus, 0, sizeof(MODEM_STATUS_STRUCT));
 
 	// Modem and craft port specific flags.
 	g_modemStatus.connectionState = NOP_CMD;	// State flag to indicate which modem command to handle.
@@ -331,7 +331,7 @@ void craftInitStatusFlags(void)
 		// Signal that the modem is available
 		g_modemStatus.modemAvailable = YES;
 
-		assignSoftTimer(MODEM_DELAY_TIMER_NUM, (MODEM_ATZ_DELAY), modemDelayTimerCallback);
+		AssignSoftTimer(MODEM_DELAY_TIMER_NUM, (MODEM_ATZ_DELAY), ModemDelayTimerCallback);
 	}
 	else
 	{

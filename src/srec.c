@@ -34,7 +34,7 @@ uint32  bytes_loaded;
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-static char * srec_uart_gets( char *s, int channel )
+static char * Srec_UartGets( char *s, int channel )
 {
     char *b = s;
     bool end = FALSE;
@@ -100,7 +100,7 @@ static char * srec_uart_gets( char *s, int channel )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-int get_and_save_srec( FL_FILE* file )
+int Get_and_save_srec( FL_FILE* file )
 {
    uint16 badrecords = 0;
    int imageType = -1;
@@ -113,8 +113,8 @@ int get_and_save_srec( FL_FILE* file )
 
    while( lastrecord == FALSE )
    {
-       srec_get_line( &asciidata);
-       //srec_xOff();
+       Srec_get_line( &asciidata);
+       //Srec_xOff();
 
        if((asciidata.RecordID == 0) || (asciidata.RecordID == CAN))
        {
@@ -129,18 +129,18 @@ int get_and_save_srec( FL_FILE* file )
            fl_fputc(0x0D, file);
            fl_fputc(0x0A, file);
 
-           linedata = srec_convert_line( asciidata );
+           linedata = Srec_convert_line( asciidata );
 
            if( (linedata.RecordType == SREC_HEADER) ||
                (linedata.RecordType == SREC_DATA))
            {
-               srec_ack( );
+               Srec_ack( );
            }
            else if( linedata.RecordType == SREC_END )
            {
                fl_fputc(0x00, file);
                lastrecord = TRUE;
-               srec_ack( );
+               Srec_ack( );
            }
 
            else // bad data type for now
@@ -160,10 +160,10 @@ int get_and_save_srec( FL_FILE* file )
                    lastrecord = TRUE;
                }
 
-               srec_nack( );
+               Srec_nack( );
            }
        }
-       //srec_xOn();
+       //Srec_xOn();
     }
     return(imageType);
 }
@@ -171,7 +171,7 @@ int get_and_save_srec( FL_FILE* file )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-int unpack_srec( FL_FILE* file )
+int Unpack_srec( FL_FILE* file )
 {
     uint8  lineDone;
     uint8  *tempcode;
@@ -207,8 +207,8 @@ int unpack_srec( FL_FILE* file )
 			WriteLCD_smText( 0, 0, (uint8*)textBuffer, NORMAL_LCD);
             progress += filelength / 100;
         }
-        //srec_file_get_line( &asciidata);
-        //srec_xOff();
+        //Srec_file_get_line( &asciidata);
+        //Srec_xOff();
         fileData = (uint8*)&asciidata;
         lineDone = FALSE;
         while(lineDone == FALSE)
@@ -231,16 +231,16 @@ int unpack_srec( FL_FILE* file )
         else
         {
             records++;
-            linedata = srec_convert_line( asciidata );
+            linedata = Srec_convert_line( asciidata );
 
             if( linedata.RecordType == SREC_HEADER )
             {
-            //    srec_ack( );
+            //    Srec_ack( );
             }
 
             else if( linedata.RecordType == SREC_DATA )
             {
-                if( srec_checksum( linedata ))
+                if( Srec_checksum( linedata ))
                 {
                     if(firstEntry == 0)
                     {
@@ -253,18 +253,18 @@ int unpack_srec( FL_FILE* file )
                         tempcode = (uint8*)code + (linedata.Address - imageAddr);
                     }
 
-                    srec_get_data( linedata, tempcode );
+                    Srec_get_data( linedata, tempcode );
                     //tempcode = tempcode + (linedata.Length - 5);
                     lastDataLen = (uint32)(linedata.Length - 5);
 
                     // reset bad records count
                     badrecords = 0;
-                    //srec_ack( );
+                    //Srec_ack( );
                 }
 
                 else
                 {
-                //      srec_nack( );
+                //      Srec_nack( );
                 }
             }
 
@@ -272,7 +272,7 @@ int unpack_srec( FL_FILE* file )
             {
                 tempcode += lastDataLen;
                 lastrecord = TRUE;
-                //srec_ack( );
+                //Srec_ack( );
             }
 
             else // bad data type for now
@@ -291,10 +291,10 @@ int unpack_srec( FL_FILE* file )
                     imageType = -1;
                     lastrecord = TRUE;
                 }
-                //srec_nack( );
+                //Srec_nack( );
             }
         }
-        //srec_xOn();
+        //Srec_xOn();
     }
 
     codesize = (unsigned long)((uint8*)tempcode - (uint8*)code);
@@ -304,7 +304,7 @@ int unpack_srec( FL_FILE* file )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void srec_get_line( ASCII_SREC_DATA * asciidata)
+void Srec_get_line( ASCII_SREC_DATA * asciidata)
 {
     //uint32 timercount;
     uint8  size;
@@ -315,7 +315,7 @@ void srec_get_line( ASCII_SREC_DATA * asciidata)
 
     memset(&charbuffer[0], 0x00, sizeof(charbuffer));
 
-    srec_uart_gets( (char*)&charbuffer[0], (int)DBG_USART );
+    Srec_UartGets( (char*)&charbuffer[0], (int)DBG_USART );
 
     if(charbuffer[0] == CAN)
     {
@@ -336,7 +336,7 @@ void srec_get_line( ASCII_SREC_DATA * asciidata)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-RECORD_DATA srec_convert_line( ASCII_SREC_DATA linedata )
+RECORD_DATA Srec_convert_line( ASCII_SREC_DATA linedata )
 {
     uint8 count;
     uint8 index;
@@ -345,19 +345,19 @@ RECORD_DATA srec_convert_line( ASCII_SREC_DATA linedata )
     // Do record type
     memset( &tempbuff[0], 0x00, sizeof(tempbuff) );
     memcpy( &tempbuff[0], &linedata.RecordType, 1 );
-    srecdata.RecordType = atoh_1( &tempbuff[0] );
+    srecdata.RecordType = Atoh_1( &tempbuff[0] );
 
     if(srecdata.RecordType == SREC_DATA)
     {
         // Do length
         memset( &tempbuff[0], 0x00, sizeof(tempbuff) );
         memcpy( &tempbuff[0], &linedata.Count[0], 2 );
-        srecdata.Length = atoh_2( &tempbuff[0] );
+        srecdata.Length = Atoh_2( &tempbuff[0] );
 
         // Do length
         memset( &tempbuff[0], 0x00, sizeof(tempbuff) );
         memcpy( &tempbuff[0], &linedata.Addr[0], 8 );
-        srecdata.Address = atoh_4( &tempbuff[0] );
+        srecdata.Address = Atoh_4( &tempbuff[0] );
 
         // Do data bytes
         count = (unsigned char)(srecdata.Length - 5);
@@ -366,7 +366,7 @@ RECORD_DATA srec_convert_line( ASCII_SREC_DATA linedata )
         {
             memset( &tempbuff[0], 0x00, sizeof(tempbuff) );
             memcpy( &tempbuff[0], &linedata.Data[ (index * 2) ], 2 );
-            srecdata.Data[index] = atoh_2( &tempbuff[0] );
+            srecdata.Data[index] = Atoh_2( &tempbuff[0] );
             index++;
         }
 
@@ -374,7 +374,7 @@ RECORD_DATA srec_convert_line( ASCII_SREC_DATA linedata )
         memset( &tempbuff[0], 0x00, sizeof(tempbuff) );
 //        memcpy( &tempbuff[0], &linedata.Checksum[0], 8 );
         memcpy( &tempbuff[0], &linedata.Data[ (index * 2) ], 2 );
-        srecdata.Checksum = atoh_2( &tempbuff[0] );
+        srecdata.Checksum = Atoh_2( &tempbuff[0] );
     }
 
     return( srecdata );
@@ -383,7 +383,7 @@ RECORD_DATA srec_convert_line( ASCII_SREC_DATA linedata )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-bool srec_checksum( RECORD_DATA linedata )
+bool Srec_checksum( RECORD_DATA linedata )
 {
     uint8 bytecount;
     uint8 checksum = 0;
@@ -420,7 +420,7 @@ bool srec_checksum( RECORD_DATA linedata )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void srec_get_data( RECORD_DATA Linedata, uint8 *data )
+void Srec_get_data( RECORD_DATA Linedata, uint8 *data )
 {
     uint8 bytecount, byteindex;
 
@@ -436,7 +436,7 @@ void srec_get_data( RECORD_DATA Linedata, uint8 *data )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void srec_ack( void )
+void Srec_ack( void )
 {
     usart_putchar( DBG_USART, ACK );
 }
@@ -444,7 +444,7 @@ void srec_ack( void )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void srec_nack( void )
+void Srec_nack( void )
 {
     usart_putchar( DBG_USART, NACK );
 }
@@ -452,7 +452,7 @@ void srec_nack( void )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 atoc( uint8 ch )
+uint8 Atoc( uint8 ch )
 {
     if((ch >= 0x30) && (ch <= 0x39))
     {
@@ -478,7 +478,7 @@ uint8 atoc( uint8 ch )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 atonum( uint8 ch )
+uint8 Atonum( uint8 ch )
 {
     if( ch == '1' )
     {
@@ -564,24 +564,24 @@ uint8 atonum( uint8 ch )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint32 atoh_4( uint8 * ch )
+uint32 Atoh_4( uint8 * ch )
 {
     uint32 result = 0;
-    result = (unsigned long)(atoc( *ch ) * 0x10000000);
+    result = (unsigned long)(Atoc( *ch ) * 0x10000000);
     ch++;
-    result += atoc( *ch ) * 0x01000000;
+    result += Atoc( *ch ) * 0x01000000;
     ch++;
-    result += atoc( *ch ) * 0x00100000;
+    result += Atoc( *ch ) * 0x00100000;
     ch++;
-    result += atoc( *ch ) * 0x00010000;
+    result += Atoc( *ch ) * 0x00010000;
     ch++;
-    result += atoc( *ch ) * 0x00001000;
+    result += Atoc( *ch ) * 0x00001000;
     ch++;
-    result += atoc( *ch ) * 0x00000100;
+    result += Atoc( *ch ) * 0x00000100;
     ch++;
-    result += atoc( *ch ) * 0x00000010;
+    result += Atoc( *ch ) * 0x00000010;
     ch++;
-    result += atoc( *ch );
+    result += Atoc( *ch );
 
     return( result );
 }
@@ -589,12 +589,12 @@ uint32 atoh_4( uint8 * ch )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 atoh_2( uint8 * ch )
+uint8 Atoh_2( uint8 * ch )
 {
     uint8 result = 0;
-    result = (unsigned char)(atoc( *ch ) * 0x10);
+    result = (unsigned char)(Atoc( *ch ) * 0x10);
     ch++;
-    result += atoc( *ch );
+    result += Atoc( *ch );
 
     return( result );
 }
@@ -602,10 +602,10 @@ uint8 atoh_2( uint8 * ch )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 atoh_1( uint8 * ch )
+uint8 Atoh_1( uint8 * ch )
 {
     uint8 result = 0;
-    result = atoc( *ch );
+    result = Atoc( *ch );
 
     return( result );
 }
@@ -613,7 +613,7 @@ uint8 atoh_1( uint8 * ch )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void srec_xOff( void )
+void Srec_xOff( void )
 {
     usart_putchar( DBG_USART, XOFF );
 }
@@ -621,7 +621,7 @@ void srec_xOff( void )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void srec_xOn(void)
+void Srec_xOn(void)
 {
     usart_putchar( DBG_USART, XON );
 }

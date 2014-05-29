@@ -57,44 +57,44 @@ static uint32 cacheEntries = 0;
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-SUMMARY_MENU_EVENT_CACHE_STRUCT* getSummaryEventInfo(uint16 tempSummaryIndex);
-void summaryMn(INPUT_MSG_STRUCT);
+SUMMARY_MENU_EVENT_CACHE_STRUCT* GetSummaryEventInfo(uint16 tempSummaryIndex);
+void SummaryMenu(INPUT_MSG_STRUCT);
 
-void summaryMnProc(INPUT_MSG_STRUCT,
+void SummaryMenuProc(INPUT_MSG_STRUCT,
                    WND_LAYOUT_STRUCT *,
                    SUMMARY_DATA *);
                    
-void dsplySummaryMn(WND_LAYOUT_STRUCT *,
+void SummaryMenuDisplay(WND_LAYOUT_STRUCT *,
                     SUMMARY_DATA *);
                     
-void summaryMnScroll(char direction);
-uint16 getFirstValidRamSummaryIndex(void);
-uint16 getNextValidRamSummaryIndex(uint16 currentValidSummaryIndex);
-uint16 getPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex);
-BOOLEAN checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex);
+void SummaryMenuScroll(char direction);
+uint16 GetFirstValidRamSummaryIndex(void);
+uint16 GetNextValidRamSummaryIndex(uint16 currentValidSummaryIndex);
+uint16 GetPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex);
+BOOLEAN CheckRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void summaryMn(INPUT_MSG_STRUCT msg)
+void SummaryMenu(INPUT_MSG_STRUCT msg)
 {  
 	static WND_LAYOUT_STRUCT wnd_layout;
 	//static MN_LAYOUT_STRUCT mn_layout;
 	//BOOL mode = 0;
 
-	summaryMnProc(msg, &wnd_layout, s_flashReadSummaryTablePtr);
+	SummaryMenuProc(msg, &wnd_layout, s_flashReadSummaryTablePtr);
 	
 	if (g_activeMenu == SUMMARY_MENU)
 	{
-		dsplySummaryMn(&wnd_layout, s_flashReadSummaryTablePtr);
-		writeMapToLcd(g_mmap);
+		SummaryMenuDisplay(&wnd_layout, s_flashReadSummaryTablePtr);
+		WriteMapToLcd(g_mmap);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void summaryMnProc(INPUT_MSG_STRUCT msg,
+void SummaryMenuProc(INPUT_MSG_STRUCT msg,
                    WND_LAYOUT_STRUCT *wnd_layout_ptr,
                    SUMMARY_DATA *rd_summary_ptr)
 {
@@ -116,7 +116,7 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 		if (msg.data[0] == START_FROM_TOP)
 		{
 			// Find the first valid summary index and set the top and current index to match
-			s_topMenuSummaryIndex = s_currentSummaryIndex = getFirstValidRamSummaryIndex();
+			s_topMenuSummaryIndex = s_currentSummaryIndex = GetFirstValidRamSummaryIndex();
 			debug("First valid ram summary index: %d\n", s_topMenuSummaryIndex);
 			
 			g_summaryListArrowChar = DOWN_ARROW_CHAR;
@@ -131,7 +131,7 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
 				{
 					// Grab the event info, assuming it's cached
-					eventInfo = getSummaryEventInfo(s_currentSummaryIndex);
+					eventInfo = GetSummaryEventInfo(s_currentSummaryIndex);
 
 					g_summaryEventNumber = eventInfo->eventNumber;
 					g_updateResultsEventRecord = YES;
@@ -161,19 +161,19 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 				// Check if the top menu summary index represents a valid index
 				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
 				{
-					summaryMnScroll(DOWN);
+					SummaryMenuScroll(DOWN);
 				}
 				break;
 			case (UP_ARROW_KEY):
 				// Check if the top menu summary index represents a valid index
 				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
 				{
-					summaryMnScroll(UP);
+					SummaryMenuScroll(UP);
 				}
 				break;
 				
 			case (ESC_KEY):
-				tempSummaryIndex = getFirstValidRamSummaryIndex();
+				tempSummaryIndex = GetFirstValidRamSummaryIndex();
 				
 				// Check if the top menu summary index represents a valid index and if the current index isn't the first
 				if ((s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES) && (tempSummaryIndex != s_currentSummaryIndex))
@@ -204,7 +204,7 @@ void summaryMnProc(INPUT_MSG_STRUCT msg,
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
+void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
                     SUMMARY_DATA *rd_summary_ptr)
 {
 	SUMMARY_MENU_EVENT_CACHE_STRUCT* eventInfo;
@@ -218,14 +218,14 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	UNUSED(rd_summary_ptr);
 
 	// Clear the LCD map
-	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Display the Title centered on the Top line
 	sprintf(lineBuff, "-%s-", getLangText(LIST_OF_SUMMARIES_TEXT));
 	length = (uint8)strlen((char*)lineBuff);
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));          
-	wndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// Setup layout
 	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
@@ -238,7 +238,7 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	{
 		debug("Summary List: No valid summary found for display\n");	
 		sprintf(lineBuff, "<%s>", getLangText(EMPTY_TEXT));
-		wndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		// We're done
 	}
 	else // s_topMenuSummaryIndex is a valid index indicating valid events in storage
@@ -248,15 +248,15 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 		while ((itemsDisplayed <= SUMMARY_MENU_ACTIVE_ITEMS) && (tempSummaryIndex < TOTAL_RAM_SUMMARIES))
 		{
 			// Check if entry is cached to prevent long delay reading files
-			eventInfo = getSummaryEventInfo(tempSummaryIndex);
+			eventInfo = GetSummaryEventInfo(tempSummaryIndex);
 
 			// Clear and setup the time stamp string for the current event
-			byteSet(&dateBuff[0], 0, sizeof(dateBuff));
-			convertTimeStampToString(dateBuff, (void*)(&(eventInfo->eventTime)), 
+			ByteSet(&dateBuff[0], 0, sizeof(dateBuff));
+			ConvertTimeStampToString(dateBuff, (void*)(&(eventInfo->eventTime)),
 										REC_DATE_TIME_DISPLAY);
 
 			// Clear and setup the mode string for the curent event
-			byteSet(&modeBuff[0], 0, sizeof(modeBuff));
+			ByteSet(&modeBuff[0], 0, sizeof(modeBuff));
 			switch (eventInfo->mode)
 			{
 				case WAVEFORM_MODE: 		strcpy(modeBuff, "W"); break;
@@ -267,17 +267,17 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 			}
 			
 			// Clear and setup the event line string for the curent event
-			byteSet(&lineBuff[0], 0, sizeof(lineBuff));
+			ByteSet(&lineBuff[0], 0, sizeof(lineBuff));
 			sprintf(lineBuff, "E%03d %s %s", (int)eventInfo->eventNumber, dateBuff, modeBuff);
 
 			// Check if the current line is to be highlighted
 			if (tempSummaryIndex == s_currentSummaryIndex)
 			{           
-				wndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
+				WndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
 			}
 			else // Print as a regular line
 			{   
-				wndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+				WndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			}
 
 			// Set the current row as the next row
@@ -286,7 +286,7 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 			// Increment the items displayed
 			itemsDisplayed++;
 			
-			tempSummaryIndex = getNextValidRamSummaryIndex(tempSummaryIndex);
+			tempSummaryIndex = GetNextValidRamSummaryIndex(tempSummaryIndex);
 		}
 
 		// Check if the summary index is at the end of the list and still room on the LCD
@@ -294,7 +294,7 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 		{
 			debug("Summary List: End of the list\n");	
 			sprintf(lineBuff, "<%s>", getLangText(END_TEXT));
-			wndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
 	}
 }
@@ -302,7 +302,7 @@ void dsplySummaryMn(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void summaryMnScroll(char direction)
+void SummaryMenuScroll(char direction)
 {  
 	uint16 tempSummaryIndex = 0;
 	uint16 compareCurrentSummaryIndex = s_currentSummaryIndex;
@@ -314,7 +314,7 @@ void summaryMnScroll(char direction)
 	{	
 		if (direction == DOWN)
 		{
-			tempSummaryIndex = getNextValidRamSummaryIndex(s_currentSummaryIndex);
+			tempSummaryIndex = GetNextValidRamSummaryIndex(s_currentSummaryIndex);
 			
 			if (tempSummaryIndex < TOTAL_RAM_SUMMARIES)
 			{
@@ -322,18 +322,18 @@ void summaryMnScroll(char direction)
 				
 				if ((s_currentSummaryIndex - s_topMenuSummaryIndex) >= SUMMARY_MENU_ACTIVE_ITEMS)
 				{
-					s_topMenuSummaryIndex = getNextValidRamSummaryIndex(s_topMenuSummaryIndex);
+					s_topMenuSummaryIndex = GetNextValidRamSummaryIndex(s_topMenuSummaryIndex);
 				}
 			}
 			else // For the last item, bump the top menu summary index one to show the end of the list
 			{
 				if ((s_currentSummaryIndex - s_topMenuSummaryIndex) >= (SUMMARY_MENU_ACTIVE_ITEMS - 1))
 				{
-					s_topMenuSummaryIndex = getNextValidRamSummaryIndex(s_topMenuSummaryIndex);
+					s_topMenuSummaryIndex = GetNextValidRamSummaryIndex(s_topMenuSummaryIndex);
 				}
 			}
 			
-			compareCurrentSummaryIndex = getNextValidRamSummaryIndex(s_currentSummaryIndex);
+			compareCurrentSummaryIndex = GetNextValidRamSummaryIndex(s_currentSummaryIndex);
 			if(compareCurrentSummaryIndex == TOTAL_RAM_SUMMARIES)
 			{
 				g_summaryListArrowChar = UP_ARROW_CHAR;
@@ -344,7 +344,7 @@ void summaryMnScroll(char direction)
 		}
 		else if (direction == UP)
 		{
-			tempSummaryIndex = getPreviousValidRamSummaryIndex(s_currentSummaryIndex);
+			tempSummaryIndex = GetPreviousValidRamSummaryIndex(s_currentSummaryIndex);
 			
 			if (tempSummaryIndex < TOTAL_RAM_SUMMARIES)
 			{
@@ -356,7 +356,7 @@ void summaryMnScroll(char direction)
 				}
 			}
 
-			compareCurrentSummaryIndex = getPreviousValidRamSummaryIndex(s_currentSummaryIndex);
+			compareCurrentSummaryIndex = GetPreviousValidRamSummaryIndex(s_currentSummaryIndex);
 			if(compareCurrentSummaryIndex == TOTAL_RAM_SUMMARIES)
 			{
 				g_summaryListArrowChar = DOWN_ARROW_CHAR;
@@ -371,11 +371,11 @@ void summaryMnScroll(char direction)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 getFirstValidRamSummaryIndex(void)
+uint16 GetFirstValidRamSummaryIndex(void)
 {
 	uint16 ramSummaryIndex = 0;
 	
-	while ((ramSummaryIndex < TOTAL_RAM_SUMMARIES) && (checkRamSummaryIndexForValidEventLink(ramSummaryIndex) == NO))
+	while ((ramSummaryIndex < TOTAL_RAM_SUMMARIES) && (CheckRamSummaryIndexForValidEventLink(ramSummaryIndex) == NO))
 		ramSummaryIndex++;
 
 	return (ramSummaryIndex);
@@ -384,13 +384,13 @@ uint16 getFirstValidRamSummaryIndex(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 getNextValidRamSummaryIndex(uint16 currentValidSummaryIndex)
+uint16 GetNextValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 {
 	uint16 ramSummaryIndex = currentValidSummaryIndex;
 
 	if (ramSummaryIndex < TOTAL_RAM_SUMMARIES)
 	{
-		while (checkRamSummaryIndexForValidEventLink(++ramSummaryIndex) == NO)
+		while (CheckRamSummaryIndexForValidEventLink(++ramSummaryIndex) == NO)
 		{
 			if (ramSummaryIndex == TOTAL_RAM_SUMMARIES)
 			{
@@ -405,7 +405,7 @@ uint16 getNextValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 getPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
+uint16 GetPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 {
 	uint16 ramSummaryIndex = currentValidSummaryIndex;
 
@@ -415,7 +415,7 @@ uint16 getPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 	}
 	else
 	{
-		while (checkRamSummaryIndexForValidEventLink(--ramSummaryIndex) == NO)
+		while (CheckRamSummaryIndexForValidEventLink(--ramSummaryIndex) == NO)
 		{
 			if (ramSummaryIndex == 0)
 			{
@@ -431,7 +431,7 @@ uint16 getPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-BOOLEAN checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
+BOOLEAN CheckRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 {
 	BOOLEAN validEventLink = NO;
 
@@ -449,7 +449,7 @@ BOOLEAN checkRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-SUMMARY_MENU_EVENT_CACHE_STRUCT* getSummaryEventInfo(uint16 tempSummaryIndex)
+SUMMARY_MENU_EVENT_CACHE_STRUCT* GetSummaryEventInfo(uint16 tempSummaryIndex)
 {
 	EVT_RECORD resultsEventRecord;
 	SUMMARY_MENU_EVENT_CACHE_STRUCT* cacheSummaryLineEntry = (SUMMARY_MENU_EVENT_CACHE_STRUCT*)&g_eventDataBuffer[0];
@@ -471,7 +471,7 @@ SUMMARY_MENU_EVENT_CACHE_STRUCT* getSummaryEventInfo(uint16 tempSummaryIndex)
 	// If here, no cache entry was found, load the event file to get the event record info
 	debug("Summary menu: Adding event record info to cache\n");
 
-	getEventFileRecord(__ramFlashSummaryTbl[tempSummaryIndex].fileEventNum, &resultsEventRecord);
+	GetEventFileRecord(__ramFlashSummaryTbl[tempSummaryIndex].fileEventNum, &resultsEventRecord);
 
 	cacheSummaryLineEntry[cacheEntries].eventNumber = resultsEventRecord.summary.eventNumber;
 	cacheSummaryLineEntry[cacheEntries].mode = resultsEventRecord.summary.mode;

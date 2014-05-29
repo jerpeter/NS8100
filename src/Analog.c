@@ -241,29 +241,29 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 
 	// Set A0 mux to A1/B1 for R/V by clearing bit
 	reg_PORTE.reg &= ~ANALOG_CONTROL_SHIFT;
-	soft_usecWait(delay);
+	SoftUsecWait(delay);
 
 	// Set low to start conversion
 	reg_PORTE.reg &= ~ANALOG_CONTROL_DATA;
-	soft_usecWait(delay);
+	SoftUsecWait(delay);
 	reg_PORTE.reg |= ANALOG_CONTROL_DATA;
-	soft_usecWait(delay);
+	SoftUsecWait(delay);
 
 	// Read R and V data
 	dataPtr->r = *(uint16*)(ANALOG_ADDRESS + 0x02);
 	dataPtr->v = *(uint16*)(ANALOG_ADDRESS + 0x00);
 
-	soft_usecWait(delay);
+	SoftUsecWait(delay);
 
 	// Set A0 mux to A2/B2 for T/A by setting bit
 	reg_PORTE.reg |= ANALOG_CONTROL_SHIFT;
-	soft_usecWait(delay);
+	SoftUsecWait(delay);
 
 	// Set low to start conversion
 	reg_PORTE.reg &= ~ANALOG_CONTROL_DATA;
-	soft_usecWait(delay);
+	SoftUsecWait(delay);
 	reg_PORTE.reg |= ANALOG_CONTROL_DATA;
-	soft_usecWait(delay);
+	SoftUsecWait(delay);
 
 	dataPtr->t = *(uint16*)(ANALOG_ADDRESS + 0x02);
 	dataPtr->a = *(uint16*)(ANALOG_ADDRESS + 0x00);
@@ -360,13 +360,13 @@ void SetupADChannelConfig(uint32 sampleRate)
 	}
 
 	//Delay for 1.2us at least
-	soft_usecWait(2);
+	SoftUsecWait(2);
 
 	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 	spi_write(&AVR32_SPI0, 0x0000);
     spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
 
-	soft_usecWait(2);
+	SoftUsecWait(2);
 
 #if 0
 	uint16 dummyRead = 0x8000;
@@ -438,7 +438,7 @@ void WriteAnalogControl(uint16 control)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void adSetCalSignalLow(void)
+void AdSetCalSignalLow(void)
 {
 	g_analogControl.bit.calSignal = 0;
 	g_analogControl.bit.calSignalEnable = 1;
@@ -449,7 +449,7 @@ void adSetCalSignalLow(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void adSetCalSignalHigh(void)
+void AdSetCalSignalHigh(void)
 {
 	g_analogControl.bit.calSignal = 1;
 	g_analogControl.bit.calSignalEnable = 1;
@@ -460,7 +460,7 @@ void adSetCalSignalHigh(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void adSetCalSignalOff(void)
+void AdSetCalSignalOff(void)
 {
 	g_analogControl.bit.calSignal = 0;
 	g_analogControl.bit.calSignalEnable = 0;
@@ -590,15 +590,15 @@ void GenerateCalSignal(void)
 	// 5) Disable cal and delay for 55ms and then off
 
 	SetCalSignalEnable(ON);
-	soft_usecWait(5 * SOFT_MSECS);
+	SoftUsecWait(5 * SOFT_MSECS);
 	SetCalSignal(ON);
-	soft_usecWait(10 * SOFT_MSECS);
+	SoftUsecWait(10 * SOFT_MSECS);
 	SetCalSignal(OFF);
-	soft_usecWait(20 * SOFT_MSECS);
+	SoftUsecWait(20 * SOFT_MSECS);
 	SetCalSignal(ON);
-	soft_usecWait(10 * SOFT_MSECS);
+	SoftUsecWait(10 * SOFT_MSECS);
 	SetCalSignalEnable(OFF);
-	soft_usecWait(55 * SOFT_MSECS);
+	SoftUsecWait(55 * SOFT_MSECS);
 }
 
 ///----------------------------------------------------------------------------
@@ -611,17 +611,17 @@ void GetChannelOffsets(uint32 sampleRate)
 	uint8 powerAnalogDown = NO;
 
 	// Check to see if the A/D is in sleep mode
-	if (getPowerControlState(ANALOG_SLEEP_ENABLE) == ON)
+	if (GetPowerControlState(ANALOG_SLEEP_ENABLE) == ON)
 	{
 		// Power the A/D on to set the offsets
-		powerControl(ANALOG_SLEEP_ENABLE, OFF);
+		PowerControl(ANALOG_SLEEP_ENABLE, OFF);
 
 		// Set flag to signal powering off the A/D when finished
 		powerAnalogDown = YES;
 	}
 
 	// Reset offset values
-	byteSet(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
+	ByteSet(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
 
 	debug("Get Channel Offset: Read and pitch... (Address boundary: %s)\n", ((uint32)(&s_tempData) % 4 == 0) ? "YES" : "NO");
 	// Read and pitch samples
@@ -632,7 +632,7 @@ void GetChannelOffsets(uint32 sampleRate)
 		//debug("Offset throw away data: 0x%x, 0x%x, 0x%x, 0x%x\n", s_tempData.r, s_tempData.v, s_tempData.t, s_tempData.a);
 
 		// Delay equivalent to the time in between gathering samples for the current sample rate
-		soft_usecWait(timeDelay);
+		SoftUsecWait(timeDelay);
 	}
 
 	// Initialize
@@ -655,7 +655,7 @@ void GetChannelOffsets(uint32 sampleRate)
 		s_aTotal += s_tempData.a;
 
 		// Delay equivalent to the time in between gathering samples for the current sample rate
-		soft_usecWait(timeDelay);
+		SoftUsecWait(timeDelay);
 	}
 
 	// Average out the summations
@@ -722,7 +722,7 @@ void GetChannelOffsets(uint32 sampleRate)
 		}
 
 		// Delay equivalent to the time in between gathering samples for the current sample rate
-		soft_usecWait(timeDelay);
+		SoftUsecWait(timeDelay);
 	}
 
 	// Average out the summations
@@ -753,7 +753,7 @@ void GetChannelOffsets(uint32 sampleRate)
 	// If we had to power on the A/D here locally, then power it off
 	if (powerAnalogDown == YES)
 	{
-		powerControl(ANALOG_SLEEP_ENABLE, ON);
+		PowerControl(ANALOG_SLEEP_ENABLE, ON);
 	}		
 }
 

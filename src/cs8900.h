@@ -285,7 +285,7 @@ typedef struct {                                 // struct to store CS8900's
 } TInitSeq;
 
 // prototypes
-void counter_init(void);
+void Counter_init(void);
 void Init8900(void);
 void Write8900(unsigned short *Address, unsigned short Data);
 void WriteFrame8900(unsigned int Data);

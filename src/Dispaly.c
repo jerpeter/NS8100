@@ -60,13 +60,13 @@ void LcdInit(void)
 ///----------------------------------------------------------------------------
 void LcdResetPulse(void)
 {
-#if 0 // fix_ns8100
+	volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
+
 	// Reset is active low, put LCD in reset
-	reg_PORTA.reg &= ~LCD_RESET_BIT;
+	*lcd &= ~LCD_RESET_BIT;
 
 	// Take LCD out of reset
-	reg_PORTA.reg |= LCD_RESET_BIT;
-#endif
+	*lcd |= LCD_RESET_BIT;
 }
 
 ///----------------------------------------------------------------------------
@@ -134,19 +134,19 @@ extern uint16 lcd_port_image;
     lcd_port_image |= LCD_ENABLE;
     *lcd = lcd_port_image;
 
-    soft_usecWait(10);
+    SoftUsecWait(10);
 
     //Set E low
     lcd_port_image &= ~LCD_ENABLE;
     *lcd = lcd_port_image;
 
-    soft_usecWait(10);
+    SoftUsecWait(10);
 
     //Set write, CS1, CS2 and address high
     lcd_port_image |= (LCD_READ_WRITE | LCD_CS1 | LCD_CS2 | LCD_RS);
     *lcd = lcd_port_image;
 
-    soft_usecWait(10);
+    SoftUsecWait(10);
 #endif
 
 #if 0 
@@ -185,9 +185,9 @@ extern uint16 lcd_port_image;
 
 	// Clock LCD data in by transitioning Enable from high to low
 	*((uint16*)0xC0000000) = (commandAndDataWord | LCD_ENABLE_BIT);
-	soft_usecWait(10);
+	SoftUsecWait(10);
 	*((uint16*)0xC0000000) = (commandAndDataWord & ~LCD_ENABLE_BIT);
-	soft_usecWait(10);
+	SoftUsecWait(10);
 #endif
 }
 
@@ -230,9 +230,9 @@ uint8 LcdRead(uint8 mode, uint8 segment)
 	
 	// Clock LCD data in by transitioning Enable from high to low
 	reg_PORTA.reg |= LCD_ENABLE_BIT;
-	soft_usecWait(1);
+	SoftUsecWait(1);
 	reg_PORTA.reg &= ~LCD_ENABLE_BIT;
-	soft_usecWait(1);
+	SoftUsecWait(1);
 
 	// Read in the data for all but the most significant bit and shift (misalignment with Port D)
 	data = (uint8)(reg_PORTC.reg << 1);
@@ -255,7 +255,7 @@ uint8 LcdRead(uint8 mode, uint8 segment)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-inline uint8 clockDataFromLcd(uint8 lcdCmd)
+inline uint8 ClockDataFromLcd(uint8 lcdCmd)
 {
 	// Take Eanble high
     *((volatile uint8*)LCD_CMD_PORT) = lcdCmd;
@@ -272,7 +272,7 @@ inline uint8 clockDataFromLcd(uint8 lcdCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-inline void clockDataToLcd(uint8 lcdCmd, uint8 lcdData)
+inline void ClockDataToLcd(uint8 lcdCmd, uint8 lcdData)
 {
 	// Take Eanble high
     *((volatile uint8*)LCD_CMD_PORT) = lcdCmd;
@@ -288,7 +288,7 @@ inline void clockDataToLcd(uint8 lcdCmd, uint8 lcdData)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-inline void waitForLcdReady(uint8 segment)
+inline void WaitForLcdReady(uint8 segment)
 {
 	UNUSED(segment);
 	// Wait for Lcd busy flag to clear
@@ -299,7 +299,7 @@ inline void waitForLcdReady(uint8 segment)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-inline uint8 readLcdData(uint8 segment)
+inline uint8 ReadLcdData(uint8 segment)
 {
 	return (LcdRead(LCD_DATA, segment));
 }
@@ -309,57 +309,57 @@ inline uint8 readLcdData(uint8 segment)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-inline void writeLcdData(uint8 lcdData, uint8 segment)
+inline void WriteLcdData(uint8 lcdData, uint8 segment)
 {
 	LcdWrite(LCD_DATA, lcdData, segment);
 	
-	waitForLcdReady(segment);
+	WaitForLcdReady(segment);
 }
 #endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-inline void setLcdStartLine(uint8 lcdData, uint8 segment)
+inline void SetLcdStartLine(uint8 lcdData, uint8 segment)
 {
 	// Or in Start Line instruction to LCD data
     lcdData |= (uint8)(LCD_START_LINE_INSTRUCTION);
 	
 	LcdWrite(LCD_INSTRUCTION, lcdData, segment);
 	
-	waitForLcdReady(segment);
+	WaitForLcdReady(segment);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-inline void setLcdXPosition(uint8 lcdData, uint8 segment)
+inline void SetLcdXPosition(uint8 lcdData, uint8 segment)
 {
 	// Or in X location instruction to the row selection in LCD data
     lcdData |= LCD_SET_PAGE;
 
 	LcdWrite(LCD_INSTRUCTION, lcdData, segment);
 		
-	waitForLcdReady(segment);
+	WaitForLcdReady(segment);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-inline void setLcdYPosition(uint8 lcdData, uint8 segment)
+inline void SetLcdYPosition(uint8 lcdData, uint8 segment)
 {
 	// Or in Y location instruction to the column slection in LCD data
     lcdData |= LCD_SET_ADDRESS;
 	
 	LcdWrite(LCD_INSTRUCTION, lcdData, segment);
 
-	waitForLcdReady(segment);
+	WaitForLcdReady(segment);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-inline void setLcdMode(uint8 lcdData, uint8 segment)
+inline void SetLcdMode(uint8 lcdData, uint8 segment)
 {
 	// Check if LCD data is set for turining on or off display
 	if (lcdData == LCD_DISPLAY_ON)
@@ -375,23 +375,23 @@ inline void setLcdMode(uint8 lcdData, uint8 segment)
 
 	LcdWrite(LCD_INSTRUCTION, lcdData, segment);
 	
-	waitForLcdReady(segment);
+	WaitForLcdReady(segment);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-inline void setLcdOrigin(uint8 x, uint8 y, uint8 segment)
+inline void SetLcdOrigin(uint8 x, uint8 y, uint8 segment)
 {
 	// Set both X and Y coordinate positions
-    setLcdXPosition(x, segment);
-    setLcdYPosition(y, segment);
+    SetLcdXPosition(x, segment);
+    SetLcdYPosition(y, segment);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void writeStringToLcd(uint8* p, uint8 x, uint8 y, uint8 (*table_ptr)[2][10])
+void WriteStringToLcd(uint8* p, uint8 x, uint8 y, uint8 (*table_ptr)[2][10])
 {
 	// =========================================
 	// Warning: This routine has not been tested
@@ -402,14 +402,14 @@ void writeStringToLcd(uint8* p, uint8 x, uint8 y, uint8 (*table_ptr)[2][10])
 	uint8 segment;
 	uint8 pixel_byte;
 
-	// Check if the LCD has power. If not, cant get status, so return
+	// Check if the LCD has power. If not, can't get status, so return
 	if (g_LcdPowerState != ENABLED)
 		return;
 
 	/* THIS ROUTINE WAS FOR TESTING THE LCD ONLY */	
 	segment = LCD_SEGMENT1;
-	setLcdXPosition(x, segment);
-	setLcdYPosition(y, segment);
+	SetLcdXPosition(x, segment);
+	SetLcdYPosition(y, segment);
 
 	while (*p != '\0')
 	{
@@ -424,9 +424,9 @@ void writeStringToLcd(uint8* p, uint8 x, uint8 y, uint8 (*table_ptr)[2][10])
 				if ((y + pixel_byte) > SEGMENT_ONE_BLOCK_BORDER) /*NOTE: BORDER is 63 its zero based 0 - 63 */
 				{
 					segment = LCD_SEGMENT2;
-					setLcdXPosition(x, segment);
+					SetLcdXPosition(x, segment);
 
-					setLcdYPosition((uint8)(y - 64), segment);
+					SetLcdYPosition((uint8)(y - 64), segment);
 				}
 			}
 			else
@@ -437,9 +437,9 @@ void writeStringToLcd(uint8* p, uint8 x, uint8 y, uint8 (*table_ptr)[2][10])
 				}
 			}
 
-			//writeLcdData(*(font_char_ptr + pixel_byte),segment);
+			//WriteLcdData(*(font_char_ptr + pixel_byte),segment);
 			LcdWrite(LCD_DATA, *(font_char_ptr + pixel_byte), segment);
-			waitForLcdReady(segment);
+			WaitForLcdReady(segment);
 
 			pixel_byte++;
 		}
@@ -452,18 +452,16 @@ void writeStringToLcd(uint8* p, uint8 x, uint8 y, uint8 (*table_ptr)[2][10])
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void writeMapToLcd(uint8 (*g_mmap_ptr)[128])
+void WriteMapToLcd(uint8 (*g_mmap_ptr)[128])
 {
     uint8 segment;
     uint8* pixel_byte_ptr;
     uint8 col_index;
     uint8 row_index;
 
-#if 0 // fix_ns8100 // Skip while testing
 	// Check if the LCD has power. If not, cant get status, so return
 	if (g_LcdPowerState != ENABLED)
 		return;
-#endif
 
 	row_index = 0;
 
@@ -473,39 +471,39 @@ void writeMapToLcd(uint8 (*g_mmap_ptr)[128])
 	    pixel_byte_ptr = (uint8*)g_mmap_ptr[row_index];	
             
         segment = LCD_SEGMENT1;
-		setLcdOrigin(row_index, DEFAULT_Y_LOC, segment);        
+		SetLcdOrigin(row_index, DEFAULT_Y_LOC, segment);
 
         while (col_index <= SEGMENT_ONE_BLOCK_BORDER)
         {
 			// Normal command replaced by code below
-			//writeLcdData(*(pixel_byte_ptr + col_index),segment);
+			//WriteLcdData(*(pixel_byte_ptr + col_index),segment);
 
-			// Optimized writeLcdData operation for speed
-			//clockDataToLcd(lcdCmdSeg1, *(pixel_byte_ptr + col_index));
-			//while (clockDataFromLcd(lcdStatusSeg1) & LCD_BUSY_FLAG) {};
-			// End of optimized writeLcdData operation
+			// Optimized WriteLcdData operation for speed
+			//ClockDataToLcd(lcdCmdSeg1, *(pixel_byte_ptr + col_index));
+			//while (ClockDataFromLcd(lcdStatusSeg1) & LCD_BUSY_FLAG) {};
+			// End of optimized WriteLcdData operation
 
 			LcdWrite(LCD_DATA, *(pixel_byte_ptr + col_index), segment);
-			waitForLcdReady(segment);
+			WaitForLcdReady(segment);
 
 			col_index++;
 		}
 		
         segment = LCD_SEGMENT2;
-		setLcdOrigin(row_index, DEFAULT_Y_LOC, segment);        
+		SetLcdOrigin(row_index, DEFAULT_Y_LOC, segment);
 
         while (col_index <= SEGMENT_TWO_BLOCK_BORDER)
         {
 			// Normal command replaced by code below
-			//writeLcdData(*(pixel_byte_ptr + col_index),segment);
+			//WriteLcdData(*(pixel_byte_ptr + col_index),segment);
 
-			// Optimized writeLcdData operation for speed
-			//clockDataToLcd(lcdCmdSeg2, *(pixel_byte_ptr + col_index));
-			//while (clockDataFromLcd(lcdStatusSeg2) & LCD_BUSY_FLAG) {};
-			// End of optimized writeLcdData operation
+			// Optimized WriteLcdData operation for speed
+			//ClockDataToLcd(lcdCmdSeg2, *(pixel_byte_ptr + col_index));
+			//while (ClockDataFromLcd(lcdStatusSeg2) & LCD_BUSY_FLAG) {};
+			// End of optimized WriteLcdData operation
 
 			LcdWrite(LCD_DATA, *(pixel_byte_ptr + col_index), segment);
-			waitForLcdReady(segment);
+			WaitForLcdReady(segment);
 
 			col_index++;
 		}
@@ -517,32 +515,32 @@ void writeMapToLcd(uint8 (*g_mmap_ptr)[128])
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void initLcdDisplay(void)
+void InitLcdDisplay(void)
 {    
 	// Issue reset pulse to LCD display
 	LcdResetPulse();
 	
 	// Make sure LCD is ready for commands
-	waitForLcdReady(LCD_SEGMENT1);
+	WaitForLcdReady(LCD_SEGMENT1);
 
 	// Init LCD segment 1
-	setLcdMode(LCD_DISPLAY_ON, LCD_SEGMENT1);
-	setLcdStartLine(DEFAULT_START_LINE, LCD_SEGMENT1);
-	setLcdOrigin(DEFAULT_X_LOC, DEFAULT_Y_LOC, LCD_SEGMENT1);
+	SetLcdMode(LCD_DISPLAY_ON, LCD_SEGMENT1);
+	SetLcdStartLine(DEFAULT_START_LINE, LCD_SEGMENT1);
+	SetLcdOrigin(DEFAULT_X_LOC, DEFAULT_Y_LOC, LCD_SEGMENT1);
 
 	// Init LCD segment 2
-	setLcdMode(LCD_DISPLAY_ON, LCD_SEGMENT2);
-	setLcdStartLine(DEFAULT_START_LINE, LCD_SEGMENT2);
-	setLcdOrigin(DEFAULT_X_LOC, DEFAULT_Y_LOC, LCD_SEGMENT2);
+	SetLcdMode(LCD_DISPLAY_ON, LCD_SEGMENT2);
+	SetLcdStartLine(DEFAULT_START_LINE, LCD_SEGMENT2);
+	SetLcdOrigin(DEFAULT_X_LOC, DEFAULT_Y_LOC, LCD_SEGMENT2);
 
 	// Clear the LCD display
-	clearLcdDisplay();
+	ClearLcdDisplay();
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void clearControlLinesLcdDisplay(void)
+void ClearControlLinesLcdDisplay(void)
 {
 	LcdWrite(LCD_INSTRUCTION, 0x00, LCD_SEGMENT1);
 	LcdWrite(LCD_DATA, 0x00, LCD_SEGMENT1);
@@ -551,54 +549,54 @@ void clearControlLinesLcdDisplay(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void clearLcdDisplay(void)
+void ClearLcdDisplay(void)
 {
 	// Turn all of the LCD pixels off (0's), effectively clearing the display
-    byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
-    writeMapToLcd(g_mmap);
+    ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+    WriteMapToLcd(g_mmap);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void fillLcdDisplay(void)
+void FillLcdDisplay(void)
 {
 	// Turn all of the LCD pixels on (1's), effectively filling the display
-    byteSet(&(g_mmap[0][0]), 0xff, sizeof(g_mmap));
-    writeMapToLcd(g_mmap);
+    ByteSet(&(g_mmap[0][0]), 0xff, sizeof(g_mmap));
+    WriteMapToLcd(g_mmap);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void setNextLcdBacklightState(void)
+void SetNextLcdBacklightState(void)
 {
 	LCD_BACKLIGHT_STATES backlightState;
 
 	// Get current backlight state
-    backlightState = getLcdBacklightState();
+    backlightState = GetLcdBacklightState();
 
 	// Advance to next backlight state
 	switch (backlightState)
 	{
-		case BACKLIGHT_OFF		: setLcdBacklightState(BACKLIGHT_DIM);		break;
-		case BACKLIGHT_DIM		: setLcdBacklightState(BACKLIGHT_BRIGHT);	break;
-		case BACKLIGHT_BRIGHT	: setLcdBacklightState(BACKLIGHT_OFF);		break;
+		case BACKLIGHT_OFF		: SetLcdBacklightState(BACKLIGHT_DIM);		break;
+		case BACKLIGHT_DIM		: SetLcdBacklightState(BACKLIGHT_BRIGHT);	break;
+		case BACKLIGHT_BRIGHT	: SetLcdBacklightState(BACKLIGHT_OFF);		break;
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-LCD_BACKLIGHT_STATES getLcdBacklightState(void)
+LCD_BACKLIGHT_STATES GetLcdBacklightState(void)
 {    
-	if (getPowerControlState(LCD_BACKLIGHT_ENABLE) == ON)
+	if (GetPowerControlState(LCD_BACKLIGHT_ENABLE) == ON)
 	{
-		if (getPowerControlState(LCD_BACKLIGHT_HI_ENABLE) == ON)
+		if (GetPowerControlState(LCD_BACKLIGHT_HI_ENABLE) == ON)
 		{
 			return (BACKLIGHT_BRIGHT);
 		}
-		else // getPowerControlState(LCD_BACKLIGHT_ENABLE) == OFF
+		else // GetPowerControlState(LCD_BACKLIGHT_ENABLE) == OFF
 		{
 			return (BACKLIGHT_DIM);
 		}
@@ -612,31 +610,31 @@ LCD_BACKLIGHT_STATES getLcdBacklightState(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void setLcdBacklightState(LCD_BACKLIGHT_STATES state)
+void SetLcdBacklightState(LCD_BACKLIGHT_STATES state)
 {    
 	switch (state)
 	{
 		case BACKLIGHT_OFF:
-			powerControl(LCD_BACKLIGHT_ENABLE, OFF);
-			powerControl(LCD_BACKLIGHT_HI_ENABLE, OFF);
+			PowerControl(LCD_BACKLIGHT_ENABLE, OFF);
+			PowerControl(LCD_BACKLIGHT_HI_ENABLE, OFF);
 		break;
 
 		case BACKLIGHT_DIM:
-			if (getPowerControlState(LCD_BACKLIGHT_ENABLE) == OFF)
+			if (GetPowerControlState(LCD_BACKLIGHT_ENABLE) == OFF)
 			{
-				powerControl(LCD_BACKLIGHT_ENABLE, ON);
+				PowerControl(LCD_BACKLIGHT_ENABLE, ON);
 			}
 
-			powerControl(LCD_BACKLIGHT_HI_ENABLE, OFF);
+			PowerControl(LCD_BACKLIGHT_HI_ENABLE, OFF);
 		break;
 
 		case BACKLIGHT_BRIGHT:
-			if (getPowerControlState(LCD_BACKLIGHT_ENABLE) == OFF)
+			if (GetPowerControlState(LCD_BACKLIGHT_ENABLE) == OFF)
 			{
-				powerControl(LCD_BACKLIGHT_ENABLE, ON);
+				PowerControl(LCD_BACKLIGHT_ENABLE, ON);
 			}
 
-			powerControl(LCD_BACKLIGHT_HI_ENABLE, ON);
+			PowerControl(LCD_BACKLIGHT_HI_ENABLE, ON);
 		break;
 	}
 }
@@ -644,7 +642,7 @@ void setLcdBacklightState(LCD_BACKLIGHT_STATES state)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void adjustLcdContrast(CONTRAST_ADJUSTMENT adjust)
+void AdjustLcdContrast(CONTRAST_ADJUSTMENT adjust)
 {
 	switch (adjust)
 	{
@@ -655,7 +653,7 @@ void adjustLcdContrast(CONTRAST_ADJUSTMENT adjust)
 				g_contrast_value += CONTRAST_STEPPING;
 			} 
 
-			setLcdContrast(g_contrast_value);
+			SetLcdContrast(g_contrast_value);
 			break;
 		
 		case DARKER:
@@ -665,18 +663,18 @@ void adjustLcdContrast(CONTRAST_ADJUSTMENT adjust)
 				g_contrast_value -= CONTRAST_STEPPING;
 			} 
 
-			setLcdContrast(g_contrast_value);
+			SetLcdContrast(g_contrast_value);
 			break;
 	}
 	
 	g_helpRecord.lcdContrast = g_contrast_value;
-	saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void setLcdContrast(uint8 cmd)
+void SetLcdContrast(uint8 cmd)
 {
 	//uint16* powerManagementPort = (uint16*)POWER_CONTROL_ADDRESS;
 	uint32 i;
@@ -720,41 +718,41 @@ void setLcdContrast(uint8 cmd)
 
 	// Section to reset the Wiper(counter)
 	//reg_PORTE.reg |= 0x04;      // Set adjust high
-	//soft_usecWait(LCD_ACCESS_DELAY);
+	//SoftUsecWait(LCD_ACCESS_DELAY);
 	//powerManagement.bit.lcdContrastEnable = OFF;
 	//*powerManagementPort = powerManagement.reg; // Set ctrl low
-	//soft_usecWait(1000);
+	//SoftUsecWait(1000);
 	// Enables wiper(counter) adjustment
 	//powerManagement.bit.lcdContrastEnable = ON;
 	//*powerManagementPort = powerManagement.reg; // Set ctrl high
-	//soft_usecWait(LCD_ACCESS_DELAY);
+	//SoftUsecWait(LCD_ACCESS_DELAY);
 	//reg_PORTE.reg &= ~0x04;      // Set adjust low
-	//soft_usecWait(LCD_ACCESS_DELAY);
+	//SoftUsecWait(LCD_ACCESS_DELAY);
 
 	// Section to reset the Wiper(counter)
-	powerControl(LCD_CONTRAST_ENABLE, ON); // Set adjust high
-	powerControl(LCD_POWER_ENABLE, OFF); // Set control low
-	soft_usecWait(LCD_ACCESS_DELAY); // Delay
+	PowerControl(LCD_CONTRAST_ENABLE, ON); // Set adjust high
+	PowerControl(LCD_POWER_ENABLE, OFF); // Set control low
+	SoftUsecWait(LCD_ACCESS_DELAY); // Delay
 
 	// Enables wiper(counter) adjustment
-	powerControl(LCD_POWER_ENABLE, ON); // Set control high	
-	soft_usecWait(LCD_ACCESS_DELAY); // Delay
+	PowerControl(LCD_POWER_ENABLE, ON); // Set control high
+	SoftUsecWait(LCD_ACCESS_DELAY); // Delay
 
-	powerControl(LCD_CONTRAST_ENABLE, OFF); // Set adjust low
-	soft_usecWait(LCD_ACCESS_DELAY); // Delay
+	PowerControl(LCD_CONTRAST_ENABLE, OFF); // Set adjust low
+	SoftUsecWait(LCD_ACCESS_DELAY); // Delay
 
 	// Section to adjust the wiper(counter)
 	for (i = 0; i < cmd; i++)
 	{
 		//reg_PORTE.reg |= 0x04;   // Set adjust high
-		//soft_usecWait(LCD_ACCESS_DELAY);
+		//SoftUsecWait(LCD_ACCESS_DELAY);
 		//reg_PORTE.reg &= ~0x04;  // Set adjust low
-		//soft_usecWait(LCD_ACCESS_DELAY);
+		//SoftUsecWait(LCD_ACCESS_DELAY);
 		
-		powerControl(LCD_CONTRAST_ENABLE, ON); // Set adjust high
-		soft_usecWait(LCD_ACCESS_DELAY);
+		PowerControl(LCD_CONTRAST_ENABLE, ON); // Set adjust high
+		SoftUsecWait(LCD_ACCESS_DELAY);
 		
-		powerControl(LCD_CONTRAST_ENABLE, OFF); // Set adjust low
-		soft_usecWait(LCD_ACCESS_DELAY);
+		PowerControl(LCD_CONTRAST_ENABLE, OFF); // Set adjust low
+		SoftUsecWait(LCD_ACCESS_DELAY);
 	}
 }

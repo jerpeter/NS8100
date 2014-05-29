@@ -51,24 +51,24 @@
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void monitorMn(INPUT_MSG_STRUCT);
-void monitorMnDsply(WND_LAYOUT_STRUCT *);
-void monitorMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
+void MonitorMenu(INPUT_MSG_STRUCT);
+void MonitorMenuDsply(WND_LAYOUT_STRUCT *);
+void MonitorMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void monitorMn(INPUT_MSG_STRUCT msg)
+void MonitorMenu(INPUT_MSG_STRUCT msg)
 {   
 	static WND_LAYOUT_STRUCT wnd_layout;
 	static MN_LAYOUT_STRUCT mn_layout;
 
-	monitorMnProc(msg, &wnd_layout, &mn_layout);
+	MonitorMenuProc(msg, &wnd_layout, &mn_layout);
 
 	if (g_activeMenu == MONITOR_MENU)
 	{
-		monitorMnDsply(&wnd_layout);
-		writeMapToLcd(g_mmap);
+		MonitorMenuDsply(&wnd_layout);
+		WriteMapToLcd(g_mmap);
 	}
 }
 
@@ -76,7 +76,7 @@ void monitorMn(INPUT_MSG_STRUCT msg)
 ///	Function Break
 ///----------------------------------------------------------------------------
 uint8 g_showRVTA = NO;
-void monitorMnProc(INPUT_MSG_STRUCT msg,
+void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 	WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -85,7 +85,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 	//uint8 mbChoice = 0;
 	FLASH_USAGE_STRUCT flashStats;
 	
-	getFlashUsageStats(&flashStats);
+	GetFlashUsageStats(&flashStats);
 
 	switch (msg.cmd)
 	{
@@ -97,7 +97,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 			mn_layout_ptr->curr_ln =       MONITOR_MN_TBL_START_LINE;
 			mn_layout_ptr->top_ln =        MONITOR_MN_TBL_START_LINE;
 
-			byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+			ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 			
 			g_monitorOperationMode = (uint8)msg.data[0];
 
@@ -117,18 +117,18 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 					SETUP_MENU_MSG(MAIN_MENU);
 					JUMP_TO_ACTIVE_MENU();
 					
-					overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT MONITOR.", (5 * SOFT_SECS));
+					OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT MONITOR.", (5 * SOFT_SECS));
 					return;
 				}
 			}
 			
 			// Make sure the parameters are up to date based on the trigger setup information
-			initSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
+			InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
 
 			switch(g_monitorOperationMode)
 			{
 				case WAVEFORM_MODE:
-					startMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
+					StartMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
 				break;   
 
 				case BARGRAPH_MODE: 
@@ -169,15 +169,15 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 						g_triggerRecord.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
 					}
 
-					startMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
+					StartMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
 				break;
 
 				case MANUAL_TRIGGER_MODE:
-					byteCpy((uint8*)&temp_g_triggerRecord, &g_triggerRecord, sizeof(REC_EVENT_MN_STRUCT));
+					ByteCpy((uint8*)&temp_g_triggerRecord, &g_triggerRecord, sizeof(REC_EVENT_MN_STRUCT));
 					temp_g_triggerRecord.trec.seismicTriggerLevel = MANUAL_TRIGGER_CHAR;
 					temp_g_triggerRecord.trec.airTriggerLevel = MANUAL_TRIGGER_CHAR;
 
-					startMonitoring(temp_g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
+					StartMonitoring(temp_g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
 				break;
 
 				case COMBO_MODE:
@@ -218,7 +218,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 						g_triggerRecord.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
 					}
 
-					startMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
+					StartMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
 					break;
 
 				default:
@@ -256,10 +256,10 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 						{
 							if (g_monitorModeActiveChoice == MB_FIRST_CHOICE)
 							{
-								stopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
+								StopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
 								// Restore the autoPrint value just in case the user escaped from a printout
-								getRecData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+								GetRecordData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 								g_helpRecord.autoPrint = temp_g_helpRecord.autoPrint;
 
 								SETUP_MENU_MSG(MAIN_MENU);
@@ -464,16 +464,16 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 		break;
         
         case STOP_MONITORING_CMD:
-			stopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
+			StopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
 			// Restore the autoPrint value just in case the user escaped from a printout
-			getRecData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+			GetRecordData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 			g_helpRecord.autoPrint = temp_g_helpRecord.autoPrint;
 
 			SETUP_MENU_MSG(MAIN_MENU);
 			JUMP_TO_ACTIVE_MENU();
 			
-			overlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) MONITOR STOPPED.", (5 * SOFT_SECS));
+			OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) MONITOR STOPPED.", (5 * SOFT_SECS));
 		break;
              
 		default:
@@ -484,7 +484,7 @@ void monitorMnProc(INPUT_MSG_STRUCT msg,
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
+void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	char buff[50];
 	char srBuff[6];
@@ -507,13 +507,13 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wnd_layout_ptr->next_row =   wnd_layout_ptr->start_row;
 	wnd_layout_ptr->next_col =   wnd_layout_ptr->start_col;
 
-	byteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	//-----------------------------------------------------------------------
 	// PRINT MONITORING
 	//-----------------------------------------------------------------------
-	byteSet(&buff[0], 0, sizeof(buff));
-	byteSet(&dotBuff[0], 0, sizeof(dotBuff));
+	ByteSet(&buff[0], 0, sizeof(buff));
+	ByteSet(&dotBuff[0], 0, sizeof(dotBuff));
 	
 	for (i = 0; i < dotState; i++)
 	{
@@ -563,7 +563,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// Setup current column to center text
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	// Write string to screen
-	wndMpWrtString((uint8*)&buff[0], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString((uint8*)&buff[0], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	if((g_monitorOperationMode == BARGRAPH_MODE) || (g_monitorOperationMode == COMBO_MODE))
 	{
@@ -576,7 +576,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				
 		sprintf(buff, "%c", arrowChar);                     
 	    wnd_layout_ptr->curr_col = 120;
-	    wndMpWrtString((uint8*)&buff[0], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	    WndMpWrtString((uint8*)&buff[0], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	}
 
 	// Advance to next row
@@ -588,55 +588,55 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//-----------------------------------------------------------------------
 		// Skip Line
 		//-----------------------------------------------------------------------
-		wndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 		//-----------------------------------------------------------------------
 		// Date
 		//-----------------------------------------------------------------------
-		byteSet(&buff[0], 0, sizeof(buff));
-		time = getCurrentTime();
-		convertTimeStampToString(buff, &time, REC_DATE_TIME_MONITOR);          
+		ByteSet(&buff[0], 0, sizeof(buff));
+		time = GetCurrentTime();
+		ConvertTimeStampToString(buff, &time, REC_DATE_TIME_MONITOR);
 		length = (uint8)strlen(buff);
 
 		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-		wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 		//-----------------------------------------------------------------------
 		// Time
 		//-----------------------------------------------------------------------
-		byteSet(&buff[0], 0, sizeof(buff));
+		ByteSet(&buff[0], 0, sizeof(buff));
 		length = (uint8)sprintf(buff,"%02d:%02d:%02d",time.hour, time.min, time.sec);                    
 
 		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-		wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 		//-----------------------------------------------------------------------
 		// Skip Line
 		//-----------------------------------------------------------------------
-		wndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 		//-----------------------------------------------------------------------
 		// Battery Voltage
 		//-----------------------------------------------------------------------
-		byteSet(&buff[0], 0, sizeof(buff));	
-		length = (uint8)sprintf(buff,"%s %.2f", getLangText(BATTERY_TEXT), getExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
+		ByteSet(&buff[0], 0, sizeof(buff));
+		length = (uint8)sprintf(buff,"%s %.2f", getLangText(BATTERY_TEXT), GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 
 		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-		wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 #if 0 // Not needed
 		//-----------------------------------------------------------------------
 		// Skip Line
 		//-----------------------------------------------------------------------
-		wndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 #endif
 
@@ -649,15 +649,15 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			//-----------------------------------------------------------------------
 			// Show RTVA
 			//-----------------------------------------------------------------------
-			byteSet(&buff[0], 0, sizeof(buff));	
+			ByteSet(&buff[0], 0, sizeof(buff));
 			length = (uint8)sprintf(buff,"R    V    T    A"); 
 
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-			wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-			byteSet(&buff[0], 0, sizeof(buff));	
+			ByteSet(&buff[0], 0, sizeof(buff));
 			length = (uint8)sprintf(buff," %04x %04x %04x %04x", 
 				(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r),
 				(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v),
@@ -666,7 +666,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-			wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
 #endif
 	}
@@ -675,26 +675,26 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//-----------------------------------------------------------------------
 		// Date and Time
 		//-----------------------------------------------------------------------
-		byteSet(&buff[0], 0, sizeof(buff));
-		time = getCurrentTime();
+		ByteSet(&buff[0], 0, sizeof(buff));
+		time = GetCurrentTime();
 
-		convertTimeStampToString(buff, &time, REC_DATE_TIME_TYPE);          
+		ConvertTimeStampToString(buff, &time, REC_DATE_TIME_TYPE);
 		length = (uint8)strlen(buff);
 		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-		wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 		//-----------------------------------------------------------------------
 		// Skip Line
 		//-----------------------------------------------------------------------
-		wndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 		//-----------------------------------------------------------------------
 		// Print Result Type Header
 		//-----------------------------------------------------------------------
-		byteSet(&buff[0], 0, sizeof(buff));	
+		ByteSet(&buff[0], 0, sizeof(buff));
 
 		if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 		{
@@ -711,7 +711,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				
 		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-		wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 		div = (float)(g_bitAccuracyMidpoint * g_sensorInfoPtr->sensorAccuracy * gainFactor) / 
@@ -722,19 +722,19 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			//-----------------------------------------------------------------------
 			// Max Results Header
 			//-----------------------------------------------------------------------
-			byteSet(&buff[0], 0, sizeof(buff));	
+			ByteSet(&buff[0], 0, sizeof(buff));
 			length = (uint8)sprintf(buff, "PEAK | R  | T  | V  |");
 
 			wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-			wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 			//-----------------------------------------------------------------------
 			// Peak Results
 			//-----------------------------------------------------------------------
-			byteSet(&buff[0], 0, sizeof(buff));
-			byteSet(&displayFormat[0], 0, sizeof(displayFormat));
+			ByteSet(&buff[0], 0, sizeof(buff));
+			ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
 
 			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
@@ -802,14 +802,14 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			length = 21;
 			wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-			wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 			//-----------------------------------------------------------------------
 			// Peak Freq Results
 			//-----------------------------------------------------------------------
-			byteSet(&buff[0], 0, sizeof(buff));
-			byteSet(&displayFormat[0], 0, sizeof(displayFormat));
+			ByteSet(&buff[0], 0, sizeof(buff));
+			ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
 			tempR = tempV = tempT = (float)0.0;
 
 			if (g_displayBargraphResultsMode != IMPULSE_RESULTS)
@@ -896,7 +896,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				length = 21;
 				wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-				wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+				WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 				wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 			}
 		}
@@ -904,8 +904,8 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//-----------------------------------------------------------------------
 		// Max Air/Max Vector Sum Results
 		//-----------------------------------------------------------------------
-		byteSet(&buff[0], 0, sizeof(buff));
-		byteSet(&displayFormat[0], 0, sizeof(displayFormat));
+		ByteSet(&buff[0], 0, sizeof(buff));
+		ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
 		tempA = (float)0.0;
 
 		// Check if displaying the vector sum and if the bar channel isn't just air
@@ -1130,11 +1130,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 					if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
 #endif
 					{
-						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), hexToMB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), HexToMB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 					}
 					else // Report Air in DB
 					{
-						sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), hexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+						sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), HexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 					}
 				}
 				else // (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS) || (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
@@ -1155,11 +1155,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 							if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
 #endif
 							{
-								sprintf(buff, "AIR %0.3f mb ", hexToMB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+								sprintf(buff, "AIR %0.3f mb ", HexToMB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
 							else // Report Air in DB
 							{
-								sprintf(buff, "AIR %4.1f dB ", hexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+								sprintf(buff, "AIR %4.1f dB ", HexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
 						}
 						else if (g_triggerRecord.op_mode == COMBO_MODE)
@@ -1176,11 +1176,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 							if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
 #endif
 							{
-								sprintf(buff, "AIR %0.3f mb ", hexToMB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+								sprintf(buff, "AIR %0.3f mb ", HexToMB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
 							else // Report Air in DB
 							{
-								sprintf(buff, "AIR %4.1f dB ", hexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+								sprintf(buff, "AIR %4.1f dB ", HexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
 						}
 					}
@@ -1194,11 +1194,11 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 						if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 						{
-							sprintf(buff, "AIR %0.3f mb ", hexToMB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							sprintf(buff, "AIR %0.3f mb ", HexToMB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 						}
 						else // Report Air in DB
 						{
-							sprintf(buff, "AIR %4.1f dB ", hexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							sprintf(buff, "AIR %4.1f dB ", HexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 						}
 					}
 
@@ -1214,12 +1214,12 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		length = 21;
 		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-		wndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 		if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 		{
-			byteSet(&buff[0], 0, sizeof(buff));
+			ByteSet(&buff[0], 0, sizeof(buff));
 		
 			length = (uint8)sprintf(buff, "(%d %s)", g_triggerRecord.berec.impulseMenuUpdateSecs, (g_triggerRecord.berec.impulseMenuUpdateSecs == 1) ?
 									getLangText(SECOND_TEXT) : getLangText(SECONDS_TEXT));
@@ -1228,7 +1228,7 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			// Always display the refresh time on the last line
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
-			wndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
 
 		// Keep impulse values refreshed based on LCD updates (every second)
@@ -1237,23 +1237,23 @@ void monitorMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	
 	if (g_promtForCancelingPrintJobs == TRUE)
 	{
-		messageBorder();
-		messageTitle(getLangText(VERIFY_TEXT));
-		messageText(getLangText(CANCEL_ALL_PRINT_JOBS_Q_TEXT));
-		messageChoice(MB_YESNO);
+		MessageBorder();
+		MessageTitle(getLangText(VERIFY_TEXT));
+		MessageText(getLangText(CANCEL_ALL_PRINT_JOBS_Q_TEXT));
+		MessageChoice(MB_YESNO);
 
 		if (g_monitorModeActiveChoice == MB_SECOND_CHOICE)
-			messageChoiceActiveSwap(MB_YESNO);
+			MessageChoiceActiveSwap(MB_YESNO);
 	}
 	
 	if (g_promtForLeavingMonitorMode == TRUE)
 	{
-		messageBorder();
-		messageTitle(getLangText(WARNING_TEXT));
-		messageText(getLangText(DO_YOU_WANT_TO_LEAVE_MONITOR_MODE_Q_TEXT));
-		messageChoice(MB_YESNO);
+		MessageBorder();
+		MessageTitle(getLangText(WARNING_TEXT));
+		MessageText(getLangText(DO_YOU_WANT_TO_LEAVE_MONITOR_MODE_Q_TEXT));
+		MessageChoice(MB_YESNO);
 
 		if (g_monitorModeActiveChoice == MB_SECOND_CHOICE)
-			messageChoiceActiveSwap(MB_YESNO);
+			MessageChoiceActiveSwap(MB_YESNO);
 	}
 }

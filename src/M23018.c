@@ -32,7 +32,7 @@ static twi_package_t s_twiPacket;
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void write_mcp23018(unsigned char chip, unsigned char address, unsigned char data)
+void WriteMcp23018(unsigned char chip, unsigned char address, unsigned char data)
 {
 	//Set output latch a with 00
 	s_twiData[0] = data;
@@ -57,7 +57,7 @@ void write_mcp23018(unsigned char chip, unsigned char address, unsigned char dat
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void write_mcp23018_bytes(unsigned char chip, unsigned char address,  unsigned char *data, unsigned char length)
+void WriteMcp23018Bytes(unsigned char chip, unsigned char address,  unsigned char *data, unsigned char length)
 {
     unsigned char count;
 
@@ -88,7 +88,7 @@ void write_mcp23018_bytes(unsigned char chip, unsigned char address,  unsigned c
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-unsigned char read_mcp23018(unsigned char chip, unsigned char address)
+unsigned char ReadMcp23018(unsigned char chip, unsigned char address)
 {
 	//Set output latch a with 00
 	s_twiData[0] = 0;
@@ -115,46 +115,46 @@ unsigned char read_mcp23018(unsigned char chip, unsigned char address)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void init_mcp23018(unsigned char chip)
+void InitMcp23018(unsigned char chip)
 {
 	// I/O Config
-    write_mcp23018(chip, IOCONA, 0x20);
-    write_mcp23018(chip, IOCONB, 0x20);
+    WriteMcp23018(chip, IOCONA, 0x20);
+    WriteMcp23018(chip, IOCONB, 0x20);
 
 	// Port Value
-	write_mcp23018(chip, GPIOA, 0x00);
-    write_mcp23018(chip, GPIOB, 0x00);
+	WriteMcp23018(chip, GPIOA, 0x00);
+    WriteMcp23018(chip, GPIOB, 0x00);
 
 	// Port Direction
-    write_mcp23018(chip, IODIRA, 0x0F);
-    write_mcp23018(chip, IODIRB, 0xFF);
+    WriteMcp23018(chip, IODIRA, 0x0F);
+    WriteMcp23018(chip, IODIRB, 0xFF);
 
 	// Pullup (Open drain outputs only, without pullups you can't drive)
-    write_mcp23018(chip, GPPUA, 0xFF);
-    write_mcp23018(chip, GPPUB, 0xFF);
+    WriteMcp23018(chip, GPPUA, 0xFF);
+    WriteMcp23018(chip, GPPUB, 0xFF);
 
 	// Polarity
-    write_mcp23018(chip, IOPOLA, 0x0E);
-    write_mcp23018(chip, IOPOLB, 0xFF);
+    WriteMcp23018(chip, IOPOLA, 0x0E);
+    WriteMcp23018(chip, IOPOLB, 0xFF);
 
 	// Default Value
-    write_mcp23018(chip, DEFVALA, 0x00);
-    write_mcp23018(chip, DEFVALB, 0x00);
+    WriteMcp23018(chip, DEFVALA, 0x00);
+    WriteMcp23018(chip, DEFVALB, 0x00);
 
 	// Interrupt on Change Compare
-	write_mcp23018(chip, INTCONA, 0x00);
-	write_mcp23018(chip, INTCONB, 0x00);
+	WriteMcp23018(chip, INTCONA, 0x00);
+	WriteMcp23018(chip, INTCONB, 0x00);
 
 	// Interrupt Enable on Change
-    write_mcp23018(chip, GPINTENA, 0x0F);
-    write_mcp23018(chip, GPINTENB, 0xFF);
+    WriteMcp23018(chip, GPINTENA, 0x0F);
+    WriteMcp23018(chip, GPINTENB, 0xFF);
 
 	// Clear any interrupt generation
-	read_mcp23018(IO_ADDRESS_KPD, INTFA);
-	read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	ReadMcp23018(IO_ADDRESS_KPD, INTFA);
+	ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 
-	read_mcp23018(IO_ADDRESS_KPD, INTFB);
-	read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	ReadMcp23018(IO_ADDRESS_KPD, INTFB);
+	ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 
 	// clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int4 = 1;

@@ -36,7 +36,7 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleAAA(CMD_BUFFER_STRUCT* inCmd)
+void HandleAAA(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -49,7 +49,7 @@ void handleAAA(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleDCM(CMD_BUFFER_STRUCT* inCmd)
+void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 {
 	SYSTEM_CFG cfg;					// 424 bytes, or 848 chars from the pc.
 	uint8 dcmHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
@@ -59,11 +59,11 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	UNUSED(inCmd);
 
-	byteSet(&cfg, 0, sizeof(SYSTEM_CFG));
+	ByteSet(&cfg, 0, sizeof(SYSTEM_CFG));
 
 	cfg.mode = g_triggerRecord.op_mode;
 	cfg.monitorStatus = g_sampleProcessing; 
-	cfg.currentTime = getCurrentTime();
+	cfg.currentTime = GetCurrentTime();
 	
 	cfg.eventCfg.distToSource = (uint32)(g_triggerRecord.trec.dist_to_source * 100.0);
 	cfg.eventCfg.weightPerDelay = (uint32)(g_triggerRecord.trec.weight_per_delay * 100.0);
@@ -99,7 +99,7 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	else
 	{
-		cfg.eventCfg.airTriggerLevel = (airTriggerConvert(g_triggerRecord.trec.airTriggerLevel)) / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+		cfg.eventCfg.airTriggerLevel = (AirTriggerConvert(g_triggerRecord.trec.airTriggerLevel)) / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
 	}
 #endif
 	cfg.eventCfg.recordTime = g_triggerRecord.trec.record_time;
@@ -143,10 +143,10 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.eventCfg.barInterval = (uint16)g_triggerRecord.bgrec.barInterval;
 	cfg.eventCfg.summaryInterval = (uint16)g_triggerRecord.bgrec.summaryInterval;
 
-	byteCpy((uint8*)cfg.eventCfg.companyName, g_triggerRecord.trec.client, COMPANY_NAME_STRING_SIZE - 2);
-	byteCpy((uint8*)cfg.eventCfg.seismicOperator, g_triggerRecord.trec.oper, SEISMIC_OPERATOR_STRING_SIZE - 2);
-	byteCpy((uint8*)cfg.eventCfg.sessionLocation, g_triggerRecord.trec.loc, SESSION_LOCATION_STRING_SIZE - 2);
-	byteCpy((uint8*)cfg.eventCfg.sessionComments, g_triggerRecord.trec.comments, SESSION_COMMENTS_STRING_SIZE - 2);
+	ByteCpy((uint8*)cfg.eventCfg.companyName, g_triggerRecord.trec.client, COMPANY_NAME_STRING_SIZE - 2);
+	ByteCpy((uint8*)cfg.eventCfg.seismicOperator, g_triggerRecord.trec.oper, SEISMIC_OPERATOR_STRING_SIZE - 2);
+	ByteCpy((uint8*)cfg.eventCfg.sessionLocation, g_triggerRecord.trec.loc, SESSION_LOCATION_STRING_SIZE - 2);
+	ByteCpy((uint8*)cfg.eventCfg.sessionComments, g_triggerRecord.trec.comments, SESSION_COMMENTS_STRING_SIZE - 2);
 	
 	cfg.autoCfg.autoMonitorMode = g_helpRecord.autoMonitorMode;
 	cfg.autoCfg.autoCalMode = g_helpRecord.autoCalMode;
@@ -174,12 +174,12 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.timerCfg.timerMode = g_helpRecord.timerMode;
 	cfg.timerCfg.timerModeFrequency = g_helpRecord.timerModeFrequency;
 #if 1 // fix_ns8100 - Size changed to uint32 however this field isn't needed
-	cfg.timerCfg.timerModeActiveMinutes = (uint16)g_helpRecord.timerModeActiveMinutes;
+	cfg.timerCfg.TimerModeActiveMinutes = (uint16)g_helpRecord.TimerModeActiveMinutes;
 #endif
 
 	if (DISABLED == g_helpRecord.timerMode)
 	{
-		cfg.timerCfg.timer_stop = cfg.timerCfg.timer_start = getCurrentTime();
+		cfg.timerCfg.timer_stop = cfg.timerCfg.timer_start = GetCurrentTime();
 	}
 	else
 	{
@@ -210,33 +210,33 @@ void handleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.unused[5] = 0x0F;
 
 	sprintf((char*)msgTypeStr, "%02d", MSGTYPE_RESPONSE);
-	buildOutgoingSimpleHeaderBuffer((uint8*)dcmHdr, (uint8*)"DCMx", (uint8*)msgTypeStr, 
+	BuildOutgoingSimpleHeaderBuffer((uint8*)dcmHdr, (uint8*)"DCMx", (uint8*)msgTypeStr,
 		(uint32)(MESSAGE_SIMPLE_TOTAL_LENGTH + sizeof(SYSTEM_CFG)), COMPRESS_NONE, CRC_NONE);	
 
 	// Send Starting CRLF
-	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	// Calculate the CRC on the header
 	g_transmitCRC = CalcCCITT32((uint8*)&dcmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
 
 	// Send Simple header
-	modem_puts((uint8*)dcmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, g_binaryXferFlag);
+	ModemPuts((uint8*)dcmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, g_binaryXferFlag);
 
 	// Calculate the CRC on the data
 	g_transmitCRC = CalcCCITT32((uint8*)&cfg, sizeof(SYSTEM_CFG), g_transmitCRC);		
 
 	// Send the configuration data
-	modem_puts((uint8*)&cfg, sizeof(SYSTEM_CFG), g_binaryXferFlag);
+	ModemPuts((uint8*)&cfg, sizeof(SYSTEM_CFG), g_binaryXferFlag);
 
 	// Ending Footer
-	modem_puts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
-	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	ModemPuts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleUCM(CMD_BUFFER_STRUCT* inCmd)
+void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 {
 	SYSTEM_CFG cfg;
 	uint8* cfgPtr = (uint8*)(&cfg);
@@ -261,7 +261,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 	else
 	{	
 	 	sizeOfCfg = sizeof(SYSTEM_CFG);
-		byteSet((uint8*)&cfg, 0, sizeOfCfg);
+		ByteSet((uint8*)&cfg, 0, sizeOfCfg);
 
 		// Check to see if the incoming message is the correct size
 		if ((uint32)((inCmd->size - 16)/2) < sizeOfCfg)
@@ -274,7 +274,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		while ((buffDex < inCmd->size) && (buffDex < (MESSAGE_HEADER_SIMPLE_LENGTH + (sizeOfCfg * 2))) && 
 				(buffDex < CMD_BUFFER_SIZE))
 		{	
-			*cfgPtr++ = convertAscii2Binary(inCmd->msg[buffDex], inCmd->msg[buffDex + 1]);
+			*cfgPtr++ = ConvertAscii2Binary(inCmd->msg[buffDex], inCmd->msg[buffDex + 1]);
 			buffDex += 2;
 		}		
 
@@ -285,7 +285,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			while ((buffDex < inCmd->size) && (buffDex < CMD_BUFFER_SIZE) && (j < 4))
 			{
 				// Add each CRC value by byte
-				((uint8*)&inCRC)[j++] = convertAscii2Binary(inCmd->msg[buffDex], inCmd->msg[buffDex + 1]);
+				((uint8*)&inCRC)[j++] = ConvertAscii2Binary(inCmd->msg[buffDex], inCmd->msg[buffDex + 1]);
 				buffDex += 2;
 			}
 
@@ -300,21 +300,21 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 				returnCode = CFG_ERR_BAD_CRC;
 
 				sprintf((char*)msgTypeStr, "%02lu", returnCode);
-				buildOutgoingSimpleHeaderBuffer((uint8*)ucmHdr, (uint8*)"UCMx", 
+				BuildOutgoingSimpleHeaderBuffer((uint8*)ucmHdr, (uint8*)"UCMx",
 					(uint8*)msgTypeStr, MESSAGE_SIMPLE_TOTAL_LENGTH, COMPRESS_NONE, CRC_NONE);	
 
 				// Send Starting CRLF
-				modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+				ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 				// Calculate the CRC on the header
 				g_transmitCRC = CalcCCITT32((uint8*)&ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
 
 				// Send Simple header
-				modem_puts((uint8*)ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
+				ModemPuts((uint8*)ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
 
 				// Send Ending Footer
-				modem_puts((uint8*)&msgCRC, 4, NO_CONVERSION);
-				modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+				ModemPuts((uint8*)&msgCRC, 4, NO_CONVERSION);
+				ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 				
 				return;
 			}
@@ -360,13 +360,13 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			}
 			else
 			{
-				setRtcDate(&(cfg.currentTime));
+				SetExternalRtcDate(&(cfg.currentTime));
 				g_helpRecord.timerMode = DISABLED;
 				// Disable Power Off protection
-				powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+				PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 				
 				// Disable the Power Off timer if it's set
-				clearSoftTimer(POWER_OFF_TIMER_NUM);
+				ClearSoftTimer(POWER_OFF_TIMER_NUM);
 			}
 			
 			// Check for correct values and update the date.
@@ -378,18 +378,18 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			}
 			else
 			{
-				setRtcTime(&(cfg.currentTime));
+				SetExternalRtcTime(&(cfg.currentTime));
 				g_helpRecord.timerMode = DISABLED;
 				
 				// Disable Power Off protection
-				powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+				PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 				
 				// Disable the Power Off timer if it's set
-				clearSoftTimer(POWER_OFF_TIMER_NUM);
+				ClearSoftTimer(POWER_OFF_TIMER_NUM);
 			}
 
 			// Update the current time.
-			updateCurrentTime();
+			UpdateCurrentTime();
 		}
 
 		//--------------------------------
@@ -569,10 +569,10 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// No check, just do not copy over the end of the string length.
-		byteCpy((uint8*)g_triggerRecord.trec.client, cfg.eventCfg.companyName, COMPANY_NAME_STRING_SIZE - 2);
-		byteCpy((uint8*)g_triggerRecord.trec.oper, cfg.eventCfg.seismicOperator, SEISMIC_OPERATOR_STRING_SIZE - 2);
-		byteCpy((uint8*)g_triggerRecord.trec.loc, cfg.eventCfg.sessionLocation, SESSION_LOCATION_STRING_SIZE - 2);
-		byteCpy((uint8*)g_triggerRecord.trec.comments, cfg.eventCfg.sessionComments, SESSION_COMMENTS_STRING_SIZE - 2);
+		ByteCpy((uint8*)g_triggerRecord.trec.client, cfg.eventCfg.companyName, COMPANY_NAME_STRING_SIZE - 2);
+		ByteCpy((uint8*)g_triggerRecord.trec.oper, cfg.eventCfg.seismicOperator, SEISMIC_OPERATOR_STRING_SIZE - 2);
+		ByteCpy((uint8*)g_triggerRecord.trec.loc, cfg.eventCfg.sessionLocation, SESSION_LOCATION_STRING_SIZE - 2);
+		ByteCpy((uint8*)g_triggerRecord.trec.comments, cfg.eventCfg.sessionComments, SESSION_COMMENTS_STRING_SIZE - 2);
 
 #if 0 // Old and incorrectly overloaded
 		if ((LOW == cfg.eventCfg.preBuffNumOfSamples) || (HIGH == cfg.eventCfg.preBuffNumOfSamples))
@@ -723,7 +723,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case SPANISH_LANG:
 #endif
 				g_helpRecord.languageMode = cfg.printerCfg.languageMode;
-				build_languageLinkTable(g_helpRecord.languageMode);
+				BuildLanguageLinkTable(g_helpRecord.languageMode);
 				break;
 					
 			default:
@@ -1044,14 +1044,14 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Check if it has all been verified and now save the data. Data in error is not saved.
-		saveRecData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
-		saveRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-		saveRecData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+		SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
+		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 	}
 
 	if (TRUE == timerModeModified)
 	{
-		processTimerModeSettings(NO_PROMPT);
+		ProcessTimerModeSettings(NO_PROMPT);
 		// If the user wants to enable, but it is now disable send an error.
 		if (DISABLED == g_helpRecord.timerMode)
 		{
@@ -1063,21 +1063,21 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 	// -------------------------------------
 	// Return codes
 	sprintf((char*)msgTypeStr, "%02lu", returnCode);
-	buildOutgoingSimpleHeaderBuffer((uint8*)ucmHdr, (uint8*)"UCMx", 
+	BuildOutgoingSimpleHeaderBuffer((uint8*)ucmHdr, (uint8*)"UCMx",
 		(uint8*)msgTypeStr, MESSAGE_SIMPLE_TOTAL_LENGTH, COMPRESS_NONE, CRC_NONE);	
 
 	// Send Starting CRLF
-	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	// Calculate the CRC on the header
 	g_transmitCRC = CalcCCITT32((uint8*)&ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
 
 	// Send Simple header
-	modem_puts((uint8*)&ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
+	ModemPuts((uint8*)&ucmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
 
 	// Send Ending Footer
-	modem_puts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
-	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	ModemPuts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	return;
 }
@@ -1085,7 +1085,7 @@ void handleUCM(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleDMM(CMD_BUFFER_STRUCT* inCmd)
+void HandleDMM(CMD_BUFFER_STRUCT* inCmd)
 {
 	MODEM_SETUP_STRUCT modemCfg;
 	uint8 dmmHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
@@ -1093,38 +1093,38 @@ void handleDMM(CMD_BUFFER_STRUCT* inCmd)
 
 	UNUSED(inCmd);
 
-	byteSet(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
+	ByteSet(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
 
-	byteCpy((uint8*)&modemCfg, &g_modemSetupRecord, sizeof(MODEM_SETUP_STRUCT));
+	ByteCpy((uint8*)&modemCfg, &g_modemSetupRecord, sizeof(MODEM_SETUP_STRUCT));
 
 	sprintf((char*)msgTypeStr, "%02d", MSGTYPE_RESPONSE);
-	buildOutgoingSimpleHeaderBuffer((uint8*)dmmHdr, (uint8*)"DMMx", (uint8*)msgTypeStr, 
+	BuildOutgoingSimpleHeaderBuffer((uint8*)dmmHdr, (uint8*)"DMMx", (uint8*)msgTypeStr,
 		(uint32)(MESSAGE_SIMPLE_TOTAL_LENGTH + sizeof(MODEM_SETUP_STRUCT)), COMPRESS_NONE, CRC_NONE);	
 
 	// Send Starting CRLF
-	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	// Calculate the CRC on the header
 	g_transmitCRC = CalcCCITT32((uint8*)&dmmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
 
 	// Send Simple header
-	modem_puts((uint8*)dmmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, g_binaryXferFlag);
+	ModemPuts((uint8*)dmmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, g_binaryXferFlag);
 
 	// Calculate the CRC on the data
 	g_transmitCRC = CalcCCITT32((uint8*)&modemCfg, sizeof(MODEM_SETUP_STRUCT), g_transmitCRC);		
 
 	// Send the configuration data
-	modem_puts((uint8*)&modemCfg, sizeof(MODEM_SETUP_STRUCT), g_binaryXferFlag);
+	ModemPuts((uint8*)&modemCfg, sizeof(MODEM_SETUP_STRUCT), g_binaryXferFlag);
 
 	// Ending Footer
-	modem_puts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
-	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	ModemPuts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleUMM(CMD_BUFFER_STRUCT* inCmd)
+void HandleUMM(CMD_BUFFER_STRUCT* inCmd)
 {
 	MODEM_SETUP_STRUCT modemCfg;
 	uint8* modemCfgPtr = (uint8*)(&modemCfg);
@@ -1135,21 +1135,21 @@ void handleUMM(CMD_BUFFER_STRUCT* inCmd)
 	uint8 ummHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
 
-	byteSet(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
+	ByteSet(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
 
 	// Move the string data into the configuration structure. String is (2 * cfgSize)
 	i = MESSAGE_HEADER_SIMPLE_LENGTH;
 	while ((i < inCmd->size) && (i < (MESSAGE_HEADER_SIMPLE_LENGTH + (sizeof(MODEM_SETUP_STRUCT) * 2))) && 
 			(i < CMD_BUFFER_SIZE))
 	{	
-		*modemCfgPtr++ = convertAscii2Binary(inCmd->msg[i], inCmd->msg[i + 1]);
+		*modemCfgPtr++ = ConvertAscii2Binary(inCmd->msg[i], inCmd->msg[i + 1]);
 		i += 2;
 	}		
 
 	// Get the CRC value from the data stream
 	while ((i < inCmd->size) && (i < CMD_BUFFER_SIZE) && (j < 4))
 	{
-		((uint8*)&inCRC)[j++] = convertAscii2Binary(inCmd->msg[i], inCmd->msg[i + 1]);
+		((uint8*)&inCRC)[j++] = ConvertAscii2Binary(inCmd->msg[i], inCmd->msg[i + 1]);
 		i += 2;
 	}
 
@@ -1197,34 +1197,34 @@ void handleUMM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			g_modemSetupRecord = modemCfg;
 
-			saveRecData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
+			SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
 		}
 	}
 
 	// -------------------------------------
 	// Return codes
 	sprintf((char*)msgTypeStr, "%02lu", returnCode);
-	buildOutgoingSimpleHeaderBuffer((uint8*)ummHdr, (uint8*)"UMMx", 
+	BuildOutgoingSimpleHeaderBuffer((uint8*)ummHdr, (uint8*)"UMMx",
 		(uint8*)msgTypeStr, MESSAGE_SIMPLE_TOTAL_LENGTH, COMPRESS_NONE, CRC_NONE);	
 
 	// Send Starting CRLF
-	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	// Calculate the CRC on the header
 	g_transmitCRC = CalcCCITT32((uint8*)&ummHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);		
 
 	// Send Simple header
-	modem_puts((uint8*)ummHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
+	ModemPuts((uint8*)ummHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
 
 	// Send Ending Footer
-	modem_puts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
-	modem_puts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	ModemPuts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 convertAscii2Binary(uint8 firstByte, uint8 secondByte)
+uint8 ConvertAscii2Binary(uint8 firstByte, uint8 secondByte)
 {
 	uint8 binaryByte = 0;
 	uint8 nibble1 = 0;
@@ -1251,7 +1251,7 @@ uint8 convertAscii2Binary(uint8 firstByte, uint8 secondByte)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleVTI(CMD_BUFFER_STRUCT* inCmd)
+void HandleVTI(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1260,7 +1260,7 @@ void handleVTI(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleSTI(CMD_BUFFER_STRUCT* inCmd)
+void HandleSTI(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1269,7 +1269,7 @@ void handleSTI(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleVDA(CMD_BUFFER_STRUCT* inCmd)
+void HandleVDA(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1278,7 +1278,7 @@ void handleVDA(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleSDA(CMD_BUFFER_STRUCT* inCmd)
+void HandleSDA(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1287,7 +1287,7 @@ void handleSDA(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleZRO(CMD_BUFFER_STRUCT* inCmd)
+void HandleZRO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1305,7 +1305,7 @@ void handleTTO(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleCAL(CMD_BUFFER_STRUCT* inCmd)
+void HandleCAL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1314,7 +1314,7 @@ void handleCAL(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleVOL(CMD_BUFFER_STRUCT* inCmd)
+void HandleVOL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1323,7 +1323,7 @@ void handleVOL(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleVCG(CMD_BUFFER_STRUCT* inCmd)
+void HandleVCG(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1332,7 +1332,7 @@ void handleVCG(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleVSL(CMD_BUFFER_STRUCT* inCmd)
+void HandleVSL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1341,7 +1341,7 @@ void handleVSL(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleVEL(CMD_BUFFER_STRUCT* inCmd)
+void HandleVEL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1350,7 +1350,7 @@ void handleVEL(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleVBD(CMD_BUFFER_STRUCT* inCmd)
+void HandleVBD(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1359,7 +1359,7 @@ void handleVBD(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleSBD(CMD_BUFFER_STRUCT* inCmd)
+void HandleSBD(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1368,7 +1368,7 @@ void handleSBD(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleVDT(CMD_BUFFER_STRUCT* inCmd)
+void HandleVDT(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1377,7 +1377,7 @@ void handleVDT(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleSDT(CMD_BUFFER_STRUCT* inCmd)
+void HandleSDT(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1386,7 +1386,7 @@ void handleSDT(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleVCL(CMD_BUFFER_STRUCT* inCmd)
+void HandleVCL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1395,7 +1395,7 @@ void handleVCL(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleSCL(CMD_BUFFER_STRUCT* inCmd)
+void HandleSCL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1404,26 +1404,26 @@ void handleSCL(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void modemInitProcess(void)
+void ModemInitProcess(void)
 {
 	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
 
-	debug("modemInitProcess\n");
+	debug("ModemInitProcess\n");
 
 	if (READ_DCD == NO_CONNECTION)
 	{
 		if (strlen(g_modemSetupRecord.reset) != 0)
 		{
-			uart_puts((char*)(g_modemSetupRecord.reset), CRAFT_COM_PORT);
-			uart_puts((char*)&g_CRLF, CRAFT_COM_PORT);
+			UartPuts((char*)(g_modemSetupRecord.reset), CRAFT_COM_PORT);
+			UartPuts((char*)&g_CRLF, CRAFT_COM_PORT);
 
-			soft_usecWait(3 * SOFT_SECS);
+			SoftUsecWait(3 * SOFT_SECS);
 		}
 
 		if (strlen(g_modemSetupRecord.init) != 0)
 		{
-			uart_puts((char*)(g_modemSetupRecord.init), CRAFT_COM_PORT);
-			uart_puts((char*)&g_CRLF, CRAFT_COM_PORT);
+			UartPuts((char*)(g_modemSetupRecord.init), CRAFT_COM_PORT);
+			UartPuts((char*)&g_CRLF, CRAFT_COM_PORT);
 		}
 	}
 
@@ -1438,10 +1438,10 @@ void modemInitProcess(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void modemResetProcess(void)
+void ModemResetProcess(void)
 {
 	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
-	debug("handleMRC\n");
+	debug("HandleMRC\n");
 
 	g_modemStatus.systemIsLockedFlag = YES;
 
@@ -1451,13 +1451,13 @@ void modemResetProcess(void)
 	}	
 
 	g_modemResetStage = 1;
-	assignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(15 * TICKS_PER_SEC), modemResetTimerCallback);
+	AssignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(15 * TICKS_PER_SEC), ModemResetTimerCallback);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMRS(CMD_BUFFER_STRUCT* inCmd)
+void HandleMRS(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 
@@ -1466,7 +1466,7 @@ void handleMRS(CMD_BUFFER_STRUCT* inCmd)
 	if (YES == g_modemSetupRecord.modemStatus)
 	{
 		g_autoRetries = 0;
-		modemResetProcess();
+		ModemResetProcess();
 	}
 
 	return;
@@ -1475,7 +1475,7 @@ void handleMRS(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMVS(CMD_BUFFER_STRUCT* inCmd)
+void HandleMVS(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1484,7 +1484,7 @@ void handleMVS(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMPO(CMD_BUFFER_STRUCT* inCmd)
+void HandleMPO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1493,7 +1493,7 @@ void handleMPO(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMMO(CMD_BUFFER_STRUCT* inCmd)
+void HandleMMO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1502,7 +1502,7 @@ void handleMMO(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMNO(CMD_BUFFER_STRUCT* inCmd)
+void HandleMNO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1511,7 +1511,7 @@ void handleMNO(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMTO(CMD_BUFFER_STRUCT* inCmd)
+void HandleMTO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1520,7 +1520,7 @@ void handleMTO(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMSD(CMD_BUFFER_STRUCT* inCmd)
+void HandleMSD(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1529,7 +1529,7 @@ void handleMSD(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMSR(CMD_BUFFER_STRUCT* inCmd)
+void HandleMSR(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1538,7 +1538,7 @@ void handleMSR(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMST(CMD_BUFFER_STRUCT* inCmd)
+void HandleMST(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1547,7 +1547,7 @@ void handleMST(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMSA(CMD_BUFFER_STRUCT* inCmd)
+void HandleMSA(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1556,7 +1556,7 @@ void handleMSA(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMSB(CMD_BUFFER_STRUCT* inCmd)
+void HandleMSB(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1565,7 +1565,7 @@ void handleMSB(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMSC(CMD_BUFFER_STRUCT* inCmd)
+void HandleMSC(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1574,7 +1574,7 @@ void handleMSC(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMVI(CMD_BUFFER_STRUCT* inCmd)
+void HandleMVI(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;
@@ -1583,7 +1583,7 @@ void handleMVI(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void handleMVO(CMD_BUFFER_STRUCT* inCmd)
+void HandleMVO(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 	return;

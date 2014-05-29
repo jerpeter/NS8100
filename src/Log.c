@@ -35,15 +35,15 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void initMonitorLog(void)
+void InitMonitorLog(void)
 {
 	// Check if the table key is not valid or if the table index is not within range
 	if ((__monitorLogTblKey != VALID_MONITOR_LOG_TABLE_KEY) || (__monitorLogTblIndex >= TOTAL_MONITOR_LOG_ENTRIES))
 	{
-		//debugPrint(RAW, "Clearing Monitor Log table\n");
+		//DebugPrint(RAW, "Clearing Monitor Log table\n");
 
 		// Clear Monitor Log table
-		byteSet(&__monitorLogTbl[0], 0x0, (sizeof(MONITOR_LOG_ENTRY_STRUCT) * TOTAL_MONITOR_LOG_ENTRIES));
+		ByteSet(&__monitorLogTbl[0], 0x0, (sizeof(MONITOR_LOG_ENTRY_STRUCT) * TOTAL_MONITOR_LOG_ENTRIES));
 
 		// Set the index to the first element
 		__monitorLogTblIndex = 0;
@@ -51,39 +51,39 @@ void initMonitorLog(void)
 		// Set the table key to be valid
 		__monitorLogTblKey = VALID_MONITOR_LOG_TABLE_KEY;
 		
-		initMonitorLogUniqueEntryId();
+		InitMonitorLogUniqueEntryId();
 
-		initMonitorLogTableFromLogFile();
+		InitMonitorLogTableFromLogFile();
 	}
 	// Check if the current monitor log entry is a partial entry (suggesting the entry was not closed)
 	else if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
 	{
-		//debugPrint(RAW, "Found partial entry at Monitor Log table index: 0x%x, Now making Incomplete\n", __monitorLogTblIndex);
+		//DebugPrint(RAW, "Found partial entry at Monitor Log table index: 0x%x, Now making Incomplete\n", __monitorLogTblIndex);
 
 		// Complete entry by setting abnormal termination
 		__monitorLogTbl[__monitorLogTblIndex].status = INCOMPLETE_LOG_ENTRY;
 	}
 
-	//debugPrint(RAW, "Monitor Log key: 0x%x, Monitor Log index: %d, Monitor Log Unique Entry Id: %d\n", 
+	//DebugPrint(RAW, "Monitor Log key: 0x%x, Monitor Log index: %d, Monitor Log Unique Entry Id: %d\n",
 	//			__monitorLogTblKey, __monitorLogTblIndex, __monitorLogUniqueEntryId);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void advanceMonitorLogIndex(void)
+void AdvanceMonitorLogIndex(void)
 {
 	__monitorLogTblIndex++;
 	if (__monitorLogTblIndex >= TOTAL_MONITOR_LOG_ENTRIES)
 		__monitorLogTblIndex = 0;
 		
-	//debugPrint(RAW, "Next Monitor Log table index: %d\n", __monitorLogTblIndex);
+	//DebugPrint(RAW, "Next Monitor Log table index: %d\n", __monitorLogTblIndex);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 getStartingMonitorLogTableIndex(void)
+uint16 GetStartingMonitorLogTableIndex(void)
 {
 	if ((__monitorLogTblIndex + (unsigned)1) >= TOTAL_MONITOR_LOG_ENTRIES)
 		return (0);
@@ -94,7 +94,7 @@ uint16 getStartingMonitorLogTableIndex(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 getStartingEventNumberForCurrentMonitorLog(void)
+uint16 GetStartingEventNumberForCurrentMonitorLog(void)
 {
 	return(__monitorLogTbl[__monitorLogTblIndex].startEventNumber);
 }
@@ -102,40 +102,40 @@ uint16 getStartingEventNumberForCurrentMonitorLog(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void clearMonitorLogEntry(void)
+void ClearMonitorLogEntry(void)
 {
 	// Set all log entries to all zero's, status to EMPTY_LOG_ENTRY, start and stop times INVALID
-	byteSet(&__monitorLogTbl[__monitorLogTblIndex], 0x0, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+	ByteSet(&__monitorLogTbl[__monitorLogTblIndex], 0x0, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 
-	//debugPrint(RAW, "Clearing entry at Monitor Log table index: %d\n", __monitorLogTblIndex);
+	//DebugPrint(RAW, "Clearing entry at Monitor Log table index: %d\n", __monitorLogTblIndex);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void newMonitorLogEntry(uint8 mode)
+void NewMonitorLogEntry(uint8 mode)
 {
 	//char spareBuffer[40];
 
 	// Advance to the next log entry
-	advanceMonitorLogIndex();
+	AdvanceMonitorLogIndex();
 
 	// Clear out the log entry (if wrapped)
-	clearMonitorLogEntry();
+	ClearMonitorLogEntry();
 
-	//debugPrint(RAW, "New Monitor Log entry with Unique Id: %d\n", __monitorLogUniqueEntryId);
+	//DebugPrint(RAW, "New Monitor Log entry with Unique Id: %d\n", __monitorLogUniqueEntryId);
 
 	// Set the unique Monitor Log Entry number
 	__monitorLogTbl[__monitorLogTblIndex].uniqueEntryId = __monitorLogUniqueEntryId;
 
 	// Store the current entry number
-	storeMonitorLogUniqueEntryId();
+	StoreMonitorLogUniqueEntryId();
 
-	//debugPrint(RAW, "Writing partial info to entry at Monitor Log table index: %d\n", __monitorLogTblIndex);
+	//DebugPrint(RAW, "Writing partial info to entry at Monitor Log table index: %d\n", __monitorLogTblIndex);
 
 	// Set the elements to start a new log entry
-	//debugPrint(RAW, "Writing start time to Monitor Log entry at: 0x%x\n", &(__monitorLogTbl[__monitorLogTblIndex].startTime));
-	__monitorLogTbl[__monitorLogTblIndex].startTime = getCurrentTime();
+	//DebugPrint(RAW, "Writing start time to Monitor Log entry at: 0x%x\n", &(__monitorLogTbl[__monitorLogTblIndex].startTime));
+	__monitorLogTbl[__monitorLogTblIndex].startTime = GetCurrentTime();
 	__monitorLogTbl[__monitorLogTblIndex].startTime.valid = TRUE;
 	__monitorLogTbl[__monitorLogTblIndex].mode = mode;
 	__monitorLogTbl[__monitorLogTblIndex].startEventNumber = g_nextEventNumberToUse;
@@ -178,17 +178,17 @@ void newMonitorLogEntry(uint8 mode)
 	__monitorLogTbl[__monitorLogTblIndex].sensor_type = g_factorySetupRecord.sensor_type;
 	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
 
-	//byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
-	//convertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
+	//ByteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
+	//ConvertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
 	//debug("\tStart Time: %s\n", (char*)&spareBuffer[0]);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void updateMonitorLogEntry()
+void UpdateMonitorLogEntry()
 {
-	//debugPrint(RAW, "Updating entry at Monitor Log table index: %d, event#: %d, total: %d\n", __monitorLogTblIndex, g_nextEventNumberToUse, 
+	//DebugPrint(RAW, "Updating entry at Monitor Log table index: %d, event#: %d, total: %d\n", __monitorLogTblIndex, g_nextEventNumberToUse,
 	//			(uint16)(g_nextEventNumberToUse - __monitorLogTbl[__monitorLogTblIndex].startEventNumber + 1));
 
 	if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
@@ -201,7 +201,7 @@ void updateMonitorLogEntry()
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void closeMonitorLogEntry()
+void CloseMonitorLogEntry()
 {
 	//char spareBuffer[40];
 
@@ -211,14 +211,14 @@ void closeMonitorLogEntry()
 	{
 		// Set the elements to close the current log entry
 		//debug("Writing stop time to Monitor Log entry at: 0x%x\n", &(__monitorLogTbl[__monitorLogTblIndex].stopTime));
-		__monitorLogTbl[__monitorLogTblIndex].stopTime = getCurrentTime();
+		__monitorLogTbl[__monitorLogTblIndex].stopTime = GetCurrentTime();
 		__monitorLogTbl[__monitorLogTblIndex].stopTime.valid = TRUE;
 		__monitorLogTbl[__monitorLogTblIndex].status = COMPLETED_LOG_ENTRY;
 
-		appendMonitorLogEntryFile();
+		AppendMonitorLogEntryFile();
 
-		//byteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
-		//convertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
+		//ByteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
+		//ConvertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
 		//debug("\tStop Time: %s\n", (char*)&spareBuffer[0]);
 	}
 }
@@ -226,7 +226,7 @@ void closeMonitorLogEntry()
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void initMonitorLogUniqueEntryId(void)
+void InitMonitorLogUniqueEntryId(void)
 {
 #if 0 // ns7100
 	uint16 uniqueEntryIdOffset = (FLASH_BOOT_SECTOR_SIZE_x8 + 2);
@@ -265,7 +265,7 @@ void initMonitorLogUniqueEntryId(void)
 #else // ns8100
 	MONITOR_LOG_ID_STRUCT monitorLogRec;
 
-	getRecData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
+	GetRecordData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
 
 	// Check if the Monitor Log Record is valid
 	if (!monitorLogRec.invalid)
@@ -285,7 +285,7 @@ void initMonitorLogUniqueEntryId(void)
 		__monitorLogUniqueEntryId = 1;
 		monitorLogRec.currentMonitorLogID = __monitorLogUniqueEntryId;
 		
-		saveRecData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
+		SaveRecordData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
 	}
 #endif
 
@@ -296,7 +296,7 @@ void initMonitorLogUniqueEntryId(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void storeMonitorLogUniqueEntryId(void)
+void StoreMonitorLogUniqueEntryId(void)
 {
 #if 0 // ns7100
 	uint16 uniqueEntryIdOffset = (FLASH_BOOT_SECTOR_SIZE_x8 + 2);
@@ -311,10 +311,10 @@ void storeMonitorLogUniqueEntryId(void)
 	// If the Monitor Log Entry number is 0, then we have wrapped (>65535) in which case we will reinitialize
 	if (__monitorLogUniqueEntryId == 0)
 	{
-		//sectorErase(uniqueEntryIdStorePtr, 1);
+		//SectorErase(uniqueEntryIdStorePtr, 1);
 		EraseParameterMemory(uniqueEntryIdOffset, FLASH_BOOT_SECTOR_SIZE_x8);
 		
-		initMonitorLogUniqueEntryId();
+		InitMonitorLogUniqueEntryId();
 	}
 	// Check if at the boundary of a flash sectors worth of unique Monitor Log Entry numbers
 	else if (((__monitorLogUniqueEntryId - 1) % 4096) == 0)
@@ -322,7 +322,7 @@ void storeMonitorLogUniqueEntryId(void)
 		// Check to make sure this isnt the initial (first) Monitor Log Entry number
 		if (__monitorLogUniqueEntryId != 1)
 		{
-			//sectorErase(uniqueEntryIdStorePtr, 1);
+			//SectorErase(uniqueEntryIdStorePtr, 1);
 			EraseParameterMemory(uniqueEntryIdOffset, FLASH_BOOT_SECTOR_SIZE_x8);
 		}	
 	}
@@ -347,7 +347,7 @@ void storeMonitorLogUniqueEntryId(void)
 		if ((positionsToAdvance == 0) || (uniqueEntryId != 0xFFFF))
 		{
 			// Store the current Monitor Log Entry number as the newest unique entry number
-			//programWord(uniqueEntryIdStorePtr, __monitorLogUniqueEntryId);
+			//ProgramFlashWord(uniqueEntryIdStorePtr, __monitorLogUniqueEntryId);
 			SaveParameterMemory((uint8*)&__monitorLogUniqueEntryId, uniqueEntryIdOffset, sizeof(__monitorLogUniqueEntryId));
 			
 			// Increment to a new Monitor Log Entry number
@@ -365,7 +365,7 @@ void storeMonitorLogUniqueEntryId(void)
 
 	monitorLogRec.currentMonitorLogID = __monitorLogUniqueEntryId;
 
-	saveRecData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
+	SaveRecordData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
 
 	// Increment to a new Monitor Log Entry number
 	__monitorLogUniqueEntryId++;
@@ -375,7 +375,7 @@ void storeMonitorLogUniqueEntryId(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 getNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, MONITOR_LOG_ENTRY_STRUCT* logEntry)
+uint8 GetNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, MONITOR_LOG_ENTRY_STRUCT* logEntry)
 {
 	uint8 found = NO;
 
@@ -413,7 +413,7 @@ uint8 getNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, M
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 numOfNewMonitorLogEntries(uint16 uid)
+uint16 NumOfNewMonitorLogEntries(uint16 uid)
 {
 	uint16 total = 0;
 	uint16 i = 0;
@@ -437,7 +437,7 @@ uint16 numOfNewMonitorLogEntries(uint16 uid)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void appendMonitorLogEntryFile(void)
+void AppendMonitorLogEntryFile(void)
 {
 	FL_FILE* monitorLogFile;
 	
@@ -447,7 +447,7 @@ void appendMonitorLogEntryFile(void)
 	if (monitorLogFile == NULL)
 	{
 		debugErr("Error: Monitor Log File not found!\r\n");
-		overlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
+		OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
 	}		
 	else // Monitor log file contains entries
 	{
@@ -470,7 +470,7 @@ void appendMonitorLogEntryFile(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void initMonitorLogTableFromLogFile(void)
+void InitMonitorLogTableFromLogFile(void)
 {
 	FL_FILE* monitorLogFile;
 	MONITOR_LOG_ENTRY_STRUCT monitorLogEntry;
@@ -487,11 +487,11 @@ void initMonitorLogTableFromLogFile(void)
 	else if (monitorLogFile->filelength < sizeof(MONITOR_LOG_ENTRY_STRUCT))
 	{
 		debugErr("Error: Monitor Log File is corrupt!\r\n");
-		overlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
+		OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
 	}		
 	else // Monitor log file contains entries
 	{
-		overlayMessage("MONITOR LOG", "INITIALIZING MONITOR LOG WITH SAVED ENTRIES", 1 * SOFT_SECS);
+		OverlayMessage("MONITOR LOG", "INITIALIZING MONITOR LOG WITH SAVED ENTRIES", 1 * SOFT_SECS);
 
 		bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 		
@@ -525,7 +525,7 @@ typedef struct
 	uint32				sensitivity;
 } MONITOR_LOG_ENTRY_STRUCT;
 
-	__monitorLogTbl[__monitorLogTblIndex].startTime = getCurrentTime();
+	__monitorLogTbl[__monitorLogTblIndex].startTime = GetCurrentTime();
 	__monitorLogTbl[__monitorLogTblIndex].startTime.valid = TRUE;
 	__monitorLogTbl[__monitorLogTblIndex].mode = mode;
 	__monitorLogTbl[__monitorLogTblIndex].startEventNumber = g_nextEventNumberToUse;
@@ -538,7 +538,7 @@ typedef struct
 #endif
 				__monitorLogTbl[__monitorLogTblIndex] = monitorLogEntry;
 			
-				advanceMonitorLogIndex();
+				AdvanceMonitorLogIndex();
 
 				bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 			}

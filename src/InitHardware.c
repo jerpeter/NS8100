@@ -380,7 +380,7 @@ void SPI_1_Init(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void avr32_enable_muxed_pins(void)
+void Avr32_enable_muxed_pins(void)
 {
 	static const gpio_map_t SMC_EBI_GPIO_MAP =
 	{
@@ -477,7 +477,7 @@ void avr32_enable_muxed_pins(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void initProcessorNoConnectPins(void)
+void InitProcessorNoConnectPins(void)
 {
 	gpio_clr_gpio_pin(AVR32_PIN_PA00); // USART0_RXD
 	gpio_clr_gpio_pin(AVR32_PIN_PA01); // USART0_TXD
@@ -498,7 +498,7 @@ void initProcessorNoConnectPins(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void avr32_chip_select_init(unsigned long hsb_hz)
+void Avr32_chip_select_init(unsigned long hsb_hz)
 {
 	unsigned long int hsb_mhz_up = (hsb_hz + 999999) / 1000000;
 
@@ -509,7 +509,7 @@ void avr32_chip_select_init(unsigned long hsb_hz)
 	SMC_CS_SETUP(3)			// Network/LAN Memory
 
 	// Put the multiplexed MCU pins used for the SM under control of the SMC.
-	avr32_enable_muxed_pins();
+	Avr32_enable_muxed_pins();
 }
 
 ///----------------------------------------------------------------------------
@@ -569,9 +569,9 @@ void _init_startup(void)
 
 	// Chip Select Initialization
 #if 1 // Normal
-	avr32_chip_select_init(FOSC0);
+	Avr32_chip_select_init(FOSC0);
 #else // Test (12Mhz)
-	avr32_chip_select_init(12000000);
+	Avr32_chip_select_init(12000000);
 #endif
 	
 	// Disable the unused and non connected clock 1
@@ -588,7 +588,7 @@ void _init_startup(void)
 	gpio_clr_gpio_pin(AVR32_PM_XOUT32_0_PIN);
 #endif
 
-	soft_usecWait(1000);
+	SoftUsecWait(1000);
 }
 
 ///----------------------------------------------------------------------------
@@ -631,9 +631,9 @@ void InitKeypad(void)
 		debugErr("Two Wire Interface failed to initialize!\n");
 	}
 
-	soft_usecWait(25 * SOFT_MSECS);
-	init_mcp23018(IO_ADDRESS_KPD);
-	soft_usecWait(25 * SOFT_MSECS);
+	SoftUsecWait(25 * SOFT_MSECS);
+	InitMcp23018(IO_ADDRESS_KPD);
+	SoftUsecWait(25 * SOFT_MSECS);
 }
 
 ///----------------------------------------------------------------------------
@@ -698,7 +698,7 @@ void InitSerial232(void)
 	};
 
 	// Load the Help Record to get the stored Baud rate. Only dependency should be SPI
-	getRecData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	GetRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 
 	// Check if the Help Record is valid
 	if (g_helpRecord.validationKey == 0xA5A5)
@@ -730,7 +730,7 @@ void InitLANToSleep(void)
 extern void Sleep8900(void);
 extern void Sleep8900_LedOn(void);
 	gpio_clr_gpio_pin(AVR32_PIN_PB27); // Clear LAN Sleep pin (active low control)
-	soft_usecWait(10 * SOFT_MSECS);
+	SoftUsecWait(10 * SOFT_MSECS);
 
 #if 0 // Test (LAN register map read)
 	debug("\n\n");
@@ -778,14 +778,14 @@ extern void Sleep8900_LedOn(void);
 	extern void ToggleLedOff8900(void);
 
 	ToggleLedOn8900();
-	soft_usecWait(250 * SOFT_MSECS);
+	SoftUsecWait(250 * SOFT_MSECS);
 	ToggleLedOff8900();
-	soft_usecWait(250 * SOFT_MSECS);
+	SoftUsecWait(250 * SOFT_MSECS);
 
 	ToggleLedOn8900();
-	soft_usecWait(250 * SOFT_MSECS);
+	SoftUsecWait(250 * SOFT_MSECS);
 	ToggleLedOff8900();
-	soft_usecWait(250 * SOFT_MSECS);
+	SoftUsecWait(250 * SOFT_MSECS);
 
 	//Sleep8900_LedOn();
 	Sleep8900();
@@ -800,14 +800,14 @@ void InitExternalKeypad(void)
 	InitKeypad();
 	
 	// Primer read
-	uint8 keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	uint8 keyScan = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 	if (keyScan)
 	{
 		debugWarn("Keypad key being pressed, likely a bug. Key: %x", keyScan);
 	}
 
 	// Turn on the red keypad LED while loading
-	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
+	WriteMcp23018(IO_ADDRESS_KPD, GPIOA, ((ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
 
 }
 
@@ -862,7 +862,7 @@ void InitSDAndFileSystem(void)
 	gpio_set_gpio_pin(AVR32_PIN_PB15);
 
 	// Wait for power to propagate
-	soft_usecWait(10 * SOFT_MSECS);
+	SoftUsecWait(10 * SOFT_MSECS);
 
 	// Check if SD Detect pin
 	if (gpio_get_pin_value(AVR32_PIN_PA02) == ON)
@@ -890,10 +890,10 @@ void InitExternalAD(void)
 {
 	// Enable the A/D
 	debug("Enable the A/D\n");
-	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
 
 	// Delay to allow AD to power up/stabilize
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 
 	// Setup the A/D Channel configuration
 	debug("Setup A/D config and channels (External Ref, Temp On)\n");
@@ -911,7 +911,7 @@ void InitExternalAD(void)
 	//------------------------------Loop 1----------------------------------------------
 	debug("Setup A/D config and channels (External Ref, Temp On)\n");
 	SetupADChannelConfig(0x39D4);
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 	GetAnalogConfigReadback();
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
@@ -920,7 +920,7 @@ void InitExternalAD(void)
 
 	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp On)\n");
 	SetupADChannelConfig(0x39DC);
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 	GetAnalogConfigReadback();
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
@@ -929,7 +929,7 @@ void InitExternalAD(void)
 
 	debug("Setup A/D config and channels (External Ref, Temp Off)\n");
 	SetupADChannelConfig(0x39F4);
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 	GetAnalogConfigReadback();
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
@@ -938,7 +938,7 @@ void InitExternalAD(void)
 
 	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp Off)\n");
 	SetupADChannelConfig(0x39FC);
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 	GetAnalogConfigReadback();
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
@@ -949,7 +949,7 @@ void InitExternalAD(void)
 	//------------------------------Loop 2----------------------------------------------
 	debug("Setup A/D config and channels (External Ref, Temp On)\n");
 	SetupADChannelConfig(0x39D4);
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 	GetAnalogConfigReadback();
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
@@ -958,7 +958,7 @@ void InitExternalAD(void)
 
 	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp On)\n");
 	SetupADChannelConfig(0x39DC);
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 	GetAnalogConfigReadback();
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
@@ -967,7 +967,7 @@ void InitExternalAD(void)
 
 	debug("Setup A/D config and channels (External Ref, Temp Off)\n");
 	SetupADChannelConfig(0x39F4);
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 	GetAnalogConfigReadback();
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
@@ -976,7 +976,7 @@ void InitExternalAD(void)
 
 	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp Off)\n");
 	SetupADChannelConfig(0x39FC);
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 	GetAnalogConfigReadback();
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
 	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
@@ -986,7 +986,7 @@ void InitExternalAD(void)
 #endif
 
 	debug("Disable the A/D\n");
-	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
 }
 
 ///----------------------------------------------------------------------------
@@ -995,7 +995,7 @@ void InitExternalAD(void)
 void TestPowerDownAndStop(void)
 {
 	// Turn off the keypad LED
-	write_mcp23018(IO_ADDRESS_KPD, GPIOA, ((read_mcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | NO_LED_PINS));
+	WriteMcp23018(IO_ADDRESS_KPD, GPIOA, ((ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | NO_LED_PINS));
 
 	spi_reset(&AVR32_SPI1);
 	gpio_clr_gpio_pin(AVR32_SPI1_MISO_0_0_PIN);
@@ -1008,15 +1008,15 @@ void TestPowerDownAndStop(void)
 	gpio_set_gpio_pin(AVR32_PIN_PB08);
 	gpio_set_gpio_pin(AVR32_PIN_PB09);
 	
-	//displayTimerCallBack();
-	setLcdBacklightState(BACKLIGHT_OFF);
+	//DisplayTimerCallBack();
+	SetLcdBacklightState(BACKLIGHT_OFF);
 
-	//lcdPwTimerCallBack();
-	powerControl(LCD_CONTRAST_ENABLE, OFF);
-	clearLcdDisplay();
-	clearControlLinesLcdDisplay();
+	//LcdPwTimerCallBack();
+	PowerControl(LCD_CONTRAST_ENABLE, OFF);
+	ClearLcdDisplay();
+	ClearControlLinesLcdDisplay();
 	LcdClearPortReg();
-	powerControl(LCD_POWER_ENABLE, OFF);
+	PowerControl(LCD_POWER_ENABLE, OFF);
 
 	gpio_clr_gpio_pin(AVR32_PIN_PB20);
 
@@ -1067,28 +1067,28 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Clock and chip selects setup in custom _init_startup
 	//-------------------------------------------------------------------------
-	initProcessorNoConnectPins();
+	InitProcessorNoConnectPins();
 	
 	//-------------------------------------------------------------------------
 	// Set RTC Timestamp pin high (Active low signal)
 	//-------------------------------------------------------------------------
-	gpio_set_gpio_pin(AVR32_PIN_PB18);
+	PowerControl(RTC_TIMESTAMP, OFF); //gpio_set_gpio_pin(AVR32_PIN_PB18);
 
 	//-------------------------------------------------------------------------
 	// Set Alarm 1 and Alarm 2 low (Active high signal)
 	//-------------------------------------------------------------------------
-	gpio_clr_gpio_pin(AVR32_PIN_PB06);
-	gpio_clr_gpio_pin(AVR32_PIN_PB07);
+	PowerControl(ALARM_1_ENABLE, OFF); //gpio_clr_gpio_pin(AVR32_PIN_PB06);
+	PowerControl(ALARM_2_ENABLE, OFF); //gpio_clr_gpio_pin(AVR32_PIN_PB07);
 
 	//-------------------------------------------------------------------------
 	// Set Trigger Out low (Active high signal)
 	//-------------------------------------------------------------------------
-	gpio_clr_gpio_pin(AVR32_PIN_PB05);
+	PowerControl(TRIGGER_OUT, OFF); //gpio_clr_gpio_pin(AVR32_PIN_PB05);
 
 	//-------------------------------------------------------------------------
 	// Set USB LED Output low (Active high signal)
 	//-------------------------------------------------------------------------
-	gpio_clr_gpio_pin(AVR32_PIN_PB28);
+	PowerControl(USB_LED, OFF); //gpio_clr_gpio_pin(AVR32_PIN_PB28);
 
 	//-------------------------------------------------------------------------
 	// Smart Sensor data in (Hardware pull up on signal)
@@ -1099,8 +1099,8 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Set SDATA and ADATA high
 	//-------------------------------------------------------------------------
-	gpio_set_gpio_pin(AVR32_PIN_PB02);
-	gpio_set_gpio_pin(AVR32_PIN_PB03);
+	PowerControl(SDATA, OFF); //gpio_set_gpio_pin(AVR32_PIN_PB02);
+	PowerControl(ADATA, OFF); //gpio_set_gpio_pin(AVR32_PIN_PB03);
 
 	//-------------------------------------------------------------------------
 	// Init the SPI interfaces
@@ -1125,9 +1125,8 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Turn on rs232 driver and receiver (Active low controls)
 	//-------------------------------------------------------------------------
-	gpio_clr_gpio_pin(AVR32_PIN_PB08);
-	gpio_clr_gpio_pin(AVR32_PIN_PB09);
-
+	PowerControl(SERIAL_232_DRIVER_ENABLE, ON); //gpio_clr_gpio_pin(AVR32_PIN_PB08);
+	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON); //gpio_clr_gpio_pin(AVR32_PIN_PB09);
 	InitSerial232();
 	
 	//-------------------------------------------------------------------------
@@ -1146,12 +1145,10 @@ void InitSystemHardware_NS8100(void)
 	InitAnalogControl();
 
 	//-------------------------------------------------------------------------
-	// Turn on display
+	// Init the LCD display
 	//-------------------------------------------------------------------------
-	gpio_set_gpio_pin(AVR32_PIN_PB22);
-	gpio_set_gpio_pin(AVR32_PIN_PB21);
-
-	// LCD Init
+	PowerControl(LCD_CONTRAST_ENABLE, ON); //gpio_set_gpio_pin(AVR32_PIN_PB22);
+	PowerControl(LCD_POWER_ENABLE, ON); //gpio_set_gpio_pin(AVR32_PIN_PB21);
 	Backlight_On();
 	Backlight_High();
 	Set_Contrast(24);
@@ -1177,16 +1174,16 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	pm_configure_usb_clock();
 
-	#if 0 // Moved to USB device manager
+#if 0 // Moved to USB device manager
 	// Init USB and Mass Storage drivers
 	usb_task_init();
 	device_mass_storage_task_init();
-	#endif
+#endif
 
 	//-------------------------------------------------------------------------
 	// Init Keypad
 	//-------------------------------------------------------------------------
-#if 0 // Test not calling init here
+#if 0 // Moved to software init becasue the MCP23018 doesn't like to be init'ed here
 	InitExternalKeypad();
 #endif
 
@@ -1249,10 +1246,10 @@ void PowerDownAndHalt(void)
 {
 	// Enable the A/D
 	debug("Enable the A/D\n");
-	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
 
 	// Delay to allow AD to power up/stabilize
-	soft_usecWait(50 * SOFT_MSECS);
+	SoftUsecWait(50 * SOFT_MSECS);
 
 	debug("Setup A/D config and channels\n");
 	// Setup the A/D Channel configuration
@@ -1260,7 +1257,7 @@ void PowerDownAndHalt(void)
 	SetupADChannelConfig(1024);
 
 	debug("Disable the A/D\n");
-	powerControl(ANALOG_SLEEP_ENABLE, OFF);
+	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
 
 	spi_reset(&AVR32_SPI1);
 
@@ -1274,15 +1271,15 @@ void PowerDownAndHalt(void)
 	gpio_set_gpio_pin(AVR32_PIN_PB08);
 	gpio_set_gpio_pin(AVR32_PIN_PB09);
 	
-	//displayTimerCallBack();
-	setLcdBacklightState(BACKLIGHT_OFF);
+	//DisplayTimerCallBack();
+	SetLcdBacklightState(BACKLIGHT_OFF);
 
-	//lcdPwTimerCallBack();
-	powerControl(LCD_CONTRAST_ENABLE, OFF);
-	clearLcdDisplay();
-	clearControlLinesLcdDisplay();
+	//LcdPwTimerCallBack();
+	PowerControl(LCD_CONTRAST_ENABLE, OFF);
+	ClearLcdDisplay();
+	ClearControlLinesLcdDisplay();
 	LcdClearPortReg();
-	powerControl(LCD_POWER_ENABLE, OFF);
+	PowerControl(LCD_POWER_ENABLE, OFF);
 
 	SLEEP(AVR32_PM_SMODE_STOP);
 	

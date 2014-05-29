@@ -141,7 +141,7 @@ void device_mass_storage_task(void)
 #endif  // FREERTOS_USED
 
 #if BOARD == EVK1100
-#if 0 // Test - fix_ns8100
+#if 0 // fix_ns8100 - Prevent LAN from coming out of sleep with USB access
     // Display Start-of-Frame counter on LEDs
     LED_Display_Field(LED_MONO0_GREEN |
                       LED_MONO1_GREEN |

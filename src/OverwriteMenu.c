@@ -46,30 +46,30 @@ static TEMP_MENU_DATA_STRUCT s_overwriteMenuTable[OVERWRITE_MN_TABLE_SIZE] = {
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void overWriteMn (INPUT_MSG_STRUCT);
-void overWriteMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
+void OverwriteMenu(INPUT_MSG_STRUCT);
+void OverwriteMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void overWriteMn(INPUT_MSG_STRUCT msg)
+void OverwriteMenu(INPUT_MSG_STRUCT msg)
 { 
     static WND_LAYOUT_STRUCT wnd_layout;
     static MN_LAYOUT_STRUCT mn_layout;
   
-    overWriteMnProc(msg, &wnd_layout, &mn_layout);
+    OverwriteMenuProc(msg, &wnd_layout, &mn_layout);
 
     if (g_activeMenu == OVERWRITE_MENU)
     {
-        dsplySelMn(&wnd_layout, &mn_layout, TITLE_CENTERED);
-        writeMapToLcd(g_mmap);
+        DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
+        WriteMapToLcd(g_mmap);
     }
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
+void OverwriteMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	char buff[20];
 	REC_EVENT_MN_STRUCT temp_rec;
@@ -89,11 +89,11 @@ void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 			mn_layout_ptr->curr_ln =    1;
 			mn_layout_ptr->top_ln =     1; 
 
-			loadTempMenuTable(s_overwriteMenuTable);
+			LoadTempMenuTable(s_overwriteMenuTable);
 
 			for (i = 1; i <= MAX_NUM_OF_SAVED_SETUPS; i++)
 			{
-				getRecData(&temp_rec, i, REC_TRIGGER_USER_MENU_TYPE);
+				GetRecordData(&temp_rec, i, REC_TRIGGER_USER_MENU_TYPE);
 
 				switch (temp_rec.op_mode)
 				{
@@ -127,27 +127,27 @@ void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 			switch (input)
 			{
 				case (ENTER_KEY):
-					saveRecData(&g_triggerRecord, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
+					SaveRecordData(&g_triggerRecord, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
 
-					updateModeMenuTitle(g_triggerRecord.op_mode);
+					UpdateModeMenuTitle(g_triggerRecord.op_mode);
 					SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 					JUMP_TO_ACTIVE_MENU();
 					break;
 
 				case (DELETE_KEY):
-					getRecData(&temp_rec, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
+					GetRecordData(&temp_rec, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
 
 					if (temp_rec.validRecord == YES)
 					{
-						byteSet(&message[0], 0, sizeof(message));
+						ByteSet(&message[0], 0, sizeof(message));
 						sprintf(message, "%s (%s)", getLangText(DELETE_SAVED_SETUP_Q_TEXT), temp_rec.name);
 
-						if (messageBox(getLangText(WARNING_TEXT), message, MB_YESNO) == MB_FIRST_CHOICE)					
+						if (MessageBox(getLangText(WARNING_TEXT), message, MB_YESNO) == MB_FIRST_CHOICE)
 						{
-							byteSet(&temp_rec.name, 0, sizeof(temp_rec.name));
+							ByteSet(&temp_rec.name, 0, sizeof(temp_rec.name));
 							temp_rec.validRecord = NO;
 
-							saveRecData(&temp_rec, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
+							SaveRecordData(&temp_rec, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
 
 							sprintf((char*)&(g_menuPtr[mn_layout_ptr->curr_ln].data[0]), "<%s>", getLangText(EMPTY_TEXT));
 						}
@@ -155,11 +155,11 @@ void overWriteMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					break;
 
 				case (DOWN_ARROW_KEY):
-					mnScroll(DOWN,SELECT_MN_WND_LNS,mn_layout_ptr);
+					MenuScroll(DOWN,SELECT_MN_WND_LNS,mn_layout_ptr);
 					break;
 
 				case (UP_ARROW_KEY):
-					mnScroll(UP,SELECT_MN_WND_LNS,mn_layout_ptr);
+					MenuScroll(UP,SELECT_MN_WND_LNS,mn_layout_ptr);
 					break;
 
 				case (ESC_KEY):

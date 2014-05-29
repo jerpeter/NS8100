@@ -84,172 +84,15 @@ static uint8 s_channelReadsToSync = 0;
 ///	Prototypes
 ///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
-void tc_sample_irq(void);
+void Tc_sample_irq(void);
 __attribute__((__interrupt__))
-void tc_typematic_irq(void);
-
-#if 0 // ns7100
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-//#pragma interrupt on
-void isr_PowerOffKey(void)
-{
-    //MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '@';
-
-	if (g_sampleProcessing != ACTIVE_STATE)
-	{
-		// Check if timer mode is enabled and power off enable has been turned off
-		if ((g_helpRecord.timerMode == ENABLED) && (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
-		{
-			// Signal a Power Off event
-			raiseSystemEventFlag(POWER_OFF_EVENT);
-		}
-		else if (getPowerControlState(POWER_OFF_PROTECTION_ENABLE) == OFF)
-		{
-			// Unit is already starting to power down, stop interrupts to prevent the proc from waking back up
-			RTC_ENABLES.bit.periodicIntEnable = OFF;
-			RTC_ENABLES.bit.powerFailIntEnable = OFF;
-		}
-	}
-	else
-	{
-		// Check if the ESC key is being pressed as well
-		if (~(*(uint8*)KEYPAD_ADDRESS) & ESC_KEY_POSITION)
-		{
-			// Stop watchdog timer from waking up processor
-			RTC_ENABLES.bit.periodicIntEnable = OFF;
-			RTC_ENABLES.bit.powerFailIntEnable = OFF;
-
-			// Disable the power off protection
-			powerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
-		}
-
-		// Clear the processor interrupt flag
-		mmc_clear_EPF4_int;
-	}
-
-	// Clear the processor interrupt flag
-	mmc_clear_EPF1_int;
-}
-//#pragma interrupt off
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-//#pragma interrupt on
-extern uint8 messageBoxActiveFlag;
-extern uint8 messageBoxKeyInput;
-void isr_SCI1(void)
-{
-	uint8 statusReg = 0;
-	uint8 dataReg = 0;
-
-    MMC2114_IMM *imm = mmc2114_get_immp();
-	//while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {;} imm->Sci1.SCIDRL = '_';
-
-	// Read the Status register
-	statusReg = imm->Sci1.SCISR1;
-
-	// Read out the data register to clear the interrupt
-	dataReg = imm->Sci1.SCIDRL;
-
-#if 1
-	{
-		auto INPUT_MSG_STRUCT msg;
-		auto uint8 keyPress = 0;
-
-		switch(dataReg)
-		{
-			case 'u' : keyPress = KEY_UPARROW; break;
-			case 'd' : keyPress = KEY_DOWNARROW; break;
-			case 'e' : keyPress = KEY_ENTER; break;
-			case '-' : keyPress = KEY_MINUS; break;
-			case '+' : keyPress = KEY_PLUS; break;
-			case 'h' : keyPress = KEY_HELP; break;
-			case 'b' : keyPress = KEY_BACKLIGHT; break;
-			case 'x' : keyPress = KEY_ESCAPE; break;
-		}
-
-		if (messageBoxActiveFlag == YES)
-		{
-			messageBoxKeyInput = keyPress;
-		}
-		else
-		{
-			messageBoxKeyInput = 0;
-
-			if (dataReg == 'o')
-			{
-				g_factorySetupSequence = STAGE_1;
-			}
-			else if ((g_factorySetupSequence == STAGE_1) && (dataReg == 'u'))
-			{
-				g_factorySetupSequence = STAGE_2;
-			}
-			else if ((g_factorySetupSequence == STAGE_2) && (dataReg == 'd'))
-			{
-				// Check if actively in Monitor mode
-				if (g_sampleProcessing == ACTIVE_STATE)
-				{
-					// Don't allow access to the factory setup
-					g_factorySetupSequence = SEQ_NOT_STARTED;
-				}
-				else // Not in Monitor mode
-				{
-					// Allow access to factory setup
-					g_factorySetupSequence = ENTER_FACTORY_SETUP;
-				}
-			}
-			else
-			{
-				msg.length = 1;
-				msg.cmd = KEYPRESS_MENU_CMD;
-				msg.data[0] = keyPress;
-				sendInputMsg(&msg);
-			}
-		}
-	}
-#endif
-
-#if 0
-	// Check if the receive data interrupt bit is set (if not, we have a problem)
-	if (statusReg & MMC2114_SCI_SCISR1_RDRF)
-	{
-		if (statusReg & MMC2114_SCI_SCISR1_OR)
-		{
-			// If the overrun bit is set for an error.
-			g_isrMessageBufferPtr->status = CMD_MSG_OVERFLOW_ERR;
-		}
-		else
-		{
-			// Write the received data into the buffer (clears the interrupt as well)
-			*(g_isrMessageBufferPtr->writePtr) = dataReg;
-
-			g_isrMessageBufferPtr->writePtr++;
-
-			// Check if buffer pointer goes beyond the end
-			if (g_isrMessageBufferPtr->writePtr >= (g_isrMessageBufferPtr->msg + CMD_BUFFER_SIZE))
-			{
-				// Reset the buffer pointer to the beginning of the buffer
-				g_isrMessageBufferPtr->writePtr = g_isrMessageBufferPtr->msg;
-			}
-
-			// Raise the Craft Data flag
-			g_modemStatus.craftPortRcvFlag = YES;
-		}
-	}
-#endif
-}
-//#pragma interrupt off
-#endif
+void Tc_typematic_irq(void);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
-void eic_external_rtc_irq(void)
+void Eic_external_rtc_irq(void)
 {
 	static uint32 updateCounter = 0;
 
@@ -271,7 +114,7 @@ void eic_external_rtc_irq(void)
 ///	Function Break
 ///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
-void eic_keypad_irq(void)
+void Eic_keypad_irq(void)
 {
 	// Print test for verification of operation
 	//debugRaw("^");
@@ -292,20 +135,20 @@ void eic_keypad_irq(void)
 
 #if 0
 	uint8 keyScan;
-	keyScan = read_mcp23018(IO_ADDRESS_KPD, INTFB);
+	keyScan = ReadMcp23018(IO_ADDRESS_KPD, INTFB);
 	{
 		debug("Keypad IRQ: Interrupt Flags: %x\n", keyScan);
 	}
 
-	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	keyScan = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 	{
 		debug("Kaypad IRQ: Key Pressed: %x\n", keyScan);
 	}
 #endif
 
 #if 0 // Not necessary to clear the keypad interrupt just the processor interrupt so the ISR isn't called again
-	read_mcp23018(IO_ADDRESS_KPD, INTFB);
-	read_mcp23018(IO_ADDRESS_KPD, GPIOB);
+	ReadMcp23018(IO_ADDRESS_KPD, INTFB);
+	ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 #endif
 
 	// clear the interrupt flag in the processor
@@ -316,7 +159,7 @@ void eic_keypad_irq(void)
 ///	Function Break
 ///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
-void eic_system_irq(void)
+void Eic_system_irq(void)
 {
 	static uint8 onKeyCount = 0;
 	static uint8 powerOffAttempted = NO;
@@ -337,15 +180,15 @@ void eic_system_irq(void)
 #endif
 
 #if 0
-	keyFlag = read_mcp23018(IO_ADDRESS_KPD, INTFA);
-	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	keyFlag = ReadMcp23018(IO_ADDRESS_KPD, INTFA);
+	keyScan = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 	debug("System IRQ: Interrupt Flags: %x\n", keyFlag);
 	debug("System IRQ: Key Pressed: %x\n", keyScan);
 #endif
 
 #if 1
-	keyFlag = read_mcp23018(IO_ADDRESS_KPD, INTFA);
-	keyScan = read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	keyFlag = ReadMcp23018(IO_ADDRESS_KPD, INTFA);
+	keyScan = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 
 	// Check if the On key was pressed
 	if ((keyFlag & keyScan) == ON_KEY)
@@ -366,7 +209,7 @@ void eic_system_irq(void)
 		if (keyScan & OFF_KEY)
 		{
 			// Jumping off the ledge.. Buh bye! No returning from this
-			powerControl(POWER_OFF, ON);
+			PowerControl(POWER_OFF, ON);
 		}
 #endif
 	}
@@ -377,7 +220,7 @@ void eic_system_irq(void)
 		{
 			// Jumping off the ledge.. Buh bye! No returning from this
 			//debugRaw("\n--> BOOM <--");
-			powerControl(POWER_OFF, ON);
+			PowerControl(POWER_OFF, ON);
 		}
 
 		powerOffAttempted = YES;
@@ -400,8 +243,8 @@ void eic_system_irq(void)
 		}
 	}
 #else
-	read_mcp23018(IO_ADDRESS_KPD, INTFA);
-	read_mcp23018(IO_ADDRESS_KPD, GPIOA);
+	ReadMcp23018(IO_ADDRESS_KPD, INTFA);
+	ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 #endif
 
 	// clear the interrupt flag in the processor
@@ -412,7 +255,7 @@ void eic_system_irq(void)
 ///	Function Break
 ///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
-void usart_1_rs232_irq(void)
+void Usart_1_rs232_irq(void)
 {
 	// Test print to verify the interrupt is running
 	//debugRaw("`");
@@ -481,71 +324,13 @@ static uint8 craftBufferCount = 0;
 	}
 	//else USART_RX_EMPTY;
 #endif
-
-#if 0
-	{
-		auto INPUT_MSG_STRUCT msg;
-		auto uint8 keyPress = 0;
-
-		switch(dataReg)
-		{
-			case 'u' : keyPress = KEY_UPARROW; break;
-			case 'd' : keyPress = KEY_DOWNARROW; break;
-			case 'e' : keyPress = KEY_ENTER; break;
-			case '-' : keyPress = KEY_MINUS; break;
-			case '+' : keyPress = KEY_PLUS; break;
-			case 'h' : keyPress = KEY_HELP; break;
-			case 'b' : keyPress = KEY_BACKLIGHT; break;
-			case 'x' : keyPress = KEY_ESCAPE; break;
-		}
-
-		if (messageBoxActiveFlag == YES)
-		{
-			messageBoxKeyInput = keyPress;
-		}
-		else
-		{
-			messageBoxKeyInput = 0;
-
-			if (dataReg == 'o')
-			{
-				g_factorySetupSequence = STAGE_1;
-			}
-			else if ((g_factorySetupSequence == STAGE_1) && (dataReg == 'u'))
-			{
-				g_factorySetupSequence = STAGE_2;
-			}
-			else if ((g_factorySetupSequence == STAGE_2) && (dataReg == 'd'))
-			{
-				// Check if actively in Monitor mode
-				if (g_sampleProcessing == ACTIVE_STATE)
-				{
-					// Don't allow access to the factory setup
-					g_factorySetupSequence = SEQ_NOT_STARTED;
-				}
-				else // Not in Monitor mode
-				{
-					// Allow access to factory setup
-					g_factorySetupSequence = ENTER_FACTORY_SETUP;
-				}
-			}
-			else
-			{
-				msg.length = 1;
-				msg.cmd = KEYPRESS_MENU_CMD;
-				msg.data[0] = keyPress;
-				sendInputMsg(&msg);
-			}
-		}
-	}
-#endif
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
-void soft_timer_tick_irq(void)
+void Soft_timer_tick_irq(void)
 {
 	// Test print to verify the interrupt is running
 	//debugRaw("`");
@@ -632,7 +417,7 @@ void Stop_Data_Clock(TC_CHANNEL_NUM channel)
 ///	Function Break
 ///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
-void tc_typematic_irq(void)
+void Tc_typematic_irq(void)
 {
 	// Increment the ms seconds counter
 	g_keypadTimerTicks++;
@@ -730,10 +515,10 @@ static inline void checkAlarms_ISR_Inline(void)
 static inline void processAndMoveManualCalData_ISR_Inline(void)
 {
 	// Wait 5 samples to start cal signaling (~5 ms)
-	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
-	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
-	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
-	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
+	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { AdSetCalSignalHigh(); }	// (~10 ms)
+	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { AdSetCalSignalLow(); }	// (~20 ms)
+	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { AdSetCalSignalHigh(); }	// (~10 ms)
+	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { AdSetCalSignalOff(); }	// (~55 ms)
 
 	// Move the samples into the event buffer
 	*(SAMPLE_DATA_STRUCT*)g_currentEventSamplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
@@ -1012,7 +797,7 @@ void processAndMoveWaveformData(void)
 				tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 				tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-				startExternalRTCClock(SAMPLE_RATE_1K);
+				StartExternalRtcClock(SAMPLE_RATE_1K);
 				AVR32_EIC.ICR.int1 = 1;
 #endif
 
@@ -1021,10 +806,10 @@ void processAndMoveWaveformData(void)
 			else // Cal pulse started
 			{
 				// Wait 5 samples to start cal signaling (~5 ms)
-				if (s_calSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh();	}	// (~10 ms)
-				if (s_calSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
-				if (s_calSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
-				if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { AdSetCalSignalHigh();	}	// (~10 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { AdSetCalSignalLow(); }	// (~20 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { AdSetCalSignalHigh(); }	// (~10 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { AdSetCalSignalOff(); }	// (~55 ms)
 
 				// Copy cal data to the event buffer cal section
 				*(SAMPLE_DATA_STRUCT*)(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
@@ -1098,7 +883,7 @@ void processAndMoveWaveformData(void)
 					tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
 					tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-					startExternalRTCClock(g_triggerRecord.trec.sample_rate);
+					StartExternalRtcClock(g_triggerRecord.trec.sample_rate);
 					AVR32_EIC.ICR.int1 = 1;
 #endif
 
@@ -1342,7 +1127,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 				tc_start(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-				startExternalRTCClock(SAMPLE_RATE_1K);
+				StartExternalRtcClock(SAMPLE_RATE_1K);
 				AVR32_EIC.ICR.int1 = 1;
 #endif
 
@@ -1351,10 +1136,10 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			else // Cal pulse started
 			{
 				// Wait 5 samples to start cal signaling (~5 ms)
-				if (s_calSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { adSetCalSignalHigh();	}	// (~10 ms)
-				if (s_calSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { adSetCalSignalLow(); }	// (~20 ms)
-				if (s_calSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { adSetCalSignalHigh(); }	// (~10 ms)
-				if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { adSetCalSignalOff(); }	// (~55 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { AdSetCalSignalHigh();	}	// (~10 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { AdSetCalSignalLow(); }	// (~20 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { AdSetCalSignalHigh(); }	// (~10 ms)
+				if (s_calSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { AdSetCalSignalOff(); }	// (~55 ms)
 
 				// Copy cal data to the event buffer cal section
 				*(SAMPLE_DATA_STRUCT*)(s_calPtr[DEFAULT_CAL_BUFFER_INDEX]) = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
@@ -1412,7 +1197,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 					tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
 					tc_start(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-					startExternalRTCClock(g_triggerRecord.trec.sample_rate);
+					StartExternalRtcClock(g_triggerRecord.trec.sample_rate);
 					AVR32_EIC.ICR.int1 = 1;
 #endif
 
@@ -1634,7 +1419,7 @@ static inline void getChannelDataNoReadbackNoTemp_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-static inline void handleChannelSyncError_ISR_Inline(void)
+static inline void HandleChannelSyncError_ISR_Inline(void)
 {
 	debugErr("AD Channel Sync Error!\n");
 		
@@ -1679,7 +1464,7 @@ static inline void handleChannelSyncError_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void dataIsrInit(void)
+void DataIsrInit(void)
 {
 	s_pretriggerFull = NO;
 	s_checkTempDrift = NO;
@@ -1689,7 +1474,7 @@ void dataIsrInit(void)
 ///	Function Break
 ///----------------------------------------------------------------------------
 __attribute__((__interrupt__))
-void tc_sample_irq(void)
+void Tc_sample_irq(void)
 {
 #if 0 // Test
 	static uint32 isrCounter = 0;
@@ -1763,7 +1548,7 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 		//___Check for channel sync error
 		if (s_channelSyncError == YES)
 		{
-			handleChannelSyncError_ISR_Inline();
+			HandleChannelSyncError_ISR_Inline();
 
 			// clear the interrupt flags and bail
 #if INTERNAL_SAMPLING_SOURCE
@@ -1791,8 +1576,7 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 	//___Check if not actively sampling
 	if (g_sampleProcessing == IDLE_STATE)
 	{
-		// Idle and not processing, might as well adjust the channel offsets
-		// fix_ns8100
+		// Idle and not processing, could adjust the channel offsets
 	}
 	//___________________________________________________________________________________________
 	//___Check if the Pretrigger buffer is not full, which is necessary for an event
