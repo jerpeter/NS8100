@@ -729,7 +729,7 @@ extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
 		{
 			SetupPowerSavingsBeforeSleeping();
 
-#if 0 // Normal
+#if 1 // Normal
 			if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { SLEEP(AVR32_PM_SMODE_STANDBY); }
 			else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { SLEEP(AVR32_PM_SMODE_FROZEN); }
 			else if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { SLEEP(AVR32_PM_SMODE_IDLE); }
