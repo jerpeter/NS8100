@@ -31,6 +31,7 @@
 #include "M23018.h"
 #include "gpio.h"
 #include "Common.h"
+#include "PowerManagement.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -1398,14 +1399,11 @@ void Backlight_Low( void )
 ///----------------------------------------------------------------------------
 void Reset_Contrast( void )
 {
+	PowerControl(LCD_POWER_ENABLE, OFF);
+	PowerControl(LCD_CONTRAST_ENABLE, OFF);
 
-    /*turn off lcd_sleep and lcdContrast*/
-	gpio_clr_gpio_pin(AVR32_PIN_PB21); //ctrl
-	gpio_clr_gpio_pin(AVR32_PIN_PB22); //adjust
-
-    /*turn off lcd_sleep and lcdContrast*/
-    gpio_set_gpio_pin(AVR32_PIN_PB22); //adjust
-    gpio_set_gpio_pin(AVR32_PIN_PB21); //adjust
+	PowerControl(LCD_CONTRAST_ENABLE, ON);
+	PowerControl(LCD_POWER_ENABLE, ON);
 }
 
 ///----------------------------------------------------------------------------
@@ -1429,9 +1427,9 @@ void Set_Contrast( uint8 level )
 
     for(i=0;i < counts;i++)
     {
-        //toggle adjust
-		gpio_clr_gpio_pin(AVR32_PIN_PB22); //adjust
-		gpio_set_gpio_pin(AVR32_PIN_PB22);   //adjust
+        // Toggle to adjust
+		PowerControl(LCD_CONTRAST_ENABLE, OFF);
+		PowerControl(LCD_CONTRAST_ENABLE, ON);
     }
 }
 

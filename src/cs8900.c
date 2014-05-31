@@ -23,6 +23,7 @@
 #include "cycle_counter.h"
 #include "intc.h"
 #include "gpio.h"
+#include "PowerManagement.h"
 
 // Counter of COUNT/COMPARE matches.
 static volatile unsigned int u32NbCompareIrqTrigger = 0;
@@ -94,7 +95,7 @@ void Init8900(void)
    unsigned int i;
 
    //turn sleep off
-   gpio_set_gpio_pin(AVR32_PIN_PB27);
+   PowerControl(LAN_SLEEP_ENABLE, OFF);
 
    Write8900(ADD_PORT, PP_SelfCTL);
    Write8900(DATA_PORT, POWER_ON_RESET);          // Reset the Ethernet-Controller

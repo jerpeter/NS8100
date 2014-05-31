@@ -1409,7 +1409,7 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (POWER_SAVINGS):
-				SETUP_USER_MENU_MSG(&powerSavingsMenu, g_helpRecord.powerSavings);
+				SETUP_USER_MENU_MSG(&powerSavingsMenu, g_helpRecord.powerSavingsLevel);
 			break;
 
 			case (REPORT_DISPLACEMENT):
@@ -2315,10 +2315,10 @@ void PrintMonitorLogMenuHandler(uint8 keyPressed, void* data)
 // Power Savings Menu
 //=============================================================================
 //*****************************************************************************
-#define POWER_PROFILE_MENU_ENTRIES 6
-USER_MENU_STRUCT powerSavingsMenu[POWER_PROFILE_MENU_ENTRIES] = {
+#define POWER_SAVINGS_MENU_ENTRIES 6
+USER_MENU_STRUCT powerSavingsMenu[POWER_SAVINGS_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, POWER_SAVINGS_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, POWER_PROFILE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, POWER_SAVINGS_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, NONE_TEXT,	NO_TAG, {POWER_SAVINGS_NONE}},
 {ITEM_2, 0, MINIMUM_TEXT,	NO_TAG, {POWER_SAVINGS_MINIMUM}},
 {ITEM_3, 0, MOST_TEXT,	NO_TAG, {POWER_SAVINGS_MOST}},
@@ -2336,7 +2336,7 @@ void PowerSavingsMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.powerSavings = (uint8)powerSavingsMenu[newItemIndex].data;
+		g_helpRecord.powerSavingsLevel = (uint8)powerSavingsMenu[newItemIndex].data;
 
 		AdjustPowerSavings();
 

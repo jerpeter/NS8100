@@ -194,50 +194,16 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 					break;      
 
 				case (DOWN_ARROW_KEY):
-#if 0 // Test (Override of the key for testing)
-					// Set RTC Timestamp pin high
-					gpio_clr_gpio_pin(AVR32_PIN_PB18);
-#endif
 					MainMenuScroll(DOWN, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (UP_ARROW_KEY):
-#if 0 // Test (Override of the key for testing)
-					// Set RTC Timestamp pin high
-					gpio_set_gpio_pin(AVR32_PIN_PB18);
-#endif
 					MainMenuScroll(UP, SELECT_MN_WND_LNS, mn_layout_ptr);
 					break;
 				case (MINUS_KEY): 
-#if 0 // Test (Override of the key for testing)
-					//PowerDownSDCard();
-				    //gpio_enable_gpio_pin(AVR32_PIN_PA19);
-					//gpio_clr_gpio_pin(AVR32_PIN_PA19);
-
-					ExternalRtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
-					debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
-					rtcMap.control_1 &= ~(0x10);
-					rtcMap.control_2 = RTC_ALARM_INT_ENABLE;
-					debug("RTC New Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
-					ExternalRtcWrite(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
-#else
 					AdjustLcdContrast(DARKER);
-#endif
 					break;
 				case (PLUS_KEY): 
-#if 0 // Test (Override of the key for testing)
-				    //gpio_set_gpio_pin(AVR32_PIN_PB19);
-					//gpio_enable_module_pin(AVR32_PIN_PA19, AVR32_SPI1_NPCS_2_0_FUNCTION);
-					//PowerUpSDCardAndInitFat32();
-
-					ExternalRtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
-					debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
-					rtcMap.control_1 &= ~(0x10);
-					rtcMap.control_2 = (RTC_ALARM_INT_ENABLE | RTC_TIMESTAMP_INT_ENABLE);
-					debug("RTC New Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
-					ExternalRtcWrite(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
-#else
 					AdjustLcdContrast(LIGHTER);
-#endif
 					break;
 				case (ESC_KEY):
 					// Reset the current line to tbe the top line	

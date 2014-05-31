@@ -75,8 +75,8 @@
 void TestSnippetsBeforeInit(void)
 {
 	#if 0 // Test (Enable serial and put processor in deep stop)
-	gpio_clr_gpio_pin(AVR32_PIN_PB08);
-	gpio_clr_gpio_pin(AVR32_PIN_PB09);
+	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
 
 	// Setup debug serial port
 	usart_options_t usart_1_rs232_options =
@@ -325,7 +325,7 @@ void TestSnippetsAfterInit(void)
 
 		debug("SPI1 CS's 1\n");
 		//gpio_set_gpio_pin(AVR32_PIN_PB14);
-		gpio_set_gpio_pin(AVR32_PIN_PB18);
+		PowerControl(RTC_TIMESTAMP, OFF);
 		//gpio_set_gpio_pin(AVR32_PIN_PB19);
 		//gpio_set_gpio_pin(AVR32_PIN_PB20);
 

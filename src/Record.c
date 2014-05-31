@@ -425,7 +425,7 @@ void LoadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 	ByteSet(rec_ptr, 0, sizeof(REC_HELP_MN_STRUCT));
 
 	// Set default conditions
-	rec_ptr->powerSavings = POWER_SAVINGS_NONE;
+	rec_ptr->powerSavingsLevel = POWER_SAVINGS_NONE;
 	rec_ptr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
 	rec_ptr->flashWrapping = YES;
 	rec_ptr->autoMonitorMode = AUTO_NO_TIMEOUT;

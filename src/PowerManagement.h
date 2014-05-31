@@ -38,7 +38,8 @@ typedef enum
 	TRIGGER_OUT,
 	SDATA,
 	ADATA,
-	USB_LED
+	USB_LED,
+	SD_POWER
 } POWER_MGMT_OPTIONS;
 
 #define ALARM_2_ENABLE_BIT				(1 << ALARM_2_ENABLE)
@@ -62,6 +63,7 @@ typedef enum
 #define SDATA_BIT						(1 << SDATA)
 #define ADATA_BIT						(1 << ADATA)
 #define USB_LED_BIT						(1 << USB_LED)
+#define SD_POWER_BIT					(1 << SD_POWER)
 
 enum {
 	SHUTDOWN_UNIT = 1,
@@ -84,7 +86,7 @@ typedef union
 
 		bitfield unused8:					1;
 		bitfield unused9:					1;
-		bitfield unused10:					1;
+		bitfield sdPower:					1;
 		bitfield usbLed:					1;
 		bitfield triggerOut:				1;
 		bitfield adata:						1;

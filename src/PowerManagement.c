@@ -67,7 +67,6 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 				state = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 				state |= 0x80;
 				WriteMcp23018(IO_ADDRESS_KPD, OLATA, state);
-				//debug("MCP23018 write complete\n");
 				s_powerManagement |= POWER_OFF_PROTECTION_ENABLE_BIT;
 			} 
 			else // (mode == OFF)
@@ -75,74 +74,65 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 				state = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 				state &= ~0x80;
 				WriteMcp23018(IO_ADDRESS_KPD, OLATA, state);
-				//debug("MCP23018 write complete\n");
 				s_powerManagement &= ~(POWER_OFF_PROTECTION_ENABLE_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case ALARM_1_ENABLE:
+		case ALARM_1_ENABLE: // Active high control
 		//----------------------------------------------------------------------------
 			//debug("Alarm 1 Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB06);
-				s_powerManagement |= ALARM_1_ENABLE_BIT;
 			}
 			else // (mode == OFF)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB06);
-				s_powerManagement &= ~(ALARM_1_ENABLE_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case ALARM_2_ENABLE:
+		case ALARM_2_ENABLE: // Active high control
 		//----------------------------------------------------------------------------
 			//debug("Alarm 2 Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB07);
-				s_powerManagement |= ALARM_2_ENABLE_BIT;
 			}
 			else // (mode == OFF)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB07);
-				s_powerManagement &= ~(ALARM_2_ENABLE_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case LCD_POWER_ENABLE:
+		case LCD_POWER_ENABLE: // Active high control
 		//----------------------------------------------------------------------------
 			//debug("Lcd Sleep Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB21);
 				g_LcdPowerState = ENABLED;
-				s_powerManagement |= LCD_POWER_ENABLE_BIT;
 			}
 			else // (mode == OFF)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB21);
 				g_LcdPowerState = DISABLED;
-				s_powerManagement &= ~(LCD_POWER_ENABLE_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case LCD_CONTRAST_ENABLE:
+		case LCD_CONTRAST_ENABLE: // Active high control
 		//----------------------------------------------------------------------------
 			//debug("Lcd Contrast Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB22); 
-				s_powerManagement |= LCD_CONTRAST_ENABLE_BIT;
 			}				
 			else // (mode == OFF)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB22);
-				s_powerManagement &= ~(LCD_CONTRAST_ENABLE_BIT);
 			}				
 			break;
 
@@ -153,12 +143,10 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			if (mode == ON)
 			{
 				Backlight_On();
-				s_powerManagement |= LCD_BACKLIGHT_ENABLE_BIT;
 			}				
 			else // (mode == OFF)
 			{
 				Backlight_Off();
-				s_powerManagement &= ~(LCD_BACKLIGHT_ENABLE_BIT);
 			}				
 			break;
 
@@ -169,61 +157,52 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			if (mode == ON)
 			{
 				Backlight_High();
-				s_powerManagement |= LCD_BACKLIGHT_HI_ENABLE_BIT;
 			}
 			else // (mode == OFF)
 			{
 				Backlight_Low();
-				s_powerManagement &= ~(LCD_BACKLIGHT_HI_ENABLE_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case SERIAL_232_DRIVER_ENABLE:
+		case SERIAL_232_DRIVER_ENABLE: // Active low control
 		//----------------------------------------------------------------------------
 			//debug("Serial 232 Driver Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB08);
-				s_powerManagement |= SERIAL_232_DRIVER_ENABLE_BIT;
 			}
 			else // (mode == OFF)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB08);
-				s_powerManagement &= ~(SERIAL_232_DRIVER_ENABLE_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case SERIAL_232_RECEIVER_ENABLE:
+		case SERIAL_232_RECEIVER_ENABLE: // Active low control
 		//----------------------------------------------------------------------------
 			//debug("Serial 232 Receiver Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB09);
-				s_powerManagement |= SERIAL_232_RECEIVER_ENABLE_BIT;
 			}
 			else // (mode == OFF)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB09);
-				s_powerManagement &= ~(SERIAL_232_RECEIVER_ENABLE_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
 		case SERIAL_485_DRIVER_ENABLE:
 		//----------------------------------------------------------------------------
-		// fix_ns8100 - No direct control over 485 until next hardware spin which will likely be PB20 for driver/receiver combo
 			//debug("Serial 485 Driver Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				//gpio_clr_gpio_pin(AVR32_PIN_PB20);
-				s_powerManagement |= SERIAL_485_DRIVER_ENABLE_BIT;
+				gpio_set_gpio_pin(AVR32_PIN_PB00);
 			}
 			else // (mode == OFF)
 			{
-				//gpio_set_gpio_pin(AVR32_PIN_PB20);
-				s_powerManagement &= ~(SERIAL_485_DRIVER_ENABLE_BIT);
+				gpio_clr_gpio_pin(AVR32_PIN_PB00);
 			}
 			break;
 
@@ -234,13 +213,11 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			//debug("Serial 485 Receiver Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				//gpio_clr_gpio_pin(AVR32_PIN_PB20);
-				s_powerManagement |= SERIAL_485_RECEIVER_ENABLE_BIT;
+				//gpio_clr_gpio_pin(AVR32_PIN_PB??);
 			}
 			else // (mode == OFF)
 			{
-				//gpio_clr_gpio_pin(AVR32_PIN_PB20);
-				s_powerManagement &= ~(SERIAL_485_RECEIVER_ENABLE_BIT);
+				//gpio_clr_gpio_pin(AVR32_PIN_PB??);
 			}
 			break;
 
@@ -251,12 +228,10 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			if (mode == ON)
 			{
 				// fix_ns8100
-				s_powerManagement |= USB_HOST_SLEEP_ENABLE_BIT;
 			}
 			else // (mode == OFF)
 			{
 				// fix_ns8100
-				s_powerManagement &= ~(USB_HOST_SLEEP_ENABLE_BIT);
 			}
 			break;
 
@@ -267,28 +242,24 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			if (mode == ON)
 			{
 				// fix_ns8100
-				s_powerManagement |= USB_DEVICE_SLEEP_ENABLE_BIT;
 			}
 			else // (mode == OFF)
 			{
 				// fix_ns8100
-				s_powerManagement &= ~(USB_DEVICE_SLEEP_ENABLE_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case LAN_SLEEP_ENABLE:
+		case LAN_SLEEP_ENABLE: // Active low control
 		//----------------------------------------------------------------------------
 			//debug("Lan Sleep Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				// fix_ns8100
-				s_powerManagement |= LAN_SLEEP_ENABLE_BIT;
+				gpio_clr_gpio_pin(AVR32_PIN_PB27);
 			}
 			else // (mode == OFF)
 			{
-				// fix_ns8100
-				s_powerManagement &= ~(LAN_SLEEP_ENABLE_BIT);
+				gpio_set_gpio_pin(AVR32_PIN_PB27);
 			}
 			break;
 
@@ -299,98 +270,112 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			if (mode == ON)
 			{
 				// fix_ns8100
-				s_powerManagement |= ANALOG_SLEEP_ENABLE_BIT;
 			}
 			else // (mode == OFF)
 			{
 				// fix_ns8100
-				s_powerManagement &= ~(ANALOG_SLEEP_ENABLE_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case RTC_TIMESTAMP:
+		case RTC_TIMESTAMP: // Active low control
 		//----------------------------------------------------------------------------
 			//debug("RTC Timestamp Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB18);
-				s_powerManagement |= RTC_TIMESTAMP_BIT;
 			}
 			else // (mode == OFF)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB18);
-				s_powerManagement &= ~(RTC_TIMESTAMP_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case TRIGGER_OUT:
+		case TRIGGER_OUT: // Active high control
 		//----------------------------------------------------------------------------
 			//debug("Trigger Out Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB05);
-				s_powerManagement |= TRIGGER_OUT_BIT;
 			}
 			else // (mode == OFF)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB05);
-				s_powerManagement &= ~(TRIGGER_OUT_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case SDATA:
+		case SDATA: // Active low control
 		//----------------------------------------------------------------------------
 			//debug("SDATA Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB02);
-				s_powerManagement |= SDATA_BIT;
 			}
 			else // (mode == OFF)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB02);
-				s_powerManagement &= ~(SDATA_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case ADATA:
+		case ADATA: // Active low control
 		//----------------------------------------------------------------------------
 			//debug("ADATA Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB03);
-				s_powerManagement |= ADATA_BIT;
 			}
 			else // (mode == OFF)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB03);
-				s_powerManagement &= ~(ADATA_BIT);
 			}
 			break;
 
 		//----------------------------------------------------------------------------
-		case USB_LED:
+		case USB_LED: // Active high control
 		//----------------------------------------------------------------------------
 			//debug("USB LED Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB28);
-				s_powerManagement |= USB_LED_BIT;
 			}
 			else // (mode == OFF)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB28);
-				s_powerManagement &= ~(USB_LED_BIT);
+			}
+			break;
+
+		//----------------------------------------------------------------------------
+		case SD_POWER: // Active high control
+		//----------------------------------------------------------------------------
+			//debug("SD Power Enable: %s.\n", mode == ON ? "On" : "Off");
+			if (mode == ON)
+			{
+				gpio_set_gpio_pin(AVR32_PIN_PB15);
+			}
+			else // (mode == OFF)
+			{
+				gpio_clr_gpio_pin(AVR32_PIN_PB15);
 			}
 			break;
 	}
 
+	// Set Power Control state for the option selected
+	if (mode == ON)
+	{
+		s_powerManagement |= (1 << option);
+	}
+	else // (mode == OFF)
+	{
+		s_powerManagement &= ~(1 << option);
+	}
+
+#if 0 // Can no longer wait locally since this can be called from within an interrupt
 	// Let hardware stabilize
 	SoftUsecWait(10 * SOFT_MSECS);
+#endif
 }
 
 ///----------------------------------------------------------------------------

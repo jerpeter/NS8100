@@ -23,6 +23,7 @@
 #include "FAT32_Access.h"
 #include "sd_mmc_spi.h"
 #include "FAT32_Disk.h"
+#include "PowerManagement.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -1177,13 +1178,13 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 void ReInitSdCardAndFat32(void)
 {
 	// Power off the SD card
-	gpio_clr_gpio_pin(AVR32_PIN_PB15);
+	PowerControl(SD_POWER, OFF);
 
 	// Wait for power to propagate
 	SoftUsecWait(10 * SOFT_MSECS);
 
 	// Power on the SD Card
-	gpio_set_gpio_pin(AVR32_PIN_PB15);
+	PowerControl(SD_POWER, ON);
 
 	// Wait for power to propagate
 	SoftUsecWait(10 * SOFT_MSECS);
@@ -1215,7 +1216,7 @@ void PowerDownSDCard(void)
 	debugRaw("\n Powering down SD Card... ");
 
 	// Power off the SD card
-	gpio_clr_gpio_pin(AVR32_PIN_PB15);
+	PowerControl(SD_POWER, OFF);
 
 	// Wait for power to propagate
 	SoftUsecWait(10 * SOFT_MSECS);
@@ -1231,7 +1232,7 @@ void PowerUpSDCardAndInitFat32(void)
 	debugRaw("\nPowering up SD Card and ReInit Fat32... \n");
 
 	// Power on the SD Card
-	gpio_set_gpio_pin(AVR32_PIN_PB15);
+	PowerControl(SD_POWER, ON);
 
 	// Wait for power to propagate
 	SoftUsecWait(10 * SOFT_MSECS);

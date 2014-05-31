@@ -521,7 +521,7 @@ void _init_startup(void)
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_ASSERT | AVR32_WDT_DISABLE_VALUE);
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_DEASSERT | AVR32_WDT_DISABLE_VALUE);
 	
-#if 0 // Test external 12 MHz oscillator
+#if 1 // Test external 12 MHz oscillator
 	pm_enable_osc0_ext_clock(&AVR32_PM);
 #endif
 
@@ -542,7 +542,7 @@ void _init_startup(void)
 	pm_pll_enable(&AVR32_PM, 0);
 	pm_wait_for_pll0_locked(&AVR32_PM);
 
-#if 0 // Left over code for setting up the main clock
+#if 0 // Removed - Left over code for setting up the main clock
 	pm_gc_setup(&AVR32_PM, 0, 1, 0, 0, 0);
 	pm_gc_enable(&AVR32_PM, 0);
 	gpio_enable_module_pin(AVR32_PM_GCLK_0_1_PIN, AVR32_PM_GCLK_0_1_FUNCTION);
@@ -551,20 +551,6 @@ void _init_startup(void)
 	pm_cksel(&AVR32_PM, 0, 0, 0, 0, 0, 0);
 	flashc_set_wait_state(1);
 	pm_switch_to_clock(&AVR32_PM, AVR32_PM_MCSEL_PLL0);
-#endif
-
-#if 0 // Test (Network Active low SBHE)
-	gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
-	gpio_clr_gpio_pin(AVR32_EBI_NWE1_0_PIN);
-	gpio_set_gpio_pin(AVR32_EBI_NWE1_0_PIN);
-#endif
-
-#if 0 // Test (Network Active low SBHE - Hardware mod connecting pin GPIO 51 to network part)
-	gpio_clr_gpio_pin(AVR32_PIN_PB19);
-	//gpio_set_gpio_pin(AVR32_PIN_PB19);
-	//gpio_clr_gpio_pin(AVR32_PIN_PB19);
-	//gpio_set_gpio_pin(AVR32_PIN_PB19);
-	//gpio_clr_gpio_pin(AVR32_PIN_PB19);
 #endif
 
 	// Chip Select Initialization
@@ -582,8 +568,10 @@ void _init_startup(void)
 	gpio_clr_gpio_pin(AVR32_PM_XOUT1_0_PIN);
 
 #if 0 // Test
+	// Disable the 32KHz crystal
 	pm_disable_clk32(&AVR32_PM);
 	
+	// With the 32KHz crystal disabled, configure GPIO lines to be outputs and low
 	gpio_clr_gpio_pin(AVR32_PM_XIN32_0_PIN);
 	gpio_clr_gpio_pin(AVR32_PM_XOUT32_0_PIN);
 #endif
@@ -639,7 +627,7 @@ void InitKeypad(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void InitPullupsOnFloatingIOLines(void)
+void InitPullupsOnFloatingDataLines(void)
 {
 	gpio_enable_pin_pull_up(AVR32_PIN_PX00);
 	gpio_enable_pin_pull_up(AVR32_PIN_PX01);
@@ -729,7 +717,8 @@ void InitLANToSleep(void)
 #if 1 // Normal
 extern void Sleep8900(void);
 extern void Sleep8900_LedOn(void);
-	gpio_clr_gpio_pin(AVR32_PIN_PB27); // Clear LAN Sleep pin (active low control)
+	// Enable the LAN Sleep
+	PowerControl(LAN_SLEEP_ENABLE, ON);
 	SoftUsecWait(10 * SOFT_MSECS);
 
 #if 0 // Test (LAN register map read)
@@ -846,20 +835,20 @@ void InitInternalAD(void)
 ///----------------------------------------------------------------------------
 void InitSDAndFileSystem(void)
 {
-	// Necessary ?
+	// Necessary ? (No, setting an output will configure it)
 	// Set SD Power pin as GPIO
-	//gpio_enable_gpio_pin(AVR32_PIN_PB15);
+	gpio_enable_gpio_pin(AVR32_PIN_PB15);
 	
-	// Necessary ?
-	// Set SD Write Protect pin as GPIO (Active low signal)
+	// Necessary ? (No, pin is configured as an input on power up)
+	// Set SD Write Protect pin as GPIO (Active low control)
 	gpio_enable_gpio_pin(AVR32_PIN_PA07);
 	
-	// Necessary ?
+	// Necessary ? (No, pin is configured as an input on power up)
 	// Set SD Detect pin as GPIO
 	gpio_enable_gpio_pin(AVR32_PIN_PA02);
 	
 	// Enable Power to SD
-	gpio_set_gpio_pin(AVR32_PIN_PB15);
+	PowerControl(SD_POWER, ON);
 
 	// Wait for power to propagate
 	SoftUsecWait(10 * SOFT_MSECS);
@@ -874,12 +863,12 @@ void InitSDAndFileSystem(void)
 		FAT32_InitDrive();
 		if (FAT32_InitFAT() == FALSE)
 		{
-			debugErr("FAT32 Initialization failed!\n\r");
+			debugErr("FAT32 Initialization failed!\n");
 		}
 	}
 	else
 	{
-		debugErr("\n\nSD Card not detected!\n");
+		debugErr("SD Card not detected!\n");
 	}
 }
 
@@ -986,7 +975,7 @@ void InitExternalAD(void)
 #endif
 
 	debug("Disable the A/D\n");
-	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
+	PowerControl(ANALOG_SLEEP_ENABLE, ON);
 }
 
 ///----------------------------------------------------------------------------
@@ -1004,9 +993,9 @@ void TestPowerDownAndStop(void)
 
 	debug("\nClosing up shop.\n\n");
 
-	// Disable rs232 driver and receiver (Active low controls)
-	gpio_set_gpio_pin(AVR32_PIN_PB08);
-	gpio_set_gpio_pin(AVR32_PIN_PB09);
+	// Disable rs232 driver and receiver (Active low control)
+	PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
+	PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
 	
 	//DisplayTimerCallBack();
 	SetLcdBacklightState(BACKLIGHT_OFF);
@@ -1018,6 +1007,7 @@ void TestPowerDownAndStop(void)
 	LcdClearPortReg();
 	PowerControl(LCD_POWER_ENABLE, OFF);
 
+	// Drive the unused pin
 	gpio_clr_gpio_pin(AVR32_PIN_PB20);
 
 	//SLEEP(AVR32_PM_SMODE_IDLE);
@@ -1048,9 +1038,9 @@ void KillClocksToModules(void)
 #endif
 
 #if 0 // Test
-	// Disable rs232 driver and receiver (Active low controls)
-	gpio_set_gpio_pin(AVR32_PIN_PB08);
-	gpio_set_gpio_pin(AVR32_PIN_PB09);
+	// Disable rs232 driver and receiver (Active low control)
+	PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
+	PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
 #endif
 }
 
@@ -1062,45 +1052,52 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Enable internal pull ups on the floating data lines
 	//-------------------------------------------------------------------------
-	InitPullupsOnFloatingIOLines();
+	InitPullupsOnFloatingDataLines();
 	
 	//-------------------------------------------------------------------------
-	// Clock and chip selects setup in custom _init_startup
+	// Init unused pins to low outputs
 	//-------------------------------------------------------------------------
 	InitProcessorNoConnectPins();
 	
 	//-------------------------------------------------------------------------
-	// Set RTC Timestamp pin high (Active low signal)
+	// Turn on rs232 driver and receiver (Active low control)
 	//-------------------------------------------------------------------------
-	PowerControl(RTC_TIMESTAMP, OFF); //gpio_set_gpio_pin(AVR32_PIN_PB18);
+	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+	InitSerial232();
 
 	//-------------------------------------------------------------------------
-	// Set Alarm 1 and Alarm 2 low (Active high signal)
+	// Set RTC Timestamp pin high (Active low control)
 	//-------------------------------------------------------------------------
-	PowerControl(ALARM_1_ENABLE, OFF); //gpio_clr_gpio_pin(AVR32_PIN_PB06);
-	PowerControl(ALARM_2_ENABLE, OFF); //gpio_clr_gpio_pin(AVR32_PIN_PB07);
+	PowerControl(RTC_TIMESTAMP, OFF);
 
 	//-------------------------------------------------------------------------
-	// Set Trigger Out low (Active high signal)
+	// Set Alarm 1 and Alarm 2 low (Active high control)
 	//-------------------------------------------------------------------------
-	PowerControl(TRIGGER_OUT, OFF); //gpio_clr_gpio_pin(AVR32_PIN_PB05);
+	PowerControl(ALARM_1_ENABLE, OFF);
+	PowerControl(ALARM_2_ENABLE, OFF);
 
 	//-------------------------------------------------------------------------
-	// Set USB LED Output low (Active high signal)
+	// Set Trigger Out low (Active high control)
 	//-------------------------------------------------------------------------
-	PowerControl(USB_LED, OFF); //gpio_clr_gpio_pin(AVR32_PIN_PB28);
+	PowerControl(TRIGGER_OUT, OFF);
+
+	//-------------------------------------------------------------------------
+	// Set USB LED Output low (Active high control)
+	//-------------------------------------------------------------------------
+	PowerControl(USB_LED, OFF);
 
 	//-------------------------------------------------------------------------
 	// Smart Sensor data in (Hardware pull up on signal)
 	//-------------------------------------------------------------------------
-	// Nothing needs to be done. Pin should default to an input on power up
-	//gpio_enable_gpio_pin(AVR32_PIN_PB01)
+	// Nothing needs to be done. Pin should default to an input on power up and has external pull up
+	// Pin - AVR32_PIN_PB01
 
 	//-------------------------------------------------------------------------
-	// Set SDATA and ADATA high
+	// Set SDATA and ADATA high (Active low control)
 	//-------------------------------------------------------------------------
-	PowerControl(SDATA, OFF); //gpio_set_gpio_pin(AVR32_PIN_PB02);
-	PowerControl(ADATA, OFF); //gpio_set_gpio_pin(AVR32_PIN_PB03);
+	PowerControl(SDATA, OFF);
+	PowerControl(ADATA, OFF);
 
 	//-------------------------------------------------------------------------
 	// Init the SPI interfaces
@@ -1115,20 +1112,14 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Turn on rs485 driver and receiver
 	//-------------------------------------------------------------------------
+	PowerControl(SERIAL_485_DRIVER_ENABLE, ON);
 	InitSerial485();
+	PowerControl(SERIAL_485_DRIVER_ENABLE, OFF);
 	
 	// Make sure 485 lines aren't floating
 	gpio_enable_pin_pull_up(AVR32_USART3_RXD_0_0_PIN);
 	gpio_enable_pin_pull_up(AVR32_USART3_TXD_0_0_PIN);
-	gpio_enable_pin_pull_up(AVR32_USART3_RTS_0_1_PIN);
 
-	//-------------------------------------------------------------------------
-	// Turn on rs232 driver and receiver (Active low controls)
-	//-------------------------------------------------------------------------
-	PowerControl(SERIAL_232_DRIVER_ENABLE, ON); //gpio_clr_gpio_pin(AVR32_PIN_PB08);
-	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON); //gpio_clr_gpio_pin(AVR32_PIN_PB09);
-	InitSerial232();
-	
 	//-------------------------------------------------------------------------
 	// Initialize the external RTC
 	//-------------------------------------------------------------------------
@@ -1147,15 +1138,15 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init the LCD display
 	//-------------------------------------------------------------------------
-	PowerControl(LCD_CONTRAST_ENABLE, ON); //gpio_set_gpio_pin(AVR32_PIN_PB22);
-	PowerControl(LCD_POWER_ENABLE, ON); //gpio_set_gpio_pin(AVR32_PIN_PB21);
+	PowerControl(LCD_CONTRAST_ENABLE, ON);
+	PowerControl(LCD_POWER_ENABLE, ON);
 	Backlight_On();
 	Backlight_High();
 	Set_Contrast(24);
 	InitDisplay();
 
 	//-------------------------------------------------------------------------
-	// Initialize the Internal Real Time Counter for half second tick used for state processing
+	// Init the Internal RTC for half second tick used for state processing
 	//-------------------------------------------------------------------------
 	InitInternalRTC();
 
@@ -1183,7 +1174,7 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init Keypad
 	//-------------------------------------------------------------------------
-#if 0 // Moved to software init becasue the MCP23018 doesn't like to be init'ed here
+#if 0 // Moved to software init because the MCP23018 doesn't like to be initialized here
 	InitExternalKeypad();
 #endif
 
@@ -1222,17 +1213,17 @@ void InitSystemHardware_NS8100(void)
 	// Init and configure the A/D to prevent the unit from burning current charging internal reference (default config)
 	InitExternalAD();
 
-#if 0 // Test
+	//-------------------------------------------------------------------------
+	// Set the power savings mode based on the saved setting
+	AdjustPowerSavings();
+
+#if 0 // Test (Now done with AdjustPowerSavings)
 	//-------------------------------------------------------------------------
 	// Kill clocks to Internal Processor modules that aren't absolutely necessary
 	KillClocksToModules();
 #endif
 
-	//-------------------------------------------------------------------------
-	// Set the power savings mode based on the saved setting
-	AdjustPowerSavings();
-
-#if 0
+#if 0 // Test
 	//-------------------------------------------------------------------------
 	// Test full power down and stop
 	TestPowerDownAndStop();
@@ -1267,9 +1258,9 @@ void PowerDownAndHalt(void)
 
 	debug("\nClosing up shop.\n\n");
 
-	// Disable rs232 driver and receiver (Active low controls)
-	gpio_set_gpio_pin(AVR32_PIN_PB08);
-	gpio_set_gpio_pin(AVR32_PIN_PB09);
+	// Disable rs232 driver and receiver (Active low control)
+	PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
+	PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
 	
 	//DisplayTimerCallBack();
 	SetLcdBacklightState(BACKLIGHT_OFF);

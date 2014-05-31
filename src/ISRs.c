@@ -231,7 +231,7 @@ void Eic_system_irq(void)
 	if (keyFlag & 0x08)
 	{
 		// Clear trigger found signal from self or any external unit connected (Active high control)
-		gpio_clr_gpio_pin(AVR32_PIN_PB05);
+		PowerControl(TRIGGER_OUT, OFF);
 		
 		//debugRaw("-ET-");
 		
@@ -947,7 +947,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			if (g_externalTrigger == NO)
 			{
 				// Signal a trigger found for any external unit connected (Active high control)
-				gpio_set_gpio_pin(AVR32_PIN_PB05);
+				PowerControl(TRIGGER_OUT, ON);
 					
 				//debugRaw("+ET+");
 			}

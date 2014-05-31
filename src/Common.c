@@ -23,6 +23,7 @@
 #include "TextTypes.h"
 #include "adc.h"
 #include "FAT32_FileLib.h"
+#include "usart.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -799,6 +800,8 @@ void ByteSet(void* dest, uint8 value, uint32 size)
 ///----------------------------------------------------------------------------
 void AdjustPowerSavings(void)
 {
+	uint32 usartRetries = USART_DEFAULT_TIMEOUT;
+
 	// Check if the Help Record is not valid since there's a chance it's referenced before it's loaded
 	if (g_helpRecord.validationKey != 0xA5A5)
 	{
@@ -809,7 +812,7 @@ void AdjustPowerSavings(void)
 	// Check if the Help Record is valid
 	if (g_helpRecord.validationKey == 0xA5A5)
 	{
-		switch (g_helpRecord.powerSavings)
+		switch (g_helpRecord.powerSavingsLevel)
 		{
 			//----------------------------------------------------------------------------
 			case POWER_SAVINGS_MINIMUM:
@@ -826,9 +829,9 @@ void AdjustPowerSavings(void)
 				// Leave active: SMC, FLASHC, HMATRIX, USBB; Disable: SDRAMC, MACB
 				AVR32_PM.pbbmask = 0x0017;
 
-				// Enable rs232 driver and receiver (Active low controls)
-				gpio_clr_gpio_pin(AVR32_PIN_PB08);
-				gpio_clr_gpio_pin(AVR32_PIN_PB09);
+				// Enable rs232 driver and receiver (Active low control)
+				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+				PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
 			break;
 
 			//----------------------------------------------------------------------------
@@ -846,18 +849,19 @@ void AdjustPowerSavings(void)
 				// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
 				AVR32_PM.pbbmask = 0x0015;
 
-				// Enable rs232 driver and receiver (Active low controls)
-				gpio_clr_gpio_pin(AVR32_PIN_PB08);
-				gpio_clr_gpio_pin(AVR32_PIN_PB09);
+				// Enable rs232 driver and receiver (Active low control)
+				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+				PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
 			break;
 
 			//----------------------------------------------------------------------------
 			case POWER_SAVINGS_MAX:
 			//----------------------------------------------------------------------------
-#if 1 // Test
-				// Delay to allow serial to finish
-				SoftUsecWait(500 * SOFT_MSECS);
-#endif
+				// Wait for serial data to pushed out to prevent the driver from lagging the system
+				while (((AVR32_USART1.csr & AVR32_USART_CSR_TXRDY_MASK) == 0) && usartRetries)
+				{
+					usartRetries--;
+				}
 
 				// Leave active: SYSTIMER; Disable: OCD
 				AVR32_PM.cpumask = 0x0100;
@@ -871,9 +875,9 @@ void AdjustPowerSavings(void)
 				// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
 				AVR32_PM.pbbmask = 0x0015;
 
-				// Disable rs232 driver and receiver (Active low controls)
-				gpio_set_gpio_pin(AVR32_PIN_PB08);
-				gpio_set_gpio_pin(AVR32_PIN_PB09);
+				// Disable rs232 driver and receiver (Active low control)
+				PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
+				PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
 			break;
 
 			//----------------------------------------------------------------------------
@@ -891,9 +895,9 @@ void AdjustPowerSavings(void)
 				// Leave active: All; Disable: None
 				AVR32_PM.pbbmask = 0x003F;
 
-				// Enable rs232 driver and receiver (Active low controls)
-				gpio_clr_gpio_pin(AVR32_PIN_PB08);
-				gpio_clr_gpio_pin(AVR32_PIN_PB09);
+				// Enable rs232 driver and receiver (Active low control)
+				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+				PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
 			break;
 		}
 	}
