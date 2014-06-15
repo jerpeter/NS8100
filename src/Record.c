@@ -433,11 +433,11 @@ void LoadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 	rec_ptr->alarmOneMode = ALARM_MODE_OFF;
 	rec_ptr->alarmTwoMode = ALARM_MODE_OFF;
 	rec_ptr->alarmOneSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
-	rec_ptr->alarmOneAirLevel     = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
+	rec_ptr->alarmOneAirLevel = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
 	rec_ptr->alarmTwoSeismicLevel = ALARM_TWO_SEIS_DEFAULT_TRIG_LVL;
-	rec_ptr->alarmTwoAirLevel     = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
-	rec_ptr->alarmOneTime  = ALARM_OUTPUT_TIME_DEFAULT;
-	rec_ptr->alarmTwoTime  = ALARM_OUTPUT_TIME_DEFAULT;
+	rec_ptr->alarmTwoAirLevel = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
+	rec_ptr->alarmOneTime = ALARM_OUTPUT_TIME_DEFAULT;
+	rec_ptr->alarmTwoTime = ALARM_OUTPUT_TIME_DEFAULT;
 #if 0 // ns7100
 	rec_ptr->baudRate = BAUD_RATE_38400;
 #else // ns8100

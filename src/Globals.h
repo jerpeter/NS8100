@@ -29,7 +29,7 @@
 #include "TextTypes.h"
 
 // Global Defines ---------------------------------------------------------------------
-#define INTERNAL_SAMPLING_SOURCE	0
+#define INTERNAL_SAMPLING_SOURCE	1
 
 #if (INTERNAL_SAMPLING_SOURCE)
 #define EXTERNAL_SAMPLING_SOURCE	0
@@ -42,9 +42,9 @@
 extern ANALOG_CONTROL_STRUCT g_analogControl;
 extern OFFSET_DATA_STRUCT g_channelOffset;
 extern INPUT_MSG_STRUCT g_input_buffer[INPUT_BUFFER_SIZE];
-extern char g_appVersion[15];
-extern char g_appDate[15];
-extern char g_appTime[15];
+//extern char g_appVersion[15];
+//extern char g_appDate[15];
+//extern char g_appTime[15];
 extern MONTH_TABLE_STRUCT g_monthTable[];
 extern uint8 g_mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 extern uint8 g_contrast_value;
@@ -117,27 +117,19 @@ extern uint32 g_kpadKeyRepeatCount;
 extern uint32 g_kpadLookForKeyTickCount;
 extern uint32 g_keypadNumberSpeed;
 extern uint8 g_keypadTable[8][8];
-//extern char g_keypadTableText[8][11];
 extern unsigned char g_smc_tab_cs_size[4];
-// Sensor information and constants.
 extern SENSOR_PARAMETERS_STRUCT g_SensorInfoStruct;
 extern SENSOR_PARAMETERS_STRUCT* g_sensorInfoPtr;
-// Contains the event record in ram.
 extern EVT_RECORD g_pendingEventRecord;
 extern EVT_RECORD g_pendingBargraphRecord;
-// Factory Setup record.
 extern FACTORY_SETUP_STRUCT g_factorySetupRecord;
-// Structure to contain system paramters and system settings.
-extern REC_EVENT_MN_STRUCT g_triggerRecord;				// Contains trigger specific information.
-// Menu specific structures
-extern uint16 g_activeMenu;							// For active menu number/enum.
-extern MN_EVENT_STRUCT g_menuEventFlags;				// Menu event flags, for main loop processing.
-extern MN_TIMER_STRUCT g_timerEventFlags;					// Menu timer strucutre.
-// System Event Flags, for main loopo processing.
+extern REC_EVENT_MN_STRUCT g_triggerRecord;
+extern uint16 g_activeMenu;
+extern MN_EVENT_STRUCT g_menuEventFlags;
+extern MN_TIMER_STRUCT g_timerEventFlags;
 extern SYS_EVENT_STRUCT g_systemEventFlags;
-extern MODEM_SETUP_STRUCT g_modemSetupRecord;			// Record for user input data.
-extern MODEM_STATUS_STRUCT g_modemStatus;			// Record for modem data processing.
-// Used as a circular buffer to continually caputer incomming data from the craft port.
+extern MODEM_SETUP_STRUCT g_modemSetupRecord;
+extern MODEM_STATUS_STRUCT g_modemStatus;
 extern CMD_BUFFER_STRUCT g_isrMessageBufferStruct;
 extern CMD_BUFFER_STRUCT* g_isrMessageBufferPtr;
 extern void (*menufunc_ptrs[TOTAL_NUMBER_OF_MENUS]) (INPUT_MSG_STRUCT);
@@ -152,26 +144,17 @@ extern uint8 g_monitorEscapeCheck;
 extern uint8 g_displayBargraphResultsMode;
 extern uint8 g_displayAlternateResultState;
 extern SUMMARY_DATA* g_bargraphSummaryPtr;
-
-// For bargraph processing.
 extern uint8 g_oneMinuteCount;
 extern uint32 g_oneSecondCnt;
 extern uint32 g_barIntervalCnt;
 extern uint32 g_totalBarIntervalCnt;
 extern uint32 g_summaryIntervalCnt;
 extern uint16 g_summaryCount;
-
 extern BARGRAPH_FREQ_CALC_BUFFER g_bargraphFreqCalcBuffer;
-
-// A queue of buffers containing summary Interval data, so the
-// summary interval data can be printed outside of the ISR context.
 extern CALCULATED_DATA_STRUCT g_bargraphSummaryInterval[NUM_OF_SUM_INTERVAL_BUFFERS];
 extern CALCULATED_DATA_STRUCT* g_bargraphSumIntervalWritePtr;
 extern CALCULATED_DATA_STRUCT* g_bargraphSumIntervalReadPtr;
 extern CALCULATED_DATA_STRUCT* g_bargraphSumIntervalEndPtr;
-
-// A queue of buffers containing bar Interval data, so the
-// bar interval data can be printed outside of the ISR context.
 extern BARGRAPH_BAR_INTERVAL_DATA g_bargraphBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS];
 extern BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalWritePtr;
 extern BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalReadPtr;
@@ -192,21 +175,12 @@ extern uint16 g_vJobFreq;
 extern uint16 g_tJobPeak;
 extern uint16 g_tJobFreq;
 extern uint32 g_vsJobPeak;
-// This ptr points to the current/in use (ram) summary table entry. It is
-// used to access the linkPtr which is really the flash event record Ptr.
-// And the record ptr is the location in ram. i.e.
 extern SUMMARY_DATA* g_comboSummaryPtr;
 extern BARGRAPH_FREQ_CALC_BUFFER g_comboFreqCalcBuffer;
-
-// A queue of buffers containing summary Interval data, so the
-// summary interval data can be printed outside of the ISR context.
 extern CALCULATED_DATA_STRUCT g_comboSummaryInterval[NUM_OF_SUM_INTERVAL_BUFFERS];
 extern CALCULATED_DATA_STRUCT* g_comboSumIntervalWritePtr;
 extern CALCULATED_DATA_STRUCT* g_comboSumIntervalReadPtr;
 extern CALCULATED_DATA_STRUCT* g_comboSumIntervalEndPtr;
-
-// A queue of buffers containing bar Interval data, so the
-// bar interval data can be printed outside of the ISR context.
 extern BARGRAPH_BAR_INTERVAL_DATA g_comboBarInterval[NUM_OF_BAR_INTERVAL_BUFFERS];
 extern BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalWritePtr;
 extern BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalReadPtr;
@@ -226,7 +200,6 @@ extern REC_HELP_MN_STRUCT g_helpRecord;
 extern uint8 g_autoDialoutState;
 extern uint8 g_modemDataTransfered;
 extern uint16 g_CRLF;
-// Holds a pool of buffers for processing input from the craft port
 extern CMD_BUFFER_STRUCT g_msgPool[CMD_MSG_POOL_SIZE];
 extern DEMx_XFER_STRUCT* g_demXferStructPtr;
 extern DSMx_XFER_STRUCT* g_dsmXferStructPtr;
@@ -264,6 +237,7 @@ extern EVT_RECORD g_resultsEventCache[50];
 extern uint16 g_resultsCacheIndex;
 extern uint32 g_cyclicEventDelay;
 extern uint32 g_updateOffsetCount;
+extern uint32 g_tempTriggerLevelForMenuAdjsutment;
 extern uint16 g_storedTempReading;
 extern uint16 g_currentTempReading;
 extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];

@@ -122,10 +122,10 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 #if 1 // ns8100 - Down convert to current bit accuracy setting
 			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 			{
-				g_triggerRecord.trec.seismicTriggerLevel /= (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_tempTriggerLevelForMenuAdjsutment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment,
 				(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
@@ -153,10 +153,10 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 #if 1 // ns8100 - Down convert to current bit accuracy setting
 		if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 		{
-			g_triggerRecord.trec.seismicTriggerLevel /= (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
+			g_tempTriggerLevelForMenuAdjsutment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
 		}		
 #endif
-		SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_triggerRecord.trec.seismicTriggerLevel,
+		SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment,
 			(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 			(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 			g_bitAccuracyMidpoint);
@@ -285,10 +285,10 @@ void AlarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 #if 1 // ns8100 - Down convert to current bit accuracy setting
 			if (g_helpRecord.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_helpRecord.alarmOneSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_tempTriggerLevelForMenuAdjsutment = g_helpRecord.alarmOneSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarmOneSeismicLevel,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
 				(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
@@ -356,10 +356,10 @@ void AlarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 #if 1 // ns8100 - Down convert to current bit accuracy setting
 			if (g_helpRecord.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_helpRecord.alarmOneSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_tempTriggerLevelForMenuAdjsutment = g_helpRecord.alarmOneSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_helpRecord.alarmOneSeismicLevel,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
 				(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(g_helpRecord.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
@@ -493,10 +493,10 @@ void AlarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 #if 1 // ns8100 - Down convert to current bit accuracy setting
 			if (g_helpRecord.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_helpRecord.alarmTwoSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_tempTriggerLevelForMenuAdjsutment = g_helpRecord.alarmTwoSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarmTwoSeismicLevel,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
 				(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
@@ -566,10 +566,10 @@ void AlarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 #if 1 // ns8100 - Down convert to current bit accuracy setting
 			if (g_helpRecord.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_helpRecord.alarmTwoSeismicLevel /= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_tempTriggerLevelForMenuAdjsutment = g_helpRecord.alarmTwoSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 #endif
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_helpRecord.alarmTwoSeismicLevel,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
 				(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(g_helpRecord.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);

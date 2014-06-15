@@ -517,11 +517,11 @@ void Avr32_chip_select_init(unsigned long hsb_hz)
 ///----------------------------------------------------------------------------
 void _init_startup(void)
 {
-	// Disable watchdog if reset from bootloader
+	// Disable watchdog if reset from boot loader
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_ASSERT | AVR32_WDT_DISABLE_VALUE);
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_DEASSERT | AVR32_WDT_DISABLE_VALUE);
 	
-#if 0 // Test external 12 MHz oscillator
+#if 0 // Test external 12 MHz oscillator clock
 	pm_enable_osc0_ext_clock(&AVR32_PM);
 #endif
 

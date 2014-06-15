@@ -77,9 +77,9 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.appBuildVersion = buildVer;
 
 	// Waveform specific - Initial conditions.
-#if 0 // Normal
+#if 1 // Original - Fixed method (Dave prefers trigger level as 16-bit regardless of bit accuracy setting)
 	cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
-#else // Bit accuracy adjusted
+#else // New - Bit accuracy adjusted
 	if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 	{
 		cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
@@ -90,9 +90,9 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	}
 #endif
 
-#if 0 // Normal
+#if 1 // Original - Fixed method (Dave prefers trigger level as 16-bit regardless of bit accuracy setting)
 	cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
-#else // Try
+#else // New - Bit accuracy adjusted
 	if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 	{
 		cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;

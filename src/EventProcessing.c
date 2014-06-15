@@ -586,7 +586,11 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	ByteSet(&(eventRec->summary.version.serialNumber[0]), 0, SERIAL_NUMBER_STRING_SIZE);
 	ByteCpy(&(eventRec->summary.version.serialNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
 	ByteSet(&(eventRec->summary.version.softwareVersion[0]), 0, VERSION_STRING_SIZE);
+#if 0 // ns7100
 	ByteCpy(&(eventRec->summary.version.softwareVersion[0]), &(g_appVersion[0]), VERSION_STRING_SIZE - 1);
+#else
+	ByteCpy(&(eventRec->summary.version.softwareVersion[0]), (void*)&g_buildVersion[0], strlen(g_buildVersion));
+#endif
 	//-----------------------
 	eventRec->summary.parameters.bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_10_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ? 
 												ACCURACY_16_BIT : g_triggerRecord.trec.bitAccuracy;
@@ -656,9 +660,9 @@ void InitEventRecord(uint8 op_mode)
 
 		if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
 		{
-#if 0 // Normal
+#if 0 // Old - Fixed method
 			eventRec->summary.parameters.seismicTriggerLevel = (uint32)g_triggerRecord.trec.seismicTriggerLevel;
-#else // Adjust trigger for bit accuracy
+#else // New - Adjust trigger for bit accuracy
 			if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 			{
 				eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
@@ -669,9 +673,9 @@ void InitEventRecord(uint8 op_mode)
 			}
 #endif
 
-#if 0 // Normal
+#if 0 // Old - Fixed method
 			eventRec->summary.parameters.airTriggerLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
-#else // Adjust trigger for bit accuracy. WARNING: Only valid if air trigger gets converted to an A/D trigger count
+#else // New - Adjust trigger for bit accuracy. WARNING: Only valid if air trigger gets converted to an A/D trigger count
 			if ((g_airTriggerCount == NO_TRIGGER_CHAR) || (g_airTriggerCount == EXTERNAL_TRIGGER_CHAR))
 			{
 				eventRec->summary.parameters.airTriggerLevel = g_airTriggerCount;

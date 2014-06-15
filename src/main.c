@@ -653,7 +653,7 @@ void BootLoadManager(void)
 ///----------------------------------------------------------------------------
 inline void SetupPowerSavingsBeforeSleeping(void)
 {
-#if 1
+#if 0
 	// Only disable for Min and Most since None and Max are either permanently on or off
 	if ((g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MINIMUM) || (g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MOST))
 	{
@@ -683,7 +683,7 @@ inline void RevertPowerSavingsAfterSleeping(void)
 	AVR32_GPIO.port[3].puerc = 0x03FF; // 0000 0011 1111 1111
 #endif
 
-#if 1
+#if 0
 	// Only enable for Min and Most since None and Max are either permanently on or off
 	if ((g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MINIMUM) || (g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MOST))
 	{
@@ -729,12 +729,12 @@ extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
 		{
 			SetupPowerSavingsBeforeSleeping();
 
-#if 1 // Normal
+#if 0 // Test
+			SLEEP(AVR32_PM_SMODE_STOP);
+#else // Normal
 			if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { SLEEP(AVR32_PM_SMODE_STANDBY); }
 			else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { SLEEP(AVR32_PM_SMODE_FROZEN); }
 			else if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { SLEEP(AVR32_PM_SMODE_IDLE); }
-#else // Test
-			SLEEP(AVR32_PM_SMODE_STOP);
 #endif
 
 			// Check if needing to revert the power savings (if monitoring then the ISR will handle this operation)
