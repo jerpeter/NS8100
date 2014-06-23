@@ -1174,7 +1174,7 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init Keypad
 	//-------------------------------------------------------------------------
-#if 0 // Moved to software init because the MCP23018 doesn't like to be initialized here
+#if 1 // Tried to remove but getting double key presses (Prior: moved to software init because the MCP23018 doesn't like to be initialized here)
 	InitExternalKeypad();
 #endif
 

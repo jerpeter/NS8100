@@ -230,7 +230,7 @@ void AlarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-#if 1 // ns8100 - Up convert to 16-bit
+#if 0 // ns8100 - No longer needed with temp caching of trigger. Prior: Up convert to 16-bit
 		if (g_helpRecord.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 		{
 			g_helpRecord.alarmOneSeismicLevel *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
@@ -438,7 +438,7 @@ void AlarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-#if 1 // ns8100 - Up convert to 16-bit
+#if 0 // ns8100 - No longer needed with temp caching of trigger. Prior: Up convert to 16-bit
 		if (g_helpRecord.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 		{
 			g_helpRecord.alarmTwoSeismicLevel *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
@@ -1376,13 +1376,12 @@ void SeismicTriggerMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-#if 1 // ns8100 - Up convert to 16-bit
+#if 0 // ns8100 - No longer needed with temp caching of trigger. Prior: Up convert to 16-bit
 		if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 		{
 			g_triggerRecord.trec.seismicTriggerLevel *= (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
 		}		
 #endif
-
 		if (g_triggerRecord.op_mode == COMBO_MODE)
 		{
 			SETUP_USER_MENU_MSG(&barResultMenu, g_helpRecord.vectorSum);

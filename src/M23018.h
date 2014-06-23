@@ -10,7 +10,7 @@
 #define IO_ADDRESS_BASE		0x20        // IO's TWI address
 #define IO_ADDRESS_KPD		0x27        // IO's TWI address
 #define IO_ADDR_LGT			1           // Address length of the IO chip
-#if 0 // Normal
+#if 1 // Normal
 #define TWI_SPEED			400000      // Speed of TWI (400 KHz)
 #else // Test
 //#define TWI_SPEED			100000		// 100 Khz - Doesn't seem to work
