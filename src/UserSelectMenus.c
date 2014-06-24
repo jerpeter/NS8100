@@ -1102,6 +1102,7 @@ USER_MENU_STRUCT baudRateMenu[BAUD_RATE_MENU_ENTRIES] = {
 #include "usart.h"
 void BaudRateMenuHandler(uint8 keyPressed, void* data)
 {
+	uint32 usartRetries = USART_DEFAULT_TIMEOUT;
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
 	usart_options_t usart_1_rs232_options =
@@ -1127,12 +1128,28 @@ void BaudRateMenuHandler(uint8 keyPressed, void* data)
 				case BAUD_RATE_9600: usart_1_rs232_options.baudrate = 9600; break;
 			}
 
+			// Check that receive is ready/idle
+			while (((AVR32_USART1.csr & AVR32_USART_CSR_RXRDY_MASK) == 0) && usartRetries)
+			{
+				usartRetries--;
+			}
+
+			// Check that transmit is ready/idle
+			usartRetries = USART_DEFAULT_TIMEOUT;
+			while (((AVR32_USART1.csr & AVR32_USART_CSR_TXRDY_MASK) == 0) && usartRetries)
+			{
+				usartRetries--;
+			}
+
 #if 1 // ns8100 (Added to help Dave's Supergraphics handle Baud change)
 			//-------------------------------------------------------------------------
-			// Signal remote end that RS232 Comm is available
+			// Signal remote end that RS232 Comm is unavailable
 			//-------------------------------------------------------------------------
-			CLEAR_RTS; CLEAR_DTR; // Init signals for ready to send and terminal ready
+			CLEAR_RTS; CLEAR_DTR;
 #endif
+
+			// Reset the RS232
+			usart_reset(&AVR32_USART1);
 
 			// Re-Initialize the RS232 with the new baud rate
 			usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
@@ -1141,7 +1158,7 @@ void BaudRateMenuHandler(uint8 keyPressed, void* data)
 			//-------------------------------------------------------------------------
 			// Signal remote end that RS232 Comm is available
 			//-------------------------------------------------------------------------
-			SET_RTS; SET_DTR; // Init signals for ready to send and terminal ready
+			SET_RTS; SET_DTR;
 #endif
 
 			SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);

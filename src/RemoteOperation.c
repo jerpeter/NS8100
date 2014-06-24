@@ -486,14 +486,36 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//--------------------------------
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
 			(NO_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
+#if 0 // Air trigger incoming as units value
 			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_VALUE) &&
 #if 0 // Port lost change
 			(cfg.eventCfg.airTriggerLevel <= AIR_TRIGGER_MAX_VALUE)))
 #else // Updated
 			(cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
 #endif
+#else // Air trigger incoming as A/D count
+			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_COUNT) && (cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MAX_COUNT)))
+#endif
 		{
-			g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
+			// Air trigger changed to be sent as an A/D count. Need to convert to units value for now until internal Air trigger handling is converted to A/D count.
+			if ((cfg.eventCfg.airTriggerLevel == NO_TRIGGER_CHAR) || (cfg.eventCfg.airTriggerLevel == EXTERNAL_TRIGGER_CHAR) ||
+				(cfg.eventCfg.airTriggerLevel == MANUAL_TRIGGER_CHAR))
+			{
+				g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
+			}
+			else
+			{
+				// Convert form A/D count to units value. Incoming as 16-bit A/D count.
+				if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+				{
+					g_triggerRecord.trec.airTriggerLevel = (uint32)(10000 * HexToMB(cfg.eventCfg.airTriggerLevel, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
+				}
+				else // Report Air in DB
+				{
+					g_triggerRecord.trec.airTriggerLevel = HexToDB(cfg.eventCfg.airTriggerLevel, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT);
+				}
+			}
+
 			g_helpRecord.alarmOneAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
 			g_helpRecord.alarmTwoAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
 		}

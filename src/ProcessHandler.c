@@ -142,13 +142,15 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		}
 		else
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, ((float)trig_mn.airTriggerLevel / (float)10000), g_airTriggerCount);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel,
+					((float)trig_mn.airTriggerLevel / (float)10000), g_airTriggerCount);
 		}
 	}
 	else if (op_mode == BARGRAPH_MODE)
 	{
 		debug("--- Bargraph Mode Settings ---\n");
-		debug("\tSample Rate: %d, Bar Interval: %d secs, Summary Interval: %d mins\n", trig_mn.sample_rate, g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));
+		debug("\tSample Rate: %d, Bar Interval: %d secs, Summary Interval: %d mins\n", trig_mn.sample_rate, g_triggerRecord.bgrec.barInterval,
+				(g_triggerRecord.bgrec.summaryInterval / 60));
 	}
 	else if (op_mode == COMBO_MODE)
 	{
@@ -161,7 +163,8 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		}
 		else
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, ((float)trig_mn.airTriggerLevel / (float)10000), g_airTriggerCount);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel,
+					((float)trig_mn.airTriggerLevel / (float)10000), g_airTriggerCount);
 		}
 
 		debug("\tBar Interval: %d secs, Summary Interval: %d mins\n", g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));

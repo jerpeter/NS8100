@@ -521,7 +521,7 @@ void _init_startup(void)
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_ASSERT | AVR32_WDT_DISABLE_VALUE);
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_DEASSERT | AVR32_WDT_DISABLE_VALUE);
 	
-#if 0 // Test external 12 MHz oscillator clock
+#if 0 // Enable External 12 MHz oscillator clock
 	pm_enable_osc0_ext_clock(&AVR32_PM);
 #endif
 

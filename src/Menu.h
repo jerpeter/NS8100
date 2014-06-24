@@ -205,6 +205,9 @@ enum {
 #define AIR_TRIGGER_MB_MIN_VALUE		100
 #define AIR_TRIGGER_MB_MAX_VALUE		51200
 
+#define AIR_TRIGGER_MIN_COUNT			64
+#define AIR_TRIGGER_MAX_COUNT			0x8000
+
 // Alarm modes
 enum {
 	ALARM_MODE_OFF = 0,
