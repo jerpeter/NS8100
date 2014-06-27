@@ -91,7 +91,11 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 #endif
 
 #if 1 // Original - Fixed method (Dave prefers trigger level as 16-bit regardless of bit accuracy setting)
+#if 0 // Use once Air trigger is stored as an A/D count
 	cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+#else // Temporary conversion to A/D count
+	cfg.eventCfg.airTriggerLevel = AirTriggerConvert(g_triggerRecord.trec.airTriggerLevel);
+#endif
 #else // New - Bit accuracy adjusted
 	if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 	{
