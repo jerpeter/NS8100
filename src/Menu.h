@@ -830,7 +830,6 @@ void TimerModeDateMenu (INPUT_MSG_STRUCT msg);
 void CalSetupMn (INPUT_MSG_STRUCT msg);
 void UserMenu (INPUT_MSG_STRUCT msg);
 void MonitorLogMn (INPUT_MSG_STRUCT msg);
-void setupMnDef(void);
 
 //----------------------------------------
 // User Select Menu Enter and Esc Handlers

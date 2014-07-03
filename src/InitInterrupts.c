@@ -272,10 +272,13 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 ///----------------------------------------------------------------------------
 void InitInterrupts_NS8100(void)
 {
+	// Disable all interrupts (Actually done at the start of InitHardware but calling here again just in case some local code enables)
 	Disable_global_interrupt();
 
-	//Setup interrupt vectors
+	#if 0 // Moved to the start of InitHardware to prevent wiping out the TWI interrupt handler
+	// Assign all interrupt vectors an un-handled
 	INTC_init_interrupts();
+	#endif
 
 	// Hook in and enable half second tick
 	Setup_8100_Soft_Timer_Tick_ISR();

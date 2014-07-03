@@ -582,29 +582,8 @@ void _init_startup(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void InitKeypad(void)
+void InitTWI(void)
 {
-#if 0
-	static const gpio_map_t EIC_GPIO_MAP =
-	{
-		{AVR32_EIC_EXTINT_4_PIN, AVR32_EIC_EXTINT_4_FUNCTION},
-		{AVR32_EIC_EXTINT_5_PIN, AVR32_EIC_EXTINT_5_FUNCTION}
-	};
-
-	// GPIO pins used for TWI interface
-	static const gpio_map_t TWI_GPIO_MAP =
-	{
-		{AVR32_TWI_SDA_0_0_PIN, AVR32_TWI_SDA_0_0_FUNCTION},
-		{AVR32_TWI_SCL_0_0_PIN, AVR32_TWI_SCL_0_0_FUNCTION}
-	};
-
-	// Enable External Interrupt for MCP23018
-	gpio_enable_module(EIC_GPIO_MAP, sizeof(EIC_GPIO_MAP) / sizeof(EIC_GPIO_MAP[0]));
-
-	// TWI gpio pins configuration
-	gpio_enable_module(TWI_GPIO_MAP, sizeof(TWI_GPIO_MAP) / sizeof(TWI_GPIO_MAP[0]));
-#endif
-
 	// TWI options.
 	twi_options_t opt;
 
@@ -613,15 +592,14 @@ void InitKeypad(void)
 	opt.speed = TWI_SPEED;
 	opt.chip = IO_ADDRESS_KPD;
 
+	uint32 trash = AVR32_TWI.rhr;
+	trash++;
+
 	// initialize TWI driver with options
 	if (twi_master_init(&AVR32_TWI, &opt) != TWI_SUCCESS)
 	{
 		debugErr("Two Wire Interface failed to initialize!\n");
 	}
-
-	SoftUsecWait(25 * SOFT_MSECS);
-	InitMcp23018(IO_ADDRESS_KPD);
-	SoftUsecWait(25 * SOFT_MSECS);
 }
 
 ///----------------------------------------------------------------------------
@@ -786,8 +764,9 @@ extern void Sleep8900_LedOn(void);
 ///----------------------------------------------------------------------------
 void InitExternalKeypad(void)
 {
-	InitKeypad();
-	
+	InitTWI();
+	InitMcp23018(IO_ADDRESS_KPD);
+
 	// Primer read
 	uint8 keyScan = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 	if (keyScan)
@@ -797,7 +776,6 @@ void InitExternalKeypad(void)
 
 	// Turn on the red keypad LED while loading
 	WriteMcp23018(IO_ADDRESS_KPD, GPIOA, ((ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
-
 }
 
 ///----------------------------------------------------------------------------
@@ -1049,6 +1027,12 @@ void KillClocksToModules(void)
 ///----------------------------------------------------------------------------
 void InitSystemHardware_NS8100(void)
 {
+	//-------------------------------------------------------------------------
+	// Disable all interrupts and clear all interrupt vectors 
+	//-------------------------------------------------------------------------
+	Disable_global_interrupt();
+	INTC_init_interrupts();
+
 	//-------------------------------------------------------------------------
 	// Enable internal pull ups on the floating data lines
 	//-------------------------------------------------------------------------

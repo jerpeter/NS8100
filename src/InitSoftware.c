@@ -61,8 +61,6 @@
 ///----------------------------------------------------------------------------
 #include "Globals.h"
 
-extern void InitKeypad(void);
-
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
@@ -347,14 +345,6 @@ void InitSoftwareSettings_NS8100(void)
 	//-------------------------------------------------------------------------
 	debug("Init Setup Menu Defaults...\n");
 	setupMnDef();
-
-	//-------------------------------------------------------------------------
-	// Reinitialize the external keypad
-	//-------------------------------------------------------------------------
-#if 1 // fix_ns8100
-	// Have to recall Keypad init otherwise interrupt hangs (Following code needs keypad access)
-	InitKeypad();
-#endif
 
 	//-------------------------------------------------------------------------
 	// Check for Timer mode activation
