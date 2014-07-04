@@ -146,11 +146,14 @@ void LoadRecordMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr,
 							LoadTrigRecordDefaults(&g_triggerRecord, BARGRAPH_MODE);
 							break;
 						case (3):
+#if 0 // 7100
 							MessageBox(getLangText(STATUS_TEXT), getLangText(COMBO_MODE_NOT_IMPLEMENTED_TEXT), MB_OK);
 							MessageBox(getLangText(STATUS_TEXT), getLangText(SETTINGS_WILL_NOT_BE_LOADED_TEXT), MB_OK);
-
 							// Do nothing
 							return;
+#else // 8100
+							LoadTrigRecordDefaults(&g_triggerRecord, COMBO_MODE);
+#endif
 							break;  
 						default:
 							// Check if the first char matches a "<" for either "<EMPTY>" or "<END>"
