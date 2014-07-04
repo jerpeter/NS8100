@@ -490,7 +490,7 @@ static inline void checkAlarms_ISR_Inline(void)
 
 		// Check if air is enabled for Alarm 1
 		if (g_helpRecord.alarmOneMode & ALARM_MODE_AIR)
-			if (s_A_channelReading > g_alarm1AirTriggerCount) { raiseSystemEventFlag(WARNING1_EVENT); }
+			if (s_A_channelReading > g_helpRecord.alarmOneAirLevel) { raiseSystemEventFlag(WARNING1_EVENT); }
 	}
 						
 	if (g_helpRecord.alarmTwoMode != ALARM_MODE_OFF)
@@ -505,7 +505,7 @@ static inline void checkAlarms_ISR_Inline(void)
 
 		// Check if air is enabled for Alarm 2
 		if (g_helpRecord.alarmTwoMode & ALARM_MODE_AIR)
-			if (s_A_channelReading > g_alarm2AirTriggerCount) { raiseSystemEventFlag(WARNING2_EVENT); }
+			if (s_A_channelReading > g_helpRecord.alarmTwoAirLevel) { raiseSystemEventFlag(WARNING2_EVENT); }
 	}				
 }
 
@@ -566,9 +566,9 @@ void processAndMoveWaveformData(void)
 			else {s_consecSeismicTriggerCount = 0; }
 		}
 
-		if (g_airTriggerCount != NO_TRIGGER_CHAR)
+		if (g_triggerRecord.trec.airTriggerLevel != NO_TRIGGER_CHAR)
 		{
-			if (s_A_channelReading > g_airTriggerCount) { s_airTriggerSample = YES; }
+			if (s_A_channelReading > g_triggerRecord.trec.airTriggerLevel) { s_airTriggerSample = YES; }
 						
 			if (s_airTriggerSample == YES) { s_consecAirTriggerCount++; s_airTriggerSample = NO; }
 			else { s_consecAirTriggerCount = 0; }
@@ -927,9 +927,9 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			else {s_consecSeismicTriggerCount = 0; }
 		}
 
-		if (g_airTriggerCount != NO_TRIGGER_CHAR)
+		if (g_triggerRecord.trec.airTriggerLevel != NO_TRIGGER_CHAR)
 		{
-			if (s_A_channelReading > g_airTriggerCount) { s_airTriggerSample = YES; }
+			if (s_A_channelReading > g_triggerRecord.trec.airTriggerLevel) { s_airTriggerSample = YES; }
 						
 			if (s_airTriggerSample == YES) { s_consecAirTriggerCount++; s_airTriggerSample = NO; }
 			else { s_consecAirTriggerCount = 0; }

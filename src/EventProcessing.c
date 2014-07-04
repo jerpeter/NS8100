@@ -661,7 +661,7 @@ void InitEventRecord(uint8 op_mode)
 		if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
 		{
 #if 0 // Old - Fixed method
-			eventRec->summary.parameters.seismicTriggerLevel = (uint32)g_triggerRecord.trec.seismicTriggerLevel;
+			eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
 #else // New - Adjust trigger for bit accuracy
 			if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 			{
@@ -674,15 +674,15 @@ void InitEventRecord(uint8 op_mode)
 #endif
 
 #if 0 // Old - Fixed method
-			eventRec->summary.parameters.airTriggerLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
-#else // New - Adjust trigger for bit accuracy. WARNING: Only valid if air trigger gets converted to an A/D trigger count
-			if ((g_airTriggerCount == NO_TRIGGER_CHAR) || (g_airTriggerCount == EXTERNAL_TRIGGER_CHAR))
+			eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+#else // New - Adjust trigger for bit accuracy
+			if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 			{
-				eventRec->summary.parameters.airTriggerLevel = g_airTriggerCount;
+				eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
 			}
 			else
 			{
-				eventRec->summary.parameters.airTriggerLevel = g_airTriggerCount / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+				eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
 			}
 #endif
 
@@ -700,7 +700,15 @@ void InitEventRecord(uint8 op_mode)
 			debug("Seismic trigger in units: %05.2f %s\n", tempSesmicTriggerInUnits, (g_helpRecord.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
 			eventRec->summary.parameters.seismicTriggerInUnits = (uint32)(tempSesmicTriggerInUnits * 100);
 
-			eventRec->summary.parameters.airTriggerInUnits = (uint32)g_triggerRecord.trec.airTriggerLevel;
+			eventRec->summary.parameters.airTriggerInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+			if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+			{
+				debug("Air trigger in units: %05.3f mB\n", (eventRec->summary.parameters.airTriggerInUnits / 10000));
+			}
+			else // (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
+			{
+				debug("Air trigger in units: %d dB\n", eventRec->summary.parameters.airTriggerInUnits);
+			}
 
 			eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
 		}	

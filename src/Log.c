@@ -157,13 +157,13 @@ void NewMonitorLogEntry(uint8 mode)
 #if 0 // Unit specific trigger level
 	__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
 #else // Bit accuracy adjusted trigger level as A/D count
-	if ((g_airTriggerCount == NO_TRIGGER_CHAR) || (g_airTriggerCount == EXTERNAL_TRIGGER_CHAR))
+	if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 	{
-		__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_airTriggerCount;
+		__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
 	}
 	else
 	{
-		__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_airTriggerCount / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+		__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
 	}
 #endif
 

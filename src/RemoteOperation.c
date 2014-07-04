@@ -86,16 +86,12 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	else
 	{
-		cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+		cfg.eventCfg.seismicTriggerLevel = (g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint));
 	}
 #endif
 
 #if 1 // Original - Fixed method (Dave prefers trigger level as 16-bit regardless of bit accuracy setting)
-#if 0 // Use once Air trigger is stored as an A/D count
 	cfg.eventCfg.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
-#else // Temporary conversion to A/D count
-	cfg.eventCfg.airTriggerLevel = AirTriggerConvert(g_triggerRecord.trec.airTriggerLevel);
-#endif
 #else // New - Bit accuracy adjusted
 	if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 	{
@@ -103,7 +99,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	else
 	{
-		cfg.eventCfg.airTriggerLevel = (AirTriggerConvert(g_triggerRecord.trec.airTriggerLevel)) / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+		cfg.eventCfg.airTriggerLevel = (g_triggerRecord.trec.airTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint));
 	}
 #endif
 	cfg.eventCfg.recordTime = g_triggerRecord.trec.record_time;
@@ -492,15 +488,16 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			(NO_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
 #if 0 // Air trigger incoming as units value
 			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_VALUE) &&
-#if 0 // Port lost change
+			#if 0 // Port lost change
 			(cfg.eventCfg.airTriggerLevel <= AIR_TRIGGER_MAX_VALUE)))
-#else // Updated
+			#else // Updated
 			(cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
-#endif
+			#endif
 #else // Air trigger incoming as A/D count
 			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_COUNT) && (cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MAX_COUNT)))
 #endif
 		{
+#if 0 // Old units value
 			// Air trigger changed to be sent as an A/D count. Need to convert to units value for now until internal Air trigger handling is converted to A/D count.
 			if ((cfg.eventCfg.airTriggerLevel == NO_TRIGGER_CHAR) || (cfg.eventCfg.airTriggerLevel == EXTERNAL_TRIGGER_CHAR) ||
 				(cfg.eventCfg.airTriggerLevel == MANUAL_TRIGGER_CHAR))
@@ -519,7 +516,9 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					g_triggerRecord.trec.airTriggerLevel = HexToDB(cfg.eventCfg.airTriggerLevel, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT);
 				}
 			}
-
+#else // Air trigger as 16-bit A/D count
+			g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
+#endif
 			g_helpRecord.alarmOneAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
 			g_helpRecord.alarmTwoAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
 		}
@@ -556,7 +555,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		// Contains the bargraph scale range
 		// cfg.eventCfg.calDataNumOfSamples;
 
-		// Bargraph specific - Intitial conditions.
+		// Bargraph specific - Initial conditions.
 		// Bar Interval Level check
 		switch (cfg.eventCfg.barInterval)
 		{
@@ -777,18 +776,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_UNITS_OF_MEASURE;
 		}
 		
-#if 0 // fix_ns8100
-		// Units of Air check
-		if ((DECIBEL_TYPE == cfg.printerCfg.unitsOfMeasure) || (MILLIBAR_TYPE == cfg.printerCfg.unitsOfMeasure))
-		{
-			g_helpRecord.unitsOfAir = cfg.printerCfg.unitsOfAir;
-		}
-		else
-		{
-			returnCode = CFG_ERR_UNITS_OF_MEASURE; // fix_ns8100 - Create CFG_ERR_UNITS_OF_AIR
-		}
-#endif
-
 		// Frequency plot mode , Yes or No or On or Off
 		if ((YES == cfg.printerCfg.freqPlotMode) || (NO == cfg.printerCfg.freqPlotMode))
 		{
@@ -798,7 +785,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			returnCode = CFG_ERR_FREQ_PLOT_MODE;
 		}
-
 
 		// Frequency plot mode , Yes or No or On or Off
 		switch (cfg.printerCfg.freqPlotType)
@@ -860,12 +846,12 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			if ((ALARM_MODE_BOTH == g_helpRecord.alarmOneMode) || (ALARM_MODE_AIR == g_helpRecord.alarmOneMode))
 			{
 	            // Alarm One Air trigger level check DB/MB.
-				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) 	||
+				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) ||
 					((cfg.alarmCfg.alarmOneAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
 #if 0 // Port lost change					  
 					(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_VALUE)))
-#else // Updated
-					(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
+#else // Updated Air as 16-bit A/D count
+					(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_COUNT)))
 #endif
 				{
 					g_helpRecord.alarmOneAirLevel = cfg.alarmCfg.alarmOneAirLevel;
@@ -949,8 +935,8 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					((cfg.alarmCfg.alarmTwoAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
 #if 0 // Port lost change
 					(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_VALUE)))
-#else // Updated
-					(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
+#else // Updated Air as 16-bit A/D count
+					(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_COUNT)))
 #endif
 				{
 					g_helpRecord.alarmTwoAirLevel = cfg.alarmCfg.alarmTwoAirLevel;

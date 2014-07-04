@@ -326,16 +326,18 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel,
 						g_helpRecord.alarmOneAirMinLevel, g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
+					g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_helpRecord.alarmOneAirLevel);
+
 					if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 					{
 						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, g_helpRecord.alarmOneAirMinLevel,
 														g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
 					}
-					else
+					else // (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 					{
 						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, g_helpRecord.alarmOneAirMinLevel,
 														g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
 					}
 #endif
@@ -572,16 +574,18 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel,
 						g_helpRecord.alarmTwoAirMinLevel, g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
+					g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirLevel);
+
 					if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 					{
 						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, g_helpRecord.alarmTwoAirMinLevel,
 														g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
 					}
-					else
+					else // (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 					{
 						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
+						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, g_helpRecord.alarmTwoAirMinLevel,
 														g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
 					}
 #endif
@@ -2895,12 +2899,28 @@ void UnitsOfAirMenuHandler(uint8 keyPressed, void* data)
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
 
-#if 0 // Port lost change
+#if 1 // Port lost change
 	if (keyPressed == ENTER_KEY)
 	{
-		g_helpRecord.unitsOfAir = (uint8)unitsOfAirMenu[newItemIndex].data;
-#else // Updated
-	if(keyPressed == ENTER_KEY)
+		if (g_helpRecord.unitsOfAir != (uint8)unitsOfAirMenu[newItemIndex].data)
+		{
+			g_helpRecord.unitsOfAir = (uint8)unitsOfAirMenu[newItemIndex].data;
+
+			if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
+			{
+				g_sensorInfoPtr->airUnitsFlag = DB_TYPE;
+				g_sensorInfoPtr->ameasurementRatio = (float)DECIBEL;
+			}
+			else // (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+			{
+				g_sensorInfoPtr->airUnitsFlag = MB_TYPE;
+				g_sensorInfoPtr->ameasurementRatio = (float)MILLIBAR;
+			}
+
+			SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		}
+#else // Air in units value
+	if (keyPressed == ENTER_KEY)
 	{
 		if (g_helpRecord.unitsOfAir != (uint8)unitsOfAirMenu[newItemIndex].data)
 		{

@@ -122,11 +122,6 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 		}
 	}
 
-	// Convert Air trigger from stored DB (log) to a linear count for A/D comparison
-	g_airTriggerCount = AirTriggerConvert(trig_mn.airTriggerLevel);
-	g_alarm1AirTriggerCount = AirTriggerConvert(g_helpRecord.alarmOneAirLevel);
-	g_alarm2AirTriggerCount = AirTriggerConvert(g_helpRecord.alarmTwoAirLevel);
-	
 	//-------------------------
 	// Debug Information
 	//-------------------------
@@ -138,12 +133,12 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 
 		if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, trig_mn.airTriggerLevel, g_airTriggerCount);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, AirTriggerConvertToUnits(trig_mn.airTriggerLevel), trig_mn.airTriggerLevel);
 		}
-		else
+		else // (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 		{
 			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel,
-					((float)trig_mn.airTriggerLevel / (float)10000), g_airTriggerCount);
+					((float)AirTriggerConvertToUnits(trig_mn.airTriggerLevel) / (float)10000), trig_mn.airTriggerLevel);
 		}
 	}
 	else if (op_mode == BARGRAPH_MODE)
@@ -159,12 +154,12 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_m
 
 		if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, trig_mn.airTriggerLevel, g_airTriggerCount);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, AirTriggerConvertToUnits(trig_mn.airTriggerLevel), trig_mn.airTriggerLevel);
 		}
-		else
+		else // (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 		{
 			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel,
-					((float)trig_mn.airTriggerLevel / (float)10000), g_airTriggerCount);
+					((float)AirTriggerConvertToUnits(trig_mn.airTriggerLevel) / (float)10000), trig_mn.airTriggerLevel);
 		}
 
 		debug("\tBar Interval: %d secs, Summary Interval: %d mins\n", g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));
@@ -522,6 +517,27 @@ uint16 AirTriggerConvert(uint32 airTriggerToConvert)
 			airTriggerToConvert = (uint32)(MbToHex(airTriggerToConvert) * 16);
 		}
 #endif
+	}
+
+	return (airTriggerToConvert);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert)
+{
+	// Check if the air trigger level is not no trigger and not manual trigger
+	if ((airTriggerToConvert != NO_TRIGGER_CHAR) && (airTriggerToConvert != MANUAL_TRIGGER_CHAR) && (airTriggerToConvert != EXTERNAL_TRIGGER_CHAR))
+	{
+		if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
+		{
+			airTriggerToConvert = HexToDB(airTriggerToConvert, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT);
+		}
+		else // (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+		{
+			airTriggerToConvert = (HexToMB(airTriggerToConvert, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT) * 10000);
+		}
 	}
 
 	return (airTriggerToConvert);

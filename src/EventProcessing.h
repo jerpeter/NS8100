@@ -96,7 +96,8 @@ inline void AdjustSampleForBitAccuracy(void);
 void PowerDownSDCard(void);
 void PowerUpSDCardAndInitFat32(void);
 uint16 SeismicTriggerConvert(float);
-uint16 AirTriggerConvert(uint32 airTriggerLevel);
+uint16 AirTriggerConvert(uint32 airTriggerToConvert);
+uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert);
 
 void CacheResultsEventInfo(EVT_RECORD* eventRecordToCache);
 

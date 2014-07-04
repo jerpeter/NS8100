@@ -917,11 +917,11 @@ void GatherSampleData(void)
 
 			if (*(g_tailOfPretriggerBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 			{
-				if ((uint16)(*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_airTriggerCount) trigFound = YES;
+				if ((uint16)(*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_triggerRecord.trec.airTriggerLevel) trigFound = YES;
 			}
 			else
 			{
-				if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_airTriggerCount) trigFound = YES;
+				if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_triggerRecord.trec.airTriggerLevel) trigFound = YES;
 			}
 
 			if ((trigFound == YES) && (recording == NO) && (calPulse == NO))
@@ -973,11 +973,11 @@ void GatherSampleData(void)
 			{
 				if (*(g_tailOfPretriggerBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((uint16)(*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_alarm1AirTriggerCount) alarm1Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarmOneAirLevel) alarm1Found = YES;
 				}
 				else
 				{
-					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_alarm1AirTriggerCount) alarm1Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_helpRecord.alarmOneAirLevel) alarm1Found = YES;
 				}
 			}
 
@@ -1017,11 +1017,11 @@ void GatherSampleData(void)
 			{
 				if (*(g_tailOfPretriggerBuff + 0) > ACCURACY_16_BIT_MIDPOINT)
 				{
-					if ((uint16)(*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_alarm2AirTriggerCount) alarm2Found = YES;
+					if ((uint16)(*(g_tailOfPretriggerBuff + 0) - ACCURACY_16_BIT_MIDPOINT) > g_helpRecord.alarmTwoAirLevel) alarm2Found = YES;
 				}
 				else
 				{
-					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_alarm2AirTriggerCount) alarm2Found = YES;
+					if ((uint16)(ACCURACY_16_BIT_MIDPOINT - *(g_tailOfPretriggerBuff + 0)) > g_helpRecord.alarmTwoAirLevel) alarm2Found = YES;
 				}
 			}
 

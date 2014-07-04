@@ -96,7 +96,7 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		g_triggerRecord.trec.airTriggerLevel = *((uint32*)data);
+		g_triggerRecord.trec.airTriggerLevel = AirTriggerConvert(*((uint32*)data));
 
 		if (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR)
 		{
@@ -106,11 +106,11 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 		{
 			if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{ 
-				debug("Air Trigger: %d dB\n", g_triggerRecord.trec.airTriggerLevel);
+				debug("Air Trigger: %d dB\n", *((uint32*)data));
 			}
 			else // MILLIBAR_TYPE (true value has been shifted up by 10,000)
 			{
-				debug("Air Trigger: %f mb\n", (float)g_triggerRecord.trec.airTriggerLevel / (float)10000);
+				debug("Air Trigger: %f mb\n", (float)(*((uint32*)data)) / (float)10000);
 			}
 		}
 
@@ -209,15 +209,17 @@ void AlarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel,
 				g_helpRecord.alarmOneAirMinLevel, g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
+			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_helpRecord.alarmOneAirLevel);
+
 			if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
-													g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, AirTriggerConvertToUnits(g_helpRecord.alarmOneAirMinLevel),
+													AirTriggerConvertToUnits(g_helpRecord.alarmOneAirMinLevel), ALARM_AIR_MAX_VALUE);
 			}
-			else
+			else // (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
-													g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, AirTriggerConvertToUnits(g_helpRecord.alarmOneAirMinLevel),
+													AirTriggerConvertToUnits(g_helpRecord.alarmOneAirMinLevel), ALARM_AIR_MB_MAX_VALUE);
 			}
 #endif
 		}
@@ -270,7 +272,7 @@ void AlarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		g_helpRecord.alarmOneAirLevel = *((uint32*)data);
+		g_helpRecord.alarmOneAirLevel = AirTriggerConvert(*((uint32*)data));
 		
 		debug("Alarm 1 Air Level: %d\n", g_helpRecord.alarmOneAirLevel);
 
@@ -339,15 +341,17 @@ void AlarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel,
 				g_helpRecord.alarmOneAirMinLevel, g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
-			if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
+			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_helpRecord.alarmOneAirLevel);
+
+			if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
-												g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, AirTriggerConvertToUnits(g_helpRecord.alarmOneAirMinLevel),
+												AirTriggerConvertToUnits(g_helpRecord.alarmOneAirMinLevel), ALARM_AIR_MAX_VALUE);
 			}
-			else
+			else // (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel, g_helpRecord.alarmOneAirMinLevel,
-												g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, AirTriggerConvertToUnits(g_helpRecord.alarmOneAirMinLevel),
+												AirTriggerConvertToUnits(g_helpRecord.alarmOneAirMinLevel), ALARM_AIR_MB_MAX_VALUE);
 			}
 #endif
 		}
@@ -417,15 +421,17 @@ void AlarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel,
 				g_helpRecord.alarmTwoAirMinLevel, g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
-			if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
+			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirLevel);
+
+			if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
-													g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirMinLevel),
+													AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirMinLevel), ALARM_AIR_MAX_VALUE);
 			}
-			else
+			else // (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
-													g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirMinLevel),
+													AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirMinLevel), ALARM_AIR_MB_MAX_VALUE);
 			}
 #endif
 		}
@@ -478,7 +484,7 @@ void AlarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		g_helpRecord.alarmTwoAirLevel = *((uint32*)data);
+		g_helpRecord.alarmTwoAirLevel = AirTriggerConvert(*((uint32*)data));
 		
 		debug("Alarm 2 Air Level: %d\n", g_helpRecord.alarmTwoAirLevel);
 
@@ -549,15 +555,17 @@ void AlarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel,
 				g_helpRecord.alarmTwoAirMinLevel, g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
 #else // Updated
-			if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
+			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirLevel);
+
+			if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
-												g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirMinLevel),
+												AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirMinLevel), ALARM_AIR_MAX_VALUE);
 			}
-			else
+			else // (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel, g_helpRecord.alarmTwoAirMinLevel,
-												g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirMinLevel),
+												AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirMinLevel), ALARM_AIR_MB_MAX_VALUE);
 			}
 #endif
 		}
@@ -1154,14 +1162,16 @@ void RecordTimeMenuHandler(uint8 keyPressed, void* data)
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel,
 			AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
 #else // Updated
+		g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+
 		if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel, AIR_TRIGGER_DEFAULT_VALUE,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
 												AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
 		}
 		else
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel, AIR_TRIGGER_MB_DEFAULT_VALUE, 
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
 												AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
 		}
 #endif
@@ -1362,14 +1372,16 @@ void SeismicTriggerMenuHandler(uint8 keyPressed, void* data)
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel,
 			AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
 #else // Updated
+		g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+
 		if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel, AIR_TRIGGER_DEFAULT_VALUE,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
 											AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
 		}
 		else
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_triggerRecord.trec.airTriggerLevel, AIR_TRIGGER_MB_DEFAULT_VALUE,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
 											AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
 		}
 #endif
