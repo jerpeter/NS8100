@@ -835,7 +835,10 @@ void InitSDAndFileSystem(void)
 	if (gpio_get_pin_value(AVR32_PIN_PA02) == ON)
 	{
 		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
-		sd_mmc_spi_internal_init();
+		if (sd_mmc_spi_internal_init() != OK)
+		{
+			debugErr("SD MMC Internal Init failed!\n");
+		}
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 
 		FAT32_InitDrive();
