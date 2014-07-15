@@ -1348,6 +1348,14 @@ void MoveComboWaveformEventToFile(void)
 				// fix_ns8100
 				g_pendingEventRecord.summary.captured.eventTime = GetCurrentTime();
 
+				if (getSystemEventState(EXT_TRIGGER_EVENT))
+				{
+					// Mark in the pending event record that this due to an External trigger signal
+					g_pendingEventRecord.summary.captured.externalTrigger = YES;
+
+					clearSystemEventFlag(EXT_TRIGGER_EVENT);
+				}
+
 				sumEntry = &g_summaryTable[g_eventBufferReadIndex];
 				sumEntry->mode = WAVEFORM_MODE;
 

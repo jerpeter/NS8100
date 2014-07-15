@@ -128,7 +128,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 			switch(g_monitorOperationMode)
 			{
 				case WAVEFORM_MODE:
-					StartMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
+					StartMonitoring(g_triggerRecord.trec, g_triggerRecord.op_mode);
 				break;   
 
 				case BARGRAPH_MODE: 
@@ -169,7 +169,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 						g_triggerRecord.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
 					}
 
-					StartMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
+					StartMonitoring(g_triggerRecord.trec, g_triggerRecord.op_mode);
 				break;
 
 				case MANUAL_TRIGGER_MODE:
@@ -177,7 +177,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 					temp_g_triggerRecord.trec.seismicTriggerLevel = MANUAL_TRIGGER_CHAR;
 					temp_g_triggerRecord.trec.airTriggerLevel = MANUAL_TRIGGER_CHAR;
 
-					StartMonitoring(temp_g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
+					StartMonitoring(temp_g_triggerRecord.trec, g_triggerRecord.op_mode);
 				break;
 
 				case COMBO_MODE:
@@ -218,7 +218,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 						g_triggerRecord.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
 					}
 
-					StartMonitoring(g_triggerRecord.trec, START_TRIGGER_CMD, g_triggerRecord.op_mode);
+					StartMonitoring(g_triggerRecord.trec, g_triggerRecord.op_mode);
 					break;
 
 				default:

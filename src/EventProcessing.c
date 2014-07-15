@@ -571,6 +571,7 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.captured.batteryLevel = (uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 	eventRec->summary.captured.printerStatus = (uint8)(g_helpRecord.autoPrint);
 	eventRec->summary.captured.calDate = g_factorySetupRecord.cal_date;
+	eventRec->summary.captured.externalTrigger = NO;
 	//-----------------------
 	ByteSet(&(eventRec->summary.parameters.companyName[0]), 0, COMPANY_NAME_STRING_SIZE);
 	ByteCpy(&(eventRec->summary.parameters.companyName[0]), &(g_triggerRecord.trec.client[0]), COMPANY_NAME_STRING_SIZE - 1);

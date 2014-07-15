@@ -47,6 +47,7 @@ typedef struct
 #define UPDATE_TIME_EVENT	0x1000
 #define UPDATE_MENU_EVENT	0x2000
 #define CRAFT_PORT_EVENT	0x4000
+#define EXT_TRIGGER_EVENT	0x8000
 #define ANY_SYSTEM_EVENT	0xFFFF
 
 // Timer Events
@@ -79,14 +80,6 @@ enum {
 	IDLE_STATE = 0,
 	ACTIVE_STATE
 };
-
-#define START_TRIGGER_CMD 20
-#define STOP_TRIGGER_CMD 30
-#define ZERO_SENSORS_CMD 40
-#define MANUEL_TRIGGER_CMD 50
-
-#define SAMPLING_CMD_ID 90
-#define MANUAL_CAL_PULSE_CMD 92
 
 ///----------------------------------------------------------------------------
 ///	Prototypes

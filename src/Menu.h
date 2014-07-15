@@ -937,7 +937,7 @@ void DisplayUserMenu(WND_LAYOUT_STRUCT* wnd_layout_ptr, MN_LAYOUT_STRUCT* mn_lay
 void DisplaySelectMenu(WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*, uint8 titlePosition);
 void StopDataCollection(void);
 void StopDataClock(void);
-void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mode);
+void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode);
 void StopMonitoring(uint8 mode, uint8 operation);
 void HandleManualCalibration(void);
 void BargraphForcedCalibration(void);

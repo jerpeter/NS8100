@@ -54,10 +54,8 @@ void StartDataCollection(uint32 sampleRate);
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 cmd_id, uint8 op_mode)
+void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 { 
-	UNUSED(cmd_id);
-
 	// Check if any events are still stored in buffers and need to be stored into flash
 	if (getSystemEventState(TRIGGER_EVENT))
 	{

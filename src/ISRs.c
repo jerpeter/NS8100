@@ -582,8 +582,14 @@ void processAndMoveWaveformData(void)
 			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
 			//usart_write_char(&AVR32_USART1, '$');
 					
-			// Reset the external trigger flag
-			g_externalTrigger = NO;
+			if (g_externalTrigger == YES)
+			{
+				// Flag as an External Trigger for handling the event
+				raiseSystemEventFlag(EXT_TRIGGER_EVENT);
+
+				// Reset the external trigger flag
+				g_externalTrigger = NO;
+			}
 
 			s_consecSeismicTriggerCount = 0;
 			s_consecAirTriggerCount = 0;

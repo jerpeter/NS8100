@@ -130,9 +130,9 @@ typedef struct
 	DATE_TIME_STRUCT	calDate;			// Calibration date
 	uint32				batteryLevel;		// Battery Level
 	uint8				printerStatus;		// Printer status information.
+	uint8				externalTrigger;	// Mark if triggered with an External signal
 	uint8				unused01;			// Unused
 	uint8				unused02;			// Unused
-	uint8				unused03;			// Unused
 	DATE_TIME_STRUCT	eventTime;			// Waveform and bargraph start information. 
 	DATE_TIME_STRUCT	endTime;			// Bargraph specific
 

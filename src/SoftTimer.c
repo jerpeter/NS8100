@@ -585,7 +585,7 @@ void HandleMidnightEvent(void)
 				OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), (2 * SOFT_SECS));
 
 				// Issue a Cal Pulse message
-	            StartMonitoring(g_triggerRecord.trec, MANUAL_CAL_PULSE_CMD, MANUAL_CAL_MODE);
+	            StartMonitoring(g_triggerRecord.trec, MANUAL_CAL_MODE);
 
 				// Wait until after the Cal Pulse has completed, 250ms to be safe (just less than 100 ms to complete)
 				SoftUsecWait(250 * SOFT_MSECS);
