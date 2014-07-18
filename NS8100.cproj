@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectVersion>6.1</ProjectVersion>
+    <ProjectVersion>6.2</ProjectVersion>
     <ProjectGuid>fbec2338-e508-4abc-b209-67205b3fbc0c</ProjectGuid>
     <avrdevice>AT32uc3a0512</avrdevice>
     <avrdeviceseries>none</avrdeviceseries>
@@ -55,7 +55,7 @@
         <documentation help="" />
         <offline-documentation help="" />
         <dependencies>
-          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.3.0" />
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.6.0" />
         </dependencies>
       </framework-data>
     </AsfFrameworkConfig>
@@ -408,25 +408,6 @@
       <SubType>compile</SubType>
     </None>
     <None Include="NS8100_Ram_uc3a0512.lds">
-      <SubType>compile</SubType>
-    </None>
-    <Folder Include="CVS" />
-    <None Include="CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="CVS\Root">
       <SubType>compile</SubType>
     </None>
     <Folder Include="src" />
@@ -828,75 +809,12 @@
     <Compile Include="src\CONFIG\conf_usb.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\CONFIG\CVS" />
-    <None Include="src\CONFIG\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CONFIG\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CONFIG\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CONFIG\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CONFIG\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CONFIG\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
-    <Folder Include="src\CVS" />
-    <None Include="src\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CVS\Entries.Log">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK" />
     <Folder Include="src\SOFTWARE_FRAMEWORK\BOARDS" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\BOARDS\board.h">
       <SubType>compile</SubType>
     </Compile>
     <Folder Include="src\SOFTWARE_FRAMEWORK\BOARDS\ASM\" />
-    <Folder Include="src\SOFTWARE_FRAMEWORK\BOARDS\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\CVS\Entries.Log">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\BOARDS\EVK1100" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\BOARDS\EVK1100\evk1100.h">
       <SubType>compile</SubType>
@@ -907,65 +825,8 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\BOARDS\EVK1100\led.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\BOARDS\EVK1100\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\EVK1100\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\EVK1100\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\EVK1100\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\EVK1100\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\EVK1100\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\BOARDS\EVK1100\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS" />
-    <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY" />
-    <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH" />
     <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\AT45DBX" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\AT45DBX\at45dbx.c">
@@ -980,90 +841,11 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\AT45DBX\at45dbx_mem.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\AT45DBX\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\AT45DBX\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\AT45DBX\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\AT45DBX\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\AT45DBX\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\AT45DBX\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\AT45DBX\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\CVS\Entries.Log">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\DATA_FLASH\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM" />
-    <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\MT48LC16M16A2TG7E" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\MT48LC16M16A2TG7E\mt48lc16m16a2tg7e.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\MT48LC16M16A2TG7E\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\MT48LC16M16A2TG7E\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\MT48LC16M16A2TG7E\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\MT48LC16M16A2TG7E\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\MT48LC16M16A2TG7E\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\MT48LC16M16A2TG7E\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SDRAM\MT48LC16M16A2TG7E\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SD_MMC" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SD_MMC\sd_mmc_spi.c">
       <SubType>compile</SubType>
@@ -1077,47 +859,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SD_MMC\sd_mmc_spi_mem.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SD_MMC\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SD_MMC\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SD_MMC\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SD_MMC\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SD_MMC\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SD_MMC\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\COMPONENTS\MEMORY\SD_MMC\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\CVS\Entries.Log">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS" />
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\ADC" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\ADC\adc.c">
@@ -1126,68 +867,11 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\ADC\adc.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\ADC\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\ADC\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\ADC\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\ADC\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\ADC\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\ADC\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\ADC\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU" />
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CYCLE_COUNTER" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CYCLE_COUNTER\cycle_counter.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CYCLE_COUNTER\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CYCLE_COUNTER\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CYCLE_COUNTER\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CYCLE_COUNTER\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CYCLE_COUNTER\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CYCLE_COUNTER\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\CYCLE_COUNTER\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\MPU" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\MPU\mpu.c">
       <SubType>compile</SubType>
@@ -1195,67 +879,7 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\MPU\mpu.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\MPU\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\MPU\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\MPU\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\MPU\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\MPU\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\MPU\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CPU\MPU\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CVS\Entries.Log">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI" />
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\SDRAMC" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\SDRAMC\sdramc.c">
       <SubType>compile</SubType>
@@ -1263,25 +887,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\SDRAMC\sdramc.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\SDRAMC\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\SDRAMC\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\SDRAMC\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\SDRAMC\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\SDRAMC\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\SDRAMC\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\EBI\SDRAMC\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\FLASHC" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\FLASHC\flashc.c">
       <SubType>compile</SubType>
@@ -1289,25 +894,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\FLASHC\flashc.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\FLASHC\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\FLASHC\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\FLASHC\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\FLASHC\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\FLASHC\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\FLASHC\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\FLASHC\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\GPIO" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\GPIO\gpio.c">
       <SubType>compile</SubType>
@@ -1315,25 +901,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\GPIO\gpio.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\GPIO\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\GPIO\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\GPIO\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\GPIO\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\GPIO\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\GPIO\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\GPIO\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\INTC" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\INTC\exception.x">
       <SubType>compile</SubType>
@@ -1344,25 +911,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\INTC\intc.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\INTC\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\INTC\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\INTC\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\INTC\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\INTC\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\INTC\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\INTC\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TC" />
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\RTC" />
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\PM" />
@@ -1375,25 +923,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\PM\pm_conf_clocks.c">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\PM\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\PM\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\PM\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\PM\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\PM\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\PM\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\PM\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\SPI" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\SPI\spi.c">
       <SubType>compile</SubType>
@@ -1401,25 +930,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\SPI\spi.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\SPI\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\SPI\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\SPI\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\SPI\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\SPI\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\SPI\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\SPI\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TWI" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TWI\twi.c">
       <SubType>compile</SubType>
@@ -1427,25 +937,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TWI\twi.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TWI\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TWI\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TWI\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TWI\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TWI\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TWI\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\TWI\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USART" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USART\usart.c">
       <SubType>compile</SubType>
@@ -1453,25 +944,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USART\usart.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USART\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USART\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USART\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USART\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USART\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USART\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USART\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\usbb.h">
       <SubType>compile</SubType>
@@ -1482,25 +954,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\usb_drv.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\usb_task.c">
       <SubType>compile</SubType>
@@ -1508,25 +961,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\usb_task.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\DEVICE" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\DEVICE\usb_descriptors.c">
       <SubType>compile</SubType>
@@ -1552,25 +986,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\DEVICE\usb_standard_request.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\DEVICE\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\DEVICE\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\DEVICE\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\DEVICE\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\DEVICE\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\DEVICE\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\DEVICE\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\HOST" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\HOST\usb_host_enum.c">
       <SubType>compile</SubType>
@@ -1584,45 +999,7 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\HOST\usb_host_task.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\HOST\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\HOST\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\HOST\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\HOST\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\HOST\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\HOST\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\DRIVERS\USBB\ENUM\HOST\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES" />
-    <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\FAT" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\FAT\fat.c">
       <SubType>compile</SubType>
@@ -1654,25 +1031,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\FAT\navigation.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\FAT\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\FAT\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\FAT\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\FAT\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\FAT\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\FAT\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\FAT\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY" />
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CTRL_ACCESS" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CTRL_ACCESS\ctrl_access.c">
@@ -1681,71 +1039,11 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CTRL_ACCESS\ctrl_access.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CTRL_ACCESS\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CTRL_ACCESS\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CTRL_ACCESS\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CTRL_ACCESS\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CTRL_ACCESS\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CTRL_ACCESS\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CTRL_ACCESS\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CVS\Entries.Log">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\usb_ids.h">
       <SubType>compile</SubType>
     </Compile>
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS" />
-    <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\device_mass_storage_task.c">
       <SubType>compile</SubType>
@@ -1756,25 +1054,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\host_mass_storage_task.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\host_mem.c">
       <SubType>compile</SubType>
@@ -1782,25 +1061,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\host_mem.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER\scsi_decoder.c">
       <SubType>compile</SubType>
@@ -1808,47 +1068,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER\scsi_decoder.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CVS\Entries.Log">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\UTILS\compiler.h">
       <SubType>compile</SubType>
@@ -1856,28 +1075,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\UTILS\conf_isp.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\CVS\Entries.Log">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\DEBUG" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\UTILS\DEBUG\debug.h">
       <SubType>compile</SubType>
@@ -1888,69 +1085,12 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\UTILS\DEBUG\print_funcs.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\DEBUG\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\DEBUG\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\DEBUG\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\DEBUG\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\DEBUG\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\DEBUG\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\DEBUG\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS" />
-    <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS" />
     <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\libnewlib_addons-at32ucr2-speed_opt.a">
       <SubType>compile</SubType>
     </None>
     <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\libnewlib_addons-at32ucr2.a">
-      <SubType>compile</SubType>
-    </None>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\CVS\Root">
       <SubType>compile</SubType>
     </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\INCLUDE" />
@@ -1969,25 +1109,6 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\INCLUDE\nlao_usart.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\INCLUDE\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\INCLUDE\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\INCLUDE\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\INCLUDE\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\INCLUDE\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\INCLUDE\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\LIBS\NEWLIB_ADDONS\INCLUDE\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\PREPROCESSOR" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\UTILS\PREPROCESSOR\mrepeat.h">
       <SubType>compile</SubType>
@@ -2001,67 +1122,10 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\UTILS\PREPROCESSOR\tpaste.h">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\PREPROCESSOR\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\PREPROCESSOR\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\PREPROCESSOR\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\PREPROCESSOR\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\PREPROCESSOR\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\PREPROCESSOR\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\PREPROCESSOR\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES" />
-    <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
     <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\GCC" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\GCC\crt0.x">
       <SubType>compile</SubType>
     </Compile>
-    <Folder Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\GCC\CVS" />
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\GCC\CVS\Entries">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\GCC\CVS\Entries.Extra">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\GCC\CVS\Entries.Extra.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\GCC\CVS\Entries.Old">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\GCC\CVS\Repository">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\SOFTWARE_FRAMEWORK\UTILS\STARTUP_FILES\GCC\CVS\Root">
-      <SubType>compile</SubType>
-    </None>
   </ItemGroup>
 </Project>

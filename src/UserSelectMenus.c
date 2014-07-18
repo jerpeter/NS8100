@@ -1152,11 +1152,12 @@ void BaudRateMenuHandler(uint8 keyPressed, void* data)
 			CLEAR_RTS; CLEAR_DTR;
 #endif
 
-			// Reset the RS232
-			usart_reset(&AVR32_USART1);
-
 			// Re-Initialize the RS232 with the new baud rate
 			usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
+
+extern void Setup_8100_Usart_RS232_ISR(void);
+			// Re-setup the interrupt since the handler is removed on usart_reset (buried in the usart_init)
+			Setup_8100_Usart_RS232_ISR();
 
 #if 1 // ns8100 (Added to help Dave's Supergraphics handle Baud change)
 			//-------------------------------------------------------------------------

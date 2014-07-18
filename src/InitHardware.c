@@ -521,7 +521,7 @@ void _init_startup(void)
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_ASSERT | AVR32_WDT_DISABLE_VALUE);
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_DEASSERT | AVR32_WDT_DISABLE_VALUE);
 	
-#if 0 // Enable External 12 MHz oscillator clock
+#if 1 // Enable External 12 MHz oscillator clock
 	pm_enable_osc0_ext_clock(&AVR32_PM);
 #endif
 
@@ -1023,6 +1023,38 @@ void KillClocksToModules(void)
 	PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
 	PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
 #endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void TestExternalRAM(void)
+{
+	uint16 i = 0, j = 0;
+	uint16* testMem = &g_eventDataBuffer[0];
+
+	while (testMem != &g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS])
+	{
+		*testMem++ = (i++ + j);
+
+		if (i == 0) { j++; }
+	}
+
+	i = 0; j = 0;
+	testMem = &g_eventDataBuffer[0];
+
+	while (testMem != &g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS])
+	{
+		if (*testMem++ != (i++ + j))
+		{
+			debugErr("Test of External RAM: failed!\n");
+			return;
+		}
+
+		if (i == 0) { j++; }
+	}
+
+	debug("Test of External RAM: passed.\n");
 }
 
 ///----------------------------------------------------------------------------

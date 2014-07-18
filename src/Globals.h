@@ -29,12 +29,13 @@
 #include "TextTypes.h"
 
 // Global Defines ---------------------------------------------------------------------
-#define INTERNAL_SAMPLING_SOURCE	1
+#define INTERNAL_SAMPLING_SOURCE	NO
 
-#if (INTERNAL_SAMPLING_SOURCE)
-#define EXTERNAL_SAMPLING_SOURCE	0
+// Make sure choice is mutually exclusive
+#if (!INTERNAL_SAMPLING_SOURCE)
+#define EXTERNAL_SAMPLING_SOURCE	YES
 #else
-#define EXTERNAL_SAMPLING_SOURCE	1
+#define EXTERNAL_SAMPLING_SOURCE	NO
 #endif
 
 // Global Externs ---------------------------------------------------------------------

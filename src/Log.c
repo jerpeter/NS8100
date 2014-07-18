@@ -397,6 +397,13 @@ uint8 GetNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, M
 			// Copy the monitor log entry over to the log entry buffer
 			*logEntry = __monitorLogTbl[(*tempIndex)];
 
+#if 0 // Test
+			debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\n",
+			logEntry->uniqueEntryId, logEntry->mode, logEntry->startEventNumber, logEntry->status,
+			logEntry->seismicTriggerLevel, logEntry->airTriggerLevel, logEntry->bitAccuracy, logEntry->adjustForTempDrift,
+			logEntry->sensor_type, logEntry->sensitivity);
+#endif
+
 			// Set the found flag to mark that an entry was discovered
 			found = TRUE;
 		}
