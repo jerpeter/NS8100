@@ -136,7 +136,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	// *NOTE* Actual element config type is already incorrectly being overloaded (done by the original author)
 	// Using the first element of free space in this structure to transfer the real Pretrigger buffer size config
-	cfg.eventCfg.unused[0] = g_helpRecord.pretrigBufferDivider;
+	cfg.eventCfg.pretrigBufferDivider = g_helpRecord.pretrigBufferDivider;
 #endif
 
 	// Bargraph specific - Initial conditions.
@@ -667,7 +667,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		if ((cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_QUARTER_SEC_DIV) || (cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_HALF_SEC_DIV) ||
 			(cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_FULL_SEC_DIV))
 		{
-			g_helpRecord.pretrigBufferDivider = cfg.eventCfg.unused[0];
+			g_helpRecord.pretrigBufferDivider = cfg.eventCfg.pretrigBufferDivider;
 		}
 		else
 		{

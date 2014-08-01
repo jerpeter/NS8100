@@ -111,7 +111,7 @@ typedef struct
 	uint8	unused[UNUSED_PARAMETERS_SIZE];		// Space for expansion, currently 40
 #else
 	uint8	adjustForTempDrift;
-	uint8	unused1;
+	uint8	pretrigBufferDivider;
 	uint8	seismicUnitsOfMeasure;
 	uint8	airUnitsOfMeasure;
 	uint32	seismicTriggerInUnits;
