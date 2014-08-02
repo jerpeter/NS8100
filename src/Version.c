@@ -18,7 +18,7 @@ $Revision: 1.2 $
 // ** DO NOT MODIFY **
 //const char applicationVersion[] = "$Revision: 0.9 $";
 //const char applicationDate[] = "$Date: 2012/08/08 01:10:04 $";
-const char g_buildVersion[] = "2.14.B";
+const char g_buildVersion[] = "2.14.C";
 const char g_buildDate[] = __DATE__ " " __TIME__;
 // =====================================================
 

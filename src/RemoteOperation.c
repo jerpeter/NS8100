@@ -109,12 +109,13 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 #if 0 // Port missing change
 	cfg.eventCfg.airSensorType = (uint16)0x0;
 #else // Updated
-	cfg.eventCfg.airSensorType = (uint16)(g_helpRecord.unitsOfAir);
+	cfg.eventCfg.airSensorType = SENSOR_MICROPHONE;
 #endif
 	cfg.eventCfg.bitAccuracy = g_triggerRecord.trec.bitAccuracy;
-	cfg.eventCfg.numOfChannels = 4;
+	cfg.eventCfg.numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;
 	cfg.eventCfg.aWeighting = (uint8)g_factorySetupRecord.aweight_option;
 	cfg.eventCfg.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
+	cfg.eventCfg.pretrigBufferDivider = g_helpRecord.pretrigBufferDivider;
 	cfg.eventCfg.numOfSamples = 0;				// Not used for configuration settings
 
 #if 0 // Old and incorrectly overloaded
@@ -122,22 +123,21 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.eventCfg.calDataNumOfSamples = g_triggerRecord.berec.barScale;
 	cfg.eventCfg.activeChannels = g_triggerRecord.berec.barChannel;
 #else // Updated with notes
-	// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
-	// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
-	cfg.eventCfg.preBuffNumOfSamples = (uint16)g_triggerRecord.srec.sensitivity;
+	cfg.eventCfg.preBuffNumOfSamples = (g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider);
+	cfg.eventCfg.calDataNumOfSamples = CALIBRATION_NUMBER_OF_SAMPLES;
+	cfg.eventCfg.activeChannels = NUMBER_OF_CHANNELS_DEFAULT;
 
-	// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
-	// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
-	cfg.eventCfg.calDataNumOfSamples = g_triggerRecord.berec.barScale;
-
-	// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
-	// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
-	cfg.eventCfg.activeChannels = g_triggerRecord.berec.barChannel;
-
-	// *NOTE* Actual element config type is already incorrectly being overloaded (done by the original author)
-	// Using the first element of free space in this structure to transfer the real Pretrigger buffer size config
-	cfg.eventCfg.pretrigBufferDivider = g_helpRecord.pretrigBufferDivider;
+	// Overloaded elements rightfully in their own place
+	cfg.extraUnitCfg.sensitivity = (uint8)g_triggerRecord.srec.sensitivity;
+	cfg.extraUnitCfg.barScale = g_triggerRecord.berec.barScale;
+	cfg.extraUnitCfg.barChannel = g_triggerRecord.berec.barChannel;
 #endif
+
+	// Needed for events but not remote config
+	cfg.eventCfg.seismicUnitsOfMeasure = g_helpRecord.unitsOfMeasure;
+	cfg.eventCfg.airUnitsOfMeasure = g_helpRecord.unitsOfAir;
+	cfg.eventCfg.airTriggerInUnits = 0x0; // Not needed
+	cfg.eventCfg.seismicTriggerInUnits = 0x0; // Not needed
 
 	// Bargraph specific - Initial conditions.
 	cfg.eventCfg.barInterval = (uint16)g_triggerRecord.bgrec.barInterval;
@@ -151,12 +151,13 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.autoCfg.autoMonitorMode = g_helpRecord.autoMonitorMode;
 	cfg.autoCfg.autoCalMode = g_helpRecord.autoCalMode;
 
-	cfg.printerCfg.autoPrint = g_helpRecord.autoPrint;
-	cfg.printerCfg.languageMode = g_helpRecord.languageMode;
-	cfg.printerCfg.vectorSum = g_helpRecord.vectorSum;
-	cfg.printerCfg.unitsOfMeasure = g_helpRecord.unitsOfMeasure;
-	cfg.printerCfg.freqPlotMode = g_helpRecord.freqPlotMode;
-	cfg.printerCfg.freqPlotType = g_helpRecord.freqPlotType;
+	cfg.extraUnitCfg.autoPrint = g_helpRecord.autoPrint;
+	cfg.extraUnitCfg.languageMode = g_helpRecord.languageMode;
+	cfg.extraUnitCfg.vectorSum = g_helpRecord.vectorSum;
+	cfg.extraUnitCfg.unitsOfMeasure = g_helpRecord.unitsOfMeasure;
+	cfg.extraUnitCfg.unitsOfAir = g_helpRecord.unitsOfAir;
+	cfg.extraUnitCfg.freqPlotMode = g_helpRecord.freqPlotMode;
+	cfg.extraUnitCfg.freqPlotType = g_helpRecord.freqPlotType;
 
 	cfg.alarmCfg.alarmOneMode = g_helpRecord.alarmOneMode;
 	cfg.alarmCfg.alarmTwoMode = g_helpRecord.alarmTwoMode;
@@ -459,7 +460,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//--------------------------------
 		// Update air sensor type DB or MB
 		//--------------------------------
-		if ((uint8)cfg.eventCfg.airSensorType == MILLIBAR_TYPE)
+		if (cfg.extraUnitCfg.unitsOfAir == MILLIBAR_TYPE)
 		{
 			g_helpRecord.unitsOfAir = MILLIBAR_TYPE;
 		}
@@ -628,44 +629,35 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_BAR_PRINT_CHANNEL;
 		}
 #else // Updated with notes
-		// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
-		// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
-		if ((cfg.eventCfg.preBuffNumOfSamples == LOW) || (cfg.eventCfg.preBuffNumOfSamples == HIGH))
+		if ((cfg.extraUnitCfg.sensitivity == LOW) || (cfg.extraUnitCfg.sensitivity == HIGH))
 		{
-			g_triggerRecord.srec.sensitivity = cfg.eventCfg.preBuffNumOfSamples; // Sensitivity
+			g_triggerRecord.srec.sensitivity = cfg.extraUnitCfg.sensitivity; // Sensitivity
 		}
 		else
 		{
 			returnCode = CFG_ERR_SENSITIVITY;
 		}
 		
-		// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
-		// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
-		if ((1 == cfg.eventCfg.calDataNumOfSamples) || (2 == cfg.eventCfg.calDataNumOfSamples) ||
-			(4 == cfg.eventCfg.calDataNumOfSamples) || (8 == cfg.eventCfg.calDataNumOfSamples))
+		if ((cfg.extraUnitCfg.barScale == 1) || (cfg.extraUnitCfg.barScale == 2) || (cfg.extraUnitCfg.barScale == 4) || (cfg.extraUnitCfg.barScale == 8))
 		{
-			g_triggerRecord.berec.barScale = (uint8)cfg.eventCfg.calDataNumOfSamples;
+			g_triggerRecord.berec.barScale = (uint8)cfg.extraUnitCfg.barScale;
 		}
 		else
 		{
 			returnCode = CFG_ERR_SCALING;
 		}
 
-		// *WARNING* Poorly done overloading of this element name with the wrong config type (done by the original author)
-		// Not happy about it, but leaving it in place to reduce changes to Dave's Supergraphics - JP
-		if (cfg.eventCfg.activeChannels <= BAR_AIR_CHANNEL) //if ((cfg.eventCfg.activeChannels >= 0) && (cfg.eventCfg.activeChannels <= BAR_AIR_CHANNEL))
+		if (cfg.extraUnitCfg.barChannel <= BAR_AIR_CHANNEL)
 		{
-			g_triggerRecord.berec.barChannel = cfg.eventCfg.activeChannels;
+			g_triggerRecord.berec.barChannel = cfg.extraUnitCfg.barChannel;
 		}
 		else
 		{
 			returnCode = CFG_ERR_BAR_PRINT_CHANNEL;
 		}
 
-		// *NOTE* Actual element config type is already incorrectly being overloaded (done by the original author)
-		// Using the first element of free space in this structure to transfer the real Pretrigger buffer size config
-		if ((cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_QUARTER_SEC_DIV) || (cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_HALF_SEC_DIV) ||
-			(cfg.eventCfg.unused[0] == PRETRIGGER_BUFFER_FULL_SEC_DIV))
+		if ((cfg.eventCfg.pretrigBufferDivider == PRETRIGGER_BUFFER_QUARTER_SEC_DIV) || (cfg.eventCfg.pretrigBufferDivider == PRETRIGGER_BUFFER_HALF_SEC_DIV) ||
+			(cfg.eventCfg.pretrigBufferDivider == PRETRIGGER_BUFFER_FULL_SEC_DIV))
 		{
 			g_helpRecord.pretrigBufferDivider = cfg.eventCfg.pretrigBufferDivider;
 		}
@@ -725,11 +717,11 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Auto print
-		if ((YES == cfg.printerCfg.autoPrint) || (NO == cfg.printerCfg.autoPrint))
+		if ((cfg.extraUnitCfg.autoPrint == NO) || (cfg.extraUnitCfg.autoPrint == YES))
 		{
 			if (SUPERGRAPH_UNIT)
 			{
-				g_helpRecord.autoPrint = cfg.printerCfg.autoPrint;
+				g_helpRecord.autoPrint = cfg.extraUnitCfg.autoPrint;
 			}
 		}
 		else
@@ -738,7 +730,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 		
 		// Language Mode	
-		switch (cfg.printerCfg.languageMode)
+		switch (cfg.extraUnitCfg.languageMode)
 		{
 			case ENGLISH_LANG:
 			case FRENCH_LANG:
@@ -747,8 +739,11 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 #if 1 // Updated (Port missing change)
 			case SPANISH_LANG:
 #endif
-				g_helpRecord.languageMode = cfg.printerCfg.languageMode;
-				BuildLanguageLinkTable(g_helpRecord.languageMode);
+				if (g_helpRecord.languageMode != cfg.extraUnitCfg.languageMode)
+				{
+					g_helpRecord.languageMode = cfg.extraUnitCfg.languageMode;
+					BuildLanguageLinkTable(g_helpRecord.languageMode);
+				}
 				break;
 					
 			default:
@@ -757,9 +752,9 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Vector Sum check
-		if ((YES == cfg.printerCfg.vectorSum) || (NO == cfg.printerCfg.vectorSum))
+		if ((cfg.extraUnitCfg.vectorSum == NO) || (cfg.extraUnitCfg.vectorSum == YES))
 		{
-			g_helpRecord.vectorSum = cfg.printerCfg.vectorSum;
+			g_helpRecord.vectorSum = cfg.extraUnitCfg.vectorSum;
 		}
 		else
 		{
@@ -767,9 +762,9 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 		
 		// Units of Measure check
-		if ((IMPERIAL_TYPE == cfg.printerCfg.unitsOfMeasure) || (METRIC_TYPE == cfg.printerCfg.unitsOfMeasure))
+		if ((cfg.extraUnitCfg.unitsOfMeasure == IMPERIAL_TYPE) || (cfg.extraUnitCfg.unitsOfMeasure == METRIC_TYPE))
 		{
-			g_helpRecord.unitsOfMeasure = cfg.printerCfg.unitsOfMeasure;
+			g_helpRecord.unitsOfMeasure = cfg.extraUnitCfg.unitsOfMeasure;
 		}
 		else
 		{
@@ -777,9 +772,9 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 		
 		// Frequency plot mode , Yes or No or On or Off
-		if ((YES == cfg.printerCfg.freqPlotMode) || (NO == cfg.printerCfg.freqPlotMode))
+		if ((cfg.extraUnitCfg.freqPlotMode == NO) || (cfg.extraUnitCfg.freqPlotMode == YES))
 		{
-			g_helpRecord.freqPlotMode = cfg.printerCfg.freqPlotMode;
+			g_helpRecord.freqPlotMode = cfg.extraUnitCfg.freqPlotMode;
 		}
 		else
 		{
@@ -787,14 +782,14 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// Frequency plot mode , Yes or No or On or Off
-		switch (cfg.printerCfg.freqPlotType)
+		switch (cfg.extraUnitCfg.freqPlotType)
 		{
 			case FREQ_PLOT_US_BOM_STANDARD:
 			case FREQ_PLOT_FRENCH_STANDARD:
 			case FREQ_PLOT_DIN_4150_STANDARD:
 			case FREQ_PLOT_BRITISH_7385_STANDARD:
 			case FREQ_PLOT_SPANISH_STANDARD:
-				g_helpRecord.freqPlotType = cfg.printerCfg.freqPlotType;
+				g_helpRecord.freqPlotType = cfg.extraUnitCfg.freqPlotType;
 				break;
 					
 			default:

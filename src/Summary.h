@@ -68,9 +68,9 @@ typedef struct
 } SEISMIC_CHANNEL_INFO_STRUCT;
 
 // Parameter Information, Initial condition information and system level settings. 
-#if 0 // Prior to added fields
+#if 0 // Prior to added fields (ns7100)
 #define UNUSED_PARAMETERS_SIZE	40
-#else
+#else // 8100
 #define UNUSED_PARAMETERS_SIZE	28
 #endif
 
@@ -107,9 +107,9 @@ typedef struct
 	uint8	sessionLocation[SESSION_LOCATION_STRING_SIZE];
 	uint8	sessionComments[SESSION_COMMENTS_STRING_SIZE];
 	
-#if 0
+#if 0 // ns7100
 	uint8	unused[UNUSED_PARAMETERS_SIZE];		// Space for expansion, currently 40
-#else
+#else // ns8100
 	uint8	adjustForTempDrift;
 	uint8	pretrigBufferDivider;
 	uint8	seismicUnitsOfMeasure;

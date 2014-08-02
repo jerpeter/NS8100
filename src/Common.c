@@ -617,7 +617,7 @@ void InitVersionMsg(void)
 ///----------------------------------------------------------------------------
 void BuildLanguageLinkTable(uint8 languageSelection)
 {
-	uint16 i, currIndex = 0;
+	uint16 i, currIndex;
 	char* languageTablePtr;
 	FL_FILE* languageFile = NULL;
 	char languageFilename[50];
@@ -680,21 +680,34 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			fl_fread(languageFile, (uint8*)&g_languageTable[0], languageFile->filelength);
 		}
 
-		// Loop and convert all line feeds and carriage returns to nulls, and leaving the last char element as a null
-		for (i = 1; i < (LANGUAGE_TABLE_MAX_SIZE - 1); i++)
-		{
-			if ((g_languageTable[i] == '\r') || (g_languageTable[i] == '\n'))
-			{
-				g_languageTable[i] = '\0';
-			}
-		}
-
-		languageTablePtr = &g_languageTable[0];
+		fl_fclose(languageFile);
 	}
 
+	// Loop and convert all line feeds and carriage returns to nulls, and leaving the last char element as a null
+	for (i = 1; i < (LANGUAGE_TABLE_MAX_SIZE - 1); i++)
+	{
+		// Check if a CR or LF was used as an element separator
+		if ((g_languageTable[i] == '\r') || (g_languageTable[i] == '\n'))
+		{
+			// Convert the CR of LF to a Null
+			g_languageTable[i] = '\0';
+
+			// Check if a CR/LF or LF/CR combo was used to as the element separator
+			if ((g_languageTable[i + 1] == '\r') || (g_languageTable[i + 1] == '\n'))
+			{
+				// Skip the second character of the combo separator
+				i++;
+			}
+		}
+	}
+
+	languageTablePtr = &g_languageTable[0];
+
+	// Set the first element of the link table to the start of the language table
 	g_languageLinkTable[0] = languageTablePtr;
 	
-	for (i = 1; i < TOTAL_TEXT_STRINGS; i++)
+	// Build the language link table by pointing to the start of every string following a Null
+	for (i = 1, currIndex = 0; i < TOTAL_TEXT_STRINGS; i++)
 	{
 		while (languageTablePtr[currIndex++] != '\0') { /* spin */ };
 

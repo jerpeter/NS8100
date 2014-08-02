@@ -601,7 +601,7 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 #if 0 // Port lost change
 	eventRec->summary.parameters.airSensorType = (uint16)0x0;
 #else // Updated
-   eventRec->summary.parameters.airSensorType = (uint16)g_helpRecord.unitsOfAir;
+   eventRec->summary.parameters.airSensorType = SENSOR_MICROPHONE;
 #endif
 	eventRec->summary.parameters.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
 	eventRec->summary.parameters.seismicUnitsOfMeasure = g_helpRecord.unitsOfMeasure;

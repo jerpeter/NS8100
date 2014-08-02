@@ -939,7 +939,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 #if 1 // Port lost change
 		if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
 #else // Updated
-		if(eventRecord->summary.parameters.airSensorType == MILLIBAR_TYPE)
+		if (eventRecord->summary.parameters.airUnitsOfMeasure == MILLIBAR_TYPE)
 #endif
 		{
 		    sprintf(buff,"%0.3f mb", HexToMB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));

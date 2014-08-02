@@ -72,6 +72,8 @@ enum {
 #define SENSOR_ACC		51200
 #endif
 
+#define SENSOR_MICROPHONE	1
+
 #define INCH_PER_CM			 		2.54
 #define LBS_PER_KG			 		2.2
 #define FT_PER_METER				3.280833
