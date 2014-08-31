@@ -36,6 +36,15 @@
 // Test Exception Handling
 #define TEST_EXCEPTION_HANDLING	1
 
+// Select between hardware board versions
+#define NS8100_ORIGINAL		0
+
+#if NS8100_ORIGINAL
+#define NS8100_ALPHA		0
+#else
+#define NS8100_ALPHA		1
+#endif
+
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
@@ -182,13 +191,27 @@ enum {
 /* Uart Info */
 #define CRAFT_BAUDRATE	115200 //14400 //38400
 #define CRAFT_COM_PORT	0
+
 #define RS485_BAUDRATE	2000000 //19200
 #define RS485_COM_PORT	1
+
+#if NS8100_ALPHA
+// Define Debug port
+#define DEBUG_BAUDRATE	115200
+#define DEBUG_COM_PORT	2
+
+// Define Project Debug Port
+#define GLOBAL_DEBUG_PRINT_PORT	DEBUG_COM_PORT
+#endif
 
 /* Battery Level defines */
 #define BATT_MIN_VOLTS 			4.0
 
+#if NS8100_ORIGINAL
 #define REFERENCE_VOLTAGE       (float)3.3
+#else // NS8100_ALPHA
+#define REFERENCE_VOLTAGE       (float)2.5
+#endif
 #define BATT_RESOLUTION         (float)1024  // 10-bit resolution
 
 #if 0 // ns7100

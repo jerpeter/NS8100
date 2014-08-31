@@ -494,6 +494,14 @@ void UsbDeviceManager(void)
 	{
 		debug("Init USB Mass Storage Driver...\n");
 
+#if NS8100_ALPHA
+		// Set for device mode
+		Usb_set_vbof_active_low();
+
+		// Wait for line to settle
+		SoftUsecWait(25 * SOFT_MSECS);
+#endif
+
 		// Init the USB and Mass Storage driver			
 		usb_task_init();
 		device_mass_storage_task_init();
@@ -510,6 +518,7 @@ void UsbDeviceManager(void)
 		if (usbMassStorageState == USB_NOT_CONNECTED)
 		{
 			OverlayMessage("USB STATUS", "USB CABLE WAS CONNECTED", 1 * SOFT_SECS);
+			debug("USB connection established\n");
 
 			// Recall the current active menu to repaint the display
 			mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
@@ -536,21 +545,23 @@ void UsbDeviceManager(void)
 			if (g_sampleProcessing == ACTIVE_STATE)
 			{
 				OverlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 1000 * SOFT_MSECS);
+				debug("USB connection disabled for monitoring\n");
 			}
 			else if (g_fileProcessActiveUsbLockout == ON)
 			{
 				OverlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR FILE OPERATION", 1000 * SOFT_MSECS);
+				debug("USB connection disabled for file operation\n");
 			}
 			else
 			{
 				OverlayMessage("USB STATUS", "USB CABLE WAS DISCONNECTED", 1000 * SOFT_MSECS);
+				debug("USB disconnected\n");
 
 				// Recall the current active menu to repaint the display
 				mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
 				JUMP_TO_ACTIVE_MENU();
 			}							
 
-			debug("USB Cable Unplugged\n");
 			Usb_disable();
 		}
 		
@@ -921,9 +932,6 @@ int main(void)
 	// ==============
 	while (1)
 	{
-		// Count Exec cycles
-		g_execCycles++;
-
 		// Handle system events
 	    SystemEventManager();
 
@@ -944,6 +952,9 @@ int main(void)
 
 		// Check if able to go to sleep
 		SleepManager();
+
+		// Count Exec cycles
+		g_execCycles++;
 	}    
 	// End of NS8100 Main
 

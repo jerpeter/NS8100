@@ -356,6 +356,18 @@ void UartPutc(uint8 c, int32 channel)
 	{
 		// fix_ns8100
 	}
+#if NS8100_ALPHA
+	else if (channel == DEBUG_COM_PORT)
+	{
+		status = usart_write_char(&AVR32_USART0, c);
+
+		while ((status == USART_TX_BUSY) && (retries))
+		{
+			retries--;
+			status = usart_write_char(&AVR32_USART0, c);
+		}
+	}
+#endif
 #endif
 }
 
@@ -584,7 +596,7 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 	// Initialize the buffer
 	ByteSet(&buf[0], 0, sizeof(buf));
 
-	// Initialize arg_ptr to the begenning of the variable argument list
+	// Initialize arg_ptr to the beginning of the variable argument list
     va_start(arg_ptr, fmt);
 
 	switch (mode)
@@ -619,6 +631,9 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 	{
 		// Print the raw string
 		UartWrite(buf, length, CRAFT_COM_PORT);
+#if NS8100_ALPHA
+		UartWrite(buf, length, GLOBAL_DEBUG_PRINT_PORT);
+#endif
 	}
 	// Check if the current string to be printed was different than the last
 	else if (strncmp(buf, s_uartBuffer, length))
@@ -629,6 +644,9 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 			// Print the repeat count of the previous repeated string
 			sprintf(repeatCountStr, "(%d)\n", (int)repeatingBuf);
 			UartPuts(repeatCountStr, CRAFT_COM_PORT);
+#if NS8100_ALPHA
+			UartPuts(repeatCountStr, GLOBAL_DEBUG_PRINT_PORT);
+#endif
 
 			// Reset the counter
 			repeatingBuf = 0;
@@ -638,6 +656,10 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 			// Issue a carrige return and a line feed
 			UartPutc('\r', CRAFT_COM_PORT);
 			UartPutc('\n', CRAFT_COM_PORT);
+#if NS8100_ALPHA
+			UartPutc('\r', GLOBAL_DEBUG_PRINT_PORT);
+			UartPutc('\n', GLOBAL_DEBUG_PRINT_PORT);
+#endif
 
 			// Reset the flag
 			strippedNewline = NO;
@@ -684,6 +706,9 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 
 		// Print the new string
 		UartWrite(buf, length, CRAFT_COM_PORT);
+#if NS8100_ALPHA
+		UartWrite(buf, length, GLOBAL_DEBUG_PRINT_PORT);
+#endif
 	}
 	else // Strings are equal
 	{
@@ -692,6 +717,9 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 
 		// Print a '!' (bang) so signify that the output was repeated
 		UartPutc('!', CRAFT_COM_PORT);
+#if NS8100_ALPHA
+		UartPutc('!', GLOBAL_DEBUG_PRINT_PORT);
+#endif
 	}
 
 	// Return the number of characters
@@ -706,5 +734,8 @@ void DebugPrintChar(uint8 charData)
 	if (g_disableDebugPrinting == NO)
 	{
 		UartPutc(charData, CRAFT_COM_PORT);
+#if NS8100_ALPHA
+		UartPutc(charData, GLOBAL_DEBUG_PRINT_PORT);
+#endif
 	}
 }

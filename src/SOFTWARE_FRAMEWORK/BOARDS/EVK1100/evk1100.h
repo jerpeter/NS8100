@@ -105,7 +105,10 @@
 //! Multiplexed pin used for USB_ID: AVR32_USBB_USB_ID_x_x.
 //! To be selected according to the AVR32_USBB_USB_ID_x_x_PIN and
 //! AVR32_USBB_USB_ID_x_x_FUNCTION definitions from <avr32/uc3axxxx.h>.
-#define USB_ID                      AVR32_USBB_USB_ID_0_0
+// NS8100_ORIGINAL
+//#define USB_ID                      AVR32_USBB_USB_ID_0_0
+// NS8100_ALPHA
+#define USB_ID						AVR32_USBB_USB_ID_0_1
 
 //! Multiplexed pin used for USB_VBOF: AVR32_USBB_USB_VBOF_x_x.
 //! To be selected according to the AVR32_USBB_USB_VBOF_x_x_PIN and

@@ -384,7 +384,8 @@ void Avr32_enable_muxed_pins(void)
 {
 	static const gpio_map_t SMC_EBI_GPIO_MAP =
 	{
-		// Enable data pins.
+		//=====================================================
+		// EBI - Data
 		{AVR32_EBI_DATA_0_PIN, AVR32_EBI_DATA_0_FUNCTION},
 		{AVR32_EBI_DATA_1_PIN, AVR32_EBI_DATA_1_FUNCTION},
 		{AVR32_EBI_DATA_2_PIN, AVR32_EBI_DATA_2_FUNCTION},
@@ -402,7 +403,8 @@ void Avr32_enable_muxed_pins(void)
 		{AVR32_EBI_DATA_14_PIN, AVR32_EBI_DATA_14_FUNCTION},
 		{AVR32_EBI_DATA_15_PIN, AVR32_EBI_DATA_15_FUNCTION},
 
-		// Enable address pins.
+		//=====================================================
+		// EBI - Address
 		{AVR32_EBI_ADDR_0_PIN, AVR32_EBI_ADDR_0_FUNCTION},
 		{AVR32_EBI_ADDR_1_PIN, AVR32_EBI_ADDR_1_FUNCTION},
 		{AVR32_EBI_ADDR_2_PIN, AVR32_EBI_ADDR_2_FUNCTION},
@@ -426,8 +428,12 @@ void Avr32_enable_muxed_pins(void)
 		{AVR32_EBI_ADDR_20_1_PIN, AVR32_EBI_ADDR_20_1_FUNCTION},
 		{AVR32_EBI_ADDR_21_1_PIN, AVR32_EBI_ADDR_21_1_FUNCTION},
 		{AVR32_EBI_ADDR_22_1_PIN, AVR32_EBI_ADDR_22_1_FUNCTION},
+#if NS8100_ORIGINAL
 		{AVR32_EBI_ADDR_23_PIN, AVR32_EBI_ADDR_23_FUNCTION},
+#endif
 
+		//=====================================================
+		// EBI - Other
 		{AVR32_EBI_NWE0_0_PIN, AVR32_EBI_NWE0_0_FUNCTION},
 		{AVR32_EBI_NWE1_0_PIN, AVR32_EBI_NWE1_0_FUNCTION},
 		{AVR32_EBI_NRD_0_PIN, AVR32_EBI_NRD_0_FUNCTION},
@@ -436,21 +442,41 @@ void Avr32_enable_muxed_pins(void)
 		{AVR32_EBI_NCS_2_PIN, AVR32_EBI_NCS_2_FUNCTION},
 		{AVR32_EBI_NCS_3_PIN, AVR32_EBI_NCS_3_FUNCTION},
 		
-#if 1
+		//=====================================================
 		// EIC
 		{AVR32_EIC_EXTINT_4_PIN, AVR32_EIC_EXTINT_4_FUNCTION},
 		{AVR32_EIC_EXTINT_5_PIN, AVR32_EIC_EXTINT_5_FUNCTION},
 
-		// TWI
-		{AVR32_TWI_SDA_0_0_PIN, AVR32_TWI_SDA_0_0_FUNCTION},
-		{AVR32_TWI_SCL_0_0_PIN, AVR32_TWI_SCL_0_0_FUNCTION},
-#endif
-
-#if EXTERNAL_SAMPLING_SOURCE
-		// USB_VBOF - reassigned to External RTC interrupt
+		// External RTC sampling interrupt
+#if (EXTERNAL_SAMPLING_SOURCE || NS8100_ALPHA)
 		{AVR32_EIC_EXTINT_1_PIN, AVR32_EIC_EXTINT_1_FUNCTION},
 #endif
 
+		// Low battery interrupt
+#if NS8100_ALPHA
+		{AVR32_EIC_EXTINT_0_PIN, AVR32_EIC_EXTINT_0_FUNCTION},
+#endif
+
+		//=====================================================
+		// TWI
+		{AVR32_TWI_SDA_0_0_PIN, AVR32_TWI_SDA_0_0_FUNCTION},
+		{AVR32_TWI_SCL_0_0_PIN, AVR32_TWI_SCL_0_0_FUNCTION},
+
+		//=====================================================
+		// USB
+#if NS8100_ALPHA
+		{AVR32_USBB_USB_VBOF_0_1_PIN, AVR32_USBB_USB_VBOF_0_1_FUNCTION},
+		{AVR32_USBB_USB_ID_0_1_PIN, AVR32_USBB_USB_ID_0_1_FUNCTION},
+#endif
+
+		//=====================================================
+		// Usart 0 - RS232 Debug
+#if NS8100_ALPHA
+		{AVR32_USART0_RXD_0_0_PIN, AVR32_USART0_RXD_0_0_FUNCTION},
+		{AVR32_USART0_TXD_0_0_PIN, AVR32_USART0_TXD_0_0_FUNCTION},
+#endif
+
+		//=====================================================
 		// Usart 1 - RS232
 		{AVR32_USART1_RXD_0_0_PIN, AVR32_USART1_RXD_0_0_FUNCTION},
 		{AVR32_USART1_TXD_0_0_PIN, AVR32_USART1_TXD_0_0_FUNCTION},
@@ -461,11 +487,13 @@ void Avr32_enable_muxed_pins(void)
 		{AVR32_USART1_RTS_0_0_PIN, AVR32_USART1_RTS_0_0_FUNCTION},
 		{AVR32_USART1_CTS_0_0_PIN, AVR32_USART1_CTS_0_0_FUNCTION},
 
+		//=====================================================
 		// Usart 3 - RS485
 		{AVR32_USART3_RXD_0_0_PIN, AVR32_USART3_RXD_0_0_FUNCTION},
 		{AVR32_USART3_TXD_0_0_PIN, AVR32_USART3_TXD_0_0_FUNCTION},
 		{AVR32_USART3_RTS_0_1_PIN, AVR32_USART3_RTS_0_1_FUNCTION},
 
+		//=====================================================
 		// Voltage monitor pins
 		{AVR32_ADC_AD_2_PIN, AVR32_ADC_AD_2_FUNCTION},
 		{AVR32_ADC_AD_3_PIN, AVR32_ADC_AD_3_FUNCTION}
@@ -479,6 +507,7 @@ void Avr32_enable_muxed_pins(void)
 ///----------------------------------------------------------------------------
 void InitProcessorNoConnectPins(void)
 {
+#if NS8100_ORIGINAL
 	gpio_clr_gpio_pin(AVR32_PIN_PA00); // USART0_RXD
 	gpio_clr_gpio_pin(AVR32_PIN_PA01); // USART0_TXD
 	gpio_clr_gpio_pin(AVR32_PIN_PB19); // GPIO 51
@@ -488,6 +517,12 @@ void InitProcessorNoConnectPins(void)
 	gpio_clr_gpio_pin(AVR32_EBI_SDWE_0_PIN);
 	gpio_clr_gpio_pin(AVR32_EBI_SDCS_0_PIN);
 	gpio_clr_gpio_pin(AVR32_EBI_NWAIT_0_PIN);
+#else // NS8100_ALPHA (Pins brought to connector so can be an input or output)
+	gpio_clr_gpio_pin(AVR32_PIN_PB30); // GPIO 62 (Pin 21)
+	gpio_clr_gpio_pin(AVR32_PIN_PB13); // GPIO 45 (Pin 126)
+	gpio_clr_gpio_pin(AVR32_PIN_PB14); // GPIO 46 (Pin 127)
+	gpio_clr_gpio_pin(AVR32_PIN_PB19); // GPIO 51 (Pin 143)
+#endif
 
 #if INTERNAL_SAMPLING_SOURCE
 	// This pin is unused if the internal sampling source is configured. Set pin as an output to prevent it from floating
@@ -528,7 +563,7 @@ void _init_startup(void)
 	// Switch the main clock to the external oscillator 0 (12 MHz)
 #if 0 // Normal
 	pm_switch_to_osc0(&AVR32_PM, FOSC0, OSC0_STARTUP);
-#else // Test
+#else // Test shorter delay to lock for start/restart of clock
 	pm_switch_to_osc0(&AVR32_PM, FOSC0, AVR32_PM_OSCCTRL0_STARTUP_0_RCOSC);
 #endif
 
@@ -542,7 +577,7 @@ void _init_startup(void)
 	pm_pll_enable(&AVR32_PM, 0);
 	pm_wait_for_pll0_locked(&AVR32_PM);
 
-#if 0 // Removed - Left over code for setting up the main clock
+#if 0 // Removed - Left over code for setting up the main clock (just burning extra juice)
 	pm_gc_setup(&AVR32_PM, 0, 1, 0, 0, 0);
 	pm_gc_enable(&AVR32_PM, 0);
 	gpio_enable_module_pin(AVR32_PM_GCLK_0_1_PIN, AVR32_PM_GCLK_0_1_FUNCTION);
@@ -680,10 +715,39 @@ void InitSerial232(void)
 	}
 
 	// Initialize it in RS232 mode.
-#if 1 // Normal
+	#if 1 // Normal
 	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
-#else // Test (12Mhz)
+	#else // Test (12Mhz)
 	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, 12000000);
+	#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+#if NS8100_ALPHA
+void InitDebug232(void)
+{
+	// Setup debug serial port
+	usart_options_t usart_0_rs232_options =
+	{
+		#if 1 // Normal
+		.baudrate = 115200,
+		#else // Test (12Mhz)
+		.baudrate = 38400,
+		#endif
+		.charlength = 8,
+		.paritytype = USART_NO_PARITY,
+		.stopbits = USART_1_STOPBIT,
+		.channelmode = USART_NORMAL_CHMODE
+	};
+
+	// Initialize it in RS232 mode.
+#if 1 // Normal
+	usart_init_rs232(&AVR32_USART0, &usart_0_rs232_options, FOSC0);
+#else // Test (12Mhz)
+	usart_init_rs232(&AVR32_USART0, &usart_0_rs232_options, 12000000);
+#endif
 #endif
 }
 
@@ -1079,6 +1143,13 @@ void InitSystemHardware_NS8100(void)
 	InitProcessorNoConnectPins();
 	
 	//-------------------------------------------------------------------------
+	// Configure Debug rs232
+	//-------------------------------------------------------------------------
+#if NS8100_ALPHA
+	InitDebug232();
+#endif
+
+	//-------------------------------------------------------------------------
 	// Turn on rs232 driver and receiver (Active low control)
 	//-------------------------------------------------------------------------
 	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
@@ -1132,8 +1203,16 @@ void InitSystemHardware_NS8100(void)
 	// Turn on rs485 driver and receiver
 	//-------------------------------------------------------------------------
 	PowerControl(SERIAL_485_DRIVER_ENABLE, ON);
+#if NS8100_ALPHA
+	PowerControl(SERIAL_485_RECEIVER_ENABLE, ON);
+#endif
+
 	InitSerial485();
+
 	PowerControl(SERIAL_485_DRIVER_ENABLE, OFF);
+#if NS8100_ALPHA
+	PowerControl(SERIAL_485_RECEIVER_ENABLE, OFF);
+#endif
 	
 	// Make sure 485 lines aren't floating
 	gpio_enable_pin_pull_up(AVR32_USART3_RXD_0_0_PIN);
@@ -1190,6 +1269,11 @@ void InitSystemHardware_NS8100(void)
 	device_mass_storage_task_init();
 #endif
 
+#if NS8100_ALPHA
+	// Disable USB LED
+	PowerControl(USB_LED, OFF);
+#endif
+
 	//-------------------------------------------------------------------------
 	// Init Keypad
 	//-------------------------------------------------------------------------
@@ -1208,8 +1292,19 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Enable pullups on input pins that may be floating
 	//-------------------------------------------------------------------------
+#if NS8100_ORIGINAL
 	// USB ID
 	gpio_enable_pin_pull_up(AVR32_PIN_PA21);
+#endif
+
+#if NS8100_ALPHA
+	// USB ID
+	gpio_enable_pin_pull_up(AVR32_USBB_USB_ID_0_1_PIN);
+	// RTC PFO (Active low)
+	gpio_enable_pin_pull_up(AVR32_PIN_PA21);
+	// USB OC (Active low)
+	gpio_enable_pin_pull_up(AVR32_PIN_PB12);
+#endif
 
 	// RS232
 	gpio_enable_pin_pull_up(AVR32_USART1_RXD_0_0_PIN);

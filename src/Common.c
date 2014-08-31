@@ -52,10 +52,12 @@ static void (*s_bootloader)(void) = NULL;
 float GetExternalVoltageLevelAveraged(uint8 type)
 {
 	uint32 adVoltageReadValue = 0;
-	uint32 adChannelSum = 0;
+	float adVoltageLevel = (float)0.0;
+
+#if NS8100_ORIGINAL
 	uint32 adChannelValueLow = 0xFFFF;
 	uint32 adChannelValueHigh = 0;
-	float adVoltageLevel = (float)0.0;
+	uint32 adChannelSum = 0;
 	uint32 i = 0;
 
 	// Need to average some amount of reads
@@ -111,6 +113,34 @@ float GetExternalVoltageLevelAveraged(uint8 type)
 			adVoltageLevel *= (REFERENCE_VOLTAGE * VOLTAGE_RATIO_BATT);
 			break;
 	}
+#else // NS8100_ALPHA
+	switch (type)
+	{
+		case EXT_CHARGE_VOLTAGE:
+		{
+			adc_start(&AVR32_ADC);
+			adVoltageReadValue = adc_get_value(&AVR32_ADC, VIN_CHANNEL);
+			adVoltageLevel = adVoltageReadValue * (REFERENCE_VOLTAGE * VOLTAGE_RATIO_EXT_CHARGE);
+
+			// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
+			//SoftUsecWait(4);
+			//debug("Ext Charge Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+		}
+		break;
+
+		case BATTERY_VOLTAGE:
+		{
+			adc_start(&AVR32_ADC);
+			adVoltageReadValue = adc_get_value(&AVR32_ADC, VBAT_CHANNEL);
+			adVoltageLevel = adVoltageReadValue * (REFERENCE_VOLTAGE * VOLTAGE_RATIO_BATT);
+
+			// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
+			//SoftUsecWait(4);
+			//debug("Battery Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+		}
+		break;
+	}
+#endif
 	
 	adVoltageLevel /= BATT_RESOLUTION;
 

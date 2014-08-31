@@ -209,16 +209,17 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 		//----------------------------------------------------------------------------
 		case SERIAL_485_RECEIVER_ENABLE:
 		//----------------------------------------------------------------------------
-		// fix_ns8100 - No direct control over 485 until next hardware spin which will likely be PB20 for driver/receiver combo
+#if NS8100_ALPHA
 			//debug("Serial 485 Receiver Enable: %s.\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				//gpio_clr_gpio_pin(AVR32_PIN_PB??);
+				gpio_clr_gpio_pin(AVR32_PIN_PB31);
 			}
 			else // (mode == OFF)
 			{
-				//gpio_clr_gpio_pin(AVR32_PIN_PB??);
+				gpio_set_gpio_pin(AVR32_PIN_PB31);
 			}
+#endif
 			break;
 
 		//----------------------------------------------------------------------------
