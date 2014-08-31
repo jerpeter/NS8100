@@ -66,12 +66,12 @@
 #define LCD_START_LINE_INSTRUCTION		0xC0 // Lower 6 bits are start line, 0 - 63
 
 // Contrast defines
-#define DEFUALT_CONTRAST        30
-#define MAX_CONTRAST			40
+#define DEFUALT_CONTRAST        34
+#define MAX_CONTRAST			48
 #define MIN_CONTRAST			20
 #define DEFAULT_MAX_CONTRAST	63
 #define DEFAULT_MIN_CONTRAST	0
-#define CONTRAST_STEPPING 		2
+#define CONTRAST_STEPPING 		1
 #define CONTRAST_FINE_STEPPING 	1
 
 #define LCD_NUM_OF_ROWS			8

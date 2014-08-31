@@ -175,7 +175,7 @@ void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
     uint8 buff[25];
     uint8 spaceBuff[25];
-	uint8 contrast_buff[11];
+	uint8 contrast_buff[15];
     uint8 x;
     uint8 clvl;
     uint8 length;
@@ -201,22 +201,16 @@ void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     ByteSet(&contrast_buff[0], ' ', (sizeof(contrast_buff) - 1));
 
     clvl = g_contrast_value;
+	clvl -= MIN_CONTRAST;
 
 	// Creating a string to give the appearance of a contrast level. Using '=' as the bar
-    for (x = 0; x < 10; x++)
+    for (x = 0; x < (sizeof(contrast_buff) - 1); x++)
 	{
-    	if ((clvl > MIN_CONTRAST) && (x < 9))
-    	{
-    		contrast_buff[x] = '=';
-    		clvl -= CONTRAST_STEPPING;
-		}
-		else
-		{
-			contrast_buff[x] = '|';
-			break;
-		}
+		if (clvl == 0) { break; }
+		else if (clvl == 1) { contrast_buff[x] = '-'; break; }
+		else if (clvl == 2) { contrast_buff[x] = '='; break; }
+		else { contrast_buff[x] = '='; clvl -= (CONTRAST_STEPPING * 2); }
 	}
-    contrast_buff[10] = '\0';
 
     debug("Contrast level: <%s>\n", buff);
     sprintf((char*)buff,"[%s]", contrast_buff);
