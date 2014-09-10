@@ -63,7 +63,7 @@
 #define LUN_5                DISABLE
 #define LUN_6                DISABLE
 #define LUN_7                DISABLE
-#define LUN_USB              DISABLE  //!< Host Mass-Storage Memory.
+#define LUN_USB              ENABLE  //!< Host Mass-Storage Memory.
 //! @}
 
 /*! \name LUN 0 Definitions

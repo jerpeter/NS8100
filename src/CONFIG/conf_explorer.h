@@ -103,7 +103,7 @@
 
 //! The explorer uses the navigator ID 1 to open the `copy file' and the ID 0 to open the `paste file'.
 #define FS_NAV_ID_COPYFILE    1
-
+#define FS_NAV_ID_USHELL_CMD  0
 //! @}
 
 /*! \name Playlist Configuration

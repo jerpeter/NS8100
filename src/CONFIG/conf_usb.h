@@ -52,6 +52,10 @@
 #include "print_funcs.h"
 #include "usb_ids.h"
 
+#include "stdint.h"
+#define true	TRUE
+#define false	FALSE
+#define bool	Bool
 
 //! @defgroup usb_general_conf USB application configuration
 //!
@@ -67,7 +71,7 @@
     //! @brief ENABLE to activate the host software framework support
     //!
     //! Possible values ENABLED or DISABLED
-#define USB_HOST_FEATURE            DISABLED
+#define USB_HOST_FEATURE            ENABLED
 
     //! @brief ENABLE to activate the device software framework support
     //!
@@ -137,7 +141,7 @@
 #define USB_HOST_PIPE_INTERRUPT_TRANSFER  DISABLE
 
     //! Force CPU reset upon ID pin change
-#define ID_PIN_CHANGE_GENERATE_RESET   ENABLE
+#define ID_PIN_CHANGE_GENERATE_RESET   DISABLE // was ENABLE
 
     //! Enable time-out delay for host transfer
 #define TIMEOUT_DELAY_ENABLE           ENABLE
@@ -165,8 +169,8 @@
       // Write here the action to associate with each USB host event.
       // Be careful not to waste time in order not to disturb the functions.
 #define Usb_id_transition_action()
-#define Host_device_disconnection_action()        (ms_new_device_connected = FALSE, ms_connected = FALSE)
-#define Host_device_connection_action()
+#define Host_device_disconnection_action()        (ms_new_device_connected = FALSE, ms_connected = FALSE, ms_process_first_connect_disconnect = TRUE)
+#define Host_device_connection_action()			  (ms_usb_prevent_sleep = TRUE)
 #define Host_sof_action()                         host_sof_action()
 #define Host_suspend_action()
 #define Host_hwup_action()
@@ -185,6 +189,9 @@
 
 extern volatile Bool ms_new_device_connected;
 extern volatile Bool ms_connected;
+extern Bool ms_process_first_connect_disconnect;
+extern Bool ms_usb_prevent_sleep;
+//extern Bool ms_device_not_supported;
 extern void host_sof_action(void);
 extern void host_suspend_action(void);
 
