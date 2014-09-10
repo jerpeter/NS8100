@@ -1,47 +1,48 @@
-/* This source file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Host management of the USB device memories.
  *
  * This file manages the accesses to the remote USB device memories.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009-2012 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 //_____  I N C L U D E S ___________________________________________________
@@ -66,16 +67,16 @@
 
 //_____ D E F I N I T I O N S ______________________________________________
 
-static U8 buf_cmd[31];
+static uint8_t buf_cmd[31];
 
-U8 host_selected_lun;
+uint8_t host_selected_lun;
 
-U8  g_pipe_ms_in;
-U8  g_pipe_ms_out;
-U8  g_u8_sector_size;
-U8  g_b_read_run = FALSE;
-U32 g_u32_read_addr;
-U16 g_u16_read_sector;
+uint8_t  g_pipe_ms_in;
+uint8_t  g_pipe_ms_out;
+uint8_t  g_u8_sector_size;
+uint8_t  g_b_read_run = false;
+uint32_t g_u32_read_addr;
+uint16_t g_u16_read_sector;
 
 
 //_____ D E C L A R A T I O N S ____________________________________________
@@ -85,9 +86,9 @@ static Ctrl_status host_read_10_ram_stop(void);
 
 //! This function manages pipe STALLs
 //! @param pipe         Pipe for the CLEAR ENDPOINT FEATURE request
-static void host_ms_stall_management(U8 pipe)
+static void host_ms_stall_management(uint8_t pipe)
 {
-  U16 nb;
+  uint16_t nb;
 
   host_clear_endpoint_feature(Host_get_pipe_endpoint_number(pipe) | MSK_EP_DIR);
   Host_ack_stall(g_pipe_ms_in);
@@ -110,7 +111,7 @@ static void host_ms_stall_management(U8 pipe)
 Ctrl_status host_ms_inquiry(void)
 {
   Ctrl_status status;
-  U16 nb;
+  uint16_t nb;
 
   if (!Is_host_ms_configured()) return CTRL_FAIL;
 
@@ -149,27 +150,31 @@ Ctrl_status host_ms_inquiry(void)
   buf_cmd[30] = 0x00;                           // 30
 
   // Send command
-  host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd);
+  if (host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd) != PIPE_GOOD)
+    return CTRL_FAIL;
 
   // Transfer data
   nb = sizeof(buf_cmd);
-  host_get_data(g_pipe_ms_in, &nb, buf_cmd);
+  if (host_get_data(g_pipe_ms_in, &nb, buf_cmd) != PIPE_GOOD)
+    return CTRL_FAIL;
 
   // Get CSW
   nb = sizeof(buf_cmd);
-  host_get_data(g_pipe_ms_in, &nb, buf_cmd);
+  if (host_get_data(g_pipe_ms_in, &nb, buf_cmd) != PIPE_GOOD)
+    return CTRL_FAIL;
 
   return (buf_cmd[12] == COMMAND_PASSED) ? CTRL_GOOD : CTRL_FAIL;
 }
 
 
 //! This function sends an SCSI REQUEST SENSE command (0x03) to the device
-//! @return U8: Sense Key
-U8 host_ms_request_sense(void)
+//! @return uint8_t: Sense Key
+uint8_t host_ms_request_sense(void)
 {
-  volatile U32 delay;
-  U16 nb;
-  U8 sense_key;
+  volatile uint32_t delay;
+  uint16_t nb;
+  uint8_t sense_key, sense_key_add;
+  Status_t status;
 
   if (!Is_host_ms_configured()) return SBC_SENSE_KEY_NO_SENSE;
 
@@ -208,30 +213,44 @@ U8 host_ms_request_sense(void)
   buf_cmd[30] = 0x00;                           // 30
 
   // Send command
-  host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd);
+  if (host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd) != PIPE_GOOD)
+    return CTRL_FAIL;
 
   // Transfer data
   for (delay = 100000; delay; delay--);
   nb = sizeof(buf_cmd);
-  if (host_get_data(g_pipe_ms_in, &nb, buf_cmd) == PIPE_STALL)
+  status = host_get_data(g_pipe_ms_in, &nb, buf_cmd);
+  if (status == PIPE_STALL)
   {
     host_ms_stall_management(g_pipe_ms_in);
-    return SBC_SENSE_KEY_NO_SENSE;
+    return CTRL_FAIL;
   }
+  else if (status != PIPE_GOOD)
+    return SBC_SENSE_KEY_NO_SENSE;
 
   sense_key = buf_cmd[2] & 0x0F;
+  sense_key_add = buf_cmd[12];
 
   // Get CSW
   nb = sizeof(buf_cmd);
-  host_get_data(g_pipe_ms_in, &nb, buf_cmd);
+  if (host_get_data(g_pipe_ms_in, &nb, buf_cmd) != PIPE_GOOD)
+    return CTRL_FAIL;
 
   if (buf_cmd[12] != COMMAND_PASSED) return SBC_SENSE_KEY_NO_SENSE;
 
   switch (sense_key)
   {
   case SBC_SENSE_KEY_NOT_READY:
-  case SBC_SENSE_KEY_HARDWARE_ERROR:
+    if (sense_key_add == SBC_ASC_MEDIUM_NOT_PRESENT)
+      return CTRL_NO_PRESENT;
+    break;
   case SBC_SENSE_KEY_UNIT_ATTENTION:
+    if (sense_key_add == SBC_ASC_NOT_READY_TO_READY_CHANGE)
+      return CTRL_BUSY;
+    if (sense_key_add == SBC_ASC_MEDIUM_NOT_PRESENT)
+      return CTRL_NO_PRESENT;
+    break;
+  case SBC_SENSE_KEY_HARDWARE_ERROR:
   case SBC_SENSE_KEY_DATA_PROTECT:
     break;
   default:
@@ -243,9 +262,9 @@ U8 host_ms_request_sense(void)
 }
 
 
-//! This fonction returns the number of LUNs of the connected mass-storage device
-//! @return U8: Number of logical units of the device
-U8 host_get_lun(void)
+//! This function returns the number of LUNs of the connected mass-storage device
+//! @return uint8_t: Number of logical units of the device
+uint8_t host_get_lun(void)
 {
   if (!Is_host_ms_configured()) return 0;
 
@@ -263,10 +282,11 @@ U8 host_get_lun(void)
 //!   Memory unplug              ->    CTRL_NO_PRESENT
 //!   Not initialized or changed ->    CTRL_BUSY
 //!   An error occurred          ->    CTRL_FAIL
-Ctrl_status host_test_unit_ready(U8 lun)
+Ctrl_status host_test_unit_ready(uint8_t lun)
 {
   Ctrl_status status;
-  U16 nb;
+  uint16_t nb;
+  Status_t get_data_status;
 
   host_selected_lun = lun;
 
@@ -307,19 +327,24 @@ Ctrl_status host_test_unit_ready(U8 lun)
   buf_cmd[30] = 0x00;                           // 30
 
   // Send command
-  host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd);
+  if (host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd) != PIPE_GOOD)
+    return CTRL_FAIL;
 
   // Get CSW
   nb = sizeof(buf_cmd);
-  if (host_get_data(g_pipe_ms_in, &nb, buf_cmd) == PIPE_STALL)
+  get_data_status = host_get_data(g_pipe_ms_in, &nb, buf_cmd);
+  if (get_data_status == PIPE_STALL)
   {
     host_ms_stall_management(g_pipe_ms_in);
     return CTRL_FAIL;
   }
+  else if (get_data_status != PIPE_GOOD)
+    return CTRL_FAIL;
 
   if (buf_cmd[12] != COMMAND_PASSED)
   {
-    host_ms_request_sense();
+    if (host_ms_request_sense() == CTRL_BUSY)
+      return CTRL_BUSY;
     return CTRL_FAIL;
   }
 
@@ -337,10 +362,11 @@ Ctrl_status host_test_unit_ready(U8 lun)
 //!   Memory unplug              ->    CTRL_NO_PRESENT
 //!   Not initialized or changed ->    CTRL_BUSY
 //!   An error occurred          ->    CTRL_FAIL
-Ctrl_status host_read_capacity(U8 lun, U32 *u32_nb_sector)
+Ctrl_status host_read_capacity(uint8_t lun, uint32_t *u32_nb_sector)
 {
   Ctrl_status status;
-  U16 nb;
+  uint16_t nb;
+  Status_t get_data_status;
 
   host_selected_lun = lun;
   g_u8_sector_size = 0;
@@ -382,24 +408,31 @@ Ctrl_status host_read_capacity(U8 lun, U32 *u32_nb_sector)
   buf_cmd[30] = 0x00;                           // 30
 
   // Send command
-  host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd);
+  if (host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd) != PIPE_GOOD)
+    return CTRL_FAIL;
 
   // Transfer data
   nb = sizeof(buf_cmd);
-  if (host_get_data(g_pipe_ms_in, &nb, buf_cmd) == PIPE_STALL)
+  get_data_status = host_get_data(g_pipe_ms_in, &nb, buf_cmd);
+  if (get_data_status == PIPE_STALL)
   {
     host_ms_stall_management(g_pipe_ms_in);
     return CTRL_FAIL;
   }
+  else if (get_data_status != PIPE_GOOD)
+    return CTRL_FAIL;
 
-  *u32_nb_sector = sbc_format_scsi_to_mcu_data(32, *(U32 *)(buf_cmd + 0));
-  g_u8_sector_size = sbc_format_scsi_to_mcu_data(32, *(U32 *)(buf_cmd + 4)) >> 9;
+ *u32_nb_sector = sbc_format_scsi_to_mcu_data(32, *(uint32_t *)(buf_cmd+0));
+
+  g_u8_sector_size = sbc_format_scsi_to_mcu_data(32, *(uint32_t *)(buf_cmd + 4)) >> 9;
 
   // Get CSW
   nb = sizeof(buf_cmd);
-  host_get_data(g_pipe_ms_in, &nb, buf_cmd);
+  if (host_get_data(g_pipe_ms_in, &nb, buf_cmd) != PIPE_GOOD)
+    return CTRL_FAIL;
 
-  if (buf_cmd[12] != COMMAND_PASSED) return CTRL_FAIL;
+  if (buf_cmd[12] != COMMAND_PASSED)
+    return CTRL_FAIL;
 
   Host_set_device_ready();
 
@@ -409,9 +442,10 @@ Ctrl_status host_read_capacity(U8 lun, U32 *u32_nb_sector)
 
 //! This function returns the physical sector size of the \a lun
 //! @param lun          Logical Unit Number
-//! @return U8: Number of 512-byte blocks per sector
-U8 host_read_sector_size(U8 lun)
+//! @return uint8_t: Number of 512-byte blocks per sector
+uint8_t host_read_sector_size(uint8_t lun)
 {
+  ((void)lun);
   return g_u8_sector_size;
 }
 
@@ -420,18 +454,19 @@ U8 host_read_sector_size(U8 lun)
 //! Only used by memory removal with a HARDWARE-SPECIFIC write-protected detection
 //! @warning The customer must unplug the memory to change this write-protected mode.
 //! @param lun          Logical Unit Number
-//! @return TRUE if the memory is protected
-Bool host_wr_protect(U8 lun)
+//! @return true if the memory is protected
+bool host_wr_protect(uint8_t lun)
 {
-  U16 nb;
-  Bool write_protect;
+  uint16_t nb;
+  bool write_protect;
+  Status_t status;
 
   host_selected_lun = lun;
 
   if (!Is_host_ms_configured() ||
       g_u8_sector_size != 1 ||  // LUN not supported in write mode, because sector size != 512 bytes
       (g_b_read_run && host_read_10_ram_stop() != CTRL_GOOD))
-    return TRUE;
+    return true;
 
   buf_cmd[0]  = 'U';                            //  0 - 0x55
   buf_cmd[1]  = 'S';                            //  1 - 0x53
@@ -466,31 +501,36 @@ Bool host_wr_protect(U8 lun)
   buf_cmd[30] = 0x00;                           // 30
 
   // Send command
-  host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd);
+  if (host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd) != PIPE_GOOD)
+    return CTRL_FAIL;
 
   // Transfer data
   nb = sizeof(buf_cmd);
-  host_get_data(g_pipe_ms_in, &nb, buf_cmd);
+  if (host_get_data(g_pipe_ms_in, &nb, buf_cmd) != PIPE_GOOD)
+    return CTRL_FAIL;
 
   write_protect = buf_cmd[2] >> 7;
 
   // Get CSW
   nb = sizeof(buf_cmd);
-  if (host_get_data(g_pipe_ms_in, &nb, buf_cmd) == PIPE_STALL)
+  status = host_get_data(g_pipe_ms_in, &nb, buf_cmd);
+  if (status == PIPE_STALL)
   {
     host_ms_stall_management(g_pipe_ms_in);
-    return FALSE;
+    return false;
   }
+  else if (status != PIPE_GOOD)
+    return false;
 
-  if (buf_cmd[12] != COMMAND_PASSED) return FALSE;
+  if (buf_cmd[12] != COMMAND_PASSED) return false;
 
   return write_protect;
 }
 
 
 //! This function informs about the memory type
-//! @return TRUE if the memory is removable
-Bool host_removal(void)
+//! @return true if the memory is removable
+bool host_removal(void)
 {
   return Is_host_ms_configured();
 }
@@ -498,9 +538,9 @@ Bool host_removal(void)
 
 //------------ SPECIFIC FUNCTIONS FOR TRANSFER BY RAM --------------------------
 
-#if ACCESS_MEM_TO_RAM == ENABLED
+#if ACCESS_MEM_TO_RAM == true
 
-//! This function tranfers 1 data sector from memory to RAM
+//! This function transfers 1 data sector from memory to RAM
 //! sector = 512 bytes
 //! @param addr         Sector address to start read
 //! @param ram          Address of RAM buffer
@@ -509,13 +549,13 @@ Bool host_removal(void)
 //!   Memory unplug              ->    CTRL_NO_PRESENT
 //!   Not initialized or changed ->    CTRL_BUSY
 //!   An error occurred          ->    CTRL_FAIL
-Ctrl_status host_read_10_ram(U32 addr, void *ram)
+Ctrl_status host_read_10_ram(uint32_t addr, void *ram)
 {
   Ctrl_status status;
-  U16 nb;
-  U16 u16_nb_byte_ignore_at_beg;
-  U32 u32_host_ms_address;
-  U32 u32_host_ms_sector;
+  uint16_t nb;
+  uint16_t u16_nb_byte_ignore_at_beg;
+  uint32_t u32_host_ms_address;
+  uint32_t u32_host_ms_sector;
 
   if (!Is_host_ms_configured()) return CTRL_FAIL;
 
@@ -587,7 +627,7 @@ Ctrl_status host_read_10_ram(U32 addr, void *ram)
       return CTRL_FAIL;
     }
 
-    g_b_read_run = TRUE;
+    g_b_read_run = true;
   }
 
   // Transfer data
@@ -605,7 +645,113 @@ Ctrl_status host_read_10_ram(U32 addr, void *ram)
 }
 
 
-//! This function terminates the tranfer of a physical sector from memory to RAM
+//! This function transfers 1 data sector from memory to RAM
+//! sector = 512 bytes
+//! @param addr         Sector address to start read
+//! @param ram          Address of RAM buffer
+//! @param nb_sector    number of sector
+//! @return                            Ctrl_status
+//!   It is ready                ->    CTRL_GOOD
+//!   Memory unplug              ->    CTRL_NO_PRESENT
+//!   Not initialized or changed ->    CTRL_BUSY
+//!   An error occurred          ->    CTRL_FAIL
+Ctrl_status host_read_10_extram(uint32_t addr, void *ram, uint8_t nb_sector)
+{
+  Ctrl_status status;
+  uint16_t nb;
+  uint32_t u32_host_ms_sector;
+
+  if (!Is_host_ms_configured()) return CTRL_FAIL;
+
+  if ( g_u8_sector_size != 1) {
+     // For U-Disk with large block then use standard routine
+    while( nb_sector != 0 ) {
+       status = host_read_10_ram(addr, ram);
+       if (status != CTRL_GOOD) return status;
+       nb_sector--;
+       addr++;
+       ram = (uint8_t*)ram + HOST_SECTOR_SIZE;
+    }
+    return CTRL_GOOD;
+  }
+
+  if (g_b_read_run && (status = host_read_10_ram_stop()) != CTRL_GOOD) return status;
+
+
+   // Compute the number of bytes per physical sector
+   u32_host_ms_sector        = (uint32_t)nb_sector * HOST_SECTOR_SIZE;
+
+   // Save current position and remaining sectors
+   g_u32_read_addr           = addr;
+
+   buf_cmd[0]  = 'U';                            //  0 - 0x55
+   buf_cmd[1]  = 'S';                            //  1 - 0x53
+   buf_cmd[2]  = 'B';                            //  2 - 0x42
+   buf_cmd[3]  = 'C';                            //  3 - 0x43
+   buf_cmd[4]  = 0x66;                           //  4 - LSB0W(dCBWTag)
+   buf_cmd[5]  = 0x00;                           //  5 - LSB1W(dCBWTag)
+   buf_cmd[6]  = 0x00;                           //  6 - LSB2W(dCBWTag)
+   buf_cmd[7]  = 0x00;                           //  7 - LSB3W(dCBWTag)
+   buf_cmd[8]  = LSB0W(u32_host_ms_sector);      //  8 - LSB0W(dCBWDataTransferLength)
+   buf_cmd[9]  = LSB1W(u32_host_ms_sector);      //  9 - LSB1W(dCBWDataTransferLength)
+   buf_cmd[10] = LSB2W(u32_host_ms_sector);      // 10 - LSB2W(dCBWDataTransferLength)
+   buf_cmd[11] = LSB3W(u32_host_ms_sector);      // 11 - LSB3W(dCBWDataTransferLength)
+   buf_cmd[12] = SBC_CMD_DIR_IN;                 // 12 - bmCBWFlags
+   buf_cmd[13] = host_selected_lun;              // 13 - bCBWLUN
+   buf_cmd[14] = 0x0A;                           // 14 - bCBWCBLength
+   buf_cmd[15] = SBC_CMD_READ_10;                // 15 - CBWCB0 - Operation Code (0x28)
+   buf_cmd[16] = 0x00;                           // 16 - CBWCB1 - RDPROTECT, DPO, FUA, Obsolete
+   buf_cmd[17] = MSB0W(addr);                    // 17 - CBWCB2 - MSB0W(Logical Block Address)
+   buf_cmd[18] = MSB1W(addr);                    // 18 - CBWCB3 - MSB1W(Logical Block Address)
+   buf_cmd[19] = MSB2W(addr);                    // 19 - CBWCB4 - MSB2W(Logical Block Address)
+   buf_cmd[20] = MSB3W(addr);                    // 20 - CBWCW5 - MSB3W(Logical Block Address)
+   buf_cmd[21] = 0x00;                           // 21 - CBWCW6 - Reserved
+   buf_cmd[22] = 0x00;                           // 22 - CBWCW7 - MSB(Transfer Length)
+   buf_cmd[23] = nb_sector;                      // 23 - CBWCW8 - LSB(Transfer Length)
+   buf_cmd[24] = 0x00;                           // 24 - CBWCW9 - Control
+   buf_cmd[25] = 0x00;                           // 25
+   buf_cmd[26] = 0x00;                           // 26
+   buf_cmd[27] = 0x00;                           // 27
+   buf_cmd[28] = 0x00;                           // 28
+   buf_cmd[29] = 0x00;                           // 29
+   buf_cmd[30] = 0x00;                           // 30
+
+   // Send command
+   host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd);
+
+#if( defined AVR32_USBC_ADDRESS )
+#warning AVR32_USBC_ADDRESS
+   // Transfer data
+   nb = nb_sector*HOST_SECTOR_SIZE;
+   if (host_get_data_multi_packet(g_pipe_ms_in, &nb, ram) == PIPE_STALL)
+   {
+     host_ms_stall_management(g_pipe_ms_in);
+     return CTRL_FAIL;
+   }
+#else
+  // Transfer data
+  nb = HOST_SECTOR_SIZE;
+  while( nb_sector != 0 ) {
+     if (host_get_data(g_pipe_ms_in, &nb, ram) == PIPE_STALL)
+     {
+       host_ms_stall_management(g_pipe_ms_in);
+       return CTRL_FAIL;
+     }
+     nb_sector--;
+     ram = (uint8_t*)ram + HOST_SECTOR_SIZE;
+  }
+#endif
+
+  // Get CSW
+  nb = sizeof(buf_cmd);
+  host_get_data(g_pipe_ms_in, &nb, buf_cmd);
+
+  return (buf_cmd[12] == COMMAND_PASSED) ? CTRL_GOOD : CTRL_FAIL;
+}
+
+
+
+//! This function terminates the transfer of a physical sector from memory to RAM
 //! @return                            Ctrl_status
 //!   It is ready                ->    CTRL_GOOD
 //!   Memory unplug              ->    CTRL_NO_PRESENT
@@ -613,9 +759,9 @@ Ctrl_status host_read_10_ram(U32 addr, void *ram)
 //!   An error occurred          ->    CTRL_FAIL
 Ctrl_status host_read_10_ram_stop(void)
 {
-  U16 nb;
+  uint16_t nb;
 
-  g_b_read_run = FALSE;
+  g_b_read_run = false;
 
   // Ignore data at end of physical sector (in case physical sector != 512 bytes)
   g_u16_read_sector *= HOST_SECTOR_SIZE;
@@ -633,7 +779,7 @@ Ctrl_status host_read_10_ram_stop(void)
 }
 
 
-//! This function tranfers 1 data sector from RAM to memory
+//! This function transfers 1 data sector from RAM to memory
 //! sector = 512 bytes
 //! @param addr         Sector address to start write
 //! @param ram          Address of RAM buffer
@@ -642,16 +788,34 @@ Ctrl_status host_read_10_ram_stop(void)
 //!   Memory unplug              ->    CTRL_NO_PRESENT
 //!   Not initialized or changed ->    CTRL_BUSY
 //!   An error occurred          ->    CTRL_FAIL
-Ctrl_status host_write_10_ram(U32 addr, const void *ram)
+Ctrl_status host_write_10_ram(uint32_t addr, const void *ram)
+{
+   return host_write_10_extram(addr, ram, 1);
+}
+
+//! This function transfers 1 data sector from RAM to memory
+//! sector = 512 bytes
+//! @param addr         Sector address to start write
+//! @param ram          Address of RAM buffer
+//! @param nb_sector    Number of sector
+//! @return                            Ctrl_status
+//!   It is ready                ->    CTRL_GOOD
+//!   Memory unplug              ->    CTRL_NO_PRESENT
+//!   Not initialized or changed ->    CTRL_BUSY
+//!   An error occurred          ->    CTRL_FAIL
+Ctrl_status host_write_10_extram(uint32_t addr, const void *ram, uint8_t nb_sector)
 {
   Ctrl_status status;
-  U16 nb;
+  uint16_t nb;
+  uint32_t dCBWDataTransferLength;
 
   if (!Is_host_ms_configured() ||
       g_u8_sector_size != 1)  // LUN not supported in write mode, because sector size != 512 bytes
     return CTRL_FAIL;
 
   if (g_b_read_run && (status = host_read_10_ram_stop()) != CTRL_GOOD) return status;
+
+  dCBWDataTransferLength = (uint32_t)nb_sector * HOST_SECTOR_SIZE;
 
   buf_cmd[0]  = 'U';                            //  0 - 0x55
   buf_cmd[1]  = 'S';                            //  1 - 0x53
@@ -661,10 +825,10 @@ Ctrl_status host_write_10_ram(U32 addr, const void *ram)
   buf_cmd[5]  = 0x00;                           //  5 - LSB1W(dCBWTag)
   buf_cmd[6]  = 0x00;                           //  6 - LSB2W(dCBWTag)
   buf_cmd[7]  = 0x00;                           //  7 - LSB3W(dCBWTag)
-  buf_cmd[8]  = (U8)HOST_SECTOR_SIZE;           //  8 - LSB0W(dCBWDataTransferLength)
-  buf_cmd[9]  = (U8)(HOST_SECTOR_SIZE >> 8);    //  9 - LSB1W(dCBWDataTransferLength)
-  buf_cmd[10] = (U8)(HOST_SECTOR_SIZE >> 16);   // 10 - LSB2W(dCBWDataTransferLength)
-  buf_cmd[11] = HOST_SECTOR_SIZE >> 24;         // 11 - LSB3W(dCBWDataTransferLength)
+  buf_cmd[8]  = LSB0W(dCBWDataTransferLength);  //  8 - LSB0W(dCBWDataTransferLength)
+  buf_cmd[9]  = LSB1W(dCBWDataTransferLength);  //  9 - LSB1W(dCBWDataTransferLength)
+  buf_cmd[10] = LSB2W(dCBWDataTransferLength);  // 10 - LSB2W(dCBWDataTransferLength)
+  buf_cmd[11] = LSB3W(dCBWDataTransferLength);  // 11 - LSB3W(dCBWDataTransferLength)
   buf_cmd[12] = SBC_CMD_DIR_OUT;                // 12 - bmCBWFlags
   buf_cmd[13] = host_selected_lun;              // 13 - bCBWLUN
   buf_cmd[14] = 0x0A;                           // 14 - bCBWCBLength
@@ -676,7 +840,7 @@ Ctrl_status host_write_10_ram(U32 addr, const void *ram)
   buf_cmd[20] = MSB3W(addr);                    // 20 - CBWCW5 - MSB3W(Logical Block Address)
   buf_cmd[21] = 0x00;                           // 21 - CBWCW6 - Reserved
   buf_cmd[22] = 0x00;                           // 22 - CBWCW7 - MSB(Transfer Length)
-  buf_cmd[23] = 0x01;                           // 23 - CBWCW8 - LSB(Transfer Length)
+  buf_cmd[23] = nb_sector;                      // 23 - CBWCW8 - LSB(Transfer Length)
   buf_cmd[24] = 0x00;                           // 24 - CBWCW9 - Control
   buf_cmd[25] = 0x00;                           // 25
   buf_cmd[26] = 0x00;                           // 26
@@ -688,12 +852,27 @@ Ctrl_status host_write_10_ram(U32 addr, const void *ram)
   // Send command
   host_send_data(g_pipe_ms_out, sizeof(buf_cmd), buf_cmd);
 
+#if( defined AVR32_USBC_ADDRESS )
+#warning AVR32_USBC_ADDRESS
   // Transfer data
-  if (host_send_data(g_pipe_ms_out, HOST_SECTOR_SIZE, ram) == PIPE_STALL)
+  if (host_send_data_multi_packet(g_pipe_ms_out, nb_sector*HOST_SECTOR_SIZE, ram) == PIPE_STALL)
   {
     host_ms_stall_management(g_pipe_ms_out);
     return CTRL_FAIL;
   }
+#else
+  // Transfer data
+  while( nb_sector!= 0 )
+  {
+    if (host_send_data(g_pipe_ms_out, HOST_SECTOR_SIZE, ram) == PIPE_STALL)
+    {
+      host_ms_stall_management(g_pipe_ms_out);
+      return CTRL_FAIL;
+    }
+    nb_sector--;
+    ram = (uint8_t*)ram + HOST_SECTOR_SIZE;
+  }
+#endif
 
   // Get CSW
   nb = sizeof(buf_cmd);
@@ -702,7 +881,7 @@ Ctrl_status host_write_10_ram(U32 addr, const void *ram)
   return (buf_cmd[12] == COMMAND_PASSED) ? CTRL_GOOD : CTRL_FAIL;
 }
 
-#endif  // ACCESS_MEM_TO_RAM == ENABLED
+#endif  // ACCESS_MEM_TO_RAM == true
 
 
 #endif  // MEM_USB == ENABLE

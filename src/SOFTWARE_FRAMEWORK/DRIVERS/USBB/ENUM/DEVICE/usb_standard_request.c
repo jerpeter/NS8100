@@ -1,7 +1,6 @@
-/* This source file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Processing of USB device enumeration requests.
  *
@@ -13,41 +12,43 @@
  * The enumeration parameters (descriptor tables) are contained in the
  * usb_descriptors.c file.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 //_____ I N C L U D E S ____________________________________________________
@@ -55,7 +56,7 @@
 #include "conf_usb.h"
 
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 
 #include "usb_drv.h"
 #include "usb_descriptors.h"
@@ -68,7 +69,9 @@
 
 
 //_____ D E F I N I T I O N S ______________________________________________
-
+#if(!defined USB_REMOTE_WAKEUP_FEATURE)
+#define USB_REMOTE_WAKEUP_FEATURE false
+#endif
 
 //_____ P R I V A T E   D E C L A R A T I O N S ____________________________
 
@@ -79,21 +82,22 @@ static  void    usb_clear_feature    (void);
 static  void    usb_set_feature      (void);
 static  void    usb_get_status       (void);
 static  void    usb_get_configuration(void);
-static  void    usb_get_interface    (void);
+static  bool    usb_get_interface    (void);
 static  void    usb_set_interface    (void);
 
 
 //_____ D E C L A R A T I O N S ____________________________________________
 
-                  Bool                                endpoint_status[NB_ENDPOINTS];
         const     void                               *pbuffer;
-                  U8                                  data_to_transfer;
+                  U16                                 data_to_transfer;
 static            U8                                  bmRequestType;
         volatile  U8                                  usb_configuration_nb;
-extern  volatile  Bool                                usb_connected;
+extern  volatile  bool                                usb_connected;
 extern  const     S_usb_device_descriptor             usb_user_device_descriptor;
 extern  const     S_usb_user_configuration_descriptor usb_user_configuration_descriptor;
-
+static            U8                                  usb_interface_status[NB_INTERFACE];  // All interface with default setting
+static            U8                                  device_status = DEVICE_STATUS;
+                  U8                                  remote_wakeup_feature;
 
 //! This function reads the SETUP request sent to the default control endpoint
 //! and calls the appropriate function. When exiting of the usb_read_request
@@ -113,13 +117,13 @@ extern  const     S_usb_user_configuration_descriptor usb_user_configuration_des
 //!
 void usb_process_request(void)
 {
-  U8 bmRequest;
+  U8 bRequest;
 
   Usb_reset_endpoint_fifo_access(EP_CONTROL);
   bmRequestType = Usb_read_endpoint_data(EP_CONTROL, 8);
-  bmRequest     = Usb_read_endpoint_data(EP_CONTROL, 8);
+  bRequest      = Usb_read_endpoint_data(EP_CONTROL, 8);
 
-  switch (bmRequest)
+  switch (bRequest)
   {
   case GET_DESCRIPTOR:
     if (bmRequestType == 0x80) usb_get_descriptor();
@@ -157,7 +161,14 @@ void usb_process_request(void)
     break;
 
   case GET_INTERFACE:
-    if (bmRequestType == 0x81) usb_get_interface();
+    if (bmRequestType == 0x81)
+    {
+      if(!usb_get_interface())
+      {
+        Usb_enable_stall_handshake(EP_CONTROL);
+        Usb_ack_setup_received_free();
+      }
+    }
     else goto unsupported_request;
     break;
 
@@ -170,7 +181,7 @@ void usb_process_request(void)
   case SYNCH_FRAME:
   default:  //!< unsupported request => call to user read request
 unsupported_request:
-    if (!usb_user_read_request(bmRequestType, bmRequest))
+    if (!usb_user_read_request(bmRequestType, bRequest))
     {
       Usb_enable_stall_handshake(EP_CONTROL);
       Usb_ack_setup_received_free();
@@ -205,16 +216,18 @@ void usb_set_address(void)
 void usb_set_configuration(void)
 {
   U8 configuration_number = Usb_read_endpoint_data(EP_CONTROL, 8);
+  U8 u8_i;
 
   if (configuration_number <= NB_CONFIGURATION)
   {
     Usb_ack_setup_received_free();
     usb_configuration_nb = configuration_number;
-
-    Usb_ack_control_in_ready_send();              //!< send a ZLP for STATUS phase
+    for( u8_i=0; u8_i<NB_INTERFACE; u8_i++) usb_interface_status[u8_i]=0;
 
     usb_user_endpoint_init(usb_configuration_nb); //!< endpoint configuration
     Usb_set_configuration_action();
+
+    Usb_ack_control_in_ready_send();              //!< send a ZLP for STATUS phase
   }
   else
   {
@@ -234,13 +247,16 @@ void usb_set_configuration(void)
 //!
 void usb_get_descriptor(void)
 {
-  Bool    zlp;
+  bool    zlp;
   U16     wLength;
   U8      descriptor_type;
   U8      string_type;
   Union32 temp;
+#if (USB_HIGH_SPEED_SUPPORT==true)
+  bool    b_first_data = true;
+#endif
 
-  zlp             = FALSE;                                  /* no zero length packet */
+  zlp             = false;                                  /* no zero length packet */
   string_type     = Usb_read_endpoint_data(EP_CONTROL, 8);  /* read LSB of wValue    */
   descriptor_type = Usb_read_endpoint_data(EP_CONTROL, 8);  /* read MSB of wValue    */
 
@@ -251,10 +267,41 @@ void usb_get_descriptor(void)
     pbuffer          = Usb_get_dev_desc_pointer();
     break;
 
+#if (USB_HIGH_SPEED_SUPPORT==false)
   case CONFIGURATION_DESCRIPTOR:
     data_to_transfer = Usb_get_conf_desc_length();  //!< sizeof(usb_conf_desc);
     pbuffer          = Usb_get_conf_desc_pointer();
     break;
+
+#else
+  case CONFIGURATION_DESCRIPTOR:
+    if( Is_usb_full_speed_mode() )
+    {
+       data_to_transfer = Usb_get_conf_desc_fs_length();  //!< sizeof(usb_conf_desc_fs);
+       pbuffer          = Usb_get_conf_desc_fs_pointer();
+    }else{
+       data_to_transfer = Usb_get_conf_desc_hs_length();  //!< sizeof(usb_conf_desc_hs);
+       pbuffer          = Usb_get_conf_desc_hs_pointer();
+    }
+    break;
+
+  case OTHER_SPEED_CONFIGURATION_DESCRIPTOR:
+    if( !Is_usb_full_speed_mode() )
+    {
+       data_to_transfer = Usb_get_conf_desc_fs_length();  //!< sizeof(usb_conf_desc_fs);
+       pbuffer          = Usb_get_conf_desc_fs_pointer();
+    }else{
+       data_to_transfer = Usb_get_conf_desc_hs_length();  //!< sizeof(usb_conf_desc_hs);
+       pbuffer          = Usb_get_conf_desc_hs_pointer();
+    }
+    break;
+
+  case DEVICE_QUALIFIER_DESCRIPTOR:
+    data_to_transfer = Usb_get_qualifier_desc_length();  //!< sizeof(usb_qualifier_desc);
+    pbuffer          = Usb_get_qualifier_desc_pointer();
+    break;
+
+#endif
 
   default:
     if (!usb_user_get_descriptor(descriptor_type, string_type))
@@ -280,7 +327,7 @@ void usb_get_descriptor(void)
   {
     // No need to test ZLP sending since we send the exact number of bytes as
     // expected by the host.
-    data_to_transfer = (U8)wLength; //!< send only requested number of data bytes
+    data_to_transfer = wLength; //!< send only requested number of data bytes
   }
 
   Usb_ack_nak_out(EP_CONTROL);
@@ -293,12 +340,29 @@ void usb_get_descriptor(void)
       break;  // don't clear the flag now, it will be cleared after
 
     Usb_reset_endpoint_fifo_access(EP_CONTROL);
-    data_to_transfer = usb_write_ep_txpacket(EP_CONTROL, pbuffer,
-                                             data_to_transfer, &pbuffer);
+
+#if (USB_HIGH_SPEED_SUPPORT==true) // To support other descriptors like OTHER_SPEED_CONFIGURATION_DESCRIPTOR
+    if( b_first_data ) {
+      b_first_data = false;
+      if( 0!= data_to_transfer ) {
+        usb_write_ep_txpacket(EP_CONTROL, pbuffer, 1, &pbuffer);
+        data_to_transfer--;
+      }
+      if( 0!= data_to_transfer ) {
+        usb_write_ep_txpacket(EP_CONTROL, &descriptor_type, 1, NULL);
+        pbuffer = ((const U8*)pbuffer)+1;
+        data_to_transfer--;
+      }
+    }
+#endif
+    if( 0!= data_to_transfer ) {
+       data_to_transfer = usb_write_ep_txpacket(EP_CONTROL, pbuffer,
+                                                data_to_transfer, &pbuffer);
+    }
     if (Is_usb_nak_out(EP_CONTROL))
       break;
-    else
-      Usb_ack_control_in_ready_send();  //!< Send data until necessary
+
+    Usb_ack_control_in_ready_send();  //!< Send data until necessary
   }
 
   if (zlp && !Is_usb_nak_out(EP_CONTROL))
@@ -342,7 +406,7 @@ void usb_get_status(void)
   case REQUEST_DEVICE_STATUS:
     Usb_ack_setup_received_free();
     Usb_reset_endpoint_fifo_access(EP_CONTROL);
-    Usb_write_endpoint_data(EP_CONTROL, 8, DEVICE_STATUS);
+    Usb_write_endpoint_data(EP_CONTROL, 8, device_status);
     break;
 
   case REQUEST_INTERFACE_STATUS:
@@ -357,7 +421,7 @@ void usb_get_status(void)
     wIndex = Get_desc_ep_nbr(wIndex);
     Usb_ack_setup_received_free();
     Usb_reset_endpoint_fifo_access(EP_CONTROL);
-    Usb_write_endpoint_data(EP_CONTROL, 8, endpoint_status[wIndex]);
+    Usb_write_endpoint_data(EP_CONTROL, 8, Is_usb_endpoint_stall_requested(wIndex) );
     break;
 
   default:
@@ -379,50 +443,125 @@ void usb_get_status(void)
 //!
 void usb_set_feature(void)
 {
-  U8 wValue;
-  U8 wIndex;
+  U16 wValue  = usb_format_usb_to_mcu_data(16, Usb_read_endpoint_data(EP_CONTROL, 16));
+  U16 wIndex  = usb_format_usb_to_mcu_data(16, Usb_read_endpoint_data(EP_CONTROL, 16));
+  U16 wLength = usb_format_usb_to_mcu_data(16, Usb_read_endpoint_data(EP_CONTROL, 16));
 
-  if (bmRequestType == INTERFACE_TYPE)
-  {
-    //!< keep that order (set StallRq/clear RxSetup) or a
-    //!< OUT request following the SETUP may be acknowledged
-    Usb_enable_stall_handshake(EP_CONTROL);
-    Usb_ack_setup_received_free();
-  }
-  else if (bmRequestType == ENDPOINT_TYPE)
-  {
-    wValue = Usb_read_endpoint_data(EP_CONTROL, 8);
+  if (wLength)
+    goto unsupported_request;
 
-    if (wValue == FEATURE_ENDPOINT_HALT)
-    {
-      Usb_read_endpoint_data(EP_CONTROL, 8);  //!< dummy read (MSB of wValue)
-      wIndex = Usb_read_endpoint_data(EP_CONTROL, 8);
-      wIndex = Get_desc_ep_nbr(wIndex);
-
-      if (wIndex == EP_CONTROL)
+   if (bmRequestType==USB_SETUP_SET_STAND_DEVICE) {
+#if (USB_REMOTE_WAKEUP_FEATURE == true)
+      if (FEATURE_DEVICE_REMOTE_WAKEUP == wValue)
       {
-        Usb_enable_stall_handshake(EP_CONTROL);
-        Usb_ack_setup_received_free();
+         device_status |= USB_DEV_STATUS_REMOTEWAKEUP;
+         remote_wakeup_feature = true;
+         Usb_ack_setup_received_free();
+         Usb_ack_control_in_ready_send();
+         return;
       }
-      else if (Is_usb_endpoint_enabled(wIndex))
+#endif
+      goto unsupported_request;
+   }
+
+  switch (wValue)
+  {
+  case FEATURE_ENDPOINT_HALT:
+    wIndex = Get_desc_ep_nbr(wIndex);  // clear direction flag
+    if (bmRequestType != ENDPOINT_TYPE ||
+        wIndex == EP_CONTROL ||
+        !Is_usb_endpoint_enabled(wIndex))
+      goto unsupported_request;
+
+    Usb_enable_stall_handshake(wIndex);
+    Usb_ack_setup_received_free();
+    Usb_ack_control_in_ready_send();
+    break;
+
+#if (USB_HIGH_SPEED_SUPPORT==true)
+  case FEATURE_TEST_MODE:
+    if (bmRequestType != DEVICE_TYPE ||
+        wIndex & 0x00FF)
+      goto unsupported_request;
+
+    switch (wIndex >> 8)
+    {
+    case TEST_J:
+      Usb_ack_setup_received_free();
+      Usb_ack_control_in_ready_send();
+      while (!Is_usb_control_in_ready());
+      Wr_bitfield(AVR32_USBB_udcon, AVR32_USBB_UDCON_SPDCONF_MASK, 2);
+      Set_bits(AVR32_USBB_udcon, AVR32_USBB_UDCON_TSTJ_MASK);
+      break;
+
+    case TEST_K:
+      Usb_ack_setup_received_free();
+      Usb_ack_control_in_ready_send();
+      while (!Is_usb_control_in_ready());
+      Wr_bitfield(AVR32_USBB_udcon, AVR32_USBB_UDCON_SPDCONF_MASK, 2);
+      Set_bits(AVR32_USBB_udcon, AVR32_USBB_UDCON_TSTK_MASK);
+      break;
+
+    case TEST_SE0_NAK:
+      Usb_ack_setup_received_free();
+      Usb_ack_control_in_ready_send();
+      while (!Is_usb_control_in_ready());
+      Wr_bitfield(AVR32_USBB_udcon, AVR32_USBB_UDCON_SPDCONF_MASK, 2);
+      break;
+
+    case TEST_PACKET:
       {
-        Usb_enable_stall_handshake(wIndex);
-        endpoint_status[wIndex] = ENABLED;
+        static const U8 test_packet[] =
+        {
+          // 00000000 * 9
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          // 01010101 * 8
+          0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
+          // 01110111 * 8
+          0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE,
+          // 0, {111111S * 15}, 111111
+          0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+          // S, 111111S, {0111111S * 7}
+          0x7F, 0xBF, 0xDF, 0xEF, 0xF7, 0xFB, 0xFD,
+          // 00111111, {S0111111 * 9}, S0
+          0xFC, 0x7E, 0xBF, 0xDF, 0xEF, 0xF7, 0xFB, 0xFD, 0x7E
+        };
+
         Usb_ack_setup_received_free();
         Usb_ack_control_in_ready_send();
+        while (!Is_usb_control_in_ready());
+        Wr_bitfield(AVR32_USBB_udcon, AVR32_USBB_UDCON_SPDCONF_MASK, 2);
+        Usb_disable_endpoint(EP_CONTROL);
+        Usb_unallocate_memory(EP_CONTROL);
+        (void)Usb_configure_endpoint(EP_CONTROL,
+                                     TYPE_BULK,
+                                     DIRECTION_IN,
+                                     64,
+                                     SINGLE_BANK);
+        Usb_reset_endpoint(EP_CONTROL);
+        Set_bits(AVR32_USBB_udcon, AVR32_USBB_UDCON_TSTPCKT_MASK);
+        usb_write_ep_txpacket(EP_CONTROL, &test_packet, sizeof(test_packet), NULL);
+        Usb_send_in(EP_CONTROL);
       }
-      else
-      {
-        Usb_enable_stall_handshake(EP_CONTROL);
-        Usb_ack_setup_received_free();
-      }
+      break;
+
+    case TEST_FORCE_ENABLE: // Only for downstream facing hub ports
+    default:
+      goto unsupported_request;
     }
-    else
-    {
-      Usb_enable_stall_handshake(EP_CONTROL);
-      Usb_ack_setup_received_free();
-    }
+    break;
+#endif
+
+  case FEATURE_DEVICE_REMOTE_WAKEUP:
+  default:
+    goto unsupported_request;
   }
+
+  return;
+
+unsupported_request:
+  Usb_enable_stall_handshake(EP_CONTROL);
+  Usb_ack_setup_received_free();
 }
 
 
@@ -430,62 +569,76 @@ void usb_set_feature(void)
 //!
 void usb_clear_feature(void)
 {
-  U8 wValue;
-  U8 wIndex;
+   U8 wValue;
+   U8 wIndex;
 
-  if (bmRequestType == ZERO_TYPE || bmRequestType == INTERFACE_TYPE)
-  {
-    //!< keep that order (set StallRq/clear RxSetup) or a
-    //!< OUT request following the SETUP may be acknowledged
-    Usb_enable_stall_handshake(EP_CONTROL);
-    Usb_ack_setup_received_free();
-  }
-  else if (bmRequestType == ENDPOINT_TYPE)
-  {
-    wValue = Usb_read_endpoint_data(EP_CONTROL, 8);
+   switch (bmRequestType)
+   {
+#if (USB_REMOTE_WAKEUP_FEATURE == true)
+      case  USB_SETUP_SET_STAND_DEVICE:
+      wValue = Usb_read_endpoint_data(EP_CONTROL, 8);
+      if (wValue != FEATURE_DEVICE_REMOTE_WAKEUP)
+         break;              // Invalid request
+      device_status &= ~USB_DEV_STATUS_REMOTEWAKEUP;
+      remote_wakeup_feature = false;
+      Usb_ack_setup_received_free();
+      Usb_ack_control_in_ready_send();
+      return;
+#endif
 
-    if (wValue == FEATURE_ENDPOINT_HALT)
-    {
+      case USB_SETUP_SET_STAND_INTERFACE:
+      break;
+
+      case USB_SETUP_SET_STAND_ENDPOINT:
+      wValue = Usb_read_endpoint_data(EP_CONTROL, 8);
+      if (wValue != FEATURE_ENDPOINT_HALT)
+         break;
       Usb_read_endpoint_data(EP_CONTROL, 8);  //!< dummy read (MSB of wValue)
       wIndex = Usb_read_endpoint_data(EP_CONTROL, 8);
       wIndex = Get_desc_ep_nbr(wIndex);
 
-      if (Is_usb_endpoint_enabled(wIndex))
+      if (!Is_usb_endpoint_enabled(wIndex))
+         break;
+      if (wIndex != EP_CONTROL)
       {
-        if (wIndex != EP_CONTROL)
-        {
-          Usb_disable_stall_handshake(wIndex);
-          Usb_reset_endpoint(wIndex);
-          Usb_reset_data_toggle(wIndex);
-        }
-        endpoint_status[wIndex] = DISABLED;
-        Usb_ack_setup_received_free();
-        Usb_ack_control_in_ready_send();
+        Usb_disable_stall_handshake(wIndex);
+        Usb_reset_endpoint(wIndex);
+        Usb_reset_data_toggle(wIndex);
       }
-      else
-      {
-        Usb_enable_stall_handshake(EP_CONTROL);
-        Usb_ack_setup_received_free();
-      }
-    }
-    else
-    {
-      Usb_enable_stall_handshake(EP_CONTROL);
       Usb_ack_setup_received_free();
-    }
-  }
+      Usb_ack_control_in_ready_send();
+      return;
+
+      default:
+      break;
+   }
+   Usb_enable_stall_handshake(EP_CONTROL);
+   Usb_ack_setup_received_free();
 }
 
-
-//! This function manages the GET INTERFACE request.
+//! This function manages the SETUP_GET_INTERFACE request.
 //!
-void usb_get_interface(void)
+bool usb_get_interface (void)
 {
-  Usb_ack_setup_received_free();
-  Usb_ack_control_in_ready_send();  //!< send a ZLP for STATUS phase
+   U16   wInterface;
+   U16   wValue;
 
-  while (!Is_usb_control_out_received());
-  Usb_ack_control_out_received_free();
+   // Read wValue
+   wValue = usb_format_usb_to_mcu_data(16, Usb_read_endpoint_data(EP_CONTROL, 16));
+   // wValue = Alternate Setting
+   // wIndex = Interface
+   wInterface=usb_format_usb_to_mcu_data(16, Usb_read_endpoint_data(EP_CONTROL, 16));
+   if(0!=wValue)
+      return false;
+   Usb_ack_setup_received_free();
+
+   Usb_reset_endpoint_fifo_access(EP_CONTROL);
+   Usb_write_endpoint_data(EP_CONTROL, 8, usb_interface_status[wInterface] );
+   Usb_ack_control_in_ready_send();
+
+   while( !Is_usb_control_out_received() );
+   Usb_ack_control_out_received_free();
+   return true;
 }
 
 
@@ -493,10 +646,108 @@ void usb_get_interface(void)
 //!
 void usb_set_interface(void)
 {
-  Usb_ack_setup_received_free();
-  Usb_ack_control_in_ready_send();  //!< send a ZLP for STATUS phase
-  while (!Is_usb_control_in_ready());
+   U8 u8_i;
+
+   // wValue = Alternate Setting
+   // wIndex = Interface
+   U16 wValue  = usb_format_usb_to_mcu_data(16, Usb_read_endpoint_data(EP_CONTROL, 16));
+   U16 wIndex  = usb_format_usb_to_mcu_data(16, Usb_read_endpoint_data(EP_CONTROL, 16));
+   Usb_ack_setup_received_free();
+
+   // Get descriptor
+#if (USB_HIGH_SPEED_SUPPORT==true)
+   if( Is_usb_full_speed_mode() )
+   {
+      data_to_transfer = Usb_get_conf_desc_fs_length();  //!< sizeof(usb_conf_desc_fs);
+      pbuffer          = Usb_get_conf_desc_fs_pointer();
+   }else{
+      data_to_transfer = Usb_get_conf_desc_hs_length();  //!< sizeof(usb_conf_desc_hs);
+      pbuffer          = Usb_get_conf_desc_hs_pointer();
+   }
+#else
+   data_to_transfer = Usb_get_conf_desc_length();  //!< sizeof(usb_conf_desc);
+   pbuffer          = Usb_get_conf_desc_pointer();
+#endif
+
+   //** Scan descriptor
+
+   //* Find configuration selected
+   if( usb_configuration_nb == 0 )
+   {
+      // No configuration selected then no interface enable
+      Usb_enable_stall_handshake(EP_CONTROL);
+      Usb_ack_setup_received_free();
+      return;
+   }
+   u8_i = usb_configuration_nb;
+   while( u8_i != 0 )
+   {
+      if( CONFIGURATION_DESCRIPTOR != ((S_usb_configuration_descriptor*)pbuffer)->bDescriptorType )
+      {
+         data_to_transfer -=  ((S_usb_configuration_descriptor*)pbuffer)->bLength;
+         pbuffer =  (U8*)pbuffer + ((S_usb_configuration_descriptor*)pbuffer)->bLength;
+         continue;
+      }
+      u8_i--;
+      if( u8_i != 0 )
+      {
+         data_to_transfer -=  ((S_usb_configuration_descriptor*)pbuffer)->wTotalLength;
+         pbuffer =  (U8*)pbuffer + ((S_usb_configuration_descriptor*)pbuffer)->wTotalLength;
+      }
+   }
+
+   // Find interface selected
+   if( wIndex >= ((S_usb_configuration_descriptor*)pbuffer)->bNumInterfaces )
+   {
+      // Interface number unknown
+      Usb_enable_stall_handshake(EP_CONTROL);
+      Usb_ack_setup_received_free();
+      return;
+   }
+   while( 1 )
+   {
+      if( data_to_transfer <= ((S_usb_interface_descriptor*)pbuffer)->bLength )
+      {
+         // Interface unknown
+         Usb_enable_stall_handshake(EP_CONTROL);
+         Usb_ack_setup_received_free();
+         return;
+      }
+      data_to_transfer -=  ((S_usb_interface_descriptor*)pbuffer)->bLength;
+      pbuffer =  (U8*)pbuffer + ((S_usb_interface_descriptor*)pbuffer)->bLength;
+      if( INTERFACE_DESCRIPTOR != ((S_usb_interface_descriptor*)pbuffer)->bDescriptorType )
+         continue;
+      if( wIndex != ((S_usb_interface_descriptor*)pbuffer)->bInterfaceNumber )
+         continue;
+      if( wValue != ((S_usb_interface_descriptor*)pbuffer)->bAlternateSetting )
+         continue;
+      usb_interface_status[wIndex] = wValue;
+      break;
+   }
+
+   //* Find endpoints of interface and reset it
+   while( 1 )
+   {
+      if( data_to_transfer <= ((S_usb_endpoint_descriptor*)pbuffer)->bLength )
+         break;    // End of interface
+      data_to_transfer -=  ((S_usb_endpoint_descriptor*)pbuffer)->bLength;
+      pbuffer =  (U8*)pbuffer + ((S_usb_endpoint_descriptor*)pbuffer)->bLength;
+      if( INTERFACE_DESCRIPTOR == ((S_usb_endpoint_descriptor*)pbuffer)->bDescriptorType )
+         break;    // End of interface
+      if( ENDPOINT_DESCRIPTOR == ((S_usb_endpoint_descriptor*)pbuffer)->bDescriptorType )
+      {
+         // Reset endpoint
+         u8_i = ((S_usb_endpoint_descriptor*)pbuffer)->bEndpointAddress & (~MSK_EP_DIR);
+         Usb_disable_stall_handshake(u8_i);
+         Usb_reset_endpoint(u8_i);
+         Usb_reset_data_toggle(u8_i);
+      }
+   }
+
+   // send a ZLP for STATUS phase
+   Usb_ack_control_in_ready_send();
+   while (!Is_usb_control_in_ready());
 }
 
 
-#endif  // USB_DEVICE_FEATURE == ENABLED
+#endif  // USB_DEVICE_FEATURE == true

@@ -46,7 +46,7 @@
 #include "navigation.h"
 #include "file.h"
 #include LIB_CTRLACCESS
-
+#include "usart.h"
 
 //_____ M A C R O S ________________________________________________________
 
@@ -1276,7 +1276,10 @@ Bool  nav_dir_name( FS_STRING sz_path  , U8 u8_size_max  )
    Bool b_mode_nav_mode_save;
 
    if ( !fat_check_mount_noopen())
-      return FALSE;
+   {
+	   usart_write_line((&AVR32_USART0), "Error: Fat Check Mount Not open!\n");
+	   return FALSE;
+   }
 
    if (0 != fs_g_nav.u32_cluster_sel_dir)
    {
@@ -1292,7 +1295,12 @@ Bool  nav_dir_name( FS_STRING sz_path  , U8 u8_size_max  )
       fs_g_nav.b_mode_nav = FS_FILE;
       // Go to parent directory and select the children directory
       if( !nav_dir_gotoparent() )
-         return FALSE;
+      {
+		    usart_write_line((&AVR32_USART0), "Error: NAV failed to goto parent!\n");
+		     fs_g_nav.b_mode_nav_single = b_mode_nav_single_save;
+		     fs_g_nav.b_mode_nav = b_mode_nav_mode_save;
+			return FALSE;
+	  }
       fs_g_nav.b_mode_nav_single = b_mode_nav_single_save ;
       fs_g_nav.b_mode_nav = b_mode_nav_mode_save;
       // Go to directory name position
@@ -1310,38 +1318,36 @@ Bool  nav_dir_name( FS_STRING sz_path  , U8 u8_size_max  )
       // No parent directory, then it is the root directory
       if( g_b_string_length )
       {
+		usart_write_line((&AVR32_USART0), "NAV: At root directory.\n");
          ((FS_STR_UNICODE)sz_path )[0] = 3;  // 3 chars for path "x:"
          status = TRUE;
       }else
 
-      if ( FS_ERR_IS_ROOT == fs_g_status )
-      {
-         // Create a device name
-         for( u8_i = 0 ; u8_i<3 ; u8_i++ )
-         {
-            switch( u8_i )
-            {
-               case 0:
-               u8_character = nav_drive_getname();    // Letter
-               break;
-               case 1:
-               u8_character = ':';                     // ":"
-               break;
-               case 2:
-               default:
-               u8_character = 0;                       // end of string
-               break;
-            }
-            if( Is_unicode )
-            {
-               ((FS_STR_UNICODE)sz_path )[0] = u8_character;
-            }else{
-               sz_path [0] = u8_character;
-            }
-            sz_path  += (Is_unicode? 2 : 1 );
-         }
-         status = TRUE;
-      }
+     // Create a device name
+     for( u8_i = 0 ; u8_i<3 ; u8_i++ )
+     {
+        switch( u8_i )
+        {
+           case 0:
+           u8_character = nav_drive_getname();    // Letter
+           break;
+           case 1:
+           u8_character = ':';                     // ":"
+           break;
+           case 2:
+           default:
+           u8_character = 0;                       // end of string
+           break;
+        }
+        if( Is_unicode )
+        {
+           ((FS_STR_UNICODE)sz_path )[0] = u8_character;
+        }else{
+           sz_path [0] = u8_character;
+        }
+        sz_path  += (Is_unicode? 2 : 1 );
+     }
+     status = TRUE;
    }
    return status;
 }
@@ -1368,7 +1374,11 @@ Bool  nav_dir_make( const FS_STRING sz_name  )
    MSB0(fs_g_seg.u32_addr)=0xFF;    // It is a new cluster list
    fs_g_seg.u32_size_or_pos = 1;    // Only one sector (= one cluster)
    if ( !fat_allocfreespace())
+   {
+      fat_delete_file( FALSE );
+      fat_cache_flush();
       return FALSE;
+   }
 
    // Save information about the new directory
    fs_g_nav_entry.u32_cluster = fs_g_seg.u32_addr; // First cluster of the directory returned by alloc_free_space
@@ -1383,6 +1393,8 @@ Bool  nav_dir_make( const FS_STRING sz_name  )
    if ( !fat_read_dir())
       return FALSE;
    fat_write_entry_file();
+   if( !fat_cache_flush())
+      return FALSE;
 
    // Go to position of new directory (it is the last directory)
    return nav_filelist_last( FS_DIR );
@@ -1681,7 +1693,8 @@ Bool  nav_setcwd( FS_STRING sz_path , Bool b_match_case , Bool b_create )
             {
 #if (FSFEATURE_WRITE == (FS_LEVEL_FEATURES & FSFEATURE_WRITE))
                // The file must be created
-               nav_file_create( sz_save_path );
+               if( !nav_file_create( sz_save_path ) )
+                  goto nav_setcwd_fail;
 #else
                goto nav_setcwd_fail;
 #endif

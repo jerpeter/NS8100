@@ -1,52 +1,52 @@
-/* This header file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file *********************************************************************
+/*****************************************************************************
+ *
+ * \file
  *
  * \brief Management of the SCSI decoding.
  *
  * This file manages the SCSI decoding.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ******************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ******************************************************************************/
 
 
 #ifndef _SCSI_DECODER_H_
 #define _SCSI_DECODER_H_
-
 
 //_____ I N C L U D E S ____________________________________________________
 
@@ -186,9 +186,6 @@
 #define SBC_SENSE_KEY_SPECIFIC_1                        0x00
 #define SBC_SENSE_KEY_SPECIFIC_0                        0x00
 //! @}
-
-//! Maximal supported INQUIRY data length.
-#define SBC_MAX_INQUIRY_DATA_LENGTH                     0x60
 
 /*! \name MODE SENSE Bit-Masks
  */
@@ -407,18 +404,18 @@
 //! Sense data.
 typedef struct
 {
-  U8 key;   //!< <tt>SENSE KEY</tt>.
-  U8 asc;   //!< <tt>ADDITIONAL SENSE CODE</tt>.
-  U8 ascq;  //!< <tt>ADDITIONAL SENSE CODE QUALIFIER</tt>.
+  uint8_t key;   //!< <tt>SENSE KEY</tt>.
+  uint8_t asc;   //!< <tt>ADDITIONAL SENSE CODE</tt>.
+  uint8_t ascq;  //!< <tt>ADDITIONAL SENSE CODE QUALIFIER</tt>.
 } s_scsi_sense;
 
 //! INQUIRY data.
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
@@ -428,14 +425,14 @@ __attribute__((__packed__))
   unsigned int RemovableMedia      : 1;
   unsigned int Reserved1           : 7;
 
-  U8           Version                ;
+  uint8_t           Version                ;
 
   unsigned int AERC                : 1;
   unsigned int Obsolete0           : 1;
   unsigned int NormACA             : 1;
   unsigned int Reserved3           : 5;
 
-  U8           Reserved4           [3];
+  uint8_t           Reserved4           [3];
 
   unsigned int RelativeAddressing  : 1;
   unsigned int Wide32Bit           : 1;
@@ -460,31 +457,31 @@ sbc_st_std_inquiry_data;
 
 //_____ D E C L A R A T I O N S ____________________________________________
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 
 //! SCSI command buffer.
-extern U8 g_scsi_command[16];
+extern uint8_t g_scsi_command[16];
 
 //! SCSI status.
-extern U8 g_scsi_status;
+extern uint8_t g_scsi_status;
 
 //! Remaining data transfer length.
-extern U32 g_scsi_data_remaining;
+extern uint32_t g_scsi_data_remaining;
 
 //! Sense data.
 extern s_scsi_sense g_scsi_sense;
 
 //! USB mass-storage IN endpoint.
-extern U8 g_scsi_ep_ms_in;
+extern uint8_t g_scsi_ep_ms_in;
 
 //! USB mass-storage OUT endpoint.
-extern U8 g_scsi_ep_ms_out;
+extern uint8_t g_scsi_ep_ms_out;
 
 /*! \brief Decodes and launches the execution of SCSI commands.
  *
  * \return Boolean indicating success.
  */
-extern Bool scsi_decode_command(void);
+extern bool scsi_decode_command(void);
 
 /*! \brief Manages the TEST UNIT READY command.
  *
@@ -499,7 +496,7 @@ extern Bool scsi_decode_command(void);
  *
  * \return Boolean indicating success.
  */
-extern Bool sbc_test_unit_ready(void);
+extern bool sbc_test_unit_ready(void);
 
 /*! \brief Manages the REQUEST SENSE command.
  *
@@ -510,7 +507,7 @@ extern Bool sbc_test_unit_ready(void);
  *
  * \return Boolean indicating success.
  */
-extern Bool sbc_request_sense(void);
+extern bool sbc_request_sense(void);
 
 /*! \brief Manages the INQUIRY command.
  *
@@ -521,7 +518,7 @@ extern Bool sbc_request_sense(void);
  *
  * \return Boolean indicating success.
  */
-extern Bool sbc_inquiry(void);
+extern bool sbc_inquiry(void);
 
 /*! \brief Manages the MODE SENSE (6) and (10) commands.
  *
@@ -532,12 +529,12 @@ extern Bool sbc_inquiry(void);
  *
  * \param b_sense_10  Boolean indicating whether the (10) version of the command
  *                    is requested:
- *   \arg \c TRUE to specify a MODE SENSE (10) command;
- *   \arg \c FALSE to specify a MODE SENSE (6) command.
+ *   \arg \c true to specify a MODE SENSE (10) command;
+ *   \arg \c false to specify a MODE SENSE (6) command.
  *
  * \return Boolean indicating success.
  */
-extern Bool sbc_mode_sense(Bool b_sense_10);
+extern bool sbc_mode_sense(bool b_sense_10);
 
 /*! \brief Manages the PREVENT ALLOW MEDIUM REMOVAL command.
  *
@@ -547,7 +544,7 @@ extern Bool sbc_mode_sense(Bool b_sense_10);
  *
  * \return Boolean indicating success.
  */
-extern Bool sbc_prevent_allow_medium_removal(void);
+extern bool sbc_prevent_allow_medium_removal(void);
 
 /*! \brief Manages the READ CAPACITY (10) command.
  *
@@ -560,7 +557,7 @@ extern Bool sbc_prevent_allow_medium_removal(void);
  *
  * \return Boolean indicating success.
  */
-extern Bool sbc_read_capacity(void);
+extern bool sbc_read_capacity(void);
 
 /*! \brief Manages the READ (10) command.
  *
@@ -574,7 +571,7 @@ extern Bool sbc_read_capacity(void);
  *
  * \return Boolean indicating success.
  */
-extern Bool sbc_read_10(void);
+extern bool sbc_read_10(void);
 
 /*! \brief Manages the WRITE (10) command.
  *
@@ -587,7 +584,7 @@ extern Bool sbc_read_10(void);
  *
  * \return Boolean indicating success.
  */
-extern Bool sbc_write_10(void);
+extern bool sbc_write_10(void);
 
 /*! \brief Sends the status "GOOD".
  */
@@ -609,7 +606,11 @@ extern void sbc_lun_status_is_fail(void);
  */
 extern void sbc_lun_status_is_protected(void);
 
-#endif  // USB_DEVICE_FEATURE == ENABLED
+/*! \brief Sends the status "FAIL because CDB field is invalid".
+ */
+extern void sbc_lun_status_is_cdb_field(void);
+
+#endif  // USB_DEVICE_FEATURE == true
 
 
 #endif  // _SCSI_DECODER_H_

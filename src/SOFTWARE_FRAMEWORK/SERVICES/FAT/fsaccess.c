@@ -54,13 +54,6 @@
 #include "fsaccess.h"
 
 /* Scheduler includes. */
-#ifdef FREERTOS_USED
-  #include "FreeRTOS.h"
-  #include "semphr.h"
-  #include "task.h"
-  #include "portmacro.h"
-#endif
-
 /* Demo includes. */
 /* Demo app includes. */
 #include "compiler.h"
@@ -86,9 +79,6 @@
 static unsigned int pvNavUsed = 0;
 
 //! Mutex to access the File System.
-#ifdef FREERTOS_USED
-static xSemaphoreHandle xFs_Access;
-#endif
 
 
 //!
@@ -333,16 +323,6 @@ void fsaccess_free_nav_id(int fd)
 Bool b_fsaccess_init(void)
 {
   nav_reset();
-#ifdef FREERTOS_USED
-  if (xFs_Access == NULL)
-  {
-    vSemaphoreCreateBinary( xFs_Access );
-    if( xFs_Access == NULL )
-      return( FALSE );
-    else
-      return( TRUE );
-  }
-#endif
   return( TRUE );
 }
 
@@ -352,10 +332,6 @@ Bool b_fsaccess_init(void)
 //!
 void fsaccess_take_mutex(void)
 {
-#ifdef FREERTOS_USED
-  // wait for semaphore
-  while( xSemaphoreTake( xFs_Access, portMAX_DELAY ) != pdTRUE );
-#endif
 }
 
 //!
@@ -363,10 +339,6 @@ void fsaccess_take_mutex(void)
 //!
 void fsaccess_give_mutex(void)
 {
-#ifdef FREERTOS_USED
-  // Release the mutex.
-  xSemaphoreGive( xFs_Access );
-#endif
 }
 
 

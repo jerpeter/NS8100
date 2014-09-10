@@ -57,37 +57,10 @@
 
 #include "compiler.h"
 #include "preprocessor.h"
-#ifdef FREERTOS_USED
-#include "FreeRTOS.h"
-#include "semphr.h"
-#endif
 #include "ctrl_access.h"
 
 
 //_____ D E F I N I T I O N S ______________________________________________
-
-#ifdef FREERTOS_USED
-
-/*! \name LUN Access Protection Macros
- */
-//! @{
-
-/*! \brief Locks accesses to LUNs.
- *
- * \return \c TRUE if the access was successfully locked, else \c FALSE.
- */
-#define Ctrl_access_lock()    ctrl_access_lock()
-
-/*! \brief Unlocks accesses to LUNs.
- */
-#define Ctrl_access_unlock()  xSemaphoreGive(ctrl_access_semphr)
-
-//! @}
-
-//! Handle to the semaphore protecting accesses to LUNs.
-static xSemaphoreHandle ctrl_access_semphr = NULL;
-
-#else
 
 /*! \name LUN Access Protection Macros
  */
@@ -104,8 +77,6 @@ static xSemaphoreHandle ctrl_access_semphr = NULL;
 #define Ctrl_access_unlock()
 
 //! @}
-
-#endif  // FREERTOS_USED
 
 
 #if MAX_LUN
@@ -217,42 +188,6 @@ Bool g_wr_protect;
 /*! \name Control Interface
  */
 //! @{
-
-
-#ifdef FREERTOS_USED
-
-Bool ctrl_access_init(void)
-{
-  // If the handle to the protecting semaphore is not valid,
-  if (!ctrl_access_semphr)
-  {
-    // try to create the semaphore.
-    vSemaphoreCreateBinary(ctrl_access_semphr);
-
-    // If the semaphore could not be created, there is no backup solution.
-    if (!ctrl_access_semphr) return FALSE;
-  }
-
-  return TRUE;
-}
-
-
-/*! \brief Locks accesses to LUNs.
- *
- * \return \c TRUE if the access was successfully locked, else \c FALSE.
- */
-static Bool ctrl_access_lock(void)
-{
-  // If the semaphore could not be created, there is no backup solution.
-  if (!ctrl_access_semphr) return FALSE;
-
-  // Wait for the semaphore.
-  while (!xSemaphoreTake(ctrl_access_semphr, portMAX_DELAY));
-
-  return TRUE;
-}
-
-#endif  // FREERTOS_USED
 
 
 U8 get_nb_lun(void)

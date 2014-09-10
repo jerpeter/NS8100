@@ -1,7 +1,6 @@
-/* This source file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Management of the USB device controller.
  *
@@ -10,41 +9,43 @@
  * setup contained in the usb_standard_request.c file.
  * Other class-specific requests are also processed in this file.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 //_____  I N C L U D E S ___________________________________________________
@@ -52,7 +53,7 @@
 #include "conf_usb.h"
 
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 
 #include "compiler.h"
 #ifdef FREERTOS_USED
@@ -72,13 +73,11 @@
 //_____ D E F I N I T I O N S ______________________________________________
 
 //!
-//! Public : (Bool) usb_connected
-//! usb_connected is set to TRUE when VBus has been detected
-//! usb_connected is set to FALSE otherwise
+//! Public : (bool) usb_connected
+//! usb_connected is set to true when VBus has been detected
+//! usb_connected is set to false otherwise
 //!
-volatile Bool usb_connected;
-
-extern Bool endpoint_status[NB_ENDPOINTS];
+volatile bool usb_connected;
 
 #ifdef FREERTOS_USED
 //! Handle to the USB Device task
@@ -97,10 +96,7 @@ xTaskHandle usb_device_tsk = NULL;
 //!
 void usb_device_task_init(void)
 {
-  U8 i;
-
-  usb_connected = FALSE;
-  for (i = 0; i < NB_ENDPOINTS; i++) endpoint_status[i] = DISABLED;
+  usb_connected = false;
   usb_configuration_nb = 0;
   //! @todo Implement this on the silicon version
   //Pll_start_auto();
@@ -112,12 +108,10 @@ void usb_device_task_init(void)
   Usb_disable_otg_pad();
   Usb_enable_otg_pad();
   Usb_enable();
-#if __AVR32_UC3A3256__  || __AVR32_UC3A3128__  || __AVR32_UC3A364__  || \
-    __AVR32_UC3A3256S__ || __AVR32_UC3A3128S__ || __AVR32_UC3A364S__ || \
-    __AT32UC3A3256__  || __AT32UC3A3128__  || __AT32UC3A364__ ||        \
-    __AT32UC3A3256S__ || __AT32UC3A3128S__ || __AT32UC3A364S__
+#if UC3A3 || UC3A4
+#  ifdef USB_HOST_FULLSPEED_ONLY
   Set_bits(AVR32_USBB_udcon, (3<<10)); // Force Full Speed
-# warning Force UC3A3 USB macro to work in Full-Speed.
+#  endif
 #endif
   Usb_unfreeze_clock();
   (void)Is_usb_clock_frozen();
@@ -149,14 +143,21 @@ void usb_start_device(void)
 {
   Usb_enable_suspend_interrupt();
   Usb_enable_reset_interrupt();
+
+#if (USB_HIGH_SPEED_SUPPORT==false)
+  Usb_force_full_speed_mode();
+#else
+  Usb_use_dual_speed_mode();
+#endif
+
   usb_init_device();  // Configure the USB controller EP0
   Usb_attach();
-  usb_connected = TRUE;
+  usb_connected = true;
 }
 
 
 //!
-//! @brief Entry point of the USB device mamagement
+//! @brief Entry point of the USB device management
 //!
 //! This function is the entry point of the USB management. Each USB
 //! event is checked here in order to launch the appropriate action.
@@ -173,7 +174,7 @@ void usb_device_task(void)
   portTickType xLastWakeTime;
 
   xLastWakeTime = xTaskGetTickCount();
-  while (TRUE)
+  while (true)
   {
     vTaskDelayUntil(&xLastWakeTime, configTSK_USB_DEV_PERIOD);
 
@@ -203,4 +204,4 @@ void usb_device_task(void)
 }
 
 
-#endif  // USB_DEVICE_FEATURE == ENABLED
+#endif  // USB_DEVICE_FEATURE == true

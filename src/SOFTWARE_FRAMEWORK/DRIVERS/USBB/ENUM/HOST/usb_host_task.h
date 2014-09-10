@@ -1,48 +1,49 @@
-/* This header file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Management of the USB host controller.
  *
  * This file manages the host controller, the host enumeration process and
  * the suspend/resume host requests.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 #ifndef _USB_HOST_TASK_H_
@@ -51,7 +52,7 @@
 
 #include "conf_usb.h"
 
-#if USB_HOST_FEATURE == DISABLED
+#if USB_HOST_FEATURE == false
   #error usb_host_task.h is #included although USB_HOST_FEATURE is disabled
 #endif
 
@@ -71,7 +72,7 @@ typedef void Pipe_handler(Status_t status, U16 nb_byte);
 
 typedef struct
 {
-  Bool          enable;
+  bool          enable;
   U16           nb_byte_to_process;
   U16           nb_byte_processed;
   U16           nb_byte_on_going;
@@ -95,7 +96,7 @@ typedef struct
 #define PIPE_NAK_TIMEOUT    0x40
 #define PIPE_DELAY_TIMEOUT  0x80
 
-//! @brief Returns TRUE when device connected and correctly enumerated.
+//! @brief Returns true when device connected and correctly enumerated.
 //! The host high-level application should test this before performing any applicative request.
 #define Is_host_ready()                   (device_state == DEVICE_READY)
 
@@ -119,13 +120,13 @@ typedef struct
 #define Host_request_suspend()            (device_state = DEVICE_SUSPENDED)
 
 //! Should be called to request the host controller to resume the USB bus
-#define Host_request_resume()             (request_resume = TRUE)
+#define Host_request_resume()             (request_resume = true)
 
 //! Private ack for resume software event
-#define Host_ack_request_resume()         (request_resume = FALSE)
+#define Host_ack_request_resume()         (request_resume = false)
 
 //! Private check for resume sequence
-#define Is_host_request_resume()          (request_resume == TRUE)
+#define Is_host_request_resume()          (request_resume == true)
 
 //! @defgroup device_state_value Host controller states
 //! Defines for device state coding
@@ -221,7 +222,7 @@ extern Status_t host_get_data(U8 pipe, U16 *nb_data, void *ptr_buf);
 
 extern void reset_it_pipe_str(void);
 
-extern Bool is_any_interrupt_pipe_active(void);
+extern bool is_any_interrupt_pipe_active(void);
 
 //!
 //! @brief This function sends nb_data bytes pointed to by ptr_buf on the specified pipe.
@@ -231,9 +232,9 @@ extern Bool is_any_interrupt_pipe_active(void);
 //! @param ptr_buf
 //! @param handler Call-back function pointer
 //!
-//! @return Bool: Status
+//! @return bool: Status
 //!
-extern Bool host_send_data_interrupt(U8 pipe, U16 nb_data, const void *ptr_buf, Pipe_handler *handler);
+extern bool host_send_data_interrupt(U8 pipe, U16 nb_data, const void *ptr_buf, Pipe_handler *handler);
 
 //!
 //! @brief This function receives nb_data bytes pointed to by ptr_buf on the specified pipe.
@@ -245,9 +246,9 @@ extern Bool host_send_data_interrupt(U8 pipe, U16 nb_data, const void *ptr_buf, 
 //! @param ptr_buf
 //! @param handler Call-back function pointer
 //!
-//! @return Bool: Status
+//! @return bool: Status
 //!
-extern Bool host_get_data_interrupt(U8 pipe, U16 nb_data, void *ptr_buf, Pipe_handler *handler);
+extern bool host_get_data_interrupt(U8 pipe, U16 nb_data, void *ptr_buf, Pipe_handler *handler);
 
 //!
 //! @brief USB pipe interrupt subroutine
@@ -262,7 +263,7 @@ extern volatile U8 device_state;
 extern volatile S_usb_setup_data usb_request;
 extern U8 data_stage[SIZEOF_DATA_STAGE];
 extern volatile U8 device_status;
-extern volatile Bool request_resume;
+extern volatile bool request_resume;
 
 //! @}
 

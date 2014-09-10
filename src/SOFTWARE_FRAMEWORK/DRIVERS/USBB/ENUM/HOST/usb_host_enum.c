@@ -1,7 +1,6 @@
-/* This source file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Processing of USB host enumeration requests.
  *
@@ -9,41 +8,43 @@
  * corresponding to the standard enumeration process (refer to chapter 9 of
  * the USB specification).
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 //_____ I N C L U D E S ____________________________________________________
@@ -51,7 +52,7 @@
 #include "conf_usb.h"
 
 
-#if USB_HOST_FEATURE == ENABLED
+#if USB_HOST_FEATURE == true
 
 #include "compiler.h"
 #include "usb_drv.h"
@@ -102,9 +103,9 @@ extern U32  host_get_timeout( void );
 //! This function checks if the VID and the PID are supported
 //! (if the VID & PID belong to the VID_PID table).
 //!
-//! @return Bool: Status
+//! @return bool: Status
 //!
-Bool host_check_VID_PID(void)
+bool host_check_VID_PID(void)
 {
   U8 c, d;
 
@@ -119,13 +120,13 @@ Bool host_check_VID_PID(void)
     {
       for (c += 2, d = c + registered_VID_PID[c - 1]; c < d; c++)
       {
-        if (registered_VID_PID[c] == device_PID) return TRUE; // PID is correct
+        if (registered_VID_PID[c] == device_PID) return true; // PID is correct
       }
     }
     else c += 2 + registered_VID_PID[c + 1];
   }
 
-  return FALSE;
+  return false;
 }
 
 
@@ -135,9 +136,9 @@ Bool host_check_VID_PID(void)
 //! If HOST_AUTO_CFG_ENDPOINT is enabled, a pipe is configured for each endpoint
 //! of supported interfaces.
 //!
-//! @return Bool: Status
+//! @return bool: Status
 //!
-Bool host_check_class(void)
+bool host_check_class(void)
 {
   U8 *descriptor, *conf_end;
   U8 device_class, device_subclass, device_protocol;
@@ -155,7 +156,7 @@ Bool host_check_class(void)
   nb_interface_supported = 0;
 
   // Check if configuration descriptor
-  if (data_stage[OFFSET_FIELD_DESCRIPTOR_TYPE] != CONFIGURATION_DESCRIPTOR) return FALSE;
+  if (data_stage[OFFSET_FIELD_DESCRIPTOR_TYPE] != CONFIGURATION_DESCRIPTOR) return false;
 
   bmattributes = data_stage[OFFSET_FIELD_BMATTRIBUTES];
   maxpower     = data_stage[OFFSET_FIELD_MAXPOWER];
@@ -173,7 +174,7 @@ Bool host_check_class(void)
     {
     case INTERFACE_DESCRIPTOR:
       // Check the number of supported interfaces does not exceed the maximum
-      if (nb_interface_supported >= MAX_INTERFACE_SUPPORTED) return TRUE;
+      if (nb_interface_supported >= MAX_INTERFACE_SUPPORTED) return true;
 
 #if HOST_AUTO_CFG_ENDPOINT == ENABLE
       // If there are still endpoints to configure although a new interface descriptor has been found
@@ -188,7 +189,7 @@ Bool host_check_class(void)
 #endif
 
       // Found an interface descriptor
-      // Get charateristics of this interface
+      // Get characteristics of this interface
       device_class    = descriptor[OFFSET_FIELD_CLASS];
       device_subclass = descriptor[OFFSET_FIELD_SUB_CLASS];
       device_protocol = descriptor[OFFSET_FIELD_PROTOCOL];
@@ -206,7 +207,7 @@ Bool host_check_class(void)
           //          its alternate setting
           interface_supported[nb_interface_supported].altset_nb    = descriptor[OFFSET_FIELD_ALT];
           //          its USB class
-          interface_supported[nb_interface_supported].class        = device_class;
+          interface_supported[nb_interface_supported].uclass        = device_class;
           //          its USB subclass
           interface_supported[nb_interface_supported].subclass     = device_subclass;
           //          its USB protocol
@@ -248,7 +249,7 @@ Bool host_check_class(void)
 
         // Fix HW, set freq at 0 in case of no interrupt endpoint
         if( TYPE_INTERRUPT != descriptor[OFFSET_FIELD_EP_TYPE] ) descriptor[OFFSET_FIELD_EP_INTERVAL] = 0;
-        
+
         // Build the pipe configuration according to the endpoint descriptor fields received
         (void)Host_configure_pipe(
                 physical_pipe,                                      // Pipe nb in USB interface
@@ -256,9 +257,25 @@ Bool host_check_class(void)
                 Get_desc_ep_nbr(descriptor[OFFSET_FIELD_EP_ADDR]),  // Pipe endpoint number
                 descriptor[OFFSET_FIELD_EP_TYPE],                   // Pipe type (isochronous/bulk/interrupt)
                 Get_pipe_token(descriptor[OFFSET_FIELD_EP_ADDR]),   // Pipe token (IN/OUT)
-                descriptor[OFFSET_FIELD_EP_SIZE],                   // Pipe size
-                SINGLE_BANK                                         // Number of banks to allocate for pipe
+                descriptor[OFFSET_FIELD_EP_SIZE] |
+                descriptor[OFFSET_FIELD_EP_SIZE + 1] << 8,          // Pipe size
+                   ((TYPE_ISOCHRONOUS == (descriptor[OFFSET_FIELD_EP_TYPE] & TRANSFER_TYPE_MASK))
+                 || (TYPE_BULK        == (descriptor[OFFSET_FIELD_EP_TYPE] & TRANSFER_TYPE_MASK))
+                 ? DOUBLE_BANK : SINGLE_BANK)  // Number of banks to allocate for pipe
               );
+
+#if (USB_HIGH_SPEED_SUPPORT==true)
+        if( (TYPE_BULK == Host_get_pipe_type(physical_pipe))
+        &&  (TOKEN_OUT == Host_get_pipe_token(physical_pipe)) )
+        {
+           if( !Is_usb_full_speed_mode() )
+           {
+              // Enable PING management for bulk OUT endpoint each micro frame
+              Host_configure_pipe_int_req_freq(physical_pipe,0);
+              Host_enable_ping(physical_pipe);
+           }
+        }
+#endif
 
         // Update endpoint pipe table in supported interface structure
         interface_supported[nb_interface_supported - 1].ep_pipe[ep_index++] = physical_pipe++;
@@ -298,8 +315,9 @@ Bool host_check_class(void)
 //!
 Status_t host_transfer_control(void *data_pointer)
 {
-  Bool sav_int_sof_enable;
-  Bool sav_glob_int_en;
+  int status = CONTROL_GOOD;
+  bool sav_int_sof_enable;
+  bool sav_glob_int_en;
   U16 data_length;
   U8 c;
 
@@ -312,17 +330,10 @@ Status_t host_transfer_control(void *data_pointer)
     {
       Host_freeze_pipe(P_CONTROL);
       Host_reset_pipe(P_CONTROL);
-      return CONTROL_TIMEOUT;
+      status = CONTROL_TIMEOUT;
+      goto host_transfer_control_end;
     }
   }
-  if (!sav_int_sof_enable)                    // Restore SOF interrupt enable
-  {
-    if ((sav_glob_int_en = Is_global_interrupt_enabled())) Disable_global_interrupt();
-    Host_disable_sof_interrupt();
-    (void)Is_host_sof_interrupt_enabled();
-    if (sav_glob_int_en) Enable_global_interrupt();
-  }
-
   Host_configure_pipe_token(P_CONTROL, TOKEN_SETUP);
   Host_ack_setup_ready();
   Host_unfreeze_pipe(P_CONTROL);
@@ -342,21 +353,21 @@ Status_t host_transfer_control(void *data_pointer)
     {
       Host_freeze_pipe(P_CONTROL);
       Host_reset_pipe(P_CONTROL);
-      return CONTROL_TIMEOUT;
+      status = CONTROL_TIMEOUT;
+      goto host_transfer_control_end;
     }
     if (Is_host_pipe_error(P_CONTROL))  // Any error?
     {
       c = Host_error_status(P_CONTROL);
       Host_ack_all_errors(P_CONTROL);
-      return c;   // Send error status
+      status = c;   // Send error status
+      goto host_transfer_control_end;
     }
   }
 
   // Setup token sent; now send IN or OUT token
   // Before just wait 1 SOF
   Usb_ack_event(EVT_HOST_SOF);
-  sav_int_sof_enable = Is_host_sof_interrupt_enabled();
-  Host_enable_sof_interrupt();
   Host_freeze_pipe(P_CONTROL);
   data_length = usb_request.wLength;
   while (!Is_usb_event(EVT_HOST_SOF))         // Wait 1 SOF
@@ -365,15 +376,9 @@ Status_t host_transfer_control(void *data_pointer)
     {
       Host_freeze_pipe(P_CONTROL);
       Host_reset_pipe(P_CONTROL);
-      return CONTROL_TIMEOUT;
+      status = CONTROL_TIMEOUT;
+      goto host_transfer_control_end;
     }
-  }
-  if (!sav_int_sof_enable)                    // Restore SOF interrupt enable
-  {
-    if ((sav_glob_int_en = Is_global_interrupt_enabled())) Disable_global_interrupt();
-    Host_disable_sof_interrupt();
-    (void)Is_host_sof_interrupt_enabled();
-    if (sav_glob_int_en) Enable_global_interrupt();
   }
 
   // IN request management ---------------------------------------------
@@ -381,6 +386,7 @@ Status_t host_transfer_control(void *data_pointer)
   {
     Host_disable_continuous_in_mode(P_CONTROL);
     Host_configure_pipe_token(P_CONTROL, TOKEN_IN);
+    Host_ack_control_in_received_free();
     while (data_length)
     {
       Host_unfreeze_pipe(P_CONTROL);
@@ -391,25 +397,29 @@ Status_t host_transfer_control(void *data_pointer)
         {
           Host_freeze_pipe(P_CONTROL);
           Host_reset_pipe(P_CONTROL);
-          return CONTROL_TIMEOUT;
+          status = CONTROL_TIMEOUT;
+          goto host_transfer_control_end;
         }
         if (Is_host_pipe_error(P_CONTROL))  // Any error?
         {
           c = Host_error_status(P_CONTROL);
           Host_ack_all_errors(P_CONTROL);
-          return c;   // Send error status
+          status = c;   // Send error status
+          goto host_transfer_control_end;
         }
         if (Is_host_stall(P_CONTROL))
         {
           Host_ack_stall(P_CONTROL);
-          return CONTROL_STALL;
+          status = CONTROL_STALL;
+          goto host_transfer_control_end;
         }
 #if TIMEOUT_DELAY_ENABLE == ENABLE
       if (1000 < host_get_timeout()) // Count 1s
       {
           Host_freeze_pipe(P_CONTROL);
           Host_reset_pipe(P_CONTROL);
-          return CONTROL_TIMEOUT;
+          status = CONTROL_TIMEOUT;
+          goto host_transfer_control_end;
       }
 #endif
       }
@@ -428,7 +438,6 @@ Status_t host_transfer_control(void *data_pointer)
       if (Is_usb_low_speed_mode())
       {
         Usb_ack_event(EVT_HOST_SOF);
-        sav_int_sof_enable = Is_host_sof_interrupt_enabled();
         if ((sav_glob_int_en = Is_global_interrupt_enabled())) Disable_global_interrupt();
         Host_ack_sof();
         (void)Is_host_sof_interrupt_enabled();
@@ -440,40 +449,37 @@ Status_t host_transfer_control(void *data_pointer)
           {
             Host_freeze_pipe(P_CONTROL);
             Host_reset_pipe(P_CONTROL);
-            return CONTROL_TIMEOUT;
+            status = CONTROL_TIMEOUT;
+            goto host_transfer_control_end;
           }
-        }
-        if (!sav_int_sof_enable)                    // Restore SOF interrupt enable
-        {
-          if ((sav_glob_int_en = Is_global_interrupt_enabled())) Disable_global_interrupt();
-          Host_disable_sof_interrupt();
-          (void)Is_host_sof_interrupt_enabled();
-          if (sav_glob_int_en) Enable_global_interrupt();
         }
       }
     }                                 // End of IN data stage
 
     Host_configure_pipe_token(P_CONTROL, TOKEN_OUT);
-    Host_unfreeze_pipe(P_CONTROL);
     Host_ack_control_out_ready_send();
+    Host_unfreeze_pipe(P_CONTROL);
     while (!Is_host_control_out_ready())
     {
       if (Is_host_emergency_exit())
       {
         Host_freeze_pipe(P_CONTROL);
         Host_reset_pipe(P_CONTROL);
-        return CONTROL_TIMEOUT;
+        status = CONTROL_TIMEOUT;
+        goto host_transfer_control_end;
       }
       if (Is_host_pipe_error(P_CONTROL))  // Any error?
       {
         c = Host_error_status(P_CONTROL);
         Host_ack_all_errors(P_CONTROL);
-        return c;   // Send error status
+        status = c;   // Send error status
+        goto host_transfer_control_end;
       }
       if (Is_host_stall(P_CONTROL))
       {
         Host_ack_stall(P_CONTROL);
-        return CONTROL_STALL;
+        status = CONTROL_STALL;
+        goto host_transfer_control_end;
       }
     }
     Host_ack_control_out_ready();
@@ -496,18 +502,21 @@ Status_t host_transfer_control(void *data_pointer)
         {
           Host_freeze_pipe(P_CONTROL);
           Host_reset_pipe(P_CONTROL);
-          return CONTROL_TIMEOUT;
+          status = CONTROL_TIMEOUT;
+          goto host_transfer_control_end;
         }
         if (Is_host_pipe_error(P_CONTROL))  // Any error?
         {
           c = Host_error_status(P_CONTROL);
           Host_ack_all_errors(P_CONTROL);
-          return c;   // Send error status
+          status = c;   // Send error status
+          goto host_transfer_control_end;
         }
         if (Is_host_stall(P_CONTROL))
         {
           Host_ack_stall(P_CONTROL);
-          return CONTROL_STALL;
+          status = CONTROL_STALL;
+          goto host_transfer_control_end;
         }
       }
       Host_ack_control_out_ready();
@@ -515,6 +524,7 @@ Status_t host_transfer_control(void *data_pointer)
 
     Host_freeze_pipe(P_CONTROL);
     Host_configure_pipe_token(P_CONTROL, TOKEN_IN);
+    Host_ack_control_in_received_free();
     Host_unfreeze_pipe(P_CONTROL);
     while (!Is_host_control_in_received())
     {
@@ -522,18 +532,21 @@ Status_t host_transfer_control(void *data_pointer)
       {
         Host_freeze_pipe(P_CONTROL);
         Host_reset_pipe(P_CONTROL);
-        return CONTROL_TIMEOUT;
+        status = CONTROL_TIMEOUT;
+        goto host_transfer_control_end;
       }
       if (Is_host_pipe_error(P_CONTROL))  // Any error?
       {
         c = Host_error_status(P_CONTROL);
         Host_ack_all_errors(P_CONTROL);
-        return c;   // Send error status
+        status = c;   // Send error status
+        goto host_transfer_control_end;
       }
       if (Is_host_stall(P_CONTROL))
       {
         Host_ack_stall(P_CONTROL);
-        return CONTROL_STALL;
+        status = CONTROL_STALL;
+        goto host_transfer_control_end;
       }
     }
     Host_ack_control_in_received();
@@ -541,8 +554,17 @@ Status_t host_transfer_control(void *data_pointer)
     Host_free_control_in();
   }
 
-  return CONTROL_GOOD;
+host_transfer_control_end:
+  if (!sav_int_sof_enable)                    // Restore SOF interrupt enable
+  {
+    if ((sav_glob_int_en = Is_global_interrupt_enabled())) Disable_global_interrupt();
+    Host_disable_sof_interrupt();
+    (void)Is_host_sof_interrupt_enabled();
+    if (sav_glob_int_en) Enable_global_interrupt();
+  }
+
+  return status;
 }
 
 
-#endif  // USB_HOST_FEATURE == ENABLED
+#endif  // USB_HOST_FEATURE == true

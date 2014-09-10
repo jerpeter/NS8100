@@ -1,47 +1,48 @@
-/* This source file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Low-level driver for AVR32 USBB.
  *
  * This file contains the USBB low-level driver routines.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USBB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 //_____ I N C L U D E S ____________________________________________________
@@ -54,10 +55,6 @@
 
 //_____ D E C L A R A T I O N S ____________________________________________
 
-#if USB_DEVICE_FEATURE == DISABLED && USB_HOST_FEATURE == DISABLED
-  #error At least one of USB_DEVICE_FEATURE and USB_HOST_FEATURE must be enabled
-#endif
-
 //! Pointers to the FIFO data registers of pipes/endpoints
 //! Use aggregated pointers to have several alignments available for a same address
 UnionVPtr pep_fifo[MAX_PEP_NB];
@@ -66,7 +63,7 @@ UnionVPtr pep_fifo[MAX_PEP_NB];
 //! ------------------ DEVICE -------------------------------
 //! ---------------------------------------------------------
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 
 #include "usb_descriptors.h"
 
@@ -110,7 +107,7 @@ U32 usb_set_ep_txpacket(U8 ep, U8 txbyte, U32 data_length)
 {
   // Use aggregated pointers to have several alignments available for a same address
   UnionVPtr   ep_fifo_cur;
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   StructCVPtr ep_fifo_end;
   Union64     txval;
 #else
@@ -125,13 +122,13 @@ U32 usb_set_ep_txpacket(U8 ep, U8 txbyte, U32 data_length)
   ep_fifo_cur.u8ptr = pep_fifo[ep].u8ptr;
   ep_fifo_end.u8ptr = ep_fifo_cur.u8ptr +
                       min(data_length, Usb_get_endpoint_size(ep) - Usb_byte_count(ep));
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   ep_fifo_end.u16ptr = (U16 *)Align_down((U32)ep_fifo_end.u8ptr, sizeof(U16));
   ep_fifo_end.u32ptr = (U32 *)Align_down((U32)ep_fifo_end.u16ptr, sizeof(U32));
   ep_fifo_end.u64ptr = (U64 *)Align_down((U32)ep_fifo_end.u32ptr, sizeof(U64));
 #endif  // !__OPTIMIZE_SIZE__
   txval.u8[0] = txbyte;
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   txval.u8[1] = txval.u8[0];
   txval.u16[1] = txval.u16[0];
   txval.u32[1] = txval.u32[0];
@@ -235,7 +232,7 @@ U32 usb_write_ep_txpacket(U8 ep, const void *txbuf, U32 data_length, const void 
   // Use aggregated pointers to have several alignments available for a same address
   UnionVPtr   ep_fifo;
   UnionCPtr   txbuf_cur;
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   StructCPtr  txbuf_end;
 #else
   UnionCPtr   txbuf_end;
@@ -246,7 +243,7 @@ U32 usb_write_ep_txpacket(U8 ep, const void *txbuf, U32 data_length, const void 
   txbuf_cur.u8ptr = txbuf;
   txbuf_end.u8ptr = txbuf_cur.u8ptr +
                     min(data_length, Usb_get_endpoint_size(ep) - Usb_byte_count(ep));
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   txbuf_end.u16ptr = (U16 *)Align_down((U32)txbuf_end.u8ptr, sizeof(U16));
   txbuf_end.u32ptr = (U32 *)Align_down((U32)txbuf_end.u16ptr, sizeof(U32));
   txbuf_end.u64ptr = (U64 *)Align_down((U32)txbuf_end.u32ptr, sizeof(U64));
@@ -355,7 +352,7 @@ U32 usb_read_ep_rxpacket(U8 ep, void *rxbuf, U32 data_length, void **prxbuf)
   // Use aggregated pointers to have several alignments available for a same address
   UnionCVPtr  ep_fifo;
   UnionPtr    rxbuf_cur;
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   StructCPtr  rxbuf_end;
 #else
   StructCPtr  rxbuf_end;
@@ -365,7 +362,7 @@ U32 usb_read_ep_rxpacket(U8 ep, void *rxbuf, U32 data_length, void **prxbuf)
   ep_fifo.u8ptr = pep_fifo[ep].u8ptr;
   rxbuf_cur.u8ptr = rxbuf;
   rxbuf_end.u8ptr = rxbuf_cur.u8ptr + min(data_length, Usb_byte_count(ep));
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   rxbuf_end.u16ptr = (U16 *)Align_down((U32)rxbuf_end.u8ptr, sizeof(U16));
   rxbuf_end.u32ptr = (U32 *)Align_down((U32)rxbuf_end.u16ptr, sizeof(U32));
   rxbuf_end.u64ptr = (U64 *)Align_down((U32)rxbuf_end.u32ptr, sizeof(U64));
@@ -449,13 +446,13 @@ U32 usb_read_ep_rxpacket(U8 ep, void *rxbuf, U32 data_length, void **prxbuf)
   return data_length - (rxbuf_cur.u8ptr - (U8 *)rxbuf);
 }
 
-#endif  // USB_DEVICE_FEATURE == ENABLED
+#endif  // USB_DEVICE_FEATURE == true
 
 //! ---------------------------------------------------------
 //! ------------------ HOST ---------------------------------
 //! ---------------------------------------------------------
 
-#if USB_HOST_FEATURE == ENABLED
+#if USB_HOST_FEATURE == true
 
 //! host_disable_all_pipes
 //!
@@ -467,15 +464,16 @@ U32 usb_read_ep_rxpacket(U8 ep, void *rxbuf, U32 data_length, void **prxbuf)
 void host_disable_all_pipes(void)
 {
 #if USB_HOST_PIPE_INTERRUPT_TRANSFER == ENABLE
-  Bool sav_glob_int_en;
+  bool sav_glob_int_en;
 #endif
   U8 p;
 
 #if USB_HOST_PIPE_INTERRUPT_TRANSFER == ENABLE
-  if ((sav_glob_int_en = Is_global_interrupt_enabled())) Disable_global_interrupt();
+  // Disable global interrupts
+  if ((sav_glob_int_en = cpu_irq_is_enabled())) cpu_irq_disable();
 #endif
   for (p = 0; p < MAX_PEP_NB; p++)
-  {
+  { // Disable the pipe <p> (disable interrupt, free memory, reset pipe, ...)
     Host_disable_pipe_interrupt(p);
     Host_reset_pipe(p);
     Host_unallocate_memory(p);
@@ -483,7 +481,8 @@ void host_disable_all_pipes(void)
   }
 #if USB_HOST_PIPE_INTERRUPT_TRANSFER == ENABLE
   (void)Is_host_pipe_enabled(MAX_PEP_NB - 1);
-  if (sav_glob_int_en) Enable_global_interrupt();
+  // Restore the global interrupts to the initial state
+  if (sav_glob_int_en) cpu_irq_enable();
 #endif
 }
 
@@ -510,7 +509,7 @@ U32 host_set_p_txpacket(U8 p, U8 txbyte, U32 data_length)
 {
   // Use aggregated pointers to have several alignments available for a same address
   UnionVPtr   p_fifo_cur;
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   StructCVPtr p_fifo_end;
   Union64     txval;
 #else
@@ -525,13 +524,13 @@ U32 host_set_p_txpacket(U8 p, U8 txbyte, U32 data_length)
   p_fifo_cur.u8ptr = pep_fifo[p].u8ptr;
   p_fifo_end.u8ptr = p_fifo_cur.u8ptr +
                      min(data_length, Host_get_pipe_size(p) - Host_byte_count(p));
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   p_fifo_end.u16ptr = (U16 *)Align_down((U32)p_fifo_end.u8ptr, sizeof(U16));
   p_fifo_end.u32ptr = (U32 *)Align_down((U32)p_fifo_end.u16ptr, sizeof(U32));
   p_fifo_end.u64ptr = (U64 *)Align_down((U32)p_fifo_end.u32ptr, sizeof(U64));
 #endif  // !__OPTIMIZE_SIZE__
   txval.u8[0] = txbyte;
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   txval.u8[1] = txval.u8[0];
   txval.u16[1] = txval.u16[0];
   txval.u32[1] = txval.u32[0];
@@ -635,7 +634,7 @@ U32 host_write_p_txpacket(U8 p, const void *txbuf, U32 data_length, const void *
   // Use aggregated pointers to have several alignments available for a same address
   UnionVPtr   p_fifo;
   UnionCPtr   txbuf_cur;
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   StructCPtr  txbuf_end;
 #else
   UnionCPtr   txbuf_end;
@@ -646,7 +645,7 @@ U32 host_write_p_txpacket(U8 p, const void *txbuf, U32 data_length, const void *
   txbuf_cur.u8ptr = txbuf;
   txbuf_end.u8ptr = txbuf_cur.u8ptr +
                     min(data_length, Host_get_pipe_size(p) - Host_byte_count(p));
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   txbuf_end.u16ptr = (U16 *)Align_down((U32)txbuf_end.u8ptr, sizeof(U16));
   txbuf_end.u32ptr = (U32 *)Align_down((U32)txbuf_end.u16ptr, sizeof(U32));
   txbuf_end.u64ptr = (U64 *)Align_down((U32)txbuf_end.u32ptr, sizeof(U64));
@@ -755,7 +754,7 @@ U32 host_read_p_rxpacket(U8 p, void *rxbuf, U32 data_length, void **prxbuf)
   // Use aggregated pointers to have several alignments available for a same address
   UnionCVPtr  p_fifo;
   UnionPtr    rxbuf_cur;
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   StructCPtr  rxbuf_end;
 #else
   UnionCPtr   rxbuf_end;
@@ -765,7 +764,7 @@ U32 host_read_p_rxpacket(U8 p, void *rxbuf, U32 data_length, void **prxbuf)
   p_fifo.u8ptr = pep_fifo[p].u8ptr;
   rxbuf_cur.u8ptr = rxbuf;
   rxbuf_end.u8ptr = rxbuf_cur.u8ptr + min(data_length, Host_byte_count(p));
-#if !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
+#if (!defined __OPTIMIZE_SIZE__) || !__OPTIMIZE_SIZE__  // Auto-generated when GCC's -Os command option is used
   rxbuf_end.u16ptr = (U16 *)Align_down((U32)rxbuf_end.u8ptr, sizeof(U16));
   rxbuf_end.u32ptr = (U32 *)Align_down((U32)rxbuf_end.u16ptr, sizeof(U32));
   rxbuf_end.u64ptr = (U64 *)Align_down((U32)rxbuf_end.u32ptr, sizeof(U64));
@@ -849,4 +848,4 @@ U32 host_read_p_rxpacket(U8 p, void *rxbuf, U32 data_length, void **prxbuf)
   return data_length - (rxbuf_cur.u8ptr - (U8 *)rxbuf);
 }
 
-#endif  // USB_HOST_FEATURE == ENABLED
+#endif  // USB_HOST_FEATURE == true

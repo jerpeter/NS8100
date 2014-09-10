@@ -165,16 +165,6 @@ extern Bool g_wr_protect;
  */
 //! @{
 
-#ifdef FREERTOS_USED
-
-/*! \brief Initializes the LUN access locker.
- *
- * \return \c TRUE if the locker was successfully initialized, else \c FALSE.
- */
-extern Bool ctrl_access_init(void);
-
-#endif  // FREERTOS_USED
-
 /*! \brief Returns the number of LUNs.
  *
  * \return Number of LUNs in the system.

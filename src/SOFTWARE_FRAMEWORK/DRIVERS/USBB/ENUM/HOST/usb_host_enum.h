@@ -1,7 +1,6 @@
-/* This header file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Processing of USB host enumeration requests.
  *
@@ -9,41 +8,43 @@
  * corresponding to the standard enumeration process (refer to chapter 9 of
  * the USB specification).
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 #ifndef _USB_HOST_ENUM_H_
@@ -54,7 +55,7 @@
 
 #include "conf_usb.h"
 
-#if USB_HOST_FEATURE == DISABLED
+#if USB_HOST_FEATURE == false
   #error usb_host_enum.h is #included although USB_HOST_FEATURE is disabled
 #endif
 
@@ -81,7 +82,7 @@ typedef struct
   U16   wValue;               //!< Field that varies according to request
   U16   wIndex;               //!< Field that varies according to request
   U16   wLength;              //!< Number of bytes to transfer if Data
-  Bool  incomplete_read;      //!< TRUE: only one read
+  bool  incomplete_read;      //!< true: only one read
 } S_usb_setup_data;
 
 //! Interface
@@ -90,7 +91,7 @@ typedef struct
   U8  interface_nb;
   U8  altset_nb;
   U8  nb_ep;
-  U8  class;
+  U8  uclass;
   U8  subclass;
   U8  protocol;
   U8  ep_pipe[MAX_EP_PER_INTERFACE];
@@ -150,7 +151,7 @@ typedef struct
   usb_request.wValue          = FEATURE_ENDPOINT_HALT << 8,\
   usb_request.wIndex          = (ep),\
   usb_request.wLength         = 0,\
-  usb_request.incomplete_read = FALSE,\
+  usb_request.incomplete_read = false,\
   host_transfer_control(data_stage)\
 )
 
@@ -163,7 +164,7 @@ typedef struct
   usb_request.wValue          = 0,\
   usb_request.wIndex          = 0,\
   usb_request.wLength         = 1,\
-  usb_request.incomplete_read = FALSE,\
+  usb_request.incomplete_read = false,\
   host_transfer_control(data_stage)\
 )
 
@@ -177,7 +178,7 @@ typedef struct
   usb_request.wValue          = (cfg_nb),\
   usb_request.wIndex          = 0,\
   usb_request.wLength         = 0,\
-  usb_request.incomplete_read = FALSE,\
+  usb_request.incomplete_read = false,\
   host_transfer_control(data_stage)\
 )
 
@@ -192,11 +193,11 @@ typedef struct
   usb_request.wValue          = (alt_setting),\
   usb_request.wIndex          = (interface_nb),\
   usb_request.wLength         = 0,\
-  usb_request.incomplete_read = FALSE,\
+  usb_request.incomplete_read = false,\
   host_transfer_control(data_stage)\
 )
 
-//! @brief Send an incomplete "get device desriptor" request
+//! @brief Send an incomplete "get device descriptor" request
 //! The descriptor received is stored in the data_stage array.
 //! The received descriptors are limited to the length of the control pipe.
 //! @return Status
@@ -207,11 +208,11 @@ typedef struct
   usb_request.wValue          = DEVICE_DESCRIPTOR << 8,\
   usb_request.wIndex          = 0,\
   usb_request.wLength         = 64,\
-  usb_request.incomplete_read = TRUE,\
+  usb_request.incomplete_read = true,\
   host_transfer_control(data_stage)\
 )
 
-//! @brief Send a "get device desriptor" request
+//! @brief Send a "get device descriptor" request
 //! The descriptor received is stored in the data_stage array.
 //! @return Status
 #define host_get_device_descriptor() \
@@ -221,7 +222,7 @@ typedef struct
   usb_request.wValue          = DEVICE_DESCRIPTOR << 8,\
   usb_request.wIndex          = 0,\
   usb_request.wLength         = 18,\
-  usb_request.incomplete_read = FALSE,\
+  usb_request.incomplete_read = false,\
   host_transfer_control(data_stage)\
 )
 
@@ -236,7 +237,7 @@ typedef struct
   usb_request.wValue          = CONFIGURATION_DESCRIPTOR << 8 | (cfg_ix),\
   usb_request.wIndex          = 0,\
   usb_request.wLength         = SIZEOF_DATA_STAGE,\
-  usb_request.incomplete_read = FALSE,\
+  usb_request.incomplete_read = false,\
   host_transfer_control(data_stage)\
 )
 
@@ -250,7 +251,7 @@ typedef struct
   usb_request.wValue          = (addr),\
   usb_request.wIndex          = 0,\
   usb_request.wLength         = 0,\
-  usb_request.incomplete_read = FALSE,\
+  usb_request.incomplete_read = false,\
   host_transfer_control(data_stage)\
 )
 
@@ -263,7 +264,7 @@ typedef struct
   usb_request.wValue          = 1,\
   usb_request.wIndex          = 1,\
   usb_request.wLength         = 0,\
-  usb_request.incomplete_read = FALSE,\
+  usb_request.incomplete_read = false,\
   host_transfer_control(data_stage)\
 )
 
@@ -276,7 +277,7 @@ typedef struct
   usb_request.wValue          = 0,\
   usb_request.wIndex          = 0,\
   usb_request.wLength         = 1,\
-  usb_request.incomplete_read = FALSE,\
+  usb_request.incomplete_read = false,\
   host_transfer_control(data_stage)\
 )
 
@@ -288,12 +289,12 @@ typedef struct
 //! @return U16: PID
 #define Get_PID()                           (device_PID)
 
-//! @brief TRUE if the connected device supports remote wake-up
-//! @return Bool: Remote wake-up supported?
+//! @brief true if the connected device supports remote wake-up
+//! @return bool: Remote wake-up supported?
 #define Is_device_supports_remote_wakeup()  (Tst_bits(bmattributes, REMOTE_WAKEUP_MASK))
 
-//! @brief TRUE if the connected device is self-powered
-//! @return Bool: Self-powered?
+//! @brief true if the connected device is self-powered
+//! @return bool: Self-powered?
 #define Is_device_self_powered()            (Tst_bits(bmattributes, SELF_POWERED_MASK))
 
 //! @brief Maximal power consumption ot the connected device (unit is 2 mA)
@@ -317,7 +318,7 @@ typedef struct
 //! @brief USB class associated with the supported interface
 //! @param s_interface U8: The supported interface number
 //! @return U8: Class
-#define Get_class(s_interface)              (interface_supported[(s_interface)].class)
+#define Get_class(s_interface)              (interface_supported[(s_interface)].uclass)
 
 //! @brief USB subclass associated with the supported interface
 //! @param s_interface U8: The supported interface number
@@ -352,10 +353,10 @@ typedef struct
 //! @return U8: Endpoint type
 #define Get_ep_type(s_interface, n_ep)      (Host_get_pipe_type(Get_ep_pipe(s_interface, n_ep)))
 
-//! @brief TRUE if the endpoint direction associated with the supported interface is IN
+//! @brief true if the endpoint direction associated with the supported interface is IN
 //! @param s_interface U8: The supported interface number
 //! @param n_ep U8: The endpoint number in this interface
-//! @return Bool: Endpoint direction IN?
+//! @return bool: Endpoint direction IN?
 #define Is_ep_in(s_interface, n_ep)         (Host_get_pipe_token(Get_ep_pipe(s_interface, n_ep)) == TOKEN_IN)
 
 //! @brief Extract token information from endpoint address
@@ -363,8 +364,8 @@ typedef struct
 //! @return TOKEN_IN/TOKEN_OUT: Pipe token
 #define Get_pipe_token(ep_addr)             ((Get_desc_ep_dir(ep_addr)) ? TOKEN_IN : TOKEN_OUT)
 
-extern Bool host_check_VID_PID(void);
-extern Bool host_check_class(void);
+extern bool host_check_VID_PID(void);
+extern bool host_check_class(void);
 extern Status_t host_transfer_control(void *data_pointer);
 
 extern volatile U16 device_VID;

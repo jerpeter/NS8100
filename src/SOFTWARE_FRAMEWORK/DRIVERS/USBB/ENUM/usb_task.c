@@ -1,7 +1,6 @@
-/* This source file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Management of the USB task either device/host or both.
  *
@@ -22,41 +21,43 @@
  *   - See the conf_usb.h file for more details about the configuration of
  *     this module.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 - 2012 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 //_____  I N C L U D E S ___________________________________________________
@@ -71,14 +72,23 @@
 #include "conf_usb.h"
 #include "usb_drv.h"
 #include "usb_task.h"
+#if UC3A || UC3B
+#   include "cycle_counter.h"
+#endif
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 #include "usb_descriptors.h"
 #include "usb_device_task.h"
 #endif
 
-#if USB_HOST_FEATURE == ENABLED
+#if USB_HOST_FEATURE == true
 #include "usb_host_task.h"
+#endif
+
+#if UC3C
+#include "pm_uc3c.h"
+#else
+#include "pm.h"
 #endif
 
 
@@ -97,16 +107,19 @@
 //! Is_usb_event(x)
 //! Usb_clear_all_event()
 volatile U16 g_usb_event = 0;
+#if (USB_HOST_FEATURE == true) && (USB_DEVICE_FEATURE == true) && (USB_HIGH_SPEED_SUPPORT==true)
+static U8 private_sof_counter_HS = 0;  // Full speed SOF = 1ms , High speed uSOF = 125us
+#endif
 
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 
 //!
-//! Public: Bool usb_connected
-//! usb_connected is set to TRUE when VBus has been detected
-//! usb_connected is set to FALSE otherwise
-//! Used with USB_DEVICE_FEATURE == ENABLED only
-extern volatile Bool usb_connected;
+//! Public: bool usb_connected
+//! usb_connected is set to true when VBus has been detected
+//! usb_connected is set to false otherwise
+//! Used with USB_DEVICE_FEATURE == true only
+extern volatile bool usb_connected;
 
   #ifdef FREERTOS_USED
 //! Handle to the USB Device task
@@ -116,19 +129,19 @@ extern xTaskHandle usb_device_tsk;
 #endif
 
 
-#if USB_HOST_FEATURE == ENABLED
+#if USB_HOST_FEATURE == true
 
-static const char log_device_disconnected[] = "Device disconnected\n";
+static const char log_device_disconnected[] = "Device disconnected\r\n";
 
 //!
 //! Private: U8 private_sof_counter
-//! Incremented  by host SOF interrupt subroutime
+//! Incremented  by host SOF interrupt subroutine
 //! This counter is used to detect time-out in host requests.
 //! It must not be modified by the user applicative tasks.
 volatile U32 private_sof_counter;
 
   #if USB_HOST_PIPE_INTERRUPT_TRANSFER == ENABLE
-extern volatile Bool g_sav_int_sof_enable;
+extern volatile bool g_sav_int_sof_enable;
 extern volatile S_pipe_int it_pipe_str[MAX_PEP_NB];
   #endif
 
@@ -140,9 +153,11 @@ extern xTaskHandle usb_host_tsk;
 #endif
 
 
-#if USB_DEVICE_FEATURE == ENABLED && USB_HOST_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true && USB_HOST_FEATURE == true
 
-static const char log_pin_id_changed[]      = "Pin Id changed\n";
+static const char log_pin_id_changed[]				= "Pin Id changed\r\n";
+static const char log_pin_id_changed_to_device[]	= "Pin Id changed to Device mode\r\n";
+static const char log_pin_id_changed_to_host[]		= "Pin Id changed to Host mode\r\n";
 
 //!
 //! Public: U8 g_usb_mode
@@ -164,7 +179,7 @@ static xSemaphoreHandle usb_tsk_semphr = NULL;
 
 #ifdef FREERTOS_USED
 
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__noinline__))
 #endif
 static portBASE_TYPE usb_general_interrupt_non_naked(void);
@@ -176,9 +191,9 @@ static portBASE_TYPE usb_general_interrupt_non_naked(void);
 //! so it must use special OS prologue and epilogue. This function must be naked
 //! in order to have no stack frame. usb_general_interrupt_non_naked is
 //! therefore used for the required stack frame of the interrupt routine.
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__naked__))
-#elif __ICCAVR32__
+#elif (defined __ICCAVR32__)
 #pragma shadow_registers = full
 #endif
 static void usb_general_interrupt(void)
@@ -190,9 +205,9 @@ static void usb_general_interrupt(void)
 
 #else
 
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__interrupt__))
-#elif __ICCAVR32__
+#elif (defined __ICCAVR32__)
 __interrupt
 #endif
 static void usb_general_interrupt(void);
@@ -203,7 +218,7 @@ static void usb_general_interrupt(void);
 //! @brief This function initializes the USB process.
 //!
 //! Depending on the mode supported (HOST/DEVICE/DUAL_ROLE) the function
-//! calls the coresponding USB mode initialization function
+//! calls the corresponding USB mode initialization function
 void usb_task_init(void)
 {
 #ifdef FREERTOS_USED
@@ -229,14 +244,14 @@ void usb_task(void *pvParameters)
   Enable_global_interrupt();
 
 #ifdef FREERTOS_USED
-  while (TRUE)
+  while (true)
   {
     // Wait for the semaphore
     while (!xSemaphoreTake(usb_tsk_semphr, portMAX_DELAY));
 
 #endif  // FREERTOS_USED
 // ---- DUAL-ROLE DEVICE/HOST USB MODE -----------------------------------------
-#if USB_DEVICE_FEATURE == ENABLED && USB_HOST_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true && USB_HOST_FEATURE == true
   #ifdef FREERTOS_USED
     if (usb_device_tsk) vTaskDelete(usb_device_tsk), usb_device_tsk = NULL;
     if (usb_host_tsk) vTaskDelete(usb_host_tsk), usb_host_tsk = NULL;
@@ -261,7 +276,7 @@ void usb_task(void *pvParameters)
 // -----------------------------------------------------------------------------
 
 // ---- DEVICE-ONLY USB MODE ---------------------------------------------------
-#elif USB_DEVICE_FEATURE == ENABLED
+#elif USB_DEVICE_FEATURE == true
   #ifdef FREERTOS_USED
     if (usb_device_tsk) vTaskDelete(usb_device_tsk), usb_device_tsk = NULL;
   #endif
@@ -270,7 +285,7 @@ void usb_task(void *pvParameters)
 // -----------------------------------------------------------------------------
 
 // ---- REDUCED-HOST-ONLY USB MODE ---------------------------------------------
-#elif USB_HOST_FEATURE == ENABLED
+#elif USB_HOST_FEATURE == true
   #ifdef FREERTOS_USED
     if (usb_host_tsk) vTaskDelete(usb_host_tsk), usb_host_tsk = NULL;
   #endif
@@ -279,7 +294,7 @@ void usb_task(void *pvParameters)
     usb_host_task_init();
 // -----------------------------------------------------------------------------
 
-// ---- ERROR, NO MODE ENABLED -------------------------------------------------
+// ---- ERROR, NO MODE true -------------------------------------------------
 #else
   #error At least one of USB_DEVICE_FEATURE and USB_HOST_FEATURE must be enabled
 #endif
@@ -290,17 +305,31 @@ void usb_task(void *pvParameters)
 }
 
 
-//! @brief Entry point of the USB mamnagement
+//! @brief Entry point of the USB management
 //!
 //! Depending on the USB mode supported (HOST/DEVICE/DUAL_ROLE) the function
-//! calls the coresponding USB management function.
+//! calls the corresponding USB management function.
 #ifndef FREERTOS_USED
 void usb_task(void)
 {
 // ---- DUAL-ROLE DEVICE/HOST USB MODE -----------------------------------------
-  #if USB_DEVICE_FEATURE == ENABLED && USB_HOST_FEATURE == ENABLED
+  #if USB_DEVICE_FEATURE == true && USB_HOST_FEATURE == true
+    if (g_old_usb_mode != g_usb_mode)
+    {
+      if (Is_usb_id_device())
+    {
+      usb_device_task_init();
+    }else{
+      private_sof_counter = 0;
+      usb_host_task_init();
+    }
+      g_old_usb_mode = g_usb_mode;  // Store current USB mode, for mode change detection
+      Usb_enable_id_interrupt();
+      Enable_global_interrupt();
+    }
+
   // Depending on current USB mode, launch the correct USB task (device or host)
-  switch (g_usb_mode)
+  switch (g_old_usb_mode)
   {
   case USB_MODE_DEVICE:
     usb_device_task();
@@ -315,16 +344,16 @@ void usb_task(void)
 // -----------------------------------------------------------------------------
 
 // ---- DEVICE-ONLY USB MODE ---------------------------------------------------
-  #elif USB_DEVICE_FEATURE == ENABLED
+  #elif USB_DEVICE_FEATURE == true
   usb_device_task();
 // -----------------------------------------------------------------------------
 
 // ---- REDUCED-HOST-ONLY USB MODE ---------------------------------------------
-  #elif USB_HOST_FEATURE == ENABLED
+  #elif USB_HOST_FEATURE == true
   usb_host_task();
 // -----------------------------------------------------------------------------
 
-// ---- ERROR, NO MODE ENABLED -------------------------------------------------
+// ---- ERROR, NO MODE true -------------------------------------------------
   #else
     #error At least one of USB_DEVICE_FEATURE and USB_HOST_FEATURE must be enabled
   #endif
@@ -368,18 +397,18 @@ void usb_task(void)
 //!         whether a task switch is required in the FreeRTOS configuration
 #ifdef FREERTOS_USED
 
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__noinline__))
-#elif __ICCAVR32__
+#elif (defined __ICCAVR32__)
 #pragma optimize = no_inline
 #endif
 static portBASE_TYPE usb_general_interrupt_non_naked(void)
 
 #else
 
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__interrupt__))
-#elif __ICCAVR32__
+#elif (defined __ICCAVR32__)
 __interrupt
 #endif
 static void usb_general_interrupt(void)
@@ -389,12 +418,12 @@ static void usb_general_interrupt(void)
 #ifdef FREERTOS_USED
   portBASE_TYPE task_woken = pdFALSE;
 #endif
-#if USB_HOST_FEATURE == ENABLED && USB_HOST_PIPE_INTERRUPT_TRANSFER == ENABLE
+#if USB_HOST_FEATURE == true && USB_HOST_PIPE_INTERRUPT_TRANSFER == ENABLE
   U8 i;
 #endif
 
 // ---------- DEVICE/HOST events management ------------------------------------
-#if USB_DEVICE_FEATURE == ENABLED && USB_HOST_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true && USB_HOST_FEATURE == true
   // ID pin change detection
   if (Is_usb_id_transition() && Is_usb_id_interrupt_enabled())
   {
@@ -407,8 +436,8 @@ static void usb_general_interrupt(void)
       {
         if (usb_connected)
         {
-          // Device mode diconnection actions
-          usb_connected = FALSE;
+          // Device mode disconnection actions
+          usb_connected = false;
           usb_configuration_nb = 0;
           Usb_vbus_off_action();
         }
@@ -416,12 +445,16 @@ static void usb_general_interrupt(void)
       // Previously in host mode, check if disconnection was detected
       else if (Is_host_attached())
       {
-        // Host mode diconnection actions
+        // Host mode disconnection actions
         device_state = DEVICE_UNATTACHED;
         Host_device_disconnection_action();
       }
-      LOG_STR(log_pin_id_changed);
-      Usb_send_event((Is_usb_device()) ? EVT_USB_DEVICE_FUNCTION :
+
+      //LOG_STR(log_pin_id_changed);
+      if (Is_usb_id_device() == USB_MODE_DEVICE) { LOG_STR(log_pin_id_changed_to_device); }
+		else { LOG_STR(log_pin_id_changed_to_host); }
+	  
+	  Usb_send_event((Is_usb_device()) ? EVT_USB_DEVICE_FUNCTION :
                                          EVT_USB_HOST_FUNCTION);
       Usb_id_transition_action();
       //! @todo ID pin hot state change!!!
@@ -433,20 +466,19 @@ static void usb_general_interrupt(void)
     #ifdef FREERTOS_USED
       // Release the semaphore in order to start a new device/host task
       taskENTER_CRITICAL();
-      task_woken = xSemaphoreGiveFromISR(usb_tsk_semphr, task_woken);
+      xSemaphoreGiveFromISR(usb_tsk_semphr, &task_woken);
       taskEXIT_CRITICAL();
     #else
 //      Reset_CPU();
     #endif
   #endif
-      g_old_usb_mode = g_usb_mode;  // Store current USB mode, for mode change detection
     }
   }
 #endif  // End DEVICE/HOST FEATURE MODE
 
 // ---------- DEVICE events management -----------------------------------------
-#if USB_DEVICE_FEATURE == ENABLED
-  #if USB_HOST_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
+  #if USB_HOST_FEATURE == true
   // If both device and host features are enabled, check if device mode is engaged
   // (accessing the USB registers of a non-engaged mode, even with load operations,
   // may corrupt USB FIFO data).
@@ -465,14 +497,16 @@ static void usb_general_interrupt(void)
       }
       else
       {
-        usb_connected = FALSE;
+        Usb_unfreeze_clock();
+        Usb_detach();
+        usb_connected = false;
         usb_configuration_nb = 0;
         Usb_send_event(EVT_USB_UNPOWERED);
         Usb_vbus_off_action();
   #ifdef FREERTOS_USED
         // Release the semaphore in order to start a new device/host task
         taskENTER_CRITICAL();
-        task_woken = xSemaphoreGiveFromISR(usb_tsk_semphr, task_woken);
+        xSemaphoreGiveFromISR(usb_tsk_semphr, &task_woken);
         taskEXIT_CRITICAL();
   #endif
       }
@@ -524,8 +558,8 @@ static void usb_general_interrupt(void)
 #endif  // End DEVICE FEATURE MODE
 
 // ---------- HOST events management -------------------------------------------
-#if USB_HOST_FEATURE == ENABLED
-  #if USB_DEVICE_FEATURE == ENABLED
+#if USB_HOST_FEATURE == true
+  #if USB_DEVICE_FEATURE == true
   // If both device and host features are enabled, check if host mode is engaged
   // (accessing the USB registers of a non-engaged mode, even with load operations,
   // may corrupt USB FIFO data).
@@ -547,7 +581,7 @@ static void usb_general_interrupt(void)
   #ifdef FREERTOS_USED
       // Release the semaphore in order to start a new device/host task
       taskENTER_CRITICAL();
-      task_woken = xSemaphoreGiveFromISR(usb_tsk_semphr, task_woken);
+      xSemaphoreGiveFromISR(usb_tsk_semphr, &task_woken);
       taskEXIT_CRITICAL();
   #endif
     }
@@ -563,8 +597,21 @@ static void usb_general_interrupt(void)
     {
       Host_ack_sof();
       Usb_send_event(EVT_HOST_SOF);
+#if (USB_HIGH_SPEED_SUPPORT==true)
+      if( Is_usb_full_speed_mode() )
+      {
+         private_sof_counter++;
+      }else{
+         private_sof_counter_HS++;
+         if( 0 == (private_sof_counter_HS%8) )
+         {
+            private_sof_counter++;
+         }
+      }
+#else
       private_sof_counter++;
-      // Delay time-out management for interrupt tranfer mode in host mode
+#endif
+      // Delay time-out management for interrupt transfer mode in host mode
   #if USB_HOST_PIPE_INTERRUPT_TRANSFER == ENABLE && TIMEOUT_DELAY_ENABLE == ENABLE
       if (private_sof_counter >= 250) // Count 250 ms (SOF @ 1 ms)
       {
@@ -574,7 +621,7 @@ static void usb_general_interrupt(void)
           if (it_pipe_str[i].enable &&
               ++it_pipe_str[i].timeout > TIMEOUT_DELAY && Host_get_pipe_type(i) != TYPE_INTERRUPT)
           {
-            it_pipe_str[i].enable = FALSE;
+            it_pipe_str[i].enable = false;
             it_pipe_str[i].status = PIPE_DELAY_TIMEOUT;
             Host_reset_pipe(i);
             if (!is_any_interrupt_pipe_active() && !g_sav_int_sof_enable) // If no more transfer is armed
@@ -615,17 +662,87 @@ static void usb_general_interrupt(void)
 }
 
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 void usb_suspend_action(void)
 {
+#if (UC3A || UC3B)
+   volatile avr32_pm_t *pm = &AVR32_PM;
+   unsigned long clock;
+   unsigned long cksel_save;
+   U32 startup;
+
+   pm->AWEN.usb_waken = 1;
+
+   // Save the clock source, Clock Select (CKSEL) and startup time since we will reconfigure them
+   clock = pm_get_clock(&AVR32_PM);
+   startup = AVR32_PM.OSCCTRL0.startup;
+   pm_cksel_get(&AVR32_PM, &cksel_save);
+
+   // Setup a long startup time. We will control it with a software delay.
+   // Moreover, this also ensures that the PLL0 will not be blocked due to a
+   // bad oscillator state/frequency in the case of a short startup (0 or 1.1 ms).
+   AVR32_PM.OSCCTRL0.startup = AVR32_PM_OSCCTRL0_STARTUP_2048_RCOSC;
+
+   // Switch on the internal RC oscillator
+   pm_switch_to_clock(&AVR32_PM, AVR32_PM_MCSEL_SLOW);
+
+   // Reset the Clock Select in order to ensure we are running on
+   // the internal RC osc at full speed.
+   pm_cksel(&AVR32_PM
+   , 0, 0 // PBA
+   , 0, 0 // PBB
+   , 0, 0 // HSB
+   );
+
+   // If there is a chance that any PB write operations are incomplete, the CPU
+   // should perform a read operation from any register on the PB bus before
+   // executing the sleep instruction.
+   AVR32_INTC.ipr[0];  // Dummy read
+
+   // Entering into Sleep mode.
+   SLEEP(AVR32_PM_SMODE_STATIC);
+   // Exit from Sleep mode.
+
+   // The host may start using the USB 10 ms (FS) or 3 ms (HS) after the RESUME.
+   // Waits for oscillator startup with a time lower than USB requirements.
+   cpu_delay_us(1400, AVR32_PM_RCOSC_FREQUENCY);
+
+   // Restore CKSEL
+   pm_cksel_set(&AVR32_PM, cksel_save);
+
+   // Shorten the startup time, since OSC0 is ready.
+   AVR32_PM.OSCCTRL0.startup = AVR32_PM_OSCCTRL0_STARTUP_0_RCOSC;
+
+   // Switch back to the previous clock.
+   pm_switch_to_clock(&AVR32_PM, clock);
+
+   // Restore startup time
+   AVR32_PM.OSCCTRL0.startup = startup;
+   pm->AWEN.usb_waken = 0;
+#else
   Enable_global_interrupt();
   //! @todo Implement this on the silicon version
   //Enter_power_down_mode();  // For example...
+#if 0
+   pm->AWEN.usb_waken = 1;
+
+   // If there is a chance that any PB write operations are incomplete, the CPU
+   // should perform a read operation from any register on the PB bus before
+   // executing the sleep instruction.
+   AVR32_INTC.ipr[0];  // Dummy read
+
+   // Entering into Sleep mode.
+   SLEEP(AVR32_PM_SMODE_STATIC);
+   // Exit from Sleep mode.
+
+   pm->AWEN.usb_waken = 0;
+#endif
+#endif
 }
 #endif
 
 
-#if USB_HOST_FEATURE == ENABLED
+#if USB_HOST_FEATURE == true
 void host_suspend_action(void)
 {
   Enable_global_interrupt();

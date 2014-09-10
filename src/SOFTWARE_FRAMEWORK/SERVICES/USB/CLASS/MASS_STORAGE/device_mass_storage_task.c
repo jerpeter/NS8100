@@ -1,47 +1,48 @@
-/* This source file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Management of the USB device mass-storage task.
  *
  * This file manages the USB device mass-storage task.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 //_____  I N C L U D E S ___________________________________________________
@@ -49,7 +50,7 @@
 #include "conf_usb.h"
 
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 
 #include "board.h"
 #ifdef FREERTOS_USED
@@ -72,12 +73,13 @@
 
 //_____ D E C L A R A T I O N S ____________________________________________
 
-extern volatile Bool ms_multiple_drive;
+extern volatile bool ms_multiple_drive;
 
-static U16  sof_cnt;
-static U32  dCBWTag;
+static uint16_t  sof_cnt;
+static uint32_t  dCBWTag;
 
-U8 usb_LUN;
+uint8_t usb_LUN;
+uint8_t ms_endpoint;
 
 
 static void usb_mass_storage_cbw(void);
@@ -94,12 +96,12 @@ void device_mass_storage_task_init(void)
   g_scsi_ep_ms_out = EP_MS_OUT;
   sof_cnt = 0;
 #ifndef FREERTOS_USED
-  #if USB_HOST_FEATURE == ENABLED
+  #if USB_HOST_FEATURE == true
   // If both device and host features are enabled, check if device mode is engaged
   // (accessing the USB registers of a non-engaged mode, even with load operations,
   // may corrupt USB FIFO data).
   if (Is_usb_device())
-  #endif  // USB_HOST_FEATURE == ENABLED
+  #endif  // USB_HOST_FEATURE == true
     Usb_enable_sof_interrupt();
 #endif  // FREERTOS_USED
 
@@ -129,7 +131,7 @@ void device_mass_storage_task(void)
   portTickType xLastWakeTime;
 
   xLastWakeTime = xTaskGetTickCount();
-  while (TRUE)
+  while (true)
   {
     vTaskDelayUntil(&xLastWakeTime, configTSK_USB_DMS_PERIOD);
 
@@ -141,7 +143,7 @@ void device_mass_storage_task(void)
 #endif  // FREERTOS_USED
 
 #if BOARD == EVK1100
-#if 0 // fix_ns8100 - Prevent LAN from coming out of sleep with USB access
+#if 0 // Error for NS8100
     // Display Start-of-Frame counter on LEDs
     LED_Display_Field(LED_MONO0_GREEN |
                       LED_MONO1_GREEN |
@@ -149,7 +151,7 @@ void device_mass_storage_task(void)
                       LED_MONO3_GREEN,
                       sof_cnt >> 5);
 #endif
-#elif BOARD == EVK1101 || BOARD == EVK1104 || BOARD == EVK1105
+#elif BOARD == EVK1101 || BOARD == EVK1104 || BOARD == EVK1105 || BOARD == UC3C_EK
     // Display Start-of-Frame counter on LEDs
     LED_Display_Field(LED0 |
                       LED1,
@@ -190,13 +192,12 @@ void usb_sof_action(void)
 //!
 static void usb_mass_storage_cbw(void)
 {
-  Bool cbw_error;
-  U8   ms_endpoint;
+  bool cbw_error;
 
   Usb_reset_endpoint_fifo_access(EP_MS_OUT);
 
   //! Check if dCBWSignature is correct
-  cbw_error = (Usb_read_endpoint_data(EP_MS_OUT, 32) != *(U32 *)&"USBC");
+  cbw_error = (Usb_read_endpoint_data(EP_MS_OUT, 32) != *(uint32_t *)&"USBC");
 
   //! Store CBW Tag to be repeated in CSW
   dCBWTag = Usb_read_endpoint_data(EP_MS_OUT, 32);
@@ -241,7 +242,7 @@ static void usb_mass_storage_cbw(void)
 
   Usb_ack_out_received_free(EP_MS_OUT);
 
-  if (!scsi_decode_command() && g_scsi_data_remaining)
+  if (!scsi_decode_command())
   {
     Usb_enable_stall_handshake(ms_endpoint);
   }
@@ -265,12 +266,17 @@ static void usb_mass_storage_csw(void)
     if (Is_usb_setup_received()) usb_process_request();
   }
 
+  // MSC Compliance - Free BAD out receive during SCSI command
+  while( Is_usb_out_received(EP_MS_OUT) ) {
+    Usb_ack_out_received_free(EP_MS_OUT);
+  }
+
   while (!Is_usb_in_ready(EP_MS_IN));
 
   Usb_reset_endpoint_fifo_access(EP_MS_IN);
 
   //! Write CSW Signature
-  Usb_write_endpoint_data(EP_MS_IN, 32, *(U32 *)&"USBS");
+  Usb_write_endpoint_data(EP_MS_IN, 32, *(uint32_t *)&"USBS");
 
   //! Write stored CBW Tag
   Usb_write_endpoint_data(EP_MS_IN, 32, dCBWTag);
@@ -283,7 +289,13 @@ static void usb_mass_storage_csw(void)
   Usb_write_endpoint_data(EP_MS_IN, 8, g_scsi_status);
 
   Usb_ack_in_ready_send(EP_MS_IN);
+
+  // MSC Compliance - Wait end of all transmissions on USB line
+  while( 0 != Usb_nb_busy_bank(EP_MS_IN) )
+  {
+    if (Is_usb_setup_received()) usb_process_request();
+  }
 }
 
 
-#endif  // USB_DEVICE_FEATURE == ENABLED
+#endif  // USB_DEVICE_FEATURE == true

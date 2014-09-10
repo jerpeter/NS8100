@@ -1,48 +1,49 @@
-/* This source file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Management of the USB host controller.
  *
  * This file manages the host controller, the host enumeration process and
  * the suspend/resume host requests.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 //_____  I N C L U D E S ___________________________________________________
@@ -50,7 +51,7 @@
 #include "conf_usb.h"
 
 
-#if USB_HOST_FEATURE == ENABLED
+#if USB_HOST_FEATURE == true
 
 #ifdef FREERTOS_USED
 #include "FreeRTOS.h"
@@ -67,14 +68,14 @@
 
 //_____ D E F I N I T I O N S ______________________________________________
 
-static const char log_device_connected[]    = "Device connected\n";
-static const char log_unsupported_device[]  = "Unsupported device\n";
-static const char log_device_enumerated[]   = "Device enumerated\n";
-static const char log_usb_suspended[]       = "USB suspended\n";
-static const char log_usb_resumed[]         = "USB resumed\n";
+static const char log_device_connected[]    = "Device connected\r\n";
+static const char log_unsupported_device[]  = "Unsupported device\r\n";
+static const char log_device_enumerated[]   = "Device enumerated\r\n";
+static const char log_usb_suspended[]       = "USB suspended\r\n";
+static const char log_usb_resumed[]         = "USB resumed\r\n";
 
 #if USB_HOST_PIPE_INTERRUPT_TRANSFER == ENABLE
-volatile Bool g_sav_int_sof_enable;
+volatile bool g_sav_int_sof_enable;
 volatile S_pipe_int it_pipe_str[MAX_PEP_NB];
 #endif
 
@@ -111,7 +112,7 @@ U8 data_stage[SIZEOF_DATA_STAGE];
 
 volatile U8 device_status;
 
-volatile Bool request_resume;
+volatile bool request_resume;
 
 //! As internal host Start-of-Frame counter
 static U16 sof_cnt;
@@ -141,13 +142,6 @@ void usb_host_task_init(void)
   Usb_disable_otg_pad();
   Usb_enable_otg_pad();
   Usb_enable();
-#if __AVR32_UC3A3256__  || __AVR32_UC3A3128__  || __AVR32_UC3A364__  || \
-    __AVR32_UC3A3256S__ || __AVR32_UC3A3128S__ || __AVR32_UC3A364S__ || \
-    __AT32UC3A3256__  || __AT32UC3A3128__  || __AT32UC3A364__ ||        \
-    __AT32UC3A3256S__ || __AT32UC3A3128S__ || __AT32UC3A364S__
-  Set_bits(AVR32_USBB_uhcon, (3<<12)); // Force Full Speed
-# warning Force UC3A3 USB macro to work in Full-Speed.
-#endif
   Usb_unfreeze_clock();
   (void)Is_usb_clock_frozen();
 #if USB_VBOF_ACTIVE_LEVEL == HIGH
@@ -197,14 +191,14 @@ void usb_host_task(void *pvParameters)
 void usb_host_task(void)
 #endif
 {
-  static Bool sav_int_sof_enable;
+  static bool sav_int_sof_enable;
   U8 pipe;
 
 #ifdef FREERTOS_USED
   portTickType xLastWakeTime;
 
   xLastWakeTime = xTaskGetTickCount();
-  while (TRUE)
+  while (true)
   {
     vTaskDelayUntil(&xLastWakeTime, configTSK_USB_HST_PERIOD);
 
@@ -614,8 +608,8 @@ device_attached_error:
 Status_t host_send_data(U8 pipe, U16 nb_data, const void *ptr_buf)
 {
   Status_t status = PIPE_GOOD;      // Frame correctly sent by default
-  Bool sav_int_sof_enable;
-  Bool sav_glob_int_en;
+  bool sav_int_sof_enable;
+  bool sav_glob_int_en;
   U8 nak_timeout;
 #if NAK_TIMEOUT_ENABLE == ENABLE
   U16 cpt_nak;
@@ -625,9 +619,9 @@ Status_t host_send_data(U8 pipe, U16 nb_data, const void *ptr_buf)
   Host_enable_sof_interrupt();
   Host_configure_pipe_token(pipe, TOKEN_OUT);
   Host_ack_out_ready(pipe);
+  Host_unfreeze_pipe(pipe);
   while (nb_data)                   // While there is something to send...
   {
-    Host_unfreeze_pipe(pipe);
     // Prepare data to be sent
     Host_reset_pipe_fifo_access(pipe);
     nb_data = host_write_p_txpacket(pipe, ptr_buf, nb_data, &ptr_buf);
@@ -685,8 +679,9 @@ Status_t host_send_data(U8 pipe, U16 nb_data, const void *ptr_buf)
     // Here OUT sent
     Host_ack_out_ready(pipe);
   }
-  Host_freeze_pipe(pipe);
+  while (Host_nb_busy_bank(pipe));
 host_send_data_end:
+  Host_freeze_pipe(pipe);
   // Restore SOF interrupt enable state
   if (!sav_int_sof_enable)
   {
@@ -718,8 +713,8 @@ host_send_data_end:
 Status_t host_get_data(U8 pipe, U16 *nb_data, void *ptr_buf)
 {
   Status_t status = PIPE_GOOD;      // Frame correctly received by default
-  Bool sav_int_sof_enable;
-  Bool sav_glob_int_en;
+  bool sav_int_sof_enable;
+  bool sav_glob_int_en;
   U8 nak_timeout;
   U16 n, i;
 #if NAK_TIMEOUT_ENABLE == ENABLE
@@ -854,8 +849,8 @@ Status_t host_get_data(U8 pipe, U16 *nb_data, void *ptr_buf)
       }
     }
   }
-  Host_freeze_pipe(pipe);
 host_get_data_end:
+  Host_freeze_pipe(pipe);
   // Restore SOF interrupt enable state
   if (!sav_int_sof_enable)
   {
@@ -880,22 +875,22 @@ void reset_it_pipe_str(void)
 
   for (i = 0; i < MAX_PEP_NB; i++)
   {
-    it_pipe_str[i].enable = FALSE;
+    it_pipe_str[i].enable = false;
     it_pipe_str[i].timeout = 0;
   }
 }
 
 
-Bool is_any_interrupt_pipe_active(void)
+bool is_any_interrupt_pipe_active(void)
 {
   U8 i;
 
   for (i = 0; i < MAX_PEP_NB; i++)
   {
-    if (it_pipe_str[i].enable) return TRUE;
+    if (it_pipe_str[i].enable) return true;
   }
 
-  return FALSE;
+  return false;
 }
 
 
@@ -907,20 +902,20 @@ Bool is_any_interrupt_pipe_active(void)
 //! @param ptr_buf
 //! @param handler Call-back function pointer
 //!
-//! @return Bool: Status
+//! @return bool: Status
 //!
-Bool host_send_data_interrupt(U8 pipe, U16 nb_data, const void *ptr_buf, Pipe_handler *handler)
+bool host_send_data_interrupt(U8 pipe, U16 nb_data, const void *ptr_buf, Pipe_handler *handler)
 {
-  Bool sav_glob_int_en;
+  bool sav_glob_int_en;
 
-  if (it_pipe_str[pipe].enable) return FALSE;
+  if (it_pipe_str[pipe].enable) return false;
 
   if (!is_any_interrupt_pipe_active())
   {
     g_sav_int_sof_enable = Is_host_sof_interrupt_enabled();
     Host_enable_sof_interrupt();
   }
-  it_pipe_str[pipe].enable = TRUE;
+  it_pipe_str[pipe].enable = true;
   it_pipe_str[pipe].nb_byte_to_process = nb_data;
   it_pipe_str[pipe].nb_byte_processed = 0;
   it_pipe_str[pipe].ptr_buf = (void *)ptr_buf;
@@ -933,6 +928,7 @@ Bool host_send_data_interrupt(U8 pipe, U16 nb_data, const void *ptr_buf, Pipe_ha
   (void)Is_host_resetting_pipe(pipe);
   if (sav_glob_int_en) Enable_global_interrupt();
   Host_configure_pipe_token(pipe, TOKEN_OUT);
+  Host_ack_out_ready(pipe);
   Host_unfreeze_pipe(pipe);
   // Prepare data to be sent
   Host_reset_pipe_fifo_access(pipe);
@@ -956,7 +952,7 @@ Bool host_send_data_interrupt(U8 pipe, U16 nb_data, const void *ptr_buf, Pipe_ha
 
   Host_send_out(pipe);              // Send the USB frame
 
-  return TRUE;
+  return true;
 }
 
 
@@ -970,20 +966,20 @@ Bool host_send_data_interrupt(U8 pipe, U16 nb_data, const void *ptr_buf, Pipe_ha
 //! @param ptr_buf
 //! @param handler Call-back function pointer
 //!
-//! @return Bool: Status
+//! @return bool: Status
 //!
-Bool host_get_data_interrupt(U8 pipe, U16 nb_data, void *ptr_buf, Pipe_handler *handler)
+bool host_get_data_interrupt(U8 pipe, U16 nb_data, void *ptr_buf, Pipe_handler *handler)
 {
-  Bool sav_glob_int_en;
+  bool sav_glob_int_en;
 
-  if (it_pipe_str[pipe].enable) return FALSE;
+  if (it_pipe_str[pipe].enable) return false;
 
   if (!is_any_interrupt_pipe_active())
   {
     g_sav_int_sof_enable = Is_host_sof_interrupt_enabled();
     Host_enable_sof_interrupt();
   }
-  it_pipe_str[pipe].enable = TRUE;
+  it_pipe_str[pipe].enable = true;
   it_pipe_str[pipe].nb_byte_to_process = nb_data;
   it_pipe_str[pipe].nb_byte_processed = 0;
   it_pipe_str[pipe].ptr_buf = ptr_buf;
@@ -1009,9 +1005,10 @@ Bool host_get_data_interrupt(U8 pipe, U16 nb_data, void *ptr_buf, Pipe_handler *
 
   Host_enable_continuous_in_mode(pipe);
   Host_configure_pipe_token(pipe, TOKEN_IN);
+  Host_ack_in_received(pipe);
   Host_unfreeze_pipe(pipe);
 
-  return TRUE;
+  return true;
 }
 
 
@@ -1022,26 +1019,26 @@ void usb_pipe_interrupt(U8 pipe)
 {
   void *ptr_buf;
   U16 n, i;
-  Bool callback = FALSE;
+  bool callback = false;
 
   // Detect which events generate an interrupt...
 
   if (Is_host_pipe_error(pipe))     // Error management
   {
     it_pipe_str[pipe].status = Host_error_status(pipe);
-    it_pipe_str[pipe].enable = FALSE;
+    it_pipe_str[pipe].enable = false;
     Host_reset_pipe(pipe);
     Host_ack_all_errors(pipe);
-    callback = TRUE;
+    callback = true;
     goto usb_pipe_interrupt_end;
   }
 
   if (Is_host_stall(pipe))          // STALL management
   {
     it_pipe_str[pipe].status = PIPE_STALL;
-    it_pipe_str[pipe].enable = FALSE;
+    it_pipe_str[pipe].enable = false;
     Host_reset_pipe(pipe);
-    callback = TRUE;
+    callback = true;
     goto usb_pipe_interrupt_end;
   }
 
@@ -1053,9 +1050,9 @@ void usb_pipe_interrupt(U8 pipe)
     if (!--it_pipe_str[pipe].nak_timeout && Host_get_pipe_type(pipe) != TYPE_INTERRUPT)
     {
       it_pipe_str[pipe].status = PIPE_NAK_TIMEOUT;
-      it_pipe_str[pipe].enable = FALSE;
+      it_pipe_str[pipe].enable = false;
       Host_reset_pipe(pipe);
-      callback = TRUE;
+      callback = true;
       goto usb_pipe_interrupt_end;
     }
   }
@@ -1089,10 +1086,10 @@ void usb_pipe_interrupt(U8 pipe)
     }
     else                            // End of transfer
     {
-      it_pipe_str[pipe].enable = FALSE;
+      it_pipe_str[pipe].enable = false;
       it_pipe_str[pipe].status = PIPE_GOOD;
       Host_reset_pipe(pipe);
-      callback = TRUE;
+      callback = true;
     }
   }
 
@@ -1116,10 +1113,10 @@ void usb_pipe_interrupt(U8 pipe)
     }
     else                            // End of transfer
     {
-      it_pipe_str[pipe].enable = FALSE; // Tranfer end
+      it_pipe_str[pipe].enable = false; // transfer end
       it_pipe_str[pipe].status = PIPE_GOOD; // Status OK
       Host_reset_pipe(pipe);
-      callback = TRUE;
+      callback = true;
     }
   }
 
@@ -1137,4 +1134,4 @@ usb_pipe_interrupt_end:
 #endif  // USB_HOST_PIPE_INTERRUPT_TRANSFER == ENABLE
 
 
-#endif  // USB_HOST_FEATURE == ENABLED
+#endif  // USB_HOST_FEATURE == true

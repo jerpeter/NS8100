@@ -1,47 +1,48 @@
-/* This header file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Low-level driver for AVR32 USBB.
  *
  * This file contains the USBB low-level driver definitions.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USBB module can be used.
- * - AppNote:
+ * Copyright (c) 2009-2012 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 #ifndef _USB_DRV_H_
@@ -55,6 +56,13 @@
 #include "usbb.h"
 #include "conf_usb.h"
 
+//  These defines are missing from or wrong in the toolchain header file ip_xxx.h or part.h
+#if defined(AVR32_UC3A364_H_INCLUDED) || defined(AVR32_UC3A364S_H_INCLUDED) \
+    || defined(AVR32_UC3A3128S_H_INCLUDED) || defined(AVR32_UC3A3128_H_INCLUDED) \
+    || defined(AVR32_UC3A3256S_H_INCLUDED) || defined(AVR32_UC3A3256_H_INCLUDED)
+#undef  AVR32_USBB_EPT_NUM // define value is wrong.
+#define AVR32_USBB_EPT_NUM       8
+#endif
 
 //! @defgroup USBB_low_level_driver USBB low-level driver module
 //! USBB low-level driver module
@@ -71,6 +79,7 @@
 //! performance and to complexify program structure by using a value in memory.
 //! The use of MAX_PEP_NB is hence preferred here to the use of a variable
 //! initialized from Usb_get_pipe_endpoint_max_nbr().
+//  These defines are missing from or wrong in the toolchain header file ip_xxx.h or part.h
 #define MAX_PEP_NB            AVR32_USBB_EPT_NUM
 
 //! @defgroup USBB_endpoints USBB endpoints
@@ -133,6 +142,10 @@
 #define TYPE_ISOCHRONOUS         AVR32_USBB_UECFGX_EPTYPE_ISOCHRONOUS
 #define TYPE_BULK                AVR32_USBB_UECFGX_EPTYPE_BULK
 #define TYPE_INTERRUPT           AVR32_USBB_UECFGX_EPTYPE_INTERRUPT
+
+#define TRANSFER_TYPE_MASK          0x03
+#define SYNCHRONIZATION_TYPE_MASK   0x0c
+#define USAGE_TYPE_MASK             0x30
 
 #define DIRECTION_OUT            AVR32_USBB_UECFGX_EPDIR_OUT
 #define DIRECTION_IN             AVR32_USBB_UECFGX_EPDIR_IN
@@ -203,7 +216,7 @@
                                                Clr_bits(AVR32_USBB_usbcon, AVR32_USBB_USBCON_UNLOCK_MASK),\
                                                Rd_bitfield(AVR32_USBB_usbcon, AVR32_USBB_USBCON_TIMVALUE_MASK))
 
-#if USB_DEVICE_FEATURE == ENABLED && USB_HOST_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true && USB_HOST_FEATURE == true
   //! Check that multiplexed pin used for USB_ID is defined
   #ifndef USB_ID
     #error YOU MUST define in your board header file the multiplexed pin used for USB_ID as AVR32_USBB_USB_ID_x_x
@@ -226,9 +239,9 @@
   //! Test if USB_ID is input from its pin
 #define Is_usb_id_pin_input() \
           (!Tst_bits(AVR32_GPIO.port[USB_ID_PIN >> 5].gper, 1 << (USB_ID_PIN & 0x1F)) &&\
-            Tst_bits(AVR32_GPIO.port[USB_ID_PIN >> 5].pmr0, 1 << (USB_ID_PIN & 0x1F)) == Tst_bits(USB_ID_PIN, 0x01) &&\
-            Tst_bits(AVR32_GPIO.port[USB_ID_PIN >> 5].pmr1, 1 << (USB_ID_PIN & 0x1F)) == Tst_bits(USB_ID_PIN, 0x02))
-#endif  // USB_DEVICE_FEATURE == ENABLED && USB_HOST_FEATURE == ENABLED
+            Tst_bits(AVR32_GPIO.port[USB_ID_PIN >> 5].pmr0, 1 << (USB_ID_PIN & 0x1F)) == Tst_bits(USB_ID_FUNCTION, 0x01) &&\
+            Tst_bits(AVR32_GPIO.port[USB_ID_PIN >> 5].pmr1, 1 << (USB_ID_PIN & 0x1F)) == Tst_bits(USB_ID_FUNCTION, 0x02))
+#endif  // USB_DEVICE_FEATURE == true && USB_HOST_FEATURE == true
   //! Enable external USB_ID pin (listened to by USB)
 #define Usb_enable_id_pin()             (Set_bits(AVR32_USBB_usbcon, AVR32_USBB_USBCON_UIDE_MASK))
   //! Disable external USB_ID pin (ignored by USB)
@@ -244,7 +257,7 @@
   //! Test if host mode is forced
 #define Is_usb_host_mode_forced()       (!Is_usb_id_pin_enabled() && !Tst_bits(AVR32_USBB_usbcon, AVR32_USBB_USBCON_UIMOD_MASK))
 
-#if USB_HOST_FEATURE == ENABLED
+#if USB_HOST_FEATURE == true
   //! Check that multiplexed pin used for USB_VBOF is defined
   #ifndef USB_VBOF
     #error YOU MUST define in your board header file the multiplexed pin used for USB_VBOF as AVR32_USBB_USB_VBOF_x_x
@@ -270,7 +283,7 @@
           (!Tst_bits(AVR32_GPIO.port[USB_VBOF_PIN >> 5].gper, 1 << (USB_VBOF_PIN & 0x1F)) &&\
             Tst_bits(AVR32_GPIO.port[USB_VBOF_PIN >> 5].pmr0, 1 << (USB_VBOF_PIN & 0x1F)) == Tst_bits(USB_VBOF_FUNCTION, 0x01) &&\
             Tst_bits(AVR32_GPIO.port[USB_VBOF_PIN >> 5].pmr1, 1 << (USB_VBOF_PIN & 0x1F)) == Tst_bits(USB_VBOF_FUNCTION, 0x02))
-#endif  // USB_HOST_FEATURE == ENABLED
+#endif  // USB_HOST_FEATURE == true
   //! Set USB_VBOF output pin polarity
 #define Usb_set_vbof_active_high()      (Clr_bits(AVR32_USBB_usbcon, AVR32_USBB_USBCON_VBUSPO_MASK))
 #define Usb_set_vbof_active_low()       (Set_bits(AVR32_USBB_usbcon, AVR32_USBB_USBCON_VBUSPO_MASK))
@@ -282,6 +295,15 @@
 #define Usb_use_full_speed_mode()       (Clr_bits(AVR32_USBB_udcon, AVR32_USBB_UDCON_LS_MASK))
   //! Test if device full speed mode is used
 #define Is_usb_full_speed_mode_used()   (!Is_usb_low_speed_mode_forced())
+#ifdef AVR32_USBB_UDCON_SPDCONF
+  //! Force device full speed mode (i.e. disable high speed)
+#define Usb_force_full_speed_mode()	(Wr_bitfield(AVR32_USBB_udcon, AVR32_USBB_UDCON_SPDCONF_MASK, 3))
+  //! Enable dual speed mode (full speed and high speed; default)
+#define Usb_use_dual_speed_mode()	(Wr_bitfield(AVR32_USBB_udcon, AVR32_USBB_UDCON_SPDCONF_MASK, 0))
+#else
+#define Usb_force_full_speed_mode()	do { } while (0)
+#define Usb_use_dual_speed_mode()	do { } while (0)
+#endif
   //! Force device low-speed mode
 #define Usb_force_low_speed_mode()      (Set_bits(AVR32_USBB_udcon, AVR32_USBB_UDCON_LS_MASK))
   //! Test if device low-speed mode is forced
@@ -340,11 +362,11 @@
   //! tests if VBus activation has been requested
 #define Is_usb_vbus_enabled()         (Tst_bits(AVR32_USBB_usbsta, AVR32_USBB_USBSTA_VBUSRQ_MASK))
 
-  //! initiates a Host Negociation Protocol
+  //! initiates a Host negotiation Protocol
 #define Usb_device_initiate_hnp()     (Set_bits(AVR32_USBB_usbcon, AVR32_USBB_USBCON_HNPREQ_MASK))
-  //! accepts a Host Negociation Protocol
+  //! accepts a Host negotiation Protocol
 #define Usb_host_accept_hnp()         (Set_bits(AVR32_USBB_usbcon, AVR32_USBB_USBCON_HNPREQ_MASK))
-  //! rejects a Host Negociation Protocol
+  //! rejects a Host negotiation Protocol
 #define Usb_host_reject_hnp()         (Clr_bits(AVR32_USBB_usbcon, AVR32_USBB_USBCON_HNPREQ_MASK))
   //! initiates a Session Request Protocol
 #define Usb_device_initiate_srp()     (Set_bits(AVR32_USBB_usbcon, AVR32_USBB_USBCON_SRPREQ_MASK))
@@ -976,6 +998,13 @@
   //! tests if USB Resume running
 #define Is_host_sending_resume()               (Tst_bits(AVR32_USBB_uhcon, AVR32_USBB_UHCON_RESUME_MASK))
 
+#ifdef AVR32_USBB_UHCON_SPDCONF
+  //! Force device full speed mode (i.e. disable high speed)
+#define Host_force_full_speed_mode()	        (Wr_bitfield(AVR32_USBB_uhcon, AVR32_USBB_UHCON_SPDCONF_MASK, 3))
+  //! Enable high speed mode
+#define Host_enable_high_speed_mode()	        (Wr_bitfield(AVR32_USBB_uhcon, AVR32_USBB_UHCON_SPDCONF_MASK, 0))
+#endif
+
   //! enables host Start-of-Frame interrupt
 #define Host_enable_sof_interrupt()            (AVR32_USBB_uhinteset = AVR32_USBB_UHINTESET_HSOFIES_MASK)
   //! enables host Start-of-Frame interrupt
@@ -1000,9 +1029,9 @@
   //! tests if host wake-up detected
 #define Is_host_hwup()                          (Tst_bits(AVR32_USBB_uhint, AVR32_USBB_UHINT_HWUPI_MASK))
 
-  //! enables host down stream rsm sent interrupt detection
+  //! enables host down stream resume sent interrupt detection
 #define Host_enable_down_stream_resume_interrupt()            (AVR32_USBB_uhinteset = AVR32_USBB_UHINTESET_RSMEDIES_MASK)
-  //! disables host down stream rsm sent interrupt detection
+  //! disables host down stream resume sent interrupt detection
 #define Host_disable_down_stream_resume_interrupt()           (AVR32_USBB_uhinteclr = AVR32_USBB_UHINTECLR_RSMEDIEC_MASK)
 #define Is_host_down_stream_resume_interrupt_enabled()        (Tst_bits(AVR32_USBB_uhinte, AVR32_USBB_UHINTE_RSMEDIE_MASK))
   //! acks host down stream resume sent
@@ -1134,6 +1163,8 @@
   //! un-allocates the configuration x in DPRAM memory
 #define Host_unallocate_memory(p)              (Clr_bits(AVR32_USBB_upcfgx(p), AVR32_USBB_UPCFGX_ALLOC_MASK))
 #define Is_host_memory_allocated(p)            (Tst_bits(AVR32_USBB_upcfgx(p), AVR32_USBB_UPCFGX_ALLOC_MASK))
+  //! Enable PING management for the endpoint p
+#define Host_enable_ping(p)                    (Set_bits(AVR32_USBB_upcfgx(p), AVR32_USBB_UPCFGX_PINGEN_MASK))
 
   //! configures selected pipe in one step
 #define Host_configure_pipe(p, freq, ep_num, type, token, size, bank) \
@@ -1560,14 +1591,14 @@
 
 extern  UnionVPtr       pep_fifo[MAX_PEP_NB];
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 extern  Status_bool_t   usb_init_device         (                             void   );
 extern  U32             usb_set_ep_txpacket     (U8,         U8  , U32               );
 extern  U32             usb_write_ep_txpacket   (U8, const void *, U32, const void **);
 extern  U32             usb_read_ep_rxpacket    (U8,       void *, U32,       void **);
 #endif
 
-#if USB_HOST_FEATURE == ENABLED
+#if USB_HOST_FEATURE == true
 extern  void            host_disable_all_pipes  (                             void   );
 extern  U32             host_set_p_txpacket     (U8,         U8  , U32               );
 extern  U32             host_write_p_txpacket   (U8, const void *, U32, const void **);

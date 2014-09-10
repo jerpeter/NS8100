@@ -1,48 +1,49 @@
-/* This source file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief USB identifiers.
  *
  * This file contains the USB parameters that uniquely identify the USB
  * application through descriptor tables.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 //_____ I N C L U D E S ____________________________________________________
@@ -50,7 +51,7 @@
 #include "conf_usb.h"
 
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 
 #include "usb_drv.h"
 #include "usb_descriptors.h"
@@ -84,7 +85,7 @@ const S_usb_device_descriptor usb_dev_desc =
 
 
 // usb_user_configuration_descriptor FS
-const S_usb_user_configuration_descriptor usb_conf_desc =
+const S_usb_user_configuration_descriptor usb_conf_desc_fs =
 {
   {
     sizeof(S_usb_configuration_descriptor),
@@ -114,7 +115,7 @@ const S_usb_user_configuration_descriptor usb_conf_desc =
     ENDPOINT_DESCRIPTOR,
     ENDPOINT_NB_1,
     EP_ATTRIBUTES_1,
-    Usb_format_mcu_to_usb_data(16, EP_SIZE_1),
+    Usb_format_mcu_to_usb_data(16, EP_SIZE_1_FS),
     EP_INTERVAL_1
   },
 
@@ -123,10 +124,73 @@ const S_usb_user_configuration_descriptor usb_conf_desc =
     ENDPOINT_DESCRIPTOR,
     ENDPOINT_NB_2,
     EP_ATTRIBUTES_2,
-    Usb_format_mcu_to_usb_data(16, EP_SIZE_2),
+    Usb_format_mcu_to_usb_data(16, EP_SIZE_2_FS),
     EP_INTERVAL_2
   }
 };
+
+#if (USB_HIGH_SPEED_SUPPORT==true)
+
+// usb_user_configuration_descriptor HS
+const S_usb_user_configuration_descriptor usb_conf_desc_hs =
+{
+  {
+    sizeof(S_usb_configuration_descriptor),
+    CONFIGURATION_DESCRIPTOR,
+    Usb_format_mcu_to_usb_data(16, sizeof(S_usb_user_configuration_descriptor)),
+    NB_INTERFACE,
+    CONF_NB,
+    CONF_INDEX,
+    CONF_ATTRIBUTES,
+    MAX_POWER
+  },
+
+  {
+    sizeof(S_usb_interface_descriptor),
+    INTERFACE_DESCRIPTOR,
+    INTERFACE_NB,
+    ALTERNATE,
+    NB_ENDPOINT,
+    INTERFACE_CLASS,
+    INTERFACE_SUB_CLASS,
+    INTERFACE_PROTOCOL,
+    INTERFACE_INDEX
+  },
+
+  {
+    sizeof(S_usb_endpoint_descriptor),
+    ENDPOINT_DESCRIPTOR,
+    ENDPOINT_NB_1,
+    EP_ATTRIBUTES_1,
+    Usb_format_mcu_to_usb_data(16, EP_SIZE_1_HS),
+    EP_INTERVAL_1
+  },
+
+  {
+    sizeof(S_usb_endpoint_descriptor),
+    ENDPOINT_DESCRIPTOR,
+    ENDPOINT_NB_2,
+    EP_ATTRIBUTES_2,
+    Usb_format_mcu_to_usb_data(16, EP_SIZE_2_HS),
+    EP_INTERVAL_2
+  }
+};
+
+
+// usb_qualifier_desc FS
+const S_usb_device_qualifier_descriptor usb_qualifier_desc =
+{
+  sizeof(S_usb_device_qualifier_descriptor),
+  DEVICE_QUALIFIER_DESCRIPTOR,
+  Usb_format_mcu_to_usb_data(16, USB_SPECIFICATION),
+  DEVICE_CLASS,
+  DEVICE_SUB_CLASS,
+  DEVICE_PROTOCOL,
+  EP_CONTROL_LENGTH,
+  NB_CONFIGURATION,
+  0
+};
+#endif
 
 
 // usb_user_language_id
@@ -165,4 +229,4 @@ const S_usb_serial_number usb_user_serial_number =
 };
 
 
-#endif  // USB_DEVICE_FEATURE == ENABLED
+#endif  // USB_DEVICE_FEATURE == true

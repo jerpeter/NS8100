@@ -1,48 +1,49 @@
-/* This header file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief USB identifiers.
  *
  * This file contains the USB parameters that uniquely identify the USB
  * application through descriptor tables.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 #ifndef _USB_DESCRIPTORS_H_
@@ -53,7 +54,7 @@
 
 #include "conf_usb.h"
 
-#if USB_DEVICE_FEATURE == DISABLED
+#if USB_DEVICE_FEATURE == false
   #error usb_descriptors.h is #included although USB_DEVICE_FEATURE is disabled
 #endif
 
@@ -64,11 +65,17 @@
 
 //_____ M A C R O S ________________________________________________________
 
-#define Usb_unicode(c)                    (Usb_format_mcu_to_usb_data(16, (U16)(c)))
+#define Usb_unicode(c)                    (Usb_format_mcu_to_usb_data(16, (uint16_t)(c)))
 #define Usb_get_dev_desc_pointer()        (&(usb_dev_desc.bLength))
 #define Usb_get_dev_desc_length()         (sizeof(usb_dev_desc))
-#define Usb_get_conf_desc_pointer()       (&(usb_conf_desc.cfg.bLength))
-#define Usb_get_conf_desc_length()        (sizeof(usb_conf_desc))
+#define Usb_get_conf_desc_pointer()       Usb_get_conf_desc_fs_pointer()
+#define Usb_get_conf_desc_length()        Usb_get_conf_desc_fs_length()
+#define Usb_get_conf_desc_hs_pointer()    (&(usb_conf_desc_hs.cfg.bLength))
+#define Usb_get_conf_desc_hs_length()     (sizeof(usb_conf_desc_hs))
+#define Usb_get_conf_desc_fs_pointer()    (&(usb_conf_desc_fs.cfg.bLength))
+#define Usb_get_conf_desc_fs_length()     (sizeof(usb_conf_desc_fs))
+#define Usb_get_qualifier_desc_pointer()  (&(usb_qualifier_desc.bLength))
+#define Usb_get_qualifier_desc_length()   (sizeof(usb_qualifier_desc))
 
 
 //_____ U S B    D E F I N E S _____________________________________________
@@ -106,15 +113,19 @@
             // USB Endpoint 1 descriptor FS
 #define ENDPOINT_NB_1           (EP_MS_IN | MSK_EP_DIR)
 #define EP_ATTRIBUTES_1         TYPE_BULK
-#define EP_IN_LENGTH_1          64
-#define EP_SIZE_1               EP_IN_LENGTH_1
+#define EP_IN_LENGTH_1_FS       64
+#define EP_SIZE_1_FS            EP_IN_LENGTH_1_FS
+#define EP_IN_LENGTH_1_HS       512
+#define EP_SIZE_1_HS            EP_IN_LENGTH_1_HS
 #define EP_INTERVAL_1           0x00            //! Interrupt polling interval from host
 
             // USB Endpoint 2 descriptor FS
 #define ENDPOINT_NB_2           EP_MS_OUT
 #define EP_ATTRIBUTES_2         TYPE_BULK
-#define EP_OUT_LENGTH_2         64
-#define EP_SIZE_2               EP_OUT_LENGTH_2
+#define EP_OUT_LENGTH_2_FS      64
+#define EP_SIZE_2_FS            EP_OUT_LENGTH_2_FS
+#define EP_OUT_LENGTH_2_HS      512
+#define EP_SIZE_2_HS            EP_OUT_LENGTH_2_HS
 #define EP_INTERVAL_2           0x00            //! Interrupt polling interval from host
 
 #define DEVICE_STATUS         SELF_POWERED
@@ -162,19 +173,19 @@
 #define USB_SN_LENGTH         13
 #define USB_SERIAL_NUMBER \
 {\
+  Usb_unicode('0'),\
+  Usb_unicode('0'),\
+  Usb_unicode('0'),\
+  Usb_unicode('0'),\
+  Usb_unicode('0'),\
+  Usb_unicode('0'),\
+  Usb_unicode('0'),\
+  Usb_unicode('0'),\
+  Usb_unicode('0'),\
   Usb_unicode('1'),\
-  Usb_unicode('.'),\
-  Usb_unicode('0'),\
-  Usb_unicode('.'),\
-  Usb_unicode('0'),\
-  Usb_unicode('.'),\
-  Usb_unicode('0'),\
-  Usb_unicode('.'),\
-  Usb_unicode('0'),\
-  Usb_unicode('.'),\
-  Usb_unicode('0'),\
-  Usb_unicode('.'),\
-  Usb_unicode('A') \
+  Usb_unicode('1'),\
+  Usb_unicode('1'),\
+  Usb_unicode('1') \
 }
 
 #define LANGUAGE_ID           0x0409
@@ -182,21 +193,21 @@
 
 //! USB Request
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
-  U8      bmRequestType;        //!< Characteristics of the request
-  U8      bRequest;             //!< Specific request
-  U16     wValue;               //!< Field that varies according to request
-  U16     wIndex;               //!< Field that varies according to request
-  U16     wLength;              //!< Number of bytes to transfer if Data
+  uint8_t      bmRequestType;        //!< Characteristics of the request
+  uint8_t      bRequest;             //!< Specific request
+  uint16_t     wValue;               //!< Field that varies according to request
+  uint16_t     wIndex;               //!< Field that varies according to request
+  uint16_t     wLength;              //!< Number of bytes to transfer if Data
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_UsbRequest;
@@ -204,30 +215,30 @@ S_UsbRequest;
 
 //! USB Device Descriptor
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
-  U8      bLength;              //!< Size of this descriptor in bytes
-  U8      bDescriptorType;      //!< DEVICE descriptor type
-  U16     bscUSB;               //!< Binay Coded Decimal Spec. release
-  U8      bDeviceClass;         //!< Class code assigned by the USB
-  U8      bDeviceSubClass;      //!< Subclass code assigned by the USB
-  U8      bDeviceProtocol;      //!< Protocol code assigned by the USB
-  U8      bMaxPacketSize0;      //!< Max packet size for EP0
-  U16     idVendor;             //!< Vendor ID. ATMEL = 0x03EB
-  U16     idProduct;            //!< Product ID assigned by the manufacturer
-  U16     bcdDevice;            //!< Device release number
-  U8      iManufacturer;        //!< Index of manu. string descriptor
-  U8      iProduct;             //!< Index of prod. string descriptor
-  U8      iSerialNumber;        //!< Index of S.N.  string descriptor
-  U8      bNumConfigurations;   //!< Number of possible configurations
+  uint8_t      bLength;              //!< Size of this descriptor in bytes
+  uint8_t      bDescriptorType;      //!< DEVICE descriptor type
+  uint16_t     bscUSB;               //!< Binary Coded Decimal Spec. release
+  uint8_t      bDeviceClass;         //!< Class code assigned by the USB
+  uint8_t      bDeviceSubClass;      //!< Subclass code assigned by the USB
+  uint8_t      bDeviceProtocol;      //!< Protocol code assigned by the USB
+  uint8_t      bMaxPacketSize0;      //!< Max packet size for EP0
+  uint16_t     idVendor;             //!< Vendor ID. ATMEL = 0x03EB
+  uint16_t     idProduct;            //!< Product ID assigned by the manufacturer
+  uint16_t     bcdDevice;            //!< Device release number
+  uint8_t      iManufacturer;        //!< Index of manufacturer string descriptor
+  uint8_t      iProduct;             //!< Index of product string descriptor
+  uint8_t      iSerialNumber;        //!< Index of serial string descriptor
+  uint8_t      bNumConfigurations;   //!< Number of possible configurations
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_usb_device_descriptor;
@@ -235,24 +246,24 @@ S_usb_device_descriptor;
 
 //! USB Configuration Descriptor
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
-  U8      bLength;              //!< Size of this descriptor in bytes
-  U8      bDescriptorType;      //!< CONFIGURATION descriptor type
-  U16     wTotalLength;         //!< Total length of data returned
-  U8      bNumInterfaces;       //!< Number of interfaces for this conf.
-  U8      bConfigurationValue;  //!< Value for SetConfiguration resquest
-  U8      iConfiguration;       //!< Index of string descriptor
-  U8      bmAttributes;         //!< Configuration characteristics
-  U8      MaxPower;             //!< Maximum power consumption
+  uint8_t      bLength;              //!< Size of this descriptor in bytes
+  uint8_t      bDescriptorType;      //!< CONFIGURATION descriptor type
+  uint16_t     wTotalLength;         //!< Total length of data returned
+  uint8_t      bNumInterfaces;       //!< Number of interfaces for this conf.
+  uint8_t      bConfigurationValue;  //!< Value for SetConfiguration request
+  uint8_t      iConfiguration;       //!< Index of string descriptor
+  uint8_t      bmAttributes;         //!< Configuration characteristics
+  uint8_t      MaxPower;             //!< Maximum power consumption
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_usb_configuration_descriptor;
@@ -260,25 +271,25 @@ S_usb_configuration_descriptor;
 
 //! USB Interface Descriptor
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
-  U8      bLength;              //!< Size of this descriptor in bytes
-  U8      bDescriptorType;      //!< INTERFACE descriptor type
-  U8      bInterfaceNumber;     //!< Number of interface
-  U8      bAlternateSetting;    //!< Value to select alternate setting
-  U8      bNumEndpoints;        //!< Number of EP except EP 0
-  U8      bInterfaceClass;      //!< Class code assigned by the USB
-  U8      bInterfaceSubClass;   //!< Subclass code assigned by the USB
-  U8      bInterfaceProtocol;   //!< Protocol code assigned by the USB
-  U8      iInterface;           //!< Index of string descriptor
+  uint8_t      bLength;              //!< Size of this descriptor in bytes
+  uint8_t      bDescriptorType;      //!< INTERFACE descriptor type
+  uint8_t      bInterfaceNumber;     //!< Number of interface
+  uint8_t      bAlternateSetting;    //!< Value to select alternate setting
+  uint8_t      bNumEndpoints;        //!< Number of EP except EP 0
+  uint8_t      bInterfaceClass;      //!< Class code assigned by the USB
+  uint8_t      bInterfaceSubClass;   //!< Subclass code assigned by the USB
+  uint8_t      bInterfaceProtocol;   //!< Protocol code assigned by the USB
+  uint8_t      iInterface;           //!< Index of string descriptor
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_usb_interface_descriptor;
@@ -286,22 +297,22 @@ S_usb_interface_descriptor;
 
 //! USB Endpoint Descriptor
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
-  U8      bLength;              //!< Size of this descriptor in bytes
-  U8      bDescriptorType;      //!< ENDPOINT descriptor type
-  U8      bEndpointAddress;     //!< Address of the endpoint
-  U8      bmAttributes;         //!< Endpoint's attributes
-  U16     wMaxPacketSize;       //!< Maximum packet size for this EP
-  U8      bInterval;            //!< Interval for polling EP in ms
+  uint8_t      bLength;              //!< Size of this descriptor in bytes
+  uint8_t      bDescriptorType;      //!< ENDPOINT descriptor type
+  uint8_t      bEndpointAddress;     //!< Address of the endpoint
+  uint8_t      bmAttributes;         //!< Endpoint's attributes
+  uint16_t     wMaxPacketSize;       //!< Maximum packet size for this EP
+  uint8_t      bInterval;            //!< Interval for polling EP in ms
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_usb_endpoint_descriptor;
@@ -309,25 +320,25 @@ S_usb_endpoint_descriptor;
 
 //! USB Device Qualifier Descriptor
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
-  U8      bLength;              //!< Size of this descriptor in bytes
-  U8      bDescriptorType;      //!< Device Qualifier descriptor type
-  U16     bscUSB;               //!< Binay Coded Decimal Spec. release
-  U8      bDeviceClass;         //!< Class code assigned by the USB
-  U8      bDeviceSubClass;      //!< Subclass code assigned by the USB
-  U8      bDeviceProtocol;      //!< Protocol code assigned by the USB
-  U8      bMaxPacketSize0;      //!< Max packet size for EP0
-  U8      bNumConfigurations;   //!< Number of possible configurations
-  U8      bReserved;            //!< Reserved for future use, must be zero
+  uint8_t      bLength;              //!< Size of this descriptor in bytes
+  uint8_t      bDescriptorType;      //!< Device Qualifier descriptor type
+  uint16_t     bscUSB;               //!< Binary Coded Decimal Spec. release
+  uint8_t      bDeviceClass;         //!< Class code assigned by the USB
+  uint8_t      bDeviceSubClass;      //!< Subclass code assigned by the USB
+  uint8_t      bDeviceProtocol;      //!< Protocol code assigned by the USB
+  uint8_t      bMaxPacketSize0;      //!< Max packet size for EP0
+  uint8_t      bNumConfigurations;   //!< Number of possible configurations
+  uint8_t      bReserved;            //!< Reserved for future use, must be zero
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_usb_device_qualifier_descriptor;
@@ -335,19 +346,19 @@ S_usb_device_qualifier_descriptor;
 
 //! USB Language Descriptor
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
-  U8      bLength;              //!< Size of this descriptor in bytes
-  U8      bDescriptorType;      //!< STRING descriptor type
-  U16     wlangid;              //!< Language id
+  uint8_t      bLength;              //!< Size of this descriptor in bytes
+  uint8_t      bDescriptorType;      //!< STRING descriptor type
+  uint16_t     wlangid;              //!< Language id
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_usb_language_id;
@@ -357,19 +368,19 @@ S_usb_language_id;
 
 //! struct usb_st_manufacturer
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
-  U8  bLength;                  //!< Size of this descriptor in bytes
-  U8  bDescriptorType;          //!< STRING descriptor type
-  U16 wstring[USB_MN_LENGTH];   //!< Unicode characters
+  uint8_t  bLength;                  //!< Size of this descriptor in bytes
+  uint8_t  bDescriptorType;          //!< STRING descriptor type
+  uint16_t wstring[USB_MN_LENGTH];   //!< Unicode characters
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_usb_manufacturer_string_descriptor;
@@ -379,19 +390,19 @@ S_usb_manufacturer_string_descriptor;
 
 //! struct usb_st_product
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
-  U8  bLength;                  //!< Size of this descriptor in bytes
-  U8  bDescriptorType;          //!< STRING descriptor type
-  U16 wstring[USB_PN_LENGTH];   //!< Unicode characters
+  uint8_t  bLength;                  //!< Size of this descriptor in bytes
+  uint8_t  bDescriptorType;          //!< STRING descriptor type
+  uint16_t wstring[USB_PN_LENGTH];   //!< Unicode characters
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_usb_product_string_descriptor;
@@ -401,19 +412,19 @@ S_usb_product_string_descriptor;
 
 //! struct usb_st_serial_number
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
-  U8  bLength;                  //!< Size of this descriptor in bytes
-  U8  bDescriptorType;          //!< STRING descriptor type
-  U16 wstring[USB_SN_LENGTH];   //!< Unicode characters
+  uint8_t  bLength;                  //!< Size of this descriptor in bytes
+  uint8_t  bDescriptorType;          //!< STRING descriptor type
+  uint16_t wstring[USB_SN_LENGTH];   //!< Unicode characters
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_usb_serial_number;
@@ -422,11 +433,11 @@ S_usb_serial_number;
 //_____ U S B   D E V I C E   M A S S - S T O R A G E   D E S C R I P T O R _
 
 typedef
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack(1)
 #endif
 struct
-#if __GNUC__
+#if (defined __GNUC__)
 __attribute__((__packed__))
 #endif
 {
@@ -435,7 +446,7 @@ __attribute__((__packed__))
   S_usb_endpoint_descriptor      ep1;
   S_usb_endpoint_descriptor      ep2;
 }
-#if __ICCAVR32__
+#if (defined __ICCAVR32__)
 #pragma pack()
 #endif
 S_usb_user_configuration_descriptor;

@@ -1,47 +1,48 @@
-/* This source file is part of the ATMEL AVR32-SoftwareFramework-AT32UC3A-1.4.0 Release */
-
-/*This file is prepared for Doxygen automatic documentation generation.*/
-/*! \file ******************************************************************
+/**************************************************************************
+ *
+ * \file
  *
  * \brief Processing of USB device specific enumeration requests.
  *
  * This file contains the specific request decoding for enumeration process.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a USB module can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
+ * \asf_license_start
  *
- ***************************************************************************/
-
-/* Copyright (C) 2006-2008, Atmel Corporation All rights reserved.
+ * \page License
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ *    this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
- * 3. The name of ATMEL may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY ATMEL ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE EXPRESSLY AND
- * SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ ***************************************************************************/
 
 
 //_____ I N C L U D E S ____________________________________________________
@@ -49,7 +50,7 @@
 #include "conf_usb.h"
 
 
-#if USB_DEVICE_FEATURE == ENABLED
+#if USB_DEVICE_FEATURE == true
 
 #include "usb_drv.h"
 #include "usb_descriptors.h"
@@ -63,13 +64,13 @@
 
 //_____ D E F I N I T I O N S ______________________________________________
 
-volatile Bool ms_multiple_drive;
+volatile bool ms_multiple_drive;
 
 
 //_____ P R I V A T E   D E C L A R A T I O N S ____________________________
 
 extern const  void *pbuffer;
-extern        U8    data_to_transfer;
+extern        uint16_t   data_to_transfer;
 
 
 //_____ D E C L A R A T I O N S ____________________________________________
@@ -77,85 +78,109 @@ extern        U8    data_to_transfer;
 //! @brief This function configures the endpoints of the device application.
 //! This function is called when the set configuration request has been received.
 //!
-void usb_user_endpoint_init(U8 conf_nb)
+void usb_user_endpoint_init(uint8_t conf_nb)
 {
-  ms_multiple_drive = FALSE;
+  ms_multiple_drive = false;
+  ((void)conf_nb);
 
-	conf_nb += 0; // Avoid unused warning
+#if (USB_HIGH_SPEED_SUPPORT==true)
+   if( !Is_usb_full_speed_mode() )
+   {
+     (void)Usb_configure_endpoint(EP_MS_IN,
+                                  EP_ATTRIBUTES_1,
+                                  DIRECTION_IN,
+                                  EP_SIZE_1_HS,
+                                  DOUBLE_BANK);
 
+     (void)Usb_configure_endpoint(EP_MS_OUT,
+                                  EP_ATTRIBUTES_2,
+                                  DIRECTION_OUT,
+                                  EP_SIZE_2_HS,
+                                  DOUBLE_BANK);
+      return;
+   }
+#endif
   (void)Usb_configure_endpoint(EP_MS_IN,
                                EP_ATTRIBUTES_1,
                                DIRECTION_IN,
-                               EP_SIZE_1,
+                               EP_SIZE_1_FS,
                                DOUBLE_BANK);
 
   (void)Usb_configure_endpoint(EP_MS_OUT,
                                EP_ATTRIBUTES_2,
                                DIRECTION_OUT,
-                               EP_SIZE_2,
+                               EP_SIZE_2_FS,
                                DOUBLE_BANK);
 }
 
 
 //! This function is called by the standard USB read request function when
-//! the USB request is not supported. This function returns TRUE when the
-//! request is processed. This function returns FALSE if the request is not
+//! the USB request is not supported. This function returns true when the
+//! request is processed. This function returns false if the request is not
 //! supported. In this case, a STALL handshake will be automatically
 //! sent by the standard USB read request function.
 //!
-Bool usb_user_read_request(U8 type, U8 request)
+bool usb_user_read_request(uint8_t type, uint8_t request)
 {
-  U8 descriptor_type;
-  U8 string_type;
+   uint16_t wInterface;
+   uint8_t wValue_msb;
+   uint8_t wValue_lsb;
 
-	type += 0; // Avoid unused warning
+   wValue_lsb = Usb_read_endpoint_data(EP_CONTROL, 8);
+   wValue_msb = Usb_read_endpoint_data(EP_CONTROL, 8);
 
-  string_type     = Usb_read_endpoint_data(EP_CONTROL, 8);
-  descriptor_type = Usb_read_endpoint_data(EP_CONTROL, 8);
+   //** Specific request from Class MassStorage
+   if( USB_SETUP_SET_CLASS_INTER == type )
+   {
+      switch( request )
+      {
+         case MASS_STORAGE_RESET:
+         // wValue must be 0
+         // wIndex = Interface
+         if( (0!=wValue_lsb) || (0!=wValue_msb) )
+            break;
+         wInterface=Usb_read_endpoint_data(EP_CONTROL, 16);
+         if( INTERFACE_NB != wInterface )
+            break;
+         Usb_ack_setup_received_free();
+         Usb_ack_control_in_ready_send();
+         return true;
+      }
+   }
+   if( USB_SETUP_GET_CLASS_INTER == type )
+   {
+      switch( request )
+      {
+         case GET_MAX_LUN:
+         // wValue must be 0
+         // wIndex = Interface
+         if( (0!=wValue_lsb) || (0!=wValue_msb) )
+            break;
+         wInterface=Usb_read_endpoint_data(EP_CONTROL, 16);
+         if( INTERFACE_NB != wInterface )
+            break;
+         Usb_ack_setup_received_free();
+         Usb_reset_endpoint_fifo_access(EP_CONTROL);
+         Usb_write_endpoint_data(EP_CONTROL, 8, get_nb_lun() - 1);
+         Usb_ack_control_in_ready_send();
+         while (!Is_usb_control_in_ready());
 
-  switch (request)
-  {
-  case GET_DESCRIPTOR:
-    switch (descriptor_type)
-    {
-    default:
-      break;
-    }
-    break;
+         while(!Is_usb_control_out_received());
+         Usb_ack_control_out_received_free();
 
-  case SET_CONFIGURATION:
-    switch (descriptor_type)
-    {
-    default:
-      break;
-    }
-    break;
+         ms_multiple_drive = true;
+         return true;
+      }
+   }
 
-  case MASS_STORAGE_RESET:
-    Usb_ack_setup_received_free();
-    Usb_ack_control_in_ready_send();
-    return TRUE;
-
-  case GET_MAX_LUN:
-    Usb_ack_setup_received_free();
-    Usb_reset_endpoint_fifo_access(EP_CONTROL);
-    Usb_write_endpoint_data(EP_CONTROL, 8, get_nb_lun() - 1);
-    Usb_ack_control_in_ready_send();
-    ms_multiple_drive = TRUE;
-    return TRUE;
-
-  default:
-    break;
-  }
-
-  return FALSE;
+   return false;
 }
 
 
 //! This function returns the size and the pointer on a user information
 //! structure
 //!
-Bool usb_user_get_descriptor(U8 type, U8 string)
+bool usb_user_get_descriptor(uint8_t type, uint8_t string)
 {
   pbuffer = NULL;
 
@@ -197,4 +222,4 @@ Bool usb_user_get_descriptor(U8 type, U8 string)
 }
 
 
-#endif  // USB_DEVICE_FEATURE == ENABLED
+#endif  // USB_DEVICE_FEATURE == true
