@@ -175,7 +175,7 @@ void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
     uint8 buff[25];
     uint8 spaceBuff[25];
-	uint8 contrast_buff[15];
+	uint8 contrast_buff[16];
     uint8 x;
     uint8 clvl;
     uint8 length;

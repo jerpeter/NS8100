@@ -67,7 +67,7 @@
 
 // Contrast defines
 #define DEFUALT_CONTRAST        34
-#define MAX_CONTRAST			48
+#define MAX_CONTRAST			50
 #define MIN_CONTRAST			20
 #define DEFAULT_MAX_CONTRAST	63
 #define DEFAULT_MIN_CONTRAST	0
