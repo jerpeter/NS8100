@@ -52,6 +52,7 @@
 #include "srec.h"
 #include "flashc.h"
 #include "rtc.h"
+#include "NomisLogo.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -633,7 +634,7 @@ void InitTWI(void)
 	// initialize TWI driver with options
 	if (twi_master_init(&AVR32_TWI, &opt) != TWI_SUCCESS)
 	{
-		debugErr("Two Wire Interface failed to initialize!\n");
+		debugErr("Two Wire Interface failed to initialize\n");
 	}
 }
 
@@ -731,11 +732,7 @@ void InitDebug232(void)
 	// Setup debug serial port
 	usart_options_t usart_0_rs232_options =
 	{
-		#if 1 // Normal
 		.baudrate = 115200,
-		#else // Test (12Mhz)
-		.baudrate = 38400,
-		#endif
 		.charlength = 8,
 		.paritytype = USART_NO_PARITY,
 		.stopbits = USART_1_STOPBIT,
@@ -838,8 +835,10 @@ void InitExternalKeypad(void)
 		debugWarn("Keypad key being pressed, likely a bug. Key: %x", keyScan);
 	}
 
+#if NS8100_ORIGINAL
 	// Turn on the red keypad LED while loading
 	WriteMcp23018(IO_ADDRESS_KPD, GPIOA, ((ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -901,25 +900,29 @@ void InitSDAndFileSystem(void)
 		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		if (sd_mmc_spi_internal_init() != OK)
 		{
-			debugErr("SD MMC Internal Init failed!\n");
+			debugErr("SD MMC Internal Init failed\n");
+			OverlayMessage("ERROR", "FAILED TO INIT SD CARD!", 0);
 		}
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 
 		FAT32_InitDrive();
 		if (FAT32_InitFAT() == FALSE)
 		{
-			debugErr("FAT32 Initialization failed!\n");
+			debugErr("FAT32 Initialization failed\n");
+			OverlayMessage("ERROR", "FAILED TO INIT FILE SYSTEM ON SD CARD!", 0);
 		}
 	}
 	else
 	{
-		debugErr("SD Card not detected!\n");
+		debugErr("SD Card not detected\n");
+		OverlayMessage("ERROR", "SD CARD IS NOT PRESENT!", 0);
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+extern void SetupADChannelConfig(uint32 sampleRate);
 void InitExternalAD(void)
 {
 	// Enable the A/D
@@ -931,93 +934,10 @@ void InitExternalAD(void)
 
 	// Setup the A/D Channel configuration
 	debug("Setup A/D config and channels (External Ref, Temp On)\n");
-	extern void SetupADChannelConfig(uint32 sampleRate);
 	SetupADChannelConfig(SAMPLE_RATE_DEFAULT);
 
-#if 0 // Test
-	//g_triggerRecord.trec.sample_rate = SAMPLE_RATE_DEFAULT;
-	//GetChannelOffsets(SAMPLE_RATE_DEFAULT);
-#endif
-
-#if 0
-	SAMPLE_DATA_STRUCT dummySample;
-
-	//------------------------------Loop 1----------------------------------------------
-	debug("Setup A/D config and channels (External Ref, Temp On)\n");
-	SetupADChannelConfig(0x39D4);
-	SoftUsecWait(50 * SOFT_MSECS);
-	GetAnalogConfigReadback();
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
+	// Read a few test samples
 	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
-
-	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp On)\n");
-	SetupADChannelConfig(0x39DC);
-	SoftUsecWait(50 * SOFT_MSECS);
-	GetAnalogConfigReadback();
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
-
-	debug("Setup A/D config and channels (External Ref, Temp Off)\n");
-	SetupADChannelConfig(0x39F4);
-	SoftUsecWait(50 * SOFT_MSECS);
-	GetAnalogConfigReadback();
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
-
-	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp Off)\n");
-	SetupADChannelConfig(0x39FC);
-	SoftUsecWait(50 * SOFT_MSECS);
-	GetAnalogConfigReadback();
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
-	//----------------------------------------------------------------------------------
-	
-	//------------------------------Loop 2----------------------------------------------
-	debug("Setup A/D config and channels (External Ref, Temp On)\n");
-	SetupADChannelConfig(0x39D4);
-	SoftUsecWait(50 * SOFT_MSECS);
-	GetAnalogConfigReadback();
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
-
-	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp On)\n");
-	SetupADChannelConfig(0x39DC);
-	SoftUsecWait(50 * SOFT_MSECS);
-	GetAnalogConfigReadback();
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
-
-	debug("Setup A/D config and channels (External Ref, Temp Off)\n");
-	SetupADChannelConfig(0x39F4);
-	SoftUsecWait(50 * SOFT_MSECS);
-	GetAnalogConfigReadback();
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
-
-	debug("Setup A/D config and channels (External Ref, Internal Buffer, Temp Off)\n");
-	SetupADChannelConfig(0x39FC);
-	SoftUsecWait(50 * SOFT_MSECS);
-	GetAnalogConfigReadback();
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	ReadAnalogData(&dummySample); debug("A/D Data: 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", dummySample.a, dummySample.r, dummySample.v, dummySample.t, g_currentTempReading);
-	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
-	//----------------------------------------------------------------------------------
-#endif
 
 	debug("Disable the A/D\n");
 	PowerControl(ANALOG_SLEEP_ENABLE, ON);
@@ -1094,31 +1014,50 @@ void KillClocksToModules(void)
 ///----------------------------------------------------------------------------
 void TestExternalRAM(void)
 {
-	uint16 i = 0, j = 0;
-	uint16* testMem = &g_eventDataBuffer[0];
+	uint32 i, j;
+	uint32 index;
+	uint32 printErrors = 0;
 
-	while (testMem != &g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS])
+#if 0
+	debug("External RAM Test: Incrementing index...\n");
+	for (i = 0, j = 0, index = 0; index < ((EVENT_BUFF_SIZE_IN_WORDS) - 614400); index++)
 	{
-		*testMem++ = (i++ + j);
-
-		if (i == 0) { j++; }
+		g_eventDataBuffer[index] = (uint16)(i + j); i++;
 	}
 
-	i = 0; j = 0;
-	testMem = &g_eventDataBuffer[0];
-
-	while (testMem != &g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS])
+	for (i = 0, j = 0, index = 0; index < ((EVENT_BUFF_SIZE_IN_WORDS) - 614400); index++)
 	{
-		if (*testMem++ != (i++ + j))
+		if (g_eventDataBuffer[index] != (uint16)(i + j))
 		{
-			debugErr("Test of External RAM: failed!\n");
-			return;
+			debugErr("Test of External RAM: failed (Index: %d, Address: 0x%x, Expected: 0x%x, Got: 0x%x)\n",
+						index, &g_eventDataBuffer[index], (uint16)(i + j), g_eventDataBuffer[index]);
+			printErrors++; if (printErrors > 5000) { debugErr("Too many errors, bailing on memory test\n"); return; }
 		}
+		i++;
+	}
+#endif
 
-		if (i == 0) { j++; }
+	debug("External RAM Test: Incrementing index with rolling increment...\n");
+	for (i = 0, j = 0, index = 0; index < ((EVENT_BUFF_SIZE_IN_WORDS) - 614400); index++)
+	{
+		g_eventDataBuffer[index] = (uint16)(i + j); i++;
+		if ((i & 0xFFFF) == 0) { j++; }
 	}
 
-	debug("Test of External RAM: passed.\n");
+	for (i = 0, j = 0, index = 0; index < ((EVENT_BUFF_SIZE_IN_WORDS) - 614400); index++)
+	{
+		if (g_eventDataBuffer[index] != (uint16)(i + j))
+		{
+			debugErr("Test of External RAM: failed (Index: %d, Address: 0x%x, Expected: 0x%x, Got: 0x%x)\n",
+			index, &g_eventDataBuffer[index], (uint16)(i + j), g_eventDataBuffer[index]);
+			printErrors++; if (printErrors > 5000) { debugErr("Too many errors, bailing on memory test\n"); return; }
+		}
+		i++;
+		if ((i & 0xFFFF) == 0) { j++; }
+	}
+
+	if (printErrors) { debug("External RAM: Total errors: %d\n", printErrors); }
+	else { debug("Test of External RAM: passed\n"); }
 }
 
 ///----------------------------------------------------------------------------
@@ -1135,8 +1074,10 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Enable internal pull ups on the floating data lines
 	//-------------------------------------------------------------------------
+#if 1 // Normal
 	InitPullupsOnFloatingDataLines();
-	
+#endif
+
 	//-------------------------------------------------------------------------
 	// Init unused pins to low outputs
 	//-------------------------------------------------------------------------
@@ -1147,6 +1088,10 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 #if NS8100_ALPHA
 	InitDebug232();
+
+	usart_write_line((&AVR32_USART0), "\r\n=========================================================\n");
+	usart_write_line((&AVR32_USART0), "=== New NS8100 Debug Port\n");
+	usart_write_line((&AVR32_USART0), "=========================================================\n");
 #endif
 
 	//-------------------------------------------------------------------------
@@ -1240,8 +1185,13 @@ void InitSystemHardware_NS8100(void)
 	PowerControl(LCD_POWER_ENABLE, ON);
 	Backlight_On();
 	Backlight_High();
-	Set_Contrast(24);
+	Set_Contrast(DEFUALT_CONTRAST);
 	InitDisplay();
+
+#if NS8100_ALPHA
+	memcpy(g_mmap, sign_on_logo, (8*128));
+	WriteMapToLcd(g_mmap);
+#endif
 
 	//-------------------------------------------------------------------------
 	// Init the Internal RTC for half second tick used for state processing
@@ -1284,7 +1234,7 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init External RTC Interrupt for interrupt source
 	//-------------------------------------------------------------------------
-#if EXTERNAL_SAMPLING_SOURCE
+#if (EXTERNAL_SAMPLING_SOURCE || NS8100_ALPHA)
 	// The internal pull up for this pin needs to be enables to bring the line high, otherwise the clock out will only reach half level
 	gpio_enable_pin_pull_up(AVR32_EIC_EXTINT_1_PIN);
 #endif
@@ -1330,6 +1280,10 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Set the power savings mode based on the saved setting
 	AdjustPowerSavings();
+
+#if 1 // Test
+	TestExternalRAM();
+#endif
 
 #if 0 // Test (Now done with AdjustPowerSavings)
 	//-------------------------------------------------------------------------
