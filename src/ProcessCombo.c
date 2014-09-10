@@ -1121,7 +1121,7 @@ void MoveStartOfComboEventRecordToFile(void)
 	// Get new file handle
 	g_comboDualCurrentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
-	if (g_comboDualCurrentEventFileHandle == NULL) { debugErr("Failed to get a new file handle for the current Combo - Bargraph event!\n"); }
+	if (g_comboDualCurrentEventFileHandle == NULL) { debugErr("Failed to get a new file handle for the current Combo - Bargraph event\n"); }
 
 	// Write in the current but unfinished event record to provide an offset to start writing in the data
 	fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_comboDualCurrentEventFileHandle);
@@ -1145,6 +1145,21 @@ void MoveEndOfComboEventRecordToFile(void)
 	g_pendingBargraphRecord.header.dataCompression = 0;
 
 	g_pendingBargraphRecord.summary.captured.endTime = GetCurrentTime();
+
+	// Mark Combo - Waveform event numbers captured
+	if ((g_pendingBargraphRecord.summary.eventNumber + 1) == g_nextEventNumberToUse)
+	{
+		debug("Combo - Bargraph: No other events recorded during session\n");
+	}
+	else // ((g_pendingBargraphRecord.summary.eventNumber + 1) != g_nextEventNumberToUse)
+	{
+		g_pendingBargraphRecord.summary.captured.comboEventsRecordedDuringSession = (g_nextEventNumberToUse - (g_pendingBargraphRecord.summary.eventNumber + 1));
+		g_pendingBargraphRecord.summary.captured.comboEventsRecordedStartNumber = (g_pendingBargraphRecord.summary.eventNumber + 1);
+		g_pendingBargraphRecord.summary.captured.comboEventsRecordedEndNumber = (g_nextEventNumberToUse - 1);
+
+		debug("Combo - Bargraph: Events recorded during session, Total: %d (%d to %d)\n", g_pendingBargraphRecord.summary.captured.comboEventsRecordedDuringSession,
+				g_pendingBargraphRecord.summary.captured.comboEventsRecordedStartNumber, g_pendingBargraphRecord.summary.captured.comboEventsRecordedEndNumber);
+	}
 
 	// Make sure at the beginning of the file
 	fl_fseek(g_comboDualCurrentEventFileHandle, 0, SEEK_SET);
@@ -1508,7 +1523,7 @@ void MoveComboWaveformEventToFile(void)
 
 					if (g_currentEventFileHandle == NULL)
 					{
-						debugErr("Failed to get a new file handle for the current Combo - Waveform event!\n");
+						debugErr("Failed to get a new file handle for the current Combo - Waveform event\n");
 
 						//ReInitSdCardAndFat32();
 						//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
