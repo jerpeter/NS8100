@@ -71,7 +71,7 @@ static uint32 s_pretriggerCount = 0;
 static uint16 s_consecSeismicTriggerCount = 0;
 static uint16 s_consecAirTriggerCount = 0;
 static uint8 s_pretriggerFull = NO;
-static uint8 s_checkTempDrift = NO;
+static uint8 s_checkForTempDrift = NO;
 static uint8 s_seismicTriggerSample = NO;
 static uint8 s_airTriggerSample = NO;
 static uint8 s_recordingEvent = NO;
@@ -79,6 +79,7 @@ static uint8 s_calPulse = NO;
 static uint8 s_consecEventsWithoutCal = 0;
 static uint8 s_channelSyncError = NO;
 static uint8 s_channelReadsToSync = 0;
+static int16 s_temperatureDelta = 0;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -108,6 +109,20 @@ void Eic_external_rtc_irq(void)
 
 	// clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int1 = 1;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+__attribute__((__interrupt__))
+void Eic_low_battery_irq(void)
+{
+	debugRaw("-LowBatt-");
+
+	raiseSystemEventFlag(LOW_BATTERY_WARNING_EVENT);
+
+	// Clear the interrupt flag in the processor
+	AVR32_EIC.ICR.int0 = 1;
 }
 
 ///----------------------------------------------------------------------------
@@ -151,7 +166,7 @@ void Eic_keypad_irq(void)
 	ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 #endif
 
-	// clear the interrupt flag in the processor
+	// Clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int5 = 1;
 }
 
@@ -230,13 +245,13 @@ void Eic_system_irq(void)
 	// Check of the external trigger signal has been found
 	if (keyFlag & 0x08)
 	{
-		// Clear trigger found signal from self or any external unit connected (Active high control)
+		// Clear trigger out signal in case it was self generated (Active high control)
 		PowerControl(TRIGGER_OUT, OFF);
 		
 		//debugRaw("-ET-");
 		
-		// Check if not processing an event
-		if (g_busyProcessingEvent == NO)
+		// Check if monitoring and not bargraph and not processing an event
+		if (((g_sampleProcessing == ACTIVE_STATE)) && (g_triggerRecord.op_mode != BARGRAPH_MODE) && (g_busyProcessingEvent == NO))
 		{
 			// Signal the start of an event
 			g_externalTrigger = YES;
@@ -247,7 +262,7 @@ void Eic_system_irq(void)
 	ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 #endif
 
-	// clear the interrupt flag in the processor
+	// Clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int4 = 1;
 }
 
@@ -429,7 +444,7 @@ void Tc_typematic_irq(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-static inline void fillPretriggerBuffer_ISR_Inline(void)
+static inline void fillPretriggerBufferUntilFull_ISR_Inline(void)
 {
 	s_pretriggerCount++;
 
@@ -445,12 +460,12 @@ static inline void fillPretriggerBuffer_ISR_Inline(void)
 		s_pretriggerCount = 0;
 		
 		// Save the current temperature
-		g_storedTempReading = g_currentTempReading;
+		g_storedTempReading = g_previousTempReading = g_currentTempReading;
 
 		// Check if setup to monitor temp drift and not 16K sample rate
 		if ((g_triggerRecord.trec.adjustForTempDrift == YES) && (g_triggerRecord.trec.sample_rate != SAMPLE_RATE_16K))
 		{
-			s_checkTempDrift = YES;
+			s_checkForTempDrift = YES;
 		}
 	}					
 }
@@ -531,10 +546,13 @@ static inline void processAndMoveManualCalData_ISR_Inline(void)
 	if (g_manualCalSampleCount == 0)
 	{
 		// Signal the end of the Cal pulse
-		raiseSystemEventFlag(MANUEL_CAL_EVENT);
+		raiseSystemEventFlag(MANUAL_CAL_EVENT);
+
+		// Signal an event buffer has been used (gimmick to make processing work)
+		g_freeEventBuffers--;
 
 		g_manualCalFlag = FALSE;
-		g_manualCalSampleCount = 0;
+		//g_manualCalSampleCount = 0; // Unnecessary
 	}
 }
 
@@ -747,7 +765,7 @@ void processAndMoveWaveformData(void)
 		//___Check if all the event samples have been handled
 		if (s_sampleCount == 0)
 		{
-			//debug("--> Recording done!\n");
+			//debug("--> Recording done\n");
 			//usart_write_char(&AVR32_USART1, '%');
 
 			s_recordingEvent = NO;
@@ -858,7 +876,7 @@ void processAndMoveWaveformData(void)
 					*(s_calPtr[DEFAULT_CAL_BUFFER_INDEX] + 2) = 0x6666;
 					*(s_calPtr[DEFAULT_CAL_BUFFER_INDEX] + 3) = 0x6666;
 #endif
-					//debug("\n--> Cal done!\n");
+					//debug("\n--> Cal done\n");
 					//usart_write_char(&AVR32_USART1, '&');
 						
 					// Reset all states and counters (that haven't already)
@@ -904,7 +922,7 @@ void processAndMoveWaveformData(void)
 	else
 	{
 		// Should _never_ get here
-		debugErr("Error in ISR processing!\n");
+		debugErr("Error in ISR processing\n");
 	}
 	
 	}	
@@ -949,22 +967,33 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
 			//usart_write_char(&AVR32_USART1, '$');
 			
-			// Check if the source was not an external trigger
-			if (g_externalTrigger == NO)
+			// Check if this event was triggered by an external trigger signal
+			if (g_externalTrigger == YES)
 			{
+				// Flag as an External Trigger for handling the event
+				raiseSystemEventFlag(EXT_TRIGGER_EVENT);
+
+				// Reset the external trigger flag
+				g_externalTrigger = NO;
+			}
+			// Check if the source was not an external trigger
+			else // (g_externalTrigger == NO)
+			{
+				//debugRaw("+ET+");
+
 				// Signal a trigger found for any external unit connected (Active high control)
 				PowerControl(TRIGGER_OUT, ON);
 					
-				//debugRaw("+ET+");
-			}
-			else // Externally triggered event
-			{
-				// Reset the external trigger flag
-				g_externalTrigger = NO;
+				// Trigger out will be cleared when our own ISR catches the active high signal
 			}
 
 			s_consecSeismicTriggerCount = 0;
 			s_consecAirTriggerCount = 0;
+
+#if 0 // Need better management of check
+			// Don't worry about temp drift during an event
+			s_checkForTempDrift = NO;
+#endif
 
 			//___________________________________________________________________________________________
 			//___Check if there is an event buffer available and not marked done for taking events (stop trigger)
@@ -1077,7 +1106,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		//___Check if all the event samples have been handled
 		if (s_sampleCount == 0)
 		{
-			//debug("--> Recording done!\n");
+			//debug("--> Recording done\n");
 			//usart_write_char(&AVR32_USART1, '%');
 
 			s_recordingEvent = NO;
@@ -1172,7 +1201,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 
 				if (s_calSampleCount == 0)
 				{
-					//debug("\n--> Cal done!\n");
+					//debug("\n--> Cal done\n");
 					//usart_write_char(&AVR32_USART1, '&');
 						
 					// Reset all states and counters (that haven't already)
@@ -1218,7 +1247,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 	else
 	{
 		// Should _never_ get here
-		debugErr("Error in ISR processing!\n");
+		debugErr("Error in ISR processing\n");
 	}
 }
 
@@ -1265,11 +1294,32 @@ static inline void moveBargraphData_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline void checkForTemperatureDrift_ISR_Inline(void)
 {
-	// Check if the stored temp reading is higher than the current reading
-	if (g_storedTempReading > g_currentTempReading)
+	// Get the delta between the current and previous temperature reading
+	s_temperatureDelta = Abs((int16)(g_currentTempReading - g_previousTempReading));
+
+	// Check if the delta in consecutive temp readings is greater than the max jump signifying a bogus temp reading that plagues this A/D part
+	if (s_temperatureDelta < MAX_TEMPERATURE_JUMP_PER_SAMPLE)
 	{
-		// Check if the delta is less than the margin of change required to signal an adjustment
-		if ((g_storedTempReading - g_currentTempReading) > AD_TEMP_COUNT_FOR_ADJUSTMENT)
+		// Update the previous temperature reading
+		g_previousTempReading = g_currentTempReading;
+
+		// Check if the stored temp reading is higher than the current reading
+		if (g_storedTempReading > g_currentTempReading)
+		{
+			// Check if the delta is less than the margin of change required to signal an adjustment
+			if ((g_storedTempReading - g_currentTempReading) > AD_TEMP_COUNT_FOR_ADJUSTMENT)
+			{
+				// Updated stored temp reading for future comparison
+				g_storedTempReading = g_currentTempReading;
+
+				// Re-init the update to get new offsets
+				g_updateOffsetCount = 0;
+
+				raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
+			}
+		}
+		// The current temp reading is equal or higher than the stored (result needs to be positive)
+		else if ((g_currentTempReading - g_storedTempReading) > AD_TEMP_COUNT_FOR_ADJUSTMENT)
 		{
 			// Updated stored temp reading for future comparison
 			g_storedTempReading = g_currentTempReading;
@@ -1279,17 +1329,6 @@ static inline void checkForTemperatureDrift_ISR_Inline(void)
 
 			raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
 		}
-	}
-	// The current temp reading is equal or higher than the stored (result needs to be positive)
-	else if ((g_currentTempReading - g_storedTempReading) > AD_TEMP_COUNT_FOR_ADJUSTMENT)
-	{
-		// Updated stored temp reading for future comparison
-		g_storedTempReading = g_currentTempReading;
-
-		// Re-init the update to get new offsets
-		g_updateOffsetCount = 0;
-
-		raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
 	}
 }
 
@@ -1309,6 +1348,15 @@ static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v = s_V_channelReading;
 	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t = s_T_channelReading;
 	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->a = s_A_channelReading;
+
+#if 0 // Test
+	// Store samples in event buffer
+	testSamples[samplesCollected++] = s_R_channelReading;
+	testSamples[samplesCollected++] = s_V_channelReading;
+	testSamples[samplesCollected++] = s_T_channelReading;
+	testSamples[samplesCollected++] = s_A_channelReading;
+	testSamples[samplesCollected++] = g_currentTempReading;
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -1354,7 +1402,7 @@ static inline void getChannelDataWithReadbackWithTemp_ISR_Inline(void)
 
     // Temperature
     spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &g_currentTempReading);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
     spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	//if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
@@ -1388,7 +1436,7 @@ static inline void getChannelDataNoReadbackWithTemp_ISR_Inline(void)
 
     // Temperature
     spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &g_currentTempReading);
+    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 }
 
@@ -1427,7 +1475,7 @@ static inline void getChannelDataNoReadbackNoTemp_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline void HandleChannelSyncError_ISR_Inline(void)
 {
-	debugErr("AD Channel Sync Error!\n");
+	debugErr("AD Channel Sync Error\n");
 		
 	// Attempt channel recovery (with a channel read to get the config read back value)
 	spi_selectChip(AD_SPI, AD_SPI_NPCS);
@@ -1453,7 +1501,7 @@ static inline void HandleChannelSyncError_ISR_Inline(void)
 
 		default: 
 			s_channelReadsToSync = 0; // Houston, we have a problem... all channels read and unable to match
-			debugErr("Error: ISR Processing AD --> Unable to Sync channels, data collection broken!\n");
+			debugErr("Error: ISR Processing AD --> Unable to Sync channels, data collection broken\n");
 			break;
 	}
 		
@@ -1473,7 +1521,7 @@ static inline void HandleChannelSyncError_ISR_Inline(void)
 void DataIsrInit(void)
 {
 	s_pretriggerFull = NO;
-	s_checkTempDrift = NO;
+	s_checkForTempDrift = NO;
 }
 
 ///----------------------------------------------------------------------------
@@ -1507,10 +1555,6 @@ void Tc_sample_irq(void)
 	}
 #endif
 
-#if 0 // Test
-	gpio_set_gpio_pin(AVR32_PIN_PB20);
-#endif
-
 #if 1 // Test
 	//___________________________________________________________________________________________
 	//___Revert power savings for sleep
@@ -1539,7 +1583,7 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 
 		//___________________________________________________________________________________________
 		//___Check for temperature drift (only will start after Pretrigger buffer is full initially)
-		if (s_checkTempDrift == YES)
+		if (s_checkForTempDrift == YES)
 		{
 			checkForTemperatureDrift_ISR_Inline();
 		}
@@ -1568,7 +1612,7 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 
 		//___________________________________________________________________________________________
 		//___Check for temperature drift (only will start after Pretrigger buffer is full initially)
-		if (s_checkTempDrift == YES)
+		if (s_checkForTempDrift == YES)
 		{
 			checkForTemperatureDrift_ISR_Inline();
 		}
@@ -1588,7 +1632,7 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 	//___Check if the Pretrigger buffer is not full, which is necessary for an event
 	else if (s_pretriggerFull == NO)
 	{
-		fillPretriggerBuffer_ISR_Inline();
+		fillPretriggerBufferUntilFull_ISR_Inline();
 	}
 	//___________________________________________________________________________________________
 	//___Check if handling a Manual Cal
