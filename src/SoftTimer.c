@@ -43,6 +43,19 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+uint8 IsSoftTimerActive(uint16 timerNum)
+{
+	if ((timerNum < NUM_OF_SOFT_TIMERS) && (g_rtcTimerBank[timerNum].state == TIMER_ASSIGNED))
+	{
+		return YES;
+	}
+
+	return NO;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void AssignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 {
 	if (timerNum >= NUM_OF_SOFT_TIMERS)
@@ -187,6 +200,8 @@ void AlarmOneOutputTimerCallback(void)
 {
 	// Deactivate alarm 1 signal
 	PowerControl(ALARM_1_ENABLE, OFF);
+
+	debug("Warning Event 1 Alarm finished\n");
 }
 
 ///----------------------------------------------------------------------------
@@ -196,6 +211,8 @@ void AlarmTwoOutputTimerCallback(void)
 {
 	// Deactivate alarm 2 signal
 	PowerControl(ALARM_2_ENABLE, OFF);
+
+	debug("Warning Event 2 Alarm finished\n");
 }
 
 ///----------------------------------------------------------------------------
@@ -456,24 +473,26 @@ void AutoMonitorTimerCallBack(void)
 	// Make sure the Auto Monitor timer is disabled
 	ClearSoftTimer(AUTO_MONITOR_TIMER_NUM);
 
-	// Check if the unit is not alread monitoring
+	// Check if the unit is not already monitoring
 	if (g_sampleProcessing != ACTIVE_STATE)
 	{
-		// Enter monitor mode with the current mode
-		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
-		JUMP_TO_ACTIVE_MENU();
+		if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
+		else // Safe to enter monitor mode
+		{
+			// Enter monitor mode with the current mode
+			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+			JUMP_TO_ACTIVE_MENU();
+		}
 	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void ProcessTimerEvents(void)
+void CheckForMidnight(void)
 {
 	static uint8 processingMidnight = NO;
 	DATE_TIME_STRUCT currentTime = GetCurrentTime();
-	INPUT_MSG_STRUCT mn_msg;
-	char msgBuffer[25];
 
 	// Check for Midnight and make sure that the current Midnight isn't already been processed
 	if ((currentTime.hour == 0) && (currentTime.min == 0) && (processingMidnight == NO))
@@ -489,31 +508,43 @@ void ProcessTimerEvents(void)
 		}
 	}
 
-	// Check if the unit is in monitor mode and if battery voltage has dropped below a certain voltage
-	if ((g_sampleProcessing == ACTIVE_STATE) && (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE) < LOW_VOLTAGE_THRESHOLD))
+#if 0 // Moved to checking in main system event handling of low battery event
+	// Check if the battery voltage has dropped below a certain voltage
+	if (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE) < LOW_VOLTAGE_THRESHOLD)
 	{
-		// Disable the monitor menu update timer
-		ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
+		// Change state to signal a low battery
+		raiseSystemEventFlag(LOW_BATTERY_WARNING_EVENT);
 
-		// Need to stop print jobs
+		INPUT_MSG_STRUCT mn_msg;
+		char msgBuffer[25];
 
-		// Voltage is low, turn printing off
-		g_helpRecord.autoPrint = OFF;
+		// Check if the unit is in monitor mode
+		if (g_sampleProcessing == ACTIVE_STATE)
+		{
+			// Disable the monitor menu update timer
+			ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 
-		// Handle and finish monitoring
-		StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+#if 0 // ns7100
+			// Voltage is low, turn printing off
+			g_helpRecord.autoPrint = OFF;
+#endif
 
-		// Clear and setup the message buffer
-		ByteSet(&(msgBuffer[0]), 0, sizeof(msgBuffer));
-		sprintf(msgBuffer, "%s %s", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT));
+			// Handle and finish monitoring
+			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
-		// Overlay a "Battery Voltage Low" message
-		OverlayMessage(getLangText(WARNING_TEXT), msgBuffer, (2 * SOFT_SECS));
+			// Clear and setup the message buffer
+			ByteSet(&(msgBuffer[0]), 0, sizeof(msgBuffer));
+			sprintf(msgBuffer, "%s %s", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT));
 
-		// Jump to the main menu
-		SETUP_MENU_MSG(MAIN_MENU);
-		JUMP_TO_ACTIVE_MENU();
+			// Overlay a "Battery Voltage Low" message
+			OverlayMessage(getLangText(WARNING_TEXT), msgBuffer, (2 * SOFT_SECS));
+
+			// Jump to the main menu
+			SETUP_MENU_MSG(MAIN_MENU);
+			JUMP_TO_ACTIVE_MENU();
+		}
 	}
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -581,20 +612,27 @@ void HandleMidnightEvent(void)
 			}
 			else
 			{
+#if 0 // ns7100
 				// Overlay a message that calibration is taking place
 				OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), (2 * SOFT_SECS));
 
 				// Issue a Cal Pulse message
 	            StartMonitoring(g_triggerRecord.trec, MANUAL_CAL_MODE);
 
-				// Wait until after the Cal Pulse has completed, 250ms to be safe (just less than 100 ms to complete)
-				SoftUsecWait(250 * SOFT_MSECS);
+				// Wait until after the Cal Pulse has completed, pretrigger + 100 to be safe (just less than 100 ms to complete)
+				SoftUsecWait(((1 * SOFT_SECS) / g_helpRecord.pretrigBufferDivider) + (100 * SOFT_MSECS));
+
+				// Just make absolutely sure we are done with the Cal pulse
+				while ((volatile uint32)g_manualCalSampleCount != 0) { /* spin */ }
 
 				// Stop data transfer
 	            StopDataCollection();
 
 				// Done processing Auto Cal logic at this point, just return
 				// Results menu will pick up the Cal event and re-enter monitor mode
+#else // ns8100
+				ForcedCalibration();
+#endif
 			}
 		}
 	}
