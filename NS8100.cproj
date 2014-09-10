@@ -225,7 +225,7 @@
     </ToolchainSettings>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Flash' ">
-    <PostBuildEvent>copy NS8100_App.srec App.s</PostBuildEvent>
+    <PostBuildEvent>copy NS8100_App.srec App.s &amp;&amp; srec2bin.exe App.bin -s NS8100_App.srec</PostBuildEvent>
     <OutputFileName>NS8100_App</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputPath>bin\Flash\</OutputPath>
@@ -244,6 +244,7 @@
           <ListValues>
             <Value>../src/SOFTWARE_FRAMEWORK/DRIVERS/EBI/SDRAMC</Value>
             <Value>../src/SOFTWARE_FRAMEWORK/SERVICES/FAT</Value>
+            <Value>../src/SOFTWARE_FRAMEWORK/SERVICES/MEMORY</Value>
             <Value>../src/SOFTWARE_FRAMEWORK/SERVICES/USB/CLASS/MASS_STORAGE/SCSI_DECODER</Value>
             <Value>../src/SOFTWARE_FRAMEWORK/SERVICES/USB/CLASS/MASS_STORAGE/HOST_MEM</Value>
             <Value>../src/SOFTWARE_FRAMEWORK/SERVICES/USB/CLASS/MASS_STORAGE</Value>
@@ -401,7 +402,25 @@
     <Compile Include="src\ProcessHandler.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\virtual_mem.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\MEMORY\virtual_mem.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\host_mem.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\host_mem.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\TestSnippets.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ushell_task.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ushell_task.h">
       <SubType>compile</SubType>
     </Compile>
     <None Include="NS8100_Flash_uc3a0512.lds">
@@ -1051,16 +1070,13 @@
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\device_mass_storage_task.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\host_mass_storage_task.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\host_mass_storage_task.h">
       <SubType>compile</SubType>
     </Compile>
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM" />
-    <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\host_mem.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\HOST_MEM\host_mem.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Folder Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER" />
     <Compile Include="src\SOFTWARE_FRAMEWORK\SERVICES\USB\CLASS\MASS_STORAGE\SCSI_DECODER\scsi_decoder.c">
       <SubType>compile</SubType>
