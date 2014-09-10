@@ -65,6 +65,7 @@
 #include "Globals.h"
 
 extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
+extern void Eic_low_battery_irq(void);
 extern void Eic_keypad_irq(void);
 extern void Eic_system_irq(void);
 extern void Eic_external_rtc_irq(void);
@@ -81,6 +82,30 @@ extern void Tc_typematic_irq(void);
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void Setup_8100_EIC_Low_Battery_ISR(void)
+{
+	// External Interrupt Controller setup
+	AVR32_EIC.IER.int0 = 1;
+	AVR32_EIC.MODE.int0 = 0;
+	AVR32_EIC.EDGE.int0 = 0;
+	AVR32_EIC.LEVEL.int0 = 0;
+	AVR32_EIC.FILTER.int0 = 1;
+	AVR32_EIC.ASYNC.int0 = 1;
+	AVR32_EIC.EN.int0 = 1;
+
+	// Register the RTC interrupt handler to the interrupt controller.
+	INTC_register_interrupt(&Eic_low_battery_irq, AVR32_EIC_IRQ_0, 0);
+
+#if 0
+	// Test for int enable
+	if(AVR32_EIC.IMR.int0 == 0x01) debug("\nLow Battery Interrupt Enabled\n");
+	else debug("\nLow Battery Interrupt Not Enabled\n");
+#endif
+}
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -104,11 +129,11 @@ void Setup_8100_EIC_Keypad_ISR(void)
 	rtc_enable_interrupt(&AVR32_RTC);
 #endif
 
-	#if 0
+#if 0
 	// Test for int enable
 	if(AVR32_EIC.IMR.int5 == 0x01) debug("\nKeypad Interrupt Enabled\n");
 	else debug("\nKeypad Interrupt Not Enabled\n");
-	#endif
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -133,11 +158,11 @@ void Setup_8100_EIC_System_ISR(void)
 	rtc_enable_interrupt(&AVR32_RTC);
 #endif
 
-	#if 0
+#if 0
 	// Test for int enable
 	if(AVR32_EIC.IMR.int4 == 0x01) debug("\nSystem Interrupt Enabled\n");
 	else debug("\nSystem Interrupt Not Enabled\n");
-	#endif
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -155,13 +180,13 @@ void Setup_8100_EIC_External_RTC_ISR(void)
 	AVR32_EIC.EN.int1 = 1;
 
 	// Register the RTC interrupt handler to the interrupt controller.
-	#if 0 // Test
+#if 0 // Test
 	INTC_register_interrupt(&Eic_external_rtc_irq, AVR32_EIC_IRQ_1, 0);
-	#else // Hook in the External RTC interrupt to the actual sample processing interrupt handler
+#else // Hook in the External RTC interrupt to the actual sample processing interrupt handler
 	INTC_register_interrupt(&Tc_sample_irq, AVR32_EIC_IRQ_1, 0);
-	#endif
+#endif
 
-	#if 1
+	#if 0
 	// Test for int enable
 	if(AVR32_EIC.IMR.int1 == 0x01) { debug("External RTC Interrupt Enabled\n"); }
 	else { debug("External RTC Interrupt Not Enabled\n"); }
@@ -275,10 +300,10 @@ void InitInterrupts_NS8100(void)
 	// Disable all interrupts (Actually done at the start of InitHardware but calling here again just in case some local code enables)
 	Disable_global_interrupt();
 
-	#if 0 // Moved to the start of InitHardware to prevent wiping out the TWI interrupt handler
+#if 0 // Moved to the start of InitHardware to prevent wiping out the TWI interrupt handler
 	// Assign all interrupt vectors an un-handled
 	INTC_init_interrupts();
-	#endif
+#endif
 
 	// Hook in and enable half second tick
 	Setup_8100_Soft_Timer_Tick_ISR();
@@ -286,14 +311,19 @@ void InitInterrupts_NS8100(void)
 	// Setup typematic timer for repeat key interrupt
 	Setup_8100_TC_Clock_ISR(ONE_MS_RESOLUTION, TC_TYPEMATIC_TIMER_CHANNEL);
 
+#if 0 // Removed for now becasue interrupt doesn't provide any benefit over just reading the pin as a GPIO input
+	// Setup Low Battery interrupt from RTC when PFO triggers
+	Setup_8100_EIC_Low_Battery_ISR();
+#endif
+
 	// Setup keypad for interrupts
 	Setup_8100_EIC_Keypad_ISR();
 	Setup_8100_EIC_System_ISR();
 
-	#if 0 // Moved interrupt setup to the end of the BootloaderManager to allow for searching for Ctrl-B
+#if 0 // Moved interrupt setup to the end of the BootloaderManager to allow for searching for Ctrl-B
 	InitCraftInterruptBuffers();
 	Setup_8100_Usart_RS232_ISR();
-	#endif
+#endif
 	
 	Enable_global_interrupt();
 }
