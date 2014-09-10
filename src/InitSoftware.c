@@ -75,10 +75,6 @@
 void setupMnDef(void)
 {
 	char buff[50];
-	#if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
-	usart_options_t rs232Options =
-	{ .charlength = 8, .paritytype = USART_NO_PARITY, .stopbits = USART_1_STOPBIT, .channelmode = USART_NORMAL_CHMODE };
-	#endif
 
 	debug("Init Power on LCD...\n");
 
@@ -301,6 +297,7 @@ void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#include "navigation.h"
 void InitSoftwareSettings_NS8100(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
@@ -340,6 +337,15 @@ void InitSoftwareSettings_NS8100(void)
 	debug("Init Get Boot Function Addr...\n");
 	GetBootFunctionAddress();
 
+#if NS8100_ALPHA
+	//-------------------------------------------------------------------------
+	// Init the NAV and select the SD MMC Card
+	//-------------------------------------------------------------------------
+	nav_reset();
+	nav_select(0);
+	nav_drive_set(0);
+#endif
+
 	//-------------------------------------------------------------------------
 	// Setup defaults, load records, init the language table
 	//-------------------------------------------------------------------------
@@ -353,6 +359,7 @@ void InitSoftwareSettings_NS8100(void)
 	if (TimerModeActiveCheck() == TRUE)
 	{
 		debug("--- Timer Mode Startup ---\n");
+
 		ProcessTimerMode();
 
 		// If here, the unit is in Timer mode, but did not power itself off yet
