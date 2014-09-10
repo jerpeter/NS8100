@@ -54,11 +54,14 @@
 #define CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD 2 // Treating event + event as 1 consecutive, event + event + event as 2 consecutive
 #define PENDING	2 // Anything above 1
 
-#if 0 // Normal
-#define AD_TEMP_COUNT_FOR_ADJUSTMENT	4
+#if 0
+#define AD_TEMP_COUNT_FOR_ADJUSTMENT	4		// First pass (about 1 degree F)
+#define AD_TEMP_COUNT_FOR_ADJUSTMENT	16		// Second pass (about 5 degrees F)
 #else // Test new count
-#define AD_TEMP_COUNT_FOR_ADJUSTMENT	16
+#define AD_TEMP_COUNT_FOR_ADJUSTMENT	32		// Second pass (about 10 degrees F)
 #endif
+
+#define	MAX_TEMPERATURE_JUMP_PER_SAMPLE	4		// Check for A/D temperature sample that is bogus
 
 enum {
 	DEFAULT_CAL_BUFFER_INDEX = 0,
