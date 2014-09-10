@@ -191,10 +191,18 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 		NewMonitorLogEntry(op_mode);
 	}
 
-	if ((op_mode == BARGRAPH_MODE) || (op_mode == COMBO_MODE))
+	if ((op_mode == BARGRAPH_MODE) || (op_mode == COMBO_MODE) || ((op_mode == WAVEFORM_MODE) && (g_helpRecord.autoCalForWaveform == ENABLED)))
 	{
-		g_fileProcessActiveUsbLockout = ON;
-		BargraphForcedCalibration();
+		if (g_skipAutoCalInWaveformAfterMidnightCal == YES)
+		{
+			// Don't perform auto cal to start waveform
+			g_skipAutoCalInWaveformAfterMidnightCal = NO;
+		}
+		else
+		{
+			g_fileProcessActiveUsbLockout = ON;
+			ForcedCalibration();
+		}
 	}
 
 	// Initialize buffers and settings and gp_ramEventRecord
@@ -261,13 +269,16 @@ void StartDataCollection(uint32 sampleRate)
 	//OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), 0);
 	GetChannelOffsets(sampleRate);
 
+#if INTERNAL_SAMPLING_SOURCE
 	debug("Setup TC clocks...\n");
 	// Setup ISR to clock the data sampling
 
-#if INTERNAL_SAMPLING_SOURCE
 	Setup_8100_TC_Clock_ISR(sampleRate, TC_SAMPLE_TIMER_CHANNEL);
 	Setup_8100_TC_Clock_ISR(CAL_PULSE_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
+	debug("Setup External RTC Sample clock...\n");
+	// Setup ISR to clock the data sampling
+
 	Setup_8100_EIC_External_RTC_ISR();
 #endif
 
@@ -279,11 +290,7 @@ void StartDataCollection(uint32 sampleRate)
 #if INTERNAL_SAMPLING_SOURCE
 	Start_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-#if 1 // Normal
 	StartExternalRtcClock(sampleRate);
-#else
-	StartExternalRtcClock(1);
-#endif
 #endif
 
 	// Change state to start processing the samples
@@ -475,7 +482,7 @@ uint16 SeismicTriggerConvert(float seismicTriggerLevel)
     
     convertToHex = (float)ADC_RESOLUTION / (float)convertToHex;
   
-	if ((seismicTriggerLevel != NO_TRIGGER_CHAR) && (seismicTriggerLevel != MANUAL_TRIGGER_CHAR))
+	if ((seismicTriggerLevel != NO_TRIGGER_CHAR) && (seismicTriggerLevel != MANUAL_TRIGGER_CHAR) && (seismicTriggerLevel != EXTERNAL_TRIGGER_CHAR))
     {
 		// Convert the trigger level into a hex value for the 430 processor board.
 		seisTriggerVal = (uint16)(((float)convertToHex * (float)seismicTriggerLevel) + (float)0.5);	
@@ -584,8 +591,8 @@ void HandleManualCalibration(void)
 
 					StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
 
-					// Wait for the Cal Pulse to complete, 250ms + 100ms
-					SoftUsecWait(350 * SOFT_MSECS);
+					// Wait for the Cal Pulse to complete, pretrigger time + 100ms
+					SoftUsecWait(((1 * SOFT_SECS) / g_helpRecord.pretrigBufferDivider) + (100 * SOFT_MSECS));
 
 					// Just make absolutely sure we are done with the Cal pulse
 					while ((volatile uint32)g_manualCalSampleCount != 0) { }
@@ -593,8 +600,11 @@ void HandleManualCalibration(void)
 					// Stop data transfer
 					StopDataClock();
 
-					if (getSystemEventState(MANUEL_CAL_EVENT))
-						MoveManuelCalToFlash();
+					if (getSystemEventState(MANUAL_CAL_EVENT))
+					{
+						debug("Manual Cal Pulse Event (Monitoring)\n");
+						MoveManualCalToFlash();
+					}
 
 					InitDataBuffs(g_triggerRecord.op_mode);
 					g_manualCalFlag = FALSE;
@@ -615,7 +625,6 @@ void HandleManualCalibration(void)
 	{
 		GetFlashUsageStats(&flashStats);
 		
-		// fix_ns8100
 		if ((g_helpRecord.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
 		{
 			OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
@@ -633,8 +642,8 @@ void HandleManualCalibration(void)
 
 			StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
 			
-			// Wait for the Cal Pulse to complete, 250ms + 100ms
-			SoftUsecWait(350 * SOFT_MSECS);
+			// Wait for the Cal Pulse to complete, pretrigger time + 100ms
+			SoftUsecWait(((1 * SOFT_SECS) / g_helpRecord.pretrigBufferDivider) + (100 * SOFT_MSECS));
 
 			// Just make absolutely sure we are done with the Cal pulse
 			while ((volatile uint32)g_manualCalSampleCount != 0) { }
@@ -642,8 +651,11 @@ void HandleManualCalibration(void)
 			// Stop data transfer
 			StopDataClock();
 
-			if (getSystemEventState(MANUEL_CAL_EVENT))
-				MoveManuelCalToFlash();
+			if (getSystemEventState(MANUAL_CAL_EVENT))
+			{
+				debug("Manual Cal Pulse Event (Non-Monitoring)\n");
+				MoveManualCalToFlash();
+			}
 
 			g_manualCalFlag = FALSE;
 			g_manualCalSampleCount = 0;
@@ -654,14 +666,14 @@ void HandleManualCalibration(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void BargraphForcedCalibration(void)
+void ForcedCalibration(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	uint8 pendingMode = g_triggerRecord.op_mode;
 	
 	OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING CALIBRATION", 0);
 
-	g_bargraphForcedCal = YES;
+	g_forcedCalibration = YES;
 
 	InitDataBuffs(MANUAL_CAL_MODE);
 	g_manualCalFlag = TRUE;
@@ -687,8 +699,8 @@ void BargraphForcedCalibration(void)
 	// No longer needed, handled in the ISR for Cal
 	//GenerateCalSignal();
 
-	// Wait for the Cal Pulse to complete, 250ms + 100ms
-	SoftUsecWait(350 * SOFT_MSECS);
+	// Wait for the Cal Pulse to complete, pretrigger + 100ms
+	SoftUsecWait(((1 * SOFT_SECS) / g_helpRecord.pretrigBufferDivider) + (100 * SOFT_MSECS));
 
 	// Just make absolutely sure we are done with the Cal pulse
 	while ((volatile uint32)g_manualCalSampleCount != 0) { /* spin */ }
@@ -699,15 +711,15 @@ void BargraphForcedCalibration(void)
 	g_manualCalFlag = FALSE;
 	g_manualCalSampleCount = 0;
 
-	if (getSystemEventState(MANUEL_CAL_EVENT))
-		MoveManuelCalToFlash();
+	if (getSystemEventState(MANUAL_CAL_EVENT))
+		MoveManualCalToFlash();
 
 	if (getMenuEventState(RESULTS_MENU_EVENT)) 
 	{
 		clearMenuEventFlag(RESULTS_MENU_EVENT);
 
 #if 0 // fix_ns8100
-		SETUP_RESULTS_MENU_MANUEL_CAL_MSG(RESULTS_MENU);
+		SETUP_RESULTS_MENU_MANUAL_CAL_MSG(RESULTS_MENU);
 
 		JUMP_TO_ACTIVE_MENU();
 #else
@@ -720,10 +732,52 @@ void BargraphForcedCalibration(void)
 
 	g_activeMenu = MONITOR_MENU;
 
-	g_bargraphForcedCal = NO;
+	g_forcedCalibration = NO;
 
-	// Reset the mode back to Bargraph
+	// Reset the mode back to the previous mode
 	g_triggerRecord.op_mode = pendingMode;
 
 	UpdateMonitorLogEntry();
+
+	if (g_enterMonitorModeAfterMidnightCal == YES)
+	{
+		// Reset flag
+		g_enterMonitorModeAfterMidnightCal = NO;
+
+		// Check if Auto Cal is enabled
+		if (g_helpRecord.autoCalForWaveform == YES)
+		{
+			// Set flag to skip auto calibration at start of waveform
+			g_skipAutoCalInWaveformAfterMidnightCal = YES;
+		}
+
+		// Assign a timer to re-enter monitor mode
+		//AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (3 * SOFT_SECS), AutoMonitorTimerCallBack);
+
+		if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
+		else // Safe to enter monitor mode
+		{
+			// Enter monitor mode with the current mode
+			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+			JUMP_TO_ACTIVE_MENU();
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void StopMonitoringForLowPowerState(void)
+{
+	INPUT_MSG_STRUCT mn_msg;
+
+	// Disable the monitor menu update timer
+	ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
+
+	// Handle and finish monitoring
+	StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+
+	// Jump to the main menu
+	SETUP_MENU_MSG(MAIN_MENU);
+	JUMP_TO_ACTIVE_MENU();
 }
