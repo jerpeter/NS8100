@@ -130,31 +130,34 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 
 				key = GetKeypadKey(CHECK_ONCE_FOR_KEY);
 
-				SoftUsecWait(10 * SOFT_MSECS);
+				SoftUsecWait(50 * SOFT_MSECS);
 
 				switch (key)
 				{
 					case UP_ARROW_KEY:
-						if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
+						if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
 						{
+							//debug("Cal Menu Screen NP selected\n");
+							OverlayMessage(getLangText(STATUS_TEXT), "CHANNEL NOISE PERCENTAGES", (1 * SOFT_SECS));
+							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
+						}
+						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
+						{
+							//debug("Cal Menu Screen CD selected\n");
+							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY CALIBRATED (ZERO) MIN MAX AVG", (1 * SOFT_SECS));
+							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
+						}
+						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
+						{
+							//debug("Cal Menu Screen NCD selected\n");
 							// Clear the stored offsets so that the A/D channel data is raw
 							memset(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
 							
 							// Clear the Pretrigger buffer
 							SoftUsecWait(250 * SOFT_MSECS);
 							
-							//debug("Cal Menu Screen 1 selected\n");
+							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY NON CALIBRATED (ZERO) MIN MAX AVG", (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
-						}
-						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
-						{
-							//debug("Cal Menu Screen 2 selected\n");
-							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
-						}
-						else if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
-						{
-							//debug("Cal Menu Screen 2 selected\n");
-							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
 						}
 
 						key = 0;
@@ -180,23 +183,26 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 #if INTERNAL_SAMPLING_SOURCE
 							Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-							StartExternalRtcClock(SAMPLE_RATE_1K);
+							StartExternalRtcClock(CALIBRATION_FIXED_SAMPLE_RATE);
 #endif
 							
 							// Clear the Pretrigger buffer
 							SoftUsecWait(250 * SOFT_MSECS);
 
-							//debug("Cal Menu Screen 2 selected\n");
+							//debug("Cal Menu Screen CD selected\n");
+							//OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY CALIBRATED (ZERO) MIN MAX AVG", 0);
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
 						{
-							//debug("Cal Menu Screen 3 selected\n");
+							//debug("Cal Menu Screen NP selected\n");
+							OverlayMessage(getLangText(STATUS_TEXT), "CHANNEL NOISE PERCENTAGES", (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
 						{
-							//debug("Cal Menu Screen 3 selected\n");
+							//debug("Cal Menu Screen DS selected\n");
+							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY SUCCESSIVE SAMPLES", (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_DISPLAY_SAMPLES;
 						}
 
@@ -287,6 +293,11 @@ void CalSetupMnProc(INPUT_MSG_STRUCT msg,
 			// Fool system and initialize buffers and pointers as if a waveform
 			InitDataBuffs(WAVEFORM_MODE);
 
+			// Setup the Pretrigger buffer pointers
+			g_startOfPretriggerBuff = &(g_pretriggerBuff[0]);
+			g_tailOfPretriggerBuff = &(g_pretriggerBuff[0]);
+			g_endOfPretriggerBuff = &(g_pretriggerBuff[1024]);
+
 #if 0 // ns7100
 			MnStopCal();
 #endif
@@ -336,13 +347,12 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	uint8 buff[50];
 	uint8 length;
-	uint16 i = 0, j = 0;
 	int32 chanMin[4];
 	int32 chanMax[4];
 	int32 chanAvg[4];
 	int16 chanMed[4][13];
+	uint16 i = 0, j = 0;
 	uint16 sampleDataMidpoint = 0x8000;
-
 	DATE_TIME_STRUCT time;
 
 	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
@@ -352,8 +362,9 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
-	//memcpy(&s_calPreTrigData[0], &g_startOfPretriggerBuff[0], (256 * 4 * 2));
-	s_calibrationData = (CALIBRATION_DATA*)g_startOfPretriggerBuff;
+	s_calibrationData = (CALIBRATION_DATA*)&g_eventDataBuffer[0];
+
+	memcpy(&s_calibrationData[0], &g_startOfPretriggerBuff[0], (256 * 4 * 2));
 
 	// Zero the Med
 	memset(&chanMed[0][0], 0, sizeof(chanMed));
@@ -373,6 +384,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			if (s_calibrationData[i].chan[j] < chanMin[j]) chanMin[j] = s_calibrationData[i].chan[j];
 			if (s_calibrationData[i].chan[j] > chanMax[j]) chanMax[j] = s_calibrationData[i].chan[j];
+
 			chanAvg[j] += s_calibrationData[i].chan[j];
 
 			if ((s_calibrationData[i].chan[j] >= (sampleDataMidpoint - 6)) && (s_calibrationData[i].chan[j] <= (sampleDataMidpoint + 6)))
@@ -398,7 +410,8 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 	}
 
-	if ((s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) || (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY) || (CAL_MENU_DISPLAY_SAMPLES))
+	if ((s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) || (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY) ||
+		(s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES))
 	{
 		// PRINT CAL_SETUP
 		ByteSet(&buff[0], 0, sizeof(buff));
@@ -593,9 +606,17 @@ void MnStartCal(void)
 	// Setup AD Channel config
 	SetupADChannelConfig(CALIBRATION_FIXED_SAMPLE_RATE);
 
-#if 0 // Now skipped since the default menu display (CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) does not use channel offsets
+extern void DataIsrInit(void);
+	DataIsrInit();
+
+#if 1 // Now skipped since the default menu display (CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) does not use channel offsets
 	// Get channel offsets
 	GetChannelOffsets(CALIBRATION_FIXED_SAMPLE_RATE);
+
+	g_channelOffset.r_offset = 0;
+	g_channelOffset.v_offset = 0;
+	g_channelOffset.t_offset = 0;
+	g_channelOffset.a_offset = 0;
 #endif
 
 #if INTERNAL_SAMPLING_SOURCE
@@ -605,7 +626,10 @@ void MnStartCal(void)
 	// Start the timer for collecting data
 	Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-	StartExternalRtcClock(SAMPLE_RATE_1K);
+extern void Setup_8100_EIC_External_RTC_ISR(void);
+	Setup_8100_EIC_External_RTC_ISR();
+
+	StartExternalRtcClock(CALIBRATION_FIXED_SAMPLE_RATE);
 #endif
 }
 
