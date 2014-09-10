@@ -186,7 +186,8 @@ enum {
 #define VIN_CHANNEL     2
 #define VBAT_CHANNEL    3
 
-#define LOW_VOLTAGE_THRESHOLD	5.0
+#define LOW_VOLTAGE_THRESHOLD		5.4
+#define EXTERNAL_VOLTAGE_PRESENT	5
 
 /* Uart Info */
 #define CRAFT_BAUDRATE	115200 //14400 //38400

@@ -634,11 +634,8 @@ void InitVersionMsg(void)
 	debugRaw("  Software Date:    %s\n", g_appDate);
 	debugRaw("  Software Time:    %s\n", g_appTime);
 	debugRaw("\n");
-#else
-	debugRaw("\n\n");
-	debugRaw("  Software Version    : %s\n", g_buildVersion);
-	debugRaw("  Software Date & Time: %s\n", g_buildDate);
-	debugRaw("\n");
+#else // ns8100
+	debug("Software Version: %s (Build Date & Time: %s)\n", g_buildVersion, g_buildDate);
 #endif
 }
 
@@ -861,16 +858,16 @@ void AdjustPowerSavings(void)
 			case POWER_SAVINGS_MINIMUM:
 			//----------------------------------------------------------------------------
 				// Leave active: SYSTIMER; Disable: OCD
-				AVR32_PM.cpumask = 0x0100;
+				AVR32_PM.cpumask = 0x00010000;
 
 				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC, USBB; Disable: PDCA, MACB
-				AVR32_PM.hsbmask = 0x004F;
+				AVR32_PM.hsbmask = 0x0000004F;
 
 				// Leave active: USART 1, USART 3, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 2, PDCA
-				AVR32_PM.pbamask = 0x4AFB;
+				AVR32_PM.pbamask = 0x00004AFB;
 
 				// Leave active: SMC, FLASHC, HMATRIX, USBB; Disable: SDRAMC, MACB
-				AVR32_PM.pbbmask = 0x0017;
+				AVR32_PM.pbbmask = 0x00000017;
 
 				// Enable rs232 driver and receiver (Active low control)
 				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
@@ -881,16 +878,16 @@ void AdjustPowerSavings(void)
 			case POWER_SAVINGS_MOST:
 			//----------------------------------------------------------------------------
 				// Leave active: SYSTIMER; Disable: OCD
-				AVR32_PM.cpumask = 0x0100;
+				AVR32_PM.cpumask = 0x00010000;
 
 				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC; Disable: PDCA, MACB, USBB
-				AVR32_PM.hsbmask = 0x0047;
+				AVR32_PM.hsbmask = 0x00000047;
 
 				// Leave active: USART1, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 2 & 3, PDCA
-				AVR32_PM.pbamask = 0x42FB;
+				AVR32_PM.pbamask = 0x000042FB;
 
 				// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
-				AVR32_PM.pbbmask = 0x0015;
+				AVR32_PM.pbbmask = 0x00000015;
 
 				// Enable rs232 driver and receiver (Active low control)
 				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
@@ -907,16 +904,16 @@ void AdjustPowerSavings(void)
 				}
 
 				// Leave active: SYSTIMER; Disable: OCD
-				AVR32_PM.cpumask = 0x0100;
+				AVR32_PM.cpumask = 0x00010000;
 
 				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC; Disable: PDCA, MACB, USBB
-				AVR32_PM.hsbmask = 0x0047;
+				AVR32_PM.hsbmask = 0x0000004F; //0x00000047;
 
 				// Leave active: TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 1 & 2 & 3, PDCA
-				AVR32_PM.pbamask = 0x40FB;
+				AVR32_PM.pbamask = 0x000040FB;
 
 				// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
-				AVR32_PM.pbbmask = 0x0015;
+				AVR32_PM.pbbmask = 0x00000017; //0x00000015;
 
 				// Disable rs232 driver and receiver (Active low control)
 				PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
@@ -927,16 +924,16 @@ void AdjustPowerSavings(void)
 			default: // POWER_SAVINGS_NONE
 			//----------------------------------------------------------------------------
 				// Leave active: All; Disable: None
-				AVR32_PM.cpumask = 0x0102;
+				AVR32_PM.cpumask = 0x00010002;
 
 				// Leave active: All; Disable: None
-				AVR32_PM.hsbmask = 0x007F;
+				AVR32_PM.hsbmask = 0x0000007F;
 
 				// Leave active: All; Disable: None
-				AVR32_PM.pbamask = 0xFFFF;
+				AVR32_PM.pbamask = 0x0000FFFF;
 
 				// Leave active: All; Disable: None
-				AVR32_PM.pbbmask = 0x003F;
+				AVR32_PM.pbbmask = 0x0000003F;
 
 				// Enable rs232 driver and receiver (Active low control)
 				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
