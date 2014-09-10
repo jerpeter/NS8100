@@ -187,6 +187,9 @@ void AirSetupMenuHandler(uint8 keyPressed, void* data)
 		SETUP_USER_MENU_MSG(&unitsOfAirMenu, g_helpRecord.unitsOfAir);
 #else // ns8100
 		SETUP_MENU_MSG(CAL_SETUP_MENU);
+
+extern void UsbDeviceManager(void);
+		UsbDeviceManager();
 #endif
 	}
 	else if (keyPressed == ESC_KEY)
@@ -1825,7 +1828,6 @@ void FreqPlotStandardMenuHandler(uint8 keyPressed, void* data)
 // Help Menu
 //=============================================================================
 //*****************************************************************************
-#if 1 // Normal
 #define HELP_MENU_ENTRIES 4
 USER_MENU_STRUCT helpMenu[HELP_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, HELP_MENU_TEXT, TITLE_POST_TAG,
@@ -1834,17 +1836,6 @@ USER_MENU_STRUCT helpMenu[HELP_MENU_ENTRIES] = {
 {ITEM_2, 0, HELP_INFORMATION_TEXT,		NO_TAG, {INFORMATION}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&HelpMenuHandler}}
 };
-#else // Test
-#define HELP_MENU_ENTRIES 5
-USER_MENU_STRUCT helpMenu[HELP_MENU_ENTRIES] = {
-{TITLE_PRE_TAG, 0, HELP_MENU_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, HELP_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 0, CONFIG_AND_OPTIONS_TEXT,	NO_TAG, {CONFIG}},
-{ITEM_2, 0, HELP_INFORMATION_TEXT,		NO_TAG, {INFORMATION}},
-{ITEM_3, 0, TESTING_TEXT,				NO_TAG, {TEST_OPTION}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&HelpMenuHandler}}
-};
-#endif
 
 //------------------
 // Help Menu Handler
@@ -1861,18 +1852,11 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 		{
 			SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 		}
-#if 0 // Test
-		else if (helpMenu[newItemIndex].data == TEST_OPTION)
-		{
-extern void PowerDownAndHalt(void);
-			PowerDownAndHalt();
-		}
-#endif
 		else
 		{
 #if 0 // ns7100
 			MessageBox(getLangText(STATUS_TEXT), getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT), MB_OK);
-#else
+#else // ns8100
 			sprintf(buildString, "%s %s %s", getLangText(SOFTWARE_VER_TEXT), (char*)g_buildVersion, (char*)g_buildDate);
 			MessageBox(getLangText(STATUS_TEXT), buildString, MB_OK);
 #endif
