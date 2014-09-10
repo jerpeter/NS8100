@@ -548,7 +548,7 @@ void MoveWaveformEventToFlash(void)
 
 					if (g_currentEventFileHandle == NULL)
 					{
-						debugErr("Failed to get a new file handle for the current Waveform event!\n");
+						debugErr("Failed to get a new file handle for the current Waveform event\n");
 						
 						//ReInitSdCardAndFat32();
 						//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);

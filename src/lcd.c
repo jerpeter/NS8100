@@ -1152,8 +1152,7 @@ void InitDisplay( void )
 
     // now clear the display
     ClearLCDscreen();
-
-} //End of function
+}
 
 ///----------------------------------------------------------------------------
 ///	Function Break

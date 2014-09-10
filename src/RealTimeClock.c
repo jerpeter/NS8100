@@ -54,7 +54,12 @@ BOOLEAN InitExternalRtc(void)
 	// Initialize the softtimer array.
 	ByteSet(&g_rtcTimerBank[0], 0, (sizeof(SOFT_TIMER_STRUCT) * NUM_OF_SOFT_TIMERS));
 
-	debug("\r\n\n______________________________________________________________________________________\n");
+	debugRaw("\r\n\n\n");
+	debugRaw("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n");
+	debugRaw("---------------------------------------------------------------------------------------\n");
+	debugRaw("-----     NS8100 Fresh boot, App version: %s (Date: %s)     -----\n", (char*)g_buildVersion, (char*)g_buildDate);
+	debugRaw("---------------------------------------------------------------------------------------\n");
+	debugRaw("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
 	debug("External RTC Init...\n");
 
 	// Get the base of the external RTC memory map

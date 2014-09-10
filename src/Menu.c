@@ -1139,23 +1139,29 @@ void DisplayFlashUsageStats(void)
 	else if (usage.sizeUsed < 1000000)
 		sprintf(&sizeUsedStr[0], "%s: %3luKB %d%%", getLangText(USED_TEXT),(usage.sizeUsed / 1000), usage.percentUsed);
 	else
-		sprintf(&sizeUsedStr[0], "%s: %3.1fMB %d%%", getLangText(USED_TEXT),((float)usage.sizeUsed / (float)1000000), usage.percentUsed);
+		sprintf(&sizeUsedStr[0], "%s: %4.0fMB %d%%", getLangText(USED_TEXT),((float)usage.sizeUsed / (float)1000000), usage.percentUsed);
 
 	if (usage.sizeFree < 1000)
 		sprintf(&sizeFreeStr[0], "%s: %3.1fKB %d%%", getLangText(FREE_TEXT),((float)usage.sizeFree / (float)1000), usage.percentFree);
 	else if (usage.sizeFree < 1000000)
 		sprintf(&sizeFreeStr[0], "%s: %3luKB %d%%", getLangText(FREE_TEXT),(usage.sizeFree / 1000), usage.percentFree);
 	else
-		sprintf(&sizeFreeStr[0], "%s: %3.1fMB %d%%", getLangText(FREE_TEXT),((float)usage.sizeFree / (float)1000000), usage.percentFree);
+		sprintf(&sizeFreeStr[0], "%s: %4.0fMB %d%%", getLangText(FREE_TEXT),((float)usage.sizeFree / (float)1000000), usage.percentFree);
 
 	sprintf(&message[0], "%s       %s %s %s: %s", getLangText(EVENT_DATA_TEXT),sizeUsedStr, sizeFreeStr, getLangText(WRAPPED_TEXT),(usage.wrapped == YES) ? "YES" : "NO");
 
 	MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
 
 	if (g_helpRecord.flashWrapping == NO)
-		sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(SPACE_REMAINING_TEXT),getLangText(WAVEFORMS_TEXT),usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT),usage.barHoursLeft);
+	{
+		if ((usage.waveEventsLeft < 1000) && (usage.barHoursLeft < 1000)) { sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(SPACE_REMAINING_TEXT),getLangText(WAVEFORMS_TEXT), usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT), usage.barHoursLeft); }
+		else { sprintf(&message[0], "%s %s: %dK, %s: ~%dK", getLangText(SPACE_REMAINING_TEXT), getLangText(WAVEFORMS_TEXT), (uint16)(usage.waveEventsLeft / 1000), getLangText(BAR_HOURS_TEXT), (uint16)(usage.barHoursLeft / 1000)); }
+	}
 	else // Wrapping is on
-		sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(BEFORE_OVERWRITE_TEXT),getLangText(WAVEFORMS_TEXT),usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT),usage.barHoursLeft);
+	{
+		if ((usage.waveEventsLeft < 1000) && (usage.barHoursLeft < 1000)) { sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(BEFORE_OVERWRITE_TEXT),getLangText(WAVEFORMS_TEXT), usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT), usage.barHoursLeft); }
+		else { sprintf(&message[0], "%s %s: %dK, %s: ~%dK", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(WAVEFORMS_TEXT), (uint16)(usage.waveEventsLeft / 1000), getLangText(BAR_HOURS_TEXT), (uint16)(usage.barHoursLeft / 1000)); }
+	}
 
 	MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
 #endif

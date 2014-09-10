@@ -160,7 +160,7 @@ uint8 ReadNandID(void)
 	manfCode = ReadNandData();
 	deviceCode = ReadNandData();
 
-	DebugPrint(RAW, "Nand Flash Device: Manufacturer Code: 0x%x, Device Code: 0x%x\n", manfCode, deviceCode);
+	debugRaw("Nand Flash Device: Manufacturer Code: 0x%x, Device Code: 0x%x\n", manfCode, deviceCode);
 
 	if (manfCode == 0x20)
 		return (PASSED);
@@ -181,8 +181,8 @@ void ReadNandStatus(void)
 
 	status = ReadNandData();
 
-	DebugPrint(RAW, "Reading Staus register returns data: 0x%x\n  ", status);
-	DebugPrint(RAW, "Write Protect: %s, Device Status: %s, Last Operation: %s\n  ",
+	debugRaw("Reading Staus register returns data: 0x%x\n  ", status);
+	debugRaw("Write Protect: %s, Device Status: %s, Last Operation: %s\n  ",
 				(status & NAND_WRITE_PROTECTION_DISABLED_BIT) ? "Disabled" : "Enabled",
 				(status & NAND_DEVICE_READY_BIT) ? "Ready" : "Busy",
 				(status & NAND_OPERATION_FAILED) ? "Failed" : "Successful");

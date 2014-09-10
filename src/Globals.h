@@ -185,7 +185,7 @@ extern BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalReadPtr;
 extern BARGRAPH_BAR_INTERVAL_DATA* g_comboBarIntervalEndPtr;
 extern uint16 g_manualCalSampleCount;
 extern uint8 g_manualCalFlag;
-extern uint8 g_bargraphForcedCal;
+extern uint8 g_forcedCalibration;
 extern uint8 g_skipAutoCalInWaveformAfterMidnightCal;
 extern uint8 g_autoRetries;
 extern DATE_TIME_STRUCT g_currentTime;
@@ -215,6 +215,7 @@ extern uint32 g_summaryEventNumber;
 extern uint8 g_summaryListMenuActive;
 extern uint8 g_summaryListArrowChar;
 extern uint8 g_disableDebugPrinting;
+extern uint8 g_lowBatteryState;
 extern USER_MENU_CACHE_STRUCT g_userMenuCache[36];
 extern USER_MENU_CACHE_STRUCT* g_userMenuCachePtr;
 extern USER_MENU_CACHE_DATA g_userMenuCacheData;
@@ -236,8 +237,9 @@ extern uint16 g_resultsCacheIndex;
 extern uint32 g_cyclicEventDelay;
 extern uint32 g_updateOffsetCount;
 extern uint32 g_tempTriggerLevelForMenuAdjsutment;
-extern uint16 g_storedTempReading;
-extern uint16 g_currentTempReading;
+extern volatile uint16 g_storedTempReading;
+extern volatile uint16 g_currentTempReading;
+extern volatile uint16 g_previousTempReading;
 extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 
 // Version

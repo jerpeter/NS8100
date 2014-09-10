@@ -359,7 +359,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	EVT_RECORD* eventRecord = &resultsEventRecord;
 	
-	if ((g_updateResultsEventRecord == YES) || (g_bargraphForcedCal == YES))
+	if ((g_updateResultsEventRecord == YES) || (g_forcedCalibration == YES))
 	{
 		if (g_summaryListMenuActive == YES)
 		{

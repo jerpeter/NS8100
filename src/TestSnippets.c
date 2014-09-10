@@ -245,7 +245,7 @@ void TestSnippetsAfterInit(void)
 		while (g_rtcSoftTimerTickCount < (timedAccess + 10))
 		{
 			monitorLogFile = fl_fopen("C:\\Logs\\TestLogRead.ns8", "r");
-			if (monitorLogFile == NULL) { debugErr("Test Read file not found!\n"); }
+			if (monitorLogFile == NULL) { debugErr("Test Read file not found\n"); }
 			bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 			while (bytesRead > 0) { bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT)); }
 			fl_fclose(monitorLogFile);
@@ -285,7 +285,7 @@ void TestSnippetsAfterInit(void)
 		while (g_rtcSoftTimerTickCount < (timedAccess + 10))
 		{
 			monitorLogFile = fl_fopen("C:\\Logs\\TestLogWrite.ns8", "a+");
-			if (monitorLogFile == NULL) { debugErr("Test Write file not opened!\n"); }
+			if (monitorLogFile == NULL) { debugErr("Test Write file not opened\n"); }
 			for (retry = 0; retry < 250; retry++)
 			{
 				fl_fwrite((uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT), 1, monitorLogFile);

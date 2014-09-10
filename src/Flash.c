@@ -622,7 +622,7 @@ int16 VerifyFlashDevice(uint8 printResults)
 	// Read Device Code
 	deviceCode = *addr;
 
-	//DebugPrint(RAW, "Flash Device: Manufacturer ID: 0x%x, Device Code: 0x%x\n", manfId, deviceCode);
+	//debugRaw("Flash Device: Manufacturer ID: 0x%x, Device Code: 0x%x\n", manfId, deviceCode);
 
 #if 0
 	addr = (uint16*)(FLASH_BASE_ADDR + 0x04);
@@ -630,7 +630,7 @@ int16 VerifyFlashDevice(uint8 printResults)
 	{
 		protection = *addr;
 
-		//DebugPrint(RAW, "  Sector %d at (%p) has protection bits: 0x%x\n", i, addr, protection);
+		//debugRaw("  Sector %d at (%p) has protection bits: 0x%x\n", i, addr, protection);
 
 		// Check if in the Boot sector range
 		if (addr < (uint16*)(FLASH_BASE_ADDR | FLASH_BOOT_SIZE_x8))
@@ -650,7 +650,7 @@ int16 VerifyFlashDevice(uint8 printResults)
 
 	if(printResults == YES)
 	{
-		DebugPrint(RAW, "  Flash Manf ID: 0x%x, Device ID: 0x%x\n", manfId, deviceCode);
+		debugRaw("  Flash Manf ID: 0x%x, Device ID: 0x%x\n", manfId, deviceCode);
 	}
 
 	if ((manfId == FLASH_MANF_ID) && ((deviceCode == FLASH_DEVICE_CODE) ||

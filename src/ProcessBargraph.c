@@ -849,7 +849,7 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 				
 	if (g_currentEventFileHandle == NULL)
 	{
-		debugErr("Failed to get a new file handle for the current Bargraph event!\n");
+		debugErr("Failed to get a new file handle for the current Bargraph event\n");
 	}			
 
 	// Write in the current but unfinished event record to provide an offset to start writing in the data

@@ -164,7 +164,7 @@ uint16 FixDataToZero(uint16 data_);
 void ProcessWaveformData(void);
 void MoveWaveformEventToFlash(void);
 
-void ProcessManuelCalPulse(void);
-void MoveManuelCalToFlash(void);
+void ProcessManualCalPulse(void);
+void MoveManualCalToFlash(void);
 
 #endif //_DATABUFFS_H_

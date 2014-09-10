@@ -312,14 +312,14 @@ void CopyFlashBlock(uint16* dst, uint16* src, uint32 len)
 ///----------------------------------------------------------------------------
 void CopyRecordIntoFlashBk(uint16* dst,uint16* src, uint32 loc, uint32 len)
 {
-	//DebugPrint(RAW, "\n CRIFBK -> ");
+	//debugRaw("\n CRIFBK -> ");
 
 	while (len > 0)
 	{
 		// Copy src data into dest offset by loc
 		*(dst + loc) = *src;
 
-		//DebugPrint(RAW, "%x ", *(dst + loc));
+		//debugRaw("%x ", *(dst + loc));
 
 		// Increment dest and src pointers
 		dst++;

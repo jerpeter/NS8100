@@ -1050,22 +1050,22 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 	}
 
 #if 0 // Test code (Display command components)
-	DebugPrint(RAW, "Recieved DEM command: \n");
+	debugRaw("Recieved DEM command: \n");
 	for(i=0;i<inCmd->size;i++)
 	{
-		DebugPrint(RAW, "(%d)%x ", i+1, inCmd->msg[i]);
+		debugRaw("(%d)%x ", i+1, inCmd->msg[i]);
 	}
-	DebugPrint(RAW, "\n");
+	debugRaw("\n");
 
-	DebugPrint(RAW, "Command: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->cmd), HDR_CMD_LEN);
-	DebugPrint(RAW, "Message Type: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->type[0], g_inCmdHeaderPtr->type[1], HDR_TYPE_LEN);
-	DebugPrint(RAW, "Data Length: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->dataLength), HDR_DATALENGTH_LEN);
-	DebugPrint(RAW, "Unit Model: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->unitModel), HDR_UNITMODEL_LEN);
-	DebugPrint(RAW, "Unit Serial #: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->unitSn), HDR_SERIALNUMBER_LEN);
-	DebugPrint(RAW, "Compress/CRC Flags: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->compressCrcFlags[0], g_inCmdHeaderPtr->compressCrcFlags[1], HDR_COMPRESSCRC_LEN);
-	DebugPrint(RAW, "Software Version: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->softwareVersion[0], g_inCmdHeaderPtr->softwareVersion[1], HDR_SOFTWAREVERSION_LEN);
-	DebugPrint(RAW, "Data Version: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->dataVersion[0], g_inCmdHeaderPtr->dataVersion[1], HDR_DATAVERSION_LEN);
-	DebugPrint(RAW, "Spare: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->spare[0], g_inCmdHeaderPtr->spare[1], HDR_SPARE_LEN);
+	debugRaw("Command: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->cmd), HDR_CMD_LEN);
+	debugRaw("Message Type: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->type[0], g_inCmdHeaderPtr->type[1], HDR_TYPE_LEN);
+	debugRaw("Data Length: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->dataLength), HDR_DATALENGTH_LEN);
+	debugRaw("Unit Model: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->unitModel), HDR_UNITMODEL_LEN);
+	debugRaw("Unit Serial #: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->unitSn), HDR_SERIALNUMBER_LEN);
+	debugRaw("Compress/CRC Flags: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->compressCrcFlags[0], g_inCmdHeaderPtr->compressCrcFlags[1], HDR_COMPRESSCRC_LEN);
+	debugRaw("Software Version: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->softwareVersion[0], g_inCmdHeaderPtr->softwareVersion[1], HDR_SOFTWAREVERSION_LEN);
+	debugRaw("Data Version: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->dataVersion[0], g_inCmdHeaderPtr->dataVersion[1], HDR_DATAVERSION_LEN);
+	debugRaw("Spare: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->spare[0], g_inCmdHeaderPtr->spare[1], HDR_SPARE_LEN);
 #endif
 
 	//-----------------------------------------------------------

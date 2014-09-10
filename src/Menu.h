@@ -134,6 +134,7 @@ enum {
 enum {
 	SELECT_TYPE = 1,
 	STRING_TYPE,
+	STRING_SPECIAL_TYPE,
 	INTEGER_BYTE_TYPE,
 	INTEGER_WORD_TYPE,
 	INTEGER_WORD_FIXED_TYPE,
@@ -802,7 +803,7 @@ typedef enum {
 	mn_msg.length = 1;\
 	mn_msg.data[0] = 12;
 
-#define SETUP_RESULTS_MENU_MANUEL_CAL_MSG(m) \
+#define SETUP_RESULTS_MENU_MANUAL_CAL_MSG(m) \
 	g_activeMenu = m; \
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 1;\
@@ -940,7 +941,7 @@ void StopDataClock(void);
 void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode);
 void StopMonitoring(uint8 mode, uint8 operation);
 void HandleManualCalibration(void);
-void BargraphForcedCalibration(void);
+void ForcedCalibration(void);
 void ProcessTimerModeSettings(uint8 mode);
 void WaitForEventProcessingToFinish(void);
 void UpdateModeMenuTitle(uint8 mode);
@@ -952,5 +953,7 @@ void DisplayTimerModeSettings(void);
 void DisplayFlashUsageStats(void);
 void DisplayAutoDialInfo(void);
 void InitSensorParameters(uint16 sensor_type, uint8 sensitivity);
+void StopMonitoringForLowPowerState(void);
+void PromptUserUnableToEnterMonitoring(void);
 
 #endif // _MENU_H_

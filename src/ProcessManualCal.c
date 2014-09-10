@@ -46,7 +46,7 @@
 ///	Function Break
 ///----------------------------------------------------------------------------
 #if 0
-void ProcessManuelCalPulse(void)
+void ProcessManualCalPulse(void)
 {
 	DATE_TIME_STRUCT triggerTimeStamp;
 	//SUMMARY_DATA* sumEntry;
@@ -92,7 +92,7 @@ void ProcessManuelCalPulse(void)
 			g_eventBufferPretrigPtr += 4;
 			g_tailOfPretriggerBuff += 4;
 			
-			raiseSystemEventFlag(MANUEL_CAL_EVENT);
+			raiseSystemEventFlag(MANUAL_CAL_EVENT);
 			g_manualCalFlag = FALSE;
 			g_manualCalSampleCount = 0;
 			break;
@@ -140,7 +140,7 @@ void ProcessManuelCalPulse(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void MoveManuelCalToFlash(void)
+void MoveManualCalToFlash(void)
 {
 	static SUMMARY_DATA* sumEntry;
 	static SUMMARY_DATA* ramSummaryEntry;
@@ -151,6 +151,8 @@ void MoveManuelCalToFlash(void)
 	uint16 lowA = 0xFFF, lowR = 0xFFF, lowV = 0xFFF, lowT = 0xFFF;
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
+
+	debug("Processing Manual Cal to be saved\n");
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
@@ -261,7 +263,7 @@ void MoveManuelCalToFlash(void)
 				
 		if (g_currentEventFileHandle == NULL)
 		{
-			debugErr("Failed to get a new file handle for the Manual Cal event!\n");
+			debugErr("Failed to get a new file handle for the Manual Cal event\n");
 			
 			//ReInitSdCardAndFat32();
 			//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
@@ -304,7 +306,7 @@ void MoveManuelCalToFlash(void)
 		{
 			g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
 		}
-		clearSystemEventFlag(MANUEL_CAL_EVENT);
+		clearSystemEventFlag(MANUAL_CAL_EVENT);
 
 		g_lastCompletedRamSummaryIndex = ramSummaryEntry;
 
@@ -315,6 +317,8 @@ void MoveManuelCalToFlash(void)
 	}
 	else
 	{
-		clearSystemEventFlag(MANUEL_CAL_EVENT);
+		debugWarn("Manual Cal: No free buffers\n");
+
+		clearSystemEventFlag(MANUAL_CAL_EVENT);
 	}
 }

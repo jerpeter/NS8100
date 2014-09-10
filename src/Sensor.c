@@ -206,26 +206,26 @@ void OneWireTest(uint8 sensor)
 
 		crc = CalcCrc8(&romData[0], 7, 0x00);
 
-		DebugPrint(RAW, "\nOne Wire Rom Data: ");
+		debugRaw("\nOne Wire Rom Data: ");
 
 		for (i = 0; i < 8; i++)
 		{
-			DebugPrint(RAW, "0x%x ", romData[i]);
+			debugRaw("0x%x ", romData[i]);
 		}
 
 		if (crc == romData[7])
 		{
-			DebugPrint(RAW, "(CRC: %x, success)\n", crc);
+			debugRaw("(CRC: %x, success)\n", crc);
 			OneWireFunctions(sensor);
 		}
 		else
 		{
-			DebugPrint(RAW, "(CRC: %x, fail)\n", crc);
+			debugRaw("(CRC: %x, fail)\n", crc);
 		}
 	}
 	else
 	{
-		DebugPrint(RAW, "\nOne Wire device not found!\n");
+		debugRaw("\nOne Wire device not found\n");
 	}
 }
 
@@ -239,7 +239,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Memory (0xF0), Address: 0x00 -> 0x1F (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		DebugPrint(RAW, "Read Memory\n");
+		debugRaw("Read Memory\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -250,13 +250,13 @@ void OneWireFunctions(uint8 sensor)
 		// Address
 		OneWireWriteByte(sensor, 0x00);
 
-		DebugPrint(RAW, "  Data:");
+		debugRaw("  Data:");
 
 		// Data
 		for (i = 0; i < 32; i++)
-			DebugPrint(RAW, "%x ", OneWireReadByte(sensor));
+			debugRaw("%x ", OneWireReadByte(sensor));
 
-		DebugPrint(RAW, "\n");
+		debugRaw("\n");
 
 		OneWireReset(sensor);
 	}
@@ -265,7 +265,7 @@ void OneWireFunctions(uint8 sensor)
 	// Write Scratchpad (0x0F), Address: 0x00 -> 0x1F (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		DebugPrint(RAW, "Write Scratchpad\n");
+		debugRaw("Write Scratchpad\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -289,7 +289,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Scratchpad (0xAA), Address: 0x00 -> 0x1F (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		DebugPrint(RAW, "Read Scratchpad\n");
+		debugRaw("Read Scratchpad\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -300,13 +300,13 @@ void OneWireFunctions(uint8 sensor)
 		// Address
 		OneWireWriteByte(sensor, 0x00);
 
-		DebugPrint(RAW, "  Data:");
+		debugRaw("  Data:");
 
 		// Data
 		for (i = 0; i < 32; i++)
-			DebugPrint(RAW, "%x ", OneWireReadByte(sensor));
+			debugRaw("%x ", OneWireReadByte(sensor));
 
-		DebugPrint(RAW, "\n");
+		debugRaw("\n");
 
 		OneWireReset(sensor);
 	}
@@ -315,7 +315,7 @@ void OneWireFunctions(uint8 sensor)
 	// Copy Scratchpad (0x55), Validation key: 0xA5, Data line held for 10ms
 	if (OneWireReset(sensor) == YES)
 	{
-		DebugPrint(RAW, "Copy Scratchpad\n");
+		debugRaw("Copy Scratchpad\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -335,7 +335,7 @@ void OneWireFunctions(uint8 sensor)
 	// Write Application Register (0x99), Address: 0x00 -> 0x07 (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		DebugPrint(RAW, "Write App Register\n");
+		debugRaw("Write App Register\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -359,7 +359,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Status Register (0x66), Validation key: 0x00
 	if (OneWireReset(sensor) == YES)
 	{
-		DebugPrint(RAW, "Read Status Register\n");
+		debugRaw("Read Status Register\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -370,10 +370,10 @@ void OneWireFunctions(uint8 sensor)
 		// Validation key
 		OneWireWriteByte(sensor, 0x00);
 
-		DebugPrint(RAW, "  Data:");
+		debugRaw("  Data:");
 
 		// Data
-		DebugPrint(RAW, "%x\n", OneWireReadByte(sensor));
+		debugRaw("%x\n", OneWireReadByte(sensor));
 
 		OneWireReset(sensor);
 	}
@@ -382,7 +382,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Application Register (0xC3), Address: 0x00 -> 0x07 (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		DebugPrint(RAW, "Read App Register\n");
+		debugRaw("Read App Register\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -393,15 +393,15 @@ void OneWireFunctions(uint8 sensor)
 		// Address
 		OneWireWriteByte(sensor, 0x00);
 
-		DebugPrint(RAW, "  Data:");
+		debugRaw("  Data:");
 
 		// Data
 		for (i = 0; i < 8; i++)
 		{
-			DebugPrint(RAW, "%x ", OneWireReadByte(sensor));
+			debugRaw("%x ", OneWireReadByte(sensor));
 		}
 
-		DebugPrint(RAW, "\n");
+		debugRaw("\n");
 
 		OneWireReset(sensor);
 	}
@@ -433,21 +433,21 @@ uint8 OneWireReadROM(uint8 sensor)
 
 		crc = CalcCrc8(&romData[0], 7, 0x00);
 
-		DebugPrint(RAW, "\nOne Wire Rom Data: ");
+		debugRaw("\nOne Wire Rom Data: ");
 
 		for (i = 0; i < 8; i++)
 		{
-			DebugPrint(RAW, "0x%x ", romData[i]);
+			debugRaw("0x%x ", romData[i]);
 		}
 
 		if (crc == romData[7])
 		{
-			DebugPrint(RAW, "(CRC: %x, success)\n", crc);
+			debugRaw("(CRC: %x, success)\n", crc);
 			OneWireFunctions(sensor);
 		}
 		else
 		{
-			DebugPrint(RAW, "(CRC: %x, fail)\n", crc);
+			debugRaw("(CRC: %x, fail)\n", crc);
 		}
 
 		OneWireReset(sensor);

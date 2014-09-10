@@ -56,9 +56,10 @@ static uint8 s_keyMap[8];
 ///----------------------------------------------------------------------------
 void CycleSleepMode(void)
 {
-	if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { g_sleepModeState = AVR32_PM_SMODE_IDLE; debug("Sleep mode level is now: Idle\n"); }
+	if (g_sleepModeState == AVR32_PM_SMODE_STOP) { g_sleepModeState = AVR32_PM_SMODE_IDLE; debug("Sleep mode level is now: Idle\n"); }
 	else if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { g_sleepModeState = AVR32_PM_SMODE_FROZEN; debug("Sleep mode level is now: Frozen\n"); }
 	else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { g_sleepModeState = AVR32_PM_SMODE_STANDBY; debug("Sleep mode level is now: Standby\n"); }
+	else if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { g_sleepModeState = AVR32_PM_SMODE_STOP; debug("Sleep mode level is now: Stop\n"); }
 }
 
 ///----------------------------------------------------------------------------
@@ -507,25 +508,6 @@ extern void BootLoadManager(void);
 					{
 #if 1 // Test
 						CycleSleepMode();
-#if 0						
-						gpio_disable_pin_pull_up(AVR32_PIN_PX00);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX01);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX02);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX03);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX04);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX05);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX06);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX07);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX08);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX09);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX10);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX35);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX36);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX37);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX38);
-						gpio_disable_pin_pull_up(AVR32_PIN_PX39);
-#endif
-
 #endif
 					}
 					else if (keyPressed == KEY_BACKLIGHT)
