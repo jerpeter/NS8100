@@ -136,11 +136,7 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 					switch (mn_layout_ptr->curr_ln)
 					{
 						case (DEFAULT_ROW_3): // Waveform
-							if (g_factorySetupRecord.invalid)
-							{
-								debugWarn("Factory setup record not found.\n");
-								MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
-							}
+							if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
 							else
 							{
 								g_triggerRecord.op_mode = WAVEFORM_MODE;
@@ -152,11 +148,7 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 							break; 
 
 						case (DEFAULT_ROW_4): // Bargraph
-							if (g_factorySetupRecord.invalid)
-							{
-								debugWarn("Factory setup record not found.\n");
-								MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
-							}
+							if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
 							else
 							{
 								g_triggerRecord.op_mode = BARGRAPH_MODE;
@@ -168,11 +160,7 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 							break;
 
 						case (DEFAULT_ROW_5): // Combo
-							if (g_factorySetupRecord.invalid)
-							{
-								debugWarn("Factory setup record not found.\n");
-								MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
-							}
+							if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
 							else
 							{
 								g_triggerRecord.op_mode = COMBO_MODE;
@@ -273,4 +261,22 @@ void MainMenuScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT * mn_layout_
            break; 
    }
    
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void PromptUserUnableToEnterMonitoring(void)
+{
+	if (g_factorySetupRecord.invalid)
+	{
+		debugWarn("Factory setup record not found.\n");
+		MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
+	}
+	else if (g_lowBatteryState == YES)
+	{
+		debugWarn("Monitoring unavailable due to low battery voltage\n");
+		sprintf((char*)g_spareBuffer, "%s %s (%3.2f)", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT), (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE)));
+		OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+	}
 }
