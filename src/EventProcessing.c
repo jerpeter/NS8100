@@ -171,7 +171,7 @@ void CopyValidFlashEventSummariesToRam(void)
 
 	debug("Copying valid flash event summaries to ram...");
 
-	// Start with begenning of flash event table
+	// Start with beginning of flash event table
 	while (flashEventPtr < (EVT_RECORD*)FLASH_EVENT_END)
 	{
 		// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
@@ -179,7 +179,7 @@ void CopyValidFlashEventSummariesToRam(void)
 			((flashEventPtr->header.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
 			(flashEventPtr->header.headerLength == eventHeaderSize))
 		{
-			//DebugPrint(RAW, "*** Found Event (%d) at: 0x%x with sizes: 0x%x, 0x%x, 0x%x, event #: %d, mode: 0x%x\n",
+			//debugRaw("*** Found Event (%d) at: 0x%x with sizes: 0x%x, 0x%x, 0x%x, event #: %d, mode: 0x%x\n",
 			//	ramSummaryIndex+1, flashEventPtr, flashEventPtr->header.headerLength,
 			//	flashEventPtr->header.summaryLength, flashEventPtr->header.dataLength,
 			//	flashEventPtr->summary.eventNumber, flashEventPtr->summary.mode);
@@ -197,14 +197,14 @@ void CopyValidFlashEventSummariesToRam(void)
 
 			if (((uint32)flashEventPtr + eventSize) >= FLASH_EVENT_END)
 			{
-				//DebugPrint(RAW, "\nDiscovered a Flash Event that wraps.\n");
-				//DebugPrint(RAW, "Assuming the end of events to find.\n");
+				//debugRaw("\nDiscovered a Flash Event that wraps.\n");
+				//debugRaw("Assuming the end of events to find.\n");
 				break;
 			}
 
 			flashEventPtr = (EVT_RECORD*)((uint32)flashEventPtr + eventSize);
 
-			//DebugPrint(RAW, "Next flashEventPtr (0x%x) Start Flag: 0x%x\n", flashEventPtr, flashEventPtr->header.startFlag);
+			//debugRaw("Next flashEventPtr (0x%x) Start Flag: 0x%x\n", flashEventPtr, flashEventPtr->header.startFlag);
 		}
 
 		// Else increment the flash event pointer, move two words, scanning memory.
@@ -367,7 +367,7 @@ uint8 InitFlashEvtBuff(void)
 
 		if (eventSize & 0x00000001)
 		{
-			debugErr("Total Event size is an odd size suggesting an error!\n");
+			debugErr("Total Event size is an odd size suggesting an error\n");
 			debug("Event sizes: 0x%x (%d), 0x%x (%d), 0x%x (%d)\n",
 					tempEventPtr->header.headerLength, tempEventPtr->header.headerLength,
 					tempEventPtr->header.summaryLength, tempEventPtr->header.summaryLength,
@@ -410,7 +410,7 @@ uint8 InitFlashEvtBuff(void)
 	{
 		if (*tempEncodeLinePtr != 0xFFFF)
 		{
-			debugWarn("Next flash event storage location (to the end of the sector) is not empty!\n");
+			debugWarn("Next flash event storage location (to the end of the sector) is not empty\n");
 
 			// Handle partial event
 			debugWarn("Handling partial flash event error...\n");
@@ -467,7 +467,7 @@ void InitFlashBuffs(void)
 	if (__ramFlashSummaryTblKey != VALID_RAM_SUMMARY_TABLE_KEY)
 	{
 		// Table is invalid, key is missing
-		//DebugPrint(RAW, "Ram Summary Key not found.\n");
+		//debugRaw("Ram Summary Key not found.\n");
 		dataInRamGarbage = TRUE;
 	}
 	else // Verify and count every ram summary link that points to an event
@@ -482,7 +482,7 @@ void InitFlashBuffs(void)
 				if((uint32)(__ramFlashSummaryTbl[i].fileEventNum) >= g_nextEventNumberToUse)
 				{
 					// This signals a big warning
-					//DebugPrint(RAW, "Data in Ram Summary Table is garbage.\n");
+					//debugRaw("Data in Ram Summary Table is garbage.\n");
 
 					// Assume the whole table is garbage, so just recreate it
 					dataInRamGarbage = TRUE;
@@ -490,7 +490,7 @@ void InitFlashBuffs(void)
 				}
 				else if(CheckValidEventFile((uint16)((uint32)(__ramFlashSummaryTbl[i].fileEventNum))) == NO)
 				{
-					//DebugPrint(RAW, "Ram summary (%d) points to an invalid event.\n", i+1);
+					//debugRaw("Ram summary (%d) points to an invalid event.\n", i+1);
 					__ramFlashSummaryTbl[i].fileEventNum = 0xFFFFFFFF;
 				}
 				else
@@ -572,6 +572,9 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.captured.printerStatus = (uint8)(g_helpRecord.autoPrint);
 	eventRec->summary.captured.calDate = g_factorySetupRecord.cal_date;
 	eventRec->summary.captured.externalTrigger = NO;
+	eventRec->summary.captured.comboEventsRecordedDuringSession = 0;
+	eventRec->summary.captured.comboEventsRecordedStartNumber = 0;
+	eventRec->summary.captured.comboEventsRecordedEndNumber = 0;
 	//-----------------------
 	ByteSet(&(eventRec->summary.parameters.companyName[0]), 0, COMPANY_NAME_STRING_SIZE);
 	ByteCpy(&(eventRec->summary.parameters.companyName[0]), &(g_triggerRecord.trec.client[0]), COMPANY_NAME_STRING_SIZE - 1);
@@ -664,52 +667,59 @@ void InitEventRecord(uint8 op_mode)
 #if 0 // Old - Fixed method
 			eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
 #else // New - Adjust trigger for bit accuracy
-			if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR))
+			if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR) ||
+				(g_triggerRecord.trec.airTriggerLevel == MANUAL_TRIGGER_CHAR))
 			{
 				eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+
+				debug("Seismic trigger in units: No Trigger\n");
 			}
-			else
+			else // Seismic trigger is valid
 			{
 				eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+
+				// Calculate the divider used for converting stored A/D peak counts to units of measure
+				unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) /
+				(float)(g_factorySetupRecord.sensor_type);
+
+				tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
+
+				if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE))
+				{
+					tempSesmicTriggerInUnits *= (float)METRIC;
+				}
+
+				debug("Seismic trigger in units: %05.2f %s\n", tempSesmicTriggerInUnits, (g_helpRecord.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
+				eventRec->summary.parameters.seismicTriggerInUnits = (uint32)(tempSesmicTriggerInUnits * 100);
 			}
 #endif
 
 #if 0 // Old - Fixed method
 			eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
 #else // New - Adjust trigger for bit accuracy
-			if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR))
+			if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR) ||
+				(g_triggerRecord.trec.airTriggerLevel == MANUAL_TRIGGER_CHAR))
 			{
 				eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+
+				debug("Air trigger in units: No Trigger\n");
 			}
-			else
+			else // Air trigger is valid
 			{
 				eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+
+				eventRec->summary.parameters.airTriggerInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+
+				if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+				{
+					debug("Air trigger in units: %05.3f mB\n", (float)(eventRec->summary.parameters.airTriggerInUnits / 10000));
+				}
+				else // (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
+				{
+					debug("Air trigger in units: %d dB\n", eventRec->summary.parameters.airTriggerInUnits);
+				}
 			}
 #endif
-
-			// Calculate the divider used for converting stored A/D peak counts to units of measure
-			unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / 
-						(float)(g_factorySetupRecord.sensor_type);
-
-			tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
-
-			if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE))
-			{
-				tempSesmicTriggerInUnits *= (float)METRIC;
-			}
-
-			debug("Seismic trigger in units: %05.2f %s\n", tempSesmicTriggerInUnits, (g_helpRecord.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
-			eventRec->summary.parameters.seismicTriggerInUnits = (uint32)(tempSesmicTriggerInUnits * 100);
-
-			eventRec->summary.parameters.airTriggerInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-			if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
-			{
-				debug("Air trigger in units: %05.3f mB\n", (eventRec->summary.parameters.airTriggerInUnits / 10000));
-			}
-			else // (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
-			{
-				debug("Air trigger in units: %d dB\n", eventRec->summary.parameters.airTriggerInUnits);
-			}
 
 			eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
 		}	
@@ -1217,7 +1227,7 @@ void ReInitSdCardAndFat32(void)
 	}
 	else
 	{
-		debugErr("\n\nSD Card not detected!\n");
+		debugErr("\n\nSD Card not detected\n");
 	}
 }
 
@@ -1265,7 +1275,7 @@ void PowerUpSDCardAndInitFat32(void)
 	}
 	else
 	{
-		debugErr("\n\nSD Card not detected!\n");
+		debugErr("\n\nSD Card not detected\n");
 	}
 
 	debugRaw("done.\n");
@@ -1658,6 +1668,7 @@ void StoreData(uint16* dataPtr, uint16 dataWords)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#include "navigation.h"
 void GetFlashUsageStats(FLASH_USAGE_STRUCT* usage)
 {
 	//FLASH_USAGE_STRUCT usage;
@@ -1674,12 +1685,26 @@ void GetFlashUsageStats(FLASH_USAGE_STRUCT* usage)
 	newBargraphMinSize = (manualCalSize + sizeof(EVT_RECORD) + (sizeof(CALCULATED_DATA_STRUCT) * 2) +
 							(((g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval) + 1) * 8 * 2));
 
+#if NS8100_ORIGINAL
     sd_mmc_spi_get_capacity();
 
 	usage->sizeUsed = 0;
 	usage->sizeFree = capacity - usage->sizeUsed;
 	usage->percentUsed = (uint8)((usage->sizeUsed * 100) / capacity);
 	usage->percentFree = (uint8)(100 - usage->percentUsed);
+#else // NS8100_ALPHA
+	nav_drive_set(0); // Select SD MMC card as drive
+
+	if(!nav_partition_mount()) // Mount drive
+	{
+		debugErr("SD MMC Card: Unable to mount volume\n");
+	}
+
+	usage->sizeFree = (nav_partition_freespace() << FS_SHIFT_B_TO_SECTOR);
+	usage->sizeUsed = (nav_partition_space() << FS_SHIFT_B_TO_SECTOR) - usage->sizeFree;
+	usage->percentFree = (uint8)(nav_partition_freespace_percent());
+	usage->percentUsed = (uint8)(100 - usage->percentFree);
+#endif
 	usage->waveEventsLeft = (uint16)(usage->sizeFree / waveSize);
 	usage->barHoursLeft = (uint16)(usage->sizeFree / barSize);
 	usage->manualCalsLeft = (uint16)(usage->sizeFree / manualCalSize);
