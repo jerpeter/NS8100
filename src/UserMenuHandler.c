@@ -172,7 +172,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 							// Call the user menu handler, passing the key and the address of the index
 							(*g_userMenuHandler)(ENTER_KEY, &g_userMenuCacheData.currentIndex);
 						}
-						else if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
+						else if ((USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE) || (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_SPECIAL_TYPE))
 						{
 							// Remove any extra spaces as the end of the string
 							RemoveExtraSpaces();
@@ -229,7 +229,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 						// Scroll the highlighted menu item up or down based on the key used
 						UserMenuScroll((uint8)input, SELECT_MN_WND_LNS, mn_layout_ptr);
 					}
-					else if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
+					else if ((USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE) || (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_SPECIAL_TYPE))
 					{
 						// If the current char is a null and not the max index of the string
 						if ((g_userMenuCacheData.text[g_userMenuCachePtr[CURRENT_TEXT_INDEX].data] == '\0') &&
@@ -264,7 +264,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 						// Change the contrast
 						AdjustLcdContrast(LIGHTER);
 					}
-					else if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
+					else if ((USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE) || (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_SPECIAL_TYPE))
 					{
 						// Check if the current index is less than the max number of characters for the string
 						if (g_userMenuCachePtr[CURRENT_TEXT_INDEX].data < g_userMenuCachePtr[MAX_TEXT_CHARS].data)
@@ -296,7 +296,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 						// Change the contrast
 						AdjustLcdContrast(DARKER);
 					}
-					else if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
+					else if ((USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE) || (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_SPECIAL_TYPE))
 					{
 #if 0 // Unneeded check on unsigned value
 						// Check if the current index is greater than or equal to the first position
@@ -327,7 +327,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 				break;
 
 				case (DELETE_KEY):
-					if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
+					if ((USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE) || (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_SPECIAL_TYPE))
 					{
 						// Check if the current index is the first position and the string length is greater than zero
 						if ((g_userMenuCachePtr[CURRENT_TEXT_INDEX].data == 0) && (strlen(g_userMenuCacheData.text) > 0))
@@ -357,7 +357,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 				break;
 				
 				default:
-					if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
+					if ((USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE) || (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_SPECIAL_TYPE))
 					{
 						// Check if the current index is less then the max length of the string
 						if (g_userMenuCachePtr[CURRENT_TEXT_INDEX].data < g_userMenuCachePtr[MAX_TEXT_CHARS].data)
@@ -389,42 +389,84 @@ void AdvanceInputChar(uint32 direction)
 	{
 		if (direction == UP_ARROW_KEY)
 		{
-			switch (currVal)
+			if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_SPECIAL_TYPE)
 			{
-				// Advance the char based on the following "rules"
-				case ' ': newVal = 'A'; break;
-				case 'Z': newVal = '0'; break;
-				case '9': newVal = '#'; break;
-				case '#': newVal = '%'; break;
-				case '&': newVal = '('; break;
-				case '/': newVal = '\\'; break;
-				case '\\': newVal = ':'; break;
-				case ':': newVal = '<'; break;
-				case '<': newVal = '>'; break;
-				case '@': newVal = '='; break;
-				case '=': newVal = '^'; break;
-				case '^': newVal = '^'; break;
-				default : newVal = ++currVal; break;
+				switch (currVal)
+				{
+					// Advance the char based on the following "rules"
+					case ' ': newVal = 'A'; break;
+					case 'Z': newVal = '0'; break;
+					case '9': newVal = '#'; break;
+					case '#': newVal = '%'; break;
+					case '&': newVal = '('; break;
+					case ')': newVal = '+'; break;
+					case '.': newVal = '@'; break;
+					case '@': newVal = '='; break;
+					case '=': newVal = '^'; break;
+					case '^': newVal = '^'; break;
+					default : newVal = ++currVal; break;
+				}
+			}
+			else // (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
+			{
+				switch (currVal)
+				{
+					// Advance the char based on the following "rules"
+					case ' ': newVal = 'A'; break;
+					case 'Z': newVal = '0'; break;
+					case '9': newVal = '#'; break;
+					case '#': newVal = '%'; break;
+					case '&': newVal = '('; break;
+					case '/': newVal = '\\'; break;
+					case '\\': newVal = ':'; break;
+					case ':': newVal = '<'; break;
+					case '<': newVal = '>'; break;
+					case '@': newVal = '='; break;
+					case '=': newVal = '^'; break;
+					case '^': newVal = '^'; break;
+					default : newVal = ++currVal; break;
+				}
 			}
 		}
 		else // direction == DOWN_ARROW_KEY
 		{
-			switch (currVal)
+			if (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_SPECIAL_TYPE)
 			{
-				// Advance the char based on the following "rules"
-				case '^': newVal = '='; break;
-				case '=': newVal = '@'; break;
-				case '>': newVal = '<'; break;
-				case '<': newVal = ':'; break;
-				case ':': newVal = '\\'; break;
-				case '\\': newVal = '/'; break;
-				case '(': newVal = '&'; break;
-				case '%': newVal = '#'; break;
-				case '#': newVal = '9'; break;
-				case '0': newVal = 'Z'; break;
-				case 'A': newVal = ' '; break;
-				case ' ': newVal = ' '; break;
-				default : newVal = --currVal; break;
+				switch (currVal)
+				{
+					// Advance the char based on the following "rules"
+					case '^': newVal = '='; break;
+					case '=': newVal = '@'; break;
+					case '@': newVal = '.'; break;
+					case '+': newVal = ')'; break;
+					case '(': newVal = '&'; break;
+					case '%': newVal = '#'; break;
+					case '#': newVal = '9'; break;
+					case '0': newVal = 'Z'; break;
+					case 'A': newVal = ' '; break;
+					case ' ': newVal = ' '; break;
+					default : newVal = --currVal; break;
+				}
+			}
+			else // (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE)
+			{
+				switch (currVal)
+				{
+					// Advance the char based on the following "rules"
+					case '^': newVal = '='; break;
+					case '=': newVal = '@'; break;
+					case '>': newVal = '<'; break;
+					case '<': newVal = ':'; break;
+					case ':': newVal = '\\'; break;
+					case '\\': newVal = '/'; break;
+					case '(': newVal = '&'; break;
+					case '%': newVal = '#'; break;
+					case '#': newVal = '9'; break;
+					case '0': newVal = 'Z'; break;
+					case 'A': newVal = ' '; break;
+					case ' ': newVal = ' '; break;
+					default : newVal = --currVal; break;
+				}
 			}
 		}
 
@@ -830,6 +872,7 @@ void CopyDataToCache(void* data)
 	switch (USER_MENU_TYPE(g_userMenuCachePtr))
 	{
 		case STRING_TYPE:
+		case STRING_SPECIAL_TYPE:
 			// Clear the data cache text string
 			ByteSet(&(g_userMenuCacheData.text[0]), 0, sizeof(g_userMenuCacheData.text));
 		
@@ -1053,6 +1096,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 	switch (USER_MENU_TYPE(g_userMenuCachePtr))
 	{
 		case STRING_TYPE:
+		case STRING_SPECIAL_TYPE:
 			// Set the specifications line for max chars
 			sprintf(g_userMenuCachePtr[MAX_TEXT_CHARS].text, "(%s %lu %s)", getLangText(MAX_TEXT),
 					g_userMenuCachePtr[MAX_TEXT_CHARS].data, getLangText(CHARS_TEXT));
