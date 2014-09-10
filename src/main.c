@@ -47,10 +47,12 @@
 #include "adc.h"
 #include "usb_task.h"
 #include "device_mass_storage_task.h"
+#include "host_mass_storage_task.h"
 #include "usb_drv.h"
 #include "FAT32_FileLib.h"
 #include "srec.h"
 #include "flashc.h"
+#include "ushell_task.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -90,6 +92,7 @@ void SystemEventManager(void)
 {
 	//debug("System Event Manager called\n");
 
+	//___________________________________________________________________________________________
 	if (getSystemEventState(TRIGGER_EVENT))
 	{
 		if (g_triggerRecord.op_mode == WAVEFORM_MODE)
@@ -104,14 +107,15 @@ void SystemEventManager(void)
 		}
 	}
 
-	if (getSystemEventState(MANUEL_CAL_EVENT))
+	//___________________________________________________________________________________________
+	if (getSystemEventState(MANUAL_CAL_EVENT))
 	{
-		debug("Cal Pulse Event\n");
-		MoveManuelCalToFlash();
+		debug("Manual Cal Pulse Event\n");
+		MoveManualCalToFlash();
 	}
 
-	if ((getSystemEventState(KEYPAD_EVENT)) ||
-	(g_kpadCheckForKeyFlag && (g_kpadLookForKeyTickCount < g_keypadTimerTicks)))
+	//___________________________________________________________________________________________
+	if ((getSystemEventState(KEYPAD_EVENT)) || (g_kpadCheckForKeyFlag && (g_kpadLookForKeyTickCount < g_keypadTimerTicks)))
 	{
 		if (getSystemEventState(KEYPAD_EVENT))
 		{
@@ -127,29 +131,75 @@ void SystemEventManager(void)
 
 	}
 
-	if (getSystemEventState(POWER_OFF_EVENT))
+	//___________________________________________________________________________________________
+#if 0 // Unused
+	if (getSystemEventState())
 	{
 		debug("Power Off Event\n");
-		clearSystemEventFlag(POWER_OFF_EVENT);
+		clearSystemEventFlag();
 
 		HandleUserPowerOffDuringTimerMode();
 	}
+#endif
 
+	//___________________________________________________________________________________________
+	if (getSystemEventState(LOW_BATTERY_WARNING_EVENT))
+	{
+		clearSystemEventFlag(LOW_BATTERY_WARNING_EVENT);
+		debugWarn("Low Battery Event\n");
+
+		// Check if actively monitoring
+		if (g_sampleProcessing == ACTIVE_STATE)
+		{
+			// Stop monitoring
+			StopMonitoringForLowPowerState();
+		}
+
+		sprintf((char*)g_spareBuffer, "%s %s (%3.2f). PLEASE CHARGE BATTERY.", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT), (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE)));
+		OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (1 * SOFT_SECS));
+
+		g_lowBatteryState = YES;
+	}
+
+	//___________________________________________________________________________________________
 	if (getSystemEventState(CYCLIC_EVENT))
 	{
-		debug("Cyclic Event\n");
 		clearSystemEventFlag(CYCLIC_EVENT);
 
-		#if 1 // Test (ISR/Exec Cycles)
-		//sprintf((char*)&g_spareBuffer[0], "%d (%s) %d", (int)g_execCycles, ((g_channelSyncError == YES) ? "YES" : "NO"), (int)(g_sampleCount / 4));
-		//OverlayMessage("EXEC CYCLES", (char*)&g_spareBuffer[0], 500 * SOFT_MSECS);
-		debugRaw("ISR Ticks/sec: %d (E:%s), Exec: %d\n", (g_sampleCountHold / 4), ((g_channelSyncError == YES) ? "YES" : "NO"), g_execCycles);
+#if 1 // Test (ISR/Exec Cycles)
+		debug("(Cyclic Event) ISR Ticks/sec: %d (E:%s), Exec/sec: %d\n", (g_sampleCountHold / 4), ((g_channelSyncError == YES) ? "YES" : "NO"), (g_execCycles / 4));
 		g_sampleCountHold = 0;
 		g_execCycles = 0;
 		g_channelSyncError = NO;
-		#endif
-		
-		#if 0 // Test (Bargraph buffer)
+#else
+		debug("Cyclic Event\n");
+#endif
+
+		if (g_lowBatteryState == YES)
+		{
+			//if (gpio_get_pin_value(AVR32_PIN_PA21) == HIGH)
+			if (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE) > LOW_VOLTAGE_THRESHOLD)
+			{
+				debug("Recovered from Low Battery Warning Event\n");
+
+				g_lowBatteryState = NO;
+			}
+#if 0 // Don't annoy the user for now
+			else
+			{
+				sprintf((char*)g_spareBuffer, "%s %s (%3.2f). PLEASE CHARGE BATTERY.", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT), (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE)));
+				OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (1 * SOFT_SECS));
+			}
+#endif
+		}
+		// Check if the battery voltage is below the safe threshold for operation
+		else if (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE) < LOW_VOLTAGE_THRESHOLD)
+		{
+			// Change state to signal a low battery
+			raiseSystemEventFlag(LOW_BATTERY_WARNING_EVENT);
+		}
+
+#if 0 // Test (Bargraph buffer)
 		uint32 bgDataBufferSize = (g_bargraphDataEndPtr - g_bargraphDataStartPtr);
 		float bgUsed;
 		float bgLocation;
@@ -169,11 +219,12 @@ void SystemEventManager(void)
 
 			debugRaw("Bargraph Data Buffer Used: %3.2f%%, Free: %3.2f%%, Location: %3.2f%%\n", bgUsed, (float)(100 - bgUsed), bgLocation);
 		}
-		#endif
+#endif
 
-		ProcessTimerEvents();
+		CheckForMidnight();
 	}
 
+	//___________________________________________________________________________________________
 	if (getSystemEventState(MIDNIGHT_EVENT))
 	{
 		debug("Midnight Event\n");
@@ -182,12 +233,14 @@ void SystemEventManager(void)
 		HandleMidnightEvent();
 	}
 
+	//___________________________________________________________________________________________
 	if (getSystemEventState(UPDATE_TIME_EVENT))
 	{
 		clearSystemEventFlag(UPDATE_TIME_EVENT);
 		UpdateCurrentTime();
 	}
 
+	//___________________________________________________________________________________________
 	if (getSystemEventState(BARGRAPH_EVENT))
 	{
 		clearSystemEventFlag(BARGRAPH_EVENT);
@@ -202,7 +255,8 @@ void SystemEventManager(void)
 		}
 	}
 
-	#if 0 // Test (Attempt to process buffered waveform data - Throw away at some point)
+	//___________________________________________________________________________________________
+#if 0 // Test (Attempt to process buffered waveform data - Throw away at some point)
 	if (getSystemEventState())
 	{
 		clearSystemEventFlag();
@@ -210,35 +264,45 @@ void SystemEventManager(void)
 		extern void processAndMoveWaveformData_ISR_Inline(void);
 		processAndMoveWaveformData_ISR_Inline();
 	}
-	#endif
+#endif
 
+	//___________________________________________________________________________________________
 	if (getSystemEventState(WARNING1_EVENT))
 	{
-		debug("Warning Event 1\n");
 		clearSystemEventFlag(WARNING1_EVENT);
 
-		PowerControl(ALARM_1_ENABLE, ON);
+		if (IsSoftTimerActive(ALARM_ONE_OUTPUT_TIMER_NUM) == NO)
+		{
+			PowerControl(ALARM_1_ENABLE, ON);
+			debug("Warning Event 1 Alarm started\n");
+		}
 
-		// Assign soft timer to turn the Alarm 1 signal off
+		// Assign (or Re-assign) soft timer to turn the Alarm 1 signal off
 		AssignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarmOneTime * 2), AlarmOneOutputTimerCallback);
 	}
 
+	//___________________________________________________________________________________________
 	if (getSystemEventState(WARNING2_EVENT))
 	{
-		debug("Warning Event 2\n");
 		clearSystemEventFlag(WARNING2_EVENT);
 
-		PowerControl(ALARM_2_ENABLE, ON);
+		if (IsSoftTimerActive(ALARM_TWO_OUTPUT_TIMER_NUM) == NO)
+		{
+			PowerControl(ALARM_2_ENABLE, ON);
+			debug("Warning Event 2 Alarm started\n");
+		}
 
-		// Assign soft timer to turn the Alarm 2 signal off
+		// Assign (or Re-assign) soft timer to turn the Alarm 2 signal off
 		AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarmTwoTime * 2), AlarmTwoOutputTimerCallback);
 	}
 
+	//___________________________________________________________________________________________
 	if (getSystemEventState(UPDATE_OFFSET_EVENT))
 	{
 		UpdateChannelOffsetsForTempChange();
 	}
 
+	//___________________________________________________________________________________________
 	if (getSystemEventState(AUTO_DIALOUT_EVENT))
 	{
 		clearSystemEventFlag(AUTO_DIALOUT_EVENT);
@@ -252,17 +316,18 @@ void SystemEventManager(void)
 ///----------------------------------------------------------------------------
 void MenuEventManager(void)
 {
-	//debug("Menu Event Manager called\n");
-
 	INPUT_MSG_STRUCT mn_msg;
 
+	//debug("Menu Event Manager called\n");
+
+	//___________________________________________________________________________________________
 	if (getMenuEventState(RESULTS_MENU_EVENT))
 	{
 		clearMenuEventFlag(RESULTS_MENU_EVENT);
 
 		if (g_triggerRecord.op_mode == MANUAL_CAL_MODE)
 		{
-			SETUP_RESULTS_MENU_MANUEL_CAL_MSG(RESULTS_MENU);
+			SETUP_RESULTS_MENU_MANUAL_CAL_MSG(RESULTS_MENU);
 		}
 		else
 		{
@@ -271,6 +336,7 @@ void MenuEventManager(void)
 		JUMP_TO_ACTIVE_MENU();
 	}
 
+	//___________________________________________________________________________________________
 	if (getTimerEventState(SOFT_TIMER_CHECK_EVENT))
 	{
 		clearTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
@@ -279,6 +345,7 @@ void MenuEventManager(void)
 		CheckSoftTimers();
 	}
 
+	//___________________________________________________________________________________________
 	if (getTimerEventState(TIMER_MODE_TIMER_EVENT))
 	{
 		clearTimerEventFlag(TIMER_MODE_TIMER_EVENT);
@@ -473,14 +540,45 @@ void HandleSystemEvents(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void init_hmatrix(void)
+{
+	union
+	{
+		unsigned long                 scfg;
+		avr32_hmatrix_scfg_t          SCFG;
+	} u_avr32_hmatrix_scfg;
+
+	// For the internal-flash HMATRIX slave, use last master as default.
+	u_avr32_hmatrix_scfg.scfg = AVR32_HMATRIX.scfg[AVR32_HMATRIX_SLAVE_FLASH];
+	u_avr32_hmatrix_scfg.SCFG.defmstr_type = AVR32_HMATRIX_DEFMSTR_TYPE_LAST_DEFAULT;
+	AVR32_HMATRIX.scfg[AVR32_HMATRIX_SLAVE_FLASH] = u_avr32_hmatrix_scfg.scfg;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 enum USB_STATES {
-	USB_INIT_DRIVER = 0,
-	USB_NOT_CONNECTED = 1,
-	USB_CONNECTED_AND_PROCESSING = 2
+	USB_INIT_DRIVER,
+	USB_NOT_CONNECTED,
+	USB_READY,
+	USB_CONNECTED_AND_PROCESSING,
+	USB_HOST_MODE_WAITING_FOR_DEVICE,
+	USB_DISABLED_FOR_OTHER_PROCESSING,
+	USB_DEVICE_MODE_SELECTED,
+	USB_HOST_MODE_SELECTED
 };
 extern uint8 g_sampleProcessing;
+extern volatile U8 device_state;
+extern Bool wrong_class_connected;
+extern Bool ms_process_first_connect_disconnect;
+extern Bool ms_usb_prevent_sleep;
+extern Bool ushell_cmd_syncevents(uint16_t*, uint16_t*);
+#include "ushell_task.h"
 #if 1 // Test - need access in main() to determine sleep level
 uint8 usbMassStorageState = USB_INIT_DRIVER;
+uint8 usbMode;
+uint8 usbThumbDriveWasConnected = NO;
+//uint8 promptForUsbOtgHostCableRemoval = NO;
 #endif
 void UsbDeviceManager(void)
 {
@@ -488,85 +586,451 @@ void UsbDeviceManager(void)
 	static uint8 usbMassStorageState = USB_INIT_DRIVER;
 #endif
 	INPUT_MSG_STRUCT mn_msg;
-	
-	// Check if the USB and Mass Storage Driver have never been initialized
+	uint16 totalEventsCopied;
+	uint16 totalEventsSkipped;
+
+	//___________________________________________________________________________________________
 	if (usbMassStorageState == USB_INIT_DRIVER)
 	{
+		// Check if the USB and Mass Storage Driver have never been initialized
 		debug("Init USB Mass Storage Driver...\n");
 
-#if NS8100_ALPHA
-		// Set for device mode
-		Usb_set_vbof_active_low();
+#if 1 // NS8100_ALPHA
+		if (Is_usb_id_device())
+		{
+			// Disable VBUS power
+			Usb_set_vbof_active_low();
+		}
+		else
+		{
+			// Enable VBUS power
+			Usb_set_vbof_active_high();
+		}
 
 		// Wait for line to settle
 		SoftUsecWait(25 * SOFT_MSECS);
 #endif
+		UNUSED(mn_msg);
+
+		// Brought forward from USB OTG MSC Host/Device example
+		//init_hmatrix();
 
 		// Init the USB and Mass Storage driver			
 		usb_task_init();
 		device_mass_storage_task_init();
+		host_mass_storage_task_init();
+		ushell_task_init(FOSC0);
 
 		// Set state to ready to process
-		usbMassStorageState = USB_NOT_CONNECTED;	
-	}
-
-	// Check if USB Cable is plugged in and not monitoring and not handling a trigger
-	if ((Is_usb_vbus_high()) && (g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && 
-			g_fileProcessActiveUsbLockout == OFF)
-	{
-		// Check if USB and Mass Storage driver init needs to occur
-		if (usbMassStorageState == USB_NOT_CONNECTED)
+		//usbMassStorageState = USB_NOT_CONNECTED;
+		if (Is_usb_id_device())
 		{
-			OverlayMessage("USB STATUS", "USB CABLE WAS CONNECTED", 1 * SOFT_SECS);
-			debug("USB connection established\n");
-
-			// Recall the current active menu to repaint the display
-			mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
-			JUMP_TO_ACTIVE_MENU();
-						
-			debug("USB Mass Storage Driver Re-Init\n");
-			// Init the USB and Mass Storage driver
-			usb_task_init();
-			device_mass_storage_task_init();
-
-			// Set state to ready to process
-			usbMassStorageState = USB_CONNECTED_AND_PROCESSING;	
+			//usbMode = USB_DEVICE_MODE_SELECTED;
+			//usbMassStorageState = USB_DEVICE_MODE_SELECTED;
+			debug("USB Device Mode enabled\n");
+		}
+		else
+		{
+			//usbMode = USB_HOST_MODE_SELECTED;
+			//usbMassStorageState = USB_HOST_MODE_SELECTED;
+			debug("USB OTG Host Mode enabled\n");
 		}
 
-		// Call Usb and Device Storage drivers if connected to check and handle incoming actions
+		usbMassStorageState = USB_READY;
+		debug("USB State changed to: Ready\n");
+	}
+	//___________________________________________________________________________________________
+	else if ((usbMassStorageState == USB_READY) || (usbMassStorageState == USB_CONNECTED_AND_PROCESSING))
+	{
+		//___________________________________________________________________________________________
+		// Check if processing is needed elsewhere
+		if ((g_sampleProcessing == ACTIVE_STATE) || (getSystemEventState(TRIGGER_EVENT)) || (g_fileProcessActiveUsbLockout == ON) ||
+			(g_activeMenu == CAL_SETUP_MENU))
+		{
+			// Need to disable USB for other processing
+			debug("USB disabled for other processing\n");
+			Usb_disable();
+
+			usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
+			ms_usb_prevent_sleep = NO;
+			debug("USB State changed to: Disabled for other processing\n");
+		}
+		//___________________________________________________________________________________________
+		// Ready to process USB in either Device or OTG Host mode
+		else
+		{
+			usb_task();
+			device_mass_storage_task();
+			host_mass_storage_task();
+			ushell_task();
+
+			//___________________________________________________________________________________________
+			// Check if USB is in Device mode
+			if (Is_usb_id_device())
+			{
+				// Check if VBUS is high meaning a remote PC is powering
+				if (Is_usb_vbus_high())
+				{
+					if (usbMassStorageState == USB_READY)
+					{
+						usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
+						ms_usb_prevent_sleep = YES;
+						debug("USB State changed to: Connected and processing\n");
+					}
+				}
+				// Check if state was connected and VBUS power has been removed
+				else if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+				{
+					// Check if USB was in OTG Host mode and cable + USB Thumb drive were removed at the same time (now in Device mode)
+					if (usbThumbDriveWasConnected == YES)
+					{
+						usbThumbDriveWasConnected = FALSE;
+						ms_process_first_connect_disconnect = FALSE;
+						OverlayMessage(getLangText(STATUS_TEXT), "USB THUMB DRIVE DISCONNECTED", (2 * SOFT_SECS));
+					}
+#if 0 // Not working properly
+					else // Device mode was connected and processing
+					{
+						debug("USB Device cable was removed\n");
+						OverlayMessage(getLangText(STATUS_TEXT), "USB DEVICE CABLE WAS REMOVED", (2 * SOFT_SECS));
+					}
+#endif
+					usbMassStorageState = USB_READY;
+					ms_usb_prevent_sleep = NO;
+					debug("USB State changed to: Ready\n");
+				}
+#if 0 // Not working properly
+				else if (promptForUsbOtgHostCableRemoval == YES)
+				{
+					promptForUsbOtgHostCableRemoval = NO;
+
+					debug("USB OTG Host cable was removed\n");
+					OverlayMessage(getLangText(STATUS_TEXT), "USB HOST OTG CABLE WAS REMOVED", (2 * SOFT_SECS));
+				}
+#endif
+			}
+			//___________________________________________________________________________________________
+			else // USB is in OTG Host mode
+			{
+				//___________________________________________________________________________________________
+				// Check if the wrong class was connected
+				if (wrong_class_connected == TRUE) //|| (ms_device_not_supported == TRUE))
+				{
+					Usb_disable();
+					debug("USB disabled due to unsupported device\n");
+
+					MessageBox(getLangText(ERROR_TEXT), "UNSUPPORTED DEVICE. PLEASE REMOVE IMMEDIATELY BEFORE SELECTING OK", MB_OK);
+
+					wrong_class_connected = FALSE;
+					//ms_device_not_supported = FALSE;
+
+					Usb_enable();
+					debug("USB re-enabled for processing again\n");
+
+					usb_task_init();
+					device_mass_storage_task_init();
+					host_mass_storage_task_init();
+					ushell_task_init(FOSC0);
+
+					usbMassStorageState = USB_READY;
+					ms_usb_prevent_sleep = NO;
+					debug("USB State changed to: Ready\n");
+				}
+				//___________________________________________________________________________________________
+				// Check if USB Thumb drive has just been connected
+				else if ((ms_connected == TRUE) && (ms_process_first_connect_disconnect == TRUE))
+				{
+					// USB is active
+					usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
+					ms_usb_prevent_sleep = YES;
+					debug("USB State changed to: Connected and processing\n");
+
+					// Don't process this connection again until it's disconnected
+					ms_process_first_connect_disconnect = FALSE;
+
+					// State processing to help with differentiating between USB Thumb drive disconnect and cable disconnect
+					usbThumbDriveWasConnected = YES;
+
+					// Check if the LCD Power was turned off
+					if (g_lcdPowerFlag == DISABLED)
+					{
+						g_lcdPowerFlag = ENABLED;
+						SetLcdContrast(g_contrast_value);
+						PowerControl(LCD_POWER_ENABLE, ON);
+						InitLcdDisplay();					// Setup LCD segments and clear display buffer
+						AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
+
+						g_lcdBacklightFlag = ENABLED;
+						SetLcdBacklightState(BACKLIGHT_BRIGHT);
+						AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
+					}
+
+					OverlayMessage(getLangText(STATUS_TEXT), "USB THUMB DRIVE DISCOVERED", (2 * SOFT_SECS));
+
+					// Check if the user wants to sync the unit events to the USB Thumb drive
+					if (MessageBox("USB DOWNLOAD", "SYNC EVENTS TO USB THUMB DRIVE?", MB_YESNO) == MB_FIRST_CHOICE)
+					{
+						OverlayMessage(getLangText(STATUS_TEXT), "SYNC IN PROGRESS", 0);
+
+						if (ushell_cmd_syncevents(&totalEventsCopied, &totalEventsSkipped) == TRUE)
+						{
+							sprintf((char*)g_spareBuffer, "SYNC SUCCESSFUL. TOTAL EVENTS: %d NEW: %d (EXISTING: %d)", (totalEventsCopied + totalEventsSkipped), totalEventsCopied, totalEventsSkipped);
+							MessageBox("USB DOWNLOAD", (char*)g_spareBuffer, MB_OK);
+						}
+						else // Error
+						{
+							MessageBox("USB DOWNLOAD", "SYNC ENCOUNTERED AN ERROR", MB_OK);
+						}
+					}
+					else // User does not want to sync events
+					{
+
+					}
+
+					if (GetExternalVoltageLevelAveraged(EXT_CHARGE_VOLTAGE) < EXTERNAL_VOLTAGE_PRESENT)
+					{
+						OverlayMessage(getLangText(STATUS_TEXT), "PLEASE REMOVE THUMB DRIVE TO CONSERVE POWER", (2 * SOFT_SECS));
+					}
+				}
+				//___________________________________________________________________________________________
+				// Check if USB Thumb drive has just been removed
+				else if ((ms_connected == FALSE) && (ms_process_first_connect_disconnect == TRUE))
+				{
+					if (usbThumbDriveWasConnected == YES)
+					{
+						usbThumbDriveWasConnected = NO;
+						OverlayMessage(getLangText(STATUS_TEXT), "USB THUMB DRIVE DISCONNECTED", (2 * SOFT_SECS));
+					}
+
+					// Don't process this disconnection again until it's connected
+					ms_process_first_connect_disconnect = FALSE;
+
+					// USB is ready for a device to be connected
+					usbMassStorageState = USB_READY;
+					ms_usb_prevent_sleep = NO;
+					//promptForUsbOtgHostCableRemoval = YES;
+					debug("USB State changed to: Ready\n");
+				}
+			}
+		}
+	}
+	//___________________________________________________________________________________________
+	else if (usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
+	{
+		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_fileProcessActiveUsbLockout == OFF) &&
+			(g_activeMenu != CAL_SETUP_MENU))
+		{
+			debug("USB enabled for processing again\n");
+			Usb_enable();
+
+			usb_task_init();
+			device_mass_storage_task_init();
+			host_mass_storage_task_init();
+			ushell_task_init(FOSC0);
+
+			usbMassStorageState = USB_READY;
+			ms_usb_prevent_sleep = NO;
+			debug("USB State changed to: Ready\n");
+		}
+	}
+
+#if 0
+	if (Is_usb_id_device() && (usbMode == USB_HOST_MODE_SELECTED))
+	{
+		usbMode = USB_DEVICE_MODE_SELECTED;
+
+		// Disable VBUS power
+		Usb_set_vbof_active_low();
+
+		// Wait for line to settle
+		SoftUsecWait(25 * SOFT_MSECS);
+	}
+	else if ((!Is_usb_id_device()) && (usbMode == USB_DEVICE_MODE_SELECTED))
+	{
+		usbMode = USB_HOST_MODE_SELECTED;
+
+		// Enable VBUS power
+		Usb_set_vbof_active_high();
+
+		// Wait for line to settle
+		SoftUsecWait(25 * SOFT_MSECS);
+	}
+#endif
+
+#if 0
+	if ((usbMassStorageState == USB_DEVICE_MODE_SELECTED) && (Is_usb_id_device()))
+	{
 		usb_task();
 		device_mass_storage_task();
 	}
-	else // USB Cable is not plugged in
+	else if ((usbMassStorageState == USB_HOST_MODE_SELECTED) && (!Is_usb_id_device()))
 	{
-		// Check if the USB was plugged in prior
-		if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+		usb_task();
+		host_mass_storage_task();
+		ushell_task();
+	}
+	else
+	{
+		if (Is_usb_id_device())
 		{
-			if (g_sampleProcessing == ACTIVE_STATE)
+			debug("Changing USB to Device Mode\n");
+			usbMassStorageState = USB_DEVICE_MODE_SELECTED;
+			usb_task_init();
+			device_mass_storage_task_init();
+		}
+		else
+		{
+			debug("Changing USB to OTG Host Mode\n");
+			usbMassStorageState = USB_HOST_MODE_SELECTED;
+			usb_task_init();
+			host_mass_storage_task_init();
+			ushell_task_init(FOSC0);
+		}
+	}
+#endif
+
+#if 0 // Normal
+	//___________________________________________________________________________________________
+	else if ((usbMassStorageState == USB_NOT_CONNECTED) || (usbMassStorageState == USB_HOST_MODE_WAITING_FOR_DEVICE))
+	{
+		// Check if ready for USB (not monitoring and not handling a trigger and not processing an SD card file)
+		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_fileProcessActiveUsbLockout == OFF))
+		{
+			// Check if USB ID is set for Device and VBUS is High (plugged into PC)
+			if ((Is_usb_id_device()) && (Is_usb_vbus_high()))
 			{
-				OverlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 1000 * SOFT_MSECS);
-				debug("USB connection disabled for monitoring\n");
-			}
-			else if (g_fileProcessActiveUsbLockout == ON)
-			{
-				OverlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR FILE OPERATION", 1000 * SOFT_MSECS);
-				debug("USB connection disabled for file operation\n");
-			}
-			else
-			{
-				OverlayMessage("USB STATUS", "USB CABLE WAS DISCONNECTED", 1000 * SOFT_MSECS);
-				debug("USB disconnected\n");
+				OverlayMessage("USB DEVICE STATUS", "USB TO PC CABLE WAS CONNECTED", 1 * SOFT_SECS);
+				debug("USB Device mode: USB to PC connection established\n");
 
 				// Recall the current active menu to repaint the display
 				mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
 				JUMP_TO_ACTIVE_MENU();
-			}							
 
-			Usb_disable();
+				// Re-Init the USB and Mass Storage driver
+				debug("USB Device Mass Storage Driver Re-Init\n");
+				usb_task_init();
+				device_mass_storage_task_init();
+
+				// Set state to ready to process
+				usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
+			}
+			// Check if USB ID is set for Host
+			else if (!Is_usb_id_device())
+			{
+				if ((Is_host_device_connection()) || (device_state == DEVICE_POWERED))
+				{
+					OverlayMessage("USB HOST STATUS", "USB DEVICE WAS CONNECTED", 1 * SOFT_SECS);
+					debug("USB OTG Host mode: OTG Host cable was connected\n");
+
+					// Recall the current active menu to repaint the display
+					mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+					JUMP_TO_ACTIVE_MENU();
+
+					// Re-Init the USB and Mass Storage driver
+					debug("USB OTG Host Mass Storage Driver Re-Init\n");
+					usb_task_init();
+					host_mass_storage_task_init();
+					ushell_task_init(FOSC0);
+
+					// Set state to host mode looking for a device
+					usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
+				}
+				else if (usbMassStorageState == USB_NOT_CONNECTED)
+				{
+					OverlayMessage("USB HOST STATUS", "USB OTG HOST CABLE WAS CONNECTED", 1 * SOFT_SECS);
+					debug("USB OTG Host mode: OTG Host cable was connected\n");
+
+					// Recall the current active menu to repaint the display
+					mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+					JUMP_TO_ACTIVE_MENU();
+
+					// Re-Init the USB and Mass Storage driver
+					debug("USB OTG Host Mass Storage Driver Re-Init\n");
+					usb_task_init();
+					host_mass_storage_task_init();
+					ushell_task_init(FOSC0);
+
+					// Set state to host mode looking for a device
+					usbMassStorageState = USB_HOST_MODE_WAITING_FOR_DEVICE;
+				}
+			}
 		}
-		
-		usbMassStorageState = USB_NOT_CONNECTED;
-	}	
+	}
+	//___________________________________________________________________________________________
+	else if (usbMassStorageState == USB_HOST_MODE_WAITING_FOR_DEVICE)
+	{
+		if ((Is_host_device_connection()) || (device_state == DEVICE_POWERED))
+		{
+			OverlayMessage("USB HOST STATUS", "USB DEVICE WAS CONNECTED", 1 * SOFT_SECS);
+			debug("USB OTG Host mode: OTG Host cable was connected\n");
+
+			// Set state to host mode looking for a device
+			usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
+		}
+	}
+	//___________________________________________________________________________________________
+	else if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+	{
+		if (((Is_usb_id_device() && Is_usb_vbus_high()) || ((!Is_usb_id_device()) && (!Is_host_device_disconnection())))
+			&& (g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && g_fileProcessActiveUsbLockout == OFF)
+		{
+			// Call Usb and Device Storage drivers if connected to check and handle incoming actions
+			usb_task();
+			device_mass_storage_task();
+			host_mass_storage_task();
+			ushell_task();
+		}
+		else // USB connection lost/gone or needs to be disabled
+		{
+			if (g_sampleProcessing == ACTIVE_STATE) // A Trigger event is an extension of Active state so don't need to check for that specifically
+			{
+				OverlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 1000 * SOFT_MSECS);
+				debug("USB disabled for monitoring\n");
+				Usb_disable();
+				usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
+			}
+			else if (g_fileProcessActiveUsbLockout == ON)
+			{
+				OverlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR FILE OPERATION", 1000 * SOFT_MSECS);
+				debug("USB disabled for file operation\n");
+				Usb_disable();
+				usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
+			}
+			else
+			{
+				// Check if USB ID is set for Device mode (PC connection)
+				if (Is_usb_id_device())
+				{
+					OverlayMessage("USB DEVICE STATUS", "USB TO PC CABLE WAS DISCONNECTED", 1 * SOFT_SECS);
+					debug("USB Device mode: USB to PC connection removed\n");
+				}
+				else
+				{
+					OverlayMessage("USB HOST STATUS", "USB DEVICE WAS REMOVED", 1 * SOFT_SECS);
+					debug("USB OTG Host mode: Device disconnected\n");
+				}
+
+				// Recall the current active menu to repaint the display
+				mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+				JUMP_TO_ACTIVE_MENU();
+
+				usbMassStorageState = USB_NOT_CONNECTED;
+			}
+		}
+	}
+	//___________________________________________________________________________________________
+	else if (usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
+	{
+		// Check if system is ready for USB processing again
+		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_fileProcessActiveUsbLockout == OFF))
+		{
+			// Reenable the USB
+			debug("USB re-enabled\n");
+			Usb_enable();
+			usbMassStorageState = USB_NOT_CONNECTED;
+		}
+	}
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -577,6 +1041,8 @@ const char default_boot_name[] = {
 	"Boot.s\0"
 };
 
+#include "rtc.h"
+#include "tc.h"
 uint8 quickBootEntryJump = NO;
 void BootLoadManager(void)
 {
@@ -601,10 +1067,27 @@ void BootLoadManager(void)
 	{
 #if 1
 		if (quickBootEntryJump == YES)
+		{
+			if (g_sampleProcessing == ACTIVE_STATE)
+			{
+				// Don't allow hidden jumping to boot during Monitoring
+				quickBootEntryJump = NO;
+				return;
+			}
+			// else (g_sampleProcessing == IDLE_STATE)
+
+			if (g_lcdPowerFlag == DISABLED)
+			{
+				SetLcdContrast(g_contrast_value);
+				PowerControl(LCD_POWER_ENABLE, ON);
+				InitLcdDisplay();
+			}
+
 			OverlayMessage("BOOTLOADER", "HIDDEN ENTRY...", 2 * SOFT_SECS);
+		}
 		else
 #endif
-		OverlayMessage("BOOTLOADER", "FOUND CTRL_B...", 2 * SOFT_SECS);
+			OverlayMessage("BOOTLOADER", "FOUND CTRL_B...", 2 * SOFT_SECS);
 
 		sprintf(textBuffer,"C:\\System\\%s", default_boot_name);
 		file = fl_fopen(textBuffer, "r");
@@ -644,10 +1127,35 @@ void BootLoadManager(void)
 
 		if (Unpack_srec(file) == -1)
 		{
-			debugErr("SREC unpack unsuccessful!\n");
+			debugErr("SREC unpack unsuccessful\n");
 		}
 
 		fl_fclose(file);
+
+		// Enable half second tick
+extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
+		rtc_disable_interrupt(&AVR32_RTC);
+		tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+		tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+		tc_stop(&AVR32_TC, TC_TYPEMATIC_TIMER_CHANNEL);
+		AVR32_EIC.IER.int0 = 0;
+		AVR32_EIC.IER.int1 = 0;
+		AVR32_EIC.IER.int2 = 0;
+		AVR32_EIC.IER.int3 = 0;
+		AVR32_EIC.IER.int4 = 0;
+		AVR32_EIC.IER.int5 = 0;
+		AVR32_EIC.IER.int6 = 0;
+		AVR32_EIC.IER.int7 = 0;
+		StopExternalRtcClock();
+		Usb_disable();
+		Usb_disable_id_interrupt();
+		Usb_disable_vbus_interrupt();
+		twi_disable_interrupt(&AVR32_TWI);
+		usart_reset(&AVR32_USART0);
+		AVR32_USART1.idr = 0xFFFFFFFF;
+		usart_reset(&AVR32_USART1);
+		usart_reset(&AVR32_USART2);
+		usart_reset(&AVR32_USART3);
 
 		Disable_global_interrupt();
 
@@ -662,15 +1170,21 @@ void BootLoadManager(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+static uint8 rs232PutToSleepState = NO;
 inline void SetupPowerSavingsBeforeSleeping(void)
 {
-#if 0
+#if 1
 	// Only disable for Min and Most since None and Max are either permanently on or off
 	if ((g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MINIMUM) || (g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MOST))
 	{
-		// Disable rs232 driver and receiver (Active low control)
-		PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
-		PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
+		if (gpio_get_pin_value(AVR32_PIN_PB24) == 1)
+		{
+			rs232PutToSleepState = YES;
+
+			// Disable rs232 driver and receiver (Active low control)
+			PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
+			PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
+		}
 	}
 #endif
 
@@ -694,13 +1208,18 @@ inline void RevertPowerSavingsAfterSleeping(void)
 	AVR32_GPIO.port[3].puerc = 0x03FF; // 0000 0011 1111 1111
 #endif
 
-#if 0
+#if 1
 	// Only enable for Min and Most since None and Max are either permanently on or off
 	if ((g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MINIMUM) || (g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MOST))
 	{
-		// Enable rs232 driver and receiver (Active low control)
-		PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
-		PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+		if (rs232PutToSleepState == YES)
+		{
+			rs232PutToSleepState = NO;
+
+			// Enable rs232 driver and receiver (Active low control)
+			PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+			PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+		}
 	}
 #endif
 
@@ -710,51 +1229,100 @@ inline void RevertPowerSavingsAfterSleeping(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void SleepManager(void)
+void PowerManager(void)
 {
-	// Check if no System Events and LCD is off and Modem is not transferring
-	if ((g_systemEventFlags.wrd == 0x0000) && (GetPowerControlState(LCD_POWER_ENABLE) == OFF) &&
-	(g_modemStatus.xferState == NOP_CMD))
+	uint8 sleepStateNeeded;
+
+#if 0 // No current signal to show a serial connection has been re-established
+	static uint8 rs232State = ON;
+
+	// Check if not set to the Max power savings
+	if (g_helpRecord.powerSavingsLevel != POWER_SAVINGS_MAX)
 	{
-#if 0 // Test
-		debug("Going to lunch and I'll be gone forever...\n");
-		StopExternalRtcClock();
-extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
-extern void rtc_clear_interrupt(volatile avr32_rtc_t *rtc);
-		rtc_disable_interrupt(&AVR32_RTC);
-		rtc_clear_interrupt(&AVR32_RTC);
-		//while (1) {	; }
-#endif
-
-		// Sleepy time
-#if 0 // Normal
-		SLEEP(AVR32_PM_SMODE_IDLE);
-#else // Test
-		// Check if USB is connected
-		if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+		// Check if rs232 is already on and DSR shows no connection
+		if ((rs232State == ON) && (gpio_get_pin_value(AVR32_PIN_PB24) == 1))
 		{
-			// Can't operate the USB is the sleep mode is deeper than IDLE (due to HSB)
-			SLEEP(AVR32_PM_SMODE_IDLE);
+			// Disable the serial rs232 drivers
+			PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
+			PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
+			rs232State = OFF;
 		}
-		else // USB is not connected and a deeper sleep mode can be used
+		// Check if rs232 is off and DSR shows a new connection
+		else if ((rs232State == OFF) && (gpio_get_pin_value(AVR32_PIN_PB24) == 0))
 		{
-			SetupPowerSavingsBeforeSleeping();
-
-#if 1 // Test
-			SLEEP(AVR32_PM_SMODE_STOP);
-#else // Normal
-			if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { SLEEP(AVR32_PM_SMODE_STANDBY); }
-			else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { SLEEP(AVR32_PM_SMODE_FROZEN); }
-			else if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { SLEEP(AVR32_PM_SMODE_IDLE); }
+			// Enable the serial rs232 drivers
+			PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+			PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+			rs232State = ON;
+			debug("USART1 RS232 Rx/Tx Drivers enabled\n");
+		}
+	}
 #endif
 
-			// Check if needing to revert the power savings (if monitoring then the ISR will handle this operation)
-			if (g_powerSavingsForSleepEnabled == YES)
+	// Check if no System Events and LCD is off and Modem is not transferring and USB is not connected
+	if ((g_systemEventFlags.wrd == 0x0000) && (GetPowerControlState(LCD_POWER_ENABLE) == OFF) &&
+		(g_modemStatus.xferState == NOP_CMD) && (ms_usb_prevent_sleep == NO)) //(usbMassStorageState != USB_CONNECTED_AND_PROCESSING))
+	{
+		SetupPowerSavingsBeforeSleeping();
+
+		// Check if actively monitoring
+		if (g_sampleProcessing == ACTIVE_STATE)
+		{
+			// Check if a higher sample rate that can't use Stop sleep mode (Wave 16K and Bar 8K)
+			if ((g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K) ||
+				((g_triggerRecord.op_mode == BARGRAPH_MODE) && (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_8K)))
 			{
-				RevertPowerSavingsAfterSleeping();
+				sleepStateNeeded = AVR32_PM_SMODE_IDLE;
+			}
+			// Check if Wave 8K
+			else if (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_8K)
+			{
+				sleepStateNeeded = AVR32_PM_SMODE_FROZEN;
+			}
+			// Check if Wave, Bar and Combo 4K
+			else if (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_4K)
+			{
+				sleepStateNeeded = AVR32_PM_SMODE_STANDBY;
+			}
+			else // Lower sample rates can use Stop mode (Wave, Bar and Combo for 0.5K, 1K and 2K)
+			{
+				sleepStateNeeded = AVR32_PM_SMODE_STOP;
 			}
 		}
-#endif
+		else // Not monitoring
+		{
+			sleepStateNeeded = AVR32_PM_SMODE_STOP;
+		}
+
+		// Check if not already set for Idle sleep and not max power savings and a remote/craft is connected (DSR and DCD)
+		if ((sleepStateNeeded != AVR32_PM_SMODE_IDLE) && (g_helpRecord.powerSavingsLevel != POWER_SAVINGS_MAX) &&
+			((gpio_get_pin_value(AVR32_PIN_PB23) == 0) && (gpio_get_pin_value(AVR32_PIN_PB24) == 0)))
+		{
+			sleepStateNeeded = AVR32_PM_SMODE_FROZEN;
+		}
+
+		// Check if sleep mode changed
+		if (g_sleepModeState != sleepStateNeeded)
+		{
+			// Track the new state
+			g_sleepModeState = sleepStateNeeded;
+
+			if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { debug("Changing Sleep mode to Idle\n"); }
+			else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { debug("Changing Sleep mode to Frozen\n"); }
+			else if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { debug("Changing Sleep mode to Standby\n"); }
+			else if (g_sleepModeState == AVR32_PM_SMODE_STOP) { debug("Changing Sleep mode to Stop\n"); }
+		}
+
+		if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { SLEEP(AVR32_PM_SMODE_IDLE); }
+		else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { SLEEP(AVR32_PM_SMODE_FROZEN); }
+		else if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { SLEEP(AVR32_PM_SMODE_STANDBY); }
+		else if (g_sleepModeState == AVR32_PM_SMODE_STOP) { SLEEP(AVR32_PM_SMODE_STOP); }
+
+		// Check if needing to revert the power savings (if monitoring then the ISR will handle this operation)
+		if (g_powerSavingsForSleepEnabled == YES)
+		{
+			RevertPowerSavingsAfterSleeping();
+		}
 	}
 }
 
@@ -800,119 +1368,6 @@ extern void StartExternalRtcClock(uint16 sampleRate);
 ///----------------------------------------------------------------------------
 int main(void)
 {
-#if 0 // Test
-	gpio_enable_pin_pull_up(AVR32_PIN_PX00);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX01);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX02);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX03);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX04);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX05);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX06);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX07);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX08);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX09);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX10);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX11);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX12);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX13);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX14);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX15);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX16);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX17);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX18);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX19);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX20);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX21);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX22);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX23);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX24);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX25);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX26);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX27);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX28);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX29);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX30);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX31);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX32);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX33);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX34);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX35);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX36);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX37);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX38);
-	gpio_enable_pin_pull_up(AVR32_PIN_PX39);
-
-	gpio_enable_pin_pull_up(AVR32_PIN_PA00);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA01);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA02);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA03);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA04);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA05);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA06);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA07);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA08);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA09);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA10);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA11);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA12);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA13);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA14);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA15);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA16);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA17);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA18);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA19);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA20);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA21);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA22);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA23);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA24);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA25);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA26);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA27);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA28);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA29);
-	gpio_enable_pin_pull_up(AVR32_PIN_PA30);
-
-	gpio_enable_pin_pull_up(AVR32_PIN_PB00);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB01);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB02);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB03);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB04);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB05);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB06);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB07);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB08);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB09);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB10);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB11);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB12);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB13);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB14);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB15);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB16);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB17);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB18);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB19);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB20);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB21);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB22);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB23);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB24);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB25);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB26);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB27);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB28);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB29);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB30);
-	gpio_enable_pin_pull_up(AVR32_PIN_PB31);
-
-	InitSystemHardware_NS8100();
-
-	while (1) {;}
-#endif
-
-#if 1
     // Initialize the system
 	InitSystemHardware_NS8100();
 	InitInterrupts_NS8100();
@@ -920,12 +1375,6 @@ int main(void)
 
 	BootLoadManager();
 	DisplayVersionToCraft();
-
-#if 0 // Test
-	// Disable rs232 driver and receiver (Active low control)
-	PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
-	PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
-#endif
 
  	// ==============
 	// Executive loop
@@ -951,7 +1400,7 @@ int main(void)
 		FactorySetupManager();
 
 		// Check if able to go to sleep
-		SleepManager();
+		PowerManager();
 
 		// Count Exec cycles
 		g_execCycles++;
@@ -960,5 +1409,4 @@ int main(void)
 
 	// End of the world
 	return (0);
-#endif
 }
