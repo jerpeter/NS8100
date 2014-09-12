@@ -9,4 +9,6 @@ Makefile
 *.map
 *.srec
 *.mk
-
+*.bin
+*.auto
+*.exe
