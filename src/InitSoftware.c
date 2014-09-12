@@ -308,13 +308,6 @@ void InitSoftwareSettings_NS8100(void)
 	debug("Init Version Strings...\n");
 
 	//-------------------------------------------------------------------------
-	// Init version strings
-	//-------------------------------------------------------------------------
-	#if 0 // ns7100
-	initVersionStrings();
-	#endif
-
-	//-------------------------------------------------------------------------
 	// Init version msg
 	//-------------------------------------------------------------------------
 	debug("Init Version Msg...\n");
@@ -384,14 +377,14 @@ void InitSoftwareSettings_NS8100(void)
 	debug("Init Craft Init Status Flags...\n");
 	CraftInitStatusFlags();
 
-#if 0 // ns7100
+#if 0 // Add ability to check sensor if one is available
+	//-------------------------------------------------------------------------
 	// Overlay a message to alert the user that the system is checking the sensors
+	//-------------------------------------------------------------------------
 	debug("Init LCD Message...\n");
-	char buff[50];
-	ByteSet(&buff[0], 0, sizeof(buff));
-	sprintf((char*)buff, "%s %s", getLangText(SENSOR_CHECK_TEXT), getLangText(ZEROING_SENSORS_TEXT));
-	OverlayMessage(getLangText(STATUS_TEXT), buff, 0);
-	#endif
+	sprintf((char*)g_spareBuffer, "%s %s", getLangText(SENSOR_CHECK_TEXT), getLangText(ZEROING_SENSORS_TEXT));
+	OverlayMessage(getLangText(STATUS_TEXT), g_spareBuffer, 0);
+#endif
 
 	//-------------------------------------------------------------------------
 	// Signal remote end that RS232 Comm is available

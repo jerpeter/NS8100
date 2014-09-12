@@ -56,10 +56,6 @@ void EndBargraph(void);
 uint32 MoveBarIntervalDataToFile(void);
 void MoveSummaryIntervalDataToFile(void);
 
-#if 0 // ns7100
-void MoveBargraphEventDataToFlash(void);
-#endif
-
 void MoveStartOfBargraphEventRecordToFlash(void);
 void MoveEndOfBargraphEventRecordToFlash(void);
 

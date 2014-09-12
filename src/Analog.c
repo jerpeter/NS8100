@@ -407,40 +407,9 @@ void SetupADChannelConfig(uint32 sampleRate)
 ///----------------------------------------------------------------------------
 void WriteAnalogControl(uint16 control)
 {
-#if 0 // ns7100
-	uint8 i = 0;
-	uint8 mask = 0x80;
-
-	// Make sure sclk bit is low
-	reg_PORTE.reg &= ~ANALOG_CONTROL_SHIFT;
-
-	// Write byte into shift register (Propogates D0 -> D7)
-	for (i = 0; i < 8; i++)
-	{
-		if (data & mask)
-		{
-			reg_PORTE.reg |= ANALOG_CONTROL_DATA;
-		}
-		else
-		{
-			reg_PORTE.reg &= ~ANALOG_CONTROL_DATA;
-		}
-
-		// Clock a bit into the shift register by rising edge of shift pin
-		reg_PORTE.reg |= ANALOG_CONTROL_SHIFT;
-		reg_PORTE.reg &= ~ANALOG_CONTROL_SHIFT;
-
-		mask >>= 1;
-	}
-
-	// Move shift register contents into storage register by rising edge of storage pin
-	reg_PORTE.reg |= ANALOG_CONTROL_STORAGE;
-	reg_PORTE.reg &= ~ANALOG_CONTROL_STORAGE;
-#else // ns8100
 	spi_selectChip(&AVR32_SPI1, AD_CTL_SPI_NPCS);
 	spi_write(&AVR32_SPI1, (unsigned short) control);
     spi_unselectChip(&AVR32_SPI1, AD_CTL_SPI_NPCS);
-#endif
 }
 
 ///----------------------------------------------------------------------------

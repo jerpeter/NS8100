@@ -281,11 +281,6 @@ void ProcessInputMsg(INPUT_MSG_STRUCT mn_msg)
 
 	switch (mn_msg.cmd)
 	{
-#if 0 // ns7100
-		case PAPER_FEED_CMD:
-			debug("Handling Paperfeed Command\n");
-			break;
-#endif
 		case CTRL_CMD:
 			{
 				debug("Handling Ctrl Sequence\n");
@@ -369,25 +364,12 @@ uint16 SendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 ///----------------------------------------------------------------------------
 void SoftUsecWait(uint32 usecs)
 {
-#if 0 // ns7100
-	volatile uint32 i = 0;
-
-	// The system clock devided 16M is approx. a microsecond if running code within processor
-	for (i = 0; i < (uint32)(usecs * (SYSCLK / 16000000)); i++) {}
-
-	// The system clock devided 6M is approx. a microsecond if running code outside processor with 2 wait states
-	//for (i = 0; i < (uint32)(usecs * (SYSCLK / 6000000)); i++) {}
-
-#else // ns8100
-
 	unsigned long int countdown = (usecs << 2) + usecs;
 	
 	for(; countdown > 0;)
 	{
 		countdown--;
 	}
-
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -497,7 +479,6 @@ uint16 DbToHex(uint16 db)
 	return (ceil(dbValue));
 }
 
-#if 1 // Updated (Port lost change)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
@@ -592,7 +573,6 @@ uint32 ConvertMBtoDB(uint32 level)
 	}
 #endif
 }
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -628,15 +608,7 @@ uint16 Isqrt(uint32 x)
 ///----------------------------------------------------------------------------
 void InitVersionMsg(void)
 {
-#if 0 // ns7100
-	debugRaw("\n\n");
-	debugRaw("  Software Version: %s\n", g_appVersion);
-	debugRaw("  Software Date:    %s\n", g_appDate);
-	debugRaw("  Software Time:    %s\n", g_appTime);
-	debugRaw("\n");
-#else // ns8100
 	debug("Software Version: %s (Build Date & Time: %s)\n", g_buildVersion, g_buildDate);
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -667,11 +639,9 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			sprintf((char*)&languageFilename[0], "C:\\Language\\German.tbl");
 			break;
 
-#if 1 // Updated (Port lost change)
 		case SPANISH_LANG: languageTablePtr = spanishLanguageTable;
 			sprintf((char*)&languageFilename[0], "C:\\Language\\Spanish.tbl");
 			break;
-#endif
 
 		default:
 			languageTablePtr = englishLanguageTable;
@@ -803,11 +773,8 @@ void JumpToBootFunction(void)
 		SoftUsecWait(1 * SOFT_SECS);
 
 		// Disable interrupts to prevent access to ISR's while in boot
-#if 0 // ns7100
-		DisableInterrupts;
-#else // ns8100
 		Disable_global_interrupt();
-#endif
+
 		// Jump to the bootloader routine to update the app image
 		(*s_bootloader)();
 	}

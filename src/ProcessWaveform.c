@@ -79,10 +79,6 @@ void ProcessWaveformData(void)
 						// Set loop counter to 1 minus the total samples to be received in the event body (minus the trigger data sample)
 						g_isTriggered = g_samplesInBody - 1;
 
-#if 0 // ns7100
-						// Save the link to the beginning of the Pretrigger event data
-						g_summaryTable[g_eventBufferWriteIndex].linkPtr = g_eventBufferPretrigPtr;
-#endif
 						// Copy Pretrigger buffer data over to the Event body buffer
 						*(g_eventBufferBodyPtr + 0) = *(g_tailOfPretriggerBuff + 0);
 						*(g_eventBufferBodyPtr + 1) = *(g_tailOfPretriggerBuff + 1);

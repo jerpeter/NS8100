@@ -448,13 +448,8 @@ static inline void fillPretriggerBufferUntilFull_ISR_Inline(void)
 {
 	s_pretriggerCount++;
 
-#if 0 // Fixed Pretrigger size (1/4 sec)
-	// Check if the Pretrigger count has accumulated the full number of samples (1/4 sec)
-	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / 4)
-#else // Variable Pretrigger size
 	// Check if the Pretrigger count has accumulated the full number of samples (variable Pretrigger size)
 	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider))
-#endif
 	{ 
 		s_pretriggerFull = YES;
 		s_pretriggerCount = 0;

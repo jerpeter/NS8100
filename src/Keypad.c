@@ -24,19 +24,11 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-//#define KEYPAD_ACCESS_DELAY 		125	// In usecs
-#if 0 // ns7100
-#define CHECK_FOR_REPEAT_KEY_DELAY 	100	// 100 * 10 msec ticks = 1 sec
-#define CHECK_FOR_COMBO_KEY_DELAY 	2	// 2 * 10 msec ticks = 20 mssec
-#define WAIT_AFTER_COMBO_KEY_DELAY 	25	// 25 * 10 msec ticks = 250 mssec
-#define REPEAT_DELAY 				10	// 10 * 10 msec ticks = 100 msecs
-#else // ns8100
 #define CHECK_FOR_REPEAT_KEY_DELAY 	750		// 750 * 1 msec ticks = 750 msecs
 #define CHECK_FOR_COMBO_KEY_DELAY 	20		// 20 * 1 msec ticks = 20 mssec
 #define WAIT_AFTER_COMBO_KEY_DELAY 	250		// 250 * 1 msec ticks = 250 mssec
 #define REPEAT_DELAY 				100		// 100 * 1 msec ticks = 100 msecs
 #define DEBOUNCE_READS 				15		// 100 * 1 msec ticks = 100 msecs
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -83,21 +75,6 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 	// Set flag to run keypad again to check for repeating keys or ctrl/shift key combos
 	g_kpadCheckForKeyFlag = ACTIVATED;
 
-#if 0 // ns7100
-	//volatile uint8* keypadAddress = (uint8*)KEYPAD_ADDRESS;
-
-	// Check if debug printing has been turned off
-	if (g_disableDebugPrinting)
-	{
-		// Wait to make sure key is still depressed (not a bouncing signal on release)
-		SoftUsecWait(3 * SOFT_MSECS);
-	}
-
-	s_keyMap[0] = (uint8)(~(*keypadAddress));
-
-	// Re-read keys and mask in to catch signal bouncing
-	s_keyMap[0] &= *keypadAddress;
-#else // ns8100
 	// Check if the key timer has already been started and key processing source is a key interrupt
 	if ((keySource == KEY_SOURCE_IRQ) && (g_tcTypematicTimerActive == YES))
 	{
@@ -129,38 +106,9 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		// Key is being pressed, and only one read should be sufficient for detecting the key
 		s_keyMap[0] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 	}
-#endif
 
-	if (s_keyMap[0]) 
-	{ 
-		debugRaw(" (Key Pressed: %x)", s_keyMap[0]);
-	}
+	if (s_keyMap[0]) { debugRaw(" (Key Pressed: %x)", s_keyMap[0]); }
 	else { debugRaw(" (Key Release)", s_keyMap[0]); }
-
-#if 0 // ns7100
-	if (SUPERGRAPH_UNIT)
-	{
-		// Check for ctrl key, row 7 column 7 (zero based)
-		if (s_keyMap[7] & 0x80)
-		{
-			ctrlKeyPressed = YES;
-			numKeysPressed++;
-
-			// Clear the ctrl key from the map
-			s_keyMap[7] &= ~0x80;
-		}
-
-		// Check for shift key, row 5 column 7 (zero based)
-		if (s_keyMap[5] & 0x80)
-		{
-			shiftKeyPressed = YES;
-			numKeysPressed++;
-
-			// Clear the shift key from the map
-			s_keyMap[5] &= ~0x80;
-		}
-	}
-#endif
 
 	//---------------------------------------------------------------------------------
 	// Find key
@@ -197,31 +145,20 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 			ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 		}
 
-#if 0 // ns7100
-		// Done looking for keys, disable the PIT timer
-		stopPitTimer(KEYPAD_TIMER);
-#else // ns8100
 		// Disable the key timer
 		Stop_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
-#endif
 
 		// No keys detected, done processing
 		return(PASSED);
 	}
 
 	// Key detected, begin higher level processing
-#if 0 // ns7100
-	// Start the PIT timer
-	if (checkPitTimer(KEYPAD_TIMER) == DISABLED)
-		startPitTimer(KEYPAD_TIMER);
-#else // ns8100
 	// Check if the key timer hasn't been activated already
 	if (g_tcTypematicTimerActive == NO)
 	{
 		// Start the key timer
 		Start_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
 	}
-#endif
 
 #if 0
 	if (SUPERGRAPH_UNIT)
@@ -476,13 +413,8 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 			}
 			else
 			{
-				// Check if the ON key is currently being pressed at the same time the enter key was detected
-#if 0 // ns7100
-				if ((reg_EPPDR.bit.EPPD0 == 0x00) && (keyPressed == ENTER_KEY))
-#else // ns8100
 				// Check if the On key is being pressed
 				if (ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0x04)
-#endif
 				{
 					// Reset the factory setup process
 					g_factorySetupSequence = SEQ_NOT_STARTED;

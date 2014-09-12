@@ -319,13 +319,6 @@ void StopMonitoring(uint8 mode, uint8 operation)
 			// Wait for any triggered events to finish sending
 			WaitForEventProcessingToFinish();
 		}
-		
-#if 0 // ns7100 (Serves no useful purpose)
-		if (((mode == BARGRAPH_MODE) || (mode == COMBO_MODE)) && (operation == EVENT_PROCESSING))
-		{
-			raiseSystemEventFlag(BARGRAPH_EVENT);
-		}
-#endif
 
 		// Stop the data transfers
 		StopDataCollection();
@@ -470,35 +463,6 @@ extern void processAndMoveWaveformData_ISR_Inline(void);
 	}
 }
 
-#if 0 // ns7100 (Used to convert trigger level for the 430)
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-uint16 SeismicTriggerConvert(float seismicTriggerLevel)
-{
-    uint16 seisTriggerVal;
-    uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
-    float convertToHex = (float)(g_factorySetupRecord.sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
-    
-    convertToHex = (float)ADC_RESOLUTION / (float)convertToHex;
-  
-	if ((seismicTriggerLevel != NO_TRIGGER_CHAR) && (seismicTriggerLevel != MANUAL_TRIGGER_CHAR) && (seismicTriggerLevel != EXTERNAL_TRIGGER_CHAR))
-    {
-		// Convert the trigger level into a hex value for the 430 processor board.
-		seisTriggerVal = (uint16)(((float)convertToHex * (float)seismicTriggerLevel) + (float)0.5);	
-			
-		//debug("SeismicTriggerConvert: seismicTriggerLevel=%f seisTriggerVal = 0x%x convertToHex=%d\n",
-		//	seismicTriggerLevel, seisTriggerVal, convertToHex);
-	}
-	else
-	{
-		seisTriggerVal = (uint16)seismicTriggerLevel;
-	}
-
-	return (SwapInt(seisTriggerVal));
-}
-#endif
-
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
@@ -507,10 +471,6 @@ uint16 AirTriggerConvert(uint32 airTriggerToConvert)
 	// Check if the air trigger level is not no trigger and not manual trigger
 	if ((airTriggerToConvert != NO_TRIGGER_CHAR) && (airTriggerToConvert != MANUAL_TRIGGER_CHAR) && (airTriggerToConvert != EXTERNAL_TRIGGER_CHAR))
 	{
-#if 0 // Port lost change
-		// Convert the float db to an offset from 0 to 2048 and upscale to 16-bit
-		airTriggerToConvert = (DbToHex(airTriggerToConvert) * 16);
-#else // Updated
 		if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 		{
 			// Convert dB to an offset from 0 to 2048 and upscale to 16-bit
@@ -521,7 +481,6 @@ uint16 AirTriggerConvert(uint32 airTriggerToConvert)
 			// Convert mb to an offset from 0 to 2048 and upscale to 16-bit
 			airTriggerToConvert = (uint32)(MbToHex(airTriggerToConvert) * 16);
 		}
-#endif
 	}
 
 	return (airTriggerToConvert);
@@ -682,19 +641,8 @@ void ForcedCalibration(void)
 	// Make sure Cal pulse is generated at low sensitivity
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 	
-#if 0 // ns7100
-	// Temp set mode to waveform to force the 430 ISR to call ProcessWaveformData instead of ProcessBargraphData 
-	// after the calibration finishes to prevent a lockup when bargraph references globals that are not inited yet
-	g_triggerRecord.op_mode = WAVEFORM_MODE;
-
-	// Set flag to Sampling, we are about to begin to sample.
-	g_sampleProcessing = ACTIVE_STATE;
-
-	// Send message to 430
-	//ISPI_SendMsg(MANUAL_CAL_PULSE_CMD);
-#else // ns8100
+	// Start the calibration
 	StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
-#endif
 
 	// No longer needed, handled in the ISR for Cal
 	//GenerateCalSignal();

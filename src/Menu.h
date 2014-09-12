@@ -527,15 +527,9 @@ enum {
 };
 
 // Data values used in 430 messaging
-#if 1 // Port lost change
 #define NO_TRIGGER_CHAR 				0xEFFF
 #define EXTERNAL_TRIGGER_CHAR			0xF000
 #define MANUAL_TRIGGER_CHAR 			0xF001
-#else // Invalid values since these could be actual triggers
-#define NO_TRIGGER_CHAR					0x1FFF
-#define EXTERNAL_TRIGGER_CHAR			0x1FFF
-#define MANUAL_TRIGGER_CHAR 			0x2FFF
-#endif
 
 // Manual Cal default rate
 #define MANUAL_CAL_DEFAULT_SAMPLE_RATE	SAMPLE_RATE_1K

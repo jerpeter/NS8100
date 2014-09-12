@@ -68,7 +68,6 @@ typedef enum {
 void InitRamSummaryTbl(void);
 void CopyValidFlashEventSummariesToRam(void);
 void CondenseRamSummaryTable(void);
-void AdvFlashDataPtrToEventData(SUMMARY_DATA*);
 uint8 InitFlashEvtBuff(void);
 void InitFlashBuffs(void);
 void InitEventRecord(uint8 op_mode);
@@ -78,9 +77,7 @@ void StoreCurrentEventNumber(void);
 uint16 GetUniqueEventNumber(SUMMARY_DATA* currentSummary);
 uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr);
 void CompleteRamEventSummary(SUMMARY_DATA* , SUMMARY_DATA*);
-void ReclaimSpace(uint16* sectorAddr);
 uint16* GetFlashDataPointer(void);
-void CheckFlashDataPointer(void);
 void StoreData(uint16* dataPtr, uint16 dataWords);
 void GetFlashUsageStats(FLASH_USAGE_STRUCT* usage);
 void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
@@ -95,7 +92,6 @@ void ReInitSdCardAndFat32(void);
 inline void AdjustSampleForBitAccuracy(void);
 void PowerDownSDCard(void);
 void PowerUpSDCardAndInitFat32(void);
-uint16 SeismicTriggerConvert(float);
 uint16 AirTriggerConvert(uint32 airTriggerToConvert);
 uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert);
 

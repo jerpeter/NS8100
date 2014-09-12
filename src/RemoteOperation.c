@@ -483,20 +483,11 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		//--------------------------------
-		// Sound Trigger Level check
+		// Air Trigger Level check
 		//--------------------------------
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
 			(NO_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
-#if 0 // Air trigger incoming as units value
-			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_VALUE) &&
-			#if 0 // Port lost change
-			(cfg.eventCfg.airTriggerLevel <= AIR_TRIGGER_MAX_VALUE)))
-			#else // Updated
-			(cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MB_MAX_VALUE))) // fix_ns8100 - Check DB/MB separately
-			#endif
-#else // Air trigger incoming as A/D count
 			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_COUNT) && (cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MAX_COUNT)))
-#endif
 		{
 #if 0 // Old units value
 			// Air trigger changed to be sent as an A/D count. Need to convert to units value for now until internal Air trigger handling is converted to A/D count.
@@ -535,11 +526,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		// Number of channels is hard coded to 4 = NUMBER_OF_CHANNELS_DEFAULT 
 		//--------------------------------
 		maxRecordTime = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS - 
-#if 0 // Fixed Pretrigger size
-			((g_triggerRecord.trec.sample_rate / 4) * NUMBER_OF_CHANNELS_DEFAULT) - 
-#else // Variable Pretrigger size
 				((g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider) * NUMBER_OF_CHANNELS_DEFAULT) -
-#endif
 				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * NUMBER_OF_CHANNELS_DEFAULT)) / 
 					(g_triggerRecord.trec.sample_rate * NUMBER_OF_CHANNELS_DEFAULT))));
 
@@ -843,11 +830,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 	            // Alarm One Air trigger level check DB/MB.
 				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) ||
 					((cfg.alarmCfg.alarmOneAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
-#if 0 // Port lost change					  
-					(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_VALUE)))
-#else // Updated Air as 16-bit A/D count
 					(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_COUNT)))
-#endif
 				{
 					g_helpRecord.alarmOneAirLevel = cfg.alarmCfg.alarmOneAirLevel;
 				}
@@ -928,11 +911,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 	            // Alarm Two Air trigger level check DB/MB.
 				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) 	||
 					((cfg.alarmCfg.alarmTwoAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
-#if 0 // Port lost change
-					(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_VALUE)))
-#else // Updated Air as 16-bit A/D count
 					(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_COUNT)))
-#endif
 				{
 					g_helpRecord.alarmTwoAirLevel = cfg.alarmCfg.alarmTwoAirLevel;
 				}

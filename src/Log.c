@@ -228,41 +228,6 @@ void CloseMonitorLogEntry()
 ///----------------------------------------------------------------------------
 void InitMonitorLogUniqueEntryId(void)
 {
-#if 0 // ns7100
-	uint16 uniqueEntryIdOffset = (FLASH_BOOT_SECTOR_SIZE_x8 + 2);
-	uint16 uniqueEntryId = 0;
-	uint16 uniqueEntryIdOffset = (FLASH_BOOT_SECTOR_SIZE_x8 * 2);
-
-	// Get the end address (Start of the 4th boot sector)
-	//uint16* endPtr = (uint16*)(FLASH_BASE_ADDR + (FLASH_BOOT_SECTOR_SIZE_x8 * 3));
-	uint16 endOffset = (FLASH_BOOT_SECTOR_SIZE_x8 * 3);
-		
-	GetParameterMemory((uint8*)&uniqueEntryId, uniqueEntryIdOffset, sizeof(uniqueEntryId));
-
-	// Check if the first location is 0xFF which indicates the unit hasn't recorded any monitor log entries
-	if (uniqueEntryId == 0xFFFF)
-	{
-		__monitorLogUniqueEntryId = 1;
-	}
-	else // Find the last stored Monitor Log entry number location
-	{
-		GetParameterMemory((uint8*)&uniqueEntryId, (uint16)(uniqueEntryIdOffset + 1), sizeof(uniqueEntryId));
-
-		// Loop until the next location is empty and not past the end
-		while ((uniqueEntryId != 0xFFFF) && ((uniqueEntryIdOffset + 1) < endOffset))
-		{
-			// Increment address
-			uniqueEntryIdOffset++;
-
-			GetParameterMemory((uint8*)&uniqueEntryId, (uint16)(uniqueEntryIdOffset + 1), sizeof(uniqueEntryId));
-		}
-
-		GetParameterMemory((uint8*)&uniqueEntryId, uniqueEntryIdOffset, sizeof(uniqueEntryId));
-
-		// Set the Monitor Log Entry number to the last stored Monitor Log number stored plus 1
-		__monitorLogUniqueEntryId = (uint16)(uniqueEntryId + 1);
-	}
-#else // ns8100
 	MONITOR_LOG_ID_STRUCT monitorLogRec;
 
 	GetRecordData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
@@ -287,7 +252,6 @@ void InitMonitorLogUniqueEntryId(void)
 		
 		SaveRecordData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
 	}
-#endif
 
 	debug("Total Monitor Log entries to date: %d, Current Monitor Log entry number: %d\n", 
 		(__monitorLogUniqueEntryId - 1), __monitorLogUniqueEntryId);
@@ -298,69 +262,6 @@ void InitMonitorLogUniqueEntryId(void)
 ///----------------------------------------------------------------------------
 void StoreMonitorLogUniqueEntryId(void)
 {
-#if 0 // ns7100
-	uint16 uniqueEntryIdOffset = (FLASH_BOOT_SECTOR_SIZE_x8 + 2);
-
-	// Get the starting address of the 3rd boot sector (base + boot sector size * 2)
-	//uint16* uniqueEntryIdStorePtr = (uint16*)(FLASH_BASE_ADDR + (FLASH_BOOT_SECTOR_SIZE_x8 * 2));
-	uint16 uniqueEntryIdOffset = (FLASH_BOOT_SECTOR_SIZE_x8 * 2);
-
-	uint16 positionsToAdvance = 0;
-	uint16 uniqueEntryId = 0;
-
-	// If the Monitor Log Entry number is 0, then we have wrapped (>65535) in which case we will reinitialize
-	if (__monitorLogUniqueEntryId == 0)
-	{
-		//SectorErase(uniqueEntryIdStorePtr, 1);
-		EraseParameterMemory(uniqueEntryIdOffset, FLASH_BOOT_SECTOR_SIZE_x8);
-		
-		InitMonitorLogUniqueEntryId();
-	}
-	// Check if at the boundary of a flash sectors worth of unique Monitor Log Entry numbers
-	else if (((__monitorLogUniqueEntryId - 1) % 4096) == 0)
-	{
-		// Check to make sure this isnt the initial (first) Monitor Log Entry number
-		if (__monitorLogUniqueEntryId != 1)
-		{
-			//SectorErase(uniqueEntryIdStorePtr, 1);
-			EraseParameterMemory(uniqueEntryIdOffset, FLASH_BOOT_SECTOR_SIZE_x8);
-		}	
-	}
-	else // Still room to store unique Monitor Log Entry numbers
-	{
-		// Get the positions to advance based on the current monitor log unique id mod'ed by the storage size in id numbers
-		positionsToAdvance = (uint16)((__monitorLogUniqueEntryId - 1) % 4096);
-
-		// Set the offset to the event number positions adjusted to bytes
-		uniqueEntryIdOffset += (positionsToAdvance * 2);
-	}
-
-	GetParameterMemory((uint8*)&uniqueEntryId, uniqueEntryIdOffset, sizeof(uniqueEntryId));
-
-	// Check to make sure Current location is empty
-	if (uniqueEntryId == 0xFFFF)
-	{
-		GetParameterMemory((uint8*)&uniqueEntryId, (uint16)(uniqueEntryIdOffset - 1), sizeof(uniqueEntryId));
-	
-		// Check if the first location to be used or if a valid unique Monitor Log Entry number
-		// preceeded the current Monitor Log Entry number to be stored
-		if ((positionsToAdvance == 0) || (uniqueEntryId != 0xFFFF))
-		{
-			// Store the current Monitor Log Entry number as the newest unique entry number
-			//ProgramFlashWord(uniqueEntryIdStorePtr, __monitorLogUniqueEntryId);
-			SaveParameterMemory((uint8*)&__monitorLogUniqueEntryId, uniqueEntryIdOffset, sizeof(__monitorLogUniqueEntryId));
-			
-			// Increment to a new Monitor Log Entry number
-			__monitorLogUniqueEntryId++;
-			
-			return;
-		}
-	}
-
-	// If we get here, then we failed a validation check
-	debugErr("Unique Monitor Log Entry number storage doesnt match Current Monitor Log Entry number. (0x%x, %d)\n", 
-				uniqueEntryIdOffset, __monitorLogUniqueEntryId);
-#else // ns8100
 	MONITOR_LOG_ID_STRUCT monitorLogRec;
 
 	monitorLogRec.currentMonitorLogID = __monitorLogUniqueEntryId;
@@ -369,7 +270,6 @@ void StoreMonitorLogUniqueEntryId(void)
 
 	// Increment to a new Monitor Log Entry number
 	__monitorLogUniqueEntryId++;
-#endif
 }
 
 ///----------------------------------------------------------------------------

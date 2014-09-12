@@ -580,12 +580,6 @@ void ProcessTimerModeSettings(uint8 mode)
 		// Calculate timer mode active run time in minutes
 		TimerModeActiveMinutes();
 
-#if 0 // ns7100
-		RTC_FLAGS.reg = RTC_FLAGS.reg;
-#else // ns8100
-		// fix_ns8100
-#endif
-
 		// Init start day based on the start date provided by the user
 		startDay = g_helpRecord.timerStartDate.day;
 

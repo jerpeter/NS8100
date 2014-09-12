@@ -64,9 +64,7 @@ extern USER_MENU_STRUCT modemSetupMenu[];
 extern USER_MENU_STRUCT modemInitMenu[];
 extern USER_MENU_STRUCT monitorLogMenu[];
 extern USER_MENU_STRUCT operatorMenu[];
-#if 1 // Updated (Port lost change)
 extern USER_MENU_STRUCT peakAccMenu[];
-#endif
 extern USER_MENU_STRUCT pretriggerSizeMenu[];
 extern USER_MENU_STRUCT printerEnableMenu[];
 extern USER_MENU_STRUCT printMonitorLogMenu[];
@@ -183,14 +181,10 @@ void AirSetupMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_factorySetupRecord.aweight_option = (uint8)airSetupMenu[newItemIndex].data;
 
-#if 0 // ns7100
-		SETUP_USER_MENU_MSG(&unitsOfAirMenu, g_helpRecord.unitsOfAir);
-#else // ns8100
 		SETUP_MENU_MSG(CAL_SETUP_MENU);
 
 extern void UsbDeviceManager(void);
 		UsbDeviceManager();
-#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
@@ -310,9 +304,6 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
-#if 0 // Port lost change
-						g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;
-#else // Updated
 						if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 						{
 							g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;
@@ -321,14 +312,8 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 						{
 							g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
 						}
-#endif
 					}
 
-#if 0 // Port lost change
-					// Call Alarm One Air Level
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_helpRecord.alarmOneAirLevel,
-						g_helpRecord.alarmOneAirMinLevel, g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
-#else // Updated
 					g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_helpRecord.alarmOneAirLevel);
 
 					if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
@@ -343,7 +328,6 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, g_helpRecord.alarmOneAirMinLevel,
 														g_helpRecord.alarmOneAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
 					}
-#endif
 				}
 			break;
 
@@ -394,9 +378,6 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
-#if 0 // Port lost change
-						g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;
-#else // Updated
 						if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 						{
 							g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;
@@ -405,7 +386,6 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 						{
 							g_helpRecord.alarmOneAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
 						}
-#endif
 					}
 
 					// Call Alarm One Seismic Level
@@ -558,9 +538,6 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
-#if 0 // Port lost change
-						g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;
-#else // Updated
 						if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 						{
 							g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;
@@ -569,14 +546,8 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 						{
 							g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
 						}
-#endif
 					}
 
-#if 0 // Port lost change
-					// Call Alarm One Air Level
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_helpRecord.alarmTwoAirLevel,
-						g_helpRecord.alarmTwoAirMinLevel, g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
-#else // Updated
 					g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_helpRecord.alarmTwoAirLevel);
 
 					if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
@@ -591,7 +562,6 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, g_helpRecord.alarmTwoAirMinLevel,
 														g_helpRecord.alarmTwoAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
 					}
-#endif
 				}
 			break;
 
@@ -642,9 +612,6 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // g_triggerRecord.op_mode == BARGRAPH_MODE
 					{
-#if 0 // Port lost change
-						g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;
-#else // Updated
 						if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
 						{
 							g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;
@@ -653,7 +620,6 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 						{
 							g_helpRecord.alarmTwoAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
 						}
-#endif
 					}
 
 					// Call Alarm Two Seismic Level
@@ -1252,15 +1218,7 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
-#if 0 // ns7100
-#define CONFIG_MENU_ENTRIES 31
-#else // ns8100
-#if 0 // Port lost change
-#define CONFIG_MENU_ENTRIES 27
-#else // Updated
 #define CONFIG_MENU_ENTRIES 30
-#endif
-#endif
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1271,16 +1229,10 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, BATTERY_TEXT,				NO_TAG, {BATTERY}},
 {NO_TAG, 0, BAUD_RATE_TEXT,				NO_TAG, {BAUD_RATE}},
 {NO_TAG, 0, CALIBRATION_DATE_TEXT,		NO_TAG, {CALIBRATION_DATE}},
-#if 0 // ns7100
-{NO_TAG, 0, COPIES_TEXT,				NO_TAG, {COPIES}},
-#endif
 {NO_TAG, 0, DATE_TIME_TEXT,				NO_TAG, {DATE_TIME}},
 {NO_TAG, 0, ERASE_MEMORY_TEXT,			NO_TAG, {ERASE_FLASH}},
 {NO_TAG, 0, FLASH_WRAPPING_TEXT,		NO_TAG, {FLASH_WRAPPING}},
 {NO_TAG, 0, FLASH_STATS_TEXT,			NO_TAG, {FLASH_STATS}},
-#if 0 // ns7100
-{NO_TAG, 0, FREQUENCY_PLOT_TEXT,		NO_TAG, {FREQUENCY_PLOT}},
-#endif
 {NO_TAG, 0, LANGUAGE_TEXT,				NO_TAG, {LANGUAGE}},
 {NO_TAG, 0, LCD_CONTRAST_TEXT,			NO_TAG, {LCD_CONTRAST}},
 {NO_TAG, 0, LCD_TIMEOUT_TEXT,			NO_TAG, {LCD_TIMEOUT}},
@@ -1288,14 +1240,8 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, MONITOR_LOG_TEXT,			NO_TAG, {MONITOR_LOG}},
 {NO_TAG, 0, PRETRIGGER_SIZE_TEXT,		NO_TAG, {PRETRIGGER_SIZE}},
 {NO_TAG, 0, POWER_SAVINGS_TEXT,			NO_TAG, {POWER_SAVINGS}},
-#if 0 // ns7100
-{NO_TAG, 0, PRINTER_TEXT,				NO_TAG, {PRINTER}},
-{NO_TAG, 0, PRINT_MONITOR_LOG_TEXT,		NO_TAG, {PRINT_MONITOR_LOG}},
-#endif
 {NO_TAG, 0, REPORT_DISPLACEMENT_TEXT,	NO_TAG, {REPORT_DISPLACEMENT}},
-#if 1 // Updated (Port lost change)
 {NO_TAG, 0, REPORT_PEAK_ACC_TEXT,		NO_TAG, {REPORT_PEAK_ACC}},
-#endif
 {NO_TAG, 0, SENSOR_GAIN_TYPE_TEXT,		NO_TAG, {SENSOR_GAIN_TYPE}},
 {NO_TAG, 0, SERIAL_NUMBER_TEXT,			NO_TAG, {SERIAL_NUMBER}},
 {NO_TAG, 0, SUMMARIES_EVENTS_TEXT,		NO_TAG, {SUMMARIES_EVENTS}},
@@ -1441,11 +1387,9 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				SETUP_USER_MENU_MSG(&displacementMenu, g_helpRecord.reportDisplacement);
 			break;
 
-#if 1 // Updated (Port lost change)
 			case (REPORT_PEAK_ACC):
 				SETUP_USER_MENU_MSG(&peakAccMenu, g_helpRecord.reportPeakAcceleration);
 			break;
-#endif
 
 			case (SENSOR_GAIN_TYPE):
 				DisplaySensorType();
@@ -1596,13 +1540,7 @@ void EraseEventsMenuHandlerz(uint8 keyPressed, void* data)
 				sprintf(stringBuff, "%s %s", getLangText(ERASE_OPERATION_IN_PROGRESS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT));
 				OverlayMessage(getLangText(STATUS_TEXT), stringBuff, 0);
 
-#if 0 // ns7100
-				// Erase all the data sectors (leave the boots sectors alone)
-				SectorErase((uint16*)(FLASH_BASE_ADDR + FLASH_SECTOR_SIZE_x8),
-							TOTAL_FLASH_DATA_SECTORS);
-#else // ns8100
 				DeleteEventFileRecords();
-#endif
 
 				// Re-Init the ram summary table and the flash buffers
 				InitRamSummaryTbl();
@@ -1619,11 +1557,7 @@ void EraseEventsMenuHandlerz(uint8 keyPressed, void* data)
 		}
 		else
 		{
-#if 0 // Port lost change
-			SETUP_USER_MENU_MSG(&eraseSettingsMenu, YES);
-#else // Updated
 			SETUP_USER_MENU_MSG(&eraseSettingsMenu, NO);
-#endif
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -1854,15 +1788,8 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 		}
 		else
 		{
-#if 0 // ns7100
-			MessageBox(getLangText(STATUS_TEXT), getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT), MB_OK);
-#else // ns8100
 			sprintf(buildString, "%s %s %s", getLangText(SOFTWARE_VER_TEXT), (char*)g_buildVersion, (char*)g_buildDate);
 			MessageBox(getLangText(STATUS_TEXT), buildString, MB_OK);
-#endif
-
-			// Don't call menu for now, since it's empty
-			//SETUP_USER_MENU_MSG(&infoMenu, DEFAULT_ITEM_1);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -2469,11 +2396,7 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 
 			// fix_ns8100 - Add in Combo mode calc that accounts for Bargraph buffers
 			g_triggerRecord.trec.record_time_max = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS -
-#if 0 // Fixed Pretrigger size
-				((g_triggerRecord.trec.sample_rate / 4) * g_sensorInfoPtr->numOfChannels) -
-#else // Variable Pretrigger size
 				((g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider) * g_sensorInfoPtr->numOfChannels) -
-#endif
 				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * g_sensorInfoPtr->numOfChannels)) /
 				(g_triggerRecord.trec.sample_rate * g_sensorInfoPtr->numOfChannels))));
 
@@ -2884,7 +2807,6 @@ void UnitsOfAirMenuHandler(uint8 keyPressed, void* data)
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
 
-#if 1 // Port lost change
 	if (keyPressed == ENTER_KEY)
 	{
 		if (g_helpRecord.unitsOfAir != (uint8)unitsOfAirMenu[newItemIndex].data)
@@ -2904,62 +2826,12 @@ void UnitsOfAirMenuHandler(uint8 keyPressed, void* data)
 
 			SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
 		}
-#else // Air in units value
-	if (keyPressed == ENTER_KEY)
-	{
-		if (g_helpRecord.unitsOfAir != (uint8)unitsOfAirMenu[newItemIndex].data)
-		{
-			g_helpRecord.unitsOfAir = (uint8)unitsOfAirMenu[newItemIndex].data;
 
-			// Check if the units of air was changed to dB, which means the prior mb values need to be converted
-			if (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
-			{
-				g_sensorInfoPtr->airUnitsFlag = DB_TYPE;
-				g_sensorInfoPtr->ameasurementRatio = (float)DECIBEL;
-
-				debug("Units of Air: Convert from MB value %f\n", (float)((float)g_triggerRecord.trec.airTriggerLevel / (float)10000));
-
-				g_triggerRecord.trec.airTriggerLevel = ConvertMBtoDB(g_triggerRecord.trec.airTriggerLevel);
-				g_helpRecord.alarmOneAirMinLevel = ConvertMBtoDB(g_helpRecord.alarmOneAirMinLevel);
-				g_helpRecord.alarmTwoAirMinLevel = ConvertMBtoDB(g_helpRecord.alarmTwoAirMinLevel);
-				g_helpRecord.alarmOneAirLevel = ConvertMBtoDB(g_helpRecord.alarmOneAirLevel);
-				g_helpRecord.alarmTwoAirLevel = ConvertMBtoDB(g_helpRecord.alarmTwoAirLevel);
-
-				debug("Units of Air: Convert to DB value %d\n", g_triggerRecord.trec.airTriggerLevel);
-			}
-			else // g_helpRecord.unitsOfAir == MILLIBAR_TYPE, units of air now mb, change from prior dB
-			{
-				g_sensorInfoPtr->airUnitsFlag = MB_TYPE;
-				g_sensorInfoPtr->ameasurementRatio = (float)MILLIBAR;
-
-				debug("Units of Air: Convert from DB value %d\n", g_triggerRecord.trec.airTriggerLevel);
-
-				g_triggerRecord.trec.airTriggerLevel = ConvertDBtoMB(g_triggerRecord.trec.airTriggerLevel);
-				g_helpRecord.alarmOneAirMinLevel = ConvertDBtoMB(g_helpRecord.alarmOneAirMinLevel);
-				g_helpRecord.alarmTwoAirMinLevel = ConvertDBtoMB(g_helpRecord.alarmTwoAirMinLevel);
-				g_helpRecord.alarmOneAirLevel = ConvertDBtoMB(g_helpRecord.alarmOneAirLevel);
-				g_helpRecord.alarmTwoAirLevel = ConvertDBtoMB(g_helpRecord.alarmTwoAirLevel);
-
-				debug("Units of Air: Convert to MB value %f\n", (float)((float)g_triggerRecord.trec.airTriggerLevel / (float)10000));
-			}
-
-			SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-		}
-#endif
-
-#if 0 // ns7100
-		SETUP_MENU_MSG(CAL_SETUP_MENU);
-#else // ns8100
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
-#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-#if 0 // ns7100
-		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
-#else // ns8100
 		SETUP_USER_MENU_MSG(&configMenu, UNITS_OF_AIR);
-#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -3068,12 +2940,9 @@ void ZeroEventNumberMenuHandler(uint8 keyPressed, void* data)
 	{
 		if (zeroEventNumberMenu[newItemIndex].data == YES)
 		{
-#if 0 // ns7100
-			SectorErase((uint16*)(FLASH_BASE_ADDR + FLASH_BOOT_SECTOR_SIZE_x8), 1);
-#else // ns8100
 			eventNumberRecord.currentEventNumber = 0;
 			SaveRecordData(&eventNumberRecord, DEFAULT_RECORD, REC_UNIQUE_EVENT_ID_TYPE);
-#endif
+
 			InitCurrentEventNumber();
 
 			__autoDialoutTbl.lastDownloadedEvent = 0;
@@ -3081,11 +2950,7 @@ void ZeroEventNumberMenuHandler(uint8 keyPressed, void* data)
 			OverlayMessage(getLangText(SUCCESS_TEXT), getLangText(EVENT_NUMBER_ZEROING_COMPLETE_TEXT), (2 * SOFT_SECS));
 		}
 
-#if 0 // Port lost change
-		SETUP_USER_MENU_MSG(&eraseSettingsMenu, YES);
-#else // Updated
 		SETUP_USER_MENU_MSG(&eraseSettingsMenu, NO);
-#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{

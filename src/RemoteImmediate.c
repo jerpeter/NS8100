@@ -214,14 +214,7 @@ void handleEEM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	else
 	{
-#if 0 // ns7100
-		// Start erasing the sector. Re-Init the ram summary table and the flash buffers
-		// Erase all the data sectors (leave the boots sectors alone)
-		SectorErase((uint16*)(FLASH_BASE_ADDR + FLASH_SECTOR_SIZE_x8),
-					TOTAL_FLASH_DATA_SECTORS);
-#else // ns8100
-		// fix_ns8100
-#endif
+		// fix_ns8100 - update to handle SD MMC Card
 
 		InitRamSummaryTbl();
 		InitFlashBuffs();
@@ -710,17 +703,10 @@ uint8 sendDQMData(void)
 			{
 				if (__ramFlashSummaryTbl[g_dqmXferStructPtr->ramTableIndex].fileEventNum != 0xFFFFFFFF)
 				{
-					// Assign it a new ptr, easier to read and handle.
-#if 0 // ns7100
-					eventRecord = (EVT_RECORD *)__ramFlashSummaryTbl[g_dqmXferStructPtr->ramTableIndex].linkPtr;
-#else // ns8100
 					static EVT_RECORD resultsEventRecord;
 					eventRecord = &resultsEventRecord;
 	
-					//GetEventFileInfo(__ramFlashSummaryTbl[g_dqmXferStructPtr->ramTableIndex].fileEventNum, &(resultsEventRecord.header),
-					//					&resultsEventRecord.summary, NO);
 					GetEventFileRecord(__ramFlashSummaryTbl[g_dqmXferStructPtr->ramTableIndex].fileEventNum, &resultsEventRecord);
-#endif
 					
 					g_dqmXferStructPtr->dqmData[idex].dqmxFlag = 0xCC;
 					g_dqmXferStructPtr->dqmData[idex].mode = eventRecord->summary.mode;
@@ -898,16 +884,10 @@ uint8 sendDSMData(void)
 		// If not at the end of the table, xfer it over, else we are done and go to the footer state.
 		if (g_dsmXferStructPtr->tableIndex < g_dsmXferStructPtr->tableIndexEnd)
 		{
-#if 0 // ns7100
-			eventRecord = (EVT_RECORD *)__ramFlashSummaryTbl[g_dsmXferStructPtr->tableIndex].linkPtr;
-#else // ns8100
 			static EVT_RECORD resultsEventRecord;
 			eventRecord = &resultsEventRecord;
 	
-			//GetEventFileInfo(__ramFlashSummaryTbl[g_dsmXferStructPtr->tableIndex].fileEventNum, &(resultsEventRecord.header),
-			//					&resultsEventRecord.summary, NO);
 			GetEventFileRecord(__ramFlashSummaryTbl[g_dsmXferStructPtr->tableIndex].fileEventNum, &resultsEventRecord);
-#endif
 			
 			g_dsmXferStructPtr->dloadEventRec.event = *eventRecord;
 			g_dsmXferStructPtr->dloadEventRec.structureFlag = START_DLOAD_FLAG;
@@ -1087,22 +1067,11 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			if (__ramFlashSummaryTbl[idex].fileEventNum != 0xFFFFFFFF)
 			{
-				// Check to see if this is the correct event number.
-#if 0 // ns7100
-				eventRecord = (EVT_RECORD *)__ramFlashSummaryTbl[idex].linkPtr;
-#else // ns8100
 				static EVT_RECORD resultsEventRecord;
 				eventRecord = &resultsEventRecord;
 	
-				//GetEventFileInfo(__ramFlashSummaryTbl[idex].fileEventNum, &(resultsEventRecord.header),
-				//					&resultsEventRecord.summary, YES);
-				
-				//GetEventFileRecord(__ramFlashSummaryTbl[idex].fileEventNum, &resultsEventRecord);
-				//CacheEventDataToRam(__ramFlashSummaryTbl[idex].fileEventNum, eventRecord->header.dataLength);
-				
 				CacheEventToRam(__ramFlashSummaryTbl[idex].fileEventNum);
 				eventRecord = (EVT_RECORD*)&g_eventDataBuffer[0];
-#endif
 
 				if (eventRecord->summary.eventNumber == eventNumToSend)
 				{
@@ -1140,8 +1109,7 @@ void prepareDEMDataToSend(EVT_RECORD* eventRecord, COMMAND_MESSAGE_HEADER* g_inC
 	uint32 eventDataCompressLength = 0;		// Will hold the length of the compressed event data.
 	uint8  flagData = 0;
 
-
-	// Clear out the xmit structures and intialize the flag and time fields.
+	// Clear out the xmit structures and initialize the flag and time fields.
 	ByteSet(&(g_demXferStructPtr->dloadEventRec), 0, sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
 	g_demXferStructPtr->xferStateFlag = NOP_XFER_STATE;
 	g_demXferStructPtr->dloadEventRec.structureFlag = START_DLOAD_FLAG;
@@ -1168,7 +1136,6 @@ void prepareDEMDataToSend(EVT_RECORD* eventRecord, COMMAND_MESSAGE_HEADER* g_inC
 			eventRecord->header.dataLength);
 	BuildIntDataField((char*)g_outCmdHeaderPtr->dataLength, dataLength, FIELD_LEN_08);
 
-
 	//-----------------------------------------------------------
 	// Setup the xfer structure ptrs.
 	g_demXferStructPtr->startDloadPtr = (uint8*)&(g_demXferStructPtr->dloadEventRec);
@@ -1176,11 +1143,10 @@ void prepareDEMDataToSend(EVT_RECORD* eventRecord, COMMAND_MESSAGE_HEADER* g_inC
 	g_demXferStructPtr->endDloadPtr = ((uint8*)g_demXferStructPtr->startDloadPtr +
 		sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
 
-
 	dataLength = eventRecord->header.headerLength + eventRecord->header.summaryLength +
 		eventRecord->header.dataLength;
 
-	// Find and set the pointer to the begining of the event data.
+	// Find and set the pointer to the beginning of the event data.
 #if 1 // Leave the same
 	g_demXferStructPtr->startDataPtr = (uint8*)eventRecord + sizeof(EVT_RECORD);
 #else // Ignore for now
@@ -1191,169 +1157,130 @@ extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 	// The data ptr is set to the start of data
 	g_demXferStructPtr->dataPtr = g_demXferStructPtr->startDataPtr;
 
-	// Is all the data contiguous? if it wraps then  we need to set the ptrs for the old method.
-#if 0 // ns7100
-	if( ( (uint32)(g_demXferStructPtr->startDataPtr) + (eventRecord->header.dataLength)) >= (uint32)FLASH_EVENT_END )
-#else // ns8100
-	if (0)
-#endif
+	// Build the CRC and compressed fields.
+	flagData = CRC_32BIT;
+	flagData = (uint8)(flagData << 4);
+	flagData = (uint8)((uint8)(flagData) | ((uint8)COMPRESS_MINILZO));
+	sprintf((char*)g_outCmdHeaderPtr->compressCrcFlags,"%02x", flagData);
+	// Create the message buffer from the outgoing header data.
+	BuildOutgoingHeaderBuffer(g_outCmdHeaderPtr, g_demXferStructPtr->msgHdr);
+
+	//----------------------------------------------------
+	// Send CRLF start of msg.
+	dataLength = 2;
+	if (ModemPuts((uint8*)&g_CRLF, dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
 	{
-#if 0 // ns7100
-		// Build the crc and copressed fields.
-		flagData = CRC_32BIT;
-		flagData = (uint8)(flagData << 4);
-		flagData = (uint8)((uint8)(flagData) | ((uint8)COMPRESS_NONE));
-		sprintf((char*)g_outCmdHeaderPtr->compressCrcFlags,"%02x", flagData);
-		// Create the message buffer from the outgoing header data.
-		BuildOutgoingHeaderBuffer(g_outCmdHeaderPtr, g_demXferStructPtr->msgHdr);
-
-		//----------------------------------------------------
-
-		// data Length is the # of bytes to the end of flash
-		dataLength = (uint32)((uint32)FLASH_EVENT_END - (uint32)g_demXferStructPtr->startDataPtr);
-
-		// Find the end of flash location.
-		g_demXferStructPtr->endDataPtr = (uint8*)((uint32)FLASH_EVENT_START +
-			(uint32)(eventRecord->header.dataLength - dataLength));
-
-		g_demXferStructPtr->xferStateFlag = HEADER_XFER_STATE;
-
-		// Prepare the flags for the xfer command.
-		g_modemStatus.xferMutex = YES;
-		g_modemStatus.xferState = DEMx_CMD;
-		g_modemStatus.xferPrintState = g_helpRecord.autoPrint;
-#endif
+		g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
 	}
+	g_transferCount = 0;						// Do not count the first CRLF
 
-	// It DOES NOT wrap in flash. Use .
-	else
+	// Send the communications header
+	dataLength = MESSAGE_HEADER_LENGTH;
+	g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->msgHdr, dataLength, SEED_32);
+	if (ModemPuts((uint8*)g_demXferStructPtr->msgHdr, dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
 	{
-		// Build the crc and copressed fields.
-		flagData = CRC_32BIT;
-		flagData = (uint8)(flagData << 4);
-		flagData = (uint8)((uint8)(flagData) | ((uint8)COMPRESS_MINILZO));
-		sprintf((char*)g_outCmdHeaderPtr->compressCrcFlags,"%02x", flagData);
-		// Create the message buffer from the outgoing header data.
-		BuildOutgoingHeaderBuffer(g_outCmdHeaderPtr, g_demXferStructPtr->msgHdr);
-
-		//----------------------------------------------------
-		// Send CRLF start of msg.
-		dataLength = 2;
-		if (ModemPuts((uint8*)&g_CRLF, dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
-		{
-			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-		}
-		g_transferCount = 0;						// Do not count the first CRLF
-
-		// Send the communications header
-		dataLength = MESSAGE_HEADER_LENGTH;
-		g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->msgHdr, dataLength, SEED_32);
-		if (ModemPuts((uint8*)g_demXferStructPtr->msgHdr, dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
-		{
-			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-		}
-		g_transferCount += dataLength;
-
+		g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
+	}
+	g_transferCount += dataLength;
 
 #if 1
-		// Compress and download the event record.
-		g_demXferStructPtr->xmitSize = 0;
-		eventRecCompressLength =
-			lzo1x_1_compress((void*)g_demXferStructPtr->startDloadPtr, sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
+	// Compress and download the event record.
+	g_demXferStructPtr->xmitSize = 0;
+	eventRecCompressLength =
+		lzo1x_1_compress((void*)g_demXferStructPtr->startDloadPtr, sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
 
-		if (g_demXferStructPtr->xmitSize > 0)
-		{
-			g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
-			if (ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
-			{
-				g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-			}
-			g_transferCount += g_demXferStructPtr->xmitSize;
-		}
-
-		// Compress and download the event data.
-		g_demXferStructPtr->xmitSize = 0;
-		eventDataCompressLength = lzo1x_1_compress(
-			(void*)(g_demXferStructPtr->startDataPtr), eventRecord->header.dataLength);
-
-		if( g_demXferStructPtr->xmitSize > 0 )
-		{
-			g_transmitCRC = CalcCCITT32((uint8 *)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
-			if(ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
-			{
-				g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-			}
-			g_transferCount += g_demXferStructPtr->xmitSize;
-		}
-#else
-		// Compress and download the event record.
-		dataLength = sizeof(uint32) + 12;
-		g_transmitCRC = CalcCCITT32((uint8*)&(g_demXferStructPtr->dloadEventRec), dataLength, g_transmitCRC);
-		if(ModemPuts((uint8*)&(g_demXferStructPtr->dloadEventRec), dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
+	if (g_demXferStructPtr->xmitSize > 0)
+	{
+		g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
+		if (ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
 		{
 			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
 		}
-		g_transferCount += dataLength;
+		g_transferCount += g_demXferStructPtr->xmitSize;
+	}
 
-		dataLength = eventRecord->header.headerLength + eventRecord->header.summaryLength +
-			eventRecord->header.dataLength ;
+	// Compress and download the event data.
+	g_demXferStructPtr->xmitSize = 0;
+	eventDataCompressLength = lzo1x_1_compress(
+		(void*)(g_demXferStructPtr->startDataPtr), eventRecord->header.dataLength);
 
-		// Compress and download the event data.
-		g_demXferStructPtr->xmitSize = 0;
-		eventDataCompressLength = lzo1x_1_compress( (void*)eventRecord, dataLength );
-
-		if( g_demXferStructPtr->xmitSize > 0 )
+	if( g_demXferStructPtr->xmitSize > 0 )
+	{
+		g_transmitCRC = CalcCCITT32((uint8 *)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
+		if(ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
 		{
-			g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
-			if (ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
-			{
-				g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-			}
-			g_transferCount += g_demXferStructPtr->xmitSize;
+			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
 		}
+		g_transferCount += g_demXferStructPtr->xmitSize;
+	}
+#else
+	// Compress and download the event record.
+	dataLength = sizeof(uint32) + 12;
+	g_transmitCRC = CalcCCITT32((uint8*)&(g_demXferStructPtr->dloadEventRec), dataLength, g_transmitCRC);
+	if(ModemPuts((uint8*)&(g_demXferStructPtr->dloadEventRec), dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
+	{
+		g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
+	}
+	g_transferCount += dataLength;
+
+	dataLength = eventRecord->header.headerLength + eventRecord->header.summaryLength +
+		eventRecord->header.dataLength ;
+
+	// Compress and download the event data.
+	g_demXferStructPtr->xmitSize = 0;
+	eventDataCompressLength = lzo1x_1_compress( (void*)eventRecord, dataLength );
+
+	if( g_demXferStructPtr->xmitSize > 0 )
+	{
+		g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
+		if (ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
+		{
+			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
+		}
+		g_transferCount += g_demXferStructPtr->xmitSize;
+	}
 #endif
 
-		dataLength = sizeof(uint32);
-		// send the compressed size of the event record; sizeof(uint32) = 4.
-		g_transmitCRC = CalcCCITT32((uint8*)&(eventRecCompressLength), dataLength, g_transmitCRC);
-		if (ModemPuts((uint8*)&(eventRecCompressLength), dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
-		{
-			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-		}
-		g_transferCount += dataLength;
-
-		// send the compressed size of the event data; sizeof(uint32) = 4.
-		g_transmitCRC = CalcCCITT32((uint8*)&(eventDataCompressLength), dataLength, g_transmitCRC);
-		if (ModemPuts((uint8*)&(eventDataCompressLength), dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
-		{
-			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-		}
-		g_transferCount += dataLength;
-
-		// Total xmitted DataLength + size of the count the crc and the crlf.
-		//g_transferCount += (dataLength + dataLength + dataLength + 2);	// Not counting last crlf
-
-		g_transferCount += (dataLength + dataLength);
-		g_transmitCRC = CalcCCITT32((uint8*)&(g_transferCount), dataLength, g_transmitCRC);
-		if (ModemPuts((uint8*)&(g_transferCount), dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
-		{
-			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-		}
-
-		// CRC xmit
-		if (ModemPuts((uint8*)&g_transmitCRC, dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
-		{
-			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-		}
-
-		// crlf xmit
-		if (ModemPuts((uint8*)&g_CRLF, sizeof(uint16), NO_CONVERSION) == MODEM_SEND_FAILED)
-		{
-			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-		}
-
-		debug("CRC=%d g_transferCount=%d \n", g_transmitCRC, g_transferCount);
+	dataLength = sizeof(uint32);
+	// send the compressed size of the event record; sizeof(uint32) = 4.
+	g_transmitCRC = CalcCCITT32((uint8*)&(eventRecCompressLength), dataLength, g_transmitCRC);
+	if (ModemPuts((uint8*)&(eventRecCompressLength), dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
+	{
+		g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
 	}
+	g_transferCount += dataLength;
+
+	// send the compressed size of the event data; sizeof(uint32) = 4.
+	g_transmitCRC = CalcCCITT32((uint8*)&(eventDataCompressLength), dataLength, g_transmitCRC);
+	if (ModemPuts((uint8*)&(eventDataCompressLength), dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
+	{
+		g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
+	}
+	g_transferCount += dataLength;
+
+	// Total xmitted DataLength + size of the count the crc and the crlf.
+	//g_transferCount += (dataLength + dataLength + dataLength + 2);	// Not counting last crlf
+
+	g_transferCount += (dataLength + dataLength);
+	g_transmitCRC = CalcCCITT32((uint8*)&(g_transferCount), dataLength, g_transmitCRC);
+	if (ModemPuts((uint8*)&(g_transferCount), dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
+	{
+		g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
+	}
+
+	// CRC xmit
+	if (ModemPuts((uint8*)&g_transmitCRC, dataLength, NO_CONVERSION) == MODEM_SEND_FAILED)
+	{
+		g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
+	}
+
+	// crlf xmit
+	if (ModemPuts((uint8*)&g_CRLF, sizeof(uint16), NO_CONVERSION) == MODEM_SEND_FAILED)
+	{
+		g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
+	}
+
+	debug("CRC=%d g_transferCount=%d \n", g_transmitCRC, g_transferCount);
 
 	return;
 }
@@ -1436,13 +1363,9 @@ uint8 sendDEMData(void)
 		}
 		else	// The ptr does wrap in flash so the limit is the end of flash.
 		{
-#if 0 // ns7100
-			g_demXferStructPtr->dataPtr = sendDataFlashWrapCheck(
-				g_demXferStructPtr->dataPtr);
-#else // ns8100
 			g_demXferStructPtr->dataPtr = sendDataNoFlashWrapCheck(
 				g_demXferStructPtr->dataPtr, g_demXferStructPtr->endDataPtr);
-#endif
+
 			if (NULL == g_demXferStructPtr->dataPtr)
 			{
 				g_demXferStructPtr->xferStateFlag = NOP_XFER_STATE;
@@ -1466,47 +1389,6 @@ uint8 sendDEMData(void)
 
 	return (xferState);
 }
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-#if 0 // ns7100
-uint8* sendDataFlashWrapCheck(uint8* xferPtr)
-{
-	uint32 xmitSize = XMIT_SIZE_MONITORING;
-
-	if ((uint8*)(xferPtr + xmitSize) < (uint8*)FLASH_EVENT_END)
-	{
-		g_transmitCRC = CalcCCITT32((uint8*)xferPtr, xmitSize, g_transmitCRC);
-
-		if (MODEM_SEND_FAILED == ModemPuts(
-			(uint8*)xferPtr, xmitSize, g_binaryXferFlag))
-		{
-			return (NULL);
-		}
-
-		xferPtr += xmitSize;
-	}
-	else
-	{
-		xmitSize = (uint32)((uint8*)FLASH_EVENT_END - (uint8*)xferPtr);
-
-		g_transmitCRC = CalcCCITT32((uint8*)xferPtr, xmitSize, g_transmitCRC);
-
-		if (MODEM_SEND_FAILED == ModemPuts(
-			(uint8*)xferPtr, xmitSize, g_binaryXferFlag))
-		{
-			return (NULL);
-		}
-
-		xferPtr = (uint8*)FLASH_EVENT_START;
-	}
-
-	g_transferCount += xmitSize;
-
-	return (xferPtr);
-}
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break

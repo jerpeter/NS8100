@@ -107,9 +107,6 @@ typedef struct
 	uint8	sessionLocation[SESSION_LOCATION_STRING_SIZE];
 	uint8	sessionComments[SESSION_COMMENTS_STRING_SIZE];
 	
-#if 0 // ns7100
-	uint8	unused[UNUSED_PARAMETERS_SIZE];		// Space for expansion, currently 40
-#else // ns8100
 	uint8	adjustForTempDrift;
 	uint8	pretrigBufferDivider;
 	uint8	seismicUnitsOfMeasure;
@@ -118,7 +115,6 @@ typedef struct
 	uint32	airTriggerInUnits;
 
 	uint8	unused[UNUSED_PARAMETERS_SIZE];		// Space for expansion, currently 28
-#endif
 } PARAMETERS_STRUCT;
 #pragma pack()
 
@@ -254,21 +250,12 @@ typedef struct
 	uint32 vs;
 } SUMMARY_WAVESHAPE;
 
-#if 0 // ns7100
-typedef struct
-{ 
-	uint16* linkPtr;
-	uint8  mode;
-	SUMMARY_WAVESHAPE waveShapeData;
-} SUMMARY_DATA;
-#else // ns8100 - event number of file
 typedef struct
 { 
 	uint32 fileEventNum;
 	uint8  mode;
 	SUMMARY_WAVESHAPE waveShapeData;
 } SUMMARY_DATA;
-#endif
 
 ////////////////////////////////////////////////////////////
 // structs for flash summarys

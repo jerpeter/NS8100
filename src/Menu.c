@@ -1106,34 +1106,6 @@ void DisplayFlashUsageStats(void)
 
 	GetFlashUsageStats(&usage);
 
-#if 0 // Port lost change
-	if (usage.sizeUsed < 1000)
-		sprintf(&sizeUsedStr[0], "USED: %3.1fKB %d%%", ((float)usage.sizeUsed / (float)1000), usage.percentUsed);
-	else if (usage.sizeUsed < 1000000)
-		sprintf(&sizeUsedStr[0], "USED: %3dKB %d%%", (int)(usage.sizeUsed / 1000), usage.percentUsed);
-	else
-		sprintf(&sizeUsedStr[0], "USED: %3.1fMB %d%%", ((float)usage.sizeUsed / (float)1000000), usage.percentUsed);
-
-	if (usage.sizeFree < 1000)
-		sprintf(&sizeFreeStr[0], "FREE: %3.1fKB %d%%", ((float)usage.sizeFree / (float)1000), usage.percentFree);
-	else if (usage.sizeFree < 1000000)
-		sprintf(&sizeFreeStr[0], "FREE: %3dKB %d%%", (int)(usage.sizeFree / 1000), usage.percentFree);
-	else
-		sprintf(&sizeFreeStr[0], "FREE: %3.1fMB %d%%", ((float)usage.sizeFree / (float)1000000), usage.percentFree);
-
-	sprintf(&message[0], "EVENT DATA       %s %s WRAPPED: %s", sizeUsedStr, sizeFreeStr, (usage.wrapped == YES) ? "YES" : "NO");
-
-	MessageBox("FLASH USAGE STATS", (char*)message, MB_OK);
-
-	if (g_helpRecord.flashWrapping == NO)
-		sprintf(&message[0], "SPACE REMAINING (CURR. SETTINGS) WAVEFORMS: %d, BAR HOURS: ~%d",
-				usage.waveEventsLeft, usage.barHoursLeft);
-	else // Wrapping is on
-		sprintf(&message[0], "BEFORE OVERWRITE (CURR. SETTINGS) WAVEFORMS: %d, BAR HOURS: ~%d",
-				usage.waveEventsLeft, usage.barHoursLeft);
-
-	MessageBox("FLASH USAGE STATS", (char*)message, MB_OK);
-#else // Updated
 	if (usage.sizeUsed < 1000)
 		sprintf(&sizeUsedStr[0], "%s: %3.1fKB %d%%", getLangText(USED_TEXT),((float)usage.sizeUsed / (float)1000), usage.percentUsed);
 	else if (usage.sizeUsed < 1000000)
@@ -1164,7 +1136,6 @@ void DisplayFlashUsageStats(void)
 	}
 
 	MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -1190,15 +1161,8 @@ void DisplayAutoDialInfo(void)
 				__autoDialoutTbl.lastConnectTime.sec);
 	}
 
-#if 0 // Port lost change
-	sprintf(&message[0], "LAST DL EVT: %d, LAST REC: %d, LAST CONNECT: %s",
-			__autoDialoutTbl.lastDownloadedEvent, GetLastStoredEventNumber(), dateStr);
-
-	MessageBox("AUTO DIALOUT INFO", (char*)message, MB_OK);
-#else // Updated
 	sprintf(&message[0], "%s: %d, %s: %d, %s: %s", getLangText(LAST_DIAL_EVENT_TEXT),__autoDialoutTbl.lastDownloadedEvent,
 			getLangText(LAST_RECEIVED_TEXT), GetLastStoredEventNumber(), getLangText(LAST_CONNECTED_TEXT),dateStr);
 
 	MessageBox(getLangText(AUTO_DIALOUT_INFO_TEXT), (char*)message, MB_OK);
-#endif
 }

@@ -108,13 +108,6 @@ BOOLEAN TimerModeActiveCheck(void)
 		}
 	}
 
-#if 0 // ns7100
-	// Might as well clear flag regardless of state
-	RTC_FLAGS.reg = RTC_FLAGS.reg;
-#else // ns8100
-	// fix_ns8100
-#endif
-
 	return (status);
 }
 
@@ -195,16 +188,9 @@ void ProcessTimerMode(void)
 	{
 		// Disable alarm output generation
 		debug("Timer Mode: Activated on end date...\n");
-#if 0 // ns7100
-		debug("Timer Mode: Disabling...\n");
-		g_helpRecord.timerMode = DISABLED;
 
-		// Save help record
-		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-#else // ns8100
 		// Signal the timer mode end of session timer to stop timer mode due to this being the last run
 		g_timerModeLastRun = YES;
-#endif
 
 	    // Deactivate alarm interrupts
 	    DisableExternalRtcAlarm();
@@ -216,16 +202,9 @@ void ProcessTimerMode(void)
 	{
 		// Disable alarm output generation
 		debug("Timer Mode: Activated on end date...\n");
-#if 0 // ns7100
-		debug("Timer Mode: Disabling...\n");
-		g_helpRecord.timerMode = DISABLED;
 
-		// Save help record
-		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-#else // ns8100
 		// Signal the timer mode end of session timer to stop timer mode due to this being the last run
 		g_timerModeLastRun = YES;
-#endif
 
 	    // Deactivate alarm interrupts
 	    DisableExternalRtcAlarm();

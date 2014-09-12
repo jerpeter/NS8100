@@ -298,10 +298,6 @@ void CalSetupMnProc(INPUT_MSG_STRUCT msg,
 			g_tailOfPretriggerBuff = &(g_pretriggerBuff[0]);
 			g_endOfPretriggerBuff = &(g_pretriggerBuff[1024]);
 
-#if 0 // ns7100
-			MnStopCal();
-#endif
-
 			// Hand setup A/D data collection and start the data clock
 			MnStartCal();
 			

@@ -524,11 +524,6 @@ void CheckForMidnight(void)
 			// Disable the monitor menu update timer
 			ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 
-#if 0 // ns7100
-			// Voltage is low, turn printing off
-			g_helpRecord.autoPrint = OFF;
-#endif
-
 			// Handle and finish monitoring
 			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
@@ -612,27 +607,7 @@ void HandleMidnightEvent(void)
 			}
 			else
 			{
-#if 0 // ns7100
-				// Overlay a message that calibration is taking place
-				OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), (2 * SOFT_SECS));
-
-				// Issue a Cal Pulse message
-	            StartMonitoring(g_triggerRecord.trec, MANUAL_CAL_MODE);
-
-				// Wait until after the Cal Pulse has completed, pretrigger + 100 to be safe (just less than 100 ms to complete)
-				SoftUsecWait(((1 * SOFT_SECS) / g_helpRecord.pretrigBufferDivider) + (100 * SOFT_MSECS));
-
-				// Just make absolutely sure we are done with the Cal pulse
-				while ((volatile uint32)g_manualCalSampleCount != 0) { /* spin */ }
-
-				// Stop data transfer
-	            StopDataCollection();
-
-				// Done processing Auto Cal logic at this point, just return
-				// Results menu will pick up the Cal event and re-enter monitor mode
-#else // ns8100
 				ForcedCalibration();
-#endif
 			}
 		}
 	}

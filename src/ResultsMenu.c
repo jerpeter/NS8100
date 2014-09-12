@@ -250,16 +250,10 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg,
 				case (MINUS_KEY):
 					switch (g_displayAlternateResultState)
 					{
-#if 0 // Port lost change
-						case DEFAULT_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
-#else // Updated
 						case DEFAULT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
-#endif
 						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
 						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
-#if 1 // Updated (Port lost change)
 						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
-#endif
 					}
 				break;
 
@@ -268,12 +262,8 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg,
 					{
 						case DEFAULT_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
 						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
-#if 0 // Port lost change
-						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
-#else
 						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
 						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
-#endif
 					}
 				break;
 
@@ -347,9 +337,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	float normalize_max_peak;
 	float tempVS;
 	float tempPeakDisp = 0;
-#if 1 // Updated (Port lost change)
 	float tempPeakAcc;
-#endif
 	char buff[50];
 	char srBuff[6];
 	char displayFormat[10];
@@ -727,105 +715,6 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
-#if 0 // Port lost change
-	else if (g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
-	{
-	    ByteSet(&buff[0], 0, sizeof(buff));
-		ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
-
-		if (eventRecord->summary.calculated.r.peak > eventRecord->summary.calculated.v.peak)
-		{
-			if (eventRecord->summary.calculated.r.peak > eventRecord->summary.calculated.t.peak)
-			{
-				// R is max
-			    normalize_max_peak = (float)eventRecord->summary.calculated.r.peak / (float)div;
-
-				if ((eventRecord->summary.mode == BARGRAPH_MODE) ||
-						((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
-				{
-					tempPeakDisp = ((float)eventRecord->summary.calculated.r.displacement / (float)1000000 / (float)div);
-				}
-				else
-				{
-			    	tempFreq = (float)eventRecord->summary.calculated.r.frequency / (float)10;
-			    }
-			}
-			else
-			{
-				// T is max
-			    normalize_max_peak = (float)eventRecord->summary.calculated.t.peak / (float)div;
-
-				if ((eventRecord->summary.mode == BARGRAPH_MODE) ||
-						((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
-				{
-					tempPeakDisp = ((float)eventRecord->summary.calculated.t.displacement / (float)1000000 / (float)div);
-				}
-				else
-				{
-			    	tempFreq = (float)eventRecord->summary.calculated.t.frequency / (float)10;
-				}
-			}
-		}
-		else
-		{
-			if (eventRecord->summary.calculated.v.peak > eventRecord->summary.calculated.t.peak)
-			{
-				// V is max
-			    normalize_max_peak = (float)eventRecord->summary.calculated.v.peak / (float)div;
-
-				if ((eventRecord->summary.mode == BARGRAPH_MODE) || 
-						((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
-				{
-					tempPeakDisp = ((float)eventRecord->summary.calculated.v.displacement / (float)1000000 / (float)div);
-				}
-				else
-				{
-				    tempFreq = (float)eventRecord->summary.calculated.v.frequency / (float)10;
-				}
-			}
-			else
-			{
-				// T is max
-			    normalize_max_peak = (float)eventRecord->summary.calculated.t.peak / (float)div;
-
-				if ((eventRecord->summary.mode == BARGRAPH_MODE) ||
-						((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
-				{
-					tempPeakDisp = ((float)eventRecord->summary.calculated.t.displacement / (float)1000000 / (float)div);
-				}
-				else
-				{
-				    tempFreq = (float)eventRecord->summary.calculated.t.frequency / (float)10;
-				}
-			}
-		}
-
-		if ((eventRecord->summary.mode != BARGRAPH_MODE) &&
-				!((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
-		{
-			tempPeakDisp = (float)normalize_max_peak / ((float)2 * (float)PI * (float)tempFreq);
-		}
-
-		if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
-		{
-			if (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
-				strcpy(displayFormat, "mg");
-			else
-				strcpy(displayFormat, "in");
-		}
-		else // Metric
-		{
-			tempPeakDisp *= (float)METRIC;
-
-			strcpy(displayFormat, "mm");
-		}
-
-		sprintf(buff,"PEAK DISP %6f %s", tempPeakDisp, displayFormat);
-	    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
-	}
-#else // Updated
 	else if(g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
 	{
 		ByteSet(&buff[0], 0, sizeof(buff));
@@ -922,7 +811,6 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString((uint8*)buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
-#endif
 	else // g_displayAlternateResultState == DEFAULT_RESULTS
 	{
 	    //-------------------------------------------------------------
@@ -936,11 +824,8 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    // Air
 	    ByteSet(&buff[0], 0, sizeof(buff));
 
-#if 1 // Port lost change
+		// Display based on what the units current setting
 		if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
-#else // Updated
-		if (eventRecord->summary.parameters.airUnitsOfMeasure == MILLIBAR_TYPE)
-#endif
 		{
 		    sprintf(buff,"%0.3f mb", HexToMB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}

@@ -30,16 +30,6 @@
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
-#if 0 // ns7100
-// RTC Alarm Frequency table, 3 sets both ALM1 and ALM0 bits to a 1, 0 clears bits
-static RTC_ALARM_FREQ_STRUCT s_rtcAlarmFreq[] = {
-{ONCE_PER_SECOND, 3, 3, 3, 3},
-{ONCE_PER_MINUTE_WHEN_SECONDS_MATCH, 0, 3, 3, 3},
-{ONCE_PER_HOUR_WHEN_MINUTES_AND_SECONDS_MATCH, 0, 0, 3, 3},
-{ONCE_PER_DAY_WHEN_HOURS_MINUTES_AND_SECONDS_MATCH, 0, 0, 0, 3},
-{WHEN_DAY_HOURS_MINUTES_AND_SECONDS_MATCH, 0, 0, 0, 0}
-};
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -231,11 +221,8 @@ DATE_TIME_STRUCT GetExternalRtcTime(void)
 	time.year = BCD_CONVERT_TO_UINT8(translateTime.years, RTC_BCD_YEARS_MASK);
 	time.month = BCD_CONVERT_TO_UINT8(translateTime.months, RTC_BCD_MONTHS_MASK);
 	time.day = BCD_CONVERT_TO_UINT8(translateTime.days, RTC_BCD_DAYS_MASK);
-#if 0 // ns7100
-	time.weekday = GetDayOfWeek(time.year, time.month, time.day);
-#else // ns8100
 	time.weekday = BCD_CONVERT_TO_UINT8(translateTime.weekdays, RTC_BCD_WEEKDAY_MASK);
-#endif
+
 	time.hour = BCD_CONVERT_TO_UINT8(translateTime.hours, RTC_BCD_HOURS_MASK);
 	time.min = BCD_CONVERT_TO_UINT8(translateTime.minutes, RTC_BCD_MINUTES_MASK);
 	time.sec = BCD_CONVERT_TO_UINT8(translateTime.seconds, RTC_BCD_SECONDS_MASK);

@@ -215,13 +215,8 @@ enum {
 #endif
 #define BATT_RESOLUTION         (float)1024  // 10-bit resolution
 
-#if 0 // ns7100
-#define BATT_RESISTOR_RATIO     	((604 + 301)/301)
-#define EXT_CHARGE_RESISTOR_RATIO	((3000 + 200)/200)
-#else // ns8100
 #define VOLTAGE_RATIO_BATT			(float)3
 #define VOLTAGE_RATIO_EXT_CHARGE    (float)16.05
-#endif
 
 enum {
 	KEYPAD_LED_STATE_UNKNOWN = 0,

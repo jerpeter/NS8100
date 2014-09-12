@@ -438,11 +438,7 @@ void LoadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 	rec_ptr->alarmTwoAirLevel = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
 	rec_ptr->alarmOneTime = ALARM_OUTPUT_TIME_DEFAULT;
 	rec_ptr->alarmTwoTime = ALARM_OUTPUT_TIME_DEFAULT;
-#if 0 // ns7100
-	rec_ptr->baudRate = BAUD_RATE_38400;
-#else // ns8100
 	rec_ptr->baudRate = BAUD_RATE_115200;
-#endif
 	rec_ptr->copies = 1;
 	rec_ptr->freqPlotType = 1;
 	rec_ptr->languageMode = ENGLISH_LANG;

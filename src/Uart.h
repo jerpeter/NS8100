@@ -149,26 +149,6 @@ enum {
 #define UART_UOP_RTS			(0x01) /* Sets All Bits on OP Bit Set	*/
 #define UART_UOP0_RTS			(0x01) /* Clears All Bits on OP Bit Rst	*/
 
-#if 0 // ns7100
-// Clear by writting a 1 (inactive)
-#define CLEAR_DTR	(reg_TIM1PORT.reg |= 0x01)
-// Set by writting a 0 (active)
-#define SET_DTR		(reg_TIM1PORT.reg &= 0xFE)
-// Clear by writting a 1 (inactive)
-#define CLEAR_RTS	(reg_TIM1PORT.reg |= 0x02)
-// Set by writting a 0 (active)
-#define SET_RTS		(reg_TIM1PORT.reg &= 0xFD)
-// Data Set Ready  a 0 = (active) - modem connected, 1 = modem not detected
-#define READ_DSR 	((reg_TIM1PORT.reg >> 2) & 0x01)
-// Data Carrier Detect  a 0 = (active) - modem connected, 1 = modem not detected
-#define READ_DCD 	((reg_TIM1PORT.reg >> 3) & 0x01)
-// Ring Indicator 1 = (active) - ring imcoming, 0 = no ring
-#define READ_RI 	(reg_TIM2PORT.reg & 0x01)
-// Returns CTS signal, 0 = Active - Clear To Send, 1 = Inactive - Not Clear To Send
-#define READ_CTS 	((reg_TIM2PORT.reg >> 1) & 0x01)
-
-#else // ns8100
-
 #define CLEAR_DTR	(AVR32_USART1.cr = (1 << AVR32_USART_DTRDIS))
 #define SET_DTR		(AVR32_USART1.cr = (1 << AVR32_USART_DTREN))
 
@@ -179,8 +159,6 @@ enum {
 #define READ_DCD 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_DCD)) ? (uint8)1 : (uint8)0)
 #define READ_RI 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_RI))  ? (uint8)1 : (uint8)0)
 #define READ_CTS 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_CTS)) ? (uint8)1 : (uint8)0)
-
-#endif
 
 enum {
 	DCD_ACTIVE = 0,
@@ -228,7 +206,6 @@ void UartWrite(void* b, int32 n, int32 channel);
 void UartPutc(uint8 c, int32 channel);
 void UartInit(uint32 BaudRate, int32 channel);
 void UartControl(uint8 control, int8 channel);
-uint16 UartAutoBaud(int32 channel);
 BOOLEAN UartCharWaiting(int32 channel);
 
 #endif // _UART_H_

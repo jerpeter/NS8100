@@ -76,24 +76,12 @@ typedef enum
 } EMBEDDED_CMDS;
 #endif
 
-#if 0 // ns7100
-typedef enum
-{
-	POS_VALID_PEAK 			= 0x0804,
-	POS_CROSSOVER_BACKWARD 	= 0x0802,
-	POS_CROSSOVER_FORWARD 	= 0x0801,
-	NEG_VALID_PEAK 			= 0x07FC,
-	NEG_CROSSOVER_BACKWARD 	= 0x07FE,
-	NEG_CROSSOVER_FORWARD 	= 0x07FF
-} CROSSOVER_LEVELS;
-#else // ns8100
 typedef enum
 {
 	FREQ_VALID_PEAK 			= 4,
 	FREQ_CROSSOVER_BACKWARD 	= 2,
 	FREQ_CROSSOVER_FORWARD 		= 1
 } CROSSOVER_LEVELS;
-#endif
 
 typedef enum
 {
@@ -164,7 +152,6 @@ uint16 FixDataToZero(uint16 data_);
 void ProcessWaveformData(void);
 void MoveWaveformEventToFlash(void);
 
-void ProcessManualCalPulse(void);
 void MoveManualCalToFlash(void);
 
 #endif //_DATABUFFS_H_

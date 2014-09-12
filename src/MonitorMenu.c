@@ -145,19 +145,12 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 
-#if 0 // ns7100
-					// Check if the sample rate is not 1024
-					if (g_triggerRecord.trec.sample_rate != SAMPLE_RATE_1K)
-					{
-						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
-					}	
-#else // ns8100
 					// Check if the sample rate is greater than max working sample rate
 					if (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_8K)
 					{
 						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
 					}	
-#endif
+
 					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
 					g_aJobPeak = g_rJobPeak = g_vJobPeak = g_tJobPeak = 0;
 					g_aJobFreq = g_rJobFreq = g_vJobFreq = g_tJobFreq = 0;
@@ -194,19 +187,12 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 
-#if 0 // ns7100
-					// Check if the sample rate is not 1024
-					if (g_triggerRecord.trec.sample_rate != SAMPLE_RATE_1K)
-					{
-						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
-					}	
-#else // ns8100
 					// Check if the sample rate is greater than max working sample rate
 					if (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_4K)
 					{
 						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
 					}	
-#endif
+
 					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
 					g_aJobPeak = g_rJobPeak = g_vJobPeak = g_tJobPeak = 0;
 					g_aJobFreq = g_rJobFreq = g_vJobFreq = g_tJobFreq = 0;
@@ -341,11 +327,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 							g_displayBargraphResultsMode = IMPULSE_RESULTS;
 							
 							// Check if results mode is Peak Displacement
-#if 0 // Port lost change
-							if (g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
-#else // Updated
 							if((g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS) || (g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS))
-#endif
 							{
 								// Change it since Peak Displacement and Peak Acceleration are not valid for Impulse results
 								g_displayAlternateResultState = DEFAULT_RESULTS;
@@ -358,25 +340,10 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 					switch (g_displayAlternateResultState)
 					{
 						case DEFAULT_RESULTS:
-#if 0 // Port lost change
-							if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
-							{
-								if(g_helpRecord.vectorSum == ENABLED)
-									g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-							}
-							else
-							{
-								if(g_helpRecord.reportDisplacement == ENABLED)
-									g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
-								else if(g_helpRecord.vectorSum == ENABLED)
-									g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-							}
-#else
 							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
 								g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS;
 							else
 								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-#endif
 						break;
 						
 						case VECTOR_SUM_RESULTS:
@@ -384,23 +351,16 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 						break;
 						
 						case PEAK_DISPLACEMENT_RESULTS:
-#if 0 // Port lost change
-							if(g_helpRecord.vectorSum == ENABLED)
-								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-							else
-								g_displayAlternateResultState = DEFAULT_RESULTS;
-#else // Updated
 			               g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-#endif
 						break;
-#if 1 // Updated (Port lost change)
+
 						case PEAK_ACCELERATION_RESULTS:
 							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
 								g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
 							else
 								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 						break;
-#endif
+
 					}
 				break;
 
@@ -408,53 +368,26 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 					switch (g_displayAlternateResultState)
 					{
 						case DEFAULT_RESULTS: 
-#if 0 // Port lost change
-							if(g_helpRecord.vectorSum == ENABLED)
-								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-							else if((g_helpRecord.reportDisplacement == ENABLED) && (g_displayBargraphResultsMode != IMPULSE_RESULTS))
-								g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
-#else // Updated
 			               g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-#endif
 						break;
 							
 						case VECTOR_SUM_RESULTS:
-#if 0 // Port lost change
-							if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
-							{
-								g_displayAlternateResultState = DEFAULT_RESULTS;
-							}
-							else
-							{
-								if(g_helpRecord.reportDisplacement == ENABLED)
-									g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
-								else
-									g_displayAlternateResultState = DEFAULT_RESULTS;
-							}
-#else // Updated
 							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
 								g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
 							else
 								g_displayAlternateResultState = DEFAULT_RESULTS;
-#endif
 						break;
 						
 						case PEAK_DISPLACEMENT_RESULTS:
-#if 0 // Port lost change							
-							g_displayAlternateResultState = DEFAULT_RESULTS;
-#else // Updated
 							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
 								g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS;
 							else
 								g_displayAlternateResultState = DEFAULT_RESULTS;
-#endif
 						break;
 
-#if 1 // Updated (Port lost change)
-							case PEAK_ACCELERATION_RESULTS:
+						case PEAK_ACCELERATION_RESULTS:
 							g_displayAlternateResultState = DEFAULT_RESULTS;
-							break;
-#endif
+						break;
 					}
 				break;
 
@@ -493,9 +426,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	static uint8 dotState = 0;
 	char displayFormat[22];
 	float div = 1, tempR = 0, tempV = 0, tempT = 0, tempA = 0, tempVS = 0, tempPeakDisp, normalize_max_peak;
-#if 1 // Updated (Port lost change)
 	float tempPeakAcc;
-#endif
 	float rFreq = 0, vFreq = 0, tFreq = 0, tempFreq;
 	uint8 arrowChar;
 	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
@@ -1031,13 +962,8 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				strcpy(displayFormat, "mm");
 			}
 
-#if 0 // Port lost change
-			sprintf(buff, "PEAK DISP %6f %s", tempPeakDisp, displayFormat);
-#else // Updated
 			sprintf(buff, "PEAK DISP %5.4f %s", tempPeakDisp, displayFormat);
-#endif
 		}
-#if 1 // Updated (Port lost change)
 		else if((g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS) && (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL))
 		{
 			if(g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
@@ -1116,7 +1042,6 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			sprintf(buff,"PEAK ACC %5.4f %s", tempPeakAcc, displayFormat);
 		}
-#endif
 		else // g_displayAlternateResultState == DEFAULT_RESULTS || g_triggerRecord.berec.barChannel == BAR_AIR_CHANNEL
 		{
 			// Check if the bar channel to display isn't just seismic
@@ -1124,11 +1049,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
-#if 1 // Port lost change
 					if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
-#else // Incorrect - Updated
-					if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
-#endif
 					{
 						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), HexToMB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 					}
@@ -1149,11 +1070,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-#if 1 // Port lost change
 							if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
-#else // Incorrect - Updated
-							if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
-#endif
 							{
 								sprintf(buff, "AIR %0.3f mb ", HexToMB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
@@ -1170,11 +1087,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_comboSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-#if 1 // Port lost change
 							if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
-#else // Incorrect - Updated
-							if (g_sensorInfoPtr->airUnitsFlag == MILLIBAR_TYPE)
-#endif
 							{
 								sprintf(buff, "AIR %0.3f mb ", HexToMB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}

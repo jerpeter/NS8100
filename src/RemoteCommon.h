@@ -385,14 +385,10 @@ typedef struct
 	uint8 unitsOfMeasure;
 	uint8 freqPlotMode;
 	uint8 freqPlotType;
-#if 0 // ns7100
-	uint8 unused[2];
-#else // ns8100 - Changed to match the padding in the ns7100
 	uint8 barChannel;
 	uint8 barScale;
 	uint8 sensitivity;
 	uint8 unitsOfAir;
-#endif
 } EXTRA_UNIT_CFG;
 #pragma pack()
 
@@ -412,11 +408,7 @@ typedef struct
 	uint32 alarmTwoAirMinLevel;
 	uint32 alarmOneTime;
 	uint32 alarmTwoTime;
-#if 0 // ns7100
-	uint8 unused[2];
-#else // ns8100 - Changed to match the padding in the ns7100
 	uint8 unused[4];
-#endif
 } ALARM_CFG;
 #pragma pack()
 
@@ -448,12 +440,8 @@ typedef struct
 	ALARM_CFG			alarmCfg;
 	TIMER_CFG			timerCfg;
 	uint8				flashWrapping;
-#if 0 // ns7100
-	uint8				unused[6];
-#else // ns8100 - Changed to match the padding in the ns7100
 	uint8				appBuildVersion;
 	uint8				unused[6];
-#endif
 } SYSTEM_CFG;
 #pragma pack()
 

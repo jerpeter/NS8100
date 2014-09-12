@@ -34,46 +34,6 @@ static char s_uartBuffer[256];
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 0 // ns7100
-uint16 UartAutoBaud(int32 channel)
-{
-	volatile MMC2114_IMM *imm = mmc2114_get_immp();
-	uint16 testCharacter;
-	uint16 i,baud;
-
-	testCharacter = UartGetc(channel, UART_BLOCK);
-	if (testCharacter == 0x55)
-	{
-		baud = 57600;
-	}
-	else if (testCharacter == 0x92)
-	{
-		baud = 38400;
-	}
-	else if (testCharacter == 0x1C)
-	{
-		baud = 19200;
-	}
-	else if (testCharacter == 0xE0)
-	{
-		baud = 9600;
-	}
-	else
-	{
-		baud = 00;
-	}
-
-	for (i = 0; i < 50000; i++) {}
-
-	testCharacter = imm->Sci1.SCIDRL;
-
-	return (baud);
-}
-#endif
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
 #if 0
 void UartInit(uint32 baudrate, int32 channel)
 {
@@ -315,26 +275,6 @@ extern int usart_write_char(volatile avr32_usart_t *usart, int c);
 ///----------------------------------------------------------------------------
 void UartPutc(uint8 c, int32 channel)
 {
-#if 0 // ns7100
-	volatile MMC2114_IMM *imm = mmc2114_get_immp();
-
-	if (channel == CRAFT_COM_PORT)
-	{
-		// Wait until transmission complete flag is cleared
-		while (!(imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_TC)) {}
-
-		// Send the data
-		imm->Sci1.SCIDRL = c;
-	}
-	else if (channel == RS485_COM_PORT)
-	{
-		// Wait until transmission complete flag is cleared
-		while (!(imm->Sci2.SCISR1 & MMC2114_SCI_SCISR1_TC)) {}
-
-		// Send the data
-		imm->Sci2.SCIDRL = c;
-	}
-#else // ns8100
 	uint32 retries = USART_DEFAULT_TIMEOUT;
 	int status;
 
@@ -367,7 +307,6 @@ void UartPutc(uint8 c, int32 channel)
 			status = usart_write_char(&AVR32_USART0, c);
 		}
 	}
-#endif
 #endif
 }
 

@@ -51,11 +51,8 @@ void InitDataBuffs(uint8 op_mode)
 	
 	if (op_mode == MANUAL_CAL_MODE)
 	{
-#if 0 // ns7100
-		// Set sample rate to 1024 since it's fixed in the 430 for manual calibrations
-#else // Comply with older model
+		// Comply with older ns7100 model
 		sampleRate = MANUAL_CAL_DEFAULT_SAMPLE_RATE;
-#endif
 	}
 	else // Waveform, Bargraph, Combo
 	{
@@ -66,12 +63,9 @@ void InitDataBuffs(uint8 op_mode)
 	g_startOfPretriggerBuff = &(g_pretriggerBuff[0]);
 	g_tailOfPretriggerBuff = &(g_pretriggerBuff[0]);
 
-#if 0 // Fixed Pretrigger size
-	// Set the Pretrigger buffer size in words, 1/4 sec @ sample rate * number of channels, plus 1 sample (1/4 sec plus actual trigger sample)
-	pretriggerBufferSize = ((uint32)(sampleRate / 4) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
-#else // Variable Pretrigger size in words; sample rate / Pretrigger buffer divider times channels plus 1 extra sample (to ensure a full Pretrigger plus a trigger sample)
+	// Variable Pretrigger size in words; sample rate / Pretrigger buffer divider times channels plus 1 extra sample (to ensure a full Pretrigger plus a trigger sample)
 	pretriggerBufferSize = ((uint32)(sampleRate / g_helpRecord.pretrigBufferDivider) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
-#endif
+
 	// Set up the end of the Pretrigger buffer
 	g_endOfPretriggerBuff = &(g_pretriggerBuff[pretriggerBufferSize]);
 
@@ -92,11 +86,7 @@ void InitDataBuffs(uint8 op_mode)
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))
 	{
 		// Calculate samples for each section and total event
-#if 0 // Fixed Pretrigger size
-		g_samplesInPretrig = (uint32)(sampleRate / 4);
-#else // Variable Pretrigger size
 		g_samplesInPretrig  = (uint32)(sampleRate / g_helpRecord.pretrigBufferDivider);
-#endif
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
 		g_samplesInCal = (uint32)MAX_CAL_SAMPLES;
 		g_samplesInEvent = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
