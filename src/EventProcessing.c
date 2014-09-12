@@ -11,13 +11,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "EventProcessing.h"
-#include "Flash.h"
 #include "Summary.h"
 #include "Record.h"
 #include "Uart.h"
 #include "Menu.h"
 #include "TextTypes.h"
-#include "NandFlash.h"
 #include "FAT32_Definitions.h"
 #include "FAT32_FileLib.h"
 #include "FAT32_Access.h"

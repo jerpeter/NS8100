@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Menu.h"
-#include "Flash.h"
 #include "Record.h"
 #include "Summary.h"
 #include "Uart.h"

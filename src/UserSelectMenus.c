@@ -17,7 +17,6 @@
 #include "Uart.h"
 #include "Keypad.h"
 #include "SysEvents.h"
-#include "Flash.h"
 #include "EventProcessing.h"
 #include "InitDataBuffers.h"
 #include "RemoteCommon.h"
