@@ -550,12 +550,6 @@
     <Compile Include="src\FAT32_Write.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\Flash.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\Flash.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\Font_Eight_by_Eight_table.h">
       <SubType>compile</SubType>
     </Compile>
@@ -635,12 +629,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\MonitorMenu.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\NandFlash.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\NandFlash.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\NomisLogo.h">
