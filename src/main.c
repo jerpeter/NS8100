@@ -256,17 +256,6 @@ void SystemEventManager(void)
 	}
 
 	//___________________________________________________________________________________________
-#if 0 // Test (Attempt to process buffered waveform data - Throw away at some point)
-	if (getSystemEventState())
-	{
-		clearSystemEventFlag();
-
-		extern void processAndMoveWaveformData_ISR_Inline(void);
-		processAndMoveWaveformData_ISR_Inline();
-	}
-#endif
-
-	//___________________________________________________________________________________________
 	if (getSystemEventState(WARNING1_EVENT))
 	{
 		clearSystemEventFlag(WARNING1_EVENT);
