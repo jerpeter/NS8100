@@ -447,18 +447,8 @@ void WaitForEventProcessingToFinish(void)
 
 		while (g_doneTakingEvents == PENDING)
 		{
-#if 0 // Test (? Throw away at some point)
-			if (getSystemEventState())
-			{
-				clearSystemEventFlag();
-
-extern void processAndMoveWaveformData_ISR_Inline(void);
-				processAndMoveWaveformData_ISR_Inline();		
-			}		
-#else // Normal
 			// Just wait for the cal and end immediately afterwards
 			SoftUsecWait(250);
-#endif
 		}
 	}
 }
@@ -510,6 +500,36 @@ uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void GetManualCalibration(void)
+{
+	InitDataBuffs(MANUAL_CAL_MODE);
+	g_manualCalFlag = TRUE;
+	g_manualCalSampleCount = MAX_CAL_SAMPLES;
+
+	// Make sure Cal pulse is generated at low sensitivity
+	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
+
+	StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
+
+	// Just let while loop spin waiting - Wait for the Cal Pulse to complete, pretrigger time + 100ms
+	//SoftUsecWait(((1 * SOFT_SECS) / g_helpRecord.pretrigBufferDivider) + (100 * SOFT_MSECS));
+
+	// Just make absolutely sure we are done with the Cal pulse
+	while ((volatile uint32)g_manualCalSampleCount != 0) { /* spin */ }
+
+	// Stop data transfer
+	StopDataClock();
+
+	if (getSystemEventState(MANUAL_CAL_EVENT))
+	{
+		debug("Manual Cal Pulse Event (Monitoring)\n");
+		MoveManualCalToFlash();
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void HandleManualCalibration(void)
 {
 	FLASH_USAGE_STRUCT flashStats;
@@ -541,33 +561,13 @@ void HandleManualCalibration(void)
 					// Perform Cal while in monitor mode
 					OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
 
-					InitDataBuffs(MANUAL_CAL_MODE);
-					g_manualCalFlag = TRUE;
-					g_manualCalSampleCount = MAX_CAL_SAMPLES;
-
-					// Make sure Cal pulse is generated at low sensitivity
-					SetSeismicGainSelect(SEISMIC_GAIN_LOW);
-
-					StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
-
-					// Wait for the Cal Pulse to complete, pretrigger time + 100ms
-					SoftUsecWait(((1 * SOFT_SECS) / g_helpRecord.pretrigBufferDivider) + (100 * SOFT_MSECS));
-
-					// Just make absolutely sure we are done with the Cal pulse
-					while ((volatile uint32)g_manualCalSampleCount != 0) { }
-
-					// Stop data transfer
-					StopDataClock();
-
-					if (getSystemEventState(MANUAL_CAL_EVENT))
-					{
-						debug("Manual Cal Pulse Event (Monitoring)\n");
-						MoveManualCalToFlash();
-					}
+					GetManualCalibration();
 
 					InitDataBuffs(g_triggerRecord.op_mode);
-					g_manualCalFlag = FALSE;
-					g_manualCalSampleCount = 0;
+
+					// Set and cleared by the ISR
+					//g_manualCalFlag = FALSE;
+					//g_manualCalSampleCount = 0;
 
 					// Make sure to reset the gain after the Cal pulse (which is generated at low sensitivity)
 					if (g_triggerRecord.srec.sensitivity == HIGH)
@@ -590,34 +590,10 @@ void HandleManualCalibration(void)
 		}
 		else
 		{
+			// Perform Cal while in monitor mode
 			OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
 
-			InitDataBuffs(MANUAL_CAL_MODE);
-			g_manualCalFlag = TRUE;
-			g_manualCalSampleCount = MAX_CAL_SAMPLES;
-
-			// Make sure Cal pulse is generated at low sensitivity
-			SetSeismicGainSelect(SEISMIC_GAIN_LOW);
-
-			StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
-			
-			// Wait for the Cal Pulse to complete, pretrigger time + 100ms
-			SoftUsecWait(((1 * SOFT_SECS) / g_helpRecord.pretrigBufferDivider) + (100 * SOFT_MSECS));
-
-			// Just make absolutely sure we are done with the Cal pulse
-			while ((volatile uint32)g_manualCalSampleCount != 0) { }
-
-			// Stop data transfer
-			StopDataClock();
-
-			if (getSystemEventState(MANUAL_CAL_EVENT))
-			{
-				debug("Manual Cal Pulse Event (Non-Monitoring)\n");
-				MoveManualCalToFlash();
-			}
-
-			g_manualCalFlag = FALSE;
-			g_manualCalSampleCount = 0;
+			GetManualCalibration();
 		}
 	}
 }
@@ -630,37 +606,11 @@ void ForcedCalibration(void)
 	INPUT_MSG_STRUCT mn_msg;
 	uint8 pendingMode = g_triggerRecord.op_mode;
 	
-	OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING CALIBRATION", 0);
-
 	g_forcedCalibration = YES;
 
-	InitDataBuffs(MANUAL_CAL_MODE);
-	g_manualCalFlag = TRUE;
-	g_manualCalSampleCount = MAX_CAL_SAMPLES;
+	OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING CALIBRATION", 0);
 
-	// Make sure Cal pulse is generated at low sensitivity
-	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
-	
-	// Start the calibration
-	StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
-
-	// No longer needed, handled in the ISR for Cal
-	//GenerateCalSignal();
-
-	// Wait for the Cal Pulse to complete, pretrigger + 100ms
-	SoftUsecWait(((1 * SOFT_SECS) / g_helpRecord.pretrigBufferDivider) + (100 * SOFT_MSECS));
-
-	// Just make absolutely sure we are done with the Cal pulse
-	while ((volatile uint32)g_manualCalSampleCount != 0) { /* spin */ }
-
-	// Stop data transfer
-	StopDataClock();
-
-	g_manualCalFlag = FALSE;
-	g_manualCalSampleCount = 0;
-
-	if (getSystemEventState(MANUAL_CAL_EVENT))
-		MoveManualCalToFlash();
+	GetManualCalibration();
 
 	if (getMenuEventState(RESULTS_MENU_EVENT)) 
 	{

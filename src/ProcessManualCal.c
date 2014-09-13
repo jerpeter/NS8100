@@ -52,7 +52,7 @@ void MoveManualCalToFlash(void)
 	uint16 sample;
 	uint16 normalizedData;
 	uint16 hiA = 0, hiR = 0, hiV = 0, hiT = 0;
-	uint16 lowA = 0xFFF, lowR = 0xFFF, lowV = 0xFFF, lowT = 0xFFF;
+	uint16 lowA = 0xFFFF, lowR = 0xFFFF, lowV = 0xFFFF, lowT = 0xFFFF;
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
 

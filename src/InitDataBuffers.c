@@ -52,24 +52,27 @@ void InitDataBuffs(uint8 op_mode)
 	{
 		// Comply with older ns7100 model
 		sampleRate = MANUAL_CAL_DEFAULT_SAMPLE_RATE;
+
+		// Variable Pretrigger size in words; sample rate / Pretrigger buffer divider times channels plus 1 extra sample (to ensure a full Pretrigger plus a trigger sample)
+		pretriggerBufferSize = ((uint32)(sampleRate / MANUAL_CAL_PRETRIGGER_BUFFER_DIVIDER) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
 	}
 	else // Waveform, Bargraph, Combo
 	{
 		sampleRate = g_triggerRecord.trec.sample_rate;
+
+		// Variable Pretrigger size in words; sample rate / Pretrigger buffer divider times channels plus 1 extra sample (to ensure a full Pretrigger plus a trigger sample)
+		pretriggerBufferSize = ((uint32)(sampleRate / g_helpRecord.pretrigBufferDivider) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
 	}
 
 	// Setup the Pretrigger buffer pointers
 	g_startOfPretriggerBuff = &(g_pretriggerBuff[0]);
 	g_tailOfPretriggerBuff = &(g_pretriggerBuff[0]);
-
-	// Variable Pretrigger size in words; sample rate / Pretrigger buffer divider times channels plus 1 extra sample (to ensure a full Pretrigger plus a trigger sample)
-	pretriggerBufferSize = ((uint32)(sampleRate / g_helpRecord.pretrigBufferDivider) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
-
-	// Set up the end of the Pretrigger buffer
 	g_endOfPretriggerBuff = &(g_pretriggerBuff[pretriggerBufferSize]);
 
 	// Setup Bit Accuracy globals
-	if (g_triggerRecord.trec.bitAccuracy == ACCURACY_10_BIT) 
+	if (op_mode == MANUAL_CAL_MODE)
+		{ g_bitAccuracyMidpoint = ACCURACY_16_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_16_BIT; }
+	else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_10_BIT)
 		{ g_bitAccuracyMidpoint = ACCURACY_10_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_10_BIT; }
 	else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_12_BIT) 
 		{ g_bitAccuracyMidpoint = ACCURACY_12_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_12_BIT; }

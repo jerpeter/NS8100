@@ -440,18 +440,18 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	uint8 i;
 
 	ByteSet(eventRec, 0x00, sizeof(EVT_RECORD));
-	ByteSet(eventRec->summary.parameters.unused, 0xFF, sizeof(eventRec->summary.parameters.unused));
-	ByteSet(eventRec->summary.captured.unused, 0xFF, sizeof(eventRec->summary.captured.unused));
-	ByteSet(eventRec->summary.calculated.unused, 0xFF, sizeof(eventRec->summary.calculated.unused));
+	ByteSet(eventRec->summary.parameters.unused, 0xAF, sizeof(eventRec->summary.parameters.unused));
+	ByteSet(eventRec->summary.captured.unused, 0xBF, sizeof(eventRec->summary.captured.unused));
+	ByteSet(eventRec->summary.calculated.unused, 0xCF, sizeof(eventRec->summary.calculated.unused));
 
 	//--------------------------------
 	eventRec->header.startFlag = (uint16)EVENT_RECORD_START_FLAG;
 	eventRec->header.recordVersion = (uint16)EVENT_RECORD_VERSION;
 	eventRec->header.headerLength = (uint16)sizeof(EVENT_HEADER_STRUCT);
 	eventRec->header.summaryLength = (uint16)sizeof(EVENT_SUMMARY_STRUCT);
-	//-----------------------
+	//--------------------------------
 	eventRec->summary.parameters.sampleRate = (uint16)g_triggerRecord.trec.sample_rate;
-	//-----------------------
+	//--------------------------------
 	eventRec->summary.captured.endTime = GetCurrentTime();
 	eventRec->summary.captured.batteryLevel = (uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 	eventRec->summary.captured.printerStatus = (uint8)(g_helpRecord.autoPrint);
@@ -531,14 +531,29 @@ void InitEventRecord(uint8 op_mode)
 		ClearAndFillInCommonRecordInfo(eventRec);
 
 		eventRec->summary.mode = op_mode;
+		if (op_mode == COMBO_MODE) { eventRec->summary.subMode = WAVEFORM_MODE; }
 		eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
 
 		eventRec->summary.parameters.numOfSamples = (uint16)(g_triggerRecord.trec.sample_rate * g_triggerRecord.trec.record_time);
 		eventRec->summary.parameters.preBuffNumOfSamples = (uint16)(g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider);
 		eventRec->summary.parameters.calDataNumOfSamples = (uint16)(CALIBRATION_NUMBER_OF_SAMPLES);
 
-		if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
+		// Reset parameters for the special calibration mode
+		if (op_mode == MANUAL_CAL_MODE)
 		{
+			eventRec->summary.parameters.sampleRate = MANUAL_CAL_DEFAULT_SAMPLE_RATE;
+			eventRec->summary.parameters.bitAccuracy = ACCURACY_16_BIT;
+			eventRec->summary.parameters.numOfSamples = 0;
+			eventRec->summary.parameters.preBuffNumOfSamples = 0;
+			eventRec->summary.parameters.seismicTriggerLevel = 0;
+			eventRec->summary.parameters.airTriggerLevel = 0;
+			eventRec->summary.parameters.recordTime = 0;
+			for (idex = 0; idex < 8; idex++) { eventRec->summary.parameters.channel[idex].options = GAIN_SELECT_x2; }
+		}
+		else // ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
+		{
+			eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
+
 #if 0 // Old - Fixed method
 			eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
 #else // New - Adjust trigger for bit accuracy
@@ -595,21 +610,7 @@ void InitEventRecord(uint8 op_mode)
 				}
 			}
 #endif
-
-			eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
 		}	
-		else // (op_mode == MANUAL_CAL_MODE)
-		{ 
-			eventRec->summary.parameters.sampleRate = MANUAL_CAL_DEFAULT_SAMPLE_RATE;
-			eventRec->summary.parameters.numOfSamples = 0;
-			eventRec->summary.parameters.preBuffNumOfSamples = 0;
-			eventRec->summary.parameters.seismicTriggerLevel = 0;
-			eventRec->summary.parameters.airTriggerLevel = 0;
-			eventRec->summary.parameters.recordTime = 0;
-			for (idex = 0; idex < 8; idex++) { eventRec->summary.parameters.channel[idex].options = GAIN_SELECT_x2; }
-		}
-
-		if (op_mode == COMBO_MODE) { eventRec->summary.subMode = WAVEFORM_MODE; }
 	}
 
 	if ((op_mode == BARGRAPH_MODE) || (op_mode == COMBO_MODE))
@@ -618,6 +619,7 @@ void InitEventRecord(uint8 op_mode)
 		ClearAndFillInCommonRecordInfo(eventRec);
 
 		eventRec->summary.mode = op_mode;
+		if (op_mode == COMBO_MODE) { eventRec->summary.subMode = BARGRAPH_MODE; }
 		eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
 
 		eventRec->summary.captured.eventTime = GetCurrentTime();
@@ -628,8 +630,6 @@ void InitEventRecord(uint8 op_mode)
 		eventRec->summary.parameters.preBuffNumOfSamples = 0;
 		eventRec->summary.parameters.calDataNumOfSamples = 0;
 		eventRec->summary.parameters.activeChannels = g_triggerRecord.berec.barChannel;
-		
-		if (op_mode == COMBO_MODE) { eventRec->summary.subMode = BARGRAPH_MODE; }
 	}	
 }
 
