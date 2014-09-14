@@ -530,10 +530,17 @@ static inline void processAndMoveManualCalData_ISR_Inline(void)
 	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { AdSetCalSignalHigh(); }	// (~10 ms)
 	if (g_manualCalSampleCount == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { AdSetCalSignalOff(); }	// (~55 ms)
 
-	// Move the samples into the event buffer
-	*(SAMPLE_DATA_STRUCT*)g_currentEventSamplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
+	// Check if the first time through
+	if (g_manualCalSampleCount == MAX_CAL_SAMPLES)
+	{
+		// Setup the sample pointer to the start of the event buffer
+		s_samplePtr = g_startOfEventBufferPtr;
+	}
 
-	g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
+	// Move the samples into the event buffer
+	*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
+
+	s_samplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 
 	g_manualCalSampleCount--;
 

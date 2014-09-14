@@ -76,7 +76,6 @@ void MoveManualCalToFlash(void)
 		sumEntry->waveShapeData.v.freq = 0;
 		sumEntry->waveShapeData.t.freq = 0;
 
-		g_currentEventSamplePtr = g_currentEventStartPtr;
 		startOfEventPtr = g_currentEventStartPtr;
 		endOfEventDataPtr = g_currentEventStartPtr + g_wordSizeInCal;
 		
