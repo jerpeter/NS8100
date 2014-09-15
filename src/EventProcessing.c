@@ -454,7 +454,7 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	//--------------------------------
 	eventRec->summary.captured.endTime = GetCurrentTime();
 	eventRec->summary.captured.batteryLevel = (uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
-	eventRec->summary.captured.printerStatus = (uint8)(g_helpRecord.autoPrint);
+	eventRec->summary.captured.printerStatus = (uint8)(g_unitConfig.autoPrint);
 	eventRec->summary.captured.calDate = g_factorySetupRecord.cal_date;
 	eventRec->summary.captured.externalTrigger = NO;
 	eventRec->summary.captured.comboEventsRecordedDuringSession = 0;
@@ -481,13 +481,13 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.parameters.bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_10_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ? 
 												ACCURACY_16_BIT : g_triggerRecord.trec.bitAccuracy;
 	eventRec->summary.parameters.numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;
-	eventRec->summary.parameters.aWeighting = (uint8)g_factorySetupRecord.aweight_option;
+	eventRec->summary.parameters.aWeighting = ((uint8)g_factorySetupRecord.aweight_option & (uint8)g_unitConfig.airScale); // Equals 1 if enabled (1) and scale is A-weighting (1)
 	eventRec->summary.parameters.seismicSensorType = g_factorySetupRecord.sensor_type;
 	eventRec->summary.parameters.airSensorType = SENSOR_MICROPHONE;
 
 	eventRec->summary.parameters.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
-	eventRec->summary.parameters.seismicUnitsOfMeasure = g_helpRecord.unitsOfMeasure;
-	eventRec->summary.parameters.airUnitsOfMeasure = g_helpRecord.unitsOfAir;
+	eventRec->summary.parameters.seismicUnitsOfMeasure = g_unitConfig.unitsOfMeasure;
+	eventRec->summary.parameters.airUnitsOfMeasure = g_unitConfig.unitsOfAir;
 	eventRec->summary.parameters.distToSource = (uint32)(g_triggerRecord.trec.dist_to_source * 100.0);
 	eventRec->summary.parameters.weightPerDelay = (uint32)(g_triggerRecord.trec.weight_per_delay * 100.0);
 	//-----------------------
@@ -535,7 +535,7 @@ void InitEventRecord(uint8 op_mode)
 		eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
 
 		eventRec->summary.parameters.numOfSamples = (uint16)(g_triggerRecord.trec.sample_rate * g_triggerRecord.trec.record_time);
-		eventRec->summary.parameters.preBuffNumOfSamples = (uint16)(g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider);
+		eventRec->summary.parameters.preBuffNumOfSamples = (uint16)(g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider);
 		eventRec->summary.parameters.calDataNumOfSamples = (uint16)(CALIBRATION_NUMBER_OF_SAMPLES);
 
 		// Reset parameters for the special calibration mode
@@ -574,12 +574,12 @@ void InitEventRecord(uint8 op_mode)
 
 				tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
 
-				if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE))
+				if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
 				{
 					tempSesmicTriggerInUnits *= (float)METRIC;
 				}
 
-				debug("Seismic trigger in units: %05.2f %s\n", tempSesmicTriggerInUnits, (g_helpRecord.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
+				debug("Seismic trigger in units: %05.2f %s\n", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
 				eventRec->summary.parameters.seismicTriggerInUnits = (uint32)(tempSesmicTriggerInUnits * 100);
 			}
 #endif
@@ -600,11 +600,11 @@ void InitEventRecord(uint8 op_mode)
 
 				eventRec->summary.parameters.airTriggerInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
-				if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+				if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 				{
 					debug("Air trigger in units: %05.3f mB\n", (float)(eventRec->summary.parameters.airTriggerInUnits / 10000));
 				}
-				else // (g_helpRecord.unitsOfAir == DECIBEL_TYPE)
+				else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 				{
 					debug("Air trigger in units: %d dB\n", eventRec->summary.parameters.airTriggerInUnits);
 				}

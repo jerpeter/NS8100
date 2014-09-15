@@ -1578,11 +1578,11 @@ void MoveComboWaveformEventToFile(void)
 					if (GetPowerControlState(LCD_POWER_ENABLE) == OFF)
 					{
 						AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
-						AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
+						AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 					}
 
 					// Check to see if there is room for another event, if not send a signal to stop monitoring
-					if (g_helpRecord.flashWrapping == NO)
+					if (g_unitConfig.flashWrapping == NO)
 					{
 						GetFlashUsageStats(&flashStats);
 

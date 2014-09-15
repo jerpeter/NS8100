@@ -61,7 +61,7 @@ void InitDataBuffs(uint8 op_mode)
 		sampleRate = g_triggerRecord.trec.sample_rate;
 
 		// Variable Pretrigger size in words; sample rate / Pretrigger buffer divider times channels plus 1 extra sample (to ensure a full Pretrigger plus a trigger sample)
-		pretriggerBufferSize = ((uint32)(sampleRate / g_helpRecord.pretrigBufferDivider) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
+		pretriggerBufferSize = ((uint32)(sampleRate / g_unitConfig.pretrigBufferDivider) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
 	}
 
 	// Setup the Pretrigger buffer pointers
@@ -88,7 +88,7 @@ void InitDataBuffs(uint8 op_mode)
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))
 	{
 		// Calculate samples for each section and total event
-		g_samplesInPretrig  = (uint32)(sampleRate / g_helpRecord.pretrigBufferDivider);
+		g_samplesInPretrig  = (uint32)(sampleRate / g_unitConfig.pretrigBufferDivider);
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
 		g_samplesInCal = (uint32)MAX_CAL_SAMPLES;
 		g_samplesInEvent = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;

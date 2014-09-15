@@ -554,7 +554,7 @@ void AdvanceInputNumber(uint32 direction)
 					}
 					else
 					{
-						if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_helpRecord.unitsOfAir == MILLIBAR_TYPE))
+						if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == MILLIBAR_TYPE))
 						{
 							// Increment the data by the key scrolling speed
 							g_userMenuCacheData.numLongData += g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE;
@@ -718,7 +718,7 @@ void AdvanceInputNumber(uint32 direction)
 						}
 						else
 						{
-							if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_helpRecord.unitsOfAir == MILLIBAR_TYPE))
+							if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == MILLIBAR_TYPE))
 							{
 								if((g_userMenuCacheData.numLongData - (g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE)) > g_userMenuCacheData.intMaxValue)
 								{
@@ -902,7 +902,7 @@ void CopyDataToCache(void* data)
 			g_userMenuCacheData.unitText = unitTypes[USER_MENU_DEFAULT_TYPE(g_userMenuCachePtr)].text;
 
 			// Check if units is metric and the alternative unit type is set
-			if ((g_helpRecord.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE))
+			if ((g_unitConfig.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE))
 			{
 				// Adjust the byte data, min and max values by the units conversion for display purposes
 				g_userMenuCacheData.numByteData = (uint8)(g_userMenuCacheData.numByteData * unitTypes[USER_MENU_ALT_TYPE(g_userMenuCachePtr)].conversion);
@@ -939,7 +939,7 @@ void CopyDataToCache(void* data)
 			g_userMenuCacheData.unitText = unitTypes[USER_MENU_DEFAULT_TYPE(g_userMenuCachePtr)].text;
 
 			// Check if units is metric and the alternative unit type is set
-			if ((g_helpRecord.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE))
+			if ((g_unitConfig.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE))
 			{
 				// Adjust the word data, min and max values by the units conversion for display purposes
 				g_userMenuCacheData.numWordData = (uint16)(g_userMenuCacheData.numWordData * unitTypes[USER_MENU_ALT_TYPE(g_userMenuCachePtr)].conversion);
@@ -994,7 +994,7 @@ void CopyDataToCache(void* data)
 				}
 			}
 			// Check if units is metric and the alternative unit type is set
-			else if ((g_helpRecord.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE))
+			else if ((g_unitConfig.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE))
 			{
 				// Check if the menu type isn't integer count
 				if (USER_MENU_TYPE(g_userMenuCachePtr) != INTEGER_COUNT_TYPE)
@@ -1049,7 +1049,7 @@ void CopyDataToCache(void* data)
 			g_userMenuCacheData.unitText = unitTypes[USER_MENU_DEFAULT_TYPE(g_userMenuCachePtr)].text;
 
 			// Check if units is metric and the alternative unit type is set
-			if ((g_helpRecord.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE))
+			if ((g_unitConfig.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE))
 			{
 				// Check if the data isn't equal to NO_TRIGGER
 				if (g_userMenuCacheData.floatData != NO_TRIGGER_CHAR)
@@ -1156,7 +1156,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				g_userMenuCacheData.floatMaxValue = (float)g_userMenuCacheData.intMaxValue / 10000;
 				g_userMenuCacheData.floatData = (float)g_userMenuCacheData.numLongData / 10000;
 
-				if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
+				if(g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 				{
 					// Set the specifications line for the integer type
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%lu-%lu%s, N)", g_userMenuCacheData.intMinValue, g_userMenuCacheData.intMaxValue, "Db");
@@ -1174,7 +1174,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				}
 				else
 				{
-					if(g_helpRecord.unitsOfAir == DECIBEL_TYPE)
+					if(g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 					{
 						// Print the data value
 						sprintf(g_userMenuCachePtr[tempRow].text, "%lu", g_userMenuCacheData.numLongData);
@@ -1189,7 +1189,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 			else if (USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_COUNT_TYPE)
 			{
 				// Check if the units are metric and no alternative type is set and not the accelerometer
-				if ((g_helpRecord.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE) &&
+				if ((g_unitConfig.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE) &&
 					(g_factorySetupRecord.sensor_type != SENSOR_ACC))
 				{
 					// Init the float increment value adjusted by the units conversion
@@ -1252,7 +1252,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				}
 				else // ((g_factorySetupRecord.sensor_type == SENSOR_2_5_IN) && (g_triggerRecord.srec.sensitivity == HIGH))
 				{
-					if (g_helpRecord.unitsOfMeasure == IMPERIAL)
+					if (g_unitConfig.unitsOfMeasure == IMPERIAL)
 						sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.6f-%.3f%s,N)",
 							g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, g_userMenuCacheData.unitText);
 					else

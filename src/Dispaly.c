@@ -667,8 +667,8 @@ void AdjustLcdContrast(CONTRAST_ADJUSTMENT adjust)
 			break;
 	}
 	
-	g_helpRecord.lcdContrast = g_contrast_value;
-	SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	g_unitConfig.lcdContrast = g_contrast_value;
+	SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 }
 
 ///----------------------------------------------------------------------------

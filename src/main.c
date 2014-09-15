@@ -267,7 +267,7 @@ void SystemEventManager(void)
 		}
 
 		// Assign (or Re-assign) soft timer to turn the Alarm 1 signal off
-		AssignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarmOneTime * 2), AlarmOneOutputTimerCallback);
+		AssignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmOneTime * 2), AlarmOneOutputTimerCallback);
 	}
 
 	//___________________________________________________________________________________________
@@ -282,7 +282,7 @@ void SystemEventManager(void)
 		}
 
 		// Assign (or Re-assign) soft timer to turn the Alarm 2 signal off
-		AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_helpRecord.alarmTwoTime * 2), AlarmTwoOutputTimerCallback);
+		AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmTwoTime * 2), AlarmTwoOutputTimerCallback);
 	}
 
 	//___________________________________________________________________________________________
@@ -415,7 +415,7 @@ void CraftManager(void)
 
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				g_helpRecord.autoPrint = g_modemStatus.xferPrintState;
+				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
 			}
 		}
 		else if (DSMx_CMD == g_modemStatus.xferState)
@@ -424,7 +424,7 @@ void CraftManager(void)
 
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				g_helpRecord.autoPrint = g_modemStatus.xferPrintState;
+				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
 			}
 		}
 		else if (DQMx_CMD == g_modemStatus.xferState)
@@ -433,7 +433,7 @@ void CraftManager(void)
 
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				g_helpRecord.autoPrint = g_modemStatus.xferPrintState;
+				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
 			}
 		}
 		else if (VMLx_CMD == g_modemStatus.xferState)
@@ -442,7 +442,7 @@ void CraftManager(void)
 
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
-				g_helpRecord.autoPrint = g_modemStatus.xferPrintState;
+				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
 			}
 		}
 	}
@@ -747,7 +747,7 @@ void UsbDeviceManager(void)
 						SetLcdContrast(g_contrast_value);
 						PowerControl(LCD_POWER_ENABLE, ON);
 						InitLcdDisplay();					// Setup LCD segments and clear display buffer
-						AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
+						AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
 						g_lcdBacklightFlag = ENABLED;
 						SetLcdBacklightState(BACKLIGHT_BRIGHT);
@@ -1164,7 +1164,7 @@ inline void SetupPowerSavingsBeforeSleeping(void)
 {
 #if 1
 	// Only disable for Min and Most since None and Max are either permanently on or off
-	if ((g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MINIMUM) || (g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MOST))
+	if ((g_unitConfig.powerSavingsLevel == POWER_SAVINGS_MINIMUM) || (g_unitConfig.powerSavingsLevel == POWER_SAVINGS_MOST))
 	{
 		if (gpio_get_pin_value(AVR32_PIN_PB24) == 1)
 		{
@@ -1199,7 +1199,7 @@ inline void RevertPowerSavingsAfterSleeping(void)
 
 #if 1
 	// Only enable for Min and Most since None and Max are either permanently on or off
-	if ((g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MINIMUM) || (g_helpRecord.powerSavingsLevel == POWER_SAVINGS_MOST))
+	if ((g_unitConfig.powerSavingsLevel == POWER_SAVINGS_MINIMUM) || (g_unitConfig.powerSavingsLevel == POWER_SAVINGS_MOST))
 	{
 		if (rs232PutToSleepState == YES)
 		{
@@ -1226,7 +1226,7 @@ void PowerManager(void)
 	static uint8 rs232State = ON;
 
 	// Check if not set to the Max power savings
-	if (g_helpRecord.powerSavingsLevel != POWER_SAVINGS_MAX)
+	if (g_unitConfig.powerSavingsLevel != POWER_SAVINGS_MAX)
 	{
 		// Check if rs232 is already on and DSR shows no connection
 		if ((rs232State == ON) && (gpio_get_pin_value(AVR32_PIN_PB24) == 1))
@@ -1284,7 +1284,7 @@ void PowerManager(void)
 		}
 
 		// Check if not already set for Idle sleep and not max power savings and a remote/craft is connected (DSR and DCD)
-		if ((sleepStateNeeded != AVR32_PM_SMODE_IDLE) && (g_helpRecord.powerSavingsLevel != POWER_SAVINGS_MAX) &&
+		if ((sleepStateNeeded != AVR32_PM_SMODE_IDLE) && (g_unitConfig.powerSavingsLevel != POWER_SAVINGS_MAX) &&
 			((gpio_get_pin_value(AVR32_PIN_PB23) == 0) && (gpio_get_pin_value(AVR32_PIN_PB24) == 0)))
 		{
 			sleepStateNeeded = AVR32_PM_SMODE_FROZEN;

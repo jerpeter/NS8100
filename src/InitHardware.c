@@ -699,14 +699,14 @@ void InitSerial232(void)
 		.channelmode = USART_NORMAL_CHMODE
 	};
 
-	// Load the Help Record to get the stored Baud rate. Only dependency should be SPI
-	GetRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	// Load the Unit Config to get the stored Baud rate. Only dependency should be SPI
+	GetRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
-	// Check if the Help Record is valid
-	if (g_helpRecord.validationKey == 0xA5A5)
+	// Check if the Unit Config is valid
+	if (g_unitConfig.validationKey == 0xA5A5)
 	{
 		// Set the baud rate to the user stored baud rate setting (initialized to 115200)
-		switch (g_helpRecord.baudRate)
+		switch (g_unitConfig.baudRate)
 		{
 			case BAUD_RATE_57600: usart_1_rs232_options.baudrate = 57600; break;
 			case BAUD_RATE_38400: usart_1_rs232_options.baudrate = 38400; break;

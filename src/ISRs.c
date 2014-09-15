@@ -449,7 +449,7 @@ static inline void fillPretriggerBufferUntilFull_ISR_Inline(void)
 	s_pretriggerCount++;
 
 	// Check if the Pretrigger count has accumulated the full number of samples (variable Pretrigger size)
-	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider))
+	if (s_pretriggerCount >= (g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider))
 	{ 
 		s_pretriggerFull = YES;
 		s_pretriggerCount = 0;
@@ -488,34 +488,34 @@ static inline void normalizeSampleData_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline void checkAlarms_ISR_Inline(void)
 {
-	if (g_helpRecord.alarmOneMode != ALARM_MODE_OFF)
+	if (g_unitConfig.alarmOneMode != ALARM_MODE_OFF)
 	{
 		// Check if seismic is enabled for Alarm 1
-		if (g_helpRecord.alarmOneMode & ALARM_MODE_SEISMIC)
+		if (g_unitConfig.alarmOneMode & ALARM_MODE_SEISMIC)
 		{
-			if (s_R_channelReading > (g_helpRecord.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
-			else if (s_V_channelReading > (g_helpRecord.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
-			else if (s_T_channelReading > (g_helpRecord.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
+			if (s_R_channelReading > (g_unitConfig.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
+			else if (s_V_channelReading > (g_unitConfig.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
+			else if (s_T_channelReading > (g_unitConfig.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
 		}
 
 		// Check if air is enabled for Alarm 1
-		if (g_helpRecord.alarmOneMode & ALARM_MODE_AIR)
-			if (s_A_channelReading > g_helpRecord.alarmOneAirLevel) { raiseSystemEventFlag(WARNING1_EVENT); }
+		if (g_unitConfig.alarmOneMode & ALARM_MODE_AIR)
+			if (s_A_channelReading > g_unitConfig.alarmOneAirLevel) { raiseSystemEventFlag(WARNING1_EVENT); }
 	}
 						
-	if (g_helpRecord.alarmTwoMode != ALARM_MODE_OFF)
+	if (g_unitConfig.alarmTwoMode != ALARM_MODE_OFF)
 	{
 		// Check if seismic is enabled for Alarm 2
-		if (g_helpRecord.alarmTwoMode & ALARM_MODE_SEISMIC)
+		if (g_unitConfig.alarmTwoMode & ALARM_MODE_SEISMIC)
 		{
-			if (s_R_channelReading > (g_helpRecord.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
-			else if (s_V_channelReading > (g_helpRecord.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
-			else if (s_T_channelReading > (g_helpRecord.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
+			if (s_R_channelReading > (g_unitConfig.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
+			else if (s_V_channelReading > (g_unitConfig.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
+			else if (s_T_channelReading > (g_unitConfig.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
 		}
 
 		// Check if air is enabled for Alarm 2
-		if (g_helpRecord.alarmTwoMode & ALARM_MODE_AIR)
-			if (s_A_channelReading > g_helpRecord.alarmTwoAirLevel) { raiseSystemEventFlag(WARNING2_EVENT); }
+		if (g_unitConfig.alarmTwoMode & ALARM_MODE_AIR)
+			if (s_A_channelReading > g_unitConfig.alarmTwoAirLevel) { raiseSystemEventFlag(WARNING2_EVENT); }
 	}				
 }
 
@@ -758,7 +758,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				s_pendingCalCount = g_triggerRecord.trec.sample_rate / 4;
 #else // Variable Pretrigger
 				// Setup delay for Cal pulse (based on Pretrigger size)
-				s_pendingCalCount = g_triggerRecord.trec.sample_rate / g_helpRecord.pretrigBufferDivider;
+				s_pendingCalCount = g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider;
 #endif
 			}
 			else // Max number of events have been captured, force a Cal pulse

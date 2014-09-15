@@ -646,8 +646,8 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 		default:
 			languageTablePtr = englishLanguageTable;
 			sprintf((char*)&languageFilename[0], "C:\\Language\\English.tbl");
-			g_helpRecord.languageMode = ENGLISH_LANG;
-			SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+			g_unitConfig.languageMode = ENGLISH_LANG;
+			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 			break;
 	}
 
@@ -740,15 +740,15 @@ void JumpToBootFunction(void)
 		if (g_sampleProcessing == ACTIVE_STATE)
 		{
 			// Check if auto monitor is disabled
-			if (g_helpRecord.autoMonitorMode == AUTO_NO_TIMEOUT)
+			if (g_unitConfig.autoMonitorMode == AUTO_NO_TIMEOUT)
 			{
-				g_helpRecord.autoMonitorMode = AUTO_TWO_MIN_TIMEOUT;
+				g_unitConfig.autoMonitorMode = AUTO_TWO_MIN_TIMEOUT;
 
-				SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+				SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 			}
 
 			// Turn printing off
-			g_helpRecord.autoPrint = NO;
+			g_unitConfig.autoPrint = NO;
 
 			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 		}
@@ -809,17 +809,17 @@ void AdjustPowerSavings(void)
 {
 	uint32 usartRetries = USART_DEFAULT_TIMEOUT;
 
-	// Check if the Help Record is not valid since there's a chance it's referenced before it's loaded
-	if (g_helpRecord.validationKey != 0xA5A5)
+	// Check if the Unit Config is not valid since there's a chance it's referenced before it's loaded
+	if (g_unitConfig.validationKey != 0xA5A5)
 	{
-		// Load the Help Record to get the stored Power Savings setting
-		GetRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		// Load the Unit Config to get the stored Power Savings setting
+		GetRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 	}
 
-	// Check if the Help Record is valid
-	if (g_helpRecord.validationKey == 0xA5A5)
+	// Check if the Unit Config is valid
+	if (g_unitConfig.validationKey == 0xA5A5)
 	{
-		switch (g_helpRecord.powerSavingsLevel)
+		switch (g_unitConfig.powerSavingsLevel)
 		{
 			//----------------------------------------------------------------------------
 			case POWER_SAVINGS_MINIMUM:

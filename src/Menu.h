@@ -382,18 +382,10 @@ enum {
 };
 
 // Help Menu types
-#if 0 // Normal
 enum {
 	CONFIG = 1,
 	INFORMATION
 };
-#else
-enum {
-	CONFIG = 1,
-	INFORMATION,
-	TEST_OPTION
-};
-#endif
 
 // Config Menu types
 enum {

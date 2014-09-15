@@ -163,7 +163,7 @@ void TimerModeTimeMenuProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAY
                      rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
                      break;
                case (ESC_KEY):
-					SETUP_USER_MENU_MSG(&timerModeFreqMenu, g_helpRecord.timerModeFrequency);
+					SETUP_USER_MENU_MSG(&timerModeFreqMenu, g_unitConfig.timerModeFrequency);
                      JUMP_TO_ACTIVE_MENU();
                      break;
                default:
@@ -413,12 +413,12 @@ void TimerModeKeepTime(void* src_ptr)
    
    rtemp = (REC_MN_STRUCT *)src_ptr;
    
-   g_helpRecord.timerStartTime.hour = (char)rtemp[TMT_START_HOUR].numrec.tindex;
-   g_helpRecord.timerStartTime.min = (char)rtemp[TMT_START_MIN].numrec.tindex;
+   g_unitConfig.timerStartTime.hour = (char)rtemp[TMT_START_HOUR].numrec.tindex;
+   g_unitConfig.timerStartTime.min = (char)rtemp[TMT_START_MIN].numrec.tindex;
 
-   g_helpRecord.timerStopTime.hour = (char)rtemp[TMT_STOP_HOUR].numrec.tindex;
-   g_helpRecord.timerStopTime.min = (char)rtemp[TMT_STOP_MIN].numrec.tindex;
+   g_unitConfig.timerStopTime.hour = (char)rtemp[TMT_STOP_HOUR].numrec.tindex;
+   g_unitConfig.timerStopTime.min = (char)rtemp[TMT_STOP_MIN].numrec.tindex;
 
-	debug("Timer Time: (Start) %d:%d -> (End) %d:%d\n", g_helpRecord.timerStartTime.hour,
-			g_helpRecord.timerStartTime.min, g_helpRecord.timerStopTime.hour, g_helpRecord.timerStopTime.min);
+	debug("Timer Time: (Start) %d:%d -> (End) %d:%d\n", g_unitConfig.timerStartTime.hour,
+			g_unitConfig.timerStartTime.min, g_unitConfig.timerStopTime.hour, g_unitConfig.timerStopTime.min);
 }

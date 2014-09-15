@@ -495,7 +495,7 @@ void KeypressEventMgr(void)
 		SetLcdContrast(g_contrast_value);
 		PowerControl(LCD_POWER_ENABLE, ON);
 		InitLcdDisplay();					// Setup LCD segments and clear display buffer
-		AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
+		AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
 		// Check if the unit is monitoring, if so, reassign the monitor update timer
 		if (g_sampleProcessing == ACTIVE_STATE)
@@ -506,7 +506,7 @@ void KeypressEventMgr(void)
 	}
 	else // Reassign the LCD Power countdown timer
 	{
-		AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
+		AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 	}
 
 	// Check if the LCD Backlight was turned off
@@ -522,9 +522,9 @@ void KeypressEventMgr(void)
 	}
 
 	// Check if Auto Monitor is active and not in monitor mode
-	if ((g_helpRecord.autoMonitorMode != AUTO_NO_TIMEOUT) && (g_sampleProcessing != ACTIVE_STATE))
+	if ((g_unitConfig.autoMonitorMode != AUTO_NO_TIMEOUT) && (g_sampleProcessing != ACTIVE_STATE))
 	{
-		AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
+		AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 	}
 }
 
@@ -646,7 +646,7 @@ uint8 GetKeypadKey(uint8 mode)
 	SoftUsecWait(1000);
 
 	// Reassign the LCD Power countdown timer
-	AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
+	AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
 	// Reassign the LCD Backlight countdown timer
 	AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);

@@ -167,7 +167,7 @@ void NewMonitorLogEntry(uint8 mode)
 #endif
 
 #if 0 // Field no longer needed
-	__monitorLogTbl[__monitorLogTblIndex].airUnitsOfMeasure = g_helpRecord.unitsOfAir;
+	__monitorLogTbl[__monitorLogTblIndex].airUnitsOfMeasure = g_unitConfig.unitsOfAir;
 #else
 	__monitorLogTbl[__monitorLogTblIndex].bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_10_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ?
 														ACCURACY_16_BIT : g_triggerRecord.trec.bitAccuracy;
@@ -420,16 +420,16 @@ void AppendMonitorLogEntryFile(void)
 			(float)(g_factorySetupRecord.sensor_type);
 
 			tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
-			if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE)) { tempSesmicTriggerInUnits *= (float)METRIC; }
+			if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE)) { tempSesmicTriggerInUnits *= (float)METRIC; }
 
-			sprintf((char*)seisString, "%05.2f %s", tempSesmicTriggerInUnits, (g_helpRecord.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
+			sprintf((char*)seisString, "%05.2f %s", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
 		}
 
 		if (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) {strcpy((char*)airString, "None"); }
 		else
 		{
 			airInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-			if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE) { sprintf((char*)airString, "%05.3f mB", ((float)airInUnits / 10000)); }
+			if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { sprintf((char*)airString, "%05.3f mB", ((float)airInUnits / 10000)); }
 			else { sprintf((char*)airString, "%d dB", (uint16)airInUnits); }
 		}
 

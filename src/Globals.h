@@ -194,7 +194,7 @@ extern uint32 g_rtcSoftTimerTickCount;
 extern volatile uint32 g_rtcCurrentTickCount;
 extern uint32 g_updateCounter;
 extern uint8 g_autoCalDaysToWait;
-extern REC_HELP_MN_STRUCT g_helpRecord;
+extern UNIT_CONFIG_STRUCT g_unitConfig;
 extern uint8 g_autoDialoutState;
 extern uint8 g_modemDataTransfered;
 extern uint16 g_CRLF;

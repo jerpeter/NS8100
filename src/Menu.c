@@ -1065,10 +1065,10 @@ void DisplayTimerModeSettings(void)
 	ByteSet(&activeTime[0], 0, sizeof(activeTime));
 	ByteSet(&activeDates[0], 0, sizeof(activeDates));
 
-	sprintf((char*)activeTime, "%02d:%02d -> %02d:%02d", g_helpRecord.timerStartTime.hour, g_helpRecord.timerStartTime.min,
-			g_helpRecord.timerStopTime.hour, g_helpRecord.timerStopTime.min);
+	sprintf((char*)activeTime, "%02d:%02d -> %02d:%02d", g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min,
+			g_unitConfig.timerStopTime.hour, g_unitConfig.timerStopTime.min);
 
-	switch (g_helpRecord.timerModeFrequency)
+	switch (g_unitConfig.timerModeFrequency)
 	{
 		case TIMER_MODE_ONE_TIME: 	activeModeTextType = ONE_TIME_TEXT; 		break;
 		case TIMER_MODE_HOURLY: 	activeModeTextType = HOURLY_TEXT; 			break;
@@ -1079,10 +1079,10 @@ void DisplayTimerModeSettings(void)
 		default:					activeModeTextType = ERROR_TEXT;			break;
 	}
 
-	sprintf((char*)activeDates, "%02d-%s-%02d -> %02d-%s-%02d", g_helpRecord.timerStartDate.day,
-			(char*)&(g_monthTable[(uint8)(g_helpRecord.timerStartDate.month)].name[0]), g_helpRecord.timerStartDate.year,
-			g_helpRecord.timerStopDate.day, (char*)&(g_monthTable[(uint8)(g_helpRecord.timerStopDate.month)].name[0]),
-			g_helpRecord.timerStopDate.year);
+	sprintf((char*)activeDates, "%02d-%s-%02d -> %02d-%s-%02d", g_unitConfig.timerStartDate.day,
+			(char*)&(g_monthTable[(uint8)(g_unitConfig.timerStartDate.month)].name[0]), g_unitConfig.timerStartDate.year,
+			g_unitConfig.timerStopDate.day, (char*)&(g_monthTable[(uint8)(g_unitConfig.timerStopDate.month)].name[0]),
+			g_unitConfig.timerStopDate.year);
 
 	// Display SAVED SETTINGS, ACTIVE TIME PERIOD HH:MM -> HH:MM
 	sprintf((char*)message, "%s, %s: %s", getLangText(SAVED_SETTINGS_TEXT),
@@ -1124,7 +1124,7 @@ void DisplayFlashUsageStats(void)
 
 	MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
 
-	if (g_helpRecord.flashWrapping == NO)
+	if (g_unitConfig.flashWrapping == NO)
 	{
 		if ((usage.waveEventsLeft < 1000) && (usage.barHoursLeft < 1000)) { sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(SPACE_REMAINING_TEXT),getLangText(WAVEFORMS_TEXT), usage.waveEventsLeft, getLangText(BAR_HOURS_TEXT), usage.barHoursLeft); }
 		else { sprintf(&message[0], "%s %s: %dK, %s: ~%dK", getLangText(SPACE_REMAINING_TEXT), getLangText(WAVEFORMS_TEXT), (uint16)(usage.waveEventsLeft / 1000), getLangText(BAR_HOURS_TEXT), (uint16)(usage.barHoursLeft / 1000)); }

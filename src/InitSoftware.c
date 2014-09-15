@@ -103,37 +103,37 @@ void setupMnDef(void)
 		g_triggerRecord.validRecord = YES;
 	}
 
-	debug("Init Load Help Rec...\n");
+	debug("Init Load Unit Config...\n");
 
-	// Load the Help Record
-	GetRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+	// Load the Unit Config
+	GetRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
-	debug("Init Help Rec Defaults...\n");
+	debug("Init Unit Config Defaults...\n");
 
-	// Check if the Help Record is uninitialized
-	if (g_helpRecord.validationKey != 0xA5A5)
+	// Check if the Unit Config is uninitialized
+	if (g_unitConfig.validationKey != 0xA5A5)
 	{
-		// Set defaults in Help Record
-		debugWarn("Help record: Not found.\n");
-		debug("Loading Help Menu Defaults\n");
-		LoadHelpRecordDefaults((REC_HELP_MN_STRUCT*)&g_helpRecord);
-		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		// Set defaults in Unit Config
+		debugWarn("Unit Config: Not found.\n");
+		debug("Loading Unit Config Defaults\n");
+		LoadUnitConfigDefaults((UNIT_CONFIG_STRUCT*)&g_unitConfig);
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 	}
 	else
 	{
-		// Help Record is valid
-		debug("Help record: Found.\n");
+		// Unit Config is valid
+		debug("Unit Config: Found.\n");
 
-		if ((g_helpRecord.pretrigBufferDivider != PRETRIGGER_BUFFER_QUARTER_SEC_DIV) && (g_helpRecord.pretrigBufferDivider != PRETRIGGER_BUFFER_HALF_SEC_DIV) &&
-		(g_helpRecord.pretrigBufferDivider != PRETRIGGER_BUFFER_FULL_SEC_DIV))
+		if ((g_unitConfig.pretrigBufferDivider != PRETRIGGER_BUFFER_QUARTER_SEC_DIV) && (g_unitConfig.pretrigBufferDivider != PRETRIGGER_BUFFER_HALF_SEC_DIV) &&
+		(g_unitConfig.pretrigBufferDivider != PRETRIGGER_BUFFER_FULL_SEC_DIV))
 		{
-			g_helpRecord.pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
-			SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+			g_unitConfig.pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
+			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 		}
 
 		#if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
 		// Set the baud rate to the user stored baud rate setting (initialized to 115200)
-		switch (g_helpRecord.baudRate)
+		switch (g_unitConfig.baudRate)
 		{
 			case BAUD_RATE_57600: rs232Options.baudrate = 57600; break;
 			case BAUD_RATE_38400: rs232Options.baudrate = 38400; break;
@@ -141,7 +141,7 @@ void setupMnDef(void)
 			case BAUD_RATE_9600: rs232Options.baudrate = 9600; break;
 		}
 
-		if (g_helpRecord.baudRate != BAUD_RATE_115200)
+		if (g_unitConfig.baudRate != BAUD_RATE_115200)
 		{
 			// Re-Initialize the RS232 with the stored baud rate
 			usart_init_rs232(&AVR32_USART1, &rs232Options, FOSC0);
@@ -152,13 +152,13 @@ void setupMnDef(void)
 	debug("Init Build Language Table...\n");
 
 	// Build the language table based on the user's last language choice
-	BuildLanguageLinkTable(g_helpRecord.languageMode);
+	BuildLanguageLinkTable(g_unitConfig.languageMode);
 
-	debug("Init Activate Help Rec Options...\n");
+	debug("Init Activate Unit Config Options...\n");
 
-	debug("Activate help record items\n");
-	// Initialize Help Record items such as contrast, timers
-	ActivateHelpRecordOptions();
+	debug("Activate Unit Config items\n");
+	// Initialize Unit Config items such as contrast, timers
+	ActivateUnitConfigOptions();
 
 	// Wait 1/2 second for the LCD power to settle
 	SoftUsecWait(500 * SOFT_MSECS);
@@ -176,11 +176,11 @@ void setupMnDef(void)
 #endif
 
 	// Check if the unit is set for Mini and auto print is enabled
-	if ((MINIGRAPH_UNIT) && (g_helpRecord.autoPrint == YES))
+	if ((MINIGRAPH_UNIT) && (g_unitConfig.autoPrint == YES))
 	{
 		// Disable Auto printing
-		g_helpRecord.autoPrint = NO;
-		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		g_unitConfig.autoPrint = NO;
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 	}
 
 	debug("Init Load Factory Setup Rec...\n");
@@ -266,7 +266,7 @@ void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
 
 	// Sensor type information
 	g_sensorInfoPtr->numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;		// The number of channels from a sensor.
-	g_sensorInfoPtr->unitsFlag = g_helpRecord.unitsOfMeasure;			// 0 = SAE; 1 = Metric
+	g_sensorInfoPtr->unitsFlag = g_unitConfig.unitsOfMeasure;			// 0 = SAE; 1 = Metric
 
 	g_sensorInfoPtr->sensorAccuracy = SENSOR_ACCURACY_100X_SHIFT;		// 100, sensor values are X 100 for accuaracy.
 	g_sensorInfoPtr->ADCResolution = ADC_RESOLUTION;				// Raw data Input Range, unless ADC is changed
@@ -276,7 +276,7 @@ void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
 
 	g_sensorInfoPtr->sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
 
-	if((IMPERIAL_TYPE == g_helpRecord.unitsOfMeasure) || (sensor_type == SENSOR_ACC))
+	if((IMPERIAL_TYPE == g_unitConfig.unitsOfMeasure) || (sensor_type == SENSOR_ACC))
 	{
 		g_sensorInfoPtr->measurementRatio = (float)IMPERIAL; 				// 1 = SAE; 25.4 = Metric
 	}

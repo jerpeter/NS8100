@@ -52,12 +52,12 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
-		case REC_HELP_USER_MENU_TYPE:
-			debug("Programming Help Record...\n");
+		case REC_UNIT_CONFIG_TYPE:
+			debug("Programming Unit Config...\n");
 
-			((REC_HELP_MN_STRUCT *)src_ptr)->validationKey = 0xA5A5;
+			((UNIT_CONFIG_STRUCT *)src_ptr)->validationKey = 0xA5A5;
 
-			rec_size = sizeof(REC_HELP_MN_STRUCT);
+			rec_size = sizeof(UNIT_CONFIG_STRUCT);
 			loc = (sizeof(REC_EVENT_MN_STRUCT)) * (MAX_NUM_OF_SAVED_SETUPS + 1);
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
@@ -69,7 +69,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 
 			rec_size = sizeof(MODEM_SETUP_STRUCT);
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
-					sizeof(REC_HELP_MN_STRUCT));
+					sizeof(UNIT_CONFIG_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
@@ -80,7 +80,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 
 			rec_size = sizeof(FACTORY_SETUP_STRUCT);
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
-					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT));
+					sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
@@ -91,7 +91,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 
 			rec_size = sizeof(CURRENT_EVENT_NUMBER_STRUCT);
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
-					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+					sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
 					sizeof(FACTORY_SETUP_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
@@ -103,7 +103,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 
 			rec_size = sizeof(MONITOR_LOG_ID_STRUCT);
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
-					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+					sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
 					sizeof(FACTORY_SETUP_STRUCT) + sizeof(CURRENT_EVENT_NUMBER_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
@@ -131,33 +131,33 @@ void GetRecordData(void* dst_ptr, uint32 num, uint8 type)
 		case REC_PRINTER_USER_MENU_TYPE:
 			break;
 
-		case REC_HELP_USER_MENU_TYPE:
+		case REC_UNIT_CONFIG_TYPE:
 			loc = sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1);
-			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(REC_HELP_MN_STRUCT));
+			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(UNIT_CONFIG_STRUCT));
 			break;
 
 		case REC_MODEM_SETUP_TYPE:
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1)) + 
-					sizeof(REC_HELP_MN_STRUCT);
+					sizeof(UNIT_CONFIG_STRUCT);
 			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(MODEM_SETUP_STRUCT));
 			break;
 
 		case REC_FACTORY_SETUP_TYPE:
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1)) + 
-					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT);
+					sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT);
 			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(FACTORY_SETUP_STRUCT));
 			break;
 
 		case REC_UNIQUE_EVENT_ID_TYPE:
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1)) + 
-					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+					sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
 					sizeof(FACTORY_SETUP_STRUCT);
 			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(CURRENT_EVENT_NUMBER_STRUCT));
 			break;
 
 		case REC_UNIQUE_MONITOR_LOG_ID_TYPE:
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1)) + 
-					sizeof(REC_HELP_MN_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+					sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
 					sizeof(FACTORY_SETUP_STRUCT) + sizeof(CURRENT_EVENT_NUMBER_STRUCT);
 			GetParameterMemory((uint8*)dst_ptr, loc, sizeof(MONITOR_LOG_ID_STRUCT));
 			break;
@@ -418,14 +418,15 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void LoadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
+void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr)
 {  
-	// Initialize the help record
-	ByteSet(rec_ptr, 0, sizeof(REC_HELP_MN_STRUCT));
+	// Initialize the Unit Config
+	ByteSet(rec_ptr, 0, sizeof(UNIT_CONFIG_STRUCT));
 
 	// Set default conditions
 	rec_ptr->powerSavingsLevel = POWER_SAVINGS_NONE;
 	rec_ptr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
+	rec_ptr->airScale = AIR_SCALE_LINEAR;
 	rec_ptr->flashWrapping = YES;
 	rec_ptr->autoMonitorMode = AUTO_NO_TIMEOUT;
 	rec_ptr->autoCalMode = AUTO_NO_CAL_TIMEOUT;
@@ -445,14 +446,10 @@ void LoadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 	rec_ptr->lcdTimeout = 2;
 	rec_ptr->timerMode = DISABLED;
 	rec_ptr->unitsOfMeasure = IMPERIAL_TYPE;
-#if 1 // Updated (Port missing change)
 	rec_ptr->unitsOfAir = DECIBEL_TYPE;
-#endif
 	rec_ptr->vectorSum = DISABLED;
 	rec_ptr->reportDisplacement = DISABLED;
-#if 1 // Updated (Port missing change)
 	rec_ptr->reportPeakAcceleration = DISABLED;
-#endif
 	rec_ptr->autoCalForWaveform = NO;
 
 	if (SUPERGRAPH_UNIT)
@@ -472,35 +469,33 @@ void LoadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void ActivateHelpRecordOptions(void)
+void ActivateUnitConfigOptions(void)
 {
-	g_contrast_value = g_helpRecord.lcdContrast;
+	g_contrast_value = g_unitConfig.lcdContrast;
 
 	if ((g_contrast_value < MIN_CONTRAST) || (g_contrast_value > MAX_CONTRAST))
 	{
-		g_helpRecord.lcdContrast = g_contrast_value = DEFUALT_CONTRAST;
+		g_unitConfig.lcdContrast = g_contrast_value = DEFUALT_CONTRAST;
 	}               
 
 	SetLcdContrast(g_contrast_value);
 
 	// The choices are between metric and sae measurement systems.
-	g_sensorInfoPtr->unitsFlag = g_helpRecord.unitsOfMeasure;
-#if 1 // Updated (Port missing change)
-	g_sensorInfoPtr->airUnitsFlag = g_helpRecord.unitsOfAir;
-#endif
+	g_sensorInfoPtr->unitsFlag = g_unitConfig.unitsOfMeasure;
+	g_sensorInfoPtr->airUnitsFlag = g_unitConfig.unitsOfAir;
 
 	AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 
-	if ((g_helpRecord.lcdTimeout < LCD_TIMEOUT_MIN_VALUE) || (g_helpRecord.lcdTimeout > LCD_TIMEOUT_MAX_VALUE))
+	if ((g_unitConfig.lcdTimeout < LCD_TIMEOUT_MIN_VALUE) || (g_unitConfig.lcdTimeout > LCD_TIMEOUT_MAX_VALUE))
 	{
-		g_helpRecord.lcdTimeout = LCD_TIMEOUT_DEFAULT_VALUE;
+		g_unitConfig.lcdTimeout = LCD_TIMEOUT_DEFAULT_VALUE;
 	}
-	AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_helpRecord.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
+	AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
-	debug("Auto Monitor Mode: %s\n", (g_helpRecord.autoMonitorMode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
-    AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_helpRecord.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
+	debug("Auto Monitor Mode: %s\n", (g_unitConfig.autoMonitorMode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
+    AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 
-	if (g_helpRecord.autoCalMode != AUTO_NO_CAL_TIMEOUT)
+	if (g_unitConfig.autoCalMode != AUTO_NO_CAL_TIMEOUT)
 	{
 		g_autoCalDaysToWait = 1;
 	}
@@ -511,7 +506,7 @@ void ActivateHelpRecordOptions(void)
 ///----------------------------------------------------------------------------
 void LoadModemSetupRecordDefaults()
 {
-	// Initialize the help record
+	// Initialize the Unit Config
 	ByteSet(&g_modemSetupRecord, 0, sizeof(MODEM_SETUP_STRUCT));
 
 	g_modemSetupRecord.modemStatus = NO;

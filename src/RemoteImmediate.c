@@ -128,16 +128,16 @@ void handleRST(CMD_BUFFER_STRUCT* inCmd)
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 		// Turn printing off
-		g_helpRecord.autoPrint = NO;
+		g_unitConfig.autoPrint = NO;
 
 		StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 	}
 
-	if(g_helpRecord.timerMode == ENABLED)
+	if(g_unitConfig.timerMode == ENABLED)
 	{
 		// Disable Timer mode since restarting would force a prompt for user action
-		g_helpRecord.timerMode = DISABLED;
-		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		g_unitConfig.timerMode = DISABLED;
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
 		OverlayMessage(getLangText(WARNING_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), (2 * SOFT_SECS));
 	}
@@ -278,7 +278,7 @@ void HandleVML(CMD_BUFFER_STRUCT* inCmd)
 	g_modemStatus.xferMutex = YES;
 
 	// Save off the printer state to allow the state to be reset when done with the command
-	g_modemStatus.xferPrintState = g_helpRecord.autoPrint;
+	g_modemStatus.xferPrintState = g_unitConfig.autoPrint;
 }
 
 ///----------------------------------------------------------------------------
@@ -310,11 +310,7 @@ void sendVMLData(void)
 		dataLength = ((NumOfNewMonitorLogEntries(s_vmlXferStruct.lastDlUniqueEntryId) + 1) * sizeof(MONITOR_LOG_ENTRY_STRUCT));
 
 		// Signal a message response in the message type string
-#if 0 // Port missing change
-		sprintf((char*)msgTypeStr, "%02d", MSGTYPE_RESPONSE);
-#else // Updated
 		sprintf((char*)msgTypeStr, "%02d", MSGTYPE_RESPONSE_REV1);
-#endif
 
 		// Build the outgoing message header
 		BuildOutgoingSimpleHeaderBuffer((uint8*)&(s_vmlXferStruct.vmlHdr), (uint8*)"VMLx", (uint8*)msgTypeStr,
@@ -629,7 +625,7 @@ void HandleDQM(CMD_BUFFER_STRUCT* inCmd)
 	g_dqmXferStructPtr->xferStateFlag = HEADER_XFER_STATE;		// This is the initial xfer state to start.
 	g_modemStatus.xferState = DQMx_CMD;							// This is the xfer command state.
 	g_modemStatus.xferMutex = YES;								// Mutex to prevent other commands.
-	g_modemStatus.xferPrintState = g_helpRecord.autoPrint;
+	g_modemStatus.xferPrintState = g_unitConfig.autoPrint;
 	g_transferCount = 0;
 
 	return;
@@ -815,7 +811,7 @@ void HandleDSM(CMD_BUFFER_STRUCT* inCmd)
 	g_modemStatus.xferState = DSMx_CMD;								// This is the xfer command state.
 	g_modemStatus.xferMutex = YES;									// Mutex to prevent other commands.
 
-	g_modemStatus.xferPrintState = g_helpRecord.autoPrint;
+	g_modemStatus.xferPrintState = g_unitConfig.autoPrint;
 
 	g_transferCount = 0;
 

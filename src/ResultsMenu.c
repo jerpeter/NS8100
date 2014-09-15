@@ -78,7 +78,7 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg,
                   MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	REC_HELP_MN_STRUCT temp_g_helpRecord;
+	UNIT_CONFIG_STRUCT temp_g_unitConfig;
 	uint32 delay = 3 * TICKS_PER_SEC;
 
 	if (msg.cmd == ACTIVATE_MENU_CMD)
@@ -125,7 +125,7 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg,
 				g_enterMonitorModeAfterMidnightCal = NO;
 
 				// Check if Auto Cal is enabled
-				if (g_helpRecord.autoCalForWaveform == YES)
+				if (g_unitConfig.autoCalForWaveform == YES)
 				{
 					// Set flag to skip auto calibration at start of waveform
 					g_skipAutoCalInWaveformAfterMidnightCal = YES;
@@ -172,8 +172,8 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg,
 							StopMonitoring(g_triggerRecord.op_mode, EVENT_PROCESSING);
 
 							// Restore the autoPrint just in case the user escaped from the printout
-							GetRecordData(&temp_g_helpRecord, 0, REC_HELP_USER_MENU_TYPE);
-							g_helpRecord.autoPrint = temp_g_helpRecord.autoPrint;
+							GetRecordData(&temp_g_unitConfig, 0, REC_UNIT_CONFIG_TYPE);
+							g_unitConfig.autoPrint = temp_g_unitConfig.autoPrint;
 
 							SETUP_MENU_MSG(MAIN_MENU);
 							JUMP_TO_ACTIVE_MENU();
@@ -593,7 +593,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			calResults = FAILED;
 	}
 
-    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE))
+    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
     {
     	normalize_max_peak *= (float)METRIC;
     }
@@ -620,7 +620,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			calResults = FAILED;
 	}
 
-    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE))
+    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
     {
     	normalize_max_peak *= (float)METRIC;
 	}
@@ -647,7 +647,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			calResults = FAILED;
 	}
 
-    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) && (g_helpRecord.unitsOfMeasure == METRIC_TYPE))
+    if ((eventRecord->summary.parameters.seismicSensorType != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
     {
     	normalize_max_peak *= (float)METRIC;
 	}
@@ -825,7 +825,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    ByteSet(&buff[0], 0, sizeof(buff));
 
 		// Display based on what the units current setting
-		if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
 		    sprintf(buff,"%0.3f mb", HexToMB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}

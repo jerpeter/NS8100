@@ -375,10 +375,10 @@ void PowerOffTimerCallback(void)
 	if (g_timerModeLastRun == YES)
 	{
 		debug("Timer Mode: Ending last session, now disabling...\n");
-		g_helpRecord.timerMode = DISABLED;
+		g_unitConfig.timerMode = DISABLED;
 
-		// Save help record
-		SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+		// Save Unit Config
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 	}
 		
 	OverlayMessage(getLangText(TIMER_MODE_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 3 * SOFT_SECS);
@@ -568,7 +568,7 @@ void HandleMidnightEvent(void)
 		JUMP_TO_ACTIVE_MENU();
 	}
 	// Check if Auto Cal is active
-	else if (g_helpRecord.autoCalMode != AUTO_NO_CAL_TIMEOUT)
+	else if (g_unitConfig.autoCalMode != AUTO_NO_CAL_TIMEOUT)
 	{
 		// Decrement days to wait
 		if (g_autoCalDaysToWait > 0) g_autoCalDaysToWait--;
@@ -579,7 +579,7 @@ void HandleMidnightEvent(void)
 			// Perform Auto Cal logic
 
 			// Reset the days to wait count
-			switch (g_helpRecord.autoCalMode)
+			switch (g_unitConfig.autoCalMode)
 			{
 				case AUTO_24_HOUR_TIMEOUT: g_autoCalDaysToWait = 1; break;
 				case AUTO_48_HOUR_TIMEOUT: g_autoCalDaysToWait = 2; break;
@@ -595,7 +595,7 @@ void HandleMidnightEvent(void)
 
 			GetFlashUsageStats(&flashStats);
 
-			if ((g_helpRecord.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
+			if ((g_unitConfig.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
 			{
 				g_enterMonitorModeAfterMidnightCal = NO;
 

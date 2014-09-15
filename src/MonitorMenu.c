@@ -81,7 +81,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 {
 	INPUT_MSG_STRUCT mn_msg;
 	REC_EVENT_MN_STRUCT temp_g_triggerRecord;
-	REC_HELP_MN_STRUCT temp_g_helpRecord;
+	UNIT_CONFIG_STRUCT temp_g_unitConfig;
 	//uint8 mbChoice = 0;
 	FLASH_USAGE_STRUCT flashStats;
 	
@@ -102,7 +102,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 			g_monitorOperationMode = (uint8)msg.data[0];
 
 			// Check if flash wrapping is disabled and if there is space left in flash
-			if (g_helpRecord.flashWrapping == NO)
+			if (g_unitConfig.flashWrapping == NO)
 			{
 				if (((g_monitorOperationMode == WAVEFORM_MODE) && (flashStats.waveEventsLeft == 0)) ||
 					((g_monitorOperationMode == BARGRAPH_MODE) && (flashStats.roomForBargraph == NO)) ||
@@ -135,12 +135,12 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 					// Set the default display mode to be the summary interval results
 					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
 					
-					if(g_helpRecord.vectorSum == DISABLED)
+					if(g_unitConfig.vectorSum == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 					
-					if(g_helpRecord.reportDisplacement == DISABLED)
+					if(g_unitConfig.reportDisplacement == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
@@ -177,12 +177,12 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 					// Set the default display mode to be the summary interval results
 					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
 					
-					if(g_helpRecord.vectorSum == DISABLED)
+					if(g_unitConfig.vectorSum == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 					
-					if(g_helpRecord.reportDisplacement == DISABLED)
+					if(g_unitConfig.reportDisplacement == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
@@ -245,8 +245,8 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 								StopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
 								// Restore the autoPrint value just in case the user escaped from a printout
-								GetRecordData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-								g_helpRecord.autoPrint = temp_g_helpRecord.autoPrint;
+								GetRecordData(&temp_g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+								g_unitConfig.autoPrint = temp_g_unitConfig.autoPrint;
 
 								SETUP_MENU_MSG(MAIN_MENU);
 								JUMP_TO_ACTIVE_MENU();
@@ -400,8 +400,8 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 			StopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
 			// Restore the autoPrint value just in case the user escaped from a printout
-			GetRecordData(&temp_g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
-			g_helpRecord.autoPrint = temp_g_helpRecord.autoPrint;
+			GetRecordData(&temp_g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+			g_unitConfig.autoPrint = temp_g_unitConfig.autoPrint;
 
 			SETUP_MENU_MSG(MAIN_MENU);
 			JUMP_TO_ACTIVE_MENU();
@@ -1049,7 +1049,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
-					if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+					if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 					{
 						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), HexToMB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 					}
@@ -1070,7 +1070,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-							if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+							if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 							{
 								sprintf(buff, "AIR %0.3f mb ", HexToMB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
@@ -1087,7 +1087,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 										((float)((g_comboSumIntervalWritePtr->a.frequency * 2) - 1)));
 							}
 
-							if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+							if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 							{
 								sprintf(buff, "AIR %0.3f mb ", HexToMB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 							}
@@ -1105,7 +1105,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 									((float)((g_aJobFreq * 2) - 1)));
 						}
 
-						if (g_helpRecord.unitsOfAir == MILLIBAR_TYPE)
+						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 						{
 							sprintf(buff, "AIR %0.3f mb ", HexToMB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 						}

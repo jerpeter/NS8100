@@ -26,7 +26,7 @@ enum {
 	REC_DATE_TIME_AM_PM_TYPE,
 	REC_DATE_TIME_MONITOR,
 	REC_RESULTS_DATA_TYPE,
-	REC_HELP_USER_MENU_TYPE,
+	REC_UNIT_CONFIG_TYPE,
 	REC_FACTORY_SETUP_TYPE,
 	REC_DATE_TIME_DISPLAY,
 	REC_MODEM_SETUP_TYPE,
@@ -111,6 +111,11 @@ enum {
 	COMPLETED_LOG_ENTRY,
 	PARTIAL_LOG_ENTRY,
 	INCOMPLETE_LOG_ENTRY
+};
+
+enum {
+	AIR_SCALE_LINEAR = 0,
+	AIR_SCALE_A_WEIGHTING = 1
 };
 
 ///----------------------------------------------------------------------------
@@ -234,7 +239,7 @@ typedef struct
 	uint8 unused1;
 	uint8 unused2;
 	uint8 unused3;
-	uint8 unused4;
+	uint8 airScale;
 	uint8 vectorSum;
 	uint8 autoCalForWaveform;
 	uint8 reportPeakAcceleration;
@@ -272,7 +277,7 @@ typedef struct
 	TM_TIME_STRUCT timerStopTime;
 	TM_DATE_STRUCT timerStartDate;
 	TM_DATE_STRUCT timerStopDate;
-} REC_HELP_MN_STRUCT;
+} UNIT_CONFIG_STRUCT;
 
 typedef struct
 {
@@ -343,8 +348,8 @@ void CopyFlashBlock(uint16* src, uint16* dst, uint32 len);
 void CopyRecordIntoFlashBk(uint16*, uint16*, uint32, uint32);
 uint8 CheckForAvailableTriggerRecordEntry(char* name, uint8* match);
 void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode);
-void LoadHelpRecordDefaults(REC_HELP_MN_STRUCT *rec_ptr);
-void ActivateHelpRecordOptions(void);
+void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr);
+void ActivateUnitConfigOptions(void);
 void LoadModemSetupRecordDefaults(void);
 void ValidateModemSetupParameters(void);
 

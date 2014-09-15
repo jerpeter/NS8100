@@ -115,14 +115,14 @@ void LcdContrastMnProc(INPUT_MSG_STRUCT msg,
 						case (1): // Lighter
 							if ((g_contrast_value - CONTRAST_STEPPING) >= MIN_CONTRAST)
 							{
-								g_helpRecord.lcdContrast = g_contrast_value -= CONTRAST_STEPPING;
+								g_unitConfig.lcdContrast = g_contrast_value -= CONTRAST_STEPPING;
 							}
 
 							SetLcdContrast(g_contrast_value);
 							break;
 
 						case (2): // Default
-							g_helpRecord.lcdContrast = g_contrast_value = DEFUALT_CONTRAST;
+							g_unitConfig.lcdContrast = g_contrast_value = DEFUALT_CONTRAST;
 
 							SetLcdContrast(g_contrast_value);
 							break;
@@ -130,14 +130,14 @@ void LcdContrastMnProc(INPUT_MSG_STRUCT msg,
 						case (3): // Darker
 							if ((g_contrast_value + CONTRAST_STEPPING) <= MAX_CONTRAST)
 							{
-								g_helpRecord.lcdContrast  = g_contrast_value += CONTRAST_STEPPING;
+								g_unitConfig.lcdContrast  = g_contrast_value += CONTRAST_STEPPING;
 							}
 
 							SetLcdContrast(g_contrast_value);
 							break;
 
 						case (4): // Save changes
-							SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+							SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
 							SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 							JUMP_TO_ACTIVE_MENU();

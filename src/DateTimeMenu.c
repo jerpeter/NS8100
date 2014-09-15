@@ -144,12 +144,12 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 							time.hour, time.min, time.sec, time.hundredths);
 
 					// Check if Timer mode is enabled
-					if (g_helpRecord.timerMode == ENABLED)
+					if (g_unitConfig.timerMode == ENABLED)
 					{
 						// Cancel Timer mode
 						MessageBox(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), MB_OK);
 
-						g_helpRecord.timerMode = DISABLED;
+						g_unitConfig.timerMode = DISABLED;
 
 						// Disable the Power Off Protection
 						PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
@@ -157,7 +157,7 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 						// Disable the Power Off timer if it's set
 						ClearSoftTimer(POWER_OFF_TIMER_NUM);
 
-						SaveRecordData(&g_helpRecord, DEFAULT_RECORD, REC_HELP_USER_MENU_TYPE);
+						SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 					}
 
 					if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
