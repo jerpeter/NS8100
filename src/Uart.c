@@ -296,8 +296,8 @@ void UartPutc(uint8 c, int32 channel)
 	{
 		// fix_ns8100
 	}
-#if 0 // NS8100_ALPHA
-	else if (channel == DEBUG_COM_PORT)
+#if NS8100_ALPHA
+	else if (channel == GLOBAL_DEBUG_PRINT_PORT)
 	{
 		status = usart_write_char(&AVR32_USART0, c);
 
@@ -306,6 +306,8 @@ void UartPutc(uint8 c, int32 channel)
 			retries--;
 			status = usart_write_char(&AVR32_USART0, c);
 		}
+
+		g_debugBuffer[g_debugBufferCount++] = c;
 	}
 #endif
 }
@@ -569,9 +571,10 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 	if (mode == RAW)
 	{
 		// Print the raw string
-		UartWrite(buf, length, CRAFT_COM_PORT);
-#if 0 // NS8100_ALPHA
+#if NS8100_ALPHA
 		UartWrite(buf, length, GLOBAL_DEBUG_PRINT_PORT);
+#else
+		UartWrite(buf, length, CRAFT_COM_PORT);
 #endif
 	}
 	// Check if the current string to be printed was different than the last
@@ -582,9 +585,10 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 		{
 			// Print the repeat count of the previous repeated string
 			sprintf(repeatCountStr, "(%d)\n", (int)repeatingBuf);
-			UartPuts(repeatCountStr, CRAFT_COM_PORT);
-#if 0 // NS8100_ALPHA
+#if NS8100_ALPHA
 			UartPuts(repeatCountStr, GLOBAL_DEBUG_PRINT_PORT);
+#else
+			UartPuts(repeatCountStr, CRAFT_COM_PORT);
 #endif
 
 			// Reset the counter
@@ -593,11 +597,12 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 		else if (strippedNewline == YES)
 		{
 			// Issue a carrige return and a line feed
-			UartPutc('\r', CRAFT_COM_PORT);
-			UartPutc('\n', CRAFT_COM_PORT);
-#if 0 // NS8100_ALPHA
+#if NS8100_ALPHA
 			UartPutc('\r', GLOBAL_DEBUG_PRINT_PORT);
 			UartPutc('\n', GLOBAL_DEBUG_PRINT_PORT);
+#else
+			UartPutc('\r', CRAFT_COM_PORT);
+			UartPutc('\n', CRAFT_COM_PORT);
 #endif
 
 			// Reset the flag
@@ -636,6 +641,24 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 			// Reduce length by one
 			length--;
 
+			// Check for a preceding carriage return
+			if (buf[length - 1] == '\r')
+			{
+				length--;
+			}
+
+			// Strip trailing newline and replace with a null
+			buf[length] = '\0';
+
+			// Set the flag
+			strippedNewline = YES;
+		}
+		// Check for an ending newline carriage return combo
+		else if ((buf[length - 2] == '\n') && (buf[length - 1] == '\r'))
+		{
+			// Reduce length by one
+			length -= 2;
+
 			// Strip trailing newline and replace with a null
 			buf[length] = '\0';
 
@@ -644,9 +667,10 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 		}
 
 		// Print the new string
-		UartWrite(buf, length, CRAFT_COM_PORT);
-#if 0 // NS8100_ALPHA
+#if NS8100_ALPHA
 		UartWrite(buf, length, GLOBAL_DEBUG_PRINT_PORT);
+#else
+		UartWrite(buf, length, CRAFT_COM_PORT);
 #endif
 	}
 	else // Strings are equal
@@ -655,9 +679,10 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 		repeatingBuf++;
 
 		// Print a '!' (bang) so signify that the output was repeated
-		UartPutc('!', CRAFT_COM_PORT);
-#if 0 // NS8100_ALPHA
+#if NS8100_ALPHA
 		UartPutc('!', GLOBAL_DEBUG_PRINT_PORT);
+#else
+		UartPutc('!', CRAFT_COM_PORT);
 #endif
 	}
 
@@ -672,9 +697,10 @@ void DebugPrintChar(uint8 charData)
 {
 	if (g_disableDebugPrinting == NO)
 	{
-		UartPutc(charData, CRAFT_COM_PORT);
-#if 0 // NS8100_ALPHA
+#if NS8100_ALPHA
 		UartPutc(charData, GLOBAL_DEBUG_PRINT_PORT);
+#else
+		UartPutc(charData, CRAFT_COM_PORT);
 #endif
 	}
 }

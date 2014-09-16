@@ -50,6 +50,15 @@
 
 #include <avr32/io.h>
 
+// Select between hardware board versions
+#define NS8100_ORIGINAL		0
+
+#if NS8100_ORIGINAL
+#define NS8100_ALPHA		0
+#else
+#define NS8100_ALPHA		1
+#endif
+
 /*! \name Base Boards
  */
 //! @{

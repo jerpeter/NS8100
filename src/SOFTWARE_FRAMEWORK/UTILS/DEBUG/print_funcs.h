@@ -47,17 +47,25 @@
 #include <avr32/io.h>
 #include "board.h"
 
-
 /*! \name USART Settings for the Debug Module
  */
 //! @{
 #if BOARD == EVK1100
+#if NS8100_ALPHA
+#  define DBG_USART               (&AVR32_USART0)
+#  define DBG_USART_RX_PIN        AVR32_USART0_RXD_0_0_PIN
+#  define DBG_USART_RX_FUNCTION   AVR32_USART0_RXD_0_0_FUNCTION
+#  define DBG_USART_TX_PIN        AVR32_USART0_TXD_0_0_PIN
+#  define DBG_USART_TX_FUNCTION   AVR32_USART0_TXD_0_0_FUNCTION
+#  define DBG_USART_BAUDRATE      115200
+#else
 #  define DBG_USART               (&AVR32_USART1)
 #  define DBG_USART_RX_PIN        AVR32_USART1_RXD_0_0_PIN
 #  define DBG_USART_RX_FUNCTION   AVR32_USART1_RXD_0_0_FUNCTION
 #  define DBG_USART_TX_PIN        AVR32_USART1_TXD_0_0_PIN
 #  define DBG_USART_TX_FUNCTION   AVR32_USART1_TXD_0_0_FUNCTION
 #  define DBG_USART_BAUDRATE      115200
+#endif
 #elif BOARD == EVK1101
 #  define DBG_USART               (&AVR32_USART1)
 #  define DBG_USART_RX_PIN        AVR32_USART1_RXD_0_0_PIN
