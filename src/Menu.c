@@ -822,7 +822,7 @@ uint8 MessageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 
 	WriteMapToLcd(g_mmap);
 
-	debug("MB: Look for a key\n");
+	debug("MB: Look for a key\r\n");
 
 	// Loop forever unitl an enter or escape key is found
 	while ((key != ENTER_KEY) && (key != ESC_KEY))
@@ -974,7 +974,7 @@ void DisplaySplashScreen(void)
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	WndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
 
-    debug("Init Write Splash Screen to LCD...\n");
+    debug("Init Write Splash Screen to LCD...\r\n");
 
 	// Write the map to the LCD
 	WriteMapToLcd(g_mmap);

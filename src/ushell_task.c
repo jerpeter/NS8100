@@ -200,7 +200,7 @@ void ushell_task_init(uint32_t pba_hz)
      g_s_cmd_his[u8_i][0] = 0;  // Set end of line for all cmd line history
   }
 
-  fputs(MSG_EXIT, stdout );
+  //fputs(MSG_EXIT, stdout );
 
   g_u32_ushell_pba_hz = pba_hz;  // Save value to manage a time counter during perform command
 
@@ -871,7 +871,7 @@ void ushell_cmd_ls( Bool b_more )
    //** Print directory name
    if( !nav_dir_name( (FS_STRING)str_char, MAX_FILE_PATH_LENGTH ) )
    {
-		usart_write_line((&AVR32_USART0), "NAV: Dir name failed\n");	   
+		usart_write_line((&AVR32_USART0), "NAV: Dir name failed\r\n");
 	    return;
    }
    //usart_write_line((&AVR32_USART0), "Dir name is %s\n\r",str_char);

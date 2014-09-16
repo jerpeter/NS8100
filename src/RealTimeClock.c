@@ -40,24 +40,24 @@ BOOLEAN InitExternalRtc(void)
 	DATE_TIME_STRUCT time;
 	RTC_MEM_MAP_STRUCT rtcMap;
 
-	//debug("Init Soft timer\n");
+	//debug("Init Soft timer\r\n");
 	// Initialize the softtimer array.
 	ByteSet(&g_rtcTimerBank[0], 0, (sizeof(SOFT_TIMER_STRUCT) * NUM_OF_SOFT_TIMERS));
 
-	debugRaw("\r\n\n\n");
-	debugRaw("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n");
-	debugRaw("---------------------------------------------------------------------------------------\n");
-	debugRaw("-----     NS8100 Fresh boot, App version: %s (Date: %s)     -----\n", (char*)g_buildVersion, (char*)g_buildDate);
-	debugRaw("---------------------------------------------------------------------------------------\n");
-	debugRaw("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
-	debug("External RTC Init...\n");
+	debugRaw("\r\n\n");
+	debugRaw("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\r\n");
+	debugRaw("---------------------------------------------------------------------------------------\r\n");
+	debugRaw("-----     NS8100 Fresh boot, App version: %s (Date: %s)     -----\r\n", (char*)g_buildVersion, (char*)g_buildDate);
+	debugRaw("---------------------------------------------------------------------------------------\r\n");
+	debugRaw("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n");
+	debug("External RTC Init...\r\n");
 
 	// Get the base of the external RTC memory map
 	ExternalRtcRead(RTC_CONTROL_1_ADDR, 10, (uint8*)&rtcMap);
 	
 	if ((rtcMap.seconds & RTC_CLOCK_INTEGRITY) || (rtcMap.control_1 & RTC_CLOCK_STOPPED))
 	{
-		debug("Init RTC: Clock integrity not guaranteed or Clock stopped, setting default time and date\n");
+		debug("Init RTC: Clock integrity not guaranteed or Clock stopped, setting default time and date\r\n");
 
 		rtcMap.control_1 |= RTC_24_HOUR_MODE;
 		ExternalRtcWrite(RTC_CONTROL_1_ADDR, 1, &rtcMap.control_1);
@@ -76,7 +76,7 @@ BOOLEAN InitExternalRtc(void)
 	}
 	else
 	{
-		debug("Ext RTC: Clock running and intergrity validated\n");
+		debug("Ext RTC: Clock running and intergrity validated\r\n");
 	}
 
 #if 1 // Normal
@@ -94,7 +94,7 @@ BOOLEAN InitExternalRtc(void)
 	// Check for RTC reset
 	if ((g_currentTime.year == 0) || (g_currentTime.month == 0) || (g_currentTime.day == 0))
 	{
-		debugWarn("Warning: External RTC date not set, assuming power loss reset... applying a default date\n");
+		debugWarn("Warning: External RTC date not set, assuming power loss reset... applying a default date\r\n");
 		// BCD formats
 		g_currentTime.year = 0x12;
 		g_currentTime.month = 0x08;
@@ -118,7 +118,7 @@ void StartExternalRtcClock(uint16 sampleRate)
 	RTC_MEM_MAP_STRUCT rtcMap;
 	uint8 clockRate;
 
-	debug("Starting External RTC Interrupt (%d ticks/sec)...\n", sampleRate);
+	debug("Starting External RTC Interrupt (%d ticks/sec)...\r\n", sampleRate);
 
 	switch (sampleRate)
 	{
@@ -143,7 +143,7 @@ void StopExternalRtcClock(void)
 {
 	RTC_MEM_MAP_STRUCT rtcMap;
 
-	debug("Stoping External RTC Interrupt\n");
+	debug("Stoping External RTC Interrupt\r\n");
 
 	// Set the clock out control to turn off any clock interrupt generation
 	rtcMap.clock_out_control = (0x07);
@@ -198,7 +198,7 @@ uint8 SetExternalRtcDate(DATE_TIME_STRUCT* time)
 			// Calculate the weekday based on the new date
 			rtcDate.weekdays = GetDayOfWeek(time->year, time->month, time->day);
 
-			//debug("Ext RTC: Apply Date: %x-%x-%x\n", rtcDate.months, rtcDate.days, rtcDate.years);
+			//debug("Ext RTC: Apply Date: %x-%x-%x\r\n", rtcDate.months, rtcDate.days, rtcDate.years);
 
 			ExternalRtcWrite(RTC_DAYS_ADDR, 4, (uint8*)&rtcDate);
 		}
@@ -227,7 +227,7 @@ DATE_TIME_STRUCT GetExternalRtcTime(void)
 	time.min = BCD_CONVERT_TO_UINT8(translateTime.minutes, RTC_BCD_MINUTES_MASK);
 	time.sec = BCD_CONVERT_TO_UINT8(translateTime.seconds, RTC_BCD_SECONDS_MASK);
 
-	//debug("Ext RTC: Get Time: %02d:%02d:%02d (%d), %02d-%02d-%02d\n\n", time.hour, time.min, time.sec, time.weekday, time.month, time.day, time.year);
+	//debug("Ext RTC: Get Time: %02d:%02d:%02d (%d), %02d-%02d-%02d\n\r\n", time.hour, time.min, time.sec, time.weekday, time.month, time.day, time.year);
 
     return (time);
 }
@@ -390,7 +390,7 @@ void EnableExternalRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second)
 	// Clear the Alarm flag
 	ExternalRtcWrite(RTC_CONTROL_2_ADDR, 1, &clearAlarmFlag);
 	
-	debug("Enable RTC Alarm with Day: %d, Hour: %d, Minute: %d and Second: %d\n", day, hour, minute, second);
+	debug("Enable RTC Alarm with Day: %d, Hour: %d, Minute: %d and Second: %d\r\n", day, hour, minute, second);
 }
 #else // Test
 ///----------------------------------------------------------------------------

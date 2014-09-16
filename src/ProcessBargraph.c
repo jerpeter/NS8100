@@ -46,7 +46,7 @@ void StartNewBargraph(void)
 	// Get the address of an empty Ram summary
 	if (GetRamSummaryEntry(&g_bargraphSummaryPtr) == FALSE)
 	{
-		debug("Out of Ram Summary Entrys\n");
+		debug("Out of Ram Summary Entrys\r\n");
 		return;
 	}
 
@@ -810,7 +810,7 @@ void MoveStartOfBargraphEventRecordToFlash(void)
 				
 	if (g_currentEventFileHandle == NULL)
 	{
-		debugErr("Failed to get a new file handle for the current Bargraph event\n");
+		debugErr("Failed to get a new file handle for the current Bargraph event\r\n");
 	}			
 
 	// Write in the current but unfinished event record to provide an offset to start writing in the data
@@ -836,7 +836,7 @@ void MoveEndOfBargraphEventRecordToFlash(void)
 	fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
 
 	fl_fclose(g_currentEventFileHandle);
-	debug("Bargraph event file closed\n");
+	debug("Bargraph event file closed\r\n");
 
 	// Store and increment the event number even if we do not save the event header information.
 	StoreCurrentEventNumber();

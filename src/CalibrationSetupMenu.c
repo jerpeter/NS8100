@@ -137,19 +137,19 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 					case UP_ARROW_KEY:
 						if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
 						{
-							//debug("Cal Menu Screen NP selected\n");
+							//debug("Cal Menu Screen NP selected\r\n");
 							OverlayMessage(getLangText(STATUS_TEXT), "CHANNEL NOISE PERCENTAGES", (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
 						{
-							//debug("Cal Menu Screen CD selected\n");
+							//debug("Cal Menu Screen CD selected\r\n");
 							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY CALIBRATED (ZERO) MIN MAX AVG", (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
 						{
-							//debug("Cal Menu Screen NCD selected\n");
+							//debug("Cal Menu Screen NCD selected\r\n");
 							// Clear the stored offsets so that the A/D channel data is raw
 							memset(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
 							
@@ -189,19 +189,19 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 							// Clear the Pretrigger buffer
 							SoftUsecWait(250 * SOFT_MSECS);
 
-							//debug("Cal Menu Screen CD selected\n");
+							//debug("Cal Menu Screen CD selected\r\n");
 							//OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY CALIBRATED (ZERO) MIN MAX AVG", 0);
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
 						{
-							//debug("Cal Menu Screen NP selected\n");
+							//debug("Cal Menu Screen NP selected\r\n");
 							OverlayMessage(getLangText(STATUS_TEXT), "CHANNEL NOISE PERCENTAGES", (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
 						{
-							//debug("Cal Menu Screen DS selected\n");
+							//debug("Cal Menu Screen DS selected\r\n");
 							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY SUCCESSIVE SAMPLES", (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_DISPLAY_SAMPLES;
 						}
@@ -254,7 +254,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 		g_triggerRecord.op_mode = previousMode;
 
 		// Reset default screen to non calibrated
-		//debug("Cal Menu Screen 1 selected\n");
+		//debug("Cal Menu Screen 1 selected\r\n");
 		s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
 
 		SETUP_MENU_MSG(MAIN_MENU);
@@ -593,7 +593,7 @@ void MnStartCal(void)
 #endif
 
 	// Enable the A/D
-	debug("Enable the A/D\n");
+	debug("Enable the A/D\r\n");
 	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
 
 	// Delay to allow AD to power up/stabilize

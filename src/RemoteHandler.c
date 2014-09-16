@@ -111,7 +111,7 @@ uint8 RemoteCmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 		
 	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
 
-	debug("\nCMH:<%s>\n", cmdMsg->msg);
+	debug("\nCMH:<%s>\r\n", cmdMsg->msg);
 
 	// Fill in the data
 	CHAR_UPPER_CASE(cmdMsg->msg[0]);
@@ -138,7 +138,7 @@ uint8 RemoteCmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 	{ 
 		if (NO == g_modemStatus.systemIsLockedFlag)
 		{
-			debug("System NOT Locked\n");
+			debug("System NOT Locked\r\n");
 		
 			// If the system is unlocked and a xfer command is not in progress 
 			// look for the next command to complet. Else, toss the message.
@@ -161,7 +161,7 @@ uint8 RemoteCmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 		}	
 		else
 		{
-			debug("System IS Locked\n");
+			debug("System IS Locked\r\n");
 		}
 	}
 

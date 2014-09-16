@@ -132,7 +132,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 				CopyDataToMenu(mn_layout_ptr);
 			}
 
-			debug("User Menu <%s>, Displayable Items: %d\n", g_userMenuCachePtr[MENU_INFO].text, USER_MENU_DISPLAY_ITEMS(g_userMenuCachePtr));
+			debug("User Menu <%s>, Displayable Items: %d\r\n", g_userMenuCachePtr[MENU_INFO].text, USER_MENU_DISPLAY_ITEMS(g_userMenuCachePtr));
 		break;
 
 		// Hanle a keypress message
@@ -339,13 +339,13 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 						// Check if the current index is beyond the first position
 						if (g_userMenuCachePtr[CURRENT_TEXT_INDEX].data > 0)
 						{
-							//debug("User Input Data String: <%s>\n", g_userMenuCacheData.text);
+							//debug("User Input Data String: <%s>\r\n", g_userMenuCacheData.text);
 
 							// Copy the string from the current index to one position left of the index
 							strcpy((char*)&(g_userMenuCacheData.text[g_userMenuCachePtr[CURRENT_TEXT_INDEX].data - 1]), 
 									(char*)&(g_userMenuCacheData.text[g_userMenuCachePtr[CURRENT_TEXT_INDEX].data]));
 
-							//debug("User Input Data String: <%s>\n", g_userMenuCacheData.text);
+							//debug("User Input Data String: <%s>\r\n", g_userMenuCacheData.text);
 
 							// Set the index to be one less (back to the same char)
 							g_userMenuCachePtr[CURRENT_TEXT_INDEX].data--;
@@ -470,7 +470,7 @@ void AdvanceInputChar(uint32 direction)
 			}
 		}
 
-		debug("User Input Advance Char: %c\n", newVal);
+		debug("User Input Advance Char: %c\r\n", newVal);
 
 		// Change the char at the current position to be the new value
 		g_userMenuCacheData.text[g_userMenuCachePtr[CURRENT_TEXT_INDEX].data] = newVal;
@@ -871,7 +871,7 @@ void CopyDataToCache(void* data)
 			{
 				// Copy the string into the data cache
 				strcpy(g_userMenuCacheData.text, (char*)data);
-				debug("User Input Text <%s>, Length: %d\n", g_userMenuCacheData.text, strlen(g_userMenuCacheData.text));
+				debug("User Input Text <%s>, Length: %d\r\n", g_userMenuCacheData.text, strlen(g_userMenuCacheData.text));
 			}			
 
 			// Set the current index to the string length
@@ -895,7 +895,7 @@ void CopyDataToCache(void* data)
 			{
 				// Set the default value in the byte data
 				g_userMenuCacheData.numByteData = (uint8)g_userMenuCacheData.intDefault;
-				debug("User Input Integer not within Range, Setting to Default: %d\n", g_userMenuCacheData.numByteData);
+				debug("User Input Integer not within Range, Setting to Default: %d\r\n", g_userMenuCacheData.numByteData);
 			}
 			
 			// Set the unit text pointer to the default unit type for the data
@@ -932,7 +932,7 @@ void CopyDataToCache(void* data)
 			{
 				// Set the default value in the word data
 				g_userMenuCacheData.numWordData = (uint16)g_userMenuCacheData.intDefault;
-				debug("User Input Integer not within Range, Setting to Default: %d\n", g_userMenuCacheData.numWordData);
+				debug("User Input Integer not within Range, Setting to Default: %d\r\n", g_userMenuCacheData.numWordData);
 			}
 
 			// Set the unit text pointer to the default unit type for the data
@@ -976,7 +976,7 @@ void CopyDataToCache(void* data)
 				{
 					// Set the default value in the long data
 					g_userMenuCacheData.numLongData = g_userMenuCacheData.intDefault;
-					debug("User Input Integer not within Range, Setting to Default: %d\n", g_userMenuCacheData.numLongData);
+					debug("User Input Integer not within Range, Setting to Default: %d\r\n", g_userMenuCacheData.numLongData);
 				}
 			}
 
@@ -1041,7 +1041,7 @@ void CopyDataToCache(void* data)
 				{
 					// Set the default value in the long data
 					g_userMenuCacheData.floatData = g_userMenuCacheData.floatDefault;
-					debug("User Input Float not within Range, Setting to Default: %f\n", g_userMenuCacheData.floatData);
+					debug("User Input Float not within Range, Setting to Default: %f\r\n", g_userMenuCacheData.floatData);
 				}
 			}
 
@@ -1100,7 +1100,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 
 			// get the string length
 			charLen = strlen(g_userMenuCacheData.text);
-			//debug("User Input Data String(%d): <%s>\n", charLen, g_userMenuCacheData.text);
+			//debug("User Input Data String(%d): <%s>\r\n", charLen, g_userMenuCacheData.text);
 
 			// Check if the string length is zero
 			if (charLen == 0)
@@ -1140,7 +1140,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				menu_layout->sub_ln = (uint8)((g_userMenuCachePtr[CURRENT_TEXT_INDEX].data % 20) + 1);
 			}
 			
-			//debug("User Input Current Index: %d, Current Line: %d, Sub Line: %d\n", 
+			//debug("User Input Current Index: %d, Current Line: %d, Sub Line: %d\r\n",
 			//		g_userMenuCachePtr[CURRENT_TEXT_INDEX].data, menu_layout->curr_ln, menu_layout->sub_ln);
 		break;
 		

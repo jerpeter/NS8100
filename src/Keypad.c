@@ -48,10 +48,10 @@ static uint8 s_keyMap[8];
 ///----------------------------------------------------------------------------
 void CycleSleepMode(void)
 {
-	if (g_sleepModeState == AVR32_PM_SMODE_STOP) { g_sleepModeState = AVR32_PM_SMODE_IDLE; debug("Sleep mode level is now: Idle\n"); }
-	else if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { g_sleepModeState = AVR32_PM_SMODE_FROZEN; debug("Sleep mode level is now: Frozen\n"); }
-	else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { g_sleepModeState = AVR32_PM_SMODE_STANDBY; debug("Sleep mode level is now: Standby\n"); }
-	else if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { g_sleepModeState = AVR32_PM_SMODE_STOP; debug("Sleep mode level is now: Stop\n"); }
+	if (g_sleepModeState == AVR32_PM_SMODE_STOP) { g_sleepModeState = AVR32_PM_SMODE_IDLE; debug("Sleep mode level is now: Idle\r\n"); }
+	else if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { g_sleepModeState = AVR32_PM_SMODE_FROZEN; debug("Sleep mode level is now: Frozen\r\n"); }
+	else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { g_sleepModeState = AVR32_PM_SMODE_STANDBY; debug("Sleep mode level is now: Standby\r\n"); }
+	else if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { g_sleepModeState = AVR32_PM_SMODE_STOP; debug("Sleep mode level is now: Stop\r\n"); }
 }
 
 ///----------------------------------------------------------------------------
@@ -118,7 +118,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 	{
 		if (s_keyMap[0] & rowMask)
 		{
-			//debug("Key Found: Row:%d, value is 0x%x\n", i, g_keypadTable[0][i]);
+			//debug("Key Found: Row:%d, value is 0x%x\r\n", i, g_keypadTable[0][i]);
 
 			keyPressed = g_keypadTable[0][i];
 			numKeysPressed++;
@@ -167,9 +167,9 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		if (numKeysPressed > 1)
 		{
 			if (ctrlKeyPressed == YES)
-				debug("Keypad: Handling ctrl key combination\n");
+				debug("Keypad: Handling ctrl key combination\r\n");
 			if (shiftKeyPressed == YES)
-				debug("Keypad: Handling shift key combination\n");
+				debug("Keypad: Handling shift key combination\r\n");
 
 			// Check if processing a combo key for the second time (under a second)
 			if (((shiftKeyPressed == YES) || (ctrlKeyPressed == YES)) && (keyPressed != KEY_NONE))
@@ -247,7 +247,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 			if (shiftKeyPressed == ON)
 			{
 				p_msg->data[0] = GetShiftChar(keyPressed);
-				//debug("Keypad: Shifted key: %c\n", (char)p_msg->data[0]);
+				//debug("Keypad: Shifted key: %c\r\n", (char)p_msg->data[0]);
 			}
 			else
 			{
@@ -339,13 +339,13 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 				{
 					//RTC_MEM_MAP_STRUCT rtcMap;
 					//ExternalRtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
-					//debug("RTC Control 1: 0x%x, Control 2: 0x%x\n", rtcMap.control_1, rtcMap.control_2);
+					//debug("RTC Control 1: 0x%x, Control 2: 0x%x\r\n", rtcMap.control_1, rtcMap.control_2);
 
 					//__monitorLogTblKey = 0;
 					//InitMonitorLog();
 					
 					//g_triggerRecord.trec.sample_rate += 1024;
-					//debug("New sample rate: %d\n", g_triggerRecord.trec.sample_rate);
+					//debug("New sample rate: %d\r\n", g_triggerRecord.trec.sample_rate);
 				}
 				
 				p_msg->cmd = 0;
@@ -373,7 +373,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					if (shiftKeyPressed == ON)
 					{
 						p_msg->data[0] = GetShiftChar(keyPressed);
-						//debug("Keypad: Shifted key: %c\n", (char)p_msg->data[0]);
+						//debug("Keypad: Shifted key: %c\r\n", (char)p_msg->data[0]);
 					}
 					else
 					{
@@ -439,7 +439,8 @@ extern void BootLoadManager(void);
 					else if (keyPressed == HELP_KEY)
 					{
 #if 1 // Test
-						CycleSleepMode();
+						//CycleSleepMode();
+						PowerUnitOff(RESET_UNIT);
 #endif
 					}
 					else if (keyPressed == KEY_BACKLIGHT)
@@ -494,13 +495,14 @@ void KeypressEventMgr(void)
 		raiseSystemEventFlag(UPDATE_MENU_EVENT);
 		SetLcdContrast(g_contrast_value);
 		PowerControl(LCD_POWER_ENABLE, ON);
+		SoftUsecWait(LCD_ACCESS_DELAY);
 		InitLcdDisplay();					// Setup LCD segments and clear display buffer
 		AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
 		// Check if the unit is monitoring, if so, reassign the monitor update timer
 		if (g_sampleProcessing == ACTIVE_STATE)
 		{
-			debug("Keypress Timer Mgr: enabling Monitor Update Timer.\n");
+			debug("Keypress Timer Mgr: enabling Monitor Update Timer.\r\n");
 			AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
 		}
 	}
@@ -674,7 +676,7 @@ uint8 ScanKeypad(void)
 	uint8 keyPressed = KEY_NONE;
 	uint8 i = 0;
 
-	//debug("MB: Reading keypad...\n");
+	//debug("MB: Reading keypad...\r\n");
 
 	//SoftUsecWait(250 * SOFT_MSECS);
 	
@@ -692,7 +694,7 @@ uint8 ScanKeypad(void)
 	s_keyMap[0] = (s_keyMap[1] & s_keyMap[2] & s_keyMap[3]);
 #endif
 
-	//debug("Scan Keypad: Key: %x\n", s_keyMap[0]);
+	//debug("Scan Keypad: Key: %x\r\n", s_keyMap[0]);
 
 	// Find keys by locating the 1's in the map
 	for (rowMask = 0x01, i = 0; i < TOTAL_KEYPAD_KEYS; i++)

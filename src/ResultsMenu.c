@@ -112,7 +112,7 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg,
 			s_monitorSessionFirstEvent = (uint16)(s_monitorSessionLastEvent - TOTAL_RAM_SUMMARIES + 1);
 		}
 
-		debug("g_lastCompletedRamSummaryIndex Event Number = %d\n", g_lastCompletedRamSummaryIndex->fileEventNum);
+		debug("g_lastCompletedRamSummaryIndex Event Number = %d\r\n", g_lastCompletedRamSummaryIndex->fileEventNum);
 
 		// Check if data corresponds to a Calibration Pulse
 		if (msg.data[0] == 13)
@@ -351,7 +351,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		if (g_summaryListMenuActive == YES)
 		{
-			debug("Results menu: updating event record cache\n");
+			debug("Results menu: updating event record cache\r\n");
 			GetEventFileRecord(g_summaryEventNumber, &resultsEventRecord);
 		}			
 		else
@@ -364,8 +364,8 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		g_updateResultsEventRecord = NO;
 
-		debugRaw("\n\tResults Evt: %04d, Mode: %d\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
-		debugRaw("\tStored peaks: a:%x r:%x v:%x t:%x\n", 
+		debugRaw("\n\tResults Evt: %04d, Mode: %d\r\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
+		debugRaw("\tStored peaks: a:%x r:%x v:%x t:%x\r\n",
 				eventRecord->summary.calculated.a.peak, 
 				eventRecord->summary.calculated.r.peak,
 				eventRecord->summary.calculated.v.peak,
@@ -916,7 +916,7 @@ EVT_RECORD* GetResultsEventInfoFromCache(uint32 fileEventNumber)
 	{		
 		if (g_resultsEventCache[i].summary.eventNumber == fileEventNumber)
 		{
-			debug("Results menu: Found cached event record info\n");
+			debug("Results menu: Found cached event record info\r\n");
 			//return (&g_resultsEventCache[i]);
 
 			ByteCpy(&resultsEventRecord, &g_resultsEventCache[i], sizeof(EVT_RECORD));
@@ -928,7 +928,7 @@ EVT_RECORD* GetResultsEventInfoFromCache(uint32 fileEventNumber)
 	}
 
 	// If here, no cache entry was found, load the event file to get the event record info
-	debug("Summary menu: Adding event record info to cache\n");
+	debug("Summary menu: Adding event record info to cache\r\n");
 	GetEventFileRecord(fileEventNumber, &resultsEventRecord);
 
 	//return (&resultsEventRecord);

@@ -50,7 +50,7 @@ void WriteMcp23018(unsigned char chip, unsigned char address, unsigned char data
 
 	if (twi_master_write(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
 	{
-		debugErr("TWI: Failure to write (single byte) to MCP23018\n");
+		debugErr("TWI: Failure to write (single byte) to MCP23018\r\n");
 	}
 }
 
@@ -81,7 +81,7 @@ void WriteMcp23018Bytes(unsigned char chip, unsigned char address,  unsigned cha
 
 	if (twi_master_write(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
 	{
-		debugErr("TWI: Failure to write (multiple bytes) to MCP23018\n");
+		debugErr("TWI: Failure to write (multiple bytes) to MCP23018\r\n");
 	}
 }
 
@@ -106,7 +106,7 @@ unsigned char ReadMcp23018(unsigned char chip, unsigned char address)
 
 	if (twi_master_read(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
 	{
-		debugErr("TWI: Failure to write to MCP23018\n");
+		debugErr("TWI: Failure to write to MCP23018\r\n");
 	}
 
 	return(s_twiData[0]);

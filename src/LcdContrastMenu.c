@@ -212,7 +212,7 @@ void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		else { contrast_buff[x] = '='; clvl -= (CONTRAST_STEPPING * 2); }
 	}
 
-    debug("Contrast level: <%s>\n", buff);
+    debug("Contrast level: <%s>\r\n", buff);
     sprintf((char*)buff,"[%s]", contrast_buff);
 
 	length = (uint8)strlen((char*)buff);

@@ -419,6 +419,6 @@ void TimerModeKeepTime(void* src_ptr)
    g_unitConfig.timerStopTime.hour = (char)rtemp[TMT_STOP_HOUR].numrec.tindex;
    g_unitConfig.timerStopTime.min = (char)rtemp[TMT_STOP_MIN].numrec.tindex;
 
-	debug("Timer Time: (Start) %d:%d -> (End) %d:%d\n", g_unitConfig.timerStartTime.hour,
+	debug("Timer Time: (Start) %d:%d -> (End) %d:%d\r\n", g_unitConfig.timerStartTime.hour,
 			g_unitConfig.timerStartTime.min, g_unitConfig.timerStopTime.hour, g_unitConfig.timerStopTime.min);
 }

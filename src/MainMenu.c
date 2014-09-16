@@ -270,12 +270,12 @@ void PromptUserUnableToEnterMonitoring(void)
 {
 	if (g_factorySetupRecord.invalid)
 	{
-		debugWarn("Factory setup record not found.\n");
+		debugWarn("Factory setup record not found.\r\n");
 		MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
 	}
 	else if (g_lowBatteryState == YES)
 	{
-		debugWarn("Monitoring unavailable due to low battery voltage\n");
+		debugWarn("Monitoring unavailable due to low battery voltage\r\n");
 		sprintf((char*)g_spareBuffer, "%s %s (%3.2f)", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT), (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE)));
 		OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
 	}

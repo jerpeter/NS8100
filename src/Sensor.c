@@ -215,17 +215,17 @@ void OneWireTest(uint8 sensor)
 
 		if (crc == romData[7])
 		{
-			debugRaw("(CRC: %x, success)\n", crc);
+			debugRaw("(CRC: %x, success)\r\n", crc);
 			OneWireFunctions(sensor);
 		}
 		else
 		{
-			debugRaw("(CRC: %x, fail)\n", crc);
+			debugRaw("(CRC: %x, fail)\r\n", crc);
 		}
 	}
 	else
 	{
-		debugRaw("\nOne Wire device not found\n");
+		debugRaw("\nOne Wire device not found\r\n");
 	}
 }
 
@@ -239,7 +239,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Memory (0xF0), Address: 0x00 -> 0x1F (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		debugRaw("Read Memory\n");
+		debugRaw("Read Memory\r\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -256,7 +256,7 @@ void OneWireFunctions(uint8 sensor)
 		for (i = 0; i < 32; i++)
 			debugRaw("%x ", OneWireReadByte(sensor));
 
-		debugRaw("\n");
+		debugRaw("\r\n");
 
 		OneWireReset(sensor);
 	}
@@ -265,7 +265,7 @@ void OneWireFunctions(uint8 sensor)
 	// Write Scratchpad (0x0F), Address: 0x00 -> 0x1F (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		debugRaw("Write Scratchpad\n");
+		debugRaw("Write Scratchpad\r\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -289,7 +289,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Scratchpad (0xAA), Address: 0x00 -> 0x1F (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		debugRaw("Read Scratchpad\n");
+		debugRaw("Read Scratchpad\r\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -306,7 +306,7 @@ void OneWireFunctions(uint8 sensor)
 		for (i = 0; i < 32; i++)
 			debugRaw("%x ", OneWireReadByte(sensor));
 
-		debugRaw("\n");
+		debugRaw("\r\n");
 
 		OneWireReset(sensor);
 	}
@@ -315,7 +315,7 @@ void OneWireFunctions(uint8 sensor)
 	// Copy Scratchpad (0x55), Validation key: 0xA5, Data line held for 10ms
 	if (OneWireReset(sensor) == YES)
 	{
-		debugRaw("Copy Scratchpad\n");
+		debugRaw("Copy Scratchpad\r\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -335,7 +335,7 @@ void OneWireFunctions(uint8 sensor)
 	// Write Application Register (0x99), Address: 0x00 -> 0x07 (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		debugRaw("Write App Register\n");
+		debugRaw("Write App Register\r\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -359,7 +359,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Status Register (0x66), Validation key: 0x00
 	if (OneWireReset(sensor) == YES)
 	{
-		debugRaw("Read Status Register\n");
+		debugRaw("Read Status Register\r\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -373,7 +373,7 @@ void OneWireFunctions(uint8 sensor)
 		debugRaw("  Data:");
 
 		// Data
-		debugRaw("%x\n", OneWireReadByte(sensor));
+		debugRaw("%x\r\n", OneWireReadByte(sensor));
 
 		OneWireReset(sensor);
 	}
@@ -382,7 +382,7 @@ void OneWireFunctions(uint8 sensor)
 	// Read Application Register (0xC3), Address: 0x00 -> 0x07 (wrap)
 	if (OneWireReset(sensor) == YES)
 	{
-		debugRaw("Read App Register\n");
+		debugRaw("Read App Register\r\n");
 
 		// Skip ROM
 		OneWireWriteByte(sensor, 0xCC);
@@ -401,7 +401,7 @@ void OneWireFunctions(uint8 sensor)
 			debugRaw("%x ", OneWireReadByte(sensor));
 		}
 
-		debugRaw("\n");
+		debugRaw("\r\n");
 
 		OneWireReset(sensor);
 	}
@@ -442,12 +442,12 @@ uint8 OneWireReadROM(uint8 sensor)
 
 		if (crc == romData[7])
 		{
-			debugRaw("(CRC: %x, success)\n", crc);
+			debugRaw("(CRC: %x, success)\r\n", crc);
 			OneWireFunctions(sensor);
 		}
 		else
 		{
-			debugRaw("(CRC: %x, fail)\n", crc);
+			debugRaw("(CRC: %x, fail)\r\n", crc);
 		}
 
 		OneWireReset(sensor);

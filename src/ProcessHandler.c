@@ -70,10 +70,12 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 
 	if (GetPowerControlState(POWER_OFF_PROTECTION_ENABLE) == OFF)
 	{
-		debug("Start Trigger: Enabling Power Off Protection\n");
+		debug("Start Trigger: Enabling Power Off Protection\r\n");
 
+#if 0 // Test with power off protection always enabled
 		// Enable power off protection
 		PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
+#endif
 	}
 
 	// Assign a one second menu update timer
@@ -126,53 +128,53 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 
 	if (op_mode == WAVEFORM_MODE)
 	{
-		debug("--- Waveform Mode Settings ---\n");
-		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
+		debug("--- Waveform Mode Settings ---\r\n");
+		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\r\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
 
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, AirTriggerConvertToUnits(trig_mn.airTriggerLevel), trig_mn.airTriggerLevel);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\r\n", trig_mn.seismicTriggerLevel, AirTriggerConvertToUnits(trig_mn.airTriggerLevel), trig_mn.airTriggerLevel);
 		}
 		else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel,
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\r\n", trig_mn.seismicTriggerLevel,
 					((float)AirTriggerConvertToUnits(trig_mn.airTriggerLevel) / (float)10000), trig_mn.airTriggerLevel);
 		}
 	}
 	else if (op_mode == BARGRAPH_MODE)
 	{
-		debug("--- Bargraph Mode Settings ---\n");
-		debug("\tSample Rate: %d, Bar Interval: %d secs, Summary Interval: %d mins\n", trig_mn.sample_rate, g_triggerRecord.bgrec.barInterval,
+		debug("--- Bargraph Mode Settings ---\r\n");
+		debug("\tSample Rate: %d, Bar Interval: %d secs, Summary Interval: %d mins\r\n", trig_mn.sample_rate, g_triggerRecord.bgrec.barInterval,
 				(g_triggerRecord.bgrec.summaryInterval / 60));
 	}
 	else if (op_mode == COMBO_MODE)
 	{
-		debug("--- Combo Mode Settings ---\n");
-		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
+		debug("--- Combo Mode Settings ---\r\n");
+		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\r\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
 
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel, AirTriggerConvertToUnits(trig_mn.airTriggerLevel), trig_mn.airTriggerLevel);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\r\n", trig_mn.seismicTriggerLevel, AirTriggerConvertToUnits(trig_mn.airTriggerLevel), trig_mn.airTriggerLevel);
 		}
 		else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\n", trig_mn.seismicTriggerLevel,
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\r\n", trig_mn.seismicTriggerLevel,
 					((float)AirTriggerConvertToUnits(trig_mn.airTriggerLevel) / (float)10000), trig_mn.airTriggerLevel);
 		}
 
-		debug("\tBar Interval: %d secs, Summary Interval: %d mins\n", g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));
+		debug("\tBar Interval: %d secs, Summary Interval: %d mins\r\n", g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));
 	}
 	else if (op_mode == MANUAL_TRIGGER_MODE)
 	{
-		debug("--- Manual Trigger Mode Settings ---\n");
+		debug("--- Manual Trigger Mode Settings ---\r\n");
 	}
 	else if (op_mode == MANUAL_CAL_MODE)
 	{
-		debug("--- Manual Cal Mode Settings ---\n");
-		debug("\tSample Rate: %d, Channels: %d\n", trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
+		debug("--- Manual Cal Mode Settings ---\r\n");
+		debug("\tSample Rate: %d, Channels: %d\r\n", trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
 	}
 
-	debug("---------------------------\n");
+	debug("---------------------------\r\n");
 
 	// Check if mode is Manual Cal
 	if (op_mode == MANUAL_CAL_MODE)
@@ -206,11 +208,11 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	}
 
 	// Initialize buffers and settings and gp_ramEventRecord
-	debug("Init data buffers\n");
+	debug("Init data buffers\r\n");
 	InitDataBuffs(op_mode);
 
 	// Setup Analog controls
-	debug("Setup Analog controls\n");
+	debug("Setup Analog controls\r\n");
 
 	// Set the cutoff frequency based on sample rate
 	switch (trig_mn.sample_rate)
@@ -259,7 +261,7 @@ extern void Setup_8100_EIC_External_RTC_ISR(void);
 void StartDataCollection(uint32 sampleRate)
 {
 	// Enable the A/D
-	debug("Enable the A/D\n");
+	debug("Enable the A/D\r\n");
 	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
 
 	// Delay to allow AD to power up/stabilize
@@ -269,18 +271,18 @@ void StartDataCollection(uint32 sampleRate)
 	SetupADChannelConfig(sampleRate);
 	
 	// Get current A/D offsets for normalization
-	debug("Getting channel offsets...\n");
+	debug("Getting channel offsets...\r\n");
 	//OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), 0);
 	GetChannelOffsets(sampleRate);
 
 #if INTERNAL_SAMPLING_SOURCE
-	debug("Setup TC clocks...\n");
+	debug("Setup TC clocks...\r\n");
 	// Setup ISR to clock the data sampling
 
 	Setup_8100_TC_Clock_ISR(sampleRate, TC_SAMPLE_TIMER_CHANNEL);
 	Setup_8100_TC_Clock_ISR(CAL_PULSE_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-	debug("Setup External RTC Sample clock...\n");
+	debug("Setup External RTC Sample clock...\r\n");
 	// Setup ISR to clock the data sampling
 
 	Setup_8100_EIC_External_RTC_ISR();
@@ -289,7 +291,7 @@ void StartDataCollection(uint32 sampleRate)
 	// Init a few key values for data collection
 	DataIsrInit();
 
-	debug("Start sampling...\n");
+	debug("Start sampling...\r\n");
 	// Start the timer for collecting data
 #if INTERNAL_SAMPLING_SOURCE
 	Start_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
@@ -298,11 +300,11 @@ void StartDataCollection(uint32 sampleRate)
 #endif
 
 	// Change state to start processing the samples
-	debug("Raise signal to start sampling\n");
+	debug("Raise signal to start sampling\r\n");
 	g_sampleProcessing = ACTIVE_STATE;
 
 	// Test - Throw away at some point
-	//debugRaw("\nA1M (%d)\n", g_unitConfig.alarmOneMode);
+	//debugRaw("\nA1M (%d)\r\n", g_unitConfig.alarmOneMode);
 }
 
 ///----------------------------------------------------------------------------
@@ -334,7 +336,7 @@ void StopMonitoring(uint8 mode, uint8 operation)
 		{
 			while (getSystemEventState(TRIGGER_EVENT))
 			{
-				debug("Handle Waveform Trigger Event Completion\n");
+				debug("Handle Waveform Trigger Event Completion\r\n");
 				MoveWaveformEventToFlash();
 			}
 		}
@@ -343,7 +345,7 @@ void StopMonitoring(uint8 mode, uint8 operation)
 		{
 			while (getSystemEventState(TRIGGER_EVENT))
 			{
-				debug("Handle Combo - Waveform Trigger Event Completion\n");
+				debug("Handle Combo - Waveform Trigger Event Completion\r\n");
 				MoveComboWaveformEventToFile();
 			}
 		}
@@ -351,14 +353,14 @@ void StopMonitoring(uint8 mode, uint8 operation)
 		if (mode == BARGRAPH_MODE)
 		{
 			// Handle the end of a Bargraph event
-			debug("Handle End of Bargraph event\n");
+			debug("Handle End of Bargraph event\r\n");
 			EndBargraph();
 		}
 		
 		if (mode == COMBO_MODE)
 		{
 			// Handle the end of a Combo Bargraph event
-			debug("Handle End of Combo - Bargraph event\n");
+			debug("Handle End of Combo - Bargraph event\r\n");
 			EndCombo();
 		}
 		
@@ -416,9 +418,11 @@ void StopDataCollection(void)
 	// Check if not in Timer Mode and if the Power Off protection is enabled
 	if ((g_unitConfig.timerMode != ENABLED) && (GetPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
 	{
+#if 0 // Test with power off protection always enabled
 		// Disable power off protection
-		debug("Stop Trigger: Disabling Power Off Protection\n");
+		debug("Stop Trigger: Disabling Power Off Protection\r\n");
 		PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+#endif
 	}
 }
 
@@ -445,7 +449,7 @@ void WaitForEventProcessingToFinish(void)
 {
 	if (g_doneTakingEvents == PENDING)
 	{
-		debug("ISR Monitor process is still pending\n");
+		debug("ISR Monitor process is still pending\r\n");
 		
 		OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
 
@@ -526,7 +530,7 @@ void GetManualCalibration(void)
 
 	if (getSystemEventState(MANUAL_CAL_EVENT))
 	{
-		debug("Manual Cal Pulse Event (Monitoring)\n");
+		debug("Manual Cal Pulse Event (Monitoring)\r\n");
 		MoveManualCalToFlash();
 	}
 }

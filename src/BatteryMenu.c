@@ -149,7 +149,7 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// ********** Print Battery text **********
 	ByteSet(&buff[0], 0, sizeof(buff));
     sprintf((char*)buff,"%.2f %s", curr_batt_volts, getLangText(VOLTS_TEXT));
-	debug("Battery: %s\n", (char*)&buff[0]);
+	debug("Battery: %s\r\n", (char*)&buff[0]);
 
     wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
     WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);

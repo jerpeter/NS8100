@@ -207,7 +207,7 @@ void ProcessWaveformData(void)
 
 						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
-						//debugRaw("TE\n");
+						//debugRaw("TE\r\n");
 						raiseSystemEventFlag(TRIGGER_EVENT);
 						g_calTestExpected = 0;
 					}
@@ -234,7 +234,7 @@ void ProcessWaveformData(void)
 
 						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
-						//debugRaw("TE\n");
+						//debugRaw("TE\r\n");
 						raiseSystemEventFlag(TRIGGER_EVENT);
 						g_calTestExpected = 0;
 					}
@@ -262,7 +262,7 @@ void ProcessWaveformData(void)
 
 						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
-						//debugRaw("TE\n");
+						//debugRaw("TE\r\n");
 						raiseSystemEventFlag(TRIGGER_EVENT);
 						g_calTestExpected = 0;
 					}
@@ -376,7 +376,7 @@ void MoveWaveformEventToFlash(void)
 			case FLASH_IDLE:
 				if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 				{
-					debugErr("Out of Ram Summary Entrys\n");
+					debugErr("Out of Ram Summary Entrys\r\n");
 				}
 
 				// Added temporarily to prevent SPI access issues
@@ -543,7 +543,7 @@ void MoveWaveformEventToFlash(void)
 
 					if (g_currentEventFileHandle == NULL)
 					{
-						debugErr("Failed to get a new file handle for the current Waveform event\n");
+						debugErr("Failed to get a new file handle for the current Waveform event\r\n");
 						
 						//ReInitSdCardAndFat32();
 						//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
@@ -561,7 +561,7 @@ void MoveWaveformEventToFlash(void)
 
 						// Done writing the event file, close the file handle
 						fl_fclose(g_currentEventFileHandle);
-						debug("Event file closed\n");
+						debug("Event file closed\r\n");
 
 						ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 					
@@ -595,7 +595,7 @@ void MoveWaveformEventToFlash(void)
 
 					raiseMenuEventFlag(RESULTS_MENU_EVENT);
 
-					//debug("DataBuffs: Changing flash move state: %s\n", "FLASH_IDLE");
+					//debug("DataBuffs: Changing flash move state: %s\r\n", "FLASH_IDLE");
 					waveformProcessingState = FLASH_IDLE;
 					g_freeEventBuffers++;
 

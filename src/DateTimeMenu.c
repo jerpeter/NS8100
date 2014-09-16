@@ -113,7 +113,7 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 
 			time = GetExternalRtcTime();
 
-			debug("Date/Time Menu: Current Date: %d-%d-%d  Current Time: %d:%d:%d.%d \n",
+			debug("Date/Time Menu: Current Date: %d-%d-%d  Current Time: %d:%d:%d.%d\r\n",
 				time.day, time.month, time.year,
 					time.hour, time.min, time.sec, time.hundredths);
 
@@ -139,7 +139,7 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 					SetExternalRtcDate(&time);
 					UpdateCurrentTime();
 
-					debug("Date/Time Menu: New Date: %d-%d-%d  New Time: %d:%d:%d.%d \n",
+					debug("Date/Time Menu: New Date: %d-%d-%d  New Time: %d:%d:%d.%d\r\n",
 						time.day, time.month, time.year,
 							time.hour, time.min, time.sec, time.hundredths);
 
@@ -151,9 +151,10 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 
 						g_unitConfig.timerMode = DISABLED;
 
+#if 0 // Test with power off protection always enabled
 						// Disable the Power Off Protection
 						PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
-
+#endif
 						// Disable the Power Off timer if it's set
 						ClearSoftTimer(POWER_OFF_TIMER_NUM);
 

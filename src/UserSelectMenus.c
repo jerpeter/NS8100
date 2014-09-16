@@ -1416,8 +1416,10 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 					{
 						g_unitConfig.timerMode = DISABLED;
 
+#if 0 // Test with power off protection always enabled
 						// Disable power off protection
 						PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+#endif
 
 						// Disable the Power Off timer if it's set
 						ClearSoftTimer(POWER_OFF_TIMER_NUM);
@@ -2110,7 +2112,7 @@ void PretriggerSizeMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_unitConfig.pretrigBufferDivider = (uint8)pretriggerSizeMenu[newItemIndex].data;
 
-		debug("New Pretrigger divider: %d\n", g_unitConfig.pretrigBufferDivider);
+		debug("New Pretrigger divider: %d\r\n", g_unitConfig.pretrigBufferDivider);
 
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
@@ -2388,7 +2390,7 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 					getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT));
 			MessageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
 
-			debug("Sample Rate: %d is not supported for this mode.\n", g_triggerRecord.trec.record_time_max);
+			debug("Sample Rate: %d is not supported for this mode.\r\n", g_triggerRecord.trec.record_time_max);
 
 			SETUP_USER_MENU_MSG(&sampleRateMenu, sampleRateMenu[DEFAULT_ITEM_2].data);
 		}
@@ -2402,7 +2404,7 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * g_sensorInfoPtr->numOfChannels)) /
 				(g_triggerRecord.trec.sample_rate * g_sensorInfoPtr->numOfChannels))));
 
-			debug("New Max Record Time: %d\n", g_triggerRecord.trec.record_time_max);
+			debug("New Max Record Time: %d\r\n", g_triggerRecord.trec.record_time_max);
 
 			SETUP_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
 		}
@@ -2605,8 +2607,8 @@ void SensorTypeMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_factorySetupRecord.sensor_type = (uint16)sensorTypeMenu[newItemIndex].data;
 
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { debug("Factory Setup: New Seismic sensor type: Accelerometer\n"); }
-		else { debug("Factory Setup: New Seismic sensor type: %3.1f in\n", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
+		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { debug("Factory Setup: New Seismic sensor type: Accelerometer\r\n"); }
+		else { debug("Factory Setup: New Seismic sensor type: %3.1f in\r\n", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
 
 		if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
 		{

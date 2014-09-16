@@ -46,14 +46,12 @@ static uint16 s_currFlashSummary;
 ///----------------------------------------------------------------------------
 void InitRamSummaryTbl(void)
 {
-	debug("Initializing ram summary table...\n");
+	debug("Initializing ram summary table...\r\n");
 
 	// Basically copying all FF's to the ram summary table
 	ByteSet(&__ramFlashSummaryTbl[0], 0xFF, (sizeof(SUMMARY_DATA) * TOTAL_RAM_SUMMARIES));
 
 	__ramFlashSummaryTblKey = VALID_RAM_SUMMARY_TABLE_KEY;
-
-	//debugRaw(" done.\n");
 }
 
 ///----------------------------------------------------------------------------
@@ -80,7 +78,7 @@ void CopyValidFlashEventSummariesToRam(void)
 	char overlayText[50];
 	uint8 i = 0;
 	
-	debug("Copying valid SD event summaries to ram...\n");
+	debug("Copying valid SD event summaries to ram...\r\n");
 
 	fl_directory_start_cluster("C:\\Events", &dirStartCluster);
     ListDirectory(dirStartCluster, dirList, NO);
@@ -109,12 +107,12 @@ void CopyValidFlashEventSummariesToRam(void)
 
 			if (eventFile == NULL)
 			{
-				debugErr("Error: Event File %s not found!\r\n", dirList[entriesFound].name);
+				debugErr("Event File %s not found\r\n", dirList[entriesFound].name);
 				OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
 			}			
 			else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
 			{
-				debugErr("Error: Event File %s is corrupt!\r\n", dirList[entriesFound].name);
+				debugErr("Event File %s is corrupt\r\n", dirList[entriesFound].name);
 				OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
 			}			
 			else
@@ -129,11 +127,12 @@ void CopyValidFlashEventSummariesToRam(void)
 				{
 					//fl_fread(eventFile, (uint8*)&tempEventRecord.summary, sizeof(EVENT_SUMMARY_STRUCT));
 
-					debug("Found Valid Event File: %s, with Event #: %d, Mode: %d, Size: %s, RSI: %d\n", 
+#if 0
+					debug("Found Valid Event File: %s, with Event #: %d, Mode: %d, Size: %s, RSI: %d\r\n", 
 							dirList[entriesFound].name, tempEventRecord.summary.eventNumber, tempEventRecord.summary.mode, 
 							(eventFile->filelength == (tempEventRecord.header.headerLength + tempEventRecord.header.summaryLength + 
 							tempEventRecord.header.dataLength)) ? "Correct" : "Incorrect", ramSummaryIndex);
-					
+#endif				
 					__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = tempEventRecord.summary.eventNumber;
 
 #if 0
@@ -167,7 +166,7 @@ void CopyValidFlashEventSummariesToRam(void)
 	uint32 eventSize = 0;
 	EVT_RECORD* flashEventPtr = (EVT_RECORD*)FLASH_EVENT_START;
 
-	debug("Copying valid flash event summaries to ram...");
+	debug("Copying valid flash event summaries to ram...\r\n");
 
 	// Start with beginning of flash event table
 	while (flashEventPtr < (EVT_RECORD*)FLASH_EVENT_END)
@@ -177,7 +176,7 @@ void CopyValidFlashEventSummariesToRam(void)
 			((flashEventPtr->header.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
 			(flashEventPtr->header.headerLength == eventHeaderSize))
 		{
-			//debugRaw("*** Found Event (%d) at: 0x%x with sizes: 0x%x, 0x%x, 0x%x, event #: %d, mode: 0x%x\n",
+			//debugRaw("*** Found Event (%d) at: 0x%x with sizes: 0x%x, 0x%x, 0x%x, event #: %d, mode: 0x%x\r\n",
 			//	ramSummaryIndex+1, flashEventPtr, flashEventPtr->header.headerLength,
 			//	flashEventPtr->header.summaryLength, flashEventPtr->header.dataLength,
 			//	flashEventPtr->summary.eventNumber, flashEventPtr->summary.mode);
@@ -195,14 +194,14 @@ void CopyValidFlashEventSummariesToRam(void)
 
 			if (((uint32)flashEventPtr + eventSize) >= FLASH_EVENT_END)
 			{
-				//debugRaw("\nDiscovered a Flash Event that wraps.\n");
-				//debugRaw("Assuming the end of events to find.\n");
+				//debugRaw("\nDiscovered a Flash Event that wraps.\r\n");
+				//debugRaw("Assuming the end of events to find.\r\n");
 				break;
 			}
 
 			flashEventPtr = (EVT_RECORD*)((uint32)flashEventPtr + eventSize);
 
-			//debugRaw("Next flashEventPtr (0x%x) Start Flag: 0x%x\n", flashEventPtr, flashEventPtr->header.startFlag);
+			//debugRaw("Next flashEventPtr (0x%x) Start Flag: 0x%x\r\n", flashEventPtr, flashEventPtr->header.startFlag);
 		}
 
 		// Else increment the flash event pointer, move two words, scanning memory.
@@ -214,14 +213,7 @@ void CopyValidFlashEventSummariesToRam(void)
 	}
 #endif
 
-	if (ramSummaryIndex == 0)
-	{
-		debugRaw(" done (none discovered).");
-	}
-	else
-	{
-		debugRaw(" done (discovered %d).", ramSummaryIndex);
-	}
+	//debug("Done copying events to summary (discovered %d)\r\n", ramSummaryIndex);
 }
 
 ///----------------------------------------------------------------------------
@@ -231,7 +223,7 @@ void CondenseRamSummaryTable(void)
 {
 	uint16 i = 0, j = 0;
 
-	debug("Condensing ram summary table...\n");
+	debug("Condensing ram summary table...\r\n");
 
 	// Find the empty summary entries between the valid entries and condense the ram summary table
 	for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
@@ -259,13 +251,13 @@ void CondenseRamSummaryTable(void)
 			// If we didnt find a valid summary entry and hit the end of the table, we are done.
 			if (j == TOTAL_RAM_SUMMARIES)
 			{
-				//debugRaw(" done.\n");
+				//debugRaw(" done.\r\n");
 				return;
 			}
 		}
 	}
 
-	//debugRaw(" done.\n");
+	//debugRaw(" done.\r\n");
 }
 
 ///----------------------------------------------------------------------------
@@ -298,10 +290,10 @@ uint8 InitFlashEvtBuff(void)
 	{
 		if (*tempEncodeLinePtr != 0xFFFF)
 		{
-			debugWarn("Next flash event storage location (to the end of the sector) is not empty\n");
+			debugWarn("Next flash event storage location (to the end of the sector) is not empty\r\n");
 
 			// Handle partial event
-			debugWarn("Handling partial flash event error...\n");
+			debugWarn("Handling partial flash event error...\r\n");
 
 			ReclaimSpace(tempEncodeLinePtr);
 			CondenseRamSummaryTable();
@@ -316,7 +308,7 @@ uint8 InitFlashEvtBuff(void)
 				}
 			}
 
-			//debugRaw(" done.\n");
+			//debugRaw(" done.\r\n");
 			return (FAILED);
 		}
 
@@ -325,8 +317,8 @@ uint8 InitFlashEvtBuff(void)
 
 	s_flashDataPtr = (uint16*)tempEventPtr;
 
-	debug("Current Flash Event Pointer: %p\n", s_flashDataPtr);
-	debug("Current Flash Sector boundary: %p\n", s_endFlashSectorPtr);
+	debug("Current Flash Event Pointer: %p\r\n", s_flashDataPtr);
+	debug("Current Flash Sector boundary: %p\r\n", s_endFlashSectorPtr);
 #endif
 
 	return (PASSED);
@@ -349,13 +341,13 @@ void InitFlashBuffs(void)
 	// Initialize the number of ram summarys
 	s_numOfFlashSummarys = 0;
 
-	//debug("Flash Event start: 0x%x End: 0x%x\n", FLASH_EVENT_START, FLASH_EVENT_END);
+	//debug("Flash Event start: 0x%x End: 0x%x\r\n", FLASH_EVENT_START, FLASH_EVENT_END);
 
 	// Init Ram Summary Table - Check to see if the ram summary table is valid
 	if (__ramFlashSummaryTblKey != VALID_RAM_SUMMARY_TABLE_KEY)
 	{
 		// Table is invalid, key is missing
-		//debugRaw("Ram Summary Key not found.\n");
+		//debugRaw("Ram Summary Key not found.\r\n");
 		dataInRamGarbage = TRUE;
 	}
 	else // Verify and count every ram summary link that points to an event
@@ -370,7 +362,7 @@ void InitFlashBuffs(void)
 				if((uint32)(__ramFlashSummaryTbl[i].fileEventNum) >= g_nextEventNumberToUse)
 				{
 					// This signals a big warning
-					//debugRaw("Data in Ram Summary Table is garbage.\n");
+					//debugRaw("Data in Ram Summary Table is garbage.\r\n");
 
 					// Assume the whole table is garbage, so just recreate it
 					dataInRamGarbage = TRUE;
@@ -378,7 +370,7 @@ void InitFlashBuffs(void)
 				}
 				else if(CheckValidEventFile((uint16)((uint32)(__ramFlashSummaryTbl[i].fileEventNum))) == NO)
 				{
-					//debugRaw("Ram summary (%d) points to an invalid event.\n", i+1);
+					//debugRaw("Ram summary (%d) points to an invalid event.\r\n", i+1);
 					__ramFlashSummaryTbl[i].fileEventNum = 0xFFFFFFFF;
 				}
 				else
@@ -421,7 +413,7 @@ void InitFlashBuffs(void)
 		CondenseRamSummaryTable();
 	}
 
-	debug("Number of Event Summaries found in RAM: %d\n", s_numOfFlashSummarys);
+	debug("Number of Event Summaries found in RAM: %d\r\n", s_numOfFlashSummarys);
 
 	// Initialize some global values and check if successful
 	if (InitFlashEvtBuff() == FAILED)
@@ -562,7 +554,7 @@ void InitEventRecord(uint8 op_mode)
 			{
 				eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
 
-				debug("Seismic trigger in units: No Trigger\n");
+				debug("Seismic trigger in units: No Trigger\r\n");
 			}
 			else // Seismic trigger is valid
 			{
@@ -579,7 +571,7 @@ void InitEventRecord(uint8 op_mode)
 					tempSesmicTriggerInUnits *= (float)METRIC;
 				}
 
-				debug("Seismic trigger in units: %05.2f %s\n", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
+				debug("Seismic trigger in units: %05.2f %s\r\n", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
 				eventRec->summary.parameters.seismicTriggerInUnits = (uint32)(tempSesmicTriggerInUnits * 100);
 			}
 #endif
@@ -592,7 +584,7 @@ void InitEventRecord(uint8 op_mode)
 			{
 				eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
 
-				debug("Air trigger in units: No Trigger\n");
+				debug("Air trigger in units: No Trigger\r\n");
 			}
 			else // Air trigger is valid
 			{
@@ -602,11 +594,11 @@ void InitEventRecord(uint8 op_mode)
 
 				if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 				{
-					debug("Air trigger in units: %05.3f mB\n", (float)(eventRec->summary.parameters.airTriggerInUnits / 10000));
+					debug("Air trigger in units: %05.3f mB\r\n", (float)(eventRec->summary.parameters.airTriggerInUnits / 10000));
 				}
 				else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 				{
-					debug("Air trigger in units: %d dB\n", eventRec->summary.parameters.airTriggerInUnits);
+					debug("Air trigger in units: %d dB\r\n", eventRec->summary.parameters.airTriggerInUnits);
 				}
 			}
 #endif
@@ -657,7 +649,7 @@ void InitCurrentEventNumber(void)
 #endif
 	}
 
-	debug("Stored Event ID: %d, Next Event ID to use: %d\n", (g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
+	debug("Stored Event ID: %d, Next Event ID to use: %d\r\n", (g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
 }
 
 ///----------------------------------------------------------------------------
@@ -725,7 +717,7 @@ void StoreCurrentEventNumber(void)
 
 			// Increment to a new Event number
 			g_nextEventNumberToUse++;
-			debug("Unique Event numbers stored: %d, Current Event number: %d\n",
+			debug("Unique Event numbers stored: %d, Current Event number: %d\r\n",
 				(g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
 
 			return;
@@ -733,7 +725,7 @@ void StoreCurrentEventNumber(void)
 	}
 
 	// If we get here, then we failed a validation check
-	debugErr("Unique Event number storage doesnt match Current Event Number. (0x%x, %d)\n",
+	debugErr("Unique Event number storage doesnt match Current Event Number. (0x%x, %d)\r\n",
 				uniqueEventStoreOffset, g_nextEventNumberToUse);
 #endif // end of ns7100
 
@@ -749,7 +741,7 @@ void StoreCurrentEventNumber(void)
 
 	// Increment to a new Event number
 	g_nextEventNumberToUse++;
-	debug("Saved Event ID: %d, Next Event ID to use: %d\n", (g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
+	debug("Saved Event ID: %d, Next Event ID to use: %d\r\n", (g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
 
 	return;
 #endif
@@ -780,13 +772,13 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 	// Verify file ID
 	if (eventFile == NULL)
 	{
-		debugErr("Error: Event File %s not found!\r\n", fileName);
+		debugErr("Event File %s not found\r\n", fileName);
 		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
 	}	
 	// Verify file is big enough
 	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
 	{
-		debugErr("Error: Event File %s is corrupt!\r\n", fileName);
+		debugErr("Event File %s is corrupt\r\n", fileName);
 		OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
 	}	
 	else
@@ -798,7 +790,7 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 			((fileEventHeader.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
 			(fileEventHeader.headerLength == sizeof(EVENT_HEADER_STRUCT)))
 		{
-			debug("Found Valid Event File: %s\n", fileName);
+			debug("Found Valid Event File: %s\r\n", fileName);
 
 			fl_fread(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
 			
@@ -837,13 +829,13 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 	// Verify file ID
 	if (eventFile == NULL)
 	{
-		debugErr("Error: Event File %s not found!\r\n", fileName);
+		debugErr("Event File %s not found\r\n", fileName);
 		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
 	}	
 	// Verify file is big enough
 	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
 	{
-		debugErr("Error: Event File %s is corrupt!\r\n", fileName);
+		debugErr("Event File %s is corrupt\r\n", fileName);
 		OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
 	}	
 	else
@@ -855,7 +847,7 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 			((eventRecord->header.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
 			(eventRecord->header.headerLength == sizeof(EVENT_HEADER_STRUCT)))
 		{
-			debug("Found Valid Event File: %s\n", fileName);
+			debug("Found Valid Event File: %s\r\n", fileName);
 		}
 
 		fl_fclose(eventFile);
@@ -888,7 +880,7 @@ void DeleteEventFileRecords(void)
 	char popupText[50];
 	unsigned long int dirStartCluster;
 	
-	debug("Deleting Events...\n");
+	debug("Deleting Events...\r\n");
 
 	fl_directory_start_cluster("C:\\Events", &dirStartCluster);
     ListDirectory(dirStartCluster, dirList, NO);
@@ -929,13 +921,13 @@ void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 	// Verify file ID
 	if (eventFile == NULL)
 	{
-		debugErr("Error: Event File %s not found!\r\n", fileName);
+		debugErr("Event File %s not found\r\n", fileName);
 		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
 	}	
 	// Verify file is big enough
 	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
 	{
-		debugErr("Error: Event File %s is corrupt!\r\n", fileName);
+		debugErr("Event File %s is corrupt\r\n", fileName);
 		OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
 	}	
 	else
@@ -964,13 +956,13 @@ void CacheEventToRam(uint16 eventNumber)
 	// Verify file ID
 	if (eventFile == NULL)
 	{
-		debugErr("Error: Event File %s not found!\r\n", fileName);
+		debugErr("Event File %s not found\r\n", fileName);
 		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
 	}	
 	// Verify file is big enough
 	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
 	{
-		debugErr("Error: Event File %s is corrupt!\r\n", fileName);
+		debugErr("Event File %s is corrupt\r\n", fileName);
 		OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
 	}	
 	else
@@ -996,13 +988,13 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 	// Verify file ID
 	if (eventFile == NULL)
 	{
-		debugErr("Error: Event File %s not found!\r\n", fileName);
+		debugErr("Event File %s not found\r\n", fileName);
 		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
 	}		
 	// Verify file is big enough
 	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
 	{
-		debugErr("Error: Event File %s is corrupt!\r\n", fileName);
+		debugErr("Event File %s is corrupt\r\n", fileName);
 		OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
 	}		
 	else
@@ -1058,7 +1050,7 @@ void ReInitSdCardAndFat32(void)
 	}
 	else
 	{
-		debugErr("\n\nSD Card not detected\n");
+		debugErr("\n\nSD Card not detected\r\n");
 	}
 }
 
@@ -1075,7 +1067,7 @@ void PowerDownSDCard(void)
 	// Wait for power to propagate
 	SoftUsecWait(10 * SOFT_MSECS);
 
-	debugRaw("done.\n");
+	debugRaw("done.\r\n");
 }
 
 ///----------------------------------------------------------------------------
@@ -1083,7 +1075,7 @@ void PowerDownSDCard(void)
 ///----------------------------------------------------------------------------
 void PowerUpSDCardAndInitFat32(void)
 {
-	debugRaw("\nPowering up SD Card and ReInit Fat32... \n");
+	debugRaw("\nPowering up SD Card and ReInit Fat32... \r\n");
 
 	// Power on the SD Card
 	PowerControl(SD_POWER, ON);
@@ -1106,10 +1098,10 @@ void PowerUpSDCardAndInitFat32(void)
 	}
 	else
 	{
-		debugErr("\n\nSD Card not detected\n");
+		debugErr("\n\nSD Card not detected\r\n");
 	}
 
-	debugRaw("done.\n");
+	debugRaw("done.\r\n");
 }
 
 ///----------------------------------------------------------------------------
@@ -1126,7 +1118,7 @@ FL_FILE* GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 	switch (option)
 	{
 		case CREATE_EVENT_FILE:
-			debug("File to create: %s\n", fileName);
+			debug("File to create: %s\r\n", fileName);
 			strcpy(&fileOption[0], "w");
 			break;
 			
@@ -1189,7 +1181,7 @@ uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr)
 		// Set the current summary pointer to the current ram summary
 		*sumEntryPtr = &__ramFlashSummaryTbl[s_currFlashSummary];
 
-		debug("Ram Summary Table Entry %d: Event ID: %d\n", s_currFlashSummary, g_nextEventNumberToUse);
+		debug("Ram Summary Table Entry %d: Event ID: %d\r\n", s_currFlashSummary, g_nextEventNumberToUse);
 
 		// Increment the flash summary value.
 		s_currFlashSummary++;
@@ -1205,7 +1197,7 @@ uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr)
 		}
 	}
 
-	debug("Number of Event Summaries in RAM: %d\n", s_numOfFlashSummarys);
+	debug("Number of Event Summaries in RAM: %d\r\n", s_numOfFlashSummarys);
 
 	return (success);
 }
@@ -1237,7 +1229,7 @@ void CompleteRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 	{
 #endif
 
-	debug("Copy calculated from Waveform buffer to global ram event record\n");
+	debug("Copy calculated from Waveform buffer to global ram event record\r\n");
 		
 	// Fill in calculated data (Bargraph data filled in at the end of bargraph)
 	g_pendingEventRecord.summary.calculated.a.peak = flashSummPtr->waveShapeData.a.peak = ramSummPtr->waveShapeData.a.peak;
@@ -1245,7 +1237,7 @@ void CompleteRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 	g_pendingEventRecord.summary.calculated.v.peak = flashSummPtr->waveShapeData.v.peak = ramSummPtr->waveShapeData.v.peak;
 	g_pendingEventRecord.summary.calculated.t.peak = flashSummPtr->waveShapeData.t.peak = ramSummPtr->waveShapeData.t.peak;
 
-	debug("Newly stored peaks: a:%04x r:%04x v:%04x t:%04x\n", 
+	debug("Newly stored peaks: a:%04x r:%04x v:%04x t:%04x\r\n", 
 			g_pendingEventRecord.summary.calculated.a.peak, 
 			g_pendingEventRecord.summary.calculated.r.peak,
 			g_pendingEventRecord.summary.calculated.v.peak,
@@ -1256,7 +1248,7 @@ void CompleteRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 	g_pendingEventRecord.summary.calculated.v.frequency = flashSummPtr->waveShapeData.v.freq = ramSummPtr->waveShapeData.v.freq;
 	g_pendingEventRecord.summary.calculated.t.frequency = flashSummPtr->waveShapeData.t.freq = ramSummPtr->waveShapeData.t.freq;
 
-	debug("Newly stored freq: a:%d r:%d v:%d t:%d\n", 
+	debug("Newly stored freq: a:%d r:%d v:%d t:%d\r\n", 
 			g_pendingEventRecord.summary.calculated.a.frequency, 
 			g_pendingEventRecord.summary.calculated.r.frequency,
 			g_pendingEventRecord.summary.calculated.v.frequency,
@@ -1374,7 +1366,7 @@ void GetFlashUsageStats(FLASH_USAGE_STRUCT* usage)
 
 	if(!nav_partition_mount()) // Mount drive
 	{
-		debugErr("SD MMC Card: Unable to mount volume\n");
+		debugErr("SD MMC Card: Unable to mount volume\r\n");
 	}
 
 	usage->sizeFree = (nav_partition_freespace() << FS_SHIFT_B_TO_SECTOR);

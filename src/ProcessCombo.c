@@ -49,7 +49,7 @@ void StartNewCombo(void)
 	// Get the address and empty Ram summary
 	if (GetRamSummaryEntry(&g_comboSummaryPtr) == FALSE)
 	{
-		debug("Out of Ram Summary Entrys\n");
+		debug("Out of Ram Summary Entrys\r\n");
 		return;
 	}
 
@@ -337,7 +337,7 @@ void ProcessComboSampleData(void)
 
 						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
-						//debugRaw("TE\n");
+						//debugRaw("TE\r\n");
 						raiseSystemEventFlag(TRIGGER_EVENT);
 						g_calTestExpected = 0;
 					}
@@ -365,7 +365,7 @@ void ProcessComboSampleData(void)
 
 						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
-						//debugRaw("TE\n");
+						//debugRaw("TE\r\n");
 						raiseSystemEventFlag(TRIGGER_EVENT);
 						g_calTestExpected = 0;
 					}
@@ -394,7 +394,7 @@ void ProcessComboSampleData(void)
 
 						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
 
-						//debugRaw("TE\n");
+						//debugRaw("TE\r\n");
 						raiseSystemEventFlag(TRIGGER_EVENT);
 						g_calTestExpected = 0;
 					}
@@ -1116,7 +1116,7 @@ void MoveStartOfComboEventRecordToFile(void)
 	// Get new file handle
 	g_comboDualCurrentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 				
-	if (g_comboDualCurrentEventFileHandle == NULL) { debugErr("Failed to get a new file handle for the current Combo - Bargraph event\n"); }
+	if (g_comboDualCurrentEventFileHandle == NULL) { debugErr("Failed to get a new file handle for the current Combo - Bargraph event\r\n"); }
 
 	// Write in the current but unfinished event record to provide an offset to start writing in the data
 	fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_comboDualCurrentEventFileHandle);
@@ -1144,7 +1144,7 @@ void MoveEndOfComboEventRecordToFile(void)
 	// Mark Combo - Waveform event numbers captured
 	if ((g_pendingBargraphRecord.summary.eventNumber + 1) == g_nextEventNumberToUse)
 	{
-		debug("Combo - Bargraph: No other events recorded during session\n");
+		debug("Combo - Bargraph: No other events recorded during session\r\n");
 	}
 	else // ((g_pendingBargraphRecord.summary.eventNumber + 1) != g_nextEventNumberToUse)
 	{
@@ -1152,7 +1152,7 @@ void MoveEndOfComboEventRecordToFile(void)
 		g_pendingBargraphRecord.summary.captured.comboEventsRecordedStartNumber = (g_pendingBargraphRecord.summary.eventNumber + 1);
 		g_pendingBargraphRecord.summary.captured.comboEventsRecordedEndNumber = (g_nextEventNumberToUse - 1);
 
-		debug("Combo - Bargraph: Events recorded during session, Total: %d (%d to %d)\n", g_pendingBargraphRecord.summary.captured.comboEventsRecordedDuringSession,
+		debug("Combo - Bargraph: Events recorded during session, Total: %d (%d to %d)\r\n", g_pendingBargraphRecord.summary.captured.comboEventsRecordedDuringSession,
 				g_pendingBargraphRecord.summary.captured.comboEventsRecordedStartNumber, g_pendingBargraphRecord.summary.captured.comboEventsRecordedEndNumber);
 	}
 
@@ -1163,7 +1163,7 @@ void MoveEndOfComboEventRecordToFile(void)
 	fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, g_comboDualCurrentEventFileHandle);
 
 	fl_fclose(g_comboDualCurrentEventFileHandle);
-	debug("Bargraph event file closed\n");
+	debug("Bargraph event file closed\r\n");
 
 #if 0 // ns8100 - *NOTE* With Combo and keeping consistant with event numbers, save moved to start instead of at the end of bargraph
 	// Store and increment the event number even if we do not save the event header information.
@@ -1351,7 +1351,7 @@ void MoveComboWaveformEventToFile(void)
 			case FLASH_IDLE:
 				if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 				{
-					debugErr("Out of Ram Summary Entrys\n");
+					debugErr("Out of Ram Summary Entrys\r\n");
 				}
 
 				// Added temporarily to prevent SPI access issues
@@ -1518,7 +1518,7 @@ void MoveComboWaveformEventToFile(void)
 
 					if (g_currentEventFileHandle == NULL)
 					{
-						debugErr("Failed to get a new file handle for the current Combo - Waveform event\n");
+						debugErr("Failed to get a new file handle for the current Combo - Waveform event\r\n");
 
 						//ReInitSdCardAndFat32();
 						//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
@@ -1536,7 +1536,7 @@ void MoveComboWaveformEventToFile(void)
 
 						// Done writing the event file, close the file handle
 						fl_fclose(g_currentEventFileHandle);
-						debug("Event file closed\n");
+						debug("Event file closed\r\n");
 
 						ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 					
@@ -1571,7 +1571,7 @@ void MoveComboWaveformEventToFile(void)
 					raiseMenuEventFlag(RESULTS_MENU_EVENT);
 #endif
 
-					//debug("DataBuffs: Changing flash move state: %s\n", "FLASH_IDLE");
+					//debug("DataBuffs: Changing flash move state: %s\r\n", "FLASH_IDLE");
 					waveformProcessingState = FLASH_IDLE;
 					g_freeEventBuffers++;
 

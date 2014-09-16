@@ -56,13 +56,13 @@ void MoveManualCalToFlash(void)
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
 
-	debug("Processing Manual Cal to be saved\n");
+	debug("Processing Manual Cal to be saved\r\n");
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
 		if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
 		{
-			debugErr("Out of Ram Summary Entrys\n");
+			debugErr("Out of Ram Summary Entrys\r\n");
 		}
 
 		g_pendingEventRecord.summary.captured.eventTime = GetCurrentTime();
@@ -164,7 +164,7 @@ void MoveManualCalToFlash(void)
 				
 		if (g_currentEventFileHandle == NULL)
 		{
-			debugErr("Failed to get a new file handle for the Manual Cal event\n");
+			debugErr("Failed to get a new file handle for the Manual Cal event\r\n");
 			
 			//ReInitSdCardAndFat32();
 			//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
@@ -182,7 +182,7 @@ void MoveManualCalToFlash(void)
 
 			// Done writing the event file, close the file handle
 			fl_fclose(g_currentEventFileHandle);
-			debug("Event file closed\n");
+			debug("Event file closed\r\n");
 
 			ramSummaryEntry->fileEventNum = g_nextEventNumberToUse;
 					
@@ -216,7 +216,7 @@ void MoveManualCalToFlash(void)
 	}
 	else
 	{
-		debugWarn("Manual Cal: No free buffers\n");
+		debugWarn("Manual Cal: No free buffers\r\n");
 
 		clearSystemEventFlag(MANUAL_CAL_EVENT);
 	}

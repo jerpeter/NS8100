@@ -153,7 +153,7 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-		//if(channelConfigReadback != 0xe0d0) { configError = YES; debug("Chan 0 Config: 0x%x\n", channelConfigReadback);}
+		//if(channelConfigReadback != 0xe0d0) { configError = YES; debug("Chan 0 Config: 0x%x\r\n", channelConfigReadback);}
 		if(channelConfigReadback != 0xe150) { configError = YES; }
 
 		// Chan 1
@@ -161,7 +161,7 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->t));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-		//if(channelConfigReadback != 0xe2d0) { configError = YES; debug("Chan 1 Config: 0x%x\n", channelConfigReadback);}
+		//if(channelConfigReadback != 0xe2d0) { configError = YES; debug("Chan 1 Config: 0x%x\r\n", channelConfigReadback);}
 		if(channelConfigReadback != 0xe350) { configError = YES; }
 
 		// Chan 2
@@ -169,7 +169,7 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-		//if(channelConfigReadback != 0xe4d0) { configError = YES; debug("Chan 2 Config: 0x%x\n", channelConfigReadback);}
+		//if(channelConfigReadback != 0xe4d0) { configError = YES; debug("Chan 2 Config: 0x%x\r\n", channelConfigReadback);}
 		if(channelConfigReadback != 0xe550) { configError = YES; }
 
 		// Chan 3
@@ -177,7 +177,7 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->a));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-		//if(channelConfigReadback != 0xe6d0) { configError = YES; debug("Chan 3 Config: 0x%x\n", channelConfigReadback);}
+		//if(channelConfigReadback != 0xe6d0) { configError = YES; debug("Chan 3 Config: 0x%x\r\n", channelConfigReadback);}
 		if(channelConfigReadback != 0xe750) { configError = YES; }
 
 		// Temp
@@ -185,12 +185,12 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
-		//if(channelConfigReadback != 0xb6d0) { configError = YES; debug("Temp Config: 0x%x\n", channelConfigReadback);}
+		//if(channelConfigReadback != 0xb6d0) { configError = YES; debug("Temp Config: 0x%x\r\n", channelConfigReadback);}
 		if(channelConfigReadback != 0xb750) { configError = YES; }
 			
 		if (configError == YES)
 		{
-			debugErr("AD Channel config error! Channel data is not in sync\n");
+			debugErr("AD Channel config error! Channel data is not in sync\r\n");
 		}
 	}
 	else if (g_adChannelConfig == FOUR_AD_CHANNELS_NO_READBACK_WITH_TEMP)
@@ -618,13 +618,13 @@ void GetChannelOffsets(uint32 sampleRate)
 	// Reset offset values
 	ByteSet(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
 
-	debug("Get Channel Offset: Read and pitch... (Address boundary: %s)\n", ((uint32)(&s_tempData) % 4 == 0) ? "YES" : "NO");
+	debug("Get Channel Offset: Read and pitch... (Address boundary: %s)\r\n", ((uint32)(&s_tempData) % 4 == 0) ? "YES" : "NO");
 	// Read and pitch samples
 	for (i = 0; i < (sampleRate * 1); i++)
 	{
 		ReadAnalogData(&s_tempData);
 
-		//debug("Offset throw away data: 0x%x, 0x%x, 0x%x, 0x%x\n", s_tempData.r, s_tempData.v, s_tempData.t, s_tempData.a);
+		//debug("Offset throw away data: 0x%x, 0x%x, 0x%x, 0x%x\r\n", s_tempData.r, s_tempData.v, s_tempData.t, s_tempData.a);
 
 		// Delay equivalent to the time in between gathering samples for the current sample rate
 		SoftUsecWait(timeDelay);
@@ -636,13 +636,13 @@ void GetChannelOffsets(uint32 sampleRate)
 	s_workingChannelOffset.tTotal = 0;
 	s_workingChannelOffset.aTotal = 0;
 
-	debug("Get Channel Offset: 1st Pass Read and sum...\n");
+	debug("Get Channel Offset: 1st Pass Read and sum...\r\n");
 	// Read and sum samples
 	for (i = 0; i < (sampleRate * 1); i++)
 	{
 		ReadAnalogData(&s_tempData);
 
-		//debug("Offset sum data: 0x%x, 0x%x, 0x%x, 0x%x\n", s_tempData.r, s_tempData.v, s_tempData.t, s_tempData.a);
+		//debug("Offset sum data: 0x%x, 0x%x, 0x%x, 0x%x\r\n", s_tempData.r, s_tempData.v, s_tempData.t, s_tempData.a);
 
 		s_workingChannelOffset.rTotal += s_tempData.r;
 		s_workingChannelOffset.vTotal += s_tempData.v;
@@ -665,18 +665,18 @@ void GetChannelOffsets(uint32 sampleRate)
 	g_channelOffset.t_offset = (int16)(s_workingChannelOffset.tTotal - ACCURACY_16_BIT_MIDPOINT);
 	g_channelOffset.a_offset = (int16)(s_workingChannelOffset.aTotal - ACCURACY_16_BIT_MIDPOINT);
 
-	debug("A/D Channel First Pass channel average: 0x%x, 0x%x, 0x%x, 0x%x\n", s_workingChannelOffset.rTotal, s_workingChannelOffset.vTotal, s_workingChannelOffset.tTotal, s_workingChannelOffset.aTotal);
-	debug("A/D Channel First Pass channel offsets: %d, %d, %d, %d\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
+	debug("A/D Channel First Pass channel average: 0x%x, 0x%x, 0x%x, 0x%x\r\n", s_workingChannelOffset.rTotal, s_workingChannelOffset.vTotal, s_workingChannelOffset.tTotal, s_workingChannelOffset.aTotal);
+	debug("A/D Channel First Pass channel offsets: %d, %d, %d, %d\r\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 
 	InitAndSeedChannelOffsetVariables();
 
-	debug("Get Channel Offset: 2nd Pass Read and sum...\n");
+	debug("Get Channel Offset: 2nd Pass Read and sum...\r\n");
 	// Read and sum samples
 	for (i = 0; i < (sampleRate * 1); i++)
 	{
 		ReadAnalogData(&s_tempData);
 
-		//debug("Offset sum data: 0x%x, 0x%x, 0x%x, 0x%x\n", s_tempData.r, s_tempData.v, s_tempData.t, s_tempData.a);
+		//debug("Offset sum data: 0x%x, 0x%x, 0x%x, 0x%x\r\n", s_tempData.r, s_tempData.v, s_tempData.t, s_tempData.a);
 
 		if (((s_tempData.r - g_channelOffset.r_offset) > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_MIN_VALUE)) && 
 			(((s_tempData.r - g_channelOffset.r_offset) < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_MIN_VALUE))))
@@ -722,8 +722,8 @@ void GetChannelOffsets(uint32 sampleRate)
 	g_channelOffset.t_offset = (int16)(s_workingChannelOffset.tTotal - ACCURACY_16_BIT_MIDPOINT);
 	g_channelOffset.a_offset = (int16)(s_workingChannelOffset.aTotal - ACCURACY_16_BIT_MIDPOINT);
 
-	debug("A/D Channel Second Pass channel average: 0x%x, 0x%x, 0x%x, 0x%x\n", s_workingChannelOffset.rTotal, s_workingChannelOffset.vTotal, s_workingChannelOffset.tTotal, s_workingChannelOffset.aTotal);
-	debug("A/D Channel Second Pass channel offsets: %d, %d, %d, %d\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
+	debug("A/D Channel Second Pass channel average: 0x%x, 0x%x, 0x%x, 0x%x\r\n", s_workingChannelOffset.rTotal, s_workingChannelOffset.vTotal, s_workingChannelOffset.tTotal, s_workingChannelOffset.aTotal);
+	debug("A/D Channel Second Pass channel offsets: %d, %d, %d, %d\r\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 
 	// If we had to power on the A/D here locally, then power it off
 	if (powerAnalogDown == YES)
@@ -805,7 +805,7 @@ void UpdateChannelOffsetsForTempChange(void)
 							(abs(s_workingChannelOffset.rTotal - s_compareChannelOffset.rTotal) < 4) &&
 							(abs(s_workingChannelOffset.rTotal - s_compareChannelOffset.rTotal) < 4))
 						{
-							debug("Temp change - A/D Channel offsets (old): %d, %d, %d, %d\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
+							debug("Temp change - A/D Channel offsets (old): %d, %d, %d, %d\r\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 
 							// Adjust the channel offsets
 							g_channelOffset.r_offset += (int16)(s_workingChannelOffset.rTotal - ACCURACY_16_BIT_MIDPOINT);
@@ -813,7 +813,7 @@ void UpdateChannelOffsetsForTempChange(void)
 							g_channelOffset.t_offset += (int16)(s_workingChannelOffset.tTotal - ACCURACY_16_BIT_MIDPOINT);
 							g_channelOffset.a_offset += (int16)(s_workingChannelOffset.aTotal - ACCURACY_16_BIT_MIDPOINT);
 
-							debug("Temp change - A/D Channel offsets (new): %d, %d, %d, %d\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
+							debug("Temp change - A/D Channel offsets (new): %d, %d, %d, %d\r\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 
 							clearSystemEventFlag(UPDATE_OFFSET_EVENT);
 						}
@@ -830,11 +830,11 @@ void UpdateChannelOffsetsForTempChange(void)
 			// Check if the comparison structure is empty (unfilled)
 			if (s_compareChannelOffset.rTotal == 0)
 			{
-				debug("Resume Offset adjustment for temp drift (0x%x), First Pass...\n", g_storedTempReading);
+				debug("Resume Offset adjustment for temp drift (0x%x), First Pass...\r\n", g_storedTempReading);
 			}
 			else
 			{
-				debug("Resume Offset adjustment for temp drift (0x%x), Second Pass...\n", g_storedTempReading);
+				debug("Resume Offset adjustment for temp drift (0x%x), Second Pass...\r\n", g_storedTempReading);
 			}
 			
 			// Initialize the counter for checking samples

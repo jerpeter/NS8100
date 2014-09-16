@@ -95,17 +95,17 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR)
 		{
-			debug("Air Trigger: No Trigger\n");
+			debug("Air Trigger: No Trigger\r\n");
 		}
 		else
 		{
 			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{ 
-				debug("Air Trigger: %d dB\n", *((uint32*)data));
+				debug("Air Trigger: %d dB\r\n", *((uint32*)data));
 			}
 			else // MILLIBAR_TYPE (true value has been shifted up by 10,000)
 			{
-				debug("Air Trigger: %f mb\n", (float)(*((uint32*)data)) / (float)10000);
+				debug("Air Trigger: %f mb\r\n", (float)(*((uint32*)data)) / (float)10000);
 			}
 		}
 
@@ -163,14 +163,14 @@ void AlarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 		
 		if (g_unitConfig.alarmOneSeismicLevel == NO_TRIGGER_CHAR)
 		{
-			debug("Alarm 1 Seismic Trigger: No Trigger\n");
+			debug("Alarm 1 Seismic Trigger: No Trigger\r\n");
 		}
 		else
 		{
 #if 1 // ns8100 - Up convert to 16-bit
 			g_unitConfig.alarmOneSeismicLevel *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 #endif
-			debug("Alarm 1 Seismic Level Count: %d\n", g_unitConfig.alarmOneSeismicLevel);
+			debug("Alarm 1 Seismic Level Count: %d\r\n", g_unitConfig.alarmOneSeismicLevel);
 		}
 
 		if (g_unitConfig.alarmOneMode == ALARM_MODE_BOTH)
@@ -235,7 +235,7 @@ void AlarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_unitConfig.alarmOneAirLevel = AirTriggerConvert(*((uint32*)data));
 		
-		debug("Alarm 1 Air Level: %d\n", g_unitConfig.alarmOneAirLevel);
+		debug("Alarm 1 Air Level: %d\r\n", g_unitConfig.alarmOneAirLevel);
 
 		SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmOneTimeMenu, &g_unitConfig.alarmOneTime,
 			ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT, 
@@ -290,7 +290,7 @@ void AlarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_unitConfig.alarmOneTime = *((float*)data);
 		
-		debug("Alarm 1 Time: %f\n", g_unitConfig.alarmOneTime);
+		debug("Alarm 1 Time: %f\r\n", g_unitConfig.alarmOneTime);
 
 		SETUP_USER_MENU_MSG(&alarmTwoMenu, g_unitConfig.alarmTwoMode);
 	}
@@ -361,14 +361,14 @@ void AlarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 		
 		if (g_unitConfig.alarmTwoSeismicLevel == NO_TRIGGER_CHAR)
 		{
-			debug("Alarm 2 Seismic Trigger: No Trigger\n");
+			debug("Alarm 2 Seismic Trigger: No Trigger\r\n");
 		}
 		else
 		{
 #if 1 // ns8100 - Up convert to 16-bit
 			g_unitConfig.alarmTwoSeismicLevel *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 #endif
-			debug("Alarm 2 Seismic Level Count: %d\n", g_unitConfig.alarmTwoSeismicLevel);
+			debug("Alarm 2 Seismic Level Count: %d\r\n", g_unitConfig.alarmTwoSeismicLevel);
 		}
 
 		if (g_unitConfig.alarmTwoMode == ALARM_MODE_BOTH)
@@ -433,7 +433,7 @@ void AlarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_unitConfig.alarmTwoAirLevel = AirTriggerConvert(*((uint32*)data));
 		
-		debug("Alarm 2 Air Level: %d\n", g_unitConfig.alarmTwoAirLevel);
+		debug("Alarm 2 Air Level: %d\r\n", g_unitConfig.alarmTwoAirLevel);
 
 		SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_unitConfig.alarmTwoTime,
 			ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT, 
@@ -488,7 +488,7 @@ void AlarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_unitConfig.alarmTwoTime = *((float*)data);
 		
-		debug("Alarm 2 Time: %f\n", g_unitConfig.alarmTwoTime);
+		debug("Alarm 2 Time: %f\r\n", g_unitConfig.alarmTwoTime);
 
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
@@ -559,7 +559,7 @@ void CompanyMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{	
 		strcpy((char*)(&g_triggerRecord.trec.client), (char*)data);
-		debug("Company: <%s>, Length: %d\n", g_triggerRecord.trec.client, strlen((char*)g_triggerRecord.trec.client));
+		debug("Company: <%s>, Length: %d\r\n", g_triggerRecord.trec.client, strlen((char*)g_triggerRecord.trec.client));
 		
 		SETUP_USER_MENU_MSG(&seismicLocationMenu, &g_triggerRecord.trec.loc);
 	}
@@ -609,7 +609,7 @@ void CopiesMenuHandler(uint8 keyPressed, void* data)
 		else // g_summaryListMenuActive == NO
 		{
 			g_unitConfig.copies = *((uint8*)data);
-			debug("Copies: %d\n", g_unitConfig.copies);
+			debug("Copies: %d\r\n", g_unitConfig.copies);
 
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
@@ -652,7 +652,7 @@ void DistanceToSourceMenuHandler(uint8 keyPressed, void* data)
 		if (g_unitConfig.unitsOfMeasure == METRIC_TYPE)
 			g_triggerRecord.trec.dist_to_source *= FT_PER_METER;
 
-		debug("Distance to Source: %f ft\n", g_triggerRecord.trec.dist_to_source);
+		debug("Distance to Source: %f ft\r\n", g_triggerRecord.trec.dist_to_source);
 
 		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 		{
@@ -698,7 +698,7 @@ void LcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_triggerRecord.berec.impulseMenuUpdateSecs = *((uint8*)data);
 
-		debug("LCD Impulse Menu Update Seconds: %d\n", g_triggerRecord.berec.impulseMenuUpdateSecs);
+		debug("LCD Impulse Menu Update Seconds: %d\r\n", g_triggerRecord.berec.impulseMenuUpdateSecs);
 
 		SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
@@ -737,7 +737,7 @@ void LcdTimeoutMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_unitConfig.lcdTimeout = *((uint8*)data);
 
-		debug("LCD Timeout: %d\n", g_unitConfig.lcdTimeout);
+		debug("LCD Timeout: %d\r\n", g_unitConfig.lcdTimeout);
 
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
@@ -777,7 +777,7 @@ void ModemDialMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{	
 		strcpy((char*)(&g_modemSetupRecord.dial), (char*)data);
-		debug("Modem Dial: <%s>, Length: %d\n", g_modemSetupRecord.dial, strlen((char*)g_modemSetupRecord.dial));
+		debug("Modem Dial: <%s>, Length: %d\r\n", g_modemSetupRecord.dial, strlen((char*)g_modemSetupRecord.dial));
 
 		SETUP_USER_MENU_MSG(&modemResetMenu, &g_modemSetupRecord.reset);
 	}
@@ -816,7 +816,7 @@ void ModemInitMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{	
 		strcpy((char*)(&g_modemSetupRecord.init), (char*)data);
-		debug("Modem Init: <%s>, Length: %d\n", g_modemSetupRecord.init, strlen((char*)g_modemSetupRecord.init));
+		debug("Modem Init: <%s>, Length: %d\r\n", g_modemSetupRecord.init, strlen((char*)g_modemSetupRecord.init));
 
 		SETUP_USER_MENU_MSG(&modemDialMenu, &g_modemSetupRecord.dial);
 	}
@@ -853,7 +853,7 @@ void modemResetMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{	
 		strcpy((char*)(&g_modemSetupRecord.reset), (char*)data);
-		debug("Modem Reset: <%s>, Length: %d\n", g_modemSetupRecord.reset, strlen((char*)g_modemSetupRecord.reset));
+		debug("Modem Reset: <%s>, Length: %d\r\n", g_modemSetupRecord.reset, strlen((char*)g_modemSetupRecord.reset));
 
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&modemRetryMenu, &g_modemSetupRecord.retries,
 			MODEM_RETRY_DEFAULT_VALUE, MODEM_RETRY_MIN_VALUE, MODEM_RETRY_MAX_VALUE);
@@ -890,7 +890,7 @@ void ModemRetryMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{	
 		g_modemSetupRecord.retries = *((uint8*)data);
-		debug("Modem Retries: %d\n", g_modemSetupRecord.retries);
+		debug("Modem Retries: %d\r\n", g_modemSetupRecord.retries);
 		
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&modemRetryTimeMenu, &g_modemSetupRecord.retryTime,
 			MODEM_RETRY_TIME_DEFAULT_VALUE, MODEM_RETRY_TIME_MIN_VALUE, MODEM_RETRY_TIME_MAX_VALUE);
@@ -927,7 +927,7 @@ void ModemRetryTimeMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{	
 		g_modemSetupRecord.retryTime = *((uint8*)data);
-		debug("Modem Retry Time: %d\n", g_modemSetupRecord.retryTime);
+		debug("Modem Retry Time: %d\r\n", g_modemSetupRecord.retryTime);
 		
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&unlockCodeMenu, &g_modemSetupRecord.unlockCode,
 			UNLOCK_CODE_DEFAULT_VALUE, UNLOCK_CODE_MIN_VALUE, UNLOCK_CODE_MAX_VALUE);
@@ -970,7 +970,7 @@ void NotesMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{	
 		strcpy((char*)(&g_triggerRecord.trec.comments), (char*)data);
-		debug("Notes: <%s>, Length: %d\n", g_triggerRecord.trec.comments, strlen((char*)g_triggerRecord.trec.comments));
+		debug("Notes: <%s>, Length: %d\r\n", g_triggerRecord.trec.comments, strlen((char*)g_triggerRecord.trec.comments));
 
 		SETUP_USER_MENU_FOR_FLOATS_MSG(&distanceToSourceMenu, &g_triggerRecord.trec.dist_to_source,
 			DISTANCE_TO_SOURCE_DEFAULT_VALUE, DISTANCE_TO_SOURCE_INCREMENT_VALUE,
@@ -1010,7 +1010,7 @@ void OperatorMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{	
 		strcpy((char*)(&g_triggerRecord.trec.oper), (char*)data);
-		debug("Operator: <%s>, Length: %d\n", g_triggerRecord.trec.oper, strlen((char*)g_triggerRecord.trec.oper));
+		debug("Operator: <%s>, Length: %d\r\n", g_triggerRecord.trec.oper, strlen((char*)g_triggerRecord.trec.oper));
 
 		if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
 		{
@@ -1079,7 +1079,7 @@ void RecordTimeMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{	
 		g_triggerRecord.trec.record_time = *((uint32*)data);
-		debug("Record Time: %d\n", g_triggerRecord.trec.record_time);
+		debug("Record Time: %d\r\n", g_triggerRecord.trec.record_time);
 
 		if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
 		{
@@ -1147,7 +1147,7 @@ void SaveRecordMenuHandler(uint8 keyPressed, void* data)
 	{	
 		if (strlen((char*)data) != 0)
 		{
-			debug("Save Record Name: <%s>\n", (char*)data);
+			debug("Save Record Name: <%s>\r\n", (char*)data);
 			availableLocation = CheckForAvailableTriggerRecordEntry((char*)data, &match);
 
 			if (match == YES)
@@ -1255,7 +1255,7 @@ void SeismicLocationMenuHandler(uint8 keyPressed, void* data)
 	if (keyPressed == ENTER_KEY)
 	{	
 		strcpy((char*)(&g_triggerRecord.trec.loc), (char*)data);
-		debug("Seismic Location: <%s>, Length: %d\n", g_triggerRecord.trec.loc, strlen((char*)g_triggerRecord.trec.loc));
+		debug("Seismic Location: <%s>, Length: %d\r\n", g_triggerRecord.trec.loc, strlen((char*)g_triggerRecord.trec.loc));
 
 		SETUP_USER_MENU_MSG(&notesMenu, &g_triggerRecord.trec.comments);
 	}
@@ -1295,14 +1295,14 @@ void SeismicTriggerMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR)
 		{
-			debug("Seismic Trigger: No Trigger\n");
+			debug("Seismic Trigger: No Trigger\r\n");
 		}
 		else
 		{
 #if 1 // ns8100 - Up convert to 16-bit
 			g_triggerRecord.trec.seismicTriggerLevel *= (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
 #endif
-			debug("Seismic Trigger: %d counts\n", g_triggerRecord.trec.seismicTriggerLevel);
+			debug("Seismic Trigger: %d counts\r\n", g_triggerRecord.trec.seismicTriggerLevel);
 		}
 
 		g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
@@ -1363,7 +1363,7 @@ void SerialNumberMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{	
-		debug("Serial #: <%s>, Length: %d\n", (char*)data, strlen((char*)data));
+		debug("Serial #: <%s>, Length: %d\r\n", (char*)data, strlen((char*)data));
 		strcpy((char*)g_factorySetupRecord.serial_num, (char*)data);
 
 		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
@@ -1404,7 +1404,7 @@ void WeightPerDelayMenuHandler(uint8 keyPressed, void* data)
 		if (g_unitConfig.unitsOfMeasure == METRIC_TYPE)
 			g_triggerRecord.trec.weight_per_delay *= LBS_PER_KG;
 
-		debug("Weight per Delay: %.1f lbs\n", g_triggerRecord.trec.weight_per_delay);
+		debug("Weight per Delay: %.1f lbs\r\n", g_triggerRecord.trec.weight_per_delay);
 
 		SETUP_USER_MENU_MSG(&operatorMenu, &g_triggerRecord.trec.oper);
 	}
@@ -1443,7 +1443,7 @@ void UnlockCodeMenuHandler(uint8 keyPressed, void* data)
 	{	
 		g_modemSetupRecord.unlockCode = *((uint16*)data);
 
-		debug("Modem Unlock Code: %4d\n", g_modemSetupRecord.unlockCode);
+		debug("Modem Unlock Code: %4d\r\n", g_modemSetupRecord.unlockCode);
 
 		SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
 

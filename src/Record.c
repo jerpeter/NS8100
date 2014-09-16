@@ -44,7 +44,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 	switch (type)
 	{
 		case REC_TRIGGER_USER_MENU_TYPE:
-			debug("Programming Trigger Record...\n");
+			debug("Programming Trigger Record...\r\n");
 			((REC_EVENT_MN_STRUCT *)src_ptr)->time_stamp = GetCurrentTime();
 
 			rec_size = sizeof(REC_EVENT_MN_STRUCT);
@@ -53,7 +53,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_UNIT_CONFIG_TYPE:
-			debug("Programming Unit Config...\n");
+			debug("Programming Unit Config...\r\n");
 
 			((UNIT_CONFIG_STRUCT *)src_ptr)->validationKey = 0xA5A5;
 
@@ -63,7 +63,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_MODEM_SETUP_TYPE:
-			debug("Programming Modem Setup Configuration...\n");
+			debug("Programming Modem Setup Configuration...\r\n");
 
 			((MODEM_SETUP_STRUCT *)src_ptr)->invalid = 0x0000;
 
@@ -74,7 +74,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_FACTORY_SETUP_TYPE:
-			debug("Programming Factory Setup Record...\n");
+			debug("Programming Factory Setup Record...\r\n");
 
 			((FACTORY_SETUP_STRUCT *)src_ptr)->invalid = 0x0000;
 
@@ -85,7 +85,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_UNIQUE_EVENT_ID_TYPE:
-			debug("Programming Current Event Number Record...\n");
+			debug("Programming Current Event Number Record...\r\n");
 
 			((CURRENT_EVENT_NUMBER_STRUCT*)src_ptr)->invalid = 0x0000;
 
@@ -97,7 +97,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_UNIQUE_MONITOR_LOG_ID_TYPE:
-			debug("Programming Monitor Log ID Record...\n");
+			debug("Programming Monitor Log ID Record...\r\n");
 
 			((MONITOR_LOG_ID_STRUCT*)src_ptr)->invalid = 0x0000;
 
@@ -492,7 +492,7 @@ void ActivateUnitConfigOptions(void)
 	}
 	AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
-	debug("Auto Monitor Mode: %s\n", (g_unitConfig.autoMonitorMode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
+	debug("Auto Monitor Mode: %s\r\n", (g_unitConfig.autoMonitorMode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
     AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 
 	if (g_unitConfig.autoCalMode != AUTO_NO_CAL_TIMEOUT)

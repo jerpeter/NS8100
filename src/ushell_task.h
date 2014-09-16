@@ -142,11 +142,11 @@
 //! @{
 #define  MSG_PROMPT           "$>"
 #define  MSG_WELCOME          "\x0C" \
-                              "--------------------------\r\n" \
+                              "\r\n--------------------------\r\n" \
                               "    NS8100 ALPHA uShell\r\n" \
                               "--------------------------\r\n"
 #define  MSG_EXIT             "\x0C" \
-                              "------------------------\r\n" \
+                              "\r\n------------------------\r\n" \
                               "uShell not available\r\n" \
                               "------------------------\r\n"
 #define  MSG_ER_CMD_NOT_FOUND "Command not found\r\n"
@@ -192,7 +192,7 @@
 #define  MSG_REMOTE_WAKEUP_KO "Device does not support remote wake-up\r\n"
 #define  MSG_SELF_POWERED     "Device is self-powered\r\n"
 #define  MSG_BUS_POWERED      "Device is bus-powered\r\n"
-#define  MSG_USB_SUSPENDED    "USB is suspended!\r\n"
+#define  MSG_USB_SUSPENDED    "USB is suspended\r\n"
 #define  MSG_OK               "ok\r\n"
 #define  MSG_KO               "FAIL\r\n"
 #define  MSG_DEVICE_FULL_SPEED "Device is full-speed\r\n"
