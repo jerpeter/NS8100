@@ -308,6 +308,13 @@ void UartPutc(uint8 c, int32 channel)
 		}
 
 		g_debugBuffer[g_debugBufferCount++] = c;
+
+		// Check if the buffer count equals the max (which shouldn't occur but have to protect overrunning the buffer)
+		if (g_debugBufferCount == sizeof(g_debugBuffer))
+		{
+			// Try to dump debug to file (g_debugBufferCount reset in call)
+			WriteDebugBufferToFile();
+		}
 	}
 #endif
 }

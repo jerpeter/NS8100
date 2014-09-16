@@ -626,8 +626,6 @@ void WriteDebugBufferToFile(void)
 {
 	if (g_debugBufferCount)
 	{
-		debug("Dumping debug output to debug log file\r\n");
-
 		FL_FILE* debugLogFile;
 
 		debugLogFile = fl_fopen("C:\\Logs\\debugLogReadable.txt", "a+");

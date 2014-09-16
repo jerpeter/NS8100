@@ -399,9 +399,10 @@ BOOLEAN GetPowerControlState(POWER_MGMT_OPTIONS option)
 ///----------------------------------------------------------------------------
 void PowerUnitOff(uint8 powerOffMode)
 {
+	debug("Dumping debug output to debug log file\r\n");
+	debug("Adding On/Off Log timestamp\r\n");
 	WriteDebugBufferToFile();
 	AddOnOffLogTimestamp(OFF);
-	debug("Adding On/Off Log timestamp\r\n");
 
 	// Disable Power Off Protection
 	PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);

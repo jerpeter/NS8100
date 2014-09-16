@@ -296,7 +296,7 @@ void ProcessInputMsg(INPUT_MSG_STRUCT mn_msg)
 
 		case KEYPRESS_MENU_CMD:
 			{
-				debug("Handling Keypress Command\\n");
+				debug("Handling Keypress Command\r\n");
 				JUMP_TO_ACTIVE_MENU();
 			}				
 			break;

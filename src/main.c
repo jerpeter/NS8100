@@ -170,7 +170,10 @@ void SystemEventManager(void)
 		// Check if USB is in device mode otherwise in Host and conflicts with uShell
 		if (Is_usb_id_device())
 		{
-			debug("(Cyclic Event) ISR Ticks/sec: %d (E:%s), Exec/sec: %d\r\n", (g_sampleCountHold / 4), ((g_channelSyncError == YES) ? "YES" : "NO"), (g_execCycles / 4));
+			if ((g_execCycles / 4) > 10000) { strcpy((char*)g_spareBuffer, ">10K"); }
+			else { sprintf((char*)g_spareBuffer, "%d", (uint16)(g_execCycles / 4)); }
+
+			debug("(Cyclic Event) ISR Ticks/sec: %d (E:%s), Exec/sec: %s\r\n", (g_sampleCountHold / 4), ((g_channelSyncError == YES) ? "YES" : "NO"), (char*)g_spareBuffer);
 		}
 		g_sampleCountHold = 0;
 		g_execCycles = 0;
@@ -227,6 +230,7 @@ void SystemEventManager(void)
 
 		if (g_debugBufferCount > GLOBAL_DEBUG_BUFFER_THRESHOLD)
 		{
+			debug("Dumping debug output to debug log file\r\n");
 			WriteDebugBufferToFile();
 		}
 
@@ -1160,6 +1164,8 @@ void BootLoadManager(void)
 
 		fl_fclose(file);
 
+		debug("Dumping debug output to debug log file\r\n");
+		debug("Adding On/Off Log timestamp before jumping to boot\r\n");
 		WriteDebugBufferToFile();
 		AddOnOffLogTimestamp(JUMP_TO_BOOT);
 
