@@ -286,7 +286,7 @@ typedef struct
 	uint16 sensor_type;
 	char serial_num[16];
 	uint8 aweight_option;
-	uint8 spare;
+	uint8 analogChannelConfig;
 } FACTORY_SETUP_STRUCT;
 
 typedef struct

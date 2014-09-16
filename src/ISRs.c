@@ -72,6 +72,7 @@ static uint16 s_consecSeismicTriggerCount = 0;
 static uint16 s_consecAirTriggerCount = 0;
 static uint8 s_pretriggerFull = NO;
 static uint8 s_checkForTempDrift = NO;
+static uint8 s_channelConfig = CHANNELS_R_AND_V_SCHEMATIC;
 static uint8 s_seismicTriggerSample = NO;
 static uint8 s_airTriggerSample = NO;
 static uint8 s_recordingEvent = NO;
@@ -962,45 +963,90 @@ static inline void getChannelDataWithReadbackWithTemp_ISR_Inline(void)
 	//___Sample Output with return config words for reference
 	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp:  dbe (b6d0)
 	
-    // Chan 0 - R
-	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	//if(s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
-	if(s_channelConfigReadBack != 0xe150) { s_channelSyncError = YES; }
+	if (s_channelConfig == CHANNELS_R_AND_V_SCHEMATIC)
+	{
+		// Chan 0 - R
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		//if(s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
+		if(s_channelConfigReadBack != 0xe150) { s_channelSyncError = YES; }
 
-    // Chan 1 - T
-    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	//if(s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
-	if(s_channelConfigReadBack != 0xe350) { s_channelSyncError = YES; }
+		// Chan 1 - T
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		//if(s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
+		if(s_channelConfigReadBack != 0xe350) { s_channelSyncError = YES; }
 
-    // Chan 2 - V
-    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	//if(s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
-	if(s_channelConfigReadBack != 0xe550) { s_channelSyncError = YES; }
+		// Chan 2 - V
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		//if(s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
+		if(s_channelConfigReadBack != 0xe550) { s_channelSyncError = YES; }
 
-    // Chan 3 - A
-    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	//if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
-	if(s_channelConfigReadBack != 0xe750) { s_channelSyncError = YES; }
+		// Chan 3 - A
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		//if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
+		if(s_channelConfigReadBack != 0xe750) { s_channelSyncError = YES; }
 
-    // Temperature
-    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	//if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
-	if(s_channelConfigReadBack != 0xb750) { s_channelSyncError = YES; }
+		// Temperature
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		//if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
+		if(s_channelConfigReadBack != 0xb750) { s_channelSyncError = YES; }
+	}
+	else // (s_channelConfig == CHANNELS_R_AND_V_SWAPPED)
+	{
+		// Chan 0 - V
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		//if(s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
+		if(s_channelConfigReadBack != 0xe150) { s_channelSyncError = YES; }
+
+		// Chan 1 - T
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		//if(s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
+		if(s_channelConfigReadBack != 0xe350) { s_channelSyncError = YES; }
+
+		// Chan 2 - R
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		//if(s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
+		if(s_channelConfigReadBack != 0xe550) { s_channelSyncError = YES; }
+
+		// Chan 3 - A
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		//if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
+		if(s_channelConfigReadBack != 0xe750) { s_channelSyncError = YES; }
+
+		// Temperature
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		//if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
+		if(s_channelConfigReadBack != 0xb750) { s_channelSyncError = YES; }
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -1008,30 +1054,60 @@ static inline void getChannelDataWithReadbackWithTemp_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline void getChannelDataNoReadbackWithTemp_ISR_Inline(void)
 {
-	// Chan 0 - R
-	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
-	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	if (s_channelConfig == CHANNELS_R_AND_V_SCHEMATIC)
+	{
+		// Chan 0 - R
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
-	// Chan 1 - T
-	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
-	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		// Chan 1 - T
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
-	// Chan 2 - V
-	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
-	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		// Chan 2 - V
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
-	// Chan 3 - A
-	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
-	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		// Chan 3 - A
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
-    // Temperature
-    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		// Temperature
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	}
+	else // (s_channelConfig == CHANNELS_R_AND_V_SWAPPED)
+	{
+		// Chan 0 - V
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+		// Chan 1 - T
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+		// Chan 2 - R
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+		// Chan 3 - A
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+		// Temperature
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -1043,25 +1119,50 @@ static inline void getChannelDataNoReadbackNoTemp_ISR_Inline(void)
 	//___Sample Output with return config words for reference
 	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp:  dbe (b6d0)
 	
-    // Chan 0 - R
-	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	if (s_channelConfig == CHANNELS_R_AND_V_SCHEMATIC)
+	{
+		// Chan 0 - R
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
-    // Chan 1 - T
-    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		// Chan 1 - T
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
-    // Chan 2 - V
-    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		// Chan 2 - V
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
-    // Chan 3 - A
-    spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-    spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		// Chan 3 - A
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	}
+	else // (s_channelConfig == CHANNELS_R_AND_V_SWAPPED)
+	{
+		// Chan 0 - V
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+		// Chan 1 - T
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+		// Chan 2 - R
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+
+		// Chan 3 - A
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -1116,6 +1217,9 @@ void DataIsrInit(void)
 {
 	s_pretriggerFull = NO;
 	s_checkForTempDrift = NO;
+
+	if (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SWAPPED) { s_channelConfig = CHANNELS_R_AND_V_SWAPPED; }
+	else { s_channelConfig = CHANNELS_R_AND_V_SCHEMATIC; }
 }
 
 ///----------------------------------------------------------------------------

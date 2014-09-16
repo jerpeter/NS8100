@@ -39,6 +39,7 @@ extern USER_MENU_STRUCT alarmOneSeismicLevelMenu[];
 extern USER_MENU_STRUCT alarmOneAirLevelMenu[];
 extern USER_MENU_STRUCT alarmTwoSeismicLevelMenu[];
 extern USER_MENU_STRUCT alarmTwoAirLevelMenu[];
+extern USER_MENU_STRUCT analogChannelConfigMenu[];
 extern USER_MENU_STRUCT barChannelMenu[];
 extern USER_MENU_STRUCT barIntervalMenu[];
 extern USER_MENU_STRUCT barScaleMenu[];
@@ -99,8 +100,8 @@ extern USER_MENU_STRUCT zeroEventNumberMenu[];
 //*****************************************************************************
 #define AIR_SCALE_MENU_ENTRIES 4
 USER_MENU_STRUCT airScaleMenu[AIR_SCALE_MENU_ENTRIES] = {
-{NO_TAG, 0, AIR_CHANNEL_SCALE_TEXT, NO_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, AIR_SCALE_MENU_ENTRIES, TITLE_LEFT_JUSTIFIED, DEFAULT_ITEM_1)}},
+{TITLE_PRE_TAG, 0, AIR_CHANNEL_SCALE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, AIR_SCALE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, LINEAR_TEXT,		NO_TAG,	{AIR_SCALE_LINEAR}},
 {ITEM_2, 0, A_WEIGHTING_TEXT,	NO_TAG,	{AIR_SCALE_A_WEIGHTING}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AirScaleMenuHandler}}
@@ -185,12 +186,13 @@ void AirSetupMenuHandler(uint8 keyPressed, void* data)
 
 		SETUP_MENU_MSG(CAL_SETUP_MENU);
 
+		// Special call before Calibration setup (can't remember the reason)
 extern void UsbDeviceManager(void);
 		UsbDeviceManager();
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
+		SETUP_USER_MENU_MSG(&analogChannelConfigMenu, g_factorySetupRecord.analogChannelConfig);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -697,6 +699,44 @@ void AlarmOutputMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
+// Analog Channel Config Menu
+//=============================================================================
+//*****************************************************************************
+#define ANALOG_CHANNEL_CONFIG_MENU_ENTRIES 4
+USER_MENU_STRUCT analogChannelConfigMenu[ANALOG_CHANNEL_CONFIG_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, ANALOG_CHANNEL_CONFIG_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, ANALOG_CHANNEL_CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{NO_TAG, 0, CHANNELS_R_AND_V_SCHEMATIC_TEXT,	NO_TAG, {CHANNELS_R_AND_V_SCHEMATIC}},
+{NO_TAG, 0, CHANNELS_R_AND_V_SWAPPED_TEXT,		NO_TAG, {CHANNELS_R_AND_V_SWAPPED}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AnalogChannelConfigMenuHandler}}
+};
+
+//-----------------------------------
+// Analog Channel Config Menu Handler
+//-----------------------------------
+void AnalogChannelConfigMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_factorySetupRecord.analogChannelConfig = (uint8)analogChannelConfigMenu[newItemIndex].data;
+
+		debug("Factory Setup: Channel R & V %s option selected\r\n", (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC) ? "Schematic" : "Swapped");
+
+		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
 // Auto Cal Menu
 //=============================================================================
 //*****************************************************************************
@@ -793,8 +833,8 @@ void AutoMonitorMenuHandler(uint8 keyPressed, void* data)
 //*****************************************************************************
 #define BAR_CHANNEL_MENU_ENTRIES 5
 USER_MENU_STRUCT barChannelMenu[BAR_CHANNEL_MENU_ENTRIES] = {
-{NO_TAG, 0, MONITOR_BARGRAPH_TEXT, NO_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAR_CHANNEL_MENU_ENTRIES, TITLE_LEFT_JUSTIFIED, DEFAULT_ITEM_1)}},
+{TITLE_PRE_TAG, 0, MONITOR_BARGRAPH_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAR_CHANNEL_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, BOTH_TEXT,		NO_TAG, {BAR_BOTH_CHANNELS}},
 {ITEM_2, 0, SEISMIC_TEXT,	NO_TAG, {BAR_SEISMIC_CHANNEL}},
 {ITEM_3, 0, AIR_TEXT,		NO_TAG, {BAR_AIR_CHANNEL}},
@@ -992,7 +1032,7 @@ void SummaryIntervalMenuHandler(uint8 keyPressed, void* data)
 #define BAR_RESULT_MENU_ENTRIES 4
 USER_MENU_STRUCT barResultMenu[BAR_RESULT_MENU_ENTRIES] = {
 {NO_TAG, 0, BAR_PRINTOUT_RESULTS_TEXT, NO_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAR_RESULT_MENU_ENTRIES, TITLE_LEFT_JUSTIFIED, DEFAULT_ITEM_1)}},
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAR_RESULT_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, PEAK_TEXT,			NO_TAG, {BAR_RESULT_PEAK}},
 {ITEM_2, 0, VECTOR_SUM_TEXT,	NO_TAG, {BAR_RESULT_VECTOR_SUM}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&BarResultMenuHandler}}
@@ -1062,7 +1102,7 @@ void BarResultMenuHandler(uint8 keyPressed, void* data)
 #define BAUD_RATE_MENU_ENTRIES 7
 USER_MENU_STRUCT baudRateMenu[BAUD_RATE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, BAUD_RATE_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAUD_RATE_MENU_ENTRIES, TITLE_LEFT_JUSTIFIED, DEFAULT_ITEM_1)}},
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAUD_RATE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, BAUD_RATE_115200_TEXT,	NO_TAG, {BAUD_RATE_115200}},
 {ITEM_2, 57600, BAUD_RATE_TEXT,	NO_TAG, {BAUD_RATE_57600}},
 {ITEM_3, 38400, BAUD_RATE_TEXT,	NO_TAG, {BAUD_RATE_38400}},
@@ -1472,7 +1512,7 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 #define DISPLACEMENT_MENU_ENTRIES 4
 USER_MENU_STRUCT displacementMenu[DISPLACEMENT_MENU_ENTRIES] = {
 {NO_TAG, 0, REPORT_DISPLACEMENT_TEXT, NO_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, DISPLACEMENT_MENU_ENTRIES, TITLE_LEFT_JUSTIFIED, DEFAULT_ITEM_2)}},
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, DISPLACEMENT_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
 {ITEM_1, 0, YES_TEXT,	NO_TAG, {YES}},
 {ITEM_2, 0, NO_TEXT,	NO_TAG, {NO}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&DisplacementMenuHandler}}
@@ -2054,8 +2094,8 @@ void MonitorLogMenuHandler(uint8 keyPressed, void* data)
 //*****************************************************************************
 #define PEAK_ACC_MENU_ENTRIES 4
 USER_MENU_STRUCT peakAccMenu[PEAK_ACC_MENU_ENTRIES] = {
-{NO_TAG, 0, REPORT_PEAK_ACC_TEXT, NO_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, PEAK_ACC_MENU_ENTRIES, TITLE_LEFT_JUSTIFIED, DEFAULT_ITEM_2)}},
+{TITLE_PRE_TAG, 0, REPORT_PEAK_ACC_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, PEAK_ACC_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
 {ITEM_1, 0, YES_TEXT,   NO_TAG, {YES}},
 {ITEM_2, 0, NO_TEXT, NO_TAG, {NO}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&PeakAccMenuHandler}}
@@ -2612,7 +2652,7 @@ void SensorTypeMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
 		{
-			SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
+			SETUP_USER_MENU_MSG(&analogChannelConfigMenu, g_factorySetupRecord.analogChannelConfig);
 		}
 		else
 		{

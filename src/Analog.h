@@ -90,6 +90,11 @@ enum {
 	FOUR_AD_CHANNELS_NO_READBACK_NO_TEMP
 };
 
+enum {
+	CHANNELS_R_AND_V_SCHEMATIC = 1,
+	CHANNELS_R_AND_V_SWAPPED
+};
+
 typedef union
 {
 	struct

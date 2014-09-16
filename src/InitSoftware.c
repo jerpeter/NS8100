@@ -193,10 +193,18 @@ void setupMnDef(void)
 		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&g_spareBuffer, "Acc"); }
 		else { sprintf((char*)&g_spareBuffer, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
 
+		// Check if an older unit doesn't have the Analog Channel Config set
+		if ((g_factorySetupRecord.analogChannelConfig != CHANNELS_R_AND_V_SCHEMATIC) && (g_factorySetupRecord.analogChannelConfig != CHANNELS_R_AND_V_SWAPPED))
+		{
+			// Set the default
+			g_factorySetupRecord.analogChannelConfig = CHANNELS_R_AND_V_SCHEMATIC;
+		}
+
 		debug("Factory Setup: Serial #: %s\r\n", g_factorySetupRecord.serial_num);
 		debug("Factory Setup: Cal Date: %s\r\n", buff);
 		debug("Factory Setup: Sensor Type: %s\r\n", (char*)g_spareBuffer);
 		debug("Factory Setup: A-Weighting: %s\r\n", (g_factorySetupRecord.aweight_option == YES) ? "Enabled" : "Disabled");
+		debug("Factory Setup: Analog Channel Config: %s\r\n", (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC) ? "Schematic" : "Swapped");
 	}
 	else // Factory Setup Record is not found or invalid
 	{

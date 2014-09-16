@@ -827,6 +827,7 @@ void AirSetupMenuHandler(uint8 key, void* data);
 void AlarmOneMenuHandler(uint8 key, void* data);
 void AlarmTwoMenuHandler(uint8 key, void* data);
 void AlarmOutputMenuHandler(uint8 key, void* data);
+void AnalogChannelConfigMenuHandler(uint8 key, void* data);
 void AutoCalMenuHandler(uint8 key, void* data);
 void AutoMonitorMenuHandler(uint8 key, void* data);
 void BarChannelMenuHandler(uint8 key, void* data);
