@@ -369,6 +369,9 @@ uint8 GetNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, M
 uint16 NumOfNewMonitorLogEntries(uint16 uid);
 void AppendMonitorLogEntryFile(void);
 void InitMonitorLogTableFromLogFile(void);
+void AddOnOffLogTimestamp(uint8 onOffState);
+void WriteDebugBufferToFile(void);
+void SwitchDebugLogFile(void);
 
 // Parameter Memory
 void GetParameterMemory(uint8* dest, uint16 address, uint16 size);

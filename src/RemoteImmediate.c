@@ -49,7 +49,7 @@ void HandleUNL(CMD_BUFFER_STRUCT* inCmd)
 	char unlStr[UNLOCK_STR_SIZE];
 	char sendStr[UNLOCK_STR_SIZE*2];
 
-	debug("HandleUNL-user unlock code=<%s>\n", dataStart);
+	debug("HandleUNL-user unlock code=<%s>\r\n", dataStart);
 
 	ByteSet(&tempStr[0], 0, sizeof(tempStr));
 
@@ -78,7 +78,7 @@ void HandleUNL(CMD_BUFFER_STRUCT* inCmd)
 
 	if (YES == matchFlag)
 	{
-		debug("HandleUNL-MatchCode=<%s>\n", dataStart);
+		debug("HandleUNL-MatchCode=<%s>\r\n", dataStart);
 
 		ByteSet(&sendStr[0], 0, sizeof(sendStr));
 		if (YES == g_modemStatus.systemIsLockedFlag)
@@ -169,14 +169,17 @@ void HandleDDP(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+extern uint8 quickBootEntryJump;
+extern void BootLoadManager(void);
 void HandleDAI(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
 
-	debug("HandleDAI:Here\n");
+	debug("HandleDAI:Here\r\n");
 
-	// If the function is valid then this call will never return, otherwise proceed as if we can't jump
-	JumpToBootFunction();
+	// If we jump to boot this call will never return, otherwise proceed as if we can't jump
+	quickBootEntryJump = YES;
+	BootLoadManager();
 
 	// Issue something to the user to alert them that the DAI command is not functional with this unit
 	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
@@ -956,7 +959,7 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 
 	EVT_RECORD* eventRecord;
 
-	debug("HandleDEM:Entry\n");
+	debug("HandleDEM:Entry\r\n");
 
 	// If the process is busy sending data, return;
 	if (YES == g_modemStatus.xferMutex)
@@ -966,7 +969,7 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 
 	if (YES == ParseIncommingMsgHeader(inCmd, g_inCmdHeaderPtr))
 	{
-		debug("HandleDEM RTN Error.\n");
+		debug("HandleDEM RTN Error.\r\n");
 		return;
 	}
 
@@ -1026,22 +1029,22 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 	}
 
 #if 0 // Test code (Display command components)
-	debugRaw("Recieved DEM command: \n");
+	debugRaw("Recieved DEM command: \r\n");
 	for(i=0;i<inCmd->size;i++)
 	{
 		debugRaw("(%d)%x ", i+1, inCmd->msg[i]);
 	}
-	debugRaw("\n");
+	debugRaw("\r\n");
 
-	debugRaw("Command: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->cmd), HDR_CMD_LEN);
-	debugRaw("Message Type: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->type[0], g_inCmdHeaderPtr->type[1], HDR_TYPE_LEN);
-	debugRaw("Data Length: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->dataLength), HDR_DATALENGTH_LEN);
-	debugRaw("Unit Model: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->unitModel), HDR_UNITMODEL_LEN);
-	debugRaw("Unit Serial #: <%s>, Len: %d\n", (char*)(g_inCmdHeaderPtr->unitSn), HDR_SERIALNUMBER_LEN);
-	debugRaw("Compress/CRC Flags: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->compressCrcFlags[0], g_inCmdHeaderPtr->compressCrcFlags[1], HDR_COMPRESSCRC_LEN);
-	debugRaw("Software Version: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->softwareVersion[0], g_inCmdHeaderPtr->softwareVersion[1], HDR_SOFTWAREVERSION_LEN);
-	debugRaw("Data Version: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->dataVersion[0], g_inCmdHeaderPtr->dataVersion[1], HDR_DATAVERSION_LEN);
-	debugRaw("Spare: 0x%x 0x%x, Len: %d\n", g_inCmdHeaderPtr->spare[0], g_inCmdHeaderPtr->spare[1], HDR_SPARE_LEN);
+	debugRaw("Command: <%s>, Len: %d\r\n", (char*)(g_inCmdHeaderPtr->cmd), HDR_CMD_LEN);
+	debugRaw("Message Type: 0x%x 0x%x, Len: %d\r\n", g_inCmdHeaderPtr->type[0], g_inCmdHeaderPtr->type[1], HDR_TYPE_LEN);
+	debugRaw("Data Length: <%s>, Len: %d\r\n", (char*)(g_inCmdHeaderPtr->dataLength), HDR_DATALENGTH_LEN);
+	debugRaw("Unit Model: <%s>, Len: %d\r\n", (char*)(g_inCmdHeaderPtr->unitModel), HDR_UNITMODEL_LEN);
+	debugRaw("Unit Serial #: <%s>, Len: %d\r\n", (char*)(g_inCmdHeaderPtr->unitSn), HDR_SERIALNUMBER_LEN);
+	debugRaw("Compress/CRC Flags: 0x%x 0x%x, Len: %d\r\n", g_inCmdHeaderPtr->compressCrcFlags[0], g_inCmdHeaderPtr->compressCrcFlags[1], HDR_COMPRESSCRC_LEN);
+	debugRaw("Software Version: 0x%x 0x%x, Len: %d\r\n", g_inCmdHeaderPtr->softwareVersion[0], g_inCmdHeaderPtr->softwareVersion[1], HDR_SOFTWAREVERSION_LEN);
+	debugRaw("Data Version: 0x%x 0x%x, Len: %d\r\n", g_inCmdHeaderPtr->dataVersion[0], g_inCmdHeaderPtr->dataVersion[1], HDR_DATAVERSION_LEN);
+	debugRaw("Spare: 0x%x 0x%x, Len: %d\r\n", g_inCmdHeaderPtr->spare[0], g_inCmdHeaderPtr->spare[1], HDR_SPARE_LEN);
 #endif
 
 	//-----------------------------------------------------------
@@ -1056,7 +1059,7 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 		// Expecting a single field, so move to that location.
 		eventNumToSend = GetInt16Field(inCmd->msg + MESSAGE_HEADER_LENGTH);
 
-		debug("eventNumToSend = %d \n",eventNumToSend);
+		debug("eventNumToSend = %d \r\n",eventNumToSend);
 
 		// Send each individual summary record.
 		for (idex = 0; idex < TOTAL_RAM_SUMMARIES; idex++)
@@ -1276,7 +1279,7 @@ extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 		g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
 	}
 
-	debug("CRC=%d g_transferCount=%d \n", g_transmitCRC, g_transferCount);
+	debug("CRC=%d g_transferCount=%d \r\n", g_transmitCRC, g_transferCount);
 
 	return;
 }
@@ -1374,7 +1377,7 @@ uint8 sendDEMData(void)
 
 	else if (FOOTER_XFER_STATE == g_demXferStructPtr->xferStateFlag)
 	{
-		debug("CRC=%d g_transferCount=%d \n", g_transmitCRC, g_transferCount+2);
+		debug("CRC=%d g_transferCount=%d \r\n", g_transmitCRC, g_transferCount+2);
 		ModemPuts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
 		ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 		g_demXferStructPtr->xferStateFlag = NOP_XFER_STATE;

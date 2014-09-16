@@ -110,10 +110,16 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	cfg.eventCfg.bitAccuracy = g_triggerRecord.trec.bitAccuracy;
 	cfg.eventCfg.numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;
-	cfg.eventCfg.aWeighting = g_factorySetupRecord.aweight_option;
 	cfg.eventCfg.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
 	cfg.eventCfg.pretrigBufferDivider = g_unitConfig.pretrigBufferDivider;
 	cfg.eventCfg.numOfSamples = 0;				// Not used for configuration settings
+
+	if ((g_factorySetupRecord.aweight_option == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_LINEAR))
+	{
+		// Need to signal remote side that current setting is linear but that A-weighting is available
+		cfg.eventCfg.aWeighting = (AIR_SCALE_LINEAR | (cfg.eventCfg.aWeighting << cfg.eventCfg.aWeighting));
+	}
+	else { cfg.eventCfg.aWeighting = g_factorySetupRecord.aweight_option; }
 
 #if 0 // Old and incorrectly overloaded
 	cfg.eventCfg.preBuffNumOfSamples = (uint16)g_triggerRecord.srec.sensitivity;
@@ -264,7 +270,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		// Check to see if the incoming message is the correct size
 		if ((uint32)((inCmd->size - 16)/2) < sizeOfCfg)
 		{
-			debug("WARNING:Msg Size incorrect msgSize=%d cfgSize=%d \n", ((inCmd->size - 16)/2), sizeOfCfg);
+			debug("WARNING:Msg Size incorrect msgSize=%d cfgSize=%d \r\n", ((inCmd->size - 16)/2), sizeOfCfg);
 		}
 		
 		// Move the string data into the configuration structure. String is (2 * cfgSize)
@@ -342,7 +348,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			(cfg.currentTime.min == 0) 	&&
 			(cfg.currentTime.hour == 0)) 
 		{
-			debug("Do not update time.\n");
+			debug("Do not update time.\r\n");
 		}
 		else
 		{
@@ -360,8 +366,11 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			{
 				SetExternalRtcDate(&(cfg.currentTime));
 				g_unitConfig.timerMode = DISABLED;
+
+#if 0 // Test with power off protection always enabled
 				// Disable Power Off protection
 				PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+#endif
 				
 				// Disable the Power Off timer if it's set
 				ClearSoftTimer(POWER_OFF_TIMER_NUM);
@@ -379,8 +388,10 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				SetExternalRtcTime(&(cfg.currentTime));
 				g_unitConfig.timerMode = DISABLED;
 				
+#if 0 // Test with power off protection always enabled
 				// Disable Power Off protection
 				PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+#endif
 				
 				// Disable the Power Off timer if it's set
 				ClearSoftTimer(POWER_OFF_TIMER_NUM);
@@ -1392,7 +1403,7 @@ void ModemInitProcess(void)
 {
 	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
 
-	debug("ModemInitProcess\n");
+	debug("ModemInitProcess\r\n");
 
 	if (READ_DCD == NO_CONNECTION)
 	{
@@ -1425,7 +1436,7 @@ void ModemInitProcess(void)
 void ModemResetProcess(void)
 {
 	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
-	debug("HandleMRC\n");
+	debug("HandleMRC\r\n");
 
 	g_modemStatus.systemIsLockedFlag = YES;
 

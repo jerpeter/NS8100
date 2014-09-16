@@ -50,19 +50,19 @@ BOOLEAN TimerModeActiveCheck(void)
 		// Check if timer mode is enabled
 		if (g_unitConfig.timerMode == ENABLED)
 		{
-			debug("Timer Mode active\n");
+			debug("Timer Mode active\r\n");
 
 			// Check if the timer mode settings match the current hour and minute meaning the unit powered itself on
 			if ((g_unitConfig.timerStartTime.hour == time.hour) && (g_unitConfig.timerStartTime.min == time.min))
 			{
-				debug("Timer Mode Check: Matched Timer settings...\n");
+				debug("Timer Mode Check: Matched Timer settings...\r\n");
 				status = TRUE;
 			}
 			// Check again if settings match current hour and near minute meaning unit powered itself on but suffered from long startup
 			else if ((g_unitConfig.timerStartTime.hour == time.hour) &&
 					((((g_unitConfig.timerStartTime.min + 1) == 60) && (time.min == 0)) || ((g_unitConfig.timerStartTime.min + 1) == time.min)))
 			{
-				debug("Timer Mode Check: Matched Timer settings (long startup)...\n");
+				debug("Timer Mode Check: Matched Timer settings (long startup)...\r\n");
 				status = TRUE;
 			}
 			// Check specialty hourly mode and if current minute matches and the current hour is within range
@@ -75,7 +75,7 @@ BOOLEAN TimerModeActiveCheck(void)
 					// OR Check if the current hour is within range with an hourly mode that does cross a 24 hour boundary
 					((time.hour >= g_unitConfig.timerStartTime.hour) || (time.hour <= g_unitConfig.timerStopTime.hour))))
 			{
-				debug("Timer Mode Check: Matched Timer settings (hourly)...\n");
+				debug("Timer Mode Check: Matched Timer settings (hourly)...\r\n");
 				status = TRUE;
 			}
 			else
@@ -101,7 +101,7 @@ BOOLEAN TimerModeActiveCheck(void)
 					OverlayMessage(getLangText(WARNING_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 2 * SOFT_SECS);
 
 					// Turn unit off/sleep
-					debug("Timer mode: Staying in Timer mode. Powering off now...\n");
+					debug("Timer mode: Staying in Timer mode. Powering off now...\r\n");
 					PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
 				}
 			}
@@ -130,8 +130,8 @@ void ProcessTimerMode(void)
 		(currTime.day > g_unitConfig.timerStopDate.day)))
 	{
 		// Disable alarm output generation
-		debug("Timer Mode: Activated after date...\n");
-		debug("Timer Mode: Disabling...\n");
+		debug("Timer Mode: Activated after date...\r\n");
+		debug("Timer Mode: Disabling...\r\n");
 		g_unitConfig.timerMode = DISABLED;
 
 		// Save Unit Config
@@ -141,7 +141,7 @@ void ProcessTimerMode(void)
 	    DisableExternalRtcAlarm();
 
 		// Turn unit off/sleep
-		debug("Timer mode: Powering unit off...\n");
+		debug("Timer mode: Powering unit off...\r\n");
 		PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
 	}
 	// Check if the Timer mode activated before start date
@@ -155,31 +155,31 @@ void ProcessTimerMode(void)
 		((currTime.year == g_unitConfig.timerStartDate.year) && (currTime.month == g_unitConfig.timerStartDate.month) &&
 		(currTime.day < g_unitConfig.timerStartDate.day)))
 	{
-		debug("Timer Mode: Activated before date...\n");
+		debug("Timer Mode: Activated before date...\r\n");
 		ResetTimeOfDayAlarm();
 
 		// Turn unit off/sleep
-		debug("Timer mode: Powering unit off...\n");
+		debug("Timer mode: Powering unit off...\r\n");
 		PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
 	}
 	// Check if the Timer mode activated during active dates but on an off day
 	else if ((g_unitConfig.timerModeFrequency == TIMER_MODE_WEEKDAYS) && ((currTime.weekday == SAT) || (currTime.weekday == SUN)))
 	{
-		debug("Timer Mode: Activated on an off day (weekday freq)...\n");
+		debug("Timer Mode: Activated on an off day (weekday freq)...\r\n");
 		ResetTimeOfDayAlarm();
 
 		// Turn unit off/sleep
-		debug("Timer mode: Powering unit off...\n");
+		debug("Timer mode: Powering unit off...\r\n");
 		PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
 	}
 	// Check if the Timer mode activated during active dates but on an off day
 	else if ((g_unitConfig.timerModeFrequency == TIMER_MODE_MONTHLY) && (currTime.day != g_unitConfig.timerStartDate.day))
 	{
-		debug("Timer Mode: Activated on off day (monthly freq)...\n");
+		debug("Timer Mode: Activated on off day (monthly freq)...\r\n");
 		ResetTimeOfDayAlarm();
 
 		// Turn unit off/sleep
-		debug("Timer mode: Powering unit off...\n");
+		debug("Timer mode: Powering unit off...\r\n");
 		PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
 	}
 	// Check if the Timer mode activated on end date (and not hourly mode)
@@ -187,7 +187,7 @@ void ProcessTimerMode(void)
 			(currTime.month == g_unitConfig.timerStopDate.month) && (currTime.day == g_unitConfig.timerStopDate.day))
 	{
 		// Disable alarm output generation
-		debug("Timer Mode: Activated on end date...\n");
+		debug("Timer Mode: Activated on end date...\r\n");
 
 		// Signal the timer mode end of session timer to stop timer mode due to this being the last run
 		g_timerModeLastRun = YES;
@@ -201,7 +201,7 @@ void ProcessTimerMode(void)
 			(currTime.hour == g_unitConfig.timerStopTime.hour))
 	{
 		// Disable alarm output generation
-		debug("Timer Mode: Activated on end date...\n");
+		debug("Timer Mode: Activated on end date...\r\n");
 
 		// Signal the timer mode end of session timer to stop timer mode due to this being the last run
 		g_timerModeLastRun = YES;
@@ -233,7 +233,7 @@ void ProcessTimerMode(void)
 	// Setup soft timer to turn system off when timer mode is finished for the day (minus the expired secs in the current minute
 	AssignSoftTimer(POWER_OFF_TIMER_NUM, ((g_unitConfig.TimerModeActiveMinutes * 60 * 2) - (currTime.sec * 2)), PowerOffTimerCallback);
 
-	debug("Timer mode: running...\n");
+	debug("Timer mode: running...\r\n");
 }
 
 ///----------------------------------------------------------------------------
@@ -261,8 +261,10 @@ void HandleUserPowerOffDuringTimerMode(void)
 		// Save Unit Config
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
+#if 0 // Test with power off protection always enabled
 		// Disable power off protection
 		PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+#endif
 
 		OverlayMessage(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), 2 * SOFT_SECS);
 	}
@@ -275,11 +277,13 @@ void HandleUserPowerOffDuringTimerMode(void)
 			MessageBox(getLangText(STATUS_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), MB_OK);
 			MessageBox(getLangText(STATUS_TEXT), getLangText(PLEASE_PRESS_ENTER_TEXT), MB_OK);
 
+#if 0 // Test with power off protection always enabled
 			// Enable power off protection
 			PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
+#endif
 
 			// Turn unit off/sleep
-			debug("Timer mode: Shutting down unit early due to user request. Powering off now...\n");
+			debug("Timer mode: Shutting down unit early due to user request. Powering off now...\r\n");
 			PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
 		}
 	}
@@ -315,7 +319,7 @@ void ResetTimeOfDayAlarm(void)
 			startDay = 1;
 		}
 
-		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
+		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\r\n",
 				g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, startDay);
 #else // Test
 		// Loop test on and off in a cycle
@@ -338,7 +342,7 @@ void ResetTimeOfDayAlarm(void)
 		// Save new testing timer mode adjustments
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
-		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
+		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\r\n",
 				g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, startDay);
 #endif
 
@@ -417,7 +421,7 @@ void ResetTimeOfDayAlarm(void)
 			// else the startDay remains today (start day is today, start hour is timer mode start hour)
 		}
 
-		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
+		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\r\n",
 				startHour, g_unitConfig.timerStartTime.min, startDay);
 
 		EnableExternalRtcAlarm(startDay, startHour, g_unitConfig.timerStartTime.min, 0);
@@ -452,7 +456,7 @@ void ResetTimeOfDayAlarm(void)
 			startDay -= g_monthTable[currTime.month].days;
 		}
 
-		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start ay) %d\n",
+		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start ay) %d\r\n",
 				g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, startDay);
 
 		EnableExternalRtcAlarm(startDay, g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, 0);
@@ -471,7 +475,7 @@ void ResetTimeOfDayAlarm(void)
 			startDay -= g_monthTable[currTime.month].days;
 		}
 
-		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
+		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\r\n",
 				g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, startDay);
 
 		EnableExternalRtcAlarm(startDay, g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, 0);
@@ -500,7 +504,7 @@ void ResetTimeOfDayAlarm(void)
 			startDay = (uint8)(g_monthTable[month].days);
 		}
 
-		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\n",
+		debug("Timer mode: Resetting TOD Alarm with (hour) %d, (min) %d, (start day) %d\r\n",
 				g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, startDay);
 
 		EnableExternalRtcAlarm(startDay, g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, 0);

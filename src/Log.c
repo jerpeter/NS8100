@@ -39,7 +39,7 @@ void InitMonitorLog(void)
 	// Check if the table key is not valid or if the table index is not within range
 	if ((__monitorLogTblKey != VALID_MONITOR_LOG_TABLE_KEY) || (__monitorLogTblIndex >= TOTAL_MONITOR_LOG_ENTRIES))
 	{
-		//debugRaw("Clearing Monitor Log table\n");
+		//debugRaw("Clearing Monitor Log table\r\n");
 
 		// Clear Monitor Log table
 		ByteSet(&__monitorLogTbl[0], 0x0, (sizeof(MONITOR_LOG_ENTRY_STRUCT) * TOTAL_MONITOR_LOG_ENTRIES));
@@ -57,13 +57,13 @@ void InitMonitorLog(void)
 	// Check if the current monitor log entry is a partial entry (suggesting the entry was not closed)
 	else if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
 	{
-		//debugRaw("Found partial entry at Monitor Log table index: 0x%x, Now making Incomplete\n", __monitorLogTblIndex);
+		//debugRaw("Found partial entry at Monitor Log table index: 0x%x, Now making Incomplete\r\n", __monitorLogTblIndex);
 
 		// Complete entry by setting abnormal termination
 		__monitorLogTbl[__monitorLogTblIndex].status = INCOMPLETE_LOG_ENTRY;
 	}
 
-	//debugRaw("Monitor Log key: 0x%x, Monitor Log index: %d, Monitor Log Unique Entry Id: %d\n",
+	//debugRaw("Monitor Log key: 0x%x, Monitor Log index: %d, Monitor Log Unique Entry Id: %d\r\n",
 	//			__monitorLogTblKey, __monitorLogTblIndex, __monitorLogUniqueEntryId);
 }
 
@@ -76,7 +76,7 @@ void AdvanceMonitorLogIndex(void)
 	if (__monitorLogTblIndex >= TOTAL_MONITOR_LOG_ENTRIES)
 		__monitorLogTblIndex = 0;
 		
-	//debugRaw("Next Monitor Log table index: %d\n", __monitorLogTblIndex);
+	//debugRaw("Next Monitor Log table index: %d\r\n", __monitorLogTblIndex);
 }
 
 ///----------------------------------------------------------------------------
@@ -106,7 +106,7 @@ void ClearMonitorLogEntry(void)
 	// Set all log entries to all zero's, status to EMPTY_LOG_ENTRY, start and stop times INVALID
 	ByteSet(&__monitorLogTbl[__monitorLogTblIndex], 0x0, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 
-	//debugRaw("Clearing entry at Monitor Log table index: %d\n", __monitorLogTblIndex);
+	//debugRaw("Clearing entry at Monitor Log table index: %d\r\n", __monitorLogTblIndex);
 }
 
 ///----------------------------------------------------------------------------
@@ -122,7 +122,7 @@ void NewMonitorLogEntry(uint8 mode)
 	// Clear out the log entry (if wrapped)
 	ClearMonitorLogEntry();
 
-	//debugRaw("New Monitor Log entry with Unique Id: %d\n", __monitorLogUniqueEntryId);
+	//debugRaw("New Monitor Log entry with Unique Id: %d\r\n", __monitorLogUniqueEntryId);
 
 	// Set the unique Monitor Log Entry number
 	__monitorLogTbl[__monitorLogTblIndex].uniqueEntryId = __monitorLogUniqueEntryId;
@@ -130,10 +130,10 @@ void NewMonitorLogEntry(uint8 mode)
 	// Store the current entry number
 	StoreMonitorLogUniqueEntryId();
 
-	//debugRaw("Writing partial info to entry at Monitor Log table index: %d\n", __monitorLogTblIndex);
+	//debugRaw("Writing partial info to entry at Monitor Log table index: %d\r\n", __monitorLogTblIndex);
 
 	// Set the elements to start a new log entry
-	//debugRaw("Writing start time to Monitor Log entry at: 0x%x\n", &(__monitorLogTbl[__monitorLogTblIndex].startTime));
+	//debugRaw("Writing start time to Monitor Log entry at: 0x%x\r\n", &(__monitorLogTbl[__monitorLogTblIndex].startTime));
 	__monitorLogTbl[__monitorLogTblIndex].startTime = GetCurrentTime();
 	__monitorLogTbl[__monitorLogTblIndex].startTime.valid = TRUE;
 	__monitorLogTbl[__monitorLogTblIndex].mode = mode;
@@ -179,7 +179,7 @@ void NewMonitorLogEntry(uint8 mode)
 
 	//ByteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
 	//ConvertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
-	//debug("\tStart Time: %s\n", (char*)&spareBuffer[0]);
+	//debug("\tStart Time: %s\r\n", (char*)&spareBuffer[0]);
 }
 
 ///----------------------------------------------------------------------------
@@ -187,7 +187,7 @@ void NewMonitorLogEntry(uint8 mode)
 ///----------------------------------------------------------------------------
 void UpdateMonitorLogEntry()
 {
-	//debugRaw("Updating entry at Monitor Log table index: %d, event#: %d, total: %d\n", __monitorLogTblIndex, g_nextEventNumberToUse,
+	//debugRaw("Updating entry at Monitor Log table index: %d, event#: %d, total: %d\r\n", __monitorLogTblIndex, g_nextEventNumberToUse,
 	//			(uint16)(g_nextEventNumberToUse - __monitorLogTbl[__monitorLogTblIndex].startEventNumber + 1));
 
 	if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
@@ -204,12 +204,12 @@ void CloseMonitorLogEntry()
 {
 	//char spareBuffer[40];
 
-	//debug("Closing entry at Monitor Log table index: %d, total recorded: %d\n", __monitorLogTblIndex, __monitorLogTbl[__monitorLogTblIndex].eventsRecorded);
+	//debug("Closing entry at Monitor Log table index: %d, total recorded: %d\r\n", __monitorLogTblIndex, __monitorLogTbl[__monitorLogTblIndex].eventsRecorded);
 
 	if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
 	{
 		// Set the elements to close the current log entry
-		//debug("Writing stop time to Monitor Log entry at: 0x%x\n", &(__monitorLogTbl[__monitorLogTblIndex].stopTime));
+		//debug("Writing stop time to Monitor Log entry at: 0x%x\r\n", &(__monitorLogTbl[__monitorLogTblIndex].stopTime));
 		__monitorLogTbl[__monitorLogTblIndex].stopTime = GetCurrentTime();
 		__monitorLogTbl[__monitorLogTblIndex].stopTime.valid = TRUE;
 		__monitorLogTbl[__monitorLogTblIndex].status = COMPLETED_LOG_ENTRY;
@@ -218,7 +218,7 @@ void CloseMonitorLogEntry()
 
 		//ByteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
 		//ConvertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
-		//debug("\tStop Time: %s\n", (char*)&spareBuffer[0]);
+		//debug("\tStop Time: %s\r\n", (char*)&spareBuffer[0]);
 	}
 }
 
@@ -252,7 +252,7 @@ void InitMonitorLogUniqueEntryId(void)
 		SaveRecordData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
 	}
 
-	debug("Total Monitor Log entries to date: %d, Current Monitor Log entry number: %d\n", 
+	debug("Total Monitor Log entries to date: %d, Current Monitor Log entry number: %d\r\n",
 		(__monitorLogUniqueEntryId - 1), __monitorLogUniqueEntryId);
 }
 
@@ -297,7 +297,7 @@ uint8 GetNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, M
 			*logEntry = __monitorLogTbl[(*tempIndex)];
 
 #if 0 // Test
-			debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\n",
+			debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\r\n",
 			logEntry->uniqueEntryId, logEntry->mode, logEntry->startEventNumber, logEntry->status,
 			logEntry->seismicTriggerLevel, logEntry->airTriggerLevel, logEntry->bitAccuracy, logEntry->adjustForTempDrift,
 			logEntry->sensor_type, logEntry->sensitivity);
@@ -364,40 +364,39 @@ void AppendMonitorLogEntryFile(void)
 	// Verify file ID
 	if (monitorLogFile == NULL)
 	{
-		debugErr("Error: Monitor Log File not found!\r\n");
+		debugErr("Monitor Log File not found\r\n");
 		OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
 	}		
 	else // Monitor log file contains entries
 	{
 		if (monitorLogFile->filelength % sizeof(MONITOR_LOG_ENTRY_STRUCT) != 0)
 		{
-			debugWarn("Warning: Monitor Log File size does not comprise all whole entries!\r\n");
+			debugWarn("Monitor Log File size does not comprise all whole entries\r\n");
 		}
 
-		debug("Writing Monitor log entry to log file...\n");
+		debug("Writing Monitor log entry to log file...\r\n");
 
 		fl_fwrite((uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT), 1, monitorLogFile);
 
 		// Done reading, close the monitor log file
 		fl_fclose(monitorLogFile);
-		
-		debug("Monitor log entry appended to log file\n");
-	}
 
+		debug("Monitor log entry appended to log file\r\n");
+	}
 
 	monitorLogHumanReadableFile = fl_fopen("C:\\Logs\\MonitorLogReadable.txt", "a+");
 
 	// Verify file ID
 	if (monitorLogHumanReadableFile == NULL)
 	{
-		debugErr("Error: Monitor Log Readable File not found!\r\n");
+		debugErr("Monitor Log Readable File not found\r\n");
 		OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLogReadable.txt", 3 * SOFT_SECS);
 	}
 	else // File successfully created or opened
 	{
 		mle = &__monitorLogTbl[__monitorLogTblIndex];
 
-		debug("Writing Monitor log entry to readable log file...\n");
+		debug("Writing Monitor log entry to readable log file...\r\n");
 
 		if (mle->mode == WAVEFORM_MODE) { strcpy((char*)&modeString, "Waveform"); }
 		else if (mle->mode == BARGRAPH_MODE) { strcpy((char*)&modeString, "Bargraph"); }
@@ -447,7 +446,7 @@ void AppendMonitorLogEntryFile(void)
 		// Done reading, close the monitor log file
 		fl_fclose(monitorLogHumanReadableFile);
 
-		debug("Monitor log readable entry appended to log file\n");
+		debug("Monitor log readable entry appended to log file\r\n");
 	}
 
 #if 0 // Test
@@ -455,7 +454,7 @@ void AppendMonitorLogEntryFile(void)
 	{
 		if (MessageBox("TEST BUFFER", "SAVE TEST BUFFER?", MB_YESNO) == MB_SECOND_CHOICE)
 		{
-			debug("Cancel save of test buffer\n");
+			debug("Cancel save of test buffer\r\n");
 			samplesCollected = 0;
 			return;
 		}
@@ -464,7 +463,7 @@ void AppendMonitorLogEntryFile(void)
 
 		testBufferFile = fl_fopen("C:\\Logs\\TestBuffer.txt", "a+");
 
-		debug("Writing Test Buffer Data to log file...\n");
+		debug("Writing Test Buffer Data to log file...\r\n");
 
 		fl_fwrite((uint8*)&(g_eventDataBuffer), (samplesCollected * 2), 1, testBufferFile);
 
@@ -473,7 +472,7 @@ void AppendMonitorLogEntryFile(void)
 
 		samplesCollected = 0;
 
-		debug("Test Buffer Data file complete\n");
+		debug("Test Buffer Data file complete\r\n");
 	}
 #endif
 }
@@ -486,6 +485,9 @@ void InitMonitorLogTableFromLogFile(void)
 	FL_FILE* monitorLogFile;
 	MONITOR_LOG_ENTRY_STRUCT monitorLogEntry;
 	int32 bytesRead = 0;
+	uint16 lowestId = 0;
+	uint16 highestId = 0;
+	uint16 foundIds = 0;
 	
 	monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "r");
 
@@ -497,7 +499,7 @@ void InitMonitorLogTableFromLogFile(void)
 	// Verify file is big enough
 	else if (monitorLogFile->filelength < sizeof(MONITOR_LOG_ENTRY_STRUCT))
 	{
-		debugErr("Error: Monitor Log File is corrupt!\r\n");
+		debugErr("Monitor Log File is corrupt\r\n");
 		OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
 	}		
 	else // Monitor log file contains entries
@@ -511,10 +513,22 @@ void InitMonitorLogTableFromLogFile(void)
 		{
 			if ((monitorLogEntry.status == COMPLETED_LOG_ENTRY) || (monitorLogEntry.status == INCOMPLETE_LOG_ENTRY))
 			{
-				debug("Found Valid Monitor Log Entry with ID: %d\n", monitorLogEntry.uniqueEntryId);
+				//debug("Found Valid Monitor Log Entry with ID: %d\r\n", monitorLogEntry.uniqueEntryId);
 
+				if (foundIds)
+				{
+					if (monitorLogEntry.uniqueEntryId < lowestId) { lowestId = monitorLogEntry.uniqueEntryId; }
+					if (monitorLogEntry.uniqueEntryId > highestId) { highestId = monitorLogEntry.uniqueEntryId; }
+				}
+				else
+				{
+					lowestId = monitorLogEntry.uniqueEntryId;
+					highestId = monitorLogEntry.uniqueEntryId;
+				}
+
+				foundIds++;
 #if 0 // Test
-				debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\n",
+				debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\r\n",
 						monitorLogEntry.uniqueEntryId, monitorLogEntry.mode, monitorLogEntry. startEventNumber, monitorLogEntry.status, 
 						monitorLogEntry.seismicTriggerLevel, monitorLogEntry.airTriggerLevel, monitorLogEntry.bitAccuracy, monitorLogEntry.adjustForTempDrift,
 						monitorLogEntry.sensor_type, monitorLogEntry.sensitivity);
@@ -557,6 +571,115 @@ typedef struct
 
 		// Done reading, close the monitor log file
 		fl_fclose(monitorLogFile);
+
+		debug("Found Valid Monitor Log Entries, ID's: %d --> %d\r\n", lowestId, highestId);
 	}
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void AddOnOffLogTimestamp(uint8 onOffState)
+{
+	FL_FILE* onOffLogHumanReadableFile;
+	DATE_TIME_STRUCT time = GetCurrentTime();
+	float extCharge = GetExternalVoltageLevelAveraged(EXT_CHARGE_VOLTAGE);
+	char onOffStateString[6];
+	char timeString[20];
+	char extChargeString[8];
+
+	onOffLogHumanReadableFile = fl_fopen("C:\\Logs\\OnOffLogReadable.txt", "a+");
+
+	// Verify file ID
+	if (onOffLogHumanReadableFile == NULL)
+	{
+		debugErr("On/Off Log File not found\r\n");
+		OverlayMessage("FILE NOT FOUND", "C:\\Logs\\OnOffLogReadable.txt", 3 * SOFT_SECS);
+	}
+	else // File successfully created or opened
+	{
+		if (onOffState == ON) { strcpy((char*)onOffStateString, "On"); }
+		else if (onOffState == OFF) { strcpy((char*)onOffStateString, "Off"); }
+		else { strcpy((char*)onOffStateString, "J2B"); }
+
+		if (extCharge > EXTERNAL_VOLTAGE_PRESENT) { sprintf((char*)&extChargeString, "%4.2fv", extCharge); }
+		else { sprintf((char*)&extChargeString, "<none>"); }
+
+		sprintf((char*)&timeString, "%02d-%02d-%02d %02d:%02d:%02d", time.day, time.month, time.year, time.hour, time.min, time.sec);
+
+		sprintf((char*)&g_spareBuffer, "Unit <%s>: %3s, Version: %s, Mode: %6s, Time: %s, Battery: %3.2fv, Ext charge: %6s\r\n",
+				(char*)&g_factorySetupRecord.serial_num, (char*)onOffStateString, (char*)g_buildVersion,
+				((g_unitConfig.timerMode == ENABLED) ? "Timer" : "Normal"), (char*)timeString,
+				GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE), extChargeString);
+
+		fl_fwrite((uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer), 1, onOffLogHumanReadableFile);
+
+		// Done reading, close the monitor log file
+		fl_fclose(onOffLogHumanReadableFile);
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void WriteDebugBufferToFile(void)
+{
+	if (g_debugBufferCount)
+	{
+		debug("Dumping debug output to debug log file\r\n");
+
+		FL_FILE* debugLogFile;
+
+		debugLogFile = fl_fopen("C:\\Logs\\debugLogReadable.txt", "a+");
+
+		// Verify file ID
+		if (debugLogFile == NULL)
+		{
+			debugErr("Debug Log File not found\r\n");
+			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\debugLogReadable.txt", 3 * SOFT_SECS);
+		}
+		else // File successfully created or opened
+		{
+			fl_fwrite((uint8*)&g_debugBuffer, g_debugBufferCount, 1, debugLogFile);
+
+			// Done reading, close the monitor log file
+			fl_fclose(debugLogFile);
+		}
+
+		memset(&g_debugBuffer, 0, sizeof(g_debugBuffer));
+		g_debugBufferCount = 0;
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+#include "navigation.h"
+void SwitchDebugLogFile(void)
+{
+   // Remove old run debug file (if it exists)
+   if(nav_setcwd("A:\\Logs\\debugLogLastRun.txt", TRUE, FALSE))
+   {
+		if(!nav_file_del(TRUE))
+		{
+			debugWarn("Unable to delete old run debug file\r\n");
+			return;
+		}
+   }
+
+   // Select source file
+   if(!nav_setcwd("A:\\Logs\\debugLogReadable.txt", TRUE, FALSE))
+   {
+	   debugWarn("Unable to open debug log file\r\n");
+	   return;
+   }
+
+   // Rename file or directory
+   if(!nav_file_rename("debugLogLastRun.txt"))
+   {
+	   debugWarn("Unable to move debug log file to last run filename\r\n");
+	   return;
+   }
+
+	debug("Debug log file moved to last run debug file\r\n");
+}

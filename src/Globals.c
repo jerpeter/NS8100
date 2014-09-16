@@ -265,14 +265,15 @@ uint32 g_tempTriggerLevelForMenuAdjsutment;
 volatile uint16 g_storedTempReading;
 volatile uint16 g_currentTempReading;
 volatile uint16 g_previousTempReading;
+uint16 g_debugBufferCount = 0;
 char g_languageTable[LANGUAGE_TABLE_MAX_SIZE];
 uint8 g_spareBuffer[8192];
+uint8 g_debugBuffer[8192];
 uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
-
-// Test only
 uint32 g_execCycles = 0;
 volatile uint32 g_sampleCount = 0;
 uint32 g_sampleCountHold = 0;
 uint8 g_channelSyncError = NO;
+uint8 g_powerOffActivated = NO;
 
 // End of the list

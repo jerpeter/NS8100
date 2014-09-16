@@ -467,7 +467,7 @@ void TimerModeActiveMinutes(void)
 		}
 	}
 
-	debug("Timer Active Minutes: %d\n", g_unitConfig.TimerModeActiveMinutes);
+	debug("Timer Active Minutes: %d\r\n", g_unitConfig.TimerModeActiveMinutes);
 
     SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 }
@@ -490,7 +490,7 @@ uint8 ValidateTimerModeSettings(void)
 	char stop_month = g_unitConfig.timerStopDate.month;
 	char stop_year = g_unitConfig.timerStopDate.year;
 
-	debug("Timer Date: (Start) %d/%d/%d -> (End) %d/%d/%d\n", start_month, start_day, start_year,
+	debug("Timer Date: (Start) %d/%d/%d -> (End) %d/%d/%d\r\n", start_month, start_day, start_year,
 															  stop_month, stop_day, stop_year);
 
 	// Check if user picked a start date that is before the current day
@@ -696,8 +696,10 @@ void ProcessTimerModeSettings(uint8 mode)
 		}
 		else // status == IN_PROGRESS
 		{
+#if 0 // Test with power off protection always enabled
 			// Enable power off protection
 			PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
+#endif
 
 			if (mode == PROMPT)
 			{
@@ -738,7 +740,7 @@ void ProcessTimerModeSettings(uint8 mode)
 			// Make sure timeout value is not zero
 			if (minutesLeft == 0) minutesLeft = 1;
 
-			debug("Timer Mode: In progress, minutes left before power off: %d (Expired secs this min: %d)\n", minutesLeft, currentTime.sec);
+			debug("Timer Mode: In progress, minutes left before power off: %d (Expired secs this min: %d)\r\n", minutesLeft, currentTime.sec);
 
 			// Setup soft timer to turn system off when timer mode is finished for the day
 			AssignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)((minutesLeft * 60 * 2) - (currentTime.sec	* 2)), PowerOffTimerCallback);

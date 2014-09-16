@@ -32,6 +32,7 @@
 #include "gpio.h"
 #include "Common.h"
 #include "PowerManagement.h"
+#include "Display.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -1403,6 +1404,7 @@ void Reset_Contrast( void )
 
 	PowerControl(LCD_CONTRAST_ENABLE, ON);
 	PowerControl(LCD_POWER_ENABLE, ON);
+	SoftUsecWait(LCD_ACCESS_DELAY);
 }
 
 ///----------------------------------------------------------------------------

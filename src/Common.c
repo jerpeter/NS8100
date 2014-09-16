@@ -43,7 +43,6 @@ extern const char applicationDate[];
 ///----------------------------------------------------------------------------
 static INPUT_MSG_STRUCT* s_inputWritePtr = &(g_input_buffer[0]);
 static INPUT_MSG_STRUCT* s_inputReadPtr = &(g_input_buffer[0]);
-static void (*s_bootloader)(void) = NULL;
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -72,7 +71,7 @@ float GetExternalVoltageLevelAveraged(uint8 type)
 					
 					// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
 					SoftUsecWait(4);
-					//debug("Ext Charge Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+					//debug("Ext Charge Voltage A/D Reading: 0x%x\r\n", adVoltageReadValue);
 				}				
 				break;
 
@@ -83,7 +82,7 @@ float GetExternalVoltageLevelAveraged(uint8 type)
 
 					// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
 					SoftUsecWait(4);
-					//debug("Battery Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+					//debug("Battery Voltage A/D Reading: 0x%x\r\n", adVoltageReadValue);
 				}
 				break;
 		}
@@ -124,7 +123,7 @@ float GetExternalVoltageLevelAveraged(uint8 type)
 
 			// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
 			//SoftUsecWait(4);
-			//debug("Ext Charge Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+			//debug("Ext Charge Voltage A/D Reading: 0x%x\r\n", adVoltageReadValue);
 		}
 		break;
 
@@ -136,7 +135,7 @@ float GetExternalVoltageLevelAveraged(uint8 type)
 
 			// Need delay to prevent lockup on spin, EOC check inside adc_get_value appears not working as intended
 			//SoftUsecWait(4);
-			//debug("Battery Voltage A/D Reading: 0x%x\n", adVoltageReadValue);
+			//debug("Battery Voltage A/D Reading: 0x%x\r\n", adVoltageReadValue);
 		}
 		break;
 	}
@@ -167,13 +166,13 @@ BOOLEAN CheckExternalChargeVoltagePresent(void)
 	adVoltageLevel = adVoltageReadValue * (REFERENCE_VOLTAGE * VOLTAGE_RATIO_EXT_CHARGE);
 	adVoltageLevel /= BATT_RESOLUTION;
 
-	//debug("Ext Charge Voltage A/D Reading: 0x%x, Value: %f\n", adVoltageReadValue, adVoltageLevel);
+	//debug("Ext Charge Voltage A/D Reading: 0x%x, Value: %f\r\n", adVoltageReadValue, adVoltageLevel);
 
 #if 0 // Test
-	debug("Battery Voltage: %f\n", GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
+	debug("Battery Voltage: %f\r\n", GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 #endif
 
-	if (adVoltageLevel > 5.0)
+	if (adVoltageLevel > EXTERNAL_VOLTAGE_PRESENT)
 		externalChargePresent = YES;
 		
 	return (externalChargePresent);
@@ -264,7 +263,7 @@ void ProcessInputMsg(INPUT_MSG_STRUCT mn_msg)
 	// Check if the LCD power is off
 	if (getSystemEventState(UPDATE_MENU_EVENT))
 	{
-		debug("Keypress command absorbed to signal unit to power on LCD\n");
+		debug("Keypress command absorbed to signal unit to power on LCD\r\n");
 
 		// Clear out the message parameters
 		mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
@@ -283,21 +282,21 @@ void ProcessInputMsg(INPUT_MSG_STRUCT mn_msg)
 	{
 		case CTRL_CMD:
 			{
-				debug("Handling Ctrl Sequence\n");
+				debug("Handling Ctrl Sequence\r\n");
 				HandleCtrlKeyCombination((char)mn_msg.data[0]);
 			}
 			break;
 
 		case BACK_LIGHT_CMD:
 			{
-				debug("Handling Backlight Command\n");
+				debug("Handling Backlight Command\r\n");
 				SetNextLcdBacklightState();
 			}
 			break;
 
 		case KEYPRESS_MENU_CMD:
 			{
-				debug("Handling Keypress Command\n");
+				debug("Handling Keypress Command\\n");
 				JUMP_TO_ACTIVE_MENU();
 			}				
 			break;
@@ -608,7 +607,7 @@ uint16 Isqrt(uint32 x)
 ///----------------------------------------------------------------------------
 void InitVersionMsg(void)
 {
-	debug("Software Version: %s (Build Date & Time: %s)\n", g_buildVersion, g_buildDate);
+	debug("Software Version: %s (Build Date & Time: %s)\r\n", g_buildVersion, g_buildDate);
 }
 
 ///----------------------------------------------------------------------------
@@ -656,14 +655,14 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 	
 	if (languageFile == NULL)
 	{
-		debugWarn("Language file not found, loading language table from app...\n");
+		debugWarn("Language file not found, loading language table from app...\r\n");
 
 		// File not found, default to internal language tables
 		g_languageLinkTable[0] = languageTablePtr;
 	}
 	else // Language file found
 	{
-		debug("Loading language table from file: %s, Length: %d\n", (char*)&languageFilename[0], languageFile->filelength);
+		debug("Loading language table from file: %s, Length: %d\r\n", (char*)&languageFilename[0], languageFile->filelength);
 
 		ByteSet(&g_languageTable, '\0', sizeof(g_languageTable));
 
@@ -714,69 +713,27 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 #if 0 // Visible check of the language table
 	for (i = 0; i < TOTAL_TEXT_STRINGS; i++)
 	{
-		debug("Check text: <%s>\n", getLangText(i));
+		debug("Check text: <%s>discovered\r\n", getLangText(i));
 	}
 #endif
 
-	debug("Language Link Table built.\n");
+	debug("Language Link Table built.\r\n");
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void GetBootFunctionAddress(void)
+extern const char default_boot_name[];
+void CheckBootloaderAppPresent(void)
 {
-	s_bootloader = NULL;
-}
+	FL_FILE* file = NULL;
 
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void JumpToBootFunction(void)
-{
-	if (s_bootloader != NULL)
+	sprintf((char*)g_spareBuffer,"C:\\System\\%s", default_boot_name);
+	file = fl_fopen((char*)g_spareBuffer, "r");
+	if (file)
 	{
-		// Check if the unit is in monitor mode
-		if (g_sampleProcessing == ACTIVE_STATE)
-		{
-			// Check if auto monitor is disabled
-			if (g_unitConfig.autoMonitorMode == AUTO_NO_TIMEOUT)
-			{
-				g_unitConfig.autoMonitorMode = AUTO_TWO_MIN_TIMEOUT;
-
-				SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
-			}
-
-			// Turn printing off
-			g_unitConfig.autoPrint = NO;
-
-			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
-		}
-
-		// Check if the LCD is currently powered
-		if (GetPowerControlState(LCD_POWER_ENABLE) == ON)
-		{
-			// Turn on the LCD power
-			PowerControl(LCD_POWER_ENABLE, ON);
-
-			// Set contrast
-			SetLcdContrast(g_contrast_value);
-
-			// Setup LCD segments and clear display buffer
-			InitLcdDisplay();
-
-			// Turn the backlight on and set to low
-			SetLcdBacklightState(BACKLIGHT_DIM);
-		}
-
-		// Wait a second
-		SoftUsecWait(1 * SOFT_SECS);
-
-		// Disable interrupts to prevent access to ISR's while in boot
-		Disable_global_interrupt();
-
-		// Jump to the bootloader routine to update the app image
-		(*s_bootloader)();
+		debug("Bootloader found and available\r\n");
+		fl_fclose(file);
 	}
 }
 
@@ -1058,7 +1015,7 @@ void InitTimeMsg(void)
 	DATE_TIME_STRUCT time = GetExternalRtcTime();
 #endif
 
-	debug("RTC: Current Date: %s %02d, %4d\n", g_monthTable[time.month].name,	time.day, (time.year + 2000));
-	debug("RTC: Current Time: %02d:%02d:%02d %s\n", ((time.hour > 12) ? (time.hour - 12) : time.hour),
+	debug("RTC: Current Date: %s %02d, %4d\r\n", g_monthTable[time.month].name,	time.day, (time.year + 2000));
+	debug("RTC: Current Time: %02d:%02d:%02d %s\r\n", ((time.hour > 12) ? (time.hour - 12) : time.hour),
 			time.min, time.sec, ((time.hour > 12) ? "PM" : "AM"));
 }

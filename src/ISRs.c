@@ -134,7 +134,6 @@ void Eic_keypad_irq(void)
 	// Print test for verification of operation
 	//debugRaw("^");
 
-#if 1
 	if (g_kpadProcessingFlag == DEACTIVATED)
 	{
 		raiseSystemEventFlag(KEYPAD_EVENT);
@@ -146,20 +145,6 @@ void Eic_keypad_irq(void)
 	{
 		g_kpadInterruptWhileProcessing = YES;
 	}
-#endif
-
-#if 0
-	uint8 keyScan;
-	keyScan = ReadMcp23018(IO_ADDRESS_KPD, INTFB);
-	{
-		debug("Keypad IRQ: Interrupt Flags: %x\n", keyScan);
-	}
-
-	keyScan = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
-	{
-		debug("Kaypad IRQ: Key Pressed: %x\n", keyScan);
-	}
-#endif
 
 #if 0 // Not necessary to clear the keypad interrupt just the processor interrupt so the ISR isn't called again
 	ReadMcp23018(IO_ADDRESS_KPD, INTFB);
@@ -184,33 +169,17 @@ void Eic_system_irq(void)
 	// Print test for verification of operation
 	//debugRaw("&");
 
-#if 0
-	if (g_kpadProcessingFlag == DEACTIVATED)
-	{
-		raiseSystemEventFlag(KEYPAD_EVENT);
-
-		// Found a new key, reset last stored key
-		g_kpadLastKeyPressed = KEY_NONE;
-	}
-#endif
-
-#if 0
-	keyFlag = ReadMcp23018(IO_ADDRESS_KPD, INTFA);
-	keyScan = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
-	debug("System IRQ: Interrupt Flags: %x\n", keyFlag);
-	debug("System IRQ: Key Pressed: %x\n", keyScan);
-#endif
-
 #if 1
 	keyFlag = ReadMcp23018(IO_ADDRESS_KPD, INTFA);
 	keyScan = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 
+	//-----------------------------------------------------------------------------------
 	// Check if the On key was pressed
 	if ((keyFlag & keyScan) == ON_KEY)
 	{
 		if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 		{
-			//debug("Factory Setup: Stage 1\n");
+			//debug("Factory Setup: Stage 1\r\n");
 			g_factorySetupSequence = STAGE_1;
 		}
 
@@ -218,23 +187,19 @@ void Eic_system_irq(void)
 		{ 
 			onKeyCount++;
 		}
-
-#if 0 // Test (Check if the off key is being pressed which seemingly doesn't want to work, only shows 1 key being pressed)
-		// Check if the Off key is also being pressed - silent ability to power off the unit in the case of a monitor failure
-		if (keyScan & OFF_KEY)
-		{
-			// Jumping off the ledge.. Buh bye! No returning from this
-			PowerControl(POWER_OFF, ON);
-		}
-#endif
 	}
 
+	//-----------------------------------------------------------------------------------
+	// Check if the Off key was pressed
 	if (keyScan & OFF_KEY)
 	{
+		g_powerOffActivated = YES;
+
 		if ((powerOffAttempted == YES) && (onKeyCount == 3))
 		{
 			// Jumping off the ledge.. Buh bye! No returning from this
 			//debugRaw("\n--> BOOM <--");
+			PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 			PowerControl(POWER_OFF, ON);
 		}
 
@@ -242,6 +207,7 @@ void Eic_system_irq(void)
 		onKeyCount = 0;
 	}
 
+	//-----------------------------------------------------------------------------------
 	// Check of the external trigger signal has been found
 	if (keyFlag & 0x08)
 	{
@@ -592,7 +558,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
 			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || (g_externalTrigger == YES))
 		{
-			//debug("--> Trigger Found! %x %x %x %x\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
+			//debug("--> Trigger Found! %x %x %x %x\r\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
 			//usart_write_char(&AVR32_USART1, '$');
 			
 			// Check if this event was triggered by an external trigger signal
@@ -734,7 +700,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		//___Check if all the event samples have been handled
 		if (s_sampleCount == 0)
 		{
-			//debug("--> Recording done\n");
+			//debug("--> Recording done\r\n");
 			//usart_write_char(&AVR32_USART1, '%');
 
 			s_recordingEvent = NO;
@@ -829,7 +795,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 
 				if (s_calSampleCount == 0)
 				{
-					//debug("\n--> Cal done\n");
+					//debug("\n--> Cal done\r\n");
 					//usart_write_char(&AVR32_USART1, '&');
 						
 					// Reset all states and counters (that haven't already)
@@ -875,7 +841,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 	else
 	{
 		// Should _never_ get here
-		debugErr("Error in ISR processing\n");
+		debugErr("Error in ISR processing\r\n");
 	}
 }
 
@@ -1103,7 +1069,7 @@ static inline void getChannelDataNoReadbackNoTemp_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline void HandleChannelSyncError_ISR_Inline(void)
 {
-	debugErr("AD Channel Sync Error\n");
+	debugErr("AD Channel Sync Error\r\n");
 		
 	// Attempt channel recovery (with a channel read to get the config read back value)
 	spi_selectChip(AD_SPI, AD_SPI_NPCS);
@@ -1129,7 +1095,7 @@ static inline void HandleChannelSyncError_ISR_Inline(void)
 
 		default: 
 			s_channelReadsToSync = 0; // Houston, we have a problem... all channels read and unable to match
-			debugErr("Error: ISR Processing AD --> Unable to Sync channels, data collection broken\n");
+			debugErr("Error: ISR Processing AD --> Unable to Sync channels, data collection broken\r\n");
 			break;
 	}
 		

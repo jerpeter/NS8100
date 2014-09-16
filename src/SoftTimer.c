@@ -60,7 +60,7 @@ void AssignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 {
 	if (timerNum >= NUM_OF_SOFT_TIMERS)
 	{
-		debugErr("AssignSoftTimer Error: Timer Number not valid: %d\n", timerNum);
+		debugErr("AssignSoftTimer Error: Timer Number not valid: %d\r\n", timerNum);
 		return;
 	}
 
@@ -83,7 +83,7 @@ void ResetSoftTimer(uint16 timerNum)
 {
 	if (timerNum >= NUM_OF_SOFT_TIMERS)
 	{
-		debugErr("AssignSoftTimer Error: Timer Number not valid: %d\n", timerNum);
+		debugErr("AssignSoftTimer Error: Timer Number not valid: %d\r\n", timerNum);
 		return;
 	}
 
@@ -103,7 +103,7 @@ void ClearSoftTimer(uint16 timerNum)
 {
 	if (timerNum >= NUM_OF_SOFT_TIMERS)
 	{
-		debugErr("ClearSoftTimer Error: Timer Number not valid: %d\n", timerNum);
+		debugErr("ClearSoftTimer Error: Timer Number not valid: %d\r\n", timerNum);
 		return;
 	}
 
@@ -148,7 +148,7 @@ void CheckSoftTimers(void)
 						}
 						else
 						{
-							debug("CheckSoftTimers:Error function call is NULL\n");
+							debug("CheckSoftTimers:Error function call is NULL\r\n");
 						}
 					}
 				}
@@ -172,7 +172,7 @@ void CheckSoftTimers(void)
 					}
 					else
 					{
-						debug("CheckSoftTimers:Error function call is NULL\n");
+						debug("CheckSoftTimers:Error function call is NULL\r\n");
 					}
 				}
 			}
@@ -187,7 +187,7 @@ void CheckSoftTimers(void)
 ///----------------------------------------------------------------------------
 void DisplayTimerCallBack(void)
 {
-	debug("LCD Backlight Timer callback: activated.\n");
+	debug("LCD Backlight Timer callback: activated.\r\n");
 
 	g_lcdBacklightFlag = DISABLED;
 	SetLcdBacklightState(BACKLIGHT_OFF);
@@ -201,7 +201,7 @@ void AlarmOneOutputTimerCallback(void)
 	// Deactivate alarm 1 signal
 	PowerControl(ALARM_1_ENABLE, OFF);
 
-	debug("Warning Event 1 Alarm finished\n");
+	debug("Warning Event 1 Alarm finished\r\n");
 }
 
 ///----------------------------------------------------------------------------
@@ -212,7 +212,7 @@ void AlarmTwoOutputTimerCallback(void)
 	// Deactivate alarm 2 signal
 	PowerControl(ALARM_2_ENABLE, OFF);
 
-	debug("Warning Event 2 Alarm finished\n");
+	debug("Warning Event 2 Alarm finished\r\n");
 }
 
 ///----------------------------------------------------------------------------
@@ -220,7 +220,7 @@ void AlarmTwoOutputTimerCallback(void)
 ///----------------------------------------------------------------------------
 void LcdPwTimerCallBack(void)
 {
-	debug("LCD Power Timer callback: activated.\n");
+	debug("LCD Power Timer callback: activated.\r\n");
 
 	g_lcdPowerFlag = DISABLED;
 
@@ -232,7 +232,7 @@ void LcdPwTimerCallBack(void)
 
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
-		debug("LCD Power Timer callback: disabling Monitor Update Timer.\n");
+		debug("LCD Power Timer callback: disabling Monitor Update Timer.\r\n");
 		ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 	}
 }
@@ -274,19 +274,19 @@ void KeypadLedUpdateTimerCallBack(void)
 
 	if ((g_sampleProcessing == IDLE_STATE) && (externalChargePresent == FALSE))
 	{
-		//debug("Keypad LED: State 1\n");
+		//debug("Keypad LED: State 1\r\n");
 		
 		ledState = KEYPAD_LED_STATE_IDLE_GREEN_ON;
 	}
 	else if ((g_sampleProcessing == IDLE_STATE) && (externalChargePresent == TRUE))
 	{
-		//debug("Keypad LED: State 2\n");
+		//debug("Keypad LED: State 2\r\n");
 
 		ledState = KEYPAD_LED_STATE_CHARGE_RED_ON;
 	}
 	else if ((g_sampleProcessing == ACTIVE_STATE) && (externalChargePresent == FALSE))
 	{
-		//debug("Keypad LED: State 3\n");
+		//debug("Keypad LED: State 3\r\n");
 
 		if (ledState == KEYPAD_LED_STATE_ACTIVE_GREEN_ON)
 		{
@@ -299,7 +299,7 @@ void KeypadLedUpdateTimerCallBack(void)
 	}		
 	else // ((g_sampleProcessing == ACTIVE_STATE) && (externalChargePresent == TRUE))
 	{
-		//debug("Keypad LED: State 4\n");
+		//debug("Keypad LED: State 4\r\n");
 
 		if (ledState == KEYPAD_LED_STATE_ACTIVE_CHARGE_GREEN_ON)
 		{
@@ -367,14 +367,14 @@ void KeypadLedUpdateTimerCallBack(void)
 ///----------------------------------------------------------------------------
 void PowerOffTimerCallback(void)
 {
-	debug("Power Off Timer callback: activated.\n");
+	debug("Power Off Timer callback: activated.\r\n");
 
 	// Handle and finish any processing
 	StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 	if (g_timerModeLastRun == YES)
 	{
-		debug("Timer Mode: Ending last session, now disabling...\n");
+		debug("Timer Mode: Ending last session, now disabling...\r\n");
 		g_unitConfig.timerMode = DISABLED;
 
 		// Save Unit Config
@@ -383,11 +383,8 @@ void PowerOffTimerCallback(void)
 		
 	OverlayMessage(getLangText(TIMER_MODE_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 3 * SOFT_SECS);
 
-	// Disable Power Off Protection
-	PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
-
 	// Power the unit off
-	debug("Timer mode: Finished for the day, sleep time.\n");
+	debug("Timer mode: Finished for the day, sleep time.\r\n");
 
 	PowerUnitOff(SHUTDOWN_UNIT);
 }
@@ -468,7 +465,7 @@ void AutoMonitorTimerCallBack(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 
-	debug("Auto Monitor Timer callback: activated.\n");
+	debug("Auto Monitor Timer callback: activated.\r\n");
 
 	// Make sure the Auto Monitor timer is disabled
 	ClearSoftTimer(AUTO_MONITOR_TIMER_NUM);

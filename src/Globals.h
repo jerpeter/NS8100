@@ -222,7 +222,9 @@ extern USER_MENU_CACHE_DATA g_userMenuCacheData;
 extern uint8 g_enterMonitorModeAfterMidnightCal;
 extern void (*g_userMenuHandler)(uint8, void*);
 extern uint16 g_eventBufferWriteIndex;
-extern uint8 g_spareBuffer[];
+extern uint8 g_spareBuffer[8192];
+extern uint8 g_debugBuffer[8192];
+extern uint16 g_debugBufferCount;
 extern uint8 g_timerModeLastRun;
 extern uint8 g_tcSampleTimerActive;
 extern uint8 g_tcTypematicTimerActive;
@@ -246,10 +248,10 @@ extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 extern const char g_buildVersion[];
 extern const char g_buildDate[];
 
-// Test
 extern uint32 g_execCycles;
 extern uint8 g_channelSyncError;
 extern volatile uint32 g_sampleCount;
 extern uint32 g_sampleCountHold;
+extern uint8 g_powerOffActivated;
 
 #endif /* GLOBALS_H_ */

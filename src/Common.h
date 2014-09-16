@@ -12,6 +12,7 @@
 ///	Includes
 ///----------------------------------------------------------------------------
 #include "Typedefs.h"
+#include "board.h"
 
 ///----------------------------------------------------------------------------
 ///	Unit Type
@@ -35,15 +36,6 @@
 
 // Test Exception Handling
 #define TEST_EXCEPTION_HANDLING	1
-
-// Select between hardware board versions
-#define NS8100_ORIGINAL		0
-
-#if NS8100_ORIGINAL
-#define NS8100_ALPHA		0
-#else
-#define NS8100_ALPHA		1
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -121,6 +113,8 @@ typedef struct
 
 #define PI	3.14159
 
+#define JUMP_TO_BOOT	2
+
 #define LANGUAGE_TABLE_MAX_SIZE		8192
 
 // To eliminate C warning when the variable is not used.
@@ -187,7 +181,7 @@ enum {
 #define VBAT_CHANNEL    3
 
 #define LOW_VOLTAGE_THRESHOLD		5.4
-#define EXTERNAL_VOLTAGE_PRESENT	5
+#define EXTERNAL_VOLTAGE_PRESENT	5.0
 
 /* Uart Info */
 #define CRAFT_BAUDRATE	115200 //14400 //38400
@@ -204,6 +198,8 @@ enum {
 // Define Project Debug Port
 #define GLOBAL_DEBUG_PRINT_PORT	DEBUG_COM_PORT
 #endif
+
+#define GLOBAL_DEBUG_BUFFER_THRESHOLD	8000
 
 /* Battery Level defines */
 #define BATT_MIN_VOLTS 			4.0
@@ -283,8 +279,7 @@ void BuildLanguageLinkTable(uint8 languageSelection);
 void InitVersionMsg(void);
 
 // Bootloader Function
-void GetBootFunctionAddress(void);
-void JumpToBootFunction(void);
+void CheckBootloaderAppPresent(void);
 void ByteCpy(void* dest, void* src, uint32 size);
 void ByteSet(void* dest, uint8 value, uint32 size);
 
