@@ -1306,15 +1306,12 @@ void UpdateComboJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 ///----------------------------------------------------------------------------
 BOOLEAN CheckSpaceForComboBarSummaryInterval(void)
 {
-	FLASH_USAGE_STRUCT flashStats;
 	uint32 barIntervalSize;
 	BOOLEAN spaceLeft;
 	
-	GetFlashUsageStats(&flashStats);
-
 	barIntervalSize = (sizeof(CALCULATED_DATA_STRUCT) + (((g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval) + 1) * 8));
 
-	if (flashStats.sizeFree > barIntervalSize)
+	if (g_flashUsageStats.sizeFree > barIntervalSize)
 		spaceLeft = YES;
 	else
 		spaceLeft = NO;
@@ -1339,7 +1336,6 @@ void MoveComboWaveformEventToFile(void)
 	uint16 sample;
 	uint32 vectorSum;
 	uint16 tempPeak;
-	FLASH_USAGE_STRUCT flashStats;
 	INPUT_MSG_STRUCT msg;
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
@@ -1584,9 +1580,7 @@ void MoveComboWaveformEventToFile(void)
 					// Check to see if there is room for another event, if not send a signal to stop monitoring
 					if (g_unitConfig.flashWrapping == NO)
 					{
-						GetFlashUsageStats(&flashStats);
-
-						if (flashStats.waveEventsLeft == 0)
+						if (g_flashUsageStats.waveEventsLeft == 0)
 						{
 							msg.cmd = STOP_MONITORING_CMD;
 							msg.length = 1;

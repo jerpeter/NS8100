@@ -78,7 +78,7 @@ uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr);
 void CompleteRamEventSummary(SUMMARY_DATA* , SUMMARY_DATA*);
 uint16* GetFlashDataPointer(void);
 void StoreData(uint16* dataPtr, uint16 dataWords);
-void GetFlashUsageStats(FLASH_USAGE_STRUCT* usage);
+void UpdateFlashUsageStats(void);
 void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
 void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
 void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize);

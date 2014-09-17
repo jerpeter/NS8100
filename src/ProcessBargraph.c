@@ -976,15 +976,12 @@ void UpdateBargraphJobTotals(CALCULATED_DATA_STRUCT* sumIntervalPtr)
 ///----------------------------------------------------------------------------
 BOOLEAN CheckSpaceForBarSummaryInterval(void)
 {
-	FLASH_USAGE_STRUCT flashStats;
 	uint32 barIntervalSize;
 	BOOLEAN spaceLeft;
 
-	GetFlashUsageStats(&flashStats);
-
 	barIntervalSize = (sizeof(CALCULATED_DATA_STRUCT) + (((g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval) + 1) * 8));
 
-	if (flashStats.sizeFree > barIntervalSize)
+	if (g_flashUsageStats.sizeFree > barIntervalSize)
 		spaceLeft = YES;
 	else
 		spaceLeft = NO;

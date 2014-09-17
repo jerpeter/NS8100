@@ -507,11 +507,8 @@ void handleGFS(CMD_BUFFER_STRUCT* inCmd)
 	uint32 dataLength;
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
 	uint8 gfsHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
-	FLASH_USAGE_STRUCT usage;
 	
 	UNUSED(inCmd);
-
-	GetFlashUsageStats(&usage);
 
 	// Transmit a carrige return line feed
 	if (ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION) == MODEM_SEND_FAILED)
@@ -549,10 +546,10 @@ void handleGFS(CMD_BUFFER_STRUCT* inCmd)
 	}
 
 	// Calculate the CRC on the data
-	g_transmitCRC = CalcCCITT32((uint8*)&usage, sizeof(FLASH_USAGE_STRUCT), g_transmitCRC);
+	g_transmitCRC = CalcCCITT32((uint8*)&g_flashUsageStats, sizeof(FLASH_USAGE_STRUCT), g_transmitCRC);
 
 	// Send the data out the modem
-	if (ModemPuts((uint8*)&usage, sizeof(FLASH_USAGE_STRUCT), g_binaryXferFlag) == MODEM_SEND_FAILED)
+	if (ModemPuts((uint8*)&g_flashUsageStats, sizeof(FLASH_USAGE_STRUCT), g_binaryXferFlag) == MODEM_SEND_FAILED)
 	{
 		// There was an error, so reset all global transfer and status fields
 		g_modemStatus.xferMutex = NO;

@@ -271,6 +271,7 @@ uint8 g_spareBuffer[SPARE_BUFFER_SIZE];
 uint8 g_debugBuffer[GLOBAL_DEBUG_BUFFER_SIZE];
 uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 uint32 g_execCycles = 0;
+FLASH_USAGE_STRUCT g_flashUsageStats;
 volatile uint32 g_sampleCount = 0;
 uint32 g_sampleCountHold = 0;
 uint8 g_channelSyncError = NO;

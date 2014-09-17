@@ -540,7 +540,6 @@ void GetManualCalibration(void)
 ///----------------------------------------------------------------------------
 void HandleManualCalibration(void)
 {
-	FLASH_USAGE_STRUCT flashStats;
 	//uint32 manualCalProgressCheck = MAX_CAL_SAMPLES;
 	//uint8 holdOpMode;
 
@@ -554,10 +553,8 @@ void HandleManualCalibration(void)
 			// Check if still waiting for an event and not processing a cal and not waiting for a cal
 			if (g_busyProcessingEvent == NO)
 			{
-				GetFlashUsageStats(&flashStats);
-				
 				// fix_ns8100
-				if ((g_unitConfig.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
+				if ((g_unitConfig.flashWrapping == NO) && (g_flashUsageStats.manualCalsLeft == 0))
 				{
 					OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 				}
@@ -590,9 +587,7 @@ void HandleManualCalibration(void)
 	}
 	else // Performing Cal outside of monitor mode
 	{
-		GetFlashUsageStats(&flashStats);
-		
-		if ((g_unitConfig.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
+		if ((g_unitConfig.flashWrapping == NO) && (g_flashUsageStats.manualCalsLeft == 0))
 		{
 			OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 		}

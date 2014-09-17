@@ -1338,9 +1338,8 @@ void StoreData(uint16* dataPtr, uint16 dataWords)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #include "navigation.h"
-void GetFlashUsageStats(FLASH_USAGE_STRUCT* usage)
+void UpdateFlashUsageStats(void)
 {
-	//FLASH_USAGE_STRUCT usage;
 	uint32 waveSize;
 	uint32 barSize;
 	uint32 manualCalSize;
@@ -1357,10 +1356,10 @@ void GetFlashUsageStats(FLASH_USAGE_STRUCT* usage)
 #if NS8100_ORIGINAL
     sd_mmc_spi_get_capacity();
 
-	usage->sizeUsed = 0;
-	usage->sizeFree = capacity - usage->sizeUsed;
-	usage->percentUsed = (uint8)((usage->sizeUsed * 100) / capacity);
-	usage->percentFree = (uint8)(100 - usage->percentUsed);
+	g_flashUsageStats.sizeUsed = 0;
+	g_flashUsageStats.sizeFree = capacity - g_flashUsageStats.sizeUsed;
+	g_flashUsageStats.percentUsed = (uint8)((g_flashUsageStats.sizeUsed * 100) / capacity);
+	g_flashUsageStats.percentFree = (uint8)(100 - g_flashUsageStats.percentUsed);
 #else // NS8100_ALPHA
 	nav_drive_set(0); // Select SD MMC card as drive
 
@@ -1369,16 +1368,16 @@ void GetFlashUsageStats(FLASH_USAGE_STRUCT* usage)
 		debugErr("SD MMC Card: Unable to mount volume\r\n");
 	}
 
-	usage->sizeFree = (nav_partition_freespace() << FS_SHIFT_B_TO_SECTOR);
-	usage->sizeUsed = (nav_partition_space() << FS_SHIFT_B_TO_SECTOR) - usage->sizeFree;
-	usage->percentFree = (uint8)(nav_partition_freespace_percent());
-	usage->percentUsed = (uint8)(100 - usage->percentFree);
+	g_flashUsageStats.sizeFree = (nav_partition_freespace() << FS_SHIFT_B_TO_SECTOR);
+	g_flashUsageStats.sizeUsed = (nav_partition_space() << FS_SHIFT_B_TO_SECTOR) - g_flashUsageStats.sizeFree;
+	g_flashUsageStats.percentFree = (uint8)(nav_partition_freespace_percent());
+	g_flashUsageStats.percentUsed = (uint8)(100 - g_flashUsageStats.percentFree);
 #endif
-	usage->waveEventsLeft = (uint16)(usage->sizeFree / waveSize);
-	usage->barHoursLeft = (uint16)(usage->sizeFree / barSize);
-	usage->manualCalsLeft = (uint16)(usage->sizeFree / manualCalSize);
-	usage->wrapped = NO;
-	usage->roomForBargraph = (usage->sizeFree > newBargraphMinSize) ? YES : NO;
+	g_flashUsageStats.waveEventsLeft = (uint16)(g_flashUsageStats.sizeFree / waveSize);
+	g_flashUsageStats.barHoursLeft = (uint16)(g_flashUsageStats.sizeFree / barSize);
+	g_flashUsageStats.manualCalsLeft = (uint16)(g_flashUsageStats.sizeFree / manualCalSize);
+	g_flashUsageStats.wrapped = NO;
+	g_flashUsageStats.roomForBargraph = (g_flashUsageStats.sizeFree > newBargraphMinSize) ? YES : NO;
 
 #if 0 // Fill in at some point
 	if (usage.wrapped == YES)

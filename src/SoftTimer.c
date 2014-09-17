@@ -546,7 +546,6 @@ void HandleMidnightEvent(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	char message[50];
-	FLASH_USAGE_STRUCT flashStats;
 
 	if ((g_triggerRecord.op_mode == BARGRAPH_MODE) && (g_sampleProcessing == ACTIVE_STATE))
 	{
@@ -590,9 +589,7 @@ void HandleMidnightEvent(void)
 			// Handle and finish any processing
 			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
-			GetFlashUsageStats(&flashStats);
-
-			if ((g_unitConfig.flashWrapping == NO) && (flashStats.manualCalsLeft == 0))
+			if ((g_unitConfig.flashWrapping == NO) && (g_flashUsageStats.manualCalsLeft == 0))
 			{
 				g_enterMonitorModeAfterMidnightCal = NO;
 

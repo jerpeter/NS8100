@@ -83,10 +83,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 	REC_EVENT_MN_STRUCT temp_g_triggerRecord;
 	UNIT_CONFIG_STRUCT temp_g_unitConfig;
 	//uint8 mbChoice = 0;
-	FLASH_USAGE_STRUCT flashStats;
 	
-	GetFlashUsageStats(&flashStats);
-
 	switch (msg.cmd)
 	{
 		case (ACTIVATE_MENU_WITH_DATA_CMD):
@@ -104,9 +101,9 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 			// Check if flash wrapping is disabled and if there is space left in flash
 			if (g_unitConfig.flashWrapping == NO)
 			{
-				if (((g_monitorOperationMode == WAVEFORM_MODE) && (flashStats.waveEventsLeft == 0)) ||
-					((g_monitorOperationMode == BARGRAPH_MODE) && (flashStats.roomForBargraph == NO)) ||
-					((g_monitorOperationMode == MANUAL_CAL_MODE) && (flashStats.manualCalsLeft == 0)))
+				if (((g_monitorOperationMode == WAVEFORM_MODE) && (g_flashUsageStats.waveEventsLeft == 0)) ||
+					((g_monitorOperationMode == BARGRAPH_MODE) && (g_flashUsageStats.roomForBargraph == NO)) ||
+					((g_monitorOperationMode == MANUAL_CAL_MODE) && (g_flashUsageStats.manualCalsLeft == 0)))
 				{
 					// Unable to store any more data in the selected mode
 					

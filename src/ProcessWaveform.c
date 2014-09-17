@@ -364,7 +364,6 @@ void MoveWaveformEventToFlash(void)
 	uint16 sample;
 	uint32 vectorSum;
 	uint16 tempPeak;
-	FLASH_USAGE_STRUCT flashStats;
 	INPUT_MSG_STRUCT msg;
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
@@ -608,9 +607,7 @@ void MoveWaveformEventToFlash(void)
 					// Check to see if there is room for another event, if not send a signal to stop monitoring
 					if (g_unitConfig.flashWrapping == NO)
 					{
-						GetFlashUsageStats(&flashStats);
-
-						if (flashStats.waveEventsLeft == 0)
+						if (g_flashUsageStats.waveEventsLeft == 0)
 						{
 							msg.cmd = STOP_MONITORING_CMD;
 							msg.length = 1;

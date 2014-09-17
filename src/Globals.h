@@ -239,6 +239,7 @@ extern uint16 g_resultsCacheIndex;
 extern uint32 g_cyclicEventDelay;
 extern uint32 g_updateOffsetCount;
 extern uint32 g_tempTriggerLevelForMenuAdjsutment;
+extern FLASH_USAGE_STRUCT g_flashUsageStats;
 extern volatile uint16 g_storedTempReading;
 extern volatile uint16 g_currentTempReading;
 extern volatile uint16 g_previousTempReading;
