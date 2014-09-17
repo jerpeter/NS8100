@@ -399,6 +399,7 @@ BOOLEAN GetPowerControlState(POWER_MGMT_OPTIONS option)
 ///----------------------------------------------------------------------------
 void PowerUnitOff(uint8 powerOffMode)
 {
+	OverlayMessage(getLangText(STATUS_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 0);
 	debug("Dumping debug output to debug log file\r\n");
 	debug("Adding On/Off Log timestamp\r\n");
 	WriteDebugBufferToFile();

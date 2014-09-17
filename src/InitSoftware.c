@@ -353,6 +353,13 @@ void InitSoftwareSettings_NS8100(void)
 	setupMnDef();
 
 	//-------------------------------------------------------------------------
+	// Update Flash Usage Stats
+	//-------------------------------------------------------------------------
+	debug("Updating Flash Usage Stats...\r\n");
+	OverlayMessage(getLangText(STATUS_TEXT), "CALCULATING EVENT STORAGE SPACE FREE", 0);
+	UpdateFlashUsageStats();
+
+	//-------------------------------------------------------------------------
 	// Check for Timer mode activation
 	//-------------------------------------------------------------------------
 	if (TimerModeActiveCheck() == TRUE)
