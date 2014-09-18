@@ -218,7 +218,7 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	UNUSED(rd_summary_ptr);
 
 	// Clear the LCD map
-	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Display the Title centered on the Top line
 	sprintf(lineBuff, "-%s-", getLangText(LIST_OF_SUMMARIES_TEXT));
@@ -251,12 +251,12 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 			eventInfo = GetSummaryEventInfo(tempSummaryIndex);
 
 			// Clear and setup the time stamp string for the current event
-			ByteSet(&dateBuff[0], 0, sizeof(dateBuff));
+			memset(&dateBuff[0], 0, sizeof(dateBuff));
 			ConvertTimeStampToString(dateBuff, (void*)(&(eventInfo->eventTime)),
 										REC_DATE_TIME_DISPLAY);
 
 			// Clear and setup the mode string for the curent event
-			ByteSet(&modeBuff[0], 0, sizeof(modeBuff));
+			memset(&modeBuff[0], 0, sizeof(modeBuff));
 			switch (eventInfo->mode)
 			{
 				case WAVEFORM_MODE: 		strcpy(modeBuff, "W"); break;
@@ -267,7 +267,7 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 			}
 			
 			// Clear and setup the event line string for the curent event
-			ByteSet(&lineBuff[0], 0, sizeof(lineBuff));
+			memset(&lineBuff[0], 0, sizeof(lineBuff));
 			sprintf(lineBuff, "E%03d %s %s", (int)eventInfo->eventNumber, dateBuff, modeBuff);
 
 			// Check if the current line is to be highlighted

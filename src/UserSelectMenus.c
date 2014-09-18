@@ -1360,6 +1360,7 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (FLASH_STATS):
+				UpdateSDCardUsageStats(0);
 				DisplayFlashUsageStats();
 			break;
 
@@ -1580,7 +1581,7 @@ void EraseEventsMenuHandlerz(uint8 keyPressed, void* data)
 				MessageBox(getLangText(WARNING_TEXT), getLangText(DO_NOT_TURN_THE_UNIT_OFF_UNTIL_THE_OPERATION_IS_COMPLETE_TEXT), MB_OK);
 
 				// Display a message alerting the user that the erase operation is in progress
-				ByteSet(&stringBuff[0], 0, sizeof(stringBuff));
+				memset(&stringBuff[0], 0, sizeof(stringBuff));
 				sprintf(stringBuff, "%s %s", getLangText(ERASE_OPERATION_IN_PROGRESS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT));
 				OverlayMessage(getLangText(STATUS_TEXT), stringBuff, 0);
 
@@ -1659,7 +1660,7 @@ void EraseSettingsMenuHandler(uint8 keyPressed, void* data)
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
 			// Clear out modem setup and save
-			ByteSet(&g_modemSetupRecord, 0, sizeof(MODEM_SETUP_STRUCT));
+			memset(&g_modemSetupRecord, 0, sizeof(MODEM_SETUP_STRUCT));
 			g_modemSetupRecord.modemStatus = NO;
 			SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
 
@@ -2425,7 +2426,7 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_5].data) && (g_triggerRecord.op_mode == BARGRAPH_MODE)) ||
 			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && (g_triggerRecord.op_mode == COMBO_MODE)))
 		{
-			ByteSet(&message[0], 0, sizeof(message));
+			memset(&message[0], 0, sizeof(message));
 			sprintf((char*)message, "%lu %s", sampleRateMenu[newItemIndex].data,
 					getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT));
 			MessageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);

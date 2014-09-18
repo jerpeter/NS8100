@@ -110,7 +110,7 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 			
 			// Add in time (hour:min) to the 2nd LCD line right justified
 			length = strlen(getLangText(SELECT_TEXT));
-			ByteSet(&(g_menuPtr[1].data[length]), ' ', (12 - length));
+			memset(&(g_menuPtr[1].data[length]), ' ', (12 - length));
 			sprintf((char*)&(g_menuPtr[1].data[12]), "%02d:%02d %s", ((currentTime.hour % 12) == 0) ? 12 : (currentTime.hour % 12),
 					currentTime.min, ((currentTime.hour / 12) == 1) ? "PM" : "AM");
 

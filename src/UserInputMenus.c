@@ -1186,7 +1186,7 @@ void SaveRecordMenuHandler(uint8 keyPressed, void* data)
 			else if (availableLocation == 0)
 			{
 				// Prompt to alert the user that the saved settings are full
-				ByteSet(&message[0], 0, sizeof(message));
+				memset(&message[0], 0, sizeof(message));
 				sprintf(message, "%s %s", getLangText(SAVED_SETTINGS_TEXT), getLangText(FULL_TEXT));
 				OverlayMessage(getLangText(WARNING_TEXT), message, 2 * SOFT_SECS);
 

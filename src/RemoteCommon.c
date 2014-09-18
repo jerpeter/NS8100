@@ -43,42 +43,42 @@ uint8 ParseIncommingMsgHeader(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* 
 	char* msgPtr = (char*)inCmd->msg;			// A tempPtr into the message buffer.
 
 	// clear the incomming header data.
-	ByteSet((uint8*)incommingHdr, 0, sizeof(COMMAND_MESSAGE_HEADER));
+	memset((uint8*)incommingHdr, 0, sizeof(COMMAND_MESSAGE_HEADER));
 
 	if (strlen(msgPtr) >= HDR_CMD_LEN)
 	{
 		// Parse the string into a header data struct.
-		ByteCpy(incommingHdr->cmd, msgPtr, HDR_CMD_LEN);
+		memcpy(incommingHdr->cmd, msgPtr, HDR_CMD_LEN);
 		msgPtr += HDR_CMD_LEN;
 	}
 
 	if (strlen(msgPtr) >= HDR_TYPE_LEN)
 	{
-		ByteCpy(incommingHdr->type, msgPtr, HDR_TYPE_LEN);
+		memcpy(incommingHdr->type, msgPtr, HDR_TYPE_LEN);
 		msgPtr += HDR_TYPE_LEN;
 	}
 
 	if (strlen((char*)inCmd->msg) >= MESSAGE_HEADER_LENGTH)
 	{
-		ByteCpy(incommingHdr->dataLength, msgPtr, HDR_DATALENGTH_LEN);
+		memcpy(incommingHdr->dataLength, msgPtr, HDR_DATALENGTH_LEN);
 		msgPtr += HDR_DATALENGTH_LEN;
 
-		ByteCpy(incommingHdr->unitModel, msgPtr, HDR_UNITMODEL_LEN);
+		memcpy(incommingHdr->unitModel, msgPtr, HDR_UNITMODEL_LEN);
 		msgPtr += HDR_UNITMODEL_LEN;
 
-		ByteCpy(incommingHdr->unitSn, msgPtr, HDR_SERIALNUMBER_LEN);
+		memcpy(incommingHdr->unitSn, msgPtr, HDR_SERIALNUMBER_LEN);
 		msgPtr += HDR_SERIALNUMBER_LEN;
 
-		ByteCpy(incommingHdr->compressCrcFlags, msgPtr, HDR_COMPRESSCRC_LEN);
+		memcpy(incommingHdr->compressCrcFlags, msgPtr, HDR_COMPRESSCRC_LEN);
 		msgPtr += HDR_COMPRESSCRC_LEN;
 
-		ByteCpy(incommingHdr->softwareVersion, msgPtr, HDR_SOFTWAREVERSION_LEN);
+		memcpy(incommingHdr->softwareVersion, msgPtr, HDR_SOFTWAREVERSION_LEN);
 		msgPtr += HDR_SOFTWAREVERSION_LEN;
 
-		ByteCpy(incommingHdr->dataVersion, msgPtr, HDR_DATAVERSION_LEN);
+		memcpy(incommingHdr->dataVersion, msgPtr, HDR_DATAVERSION_LEN);
 		msgPtr += HDR_DATAVERSION_LEN;
 
-		ByteCpy(incommingHdr->spare, msgPtr, HDR_SPARE_LEN);
+		memcpy(incommingHdr->spare, msgPtr, HDR_SPARE_LEN);
 		msgPtr += HDR_SPARE_LEN;
 	}
 	else
@@ -98,12 +98,12 @@ uint8 ParseIncommingMsgCmd(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* inc
 	char* msgPtr = (char*)inCmd->msg;			// A tempPtr into the message buffer.
 
 	// clear the incomming header data.
-	ByteSet((uint8*)incommingHdr, 0, sizeof(COMMAND_MESSAGE_HEADER));
+	memset((uint8*)incommingHdr, 0, sizeof(COMMAND_MESSAGE_HEADER));
 
 	if (strlen(msgPtr) >= HDR_CMD_LEN)
 	{
 		// Parse the string into a header data struct.
-		ByteCpy(incommingHdr->cmd, msgPtr, HDR_CMD_LEN);
+		memcpy(incommingHdr->cmd, msgPtr, HDR_CMD_LEN);
 		msgPtr += HDR_CMD_LEN;
 	}
 	else
@@ -122,34 +122,34 @@ void BuildOutgoingHeaderBuffer(COMMAND_MESSAGE_HEADER* msgHdrData, uint8* msgHdr
 {
 	uint8* bufPtr = msgHdrBuf;
 
-	ByteSet(bufPtr, 0, MESSAGE_HEADER_LENGTH+1);
+	memset(bufPtr, 0, MESSAGE_HEADER_LENGTH+1);
 
 	// Parse the string into a header data struct.
-	ByteCpy(bufPtr, msgHdrData->cmd, HDR_CMD_LEN);
+	memcpy(bufPtr, msgHdrData->cmd, HDR_CMD_LEN);
 	bufPtr += HDR_CMD_LEN;
 
-	ByteCpy(bufPtr, msgHdrData->type, HDR_TYPE_LEN);
+	memcpy(bufPtr, msgHdrData->type, HDR_TYPE_LEN);
 	bufPtr += HDR_TYPE_LEN;
 
-	ByteCpy(bufPtr, msgHdrData->dataLength, HDR_DATALENGTH_LEN);
+	memcpy(bufPtr, msgHdrData->dataLength, HDR_DATALENGTH_LEN);
 	bufPtr += HDR_DATALENGTH_LEN;
 
-	ByteCpy(bufPtr, msgHdrData->unitModel, HDR_UNITMODEL_LEN);
+	memcpy(bufPtr, msgHdrData->unitModel, HDR_UNITMODEL_LEN);
 	bufPtr += HDR_UNITMODEL_LEN;
 
-	ByteCpy(bufPtr, msgHdrData->unitSn, HDR_SERIALNUMBER_LEN);
+	memcpy(bufPtr, msgHdrData->unitSn, HDR_SERIALNUMBER_LEN);
 	bufPtr += HDR_SERIALNUMBER_LEN;
 
-	ByteCpy(bufPtr, msgHdrData->compressCrcFlags, HDR_COMPRESSCRC_LEN);
+	memcpy(bufPtr, msgHdrData->compressCrcFlags, HDR_COMPRESSCRC_LEN);
 	bufPtr += HDR_COMPRESSCRC_LEN;
 
-	ByteCpy(bufPtr, msgHdrData->softwareVersion, HDR_SOFTWAREVERSION_LEN);
+	memcpy(bufPtr, msgHdrData->softwareVersion, HDR_SOFTWAREVERSION_LEN);
 	bufPtr += HDR_SOFTWAREVERSION_LEN;
 
-	ByteCpy(bufPtr, msgHdrData->dataVersion, HDR_DATAVERSION_LEN);
+	memcpy(bufPtr, msgHdrData->dataVersion, HDR_DATAVERSION_LEN);
 	bufPtr += HDR_DATAVERSION_LEN;
 
-	ByteCpy(bufPtr, msgHdrData->spare, HDR_SPARE_LEN);
+	memcpy(bufPtr, msgHdrData->spare, HDR_SPARE_LEN);
 	bufPtr += HDR_SPARE_LEN;
 
 }
@@ -167,13 +167,13 @@ void BuildOutgoingSimpleHeaderBuffer(uint8* msgHdrBuf,
 	UNUSED(verFlag);
 	UNUSED(crcFlag);
 
-	ByteSet(bufPtr, 0, MESSAGE_HEADER_SIMPLE_LENGTH);
+	memset(bufPtr, 0, MESSAGE_HEADER_SIMPLE_LENGTH);
 
 	// Parse the string into a header data struct.
-	ByteCpy(bufPtr, msgCmd, HDR_CMD_LEN);
+	memcpy(bufPtr, msgCmd, HDR_CMD_LEN);
 	bufPtr += HDR_CMD_LEN;
 
-	ByteCpy(bufPtr, msgType, HDR_TYPE_LEN);
+	memcpy(bufPtr, msgType, HDR_TYPE_LEN);
 	bufPtr += HDR_TYPE_LEN;
 
 	BuildIntDataField((char*)bufPtr, dataLength, FIELD_LEN_08);
@@ -214,8 +214,8 @@ uint16 GetInt16Field(uint8* dataPtr)
 	uint16 int16Data = 0;
 	uint8 dataStr[DATA_FIELD_LEN+1];
 
-	ByteSet(dataStr, 0, sizeof(dataStr));
-	ByteCpy(dataStr, dataPtr, DATA_FIELD_LEN);
+	memset(dataStr, 0, sizeof(dataStr));
+	memcpy(dataStr, dataPtr, DATA_FIELD_LEN);
 	int16Data = (uint16)DataLengthStrToUint32(dataStr);
 
 
@@ -258,7 +258,7 @@ uint32 DataLengthStrToUint32(uint8* dataLengthStr)
 	uint8* dataBuf = dataLenBuf;
 
 
-	ByteSet(&dataLenBuf[0], 0, sizeof(dataLenBuf));
+	memset(&dataLenBuf[0], 0, sizeof(dataLenBuf));
 
 	// Look and clear all leading zeros and non digits.
 	while (((*dataStr <= '0') 	||
@@ -319,7 +319,7 @@ void InitAutoDialout(void)
 	if (__autoDialoutTblKey != VALID_AUTODIALOUT_TABLE_KEY)
 	{
 		// Clear AutoDialout Log table
-		ByteSet(&__autoDialoutTbl, 0x0, sizeof(AUTODIALOUT_STRUCT));
+		memset(&__autoDialoutTbl, 0x0, sizeof(AUTODIALOUT_STRUCT));
 
 		// No need to set the following since the memset takes care of this
 		//__autoDialoutTbl.lastDownloadedEvent = 0;

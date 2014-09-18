@@ -183,9 +183,9 @@ void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
 
 	// *** Print the Light and Dark text ***
-	ByteSet(&buff[0], 0, sizeof(buff));
-	ByteSet(&spaceBuff[0], 0, sizeof(spaceBuff));
-	ByteSet(&spaceBuff[0], ' ', sizeof(spaceBuff) - 1);
+	memset(&buff[0], 0, sizeof(buff));
+	memset(&spaceBuff[0], 0, sizeof(spaceBuff));
+	memset(&spaceBuff[0], ' ', sizeof(spaceBuff) - 1);
 
 	length = (uint8)(strlen(getLangText(LIGHT_TEXT)) + strlen(getLangText(DARK_TEXT)));
 	spaceBuff[(20 - length)] = '\0';
@@ -196,9 +196,9 @@ void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// *** Print the Contrast Bar
-    ByteSet(&buff[0], 0, sizeof(buff));
-    ByteSet(&contrast_buff[0], 0, sizeof(contrast_buff));
-    ByteSet(&contrast_buff[0], ' ', (sizeof(contrast_buff) - 1));
+    memset(&buff[0], 0, sizeof(buff));
+    memset(&contrast_buff[0], 0, sizeof(contrast_buff));
+    memset(&contrast_buff[0], ' ', (sizeof(contrast_buff) - 1));
 
     clvl = g_contrast_value;
 	clvl -= MIN_CONTRAST;

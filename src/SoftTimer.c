@@ -525,7 +525,7 @@ void CheckForMidnight(void)
 			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
 			// Clear and setup the message buffer
-			ByteSet(&(msgBuffer[0]), 0, sizeof(msgBuffer));
+			memset(&(msgBuffer[0]), 0, sizeof(msgBuffer));
 			sprintf(msgBuffer, "%s %s", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT));
 
 			// Overlay a "Battery Voltage Low" message
@@ -552,7 +552,7 @@ void HandleMidnightEvent(void)
 		// Do not handle midnight calibration since a manual cal is forced at the beginning of Bargraph
 
 		// Overlay a message that the current bargraph has ended
-		ByteSet(&message[0], 0, sizeof(message));
+		memset(&message[0], 0, sizeof(message));
 		sprintf(message, "%s %s", getLangText(MONITOR_BARGRAPH_TEXT), getLangText(END_TEXT));
 		OverlayMessage(getLangText(STATUS_TEXT), message, 0);
 
@@ -589,7 +589,7 @@ void HandleMidnightEvent(void)
 			// Handle and finish any processing
 			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 
-			if ((g_unitConfig.flashWrapping == NO) && (g_flashUsageStats.manualCalsLeft == 0))
+			if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 			{
 				g_enterMonitorModeAfterMidnightCal = NO;
 

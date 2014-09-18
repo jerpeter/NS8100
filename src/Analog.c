@@ -616,7 +616,7 @@ void GetChannelOffsets(uint32 sampleRate)
 	}
 
 	// Reset offset values
-	ByteSet(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
+	memset(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
 
 	debug("Get Channel Offset: Read and pitch... (Address boundary: %s)\r\n", ((uint32)(&s_tempData) % 4 == 0) ? "YES" : "NO");
 	// Read and pitch samples

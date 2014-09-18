@@ -356,7 +356,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
 	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
-	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	s_calibrationData = (CALIBRATION_DATA*)&g_eventDataBuffer[0];
 
@@ -410,14 +410,14 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		(s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES))
 	{
 		// PRINT CAL_SETUP
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		length = (uint8)sprintf((char*)buff, "-%s-", getLangText(CAL_SETUP_TEXT));
 		wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 		WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 		// DATE AND TIME
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		time = GetCurrentTime();
 		ConvertTimeStampToString((char*)buff, &time, REC_DATE_TIME_TYPE);
 		length = (uint8)strlen((char*)buff);
@@ -428,7 +428,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if (s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY)
 		{
 			// PRINT Table separator
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			//sprintf((char*)buff, "--------------------");
 			sprintf((char*)buff, "-----RAW NO CAL-----");
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
@@ -437,7 +437,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
 		{
 			// PRINT Table separator
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			//sprintf((char*)buff, "--------------------");
 			sprintf((char*)buff, "-----CALIBRATED-----");
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
@@ -446,7 +446,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		else // CAL_MENU_DISPLAY_SAMPLES
 		{
 			// PRINT Table separator
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			//sprintf((char*)buff, "--------------------");
 			sprintf((char*)buff, "-----RAW SAMPLES-----");
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
@@ -456,28 +456,28 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
 		{
 			// PRINT Table header
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			sprintf((char*)buff, "C|  1st|  2nd|  3rd|");
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 
 			// PRINT R,V,T,A Min, Max and Avg
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			sprintf((char*)buff, "R| %04x| %04x| %04x|", s_calibrationData[0].chan[1], s_calibrationData[1].chan[1], s_calibrationData[2].chan[1]);
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			sprintf((char*)buff, "V| %04x| %04x| %04x|", s_calibrationData[0].chan[2], s_calibrationData[1].chan[2], s_calibrationData[2].chan[2]);
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			sprintf((char*)buff, "T| %04x| %04x| %04x|", s_calibrationData[0].chan[3], s_calibrationData[1].chan[3], s_calibrationData[2].chan[3]);
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			sprintf((char*)buff, "A| %04x| %04x| %04x|", s_calibrationData[0].chan[0], s_calibrationData[1].chan[0], s_calibrationData[2].chan[0]);
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
@@ -485,28 +485,28 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		else // ((s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) || (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY))
 		{
 			// PRINT Table header
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			sprintf((char*)buff, "C|  Min|  Max|  Avg|");
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 
 			// PRINT R,V,T,A Min, Max and Avg
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			sprintf((char*)buff, "R|%+5ld|%+5ld|%+5ld|", chanMin[1], chanMax[1], chanAvg[1]);
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			sprintf((char*)buff, "V|%+5ld|%+5ld|%+5ld|", chanMin[2], chanMax[2], chanAvg[2]);
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			sprintf((char*)buff, "T|%+5ld|%+5ld|%+5ld|", chanMin[3], chanMax[3], chanAvg[3]);
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			sprintf((char*)buff, "A|%+5ld|%+5ld|%+5ld|", chanMin[0], chanMax[0], chanAvg[0]);
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
@@ -515,14 +515,14 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	else // s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY
 	{
 		// R
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		sprintf((char*)buff, "R%%|%2d|%2d|%2d|%2d|%2d|%2d",
 				chanMed[1][5], chanMed[1][4], chanMed[1][3],
 				chanMed[1][2], chanMed[1][1], chanMed[1][0]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 		WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		sprintf((char*)buff, "%2d|%2d|%2d|%2d|%2d|%2d|%2d", chanMed[1][6],
 				chanMed[1][7], chanMed[1][8], chanMed[1][9],
 				chanMed[1][10], chanMed[1][11], chanMed[1][12]);
@@ -530,14 +530,14 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 		// V
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		sprintf((char*)buff, "V%%|%2d|%2d|%2d|%2d|%2d|%2d",
 				chanMed[2][5], chanMed[2][4], chanMed[2][3],
 				chanMed[2][2], chanMed[2][1], chanMed[2][0]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
 		WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		sprintf((char*)buff, "%2d|%2d|%2d|%2d|%2d|%2d|%2d", chanMed[2][6],
 				chanMed[2][7], chanMed[2][8], chanMed[2][9],
 				chanMed[2][10], chanMed[2][11], chanMed[2][12]);
@@ -545,14 +545,14 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 		// T
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		sprintf((char*)buff, "T%%|%2d|%2d|%2d|%2d|%2d|%2d",
 				chanMed[3][5], chanMed[3][4], chanMed[3][3],
 				chanMed[3][2], chanMed[3][1], chanMed[3][0]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
 		WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		sprintf((char*)buff, "%2d|%2d|%2d|%2d|%2d|%2d|%2d", chanMed[3][6],
 				chanMed[3][7], chanMed[3][8], chanMed[3][9],
 				chanMed[3][10], chanMed[3][11], chanMed[3][12]);
@@ -560,14 +560,14 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 		// A
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		sprintf((char*)buff, "A%%|%2d|%2d|%2d|%2d|%2d|%2d",
 				chanMed[0][5], chanMed[0][4], chanMed[0][3],
 				chanMed[0][2], chanMed[0][1], chanMed[0][0]);
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
 		WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		sprintf((char*)buff, "%2d|%2d|%2d|%2d|%2d|%2d|%2d", chanMed[0][6],
 				chanMed[0][7], chanMed[0][8], chanMed[0][9],
 				chanMed[0][10], chanMed[0][11], chanMed[0][12]);

@@ -372,7 +372,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				eventRecord->summary.calculated.t.peak);
 	}
 
-	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
     //-------------------------------------------------------------
 	// Event specific scaling factors
@@ -406,8 +406,8 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
-		ByteSet(&buff[0], 0, sizeof(buff));
-		ByteSet(&dotBuff[0], 0, sizeof(dotBuff));
+		memset(&buff[0], 0, sizeof(buff));
+		memset(&dotBuff[0], 0, sizeof(dotBuff));
 
 		for (i = 0; i < dotState; i++)		dotBuff[i] = '.';
 		for (; i < (TOTAL_DOTS-1); i++)		dotBuff[i] = ' ';
@@ -513,7 +513,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		// Date & Time
 		time = GetCurrentTime();
-	    ByteSet(&buff[0], 0, sizeof(buff));
+	    memset(&buff[0], 0, sizeof(buff));
 		length = (uint8)sprintf(buff,"(%02d:%02d:%02d)", time.hour, time.min, time.sec);
 
 		// Setup current column, Write string to screen, Advance to next row
@@ -533,7 +533,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
     //-------------------------------------------------------------
     // Date Time Info
-    ByteSet(&buff[0], 0, sizeof(buff));
+    memset(&buff[0], 0, sizeof(buff));
     ConvertTimeStampToString(
     	buff, (void*)(&eventRecord->summary.captured.eventTime), REC_DATE_TIME_DISPLAY);
 
@@ -542,7 +542,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
     //-------------------------------------------------------------
     // Event number
-    ByteSet(&buff[0], 0, sizeof(buff));
+    memset(&buff[0], 0, sizeof(buff));
 
 	// Remove commented code assuming display works
 	//if (g_summaryListMenuActive == YES)
@@ -553,7 +553,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
     //-------------------------------------------------------------
     // Units inches or millimeters LABEL
-    ByteSet(&buff[0], 0, sizeof(buff));
+    memset(&buff[0], 0, sizeof(buff));
 	if (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
 	{
 		sprintf(buff, "mg/s");
@@ -574,7 +574,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
     //-------------------------------------------------------------
     // R LABEL, T LABEL, V LABEL
-    ByteSet(&buff[0], 0, sizeof(buff));
+    memset(&buff[0], 0, sizeof(buff));
     sprintf(buff,"   R      T      V");
 
 	// Setup current column, Write string to screen,
@@ -598,7 +598,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     	normalize_max_peak *= (float)METRIC;
     }
 
-    ByteSet(&buff[0], 0, sizeof(buff));
+    memset(&buff[0], 0, sizeof(buff));
     if (normalize_max_peak >= 100)
         sprintf(buff, "%05.2f", normalize_max_peak);
     else if (normalize_max_peak >= 10)
@@ -625,7 +625,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     	normalize_max_peak *= (float)METRIC;
 	}
 
-    ByteSet(&buff[0], 0, sizeof(buff));
+    memset(&buff[0], 0, sizeof(buff));
     if (normalize_max_peak >= 100)
         sprintf(buff, "%05.2f", normalize_max_peak);
     else if (normalize_max_peak >= 10)
@@ -652,7 +652,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     	normalize_max_peak *= (float)METRIC;
 	}
 
-    ByteSet(&buff[0], 0, sizeof(buff));
+    memset(&buff[0], 0, sizeof(buff));
     if (normalize_max_peak >= 100)
         sprintf(buff, "%05.2f", normalize_max_peak);
     else if (normalize_max_peak >= 10)
@@ -667,7 +667,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
     //-------------------------------------------------------------
     // R FREQ, T FREQ, V FREQ
-	ByteSet(&buff[0], 0, sizeof(buff));
+	memset(&buff[0], 0, sizeof(buff));
 	if ((eventRecord->summary.mode == BARGRAPH_MODE) || 
 			((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
 	{
@@ -691,8 +691,8 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	if (g_displayAlternateResultState == VECTOR_SUM_RESULTS)
 	{
-	    ByteSet(&buff[0], 0, sizeof(buff));
-		ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
+	    memset(&buff[0], 0, sizeof(buff));
+		memset(&displayFormat[0], 0, sizeof(displayFormat));
 
 		tempVS = sqrtf((float)eventRecord->summary.calculated.vectorSumPeak) / (float)div;
 
@@ -717,8 +717,8 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else if(g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
 	{
-		ByteSet(&buff[0], 0, sizeof(buff));
-		ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
+		memset(&buff[0], 0, sizeof(buff));
+		memset(&displayFormat[0], 0, sizeof(displayFormat));
 
 		if(eventRecord->summary.calculated.r.displacement > eventRecord->summary.calculated.v.displacement)
 		{
@@ -815,14 +815,14 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 	    //-------------------------------------------------------------
 	    // AIR
-	    ByteSet(&buff[0], 0, sizeof(buff));
+	    memset(&buff[0], 0, sizeof(buff));
 	    sprintf(buff, "%s", getLangText(AIR_TEXT));
 	    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
 	    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	    //-------------------------------------------------------------
 	    // Air
-	    ByteSet(&buff[0], 0, sizeof(buff));
+	    memset(&buff[0], 0, sizeof(buff));
 
 		// Display based on what the units current setting
 		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
@@ -846,7 +846,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		//-------------------------------------------------------------
 		// A FREQ
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 
 		if ((eventRecord->summary.mode == BARGRAPH_MODE) ||
 				((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
@@ -919,7 +919,7 @@ EVT_RECORD* GetResultsEventInfoFromCache(uint32 fileEventNumber)
 			debug("Results menu: Found cached event record info\r\n");
 			//return (&g_resultsEventCache[i]);
 
-			ByteCpy(&resultsEventRecord, &g_resultsEventCache[i], sizeof(EVT_RECORD));
+			memcpy(&resultsEventRecord, &g_resultsEventCache[i], sizeof(EVT_RECORD));
 
 			return (NULL);
 		}
@@ -940,7 +940,7 @@ EVT_RECORD* GetResultsEventInfoFromCache(uint32 fileEventNumber)
 ///----------------------------------------------------------------------------
 void CacheResultsEventInfo(EVT_RECORD* eventRecordToCache)
 {
-	ByteCpy(&g_resultsEventCache[g_resultsCacheIndex], eventRecordToCache, sizeof(EVT_RECORD));
+	memcpy(&g_resultsEventCache[g_resultsCacheIndex], eventRecordToCache, sizeof(EVT_RECORD));
 	
 	if (++g_resultsCacheIndex >= 50) { g_resultsCacheIndex = 0; }
 }

@@ -552,7 +552,7 @@ void ClearControlLinesLcdDisplay(void)
 void ClearLcdDisplay(void)
 {
 	// Turn all of the LCD pixels off (0's), effectively clearing the display
-    ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+    memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
     WriteMapToLcd(g_mmap);
 }
 
@@ -562,7 +562,7 @@ void ClearLcdDisplay(void)
 void FillLcdDisplay(void)
 {
 	// Turn all of the LCD pixels on (1's), effectively filling the display
-    ByteSet(&(g_mmap[0][0]), 0xff, sizeof(g_mmap));
+    memset(&(g_mmap[0][0]), 0xff, sizeof(g_mmap));
     WriteMapToLcd(g_mmap);
 }
 

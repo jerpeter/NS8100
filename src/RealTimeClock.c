@@ -42,7 +42,7 @@ BOOLEAN InitExternalRtc(void)
 
 	//debug("Init Soft timer\r\n");
 	// Initialize the softtimer array.
-	ByteSet(&g_rtcTimerBank[0], 0, (sizeof(SOFT_TIMER_STRUCT) * NUM_OF_SOFT_TIMERS));
+	memset(&g_rtcTimerBank[0], 0, (sizeof(SOFT_TIMER_STRUCT) * NUM_OF_SOFT_TIMERS));
 
 	debugRaw("\r\n\n");
 	debugRaw("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\r\n");

@@ -51,7 +51,7 @@ void HandleUNL(CMD_BUFFER_STRUCT* inCmd)
 
 	debug("HandleUNL-user unlock code=<%s>\r\n", dataStart);
 
-	ByteSet(&tempStr[0], 0, sizeof(tempStr));
+	memset(&tempStr[0], 0, sizeof(tempStr));
 
 	sprintf(unlStr,"%04d", g_modemSetupRecord.unlockCode);
 
@@ -80,7 +80,7 @@ void HandleUNL(CMD_BUFFER_STRUCT* inCmd)
 	{
 		debug("HandleUNL-MatchCode=<%s>\r\n", dataStart);
 
-		ByteSet(&sendStr[0], 0, sizeof(sendStr));
+		memset(&sendStr[0], 0, sizeof(sendStr));
 		if (YES == g_modemStatus.systemIsLockedFlag)
 		{
 			g_modemStatus.systemIsLockedFlag = NO;
@@ -350,7 +350,7 @@ void sendVMLData(void)
 			if (status == NO)
 			{
 				// Write all 0xCC's to a log entry to mark the end of the data (following a convention used in the DQM command)
-				ByteSet(&(s_vmlXferStruct.vmlData[i]), 0xCC, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+				memset(&(s_vmlXferStruct.vmlData[i]), 0xCC, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 
 				// Reached the end of the data, set state to handle footer next
 				s_vmlXferStruct.xferStateFlag = FOOTER_XFER_STATE;
@@ -422,7 +422,7 @@ void handleGAD(CMD_BUFFER_STRUCT* inCmd)
 
 	UNUSED(inCmd);
 
-	ByteSet(&serialNumber[0], 0, sizeof(serialNumber));
+	memset(&serialNumber[0], 0, sizeof(serialNumber));
 	strcpy((char*)&serialNumber[0], g_factorySetupRecord.serial_num);
 
 	// Transmit a carrige return line feed
@@ -546,10 +546,10 @@ void handleGFS(CMD_BUFFER_STRUCT* inCmd)
 	}
 
 	// Calculate the CRC on the data
-	g_transmitCRC = CalcCCITT32((uint8*)&g_flashUsageStats, sizeof(FLASH_USAGE_STRUCT), g_transmitCRC);
+	g_transmitCRC = CalcCCITT32((uint8*)&g_sdCardUsageStats, sizeof(FLASH_USAGE_STRUCT), g_transmitCRC);
 
 	// Send the data out the modem
-	if (ModemPuts((uint8*)&g_flashUsageStats, sizeof(FLASH_USAGE_STRUCT), g_binaryXferFlag) == MODEM_SEND_FAILED)
+	if (ModemPuts((uint8*)&g_sdCardUsageStats, sizeof(FLASH_USAGE_STRUCT), g_binaryXferFlag) == MODEM_SEND_FAILED)
 	{
 		// There was an error, so reset all global transfer and status fields
 		g_modemStatus.xferMutex = NO;
@@ -591,7 +591,7 @@ void HandleDQM(CMD_BUFFER_STRUCT* inCmd)
 		return;
 	}
 
-	ByteSet((uint8*)g_dqmXferStructPtr, 0, sizeof(DQMx_XFER_STRUCT));
+	memset((uint8*)g_dqmXferStructPtr, 0, sizeof(DQMx_XFER_STRUCT));
 
 	// Determine the data size first. This size is needed for the header length.
 	for (idex = 0; idex < TOTAL_RAM_SUMMARIES; idex++)
@@ -675,7 +675,7 @@ uint8 sendDQMData(void)
 	{
 		if (g_dqmXferStructPtr->ramTableIndex >= TOTAL_RAM_SUMMARIES)
 		{
-			ByteSet((uint8*)g_dqmXferStructPtr->dqmData, 0xCC, sizeof(DQMx_DATA_STRUCT));
+			memset((uint8*)g_dqmXferStructPtr->dqmData, 0xCC, sizeof(DQMx_DATA_STRUCT));
 			g_dqmXferStructPtr->dqmData[0].endFlag = 0xEE;
 
 			g_transmitCRC = CalcCCITT32((uint8*)g_dqmXferStructPtr->dqmData,
@@ -707,7 +707,7 @@ uint8 sendDQMData(void)
 					g_dqmXferStructPtr->dqmData[idex].dqmxFlag = 0xCC;
 					g_dqmXferStructPtr->dqmData[idex].mode = eventRecord->summary.mode;
 					g_dqmXferStructPtr->dqmData[idex].eventNumber = eventRecord->summary.eventNumber;
-					ByteCpy(g_dqmXferStructPtr->dqmData[idex].serialNumber,
+					memcpy(g_dqmXferStructPtr->dqmData[idex].serialNumber,
 						eventRecord->summary.version.serialNumber, SERIAL_NUMBER_STRING_SIZE);
 					g_dqmXferStructPtr->dqmData[idex].eventTime = eventRecord->summary.captured.eventTime;
 					g_dqmXferStructPtr->dqmData[idex].endFlag = 0xEE;
@@ -777,10 +777,10 @@ void HandleDSM(CMD_BUFFER_STRUCT* inCmd)
 	}
 
 	// Now start building the outgoing header. Clear the outgoing header data.
-	ByteSet((uint8*)g_outCmdHeaderPtr, 0, sizeof(COMMAND_MESSAGE_HEADER));
+	memset((uint8*)g_outCmdHeaderPtr, 0, sizeof(COMMAND_MESSAGE_HEADER));
 
 	// Copy the existing header data into the outgoing buffer.
-	ByteCpy(g_outCmdHeaderPtr, g_inCmdHeaderPtr,  sizeof(COMMAND_MESSAGE_HEADER));
+	memcpy(g_outCmdHeaderPtr, g_inCmdHeaderPtr,  sizeof(COMMAND_MESSAGE_HEADER));
 
 	// Start Building the outgoing header. Set the msg type to a one for a response message.
 	sprintf((char*)g_outCmdHeaderPtr->type, "%02d", MSGTYPE_RESPONSE);
@@ -797,7 +797,7 @@ void HandleDSM(CMD_BUFFER_STRUCT* inCmd)
 	BuildOutgoingHeaderBuffer(g_outCmdHeaderPtr, g_dsmXferStructPtr->msgHdr);
 
 	// Fill in the number of records, fill in the data length
-	ByteSet(g_dsmXferStructPtr->numOfRecStr, 0, (DATA_FIELD_LEN+1));
+	memset(g_dsmXferStructPtr->numOfRecStr, 0, (DATA_FIELD_LEN+1));
 	BuildIntDataField((char*)g_dsmXferStructPtr->numOfRecStr, numberOfRecs, FIELD_LEN_06);
 
 	//-----------------------------------------------------------
@@ -1006,7 +1006,7 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			// Signal a bad CRC value
 			sprintf((char*)msgTypeStr, "%02d", CFG_ERR_BAD_CRC);
-			ByteCpy(g_inCmdHeaderPtr->type, msgTypeStr, HDR_TYPE_LEN);
+			memcpy(g_inCmdHeaderPtr->type, msgTypeStr, HDR_TYPE_LEN);
 
 			// Send Starting CRLF
 			ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
@@ -1106,7 +1106,7 @@ void prepareDEMDataToSend(EVT_RECORD* eventRecord, COMMAND_MESSAGE_HEADER* g_inC
 	uint8  flagData = 0;
 
 	// Clear out the xmit structures and initialize the flag and time fields.
-	ByteSet(&(g_demXferStructPtr->dloadEventRec), 0, sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
+	memset(&(g_demXferStructPtr->dloadEventRec), 0, sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
 	g_demXferStructPtr->xferStateFlag = NOP_XFER_STATE;
 	g_demXferStructPtr->dloadEventRec.structureFlag = START_DLOAD_FLAG;
 	g_demXferStructPtr->dloadEventRec.downloadDate = GetCurrentTime();
@@ -1116,8 +1116,8 @@ void prepareDEMDataToSend(EVT_RECORD* eventRecord, COMMAND_MESSAGE_HEADER* g_inC
 
 	// Now start building the outgoing header. Get the intial values from
 	// the incomming header. Clear the outgoing header data.
-	ByteSet(g_outCmdHeaderPtr, 0, sizeof(COMMAND_MESSAGE_HEADER));
-	ByteCpy(g_outCmdHeaderPtr, g_inCmdHeaderPtr,  sizeof(COMMAND_MESSAGE_HEADER));
+	memset(g_outCmdHeaderPtr, 0, sizeof(COMMAND_MESSAGE_HEADER));
+	memcpy(g_outCmdHeaderPtr, g_inCmdHeaderPtr,  sizeof(COMMAND_MESSAGE_HEADER));
 
 	// Start Building the outgoing message header. Set the type to a one for a response message.
 	sprintf((char*)g_outCmdHeaderPtr->type, "%02d", MSGTYPE_RESPONSE);
@@ -1450,7 +1450,7 @@ void handleGMN(CMD_BUFFER_STRUCT* inCmd)
 	else
 	{
 		// Not larger then 1 but give some exta
-		ByteSet(tempBuff, 0, 4);
+		memset(tempBuff, 0, 4);
 
 		readDex = 16;
 		while ((readDex < inCmd->size) && (readDex < 18))

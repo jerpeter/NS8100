@@ -825,7 +825,7 @@ void CopyMenuToCache(USER_MENU_STRUCT* currentMenu)
 	g_userMenuHandler = (void*)currentMenu[(USER_MENU_TOTAL_ITEMS(currentMenu) - 1)].data;
 
 	// Clear the user menu display cache
-	ByteSet(&g_userMenuCache, 0, sizeof(g_userMenuCache));
+	memset(&g_userMenuCache, 0, sizeof(g_userMenuCache));
 
 	// Copy the menu contents over to the user menu display cache (minus the last line with the menu handler)
 	for (i = 0; i < USER_MENU_DISPLAY_ITEMS(currentMenu); i++)
@@ -864,7 +864,7 @@ void CopyDataToCache(void* data)
 		case STRING_TYPE:
 		case STRING_SPECIAL_TYPE:
 			// Clear the data cache text string
-			ByteSet(&(g_userMenuCacheData.text[0]), 0, sizeof(g_userMenuCacheData.text));
+			memset(&(g_userMenuCacheData.text[0]), 0, sizeof(g_userMenuCacheData.text));
 		
 			// Check to make sure the data pointer isn't null
 			if (data != NULL)
@@ -1095,7 +1095,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 			for (i = tempRow; i < USER_MENU_DISPLAY_ITEMS(g_userMenuCachePtr); i++)
 			{
 				// Clear the user menu display cache
-				ByteSet(&(g_userMenuCachePtr[i].text[0]), 0, MAX_CHAR_PER_LN);
+				memset(&(g_userMenuCachePtr[i].text[0]), 0, MAX_CHAR_PER_LN);
 			}
 
 			// get the string length

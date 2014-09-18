@@ -177,7 +177,7 @@ void ConvertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 	uint8 tbuff[5];
 
 	// Clear the buffer.
-	ByteSet(&tbuff[0], 0, sizeof(tbuff));
+	memset(&tbuff[0], 0, sizeof(tbuff));
 
 	switch (type)
 	{
@@ -391,10 +391,10 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 	rec_ptr->berec.impulseMenuUpdateSecs = 1;
 
 	// Clear strings
-	ByteSet((char*)rec_ptr->trec.client, 0, sizeof(rec_ptr->trec.client));
-	ByteSet((char*)rec_ptr->trec.loc, 0, sizeof(rec_ptr->trec.loc));
-	ByteSet((char*)rec_ptr->trec.comments, 0, sizeof(rec_ptr->trec.comments));
-	ByteSet((char*)rec_ptr->trec.oper, 0, sizeof(rec_ptr->trec.oper));
+	memset((char*)rec_ptr->trec.client, 0, sizeof(rec_ptr->trec.client));
+	memset((char*)rec_ptr->trec.loc, 0, sizeof(rec_ptr->trec.loc));
+	memset((char*)rec_ptr->trec.comments, 0, sizeof(rec_ptr->trec.comments));
+	memset((char*)rec_ptr->trec.oper, 0, sizeof(rec_ptr->trec.oper));
 
 	// Mode specific 
 	switch (op_mode)
@@ -421,7 +421,7 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr)
 {  
 	// Initialize the Unit Config
-	ByteSet(rec_ptr, 0, sizeof(UNIT_CONFIG_STRUCT));
+	memset(rec_ptr, 0, sizeof(UNIT_CONFIG_STRUCT));
 
 	// Set default conditions
 	rec_ptr->powerSavingsLevel = POWER_SAVINGS_NONE;
@@ -507,7 +507,7 @@ void ActivateUnitConfigOptions(void)
 void LoadModemSetupRecordDefaults()
 {
 	// Initialize the Unit Config
-	ByteSet(&g_modemSetupRecord, 0, sizeof(MODEM_SETUP_STRUCT));
+	memset(&g_modemSetupRecord, 0, sizeof(MODEM_SETUP_STRUCT));
 
 	g_modemSetupRecord.modemStatus = NO;
 	g_modemSetupRecord.retries = MODEM_RETRY_DEFAULT_VALUE;

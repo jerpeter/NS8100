@@ -181,10 +181,10 @@ void MonitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     uint8 buff[25];
     uint8 length;
 
-    ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+    memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Add in a title for the menu
-	ByteSet(&buff[0], 0, sizeof(buff));
+	memset(&buff[0], 0, sizeof(buff));
 	length = (uint8)sprintf((char*)buff, "-%s-", getLangText(VIEW_MONITOR_LOG_TEXT));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
@@ -196,7 +196,7 @@ void MonitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if (__monitorLogTbl[s_MonitorMenuCurrentLogIndex].status != EMPTY_LOG_ENTRY)
 		{
 			// Display Mode text
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			switch(__monitorLogTbl[s_MonitorMenuCurrentLogIndex].mode)
 			{
 				case WAVEFORM_MODE:   length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(WAVEFORM_MODE_TEXT)); break;
@@ -210,7 +210,7 @@ void MonitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 			// Display Start Time text
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			ConvertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[s_MonitorMenuCurrentLogIndex].startTime, REC_DATE_TIME_TYPE);
 			length = (uint8)strlen((char*)(&buff[0]));
 
@@ -219,7 +219,7 @@ void MonitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 			// Display Stop Time text
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			ConvertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[s_MonitorMenuCurrentLogIndex].stopTime, REC_DATE_TIME_TYPE);
 			length = (uint8)strlen((char*)(&buff[0]));
 
@@ -263,7 +263,7 @@ void MonitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if(s_MonitorMenuCurrentLogIndex == s_MonitorMenuStartLogIndex)
 		{
 			// Display Start of Log
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			length = (uint8)sprintf((char*)buff, "<%s>", getLangText(START_OF_LOG_TEXT));
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
@@ -273,7 +273,7 @@ void MonitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		else if(s_MonitorMenuCurrentLogIndex == s_MonitorMenuLastLogIndex)
 		{
 			// Display End of Log
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			length = (uint8)sprintf((char*)buff, "<%s>", getLangText(END_OF_LOG_TEXT));
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
@@ -284,7 +284,7 @@ void MonitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	else
 	{
 		// Display Mode text
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		length = (uint8)sprintf((char*)(&buff[0]), "<%s>", getLangText(EMPTY_TEXT));
 
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;

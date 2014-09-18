@@ -182,12 +182,12 @@ void LoadRecordMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr,
 
 						if (temp_rec.validRecord == YES)
 						{
-							ByteSet(&message[0], 0, sizeof(message));
+							memset(&message[0], 0, sizeof(message));
 							sprintf(message, "%s (%s)", getLangText(DELETE_SAVED_SETUP_Q_TEXT), temp_rec.name);
 
 							if (MessageBox(getLangText(WARNING_TEXT), message, MB_YESNO) == MB_FIRST_CHOICE)
 							{
-								ByteSet(&temp_rec.name, 0, sizeof(temp_rec.name));
+								memset(&temp_rec.name, 0, sizeof(temp_rec.name));
 								temp_rec.validRecord = NO;
 
 								SaveRecordData(&temp_rec, (uint32)(mn_layout_ptr->curr_ln - 3), REC_TRIGGER_USER_MENU_TYPE);

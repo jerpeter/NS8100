@@ -233,13 +233,13 @@ void TimerModeDateMenuDisplay(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_lay
 	uint8 menu_ln;
 	uint8 length = 0;
 
-	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	menu_ln = 0;
 	top = (uint8)mn_layout_ptr->top_ln;
 
 	// Add in a title for the menu
-	ByteSet(&sbuff[0], 0, sizeof(sbuff));
+	memset(&sbuff[0], 0, sizeof(sbuff));
 	sprintf((char*)sbuff, "-%s-", getLangText(ACTIVE_DATE_PERIOD_TEXT));
 	length = (uint8)strlen((char*)sbuff);
 
@@ -248,7 +248,7 @@ void TimerModeDateMenuDisplay(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_lay
 	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// Add in a title for the menu
-	ByteSet(&sbuff[0], 0, sizeof(sbuff));
+	memset(&sbuff[0], 0, sizeof(sbuff));
 	sprintf((char*)sbuff, "(%s)", getLangText(DAY_MONTH_YEAR_TEXT));
 	length = (uint8)strlen((char*)sbuff);
 
@@ -256,7 +256,7 @@ void TimerModeDateMenuDisplay(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_lay
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-	ByteSet(&sbuff[0], 0, sizeof(sbuff));
+	memset(&sbuff[0], 0, sizeof(sbuff));
 
 	wnd_layout_ptr->curr_row =   wnd_layout_ptr->start_row;
 	wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
@@ -570,7 +570,7 @@ void ProcessTimerModeSettings(uint8 mode)
 
 		if (mode == PROMPT)
 		{
-			ByteSet(&stringBuff[0], 0, sizeof(stringBuff));
+			memset(&stringBuff[0], 0, sizeof(stringBuff));
 			sprintf(stringBuff, "%s %s", getLangText(TIMER_SETTINGS_INVALID_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT));
 			MessageBox(getLangText(ERROR_TEXT), stringBuff, MB_OK);
 		}
@@ -657,7 +657,7 @@ void ProcessTimerModeSettings(uint8 mode)
 		{
 			if (mode == PROMPT)
 			{
-				ByteSet(&stringBuff[0], 0, sizeof(stringBuff));
+				memset(&stringBuff[0], 0, sizeof(stringBuff));
 				sprintf(stringBuff, "%s %s", getLangText(TIMER_MODE_NOW_ACTIVE_TEXT), getLangText(PLEASE_POWER_OFF_UNIT_TEXT));
 				MessageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
 			}
@@ -703,7 +703,7 @@ void ProcessTimerModeSettings(uint8 mode)
 
 			if (mode == PROMPT)
 			{
-				ByteSet(&stringBuff[0], 0, sizeof(stringBuff));
+				memset(&stringBuff[0], 0, sizeof(stringBuff));
 				sprintf(stringBuff, "%s", getLangText(TIMER_MODE_NOW_ACTIVE_TEXT));
 				MessageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
 			}

@@ -96,7 +96,7 @@ static const COMMAND_MESSAGE_STRUCT s_cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] 
 ///----------------------------------------------------------------------------
 void InitCraftInterruptBuffers(void)
 {
-	ByteSet(g_isrMessageBufferPtr, 0, sizeof(CMD_BUFFER_STRUCT));
+	memset(g_isrMessageBufferPtr, 0, sizeof(CMD_BUFFER_STRUCT));
 	g_isrMessageBufferPtr->status = CMD_MSG_NO_ERR;
 	g_isrMessageBufferPtr->overRunCheck = 0xBADD;
 	g_isrMessageBufferPtr->writePtr = g_isrMessageBufferPtr->readPtr = g_isrMessageBufferPtr->msg;
@@ -193,7 +193,7 @@ void RemoteCmdMessageProcessing()
 
 	RemoteCmdMessageHandler(&(g_msgPool[s_msgReadIndex]));
 
-	ByteSet(g_msgPool[s_msgReadIndex].msg, 0, sizeof(CMD_BUFFER_SIZE));
+	memset(g_msgPool[s_msgReadIndex].msg, 0, sizeof(CMD_BUFFER_SIZE));
 	g_msgPool[s_msgReadIndex].size = 0;	
 	g_msgPool[s_msgReadIndex].readPtr = g_msgPool[s_msgReadIndex].msg;	
 	g_msgPool[s_msgReadIndex].writePtr = g_msgPool[s_msgReadIndex].msg;
@@ -300,7 +300,7 @@ void ProcessCraftData()
 void RemoteCmdMessageHandlerInit()
 {	
 	// Clear and set up the addresses for the ptrs from the buffer array.
-	ByteSet(g_msgPool, 0, (sizeof(CMD_BUFFER_STRUCT) * CMD_MSG_POOL_SIZE));
+	memset(g_msgPool, 0, (sizeof(CMD_BUFFER_STRUCT) * CMD_MSG_POOL_SIZE));
 
 	for (s_msgWriteIndex = 0; s_msgWriteIndex < CMD_MSG_POOL_SIZE; s_msgWriteIndex++)
 	{	
@@ -320,7 +320,7 @@ void RemoteCmdMessageHandlerInit()
 ///----------------------------------------------------------------------------
 void CraftInitStatusFlags(void)
 {
-	ByteSet(&g_modemStatus, 0, sizeof(MODEM_STATUS_STRUCT));
+	memset(&g_modemStatus, 0, sizeof(MODEM_STATUS_STRUCT));
 
 	// Modem and craft port specific flags.
 	g_modemStatus.connectionState = NOP_CMD;	// State flag to indicate which modem command to handle.

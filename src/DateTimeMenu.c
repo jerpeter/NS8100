@@ -294,8 +294,8 @@ void DisplayDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr
 	uint8 menu_ln;
 	uint8 length = 0;
 
-	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
-	ByteSet(&sbuff[0], 0, sizeof(sbuff));
+	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	memset(&sbuff[0], 0, sizeof(sbuff));
 
 	menu_ln = 0;
 	top = (uint8)mn_layout_ptr->top_ln;
@@ -308,7 +308,7 @@ void DisplayDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-	ByteSet(&sbuff[0], 0, sizeof(sbuff));
+	memset(&sbuff[0], 0, sizeof(sbuff));
 
 	wnd_layout_ptr->curr_row =   wnd_layout_ptr->start_row;
 	wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
@@ -388,7 +388,7 @@ void DisplayDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr
 ///----------------------------------------------------------------------------
 void LoadDateTimeMnDefRec(REC_MN_STRUCT *rec_ptr,DATE_TIME_STRUCT *time_ptr)
 {
-	ByteSet(rec_ptr, 0, (sizeof(REC_MN_STRUCT) * 6));
+	memset(rec_ptr, 0, (sizeof(REC_MN_STRUCT) * 6));
 
 	// HOURS
 	rec_ptr[DTM_HOUR].enterflag = FALSE;

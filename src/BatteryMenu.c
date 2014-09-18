@@ -129,10 +129,10 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     float batt_rng;
     uint8 length;
 
-    ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+    memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Add in a title for the menu
-	ByteSet(&buff[0], 0, sizeof(buff));
+	memset(&buff[0], 0, sizeof(buff));
 	sprintf((char*)buff, "-%s-", getLangText(BATTERY_VOLTAGE_TEXT));
 	length = (uint8)strlen((char*)buff);
 
@@ -147,7 +147,7 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     curr_batt_volts = GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE);
 
 	// ********** Print Battery text **********
-	ByteSet(&buff[0], 0, sizeof(buff));
+	memset(&buff[0], 0, sizeof(buff));
     sprintf((char*)buff,"%.2f %s", curr_batt_volts, getLangText(VOLTS_TEXT));
 	debug("Battery: %s\r\n", (char*)&buff[0]);
 
@@ -155,9 +155,9 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// ********** Print the Low and Full text **********
-	ByteSet(&buff[0], 0, sizeof(buff));
-	ByteSet(&spaceBuff[0], 0, sizeof(spaceBuff));
-	ByteSet(&spaceBuff[0], ' ', sizeof(spaceBuff) - 1);
+	memset(&buff[0], 0, sizeof(buff));
+	memset(&spaceBuff[0], 0, sizeof(spaceBuff));
+	memset(&spaceBuff[0], ' ', sizeof(spaceBuff) - 1);
 
 	length = (uint8)(strlen(getLangText(LOW_TEXT)) + strlen(getLangText(FULL_TEXT)));
 	spaceBuff[(20 - length)] = '\0';
@@ -168,9 +168,9 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// ********** E========F **********
-    ByteSet(&buff[0], 0, sizeof(buff));
-    ByteSet(&batt_buff[0], 0, sizeof(batt_buff));
-    ByteSet(&batt_buff[0], ' ', (sizeof(batt_buff) - 1));
+    memset(&buff[0], 0, sizeof(buff));
+    memset(&batt_buff[0], 0, sizeof(batt_buff));
+    memset(&batt_buff[0], ' ', (sizeof(batt_buff) - 1));
 
     batt_rng = (float).25;
     x = 0;
@@ -206,7 +206,7 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// ********** Print other battery voltages **********
-	ByteSet(&buff[0], 0, sizeof(buff));
+	memset(&buff[0], 0, sizeof(buff));
 
 	curr_batt_volts = GetExternalVoltageLevelAveraged(EXT_CHARGE_VOLTAGE);
 

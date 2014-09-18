@@ -59,7 +59,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	UNUSED(inCmd);
 
-	ByteSet(&cfg, 0, sizeof(SYSTEM_CFG));
+	memset(&cfg, 0, sizeof(SYSTEM_CFG));
 
 	cfg.mode = g_triggerRecord.op_mode;
 	cfg.monitorStatus = g_sampleProcessing; 
@@ -146,10 +146,10 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.eventCfg.barInterval = (uint16)g_triggerRecord.bgrec.barInterval;
 	cfg.eventCfg.summaryInterval = (uint16)g_triggerRecord.bgrec.summaryInterval;
 
-	ByteCpy((uint8*)cfg.eventCfg.companyName, g_triggerRecord.trec.client, COMPANY_NAME_STRING_SIZE - 2);
-	ByteCpy((uint8*)cfg.eventCfg.seismicOperator, g_triggerRecord.trec.oper, SEISMIC_OPERATOR_STRING_SIZE - 2);
-	ByteCpy((uint8*)cfg.eventCfg.sessionLocation, g_triggerRecord.trec.loc, SESSION_LOCATION_STRING_SIZE - 2);
-	ByteCpy((uint8*)cfg.eventCfg.sessionComments, g_triggerRecord.trec.comments, SESSION_COMMENTS_STRING_SIZE - 2);
+	memcpy((uint8*)cfg.eventCfg.companyName, g_triggerRecord.trec.client, COMPANY_NAME_STRING_SIZE - 2);
+	memcpy((uint8*)cfg.eventCfg.seismicOperator, g_triggerRecord.trec.oper, SEISMIC_OPERATOR_STRING_SIZE - 2);
+	memcpy((uint8*)cfg.eventCfg.sessionLocation, g_triggerRecord.trec.loc, SESSION_LOCATION_STRING_SIZE - 2);
+	memcpy((uint8*)cfg.eventCfg.sessionComments, g_triggerRecord.trec.comments, SESSION_COMMENTS_STRING_SIZE - 2);
 	
 	cfg.autoCfg.autoMonitorMode = g_unitConfig.autoMonitorMode;
 	cfg.autoCfg.autoCalMode = g_unitConfig.autoCalMode;
@@ -265,7 +265,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 	else
 	{	
 	 	sizeOfCfg = sizeof(SYSTEM_CFG);
-		ByteSet((uint8*)&cfg, 0, sizeOfCfg);
+		memset((uint8*)&cfg, 0, sizeOfCfg);
 
 		// Check to see if the incoming message is the correct size
 		if ((uint32)((inCmd->size - 16)/2) < sizeOfCfg)
@@ -593,10 +593,10 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		// No check, just do not copy over the end of the string length.
-		ByteCpy((uint8*)g_triggerRecord.trec.client, cfg.eventCfg.companyName, COMPANY_NAME_STRING_SIZE - 2);
-		ByteCpy((uint8*)g_triggerRecord.trec.oper, cfg.eventCfg.seismicOperator, SEISMIC_OPERATOR_STRING_SIZE - 2);
-		ByteCpy((uint8*)g_triggerRecord.trec.loc, cfg.eventCfg.sessionLocation, SESSION_LOCATION_STRING_SIZE - 2);
-		ByteCpy((uint8*)g_triggerRecord.trec.comments, cfg.eventCfg.sessionComments, SESSION_COMMENTS_STRING_SIZE - 2);
+		memcpy((uint8*)g_triggerRecord.trec.client, cfg.eventCfg.companyName, COMPANY_NAME_STRING_SIZE - 2);
+		memcpy((uint8*)g_triggerRecord.trec.oper, cfg.eventCfg.seismicOperator, SEISMIC_OPERATOR_STRING_SIZE - 2);
+		memcpy((uint8*)g_triggerRecord.trec.loc, cfg.eventCfg.sessionLocation, SESSION_LOCATION_STRING_SIZE - 2);
+		memcpy((uint8*)g_triggerRecord.trec.comments, cfg.eventCfg.sessionComments, SESSION_COMMENTS_STRING_SIZE - 2);
 
 #if 0 // Old and incorrectly overloaded
 		if ((LOW == cfg.eventCfg.preBuffNumOfSamples) || (HIGH == cfg.eventCfg.preBuffNumOfSamples))
@@ -1088,9 +1088,9 @@ void HandleDMM(CMD_BUFFER_STRUCT* inCmd)
 
 	UNUSED(inCmd);
 
-	ByteSet(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
+	memset(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
 
-	ByteCpy((uint8*)&modemCfg, &g_modemSetupRecord, sizeof(MODEM_SETUP_STRUCT));
+	memcpy((uint8*)&modemCfg, &g_modemSetupRecord, sizeof(MODEM_SETUP_STRUCT));
 
 	sprintf((char*)msgTypeStr, "%02d", MSGTYPE_RESPONSE);
 	BuildOutgoingSimpleHeaderBuffer((uint8*)dmmHdr, (uint8*)"DMMx", (uint8*)msgTypeStr,
@@ -1130,7 +1130,7 @@ void HandleUMM(CMD_BUFFER_STRUCT* inCmd)
 	uint8 ummHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
 
-	ByteSet(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
+	memset(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
 
 	// Move the string data into the configuration structure. String is (2 * cfgSize)
 	i = MESSAGE_HEADER_SIMPLE_LENGTH;
