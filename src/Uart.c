@@ -307,14 +307,13 @@ void UartPutc(uint8 c, int32 channel)
 			status = usart_write_char(&AVR32_USART0, c);
 		}
 
-		g_debugBuffer[g_debugBufferCount++] = c;
-
-		// Check if the buffer count equals the max (which shouldn't occur but have to protect overrunning the buffer)
-		if (g_debugBufferCount == sizeof(g_debugBuffer))
+		// Check if the buffer count doesn't equal the max (protect overrunning the buffer)
+		if (g_debugBufferCount != sizeof(g_debugBuffer))
 		{
-			// Try to dump debug to file (g_debugBufferCount reset in call)
-			WriteDebugBufferToFile();
+			// Dump to the buffer
+			g_debugBuffer[g_debugBufferCount++] = c;
 		}
+		// else do nothing (Assuming it's more important how we got here than where we're going)
 	}
 #endif
 }
@@ -542,7 +541,7 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 	//	return (0);
 
 	// Initialize the buffer
-	ByteSet(&buf[0], 0, sizeof(buf));
+	memset(&buf[0], 0, sizeof(buf));
 
 	// Initialize arg_ptr to the beginning of the variable argument list
     va_start(arg_ptr, fmt);

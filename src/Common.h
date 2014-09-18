@@ -199,8 +199,8 @@ enum {
 #define GLOBAL_DEBUG_PRINT_PORT	DEBUG_COM_PORT
 #endif
 
-#define GLOBAL_DEBUG_BUFFER_SIZE		16384
-#define GLOBAL_DEBUG_BUFFER_THRESHOLD	16000
+#define GLOBAL_DEBUG_BUFFER_SIZE		(65536 - 1) // 1 less than max uint16 index
+#define GLOBAL_DEBUG_BUFFER_THRESHOLD	(32768)
 
 #define SPARE_BUFFER_SIZE				8192
 
@@ -283,8 +283,6 @@ void InitVersionMsg(void);
 
 // Bootloader Function
 void CheckBootloaderAppPresent(void);
-void ByteCpy(void* dest, void* src, uint32 size);
-void ByteSet(void* dest, uint8 value, uint32 size);
 
 // Main menu prototype extensions
 void HandleSystemEvents(void);
@@ -295,5 +293,8 @@ uint16 GetTotalDaysFromReference(TM_DATE_STRUCT date);
 void GetDateString(char*, uint8, uint8);
 uint8 GetDaysPerMonth(uint8, uint16);
 void InitTimeMsg(void);
+
+// Error routines
+void ReportFileSystemAccessProblem(char*);
 
 #endif // _COMMON_H_
