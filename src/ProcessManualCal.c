@@ -44,7 +44,7 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void MoveManualCalToFlash(void)
+void MoveManualCalToFile(void)
 {
 	static SUMMARY_DATA* sumEntry;
 	static SUMMARY_DATA* ramSummaryEntry;
@@ -55,6 +55,7 @@ void MoveManualCalToFlash(void)
 	uint16 lowA = 0xFFFF, lowR = 0xFFFF, lowV = 0xFFFF, lowT = 0xFFFF;
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
+	FL_FILE* manualCalFileHandle = NULL;
 
 	debug("Processing Manual Cal to be saved\r\n");
 
@@ -159,60 +160,70 @@ void MoveManualCalToFlash(void)
 		CompleteRamEventSummary(ramSummaryEntry, sumEntry);
 		CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 
-		// Get new event file handle
-		g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
-				
-		if (g_currentEventFileHandle == NULL)
+		if (g_fileAccessLock != AVAILABLE)
 		{
-			debugErr("Failed to get a new file handle for the Manual Cal event\r\n");
-			
-			//ReInitSdCardAndFat32();
-			//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
-		}					
-		else // Write the file event to the SD card
+			ReportFileSystemAccessProblem("Save Manual Cal");
+		}
+		else // (g_fileAccessLock == AVAILABLE)
 		{
-			sprintf((char*)&g_spareBuffer[0], "CALIBRATION EVENT #%d BEING SAVED...", g_nextEventNumberToUse);
-			OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
+			g_fileAccessLock = FILE_LOCK;
 
-			// Write the event record header and summary
-			fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
+			// Get new event file handle
+			manualCalFileHandle = GetEventFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
 
-			// Write the event data, containing the Pretrigger, event and cal
-			fl_fwrite(g_currentEventStartPtr, g_wordSizeInCal, 2, g_currentEventFileHandle);
+			if (manualCalFileHandle == NULL)
+			{
+				debugErr("Failed to get a new file handle for the Manual Cal event\r\n");
+			}
+			else // Write the file event to the SD card
+			{
+				sprintf((char*)&g_spareBuffer[0], "CALIBRATION EVENT #%d BEING SAVED...", g_pendingEventRecord.summary.eventNumber);
+				OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
-			// Done writing the event file, close the file handle
-			fl_fclose(g_currentEventFileHandle);
-			debug("Event file closed\r\n");
+				// Write the event record header and summary
+				fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, manualCalFileHandle);
 
-			ramSummaryEntry->fileEventNum = g_nextEventNumberToUse;
+				// Write the event data, containing the Pretrigger, event and cal
+				fl_fwrite(g_currentEventStartPtr, g_wordSizeInCal, 2, manualCalFileHandle);
+
+				// Done writing the event file, close the file handle
+				fl_fclose(manualCalFileHandle);
+				debug("Manual Cal Event file closed\r\n");
+
+				ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 					
-			// Don't log a monitor entry for Manual Cal
-			//UpdateMonitorLogEntry();
+				// Don't log a monitor entry for Manual Cal
+				//UpdateMonitorLogEntry();
 
-			// After event numbers have been saved, store current event number in persistent storage.
-			StoreCurrentEventNumber();
+				// After event numbers have been saved, store current event number in persistent storage.
+				StoreCurrentEventNumber();
 
-			// Now store the updated event number in the universal ram storage.
-			g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
+				UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_wordSizeInCal);
+
+				// Now store the updated event number in the universal ram storage.
+				g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
+			}
+
+			if (++g_eventBufferReadIndex == g_maxEventBuffers)
+			{
+				g_eventBufferReadIndex = 0;
+				g_currentEventSamplePtr = g_startOfEventBufferPtr;
+			}
+			else
+			{
+				g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
+			}
+			clearSystemEventFlag(MANUAL_CAL_EVENT);
+
+			g_lastCompletedRamSummaryIndex = ramSummaryEntry;
+
+			// Set printout mode to allow the results menu processing to know this is a manual cal pulse
+			raiseMenuEventFlag(RESULTS_MENU_EVENT);
+
+			g_freeEventBuffers++;
+
+			g_fileAccessLock = AVAILABLE;
 		}
-
-		if (++g_eventBufferReadIndex == g_maxEventBuffers)
-		{
-			g_eventBufferReadIndex = 0;
-			g_currentEventSamplePtr = g_startOfEventBufferPtr;
-		}
-		else
-		{
-			g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
-		}
-		clearSystemEventFlag(MANUAL_CAL_EVENT);
-
-		g_lastCompletedRamSummaryIndex = ramSummaryEntry;
-
-		// Set printout mode to allow the results menu processing to know this is a manual cal pulse
-		raiseMenuEventFlag(RESULTS_MENU_EVENT);
-
-		g_freeEventBuffers++;
 	}
 	else
 	{

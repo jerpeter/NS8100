@@ -90,20 +90,24 @@ void FactorySetupManager(void);
 ///----------------------------------------------------------------------------
 void SystemEventManager(void)
 {
-	//debug("System Event Manager called\r\n");
-
 	//___________________________________________________________________________________________
 	if (getSystemEventState(TRIGGER_EVENT))
 	{
-		if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 		{
-			debug("Trigger Event (Wave)\r\n");
-			MoveWaveformEventToFlash();
+			debug("Trigger Event (%s)\r\n", (g_triggerRecord.op_mode == WAVEFORM_MODE) ? "Wave" : "Combo");
+			MoveWaveformEventToFile();
 		}
-		else if (g_triggerRecord.op_mode == COMBO_MODE)
+	}
+
+	//___________________________________________________________________________________________
+	if (getSystemEventState(BARGRAPH_EVENT))
+	{
+		clearSystemEventFlag(BARGRAPH_EVENT);
+
+		if ((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 		{
-			debug("Trigger Event (Combo)\r\n");
-			MoveComboWaveformEventToFile();
+			CalculateBargraphData();
 		}
 	}
 
@@ -111,7 +115,7 @@ void SystemEventManager(void)
 	if (getSystemEventState(MANUAL_CAL_EVENT))
 	{
 		debug("Manual Cal Pulse Event\r\n");
-		MoveManualCalToFlash();
+		MoveManualCalToFile();
 	}
 
 	//___________________________________________________________________________________________
@@ -206,29 +210,7 @@ void SystemEventManager(void)
 			raiseSystemEventFlag(LOW_BATTERY_WARNING_EVENT);
 		}
 
-#if 0 // Test (Bargraph buffer)
-		uint32 bgDataBufferSize = (g_bargraphDataEndPtr - g_bargraphDataStartPtr);
-		float bgUsed;
-		float bgLocation;
-		
-		if (((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)) && (g_sampleProcessing == ACTIVE_STATE))
-		{
-			if (g_bargraphDataWritePtr >= g_bargraphDataReadPtr)
-			{
-				bgUsed = (((float)100 * (float)(g_bargraphDataWritePtr - g_bargraphDataReadPtr)) / (float)bgDataBufferSize);
-			}
-			else
-			{
-				bgUsed = (((float)100 * (float)(bgDataBufferSize + g_bargraphDataWritePtr - g_bargraphDataReadPtr)) / (float)bgDataBufferSize);
-			}
-
-			bgLocation = (((float)100 * (float)(g_bargraphDataWritePtr - g_bargraphDataStartPtr)) / (float)bgDataBufferSize);
-
-			debugRaw("Bargraph Data Buffer Used: %3.2f%%, Free: %3.2f%%, Location: %3.2f%%\r\n", bgUsed, (float)(100 - bgUsed), bgLocation);
-		}
-#endif
-
-		if (g_debugBufferCount > GLOBAL_DEBUG_BUFFER_THRESHOLD)
+		if ((g_debugBufferCount > GLOBAL_DEBUG_BUFFER_THRESHOLD) && (g_fileAccessLock == AVAILABLE))
 		{
 			debug("Dumping debug output to debug log file\r\n");
 			WriteDebugBufferToFile();
@@ -251,21 +233,6 @@ void SystemEventManager(void)
 	{
 		clearSystemEventFlag(UPDATE_TIME_EVENT);
 		UpdateCurrentTime();
-	}
-
-	//___________________________________________________________________________________________
-	if (getSystemEventState(BARGRAPH_EVENT))
-	{
-		clearSystemEventFlag(BARGRAPH_EVENT);
-
-		if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-		{
-			CalculateBargraphData();
-		}
-		else if (g_triggerRecord.op_mode == COMBO_MODE)
-		{
-			CalculateComboData();
-		}
 	}
 
 	//___________________________________________________________________________________________
@@ -1120,6 +1087,11 @@ void BootLoadManager(void)
 		else
 #endif
 			OverlayMessage("BOOTLOADER", "FOUND CTRL_B...", 2 * SOFT_SECS);
+
+		if (g_fileAccessLock != AVAILABLE)
+		{
+			ReportFileSystemAccessProblem("Bootloader access");
+		}
 
 		sprintf(textBuffer,"C:\\System\\%s", default_boot_name);
 		file = fl_fopen(textBuffer, "r");

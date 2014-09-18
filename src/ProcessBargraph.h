@@ -17,8 +17,10 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define NUM_OF_BAR_INTERVAL_BUFFERS		40
-#define NUM_OF_SUM_INTERVAL_BUFFERS		4
+#define NUM_OF_BAR_INTERVAL_BUFFERS			120
+#define NUM_OF_SUM_INTERVAL_BUFFERS			1
+#define NUM_OF_BAR_INTERVALS_TO_HOLD		60
+#define NUM_OF_SUMMARY_INTERVALS_TO_HOLD	0
 
 #define MAX_BARGRAPH_HOURS 				24
 #define MAX_SAMPLES_PER_HOUR 			600
@@ -28,7 +30,9 @@
 
 #define BG_DATA_BUFFER_SIZE 			SAMPLE_RATE_8K * 4 * 60
 
-#define COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET	(((NUM_OF_BAR_INTERVAL_BUFFERS + NUM_OF_SUM_INTERVAL_BUFFERS) * sizeof(CALCULATED_DATA_STRUCT)) + BG_DATA_BUFFER_SIZE)
+#define COMBO_MODE_BAR_INTERVAL_SIZE		(NUM_OF_BAR_INTERVAL_BUFFERS * sizeof(BARGRAPH_BAR_INTERVAL_DATA))
+#define COMBO_MODE_SUMMARY_INTERVAL_SIZE	(NUM_OF_SUM_INTERVAL_BUFFERS * sizeof(CALCULATED_DATA_STRUCT))
+#define COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET	(COMBO_MODE_BAR_INTERVAL_SIZE + COMBO_MODE_SUMMARY_INTERVAL_SIZE + BG_DATA_BUFFER_SIZE)
 #define COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS	(((COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET / sizeof(SAMPLE_DATA_STRUCT)) * sizeof(SAMPLE_DATA_STRUCT)) / 2)
 
 // Check if the current ptr goes past the end of the event(ram) buffer.
@@ -48,20 +52,14 @@ enum // Set unique values to the following types (actual value doesn't matter)
 ///	Prototypes
 ///----------------------------------------------------------------------------
 void StartNewBargraph(void);
-void ProcessBargraphData(void);
-uint8 CalculateBargraphData(void);
-void UpdateBargraphJobTotals(CALCULATED_DATA_STRUCT *);
+void UpdateBargraphJobTotals(void);
 void EndBargraph(void);
-
-uint32 MoveBarIntervalDataToFile(void);
+void MoveBarIntervalDataToFile(void);
 void MoveSummaryIntervalDataToFile(void);
-
-void MoveStartOfBargraphEventRecordToFlash(void);
-void MoveEndOfBargraphEventRecordToFlash(void);
-
+void CompleteSummaryInterval(void);
+void MoveStartOfBargraphEventRecordToFile(void);
+void MoveEndOfBargraphEventRecordToFile(void);
 void AdvanceBarIntervalBufPtr(uint8);
-void AdvanceSumIntervalBufPtr(uint8);
-
-BOOLEAN CheckSpaceForBarSummaryInterval(void);
+uint8 CalculateBargraphData(void);
 
 #endif //_DATABUFFS_H_

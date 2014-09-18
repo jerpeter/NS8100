@@ -24,6 +24,7 @@
 #include "adc.h"
 #include "FAT32_FileLib.h"
 #include "usart.h"
+#include "ctype.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -650,33 +651,40 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			break;
 	}
 
-	// Attempt to find the file on the SD file system
-	languageFile = fl_fopen((char*)&languageFilename[0], "r");
-	
-	if (languageFile == NULL)
-	{
-		debugWarn("Language file not found, loading language table from app...\r\n");
+	// Default to internal language tables as a backup (overwritten if a language file is found)
+	g_languageLinkTable[0] = languageTablePtr;
 
-		// File not found, default to internal language tables
-		g_languageLinkTable[0] = languageTablePtr;
+	if (g_fileAccessLock != AVAILABLE)
+	{
+		ReportFileSystemAccessProblem("Build language table");
 	}
-	else // Language file found
+	else // (g_fileAccessLock == AVAILABLE)
 	{
-		debug("Loading language table from file: %s, Length: %d\r\n", (char*)&languageFilename[0], languageFile->filelength);
+		g_fileAccessLock = FILE_LOCK;
 
-		ByteSet(&g_languageTable, '\0', sizeof(g_languageTable));
+		// Attempt to find the file on the SD file system
+		languageFile = fl_fopen((char*)&languageFilename[0], "r");
 
-		if (languageFile->filelength > LANGUAGE_TABLE_MAX_SIZE)
+		if (languageFile)
 		{
-			// Error case - Just read the maximum buffer size and pray
-			fl_fread(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
-		}
-		else
-		{
-			fl_fread(languageFile, (uint8*)&g_languageTable[0], languageFile->filelength);
+			debug("Loading language table from file: %s, Length: %d\r\n", (char*)&languageFilename[0], languageFile->filelength);
+
+			memset(&g_languageTable, '\0', sizeof(g_languageTable));
+
+			if (languageFile->filelength > LANGUAGE_TABLE_MAX_SIZE)
+			{
+				// Error case - Just read the maximum buffer size and pray
+				fl_fread(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
+			}
+			else
+			{
+				fl_fread(languageFile, (uint8*)&g_languageTable[0], languageFile->filelength);
+			}
+
+			fl_fclose(languageFile);
 		}
 
-		fl_fclose(languageFile);
+		g_fileAccessLock = AVAILABLE;
 	}
 
 	// Loop and convert all line feeds and carriage returns to nulls, and leaving the last char element as a null
@@ -728,34 +736,23 @@ void CheckBootloaderAppPresent(void)
 {
 	FL_FILE* file = NULL;
 
-	sprintf((char*)g_spareBuffer,"C:\\System\\%s", default_boot_name);
-	file = fl_fopen((char*)g_spareBuffer, "r");
-	if (file)
+	if (g_fileAccessLock != AVAILABLE)
 	{
-		debug("Bootloader found and available\r\n");
-		fl_fclose(file);
+		ReportFileSystemAccessProblem("Check bootloader available");
 	}
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void ByteCpy(void* dest, void* src, uint32 size)
-{
-	while ((int32)size-- > 0)
+	else // (g_fileAccessLock == AVAILABLE)
 	{
-		((uint8*)dest)[size] = ((uint8*)src)[size];
-	}
-}
+		g_fileAccessLock = FILE_LOCK;
 
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void ByteSet(void* dest, uint8 value, uint32 size)
-{
-	while ((int32)size-- > 0)
-	{
-		((uint8*)dest)[size] = value;
+		sprintf((char*)g_spareBuffer,"C:\\System\\%s", default_boot_name);
+		file = fl_fopen((char*)g_spareBuffer, "r");
+		if (file)
+		{
+			debug("Bootloader found and available\r\n");
+			fl_fclose(file);
+		}
+
+		g_fileAccessLock = AVAILABLE;
 	}
 }
 
@@ -879,7 +876,7 @@ void GetDateString(char* buff, uint8 monthNum, uint8 bufSize)
 			monthNum = 1;
 		}
 
-		ByteSet(buff, 0, bufSize);
+		memset(buff, 0, bufSize);
 		strcpy((char*)buff, (char*)g_monthTable[monthNum].name);
 	}
 }
@@ -1018,4 +1015,17 @@ void InitTimeMsg(void)
 	debug("RTC: Current Date: %s %02d, %4d\r\n", g_monthTable[time.month].name,	time.day, (time.year + 2000));
 	debug("RTC: Current Time: %02d:%02d:%02d %s\r\n", ((time.hour > 12) ? (time.hour - 12) : time.hour),
 			time.min, time.sec, ((time.hour > 12) ? "PM" : "AM"));
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ReportFileSystemAccessProblem(char* attemptedProcess)
+{
+	uint16 i = 0;
+
+	debugErr("Unable to access file system during: %s\r\n", attemptedProcess);
+	for (; i < strlen(attemptedProcess); i++) { attemptedProcess[i] = toupper(attemptedProcess[i]); }
+	sprintf((char*)g_spareBuffer, "FILE SYSTEM BUSY DURING: %s", attemptedProcess);
+	OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 }

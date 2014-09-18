@@ -351,7 +351,7 @@ void ProcessWaveformData(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void MoveWaveformEventToFlash(void)
+void MoveWaveformEventToFile(void)
 {
 	static FLASH_MOV_STATE waveformProcessingState = FLASH_IDLE;
 	static SUMMARY_DATA* sumEntry;
@@ -367,6 +367,7 @@ void MoveWaveformEventToFlash(void)
 	INPUT_MSG_STRUCT msg;
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
+	FL_FILE* waveformFileHandle = NULL;
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
@@ -406,7 +407,7 @@ void MoveWaveformEventToFlash(void)
 				for (i = g_samplesInPretrig; i != 0; i--)
 				{
 					if (g_bitShiftForAccuracy) AdjustSampleForBitAccuracy();
-					
+
 					g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 				}
 
@@ -523,9 +524,10 @@ void MoveWaveformEventToFlash(void)
 				break;
 				
 			case FLASH_STORE:
-				if (g_spi1AccessLock == AVAILABLE)
+				if ((g_spi1AccessLock == AVAILABLE) && (g_fileAccessLock == AVAILABLE))
 				{
 					g_spi1AccessLock = EVENT_LOCK;
+					g_fileAccessLock = FILE_LOCK;
 
 					startOfEventPtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
 					endOfEventDataPtr = startOfEventPtr + (g_wordSizeInPretrig + g_wordSizeInEvent);
@@ -536,31 +538,29 @@ void MoveWaveformEventToFlash(void)
 
 					CompleteRamEventSummary(ramSummaryEntry, sumEntry);
 					CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
-					
-					// Get new event file handle
-					g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
 
-					if (g_currentEventFileHandle == NULL)
+					// Get new event file handle
+					waveformFileHandle = GetEventFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
+
+					if (waveformFileHandle == NULL)
 					{
-						debugErr("Failed to get a new file handle for the current Waveform event\r\n");
-						
-						//ReInitSdCardAndFat32();
-						//g_currentEventFileHandle = GetEventFileHandle(g_nextEventNumberToUse, CREATE_EVENT_FILE);
+						debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.op_mode == WAVEFORM_MODE) ? "Waveform" : "Combo - Waveform");
 					}					
 					else // Write the file event to the SD card
 					{
-						sprintf((char*)&g_spareBuffer[0], "WAVEFORM EVENT #%d BEING SAVED... (MAY TAKE TIME)", g_nextEventNumberToUse);
+						sprintf((char*)&g_spareBuffer[0], "%s EVENT #%d BEING SAVED... (MAY TAKE TIME)",
+								(g_triggerRecord.op_mode == WAVEFORM_MODE) ? "WAVEFORM" : "COMBO - WAVEFORM", g_pendingEventRecord.summary.eventNumber);
 						OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
 						// Write the event record header and summary
-						fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, g_currentEventFileHandle);
+						fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, waveformFileHandle);
 
 						// Write the event data, containing the Pretrigger, event and cal
-						fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, g_currentEventFileHandle);
+						fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, waveformFileHandle);
 
 						// Done writing the event file, close the file handle
-						fl_fclose(g_currentEventFileHandle);
-						debug("Event file closed\r\n");
+						fl_fclose(waveformFileHandle);
+						debug("Waveform Event file closed\r\n");
 
 						ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 					
@@ -569,9 +569,13 @@ void MoveWaveformEventToFlash(void)
 						// After event numbers have been saved, store current event number in persistent storage.
 						StoreCurrentEventNumber();
 
+						UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_wordSizeInEvent);
+
 						// Now store the updated event number in the universal ram storage.
 						g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 					}
+
+					g_fileAccessLock = AVAILABLE;
 
 					// Update event buffer count and pointers
 					if (++g_eventBufferReadIndex == g_maxEventBuffers)
@@ -592,7 +596,12 @@ void MoveWaveformEventToFlash(void)
 
 					g_lastCompletedRamSummaryIndex = ramSummaryEntry;
 
-					raiseMenuEventFlag(RESULTS_MENU_EVENT);
+					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+					{
+						raiseMenuEventFlag(RESULTS_MENU_EVENT);
+					}
+					// else (g_triggerRecord.op_mode == COMBO_MODE)
+					// Leave in monitor mode menu display processing for bargraph
 
 					//debug("DataBuffs: Changing flash move state: %s\r\n", "FLASH_IDLE");
 					waveformProcessingState = FLASH_IDLE;
@@ -607,7 +616,7 @@ void MoveWaveformEventToFlash(void)
 					// Check to see if there is room for another event, if not send a signal to stop monitoring
 					if (g_unitConfig.flashWrapping == NO)
 					{
-						if (g_flashUsageStats.waveEventsLeft == 0)
+						if (g_sdCardUsageStats.waveEventsLeft == 0)
 						{
 							msg.cmd = STOP_MONITORING_CMD;
 							msg.length = 1;

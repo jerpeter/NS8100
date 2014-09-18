@@ -42,7 +42,7 @@ void InitMonitorLog(void)
 		//debugRaw("Clearing Monitor Log table\r\n");
 
 		// Clear Monitor Log table
-		ByteSet(&__monitorLogTbl[0], 0x0, (sizeof(MONITOR_LOG_ENTRY_STRUCT) * TOTAL_MONITOR_LOG_ENTRIES));
+		memset(&__monitorLogTbl[0], 0x0, (sizeof(MONITOR_LOG_ENTRY_STRUCT) * TOTAL_MONITOR_LOG_ENTRIES));
 
 		// Set the index to the first element
 		__monitorLogTblIndex = 0;
@@ -104,7 +104,7 @@ uint16 GetStartingEventNumberForCurrentMonitorLog(void)
 void ClearMonitorLogEntry(void)
 {
 	// Set all log entries to all zero's, status to EMPTY_LOG_ENTRY, start and stop times INVALID
-	ByteSet(&__monitorLogTbl[__monitorLogTblIndex], 0x0, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+	memset(&__monitorLogTbl[__monitorLogTblIndex], 0x0, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 
 	//debugRaw("Clearing entry at Monitor Log table index: %d\r\n", __monitorLogTblIndex);
 }
@@ -177,7 +177,7 @@ void NewMonitorLogEntry(uint8 mode)
 	__monitorLogTbl[__monitorLogTblIndex].sensor_type = g_factorySetupRecord.sensor_type;
 	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
 
-	//ByteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
+	//memset(&spareBuffer[0], 0x0, sizeof(spareBuffer));
 	//ConvertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
 	//debug("\tStart Time: %s\r\n", (char*)&spareBuffer[0]);
 }
@@ -216,7 +216,7 @@ void CloseMonitorLogEntry()
 
 		AppendMonitorLogEntryFile();
 
-		//ByteSet(&spareBuffer[0], 0x0, sizeof(spareBuffer));
+		//memset(&spareBuffer[0], 0x0, sizeof(spareBuffer));
 		//ConvertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
 		//debug("\tStop Time: %s\r\n", (char*)&spareBuffer[0]);
 	}
@@ -359,94 +359,105 @@ void AppendMonitorLogEntryFile(void)
 	float unitsDiv;
 	uint32 airInUnits;
 	
-	monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "a+");
-
-	// Verify file ID
-	if (monitorLogFile == NULL)
+	if (g_fileAccessLock != AVAILABLE)
 	{
-		debugErr("Monitor Log File not found\r\n");
-		OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
-	}		
-	else // Monitor log file contains entries
-	{
-		if (monitorLogFile->filelength % sizeof(MONITOR_LOG_ENTRY_STRUCT) != 0)
-		{
-			debugWarn("Monitor Log File size does not comprise all whole entries\r\n");
-		}
-
-		debug("Writing Monitor log entry to log file...\r\n");
-
-		fl_fwrite((uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT), 1, monitorLogFile);
-
-		// Done reading, close the monitor log file
-		fl_fclose(monitorLogFile);
-
-		debug("Monitor log entry appended to log file\r\n");
+		ReportFileSystemAccessProblem("Add monitor log entry");
 	}
-
-	monitorLogHumanReadableFile = fl_fopen("C:\\Logs\\MonitorLogReadable.txt", "a+");
-
-	// Verify file ID
-	if (monitorLogHumanReadableFile == NULL)
+	else // (g_fileAccessLock == AVAILABLE)
 	{
-		debugErr("Monitor Log Readable File not found\r\n");
-		OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLogReadable.txt", 3 * SOFT_SECS);
-	}
-	else // File successfully created or opened
-	{
-		mle = &__monitorLogTbl[__monitorLogTblIndex];
+		g_fileAccessLock = FILE_LOCK;
 
-		debug("Writing Monitor log entry to readable log file...\r\n");
+		monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "a+");
 
-		if (mle->mode == WAVEFORM_MODE) { strcpy((char*)&modeString, "Waveform"); }
-		else if (mle->mode == BARGRAPH_MODE) { strcpy((char*)&modeString, "Bargraph"); }
-		else if (mle->mode == COMBO_MODE) { strcpy((char*)&modeString, "Combo"); }
-
-		if (mle->status == COMPLETED_LOG_ENTRY) { strcpy((char*)&statusString, "Completed"); }
-		else if (mle->status == PARTIAL_LOG_ENTRY) { strcpy((char*)&statusString, "Partial"); }
-		else if (mle->status == INCOMPLETE_LOG_ENTRY) { strcpy((char*)&statusString, "Incomplete"); }
-
-		sprintf((char*)&startTimeString, "%02d-%02d-%02d %02d:%02d:%02d", mle->startTime.day, mle->startTime.month, mle->startTime.year,
-				mle->startTime.hour, mle->startTime.min, mle->startTime.sec);
-		sprintf((char*)&stopTimeString, "%02d-%02d-%02d %02d:%02d:%02d", mle->stopTime.day, mle->stopTime.month, mle->stopTime.year,
-				mle->stopTime.hour, mle->stopTime.min, mle->stopTime.sec);
-
-		if (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) {strcpy((char*)seisString, "None"); }
-		else
+		// Verify file ID
+		if (monitorLogFile == NULL)
 		{
-			// Calculate the divider used for converting stored A/D peak counts to units of measure
-			unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) /
-			(float)(g_factorySetupRecord.sensor_type);
+			debugErr("Monitor Log File not found\r\n");
+			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
+		}
+		else // Monitor log file contains entries
+		{
+			if (monitorLogFile->filelength % sizeof(MONITOR_LOG_ENTRY_STRUCT) != 0)
+			{
+				debugWarn("Monitor Log File size does not comprise all whole entries\r\n");
+			}
 
-			tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
-			if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE)) { tempSesmicTriggerInUnits *= (float)METRIC; }
+			debug("Writing Monitor log entry to log file...\r\n");
 
-			sprintf((char*)seisString, "%05.2f %s", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
+			fl_fwrite((uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT), 1, monitorLogFile);
+
+			// Done reading, close the monitor log file
+			fl_fclose(monitorLogFile);
+
+			debug("Monitor log entry appended to log file\r\n");
 		}
 
-		if (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) {strcpy((char*)airString, "None"); }
-		else
+		monitorLogHumanReadableFile = fl_fopen("C:\\Logs\\MonitorLogReadable.txt", "a+");
+
+		// Verify file ID
+		if (monitorLogHumanReadableFile == NULL)
 		{
-			airInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-			if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { sprintf((char*)airString, "%05.3f mB", ((float)airInUnits / 10000)); }
-			else { sprintf((char*)airString, "%d dB", (uint16)airInUnits); }
+			debugErr("Monitor Log Readable File not found\r\n");
+			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLogReadable.txt", 3 * SOFT_SECS);
+		}
+		else // File successfully created or opened
+		{
+			mle = &__monitorLogTbl[__monitorLogTblIndex];
+
+			debug("Writing Monitor log entry to readable log file...\r\n");
+
+			if (mle->mode == WAVEFORM_MODE) { strcpy((char*)&modeString, "Waveform"); }
+			else if (mle->mode == BARGRAPH_MODE) { strcpy((char*)&modeString, "Bargraph"); }
+			else if (mle->mode == COMBO_MODE) { strcpy((char*)&modeString, "Combo"); }
+
+			if (mle->status == COMPLETED_LOG_ENTRY) { strcpy((char*)&statusString, "Completed"); }
+			else if (mle->status == PARTIAL_LOG_ENTRY) { strcpy((char*)&statusString, "Partial"); }
+			else if (mle->status == INCOMPLETE_LOG_ENTRY) { strcpy((char*)&statusString, "Incomplete"); }
+
+			sprintf((char*)&startTimeString, "%02d-%02d-%02d %02d:%02d:%02d", mle->startTime.day, mle->startTime.month, mle->startTime.year,
+					mle->startTime.hour, mle->startTime.min, mle->startTime.sec);
+			sprintf((char*)&stopTimeString, "%02d-%02d-%02d %02d:%02d:%02d", mle->stopTime.day, mle->stopTime.month, mle->stopTime.year,
+					mle->stopTime.hour, mle->stopTime.min, mle->stopTime.sec);
+
+			if (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) {strcpy((char*)seisString, "None"); }
+			else
+			{
+				// Calculate the divider used for converting stored A/D peak counts to units of measure
+				unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) /
+				(float)(g_factorySetupRecord.sensor_type);
+
+				tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
+				if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE)) { tempSesmicTriggerInUnits *= (float)METRIC; }
+
+				sprintf((char*)seisString, "%05.2f %s", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
+			}
+
+			if (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) {strcpy((char*)airString, "None"); }
+			else
+			{
+				airInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+				if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { sprintf((char*)airString, "%05.3f mB", ((float)airInUnits / 10000)); }
+				else { sprintf((char*)airString, "%d dB", (uint16)airInUnits); }
+			}
+
+			if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&sensorString, "Acc"); }
+			else { sprintf((char*)&sensorString, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
+
+			sprintf((char*)&g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
+					"Seismic Trig: %10s, Air Trig: %11s\r\n\tBit Acc: %d, Temp Adjust: %3s, Sensor: %8s, Sensitivity: %4s\r\n\n",
+					mle->uniqueEntryId, (char*)statusString, (char*)modeString, (char*)startTimeString, (char*)stopTimeString, mle->eventsRecorded, mle->startEventNumber,
+					(char*)seisString, (char*)airString, mle->bitAccuracy, ((mle->adjustForTempDrift == YES) ? "YES" : "NO"),
+					(char*)sensorString, ((mle->sensitivity == LOW) ? "LOW" : "HIGH"));
+
+			fl_fwrite((uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer), 1, monitorLogHumanReadableFile);
+
+			// Done reading, close the monitor log file
+			fl_fclose(monitorLogHumanReadableFile);
+
+			debug("Monitor log readable entry appended to log file\r\n");
 		}
 
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&sensorString, "Acc"); }
-		else { sprintf((char*)&sensorString, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
-
-		sprintf((char*)&g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
-				"Seismic Trig: %10s, Air Trig: %11s\r\n\tBit Acc: %d, Temp Adjust: %3s, Sensor: %8s, Sensitivity: %4s\r\n\n",
-				mle->uniqueEntryId, (char*)statusString, (char*)modeString, (char*)startTimeString, (char*)stopTimeString, mle->eventsRecorded, mle->startEventNumber,
-				(char*)seisString, (char*)airString, mle->bitAccuracy, ((mle->adjustForTempDrift == YES) ? "YES" : "NO"),
-				(char*)sensorString, ((mle->sensitivity == LOW) ? "LOW" : "HIGH"));
-
-		fl_fwrite((uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer), 1, monitorLogHumanReadableFile);
-
-		// Done reading, close the monitor log file
-		fl_fclose(monitorLogHumanReadableFile);
-
-		debug("Monitor log readable entry appended to log file\r\n");
+		g_fileAccessLock = AVAILABLE;
 	}
 
 #if 0 // Test
@@ -489,90 +500,101 @@ void InitMonitorLogTableFromLogFile(void)
 	uint16 highestId = 0;
 	uint16 foundIds = 0;
 	
-	monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "r");
+	if (g_fileAccessLock != AVAILABLE)
+	{
+		ReportFileSystemAccessProblem("Init monitor log");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
 
-	// Verify file ID
-	if (monitorLogFile == NULL)
-	{
-		debugWarn("Warning: Monitor Log File not found or has not yet been created\r\n");
-	}		
-	// Verify file is big enough
-	else if (monitorLogFile->filelength < sizeof(MONITOR_LOG_ENTRY_STRUCT))
-	{
-		debugErr("Monitor Log File is corrupt\r\n");
-		OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
-	}		
-	else // Monitor log file contains entries
-	{
-		OverlayMessage("MONITOR LOG", "INITIALIZING MONITOR LOG WITH SAVED ENTRIES", 1 * SOFT_SECS);
+		monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "r");
 
-		bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
-		
-		// Loop while data continues to be read from MONITOR log file
-		while (bytesRead > 0)
+		// Verify file ID
+		if (monitorLogFile == NULL)
 		{
-			if ((monitorLogEntry.status == COMPLETED_LOG_ENTRY) || (monitorLogEntry.status == INCOMPLETE_LOG_ENTRY))
+			debugWarn("Warning: Monitor Log File not found or has not yet been created\r\n");
+		}
+		// Verify file is big enough
+		else if (monitorLogFile->filelength < sizeof(MONITOR_LOG_ENTRY_STRUCT))
+		{
+			debugErr("Monitor Log File is corrupt\r\n");
+			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
+		}
+		else // Monitor log file contains entries
+		{
+			OverlayMessage("MONITOR LOG", "INITIALIZING MONITOR LOG WITH SAVED ENTRIES", 1 * SOFT_SECS);
+
+			bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+
+			// Loop while data continues to be read from MONITOR log file
+			while (bytesRead > 0)
 			{
-				//debug("Found Valid Monitor Log Entry with ID: %d\r\n", monitorLogEntry.uniqueEntryId);
-
-				if (foundIds)
+				if ((monitorLogEntry.status == COMPLETED_LOG_ENTRY) || (monitorLogEntry.status == INCOMPLETE_LOG_ENTRY))
 				{
-					if (monitorLogEntry.uniqueEntryId < lowestId) { lowestId = monitorLogEntry.uniqueEntryId; }
-					if (monitorLogEntry.uniqueEntryId > highestId) { highestId = monitorLogEntry.uniqueEntryId; }
-				}
-				else
-				{
-					lowestId = monitorLogEntry.uniqueEntryId;
-					highestId = monitorLogEntry.uniqueEntryId;
-				}
+					//debug("Found Valid Monitor Log Entry with ID: %d\r\n", monitorLogEntry.uniqueEntryId);
 
-				foundIds++;
+					if (foundIds)
+					{
+						if (monitorLogEntry.uniqueEntryId < lowestId) { lowestId = monitorLogEntry.uniqueEntryId; }
+						if (monitorLogEntry.uniqueEntryId > highestId) { highestId = monitorLogEntry.uniqueEntryId; }
+					}
+					else
+					{
+						lowestId = monitorLogEntry.uniqueEntryId;
+						highestId = monitorLogEntry.uniqueEntryId;
+					}
+
+					foundIds++;
 #if 0 // Test
-				debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\r\n",
-						monitorLogEntry.uniqueEntryId, monitorLogEntry.mode, monitorLogEntry. startEventNumber, monitorLogEntry.status, 
-						monitorLogEntry.seismicTriggerLevel, monitorLogEntry.airTriggerLevel, monitorLogEntry.bitAccuracy, monitorLogEntry.adjustForTempDrift,
-						monitorLogEntry.sensor_type, monitorLogEntry.sensitivity);
-/*
-typedef struct
-{
-	uint16				uniqueEntryId;
-	uint8				status;
-	uint8				mode;
-	DATE_TIME_STRUCT	startTime;
-	DATE_TIME_STRUCT	stopTime;
-	uint16				eventsRecorded;
-	uint16				startEventNumber;
-	uint32				seismicTriggerLevel;
-	uint32				airTriggerLevel;
-	uint8				bitAccuracy;
-	uint8				adjustForTempDrift;
-	uint16				sensor_type;
-	uint32				sensitivity;
-} MONITOR_LOG_ENTRY_STRUCT;
+					debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\r\n",
+							monitorLogEntry.uniqueEntryId, monitorLogEntry.mode, monitorLogEntry. startEventNumber, monitorLogEntry.status,
+							monitorLogEntry.seismicTriggerLevel, monitorLogEntry.airTriggerLevel, monitorLogEntry.bitAccuracy, monitorLogEntry.adjustForTempDrift,
+							monitorLogEntry.sensor_type, monitorLogEntry.sensitivity);
+	/*
+	typedef struct
+	{
+		uint16				uniqueEntryId;
+		uint8				status;
+		uint8				mode;
+		DATE_TIME_STRUCT	startTime;
+		DATE_TIME_STRUCT	stopTime;
+		uint16				eventsRecorded;
+		uint16				startEventNumber;
+		uint32				seismicTriggerLevel;
+		uint32				airTriggerLevel;
+		uint8				bitAccuracy;
+		uint8				adjustForTempDrift;
+		uint16				sensor_type;
+		uint32				sensitivity;
+	} MONITOR_LOG_ENTRY_STRUCT;
 
-	__monitorLogTbl[__monitorLogTblIndex].startTime = GetCurrentTime();
-	__monitorLogTbl[__monitorLogTblIndex].startTime.valid = TRUE;
-	__monitorLogTbl[__monitorLogTblIndex].mode = mode;
-	__monitorLogTbl[__monitorLogTblIndex].startEventNumber = g_nextEventNumberToUse;
-	__monitorLogTbl[__monitorLogTblIndex].status = PARTIAL_LOG_ENTRY;
-	__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
-	__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
-	__monitorLogTbl[__monitorLogTblIndex].sensor_type =  g_factorySetupRecord.sensor_type;
-	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
-*/
+		__monitorLogTbl[__monitorLogTblIndex].startTime = GetCurrentTime();
+		__monitorLogTbl[__monitorLogTblIndex].startTime.valid = TRUE;
+		__monitorLogTbl[__monitorLogTblIndex].mode = mode;
+		__monitorLogTbl[__monitorLogTblIndex].startEventNumber = g_nextEventNumberToUse;
+		__monitorLogTbl[__monitorLogTblIndex].status = PARTIAL_LOG_ENTRY;
+		__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+		__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+		__monitorLogTbl[__monitorLogTblIndex].sensor_type =  g_factorySetupRecord.sensor_type;
+		__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
+	*/
 #endif
-				__monitorLogTbl[__monitorLogTblIndex] = monitorLogEntry;
+					__monitorLogTbl[__monitorLogTblIndex] = monitorLogEntry;
 			
-				AdvanceMonitorLogIndex();
+					AdvanceMonitorLogIndex();
 
-				bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+					bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+				}
 			}
+
+			// Done reading, close the monitor log file
+			fl_fclose(monitorLogFile);
+
+			debug("Found Valid Monitor Log Entries, ID's: %d --> %d\r\n", lowestId, highestId);
 		}
 
-		// Done reading, close the monitor log file
-		fl_fclose(monitorLogFile);
-
-		debug("Found Valid Monitor Log Entries, ID's: %d --> %d\r\n", lowestId, highestId);
+		g_fileAccessLock = AVAILABLE;
 	}
 }
 
@@ -588,34 +610,45 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 	char timeString[20];
 	char extChargeString[8];
 
-	onOffLogHumanReadableFile = fl_fopen("C:\\Logs\\OnOffLogReadable.txt", "a+");
-
-	// Verify file ID
-	if (onOffLogHumanReadableFile == NULL)
+	if (g_fileAccessLock != AVAILABLE)
 	{
-		debugErr("On/Off Log File not found\r\n");
-		OverlayMessage("FILE NOT FOUND", "C:\\Logs\\OnOffLogReadable.txt", 3 * SOFT_SECS);
+		ReportFileSystemAccessProblem("Add On/Off log timestamp");
 	}
-	else // File successfully created or opened
+	else // (g_fileAccessLock == AVAILABLE)
 	{
-		if (onOffState == ON) { strcpy((char*)onOffStateString, "On"); }
-		else if (onOffState == OFF) { strcpy((char*)onOffStateString, "Off"); }
-		else { strcpy((char*)onOffStateString, "J2B"); }
+		g_fileAccessLock = FILE_LOCK;
 
-		if (extCharge > EXTERNAL_VOLTAGE_PRESENT) { sprintf((char*)&extChargeString, "%4.2fv", extCharge); }
-		else { sprintf((char*)&extChargeString, "<none>"); }
+		onOffLogHumanReadableFile = fl_fopen("C:\\Logs\\OnOffLogReadable.txt", "a+");
 
-		sprintf((char*)&timeString, "%02d-%02d-%02d %02d:%02d:%02d", time.day, time.month, time.year, time.hour, time.min, time.sec);
+		// Verify file ID
+		if (onOffLogHumanReadableFile == NULL)
+		{
+			debugErr("On/Off Log File not found\r\n");
+			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\OnOffLogReadable.txt", 3 * SOFT_SECS);
+		}
+		else // File successfully created or opened
+		{
+			if (onOffState == ON) { strcpy((char*)onOffStateString, "On"); }
+			else if (onOffState == OFF) { strcpy((char*)onOffStateString, "Off"); }
+			else { strcpy((char*)onOffStateString, "J2B"); }
 
-		sprintf((char*)&g_spareBuffer, "Unit <%s>: %3s, Version: %s, Mode: %6s, Time: %s, Battery: %3.2fv, Ext charge: %6s\r\n",
-				(char*)&g_factorySetupRecord.serial_num, (char*)onOffStateString, (char*)g_buildVersion,
-				((g_unitConfig.timerMode == ENABLED) ? "Timer" : "Normal"), (char*)timeString,
-				GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE), extChargeString);
+			if (extCharge > EXTERNAL_VOLTAGE_PRESENT) { sprintf((char*)&extChargeString, "%4.2fv", extCharge); }
+			else { sprintf((char*)&extChargeString, "<none>"); }
 
-		fl_fwrite((uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer), 1, onOffLogHumanReadableFile);
+			sprintf((char*)&timeString, "%02d-%02d-%02d %02d:%02d:%02d", time.day, time.month, time.year, time.hour, time.min, time.sec);
 
-		// Done reading, close the monitor log file
-		fl_fclose(onOffLogHumanReadableFile);
+			sprintf((char*)&g_spareBuffer, "Unit <%s>: %3s, Version: %s, Mode: %6s, Time: %s, Battery: %3.2fv, Ext charge: %6s\r\n",
+					(char*)&g_factorySetupRecord.serial_num, (char*)onOffStateString, (char*)g_buildVersion,
+					((g_unitConfig.timerMode == ENABLED) ? "Timer" : "Normal"), (char*)timeString,
+					GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE), extChargeString);
+
+			fl_fwrite((uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer), 1, onOffLogHumanReadableFile);
+
+			// Done reading, close the monitor log file
+			fl_fclose(onOffLogHumanReadableFile);
+		}
+
+		g_fileAccessLock = AVAILABLE;
 	}
 }
 
@@ -624,28 +657,39 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 ///----------------------------------------------------------------------------
 void WriteDebugBufferToFile(void)
 {
-	if (g_debugBufferCount)
+	if (g_fileAccessLock != AVAILABLE)
 	{
-		FL_FILE* debugLogFile;
+		ReportFileSystemAccessProblem("Write debug buffer");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
 
-		debugLogFile = fl_fopen("C:\\Logs\\debugLogReadable.txt", "a+");
-
-		// Verify file ID
-		if (debugLogFile == NULL)
+		if (g_debugBufferCount)
 		{
-			debugErr("Debug Log File not found\r\n");
-			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\debugLogReadable.txt", 3 * SOFT_SECS);
-		}
-		else // File successfully created or opened
-		{
-			fl_fwrite((uint8*)&g_debugBuffer, g_debugBufferCount, 1, debugLogFile);
+			FL_FILE* debugLogFile;
 
-			// Done reading, close the monitor log file
-			fl_fclose(debugLogFile);
+			debugLogFile = fl_fopen("C:\\Logs\\DebugLogReadable.txt", "a+");
+
+			// Verify file ID
+			if (debugLogFile == NULL)
+			{
+				debugErr("Debug Log File not found\r\n");
+				OverlayMessage("FILE NOT FOUND", "C:\\Logs\\DebugLogReadable.txt", 3 * SOFT_SECS);
+			}
+			else // File successfully created or opened
+			{
+				fl_fwrite((uint8*)&g_debugBuffer, g_debugBufferCount, 1, debugLogFile);
+
+				// Done reading, close the monitor log file
+				fl_fclose(debugLogFile);
+			}
+
+			memset(&g_debugBuffer, 0, sizeof(g_debugBuffer));
+			g_debugBufferCount = 0;
 		}
 
-		memset(&g_debugBuffer, 0, sizeof(g_debugBuffer));
-		g_debugBufferCount = 0;
+		g_fileAccessLock = AVAILABLE;
 	}
 }
 
@@ -655,29 +699,50 @@ void WriteDebugBufferToFile(void)
 #include "navigation.h"
 void SwitchDebugLogFile(void)
 {
-   // Remove old run debug file (if it exists)
-   if(nav_setcwd("A:\\Logs\\debugLogLastRun.txt", TRUE, FALSE))
-   {
-		if(!nav_file_del(TRUE))
+	uint8 status = PASSED;
+
+	if (g_fileAccessLock != AVAILABLE)
+	{
+		ReportFileSystemAccessProblem("Rename debug file");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
+
+		nav_drive_set(0);
+		nav_partition_mount();
+
+		// Remove old run debug file (if it exists)
+		if(nav_setcwd("A:\\Logs\\DebugLogLastRun.txt", TRUE, FALSE))
 		{
-			debugWarn("Unable to delete old run debug file\r\n");
-			return;
+			if(!nav_file_del(TRUE))
+			{
+				debugErr("Unable to delete old run debug file\r\n");
+				status = FAILED;
+			}
 		}
-   }
 
-   // Select source file
-   if(!nav_setcwd("A:\\Logs\\debugLogReadable.txt", TRUE, FALSE))
-   {
-	   debugWarn("Unable to open debug log file\r\n");
-	   return;
-   }
+		if (status == PASSED)
+		{
+			// Select source file
+			if(nav_setcwd("A:\\Logs\\DebugLogReadable.txt", TRUE, FALSE))
+			{
+				// Rename file or directory
+				if(!nav_file_rename("DebugLogLastRun.txt"))
+				{
+					debugErr("Unable to move debug log file to last run filename\r\n");
+					status = FAILED;
+				}
+			}
+			else
+			{
+				debugWarn("No debug file from last run\r\n");
+				status = FAILED;
+			}
+		}
 
-   // Rename file or directory
-   if(!nav_file_rename("debugLogLastRun.txt"))
-   {
-	   debugWarn("Unable to move debug log file to last run filename\r\n");
-	   return;
-   }
+		if (status == PASSED) { debug("Debug log file moved to last run debug file\r\n"); }
 
-	debug("Debug log file moved to last run debug file\r\n");
+		g_fileAccessLock = AVAILABLE;
+	}
 }

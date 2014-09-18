@@ -34,20 +34,14 @@
 #define MAX_DATA_PER_SAMPLE			(MAX_NUM_OF_CHANNELS * CHANNEL_DATA_IN_BYTES) // 8
 #define MAX_DATA_PER_SECOND			(MAX_SAMPLE_RATE * MAX_DATA_PER_SAMPLE) // 64K
 
-#if 0 // Static Pretrigger size (0.25 sec)
-#define LARGEST_PRETIRGGER_SIZE_IN_BYTES	(MAX_DATA_PER_SECOND / 4) // 32768 = MAX_DATA_PER_SECOND * 1/4 second
-#else // Variable Pretrigger size (use full second buffer for calculation)
 #define LARGEST_PRETIRGGER_SIZE_IN_BYTES	(MAX_DATA_PER_SECOND)
-#endif
-
-#define LARGEST_EVENT_SIZE_IN_BYTES			(MAX_DATA_PER_SECOND * 50) // Determined by max data and ram storage available
+#define LARGEST_EVENT_SIZE_IN_BYTES			(MAX_DATA_PER_SECOND * 55) // Determined by max data and ram storage available
 #define LARGEST_CAL_SIZE_IN_BYTES			(MAX_DATA_PER_SAMPLE * MAX_CAL_SAMPLES) // 1600
-#define SPARE_SIZE_IN_BYTES					24000 // Leftover to match old event buffer size
 
 #define PRE_TRIG_BUFF_SIZE_IN_BYTES 	(LARGEST_PRETIRGGER_SIZE_IN_BYTES + MAX_DATA_PER_SAMPLE) // Max 1 second + 1 sample
 #define PRE_TRIG_BUFF_SIZE_IN_WORDS 	(PRE_TRIG_BUFF_SIZE_IN_BYTES / 2)
 
-#define EVENT_BUFF_SIZE_IN_BYTES    (LARGEST_EVENT_SIZE_IN_BYTES + LARGEST_PRETIRGGER_SIZE_IN_BYTES + LARGEST_CAL_SIZE_IN_BYTES + SPARE_SIZE_IN_BYTES)
+#define EVENT_BUFF_SIZE_IN_BYTES    (LARGEST_EVENT_SIZE_IN_BYTES + LARGEST_PRETIRGGER_SIZE_IN_BYTES + LARGEST_CAL_SIZE_IN_BYTES)
 #define EVENT_BUFF_SIZE_IN_WORDS    (((EVENT_BUFF_SIZE_IN_BYTES / sizeof(SAMPLE_DATA_STRUCT)) * sizeof(SAMPLE_DATA_STRUCT)) / 2)
 
 typedef enum
@@ -107,12 +101,14 @@ typedef enum
 	FLASH_STORE		// EVENT_STORAGE
 } FLASH_MOV_STATE;	// EVENT_PROCESSING_STATE
 
-typedef enum
+enum
 {
-	AVAILABLE = 0,
+	AVAILABLE = 1,
 	EVENT_LOCK,
-	CAL_PULSE_LOCK
-} SPI_LOCK_STATE;
+	CAL_PULSE_LOCK,
+	FILE_LOCK
+};
+
 typedef union
 {
 	uint16 sampleWord[8];
@@ -150,8 +146,8 @@ uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 uint16 FixDataToZero(uint16 data_);
 
 void ProcessWaveformData(void);
-void MoveWaveformEventToFlash(void);
+void MoveWaveformEventToFile(void);
 
-void MoveManualCalToFlash(void);
+void MoveManualCalToFile(void);
 
 #endif //_DATABUFFS_H_

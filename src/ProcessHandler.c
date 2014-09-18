@@ -61,7 +61,7 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	{
 		while (getSystemEventState(TRIGGER_EVENT))
 		{
-			MoveWaveformEventToFlash();
+			MoveWaveformEventToFile();
 		}
 	}
 
@@ -208,7 +208,7 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	}
 
 	// Initialize buffers and settings and gp_ramEventRecord
-	debug("Init data buffers\r\n");
+	debug("Init data buffers (mode: %d)\r\n", op_mode);
 	InitDataBuffs(op_mode);
 
 	// Setup Analog controls
@@ -337,7 +337,7 @@ void StopMonitoring(uint8 mode, uint8 operation)
 			while (getSystemEventState(TRIGGER_EVENT))
 			{
 				debug("Handle Waveform Trigger Event Completion\r\n");
-				MoveWaveformEventToFlash();
+				MoveWaveformEventToFile();
 			}
 		}
 
@@ -346,7 +346,7 @@ void StopMonitoring(uint8 mode, uint8 operation)
 			while (getSystemEventState(TRIGGER_EVENT))
 			{
 				debug("Handle Combo - Waveform Trigger Event Completion\r\n");
-				MoveComboWaveformEventToFile();
+				MoveWaveformEventToFile();
 			}
 		}
 
@@ -361,7 +361,7 @@ void StopMonitoring(uint8 mode, uint8 operation)
 		{
 			// Handle the end of a Combo Bargraph event
 			debug("Handle End of Combo - Bargraph event\r\n");
-			EndCombo();
+			EndBargraph();
 		}
 		
 		// Check if any events are waiting to still be processed
@@ -531,7 +531,7 @@ void GetManualCalibration(void)
 	if (getSystemEventState(MANUAL_CAL_EVENT))
 	{
 		debug("Manual Cal Pulse Event (Monitoring)\r\n");
-		MoveManualCalToFlash();
+		MoveManualCalToFile();
 	}
 }
 
@@ -554,7 +554,7 @@ void HandleManualCalibration(void)
 			if (g_busyProcessingEvent == NO)
 			{
 				// fix_ns8100
-				if ((g_unitConfig.flashWrapping == NO) && (g_flashUsageStats.manualCalsLeft == 0))
+				if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 				{
 					OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 				}
@@ -587,7 +587,7 @@ void HandleManualCalibration(void)
 	}
 	else // Performing Cal outside of monitor mode
 	{
-		if ((g_unitConfig.flashWrapping == NO) && (g_flashUsageStats.manualCalsLeft == 0))
+		if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 		{
 			OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 		}

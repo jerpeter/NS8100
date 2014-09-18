@@ -94,16 +94,16 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 			mn_layout_ptr->curr_ln =       MONITOR_MN_TBL_START_LINE;
 			mn_layout_ptr->top_ln =        MONITOR_MN_TBL_START_LINE;
 
-			ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+			memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 			
 			g_monitorOperationMode = (uint8)msg.data[0];
 
 			// Check if flash wrapping is disabled and if there is space left in flash
 			if (g_unitConfig.flashWrapping == NO)
 			{
-				if (((g_monitorOperationMode == WAVEFORM_MODE) && (g_flashUsageStats.waveEventsLeft == 0)) ||
-					((g_monitorOperationMode == BARGRAPH_MODE) && (g_flashUsageStats.roomForBargraph == NO)) ||
-					((g_monitorOperationMode == MANUAL_CAL_MODE) && (g_flashUsageStats.manualCalsLeft == 0)))
+				if (((g_monitorOperationMode == WAVEFORM_MODE) && (g_sdCardUsageStats.waveEventsLeft == 0)) ||
+					((g_monitorOperationMode == BARGRAPH_MODE) && (g_sdCardUsageStats.roomForBargraph == NO)) ||
+					((g_monitorOperationMode == MANUAL_CAL_MODE) && (g_sdCardUsageStats.manualCalsLeft == 0)))
 				{
 					// Unable to store any more data in the selected mode
 					
@@ -128,7 +128,8 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 					StartMonitoring(g_triggerRecord.trec, g_triggerRecord.op_mode);
 				break;   
 
-				case BARGRAPH_MODE: 
+				case BARGRAPH_MODE:
+				case COMBO_MODE:
 					// Set the default display mode to be the summary interval results
 					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
 					
@@ -143,10 +144,12 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 					}
 
 					// Check if the sample rate is greater than max working sample rate
-					if (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_8K)
+					if (((g_monitorOperationMode == BARGRAPH_MODE) && (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_8K)) ||
+						((g_monitorOperationMode == COMBO_MODE) && (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_4K)))
 					{
+						// Set to a default
 						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
-					}	
+					}
 
 					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
 					g_aJobPeak = g_rJobPeak = g_vJobPeak = g_tJobPeak = 0;
@@ -163,46 +166,12 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 				break;
 
 				case MANUAL_TRIGGER_MODE:
-					ByteCpy((uint8*)&temp_g_triggerRecord, &g_triggerRecord, sizeof(REC_EVENT_MN_STRUCT));
+					memcpy((uint8*)&temp_g_triggerRecord, &g_triggerRecord, sizeof(REC_EVENT_MN_STRUCT));
 					temp_g_triggerRecord.trec.seismicTriggerLevel = MANUAL_TRIGGER_CHAR;
 					temp_g_triggerRecord.trec.airTriggerLevel = MANUAL_TRIGGER_CHAR;
 
 					StartMonitoring(temp_g_triggerRecord.trec, g_triggerRecord.op_mode);
 				break;
-
-				case COMBO_MODE:
-					// Set the default display mode to be the summary interval results
-					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
-					
-					if(g_unitConfig.vectorSum == DISABLED)
-					{
-						g_displayAlternateResultState = DEFAULT_RESULTS;
-					}
-					
-					if(g_unitConfig.reportDisplacement == DISABLED)
-					{
-						g_displayAlternateResultState = DEFAULT_RESULTS;
-					}
-
-					// Check if the sample rate is greater than max working sample rate
-					if (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_4K)
-					{
-						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
-					}	
-
-					g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
-					g_aJobPeak = g_rJobPeak = g_vJobPeak = g_tJobPeak = 0;
-					g_aJobFreq = g_rJobFreq = g_vJobFreq = g_tJobFreq = 0;
-					g_vsImpulsePeak = g_vsJobPeak = 0;
-					
-					if ((g_triggerRecord.berec.impulseMenuUpdateSecs < LCD_IMPULSE_TIME_MIN_VALUE) || 
-						(g_triggerRecord.berec.impulseMenuUpdateSecs > LCD_IMPULSE_TIME_MAX_VALUE))
-					{
-						g_triggerRecord.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
-					}
-
-					StartMonitoring(g_triggerRecord.trec, g_triggerRecord.op_mode);
-					break;
 
 				default:
 					break;    
@@ -435,13 +404,13 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wnd_layout_ptr->next_row =   wnd_layout_ptr->start_row;
 	wnd_layout_ptr->next_col =   wnd_layout_ptr->start_col;
 
-	ByteSet(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	//-----------------------------------------------------------------------
 	// PRINT MONITORING
 	//-----------------------------------------------------------------------
-	ByteSet(&buff[0], 0, sizeof(buff));
-	ByteSet(&dotBuff[0], 0, sizeof(dotBuff));
+	memset(&buff[0], 0, sizeof(buff));
+	memset(&dotBuff[0], 0, sizeof(dotBuff));
 	
 	for (i = 0; i < dotState; i++)
 	{
@@ -522,7 +491,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//-----------------------------------------------------------------------
 		// Date
 		//-----------------------------------------------------------------------
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		time = GetCurrentTime();
 		ConvertTimeStampToString(buff, &time, REC_DATE_TIME_MONITOR);
 		length = (uint8)strlen(buff);
@@ -535,7 +504,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//-----------------------------------------------------------------------
 		// Time
 		//-----------------------------------------------------------------------
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		length = (uint8)sprintf(buff,"%02d:%02d:%02d",time.hour, time.min, time.sec);                    
 
 		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
@@ -552,7 +521,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//-----------------------------------------------------------------------
 		// Battery Voltage
 		//-----------------------------------------------------------------------
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		length = (uint8)sprintf(buff,"%s %.2f", getLangText(BATTERY_TEXT), GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 
 		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
@@ -577,7 +546,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			//-----------------------------------------------------------------------
 			// Show RTVA
 			//-----------------------------------------------------------------------
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			length = (uint8)sprintf(buff,"R    V    T    A"); 
 
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
@@ -585,7 +554,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			length = (uint8)sprintf(buff," %04x %04x %04x %04x", 
 				(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r),
 				(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v),
@@ -603,7 +572,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//-----------------------------------------------------------------------
 		// Date and Time
 		//-----------------------------------------------------------------------
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		time = GetCurrentTime();
 
 		ConvertTimeStampToString(buff, &time, REC_DATE_TIME_TYPE);
@@ -622,7 +591,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//-----------------------------------------------------------------------
 		// Print Result Type Header
 		//-----------------------------------------------------------------------
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 
 		if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 		{
@@ -650,7 +619,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			//-----------------------------------------------------------------------
 			// Max Results Header
 			//-----------------------------------------------------------------------
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 			length = (uint8)sprintf(buff, "PEAK | R  | T  | V  |");
 
 			wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
@@ -661,23 +630,14 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			//-----------------------------------------------------------------------
 			// Peak Results
 			//-----------------------------------------------------------------------
-			ByteSet(&buff[0], 0, sizeof(buff));
-			ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
+			memset(&buff[0], 0, sizeof(buff));
+			memset(&displayFormat[0], 0, sizeof(displayFormat));
 
 			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
-				if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-				{
-					tempR = ((float)g_bargraphSumIntervalWritePtr->r.peak / (float)div);
-					tempT = ((float)g_bargraphSumIntervalWritePtr->t.peak / (float)div);
-					tempV = ((float)g_bargraphSumIntervalWritePtr->v.peak / (float)div);
-				}
-				else if (g_triggerRecord.op_mode == COMBO_MODE)
-				{
-					tempR = ((float)g_comboSumIntervalWritePtr->r.peak / (float)div);
-					tempT = ((float)g_comboSumIntervalWritePtr->t.peak / (float)div);
-					tempV = ((float)g_comboSumIntervalWritePtr->v.peak / (float)div);
-				}
+				tempR = ((float)g_bargraphSummaryIntervalPtr->r.peak / (float)div);
+				tempT = ((float)g_bargraphSummaryIntervalPtr->t.peak / (float)div);
+				tempV = ((float)g_bargraphSummaryIntervalPtr->v.peak / (float)div);
 			}
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 			{
@@ -736,66 +696,45 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			//-----------------------------------------------------------------------
 			// Peak Freq Results
 			//-----------------------------------------------------------------------
-			ByteSet(&buff[0], 0, sizeof(buff));
-			ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
+			memset(&buff[0], 0, sizeof(buff));
+			memset(&displayFormat[0], 0, sizeof(displayFormat));
 			tempR = tempV = tempT = (float)0.0;
 
 			if (g_displayBargraphResultsMode != IMPULSE_RESULTS)
 			{
 				if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 				{
-					if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+					if (g_bargraphSummaryIntervalPtr->r.frequency > 0)
 					{
-						if (g_bargraphSumIntervalWritePtr->r.frequency > 0)
-						{
-							tempR = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-									((float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1)));
-						}
-						if (g_bargraphSumIntervalWritePtr->v.frequency > 0)
-						{
-							tempV = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-									((float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1)));
-						}
-						if (g_bargraphSumIntervalWritePtr->t.frequency > 0)
-						{
-							tempT = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-									((float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1)));
-						}
+						tempR = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
+								((float)((g_bargraphSummaryIntervalPtr->r.frequency * 2) - 1)));
 					}
-					else if (g_triggerRecord.op_mode == COMBO_MODE)
+					if (g_bargraphSummaryIntervalPtr->v.frequency > 0)
 					{
-						if (g_comboSumIntervalWritePtr->r.frequency > 0)
-						{
-							tempR = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-									((float)((g_comboSumIntervalWritePtr->r.frequency * 2) - 1)));
-						}
-						if (g_comboSumIntervalWritePtr->v.frequency > 0)
-						{
-							tempV = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-									((float)((g_comboSumIntervalWritePtr->v.frequency * 2) - 1)));
-						}
-						if (g_comboSumIntervalWritePtr->t.frequency > 0)
-						{
-							tempT = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-									((float)((g_comboSumIntervalWritePtr->t.frequency * 2) - 1)));
-						}
+						tempV = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
+								((float)((g_bargraphSummaryIntervalPtr->v.frequency * 2) - 1)));
+					}
+					if (g_bargraphSummaryIntervalPtr->t.frequency > 0)
+					{
+						tempT = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
+								((float)((g_bargraphSummaryIntervalPtr->t.frequency * 2) - 1)));
 					}
 				}
 				else // g_displayBargraphResultsMode == JOB_PEAK_RESULTS
 				{
 					if (g_rJobFreq > 0)
 					{
-						tempR = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+						tempR = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
 								((float)((g_rJobFreq * 2) - 1)));
 					}
 					if (g_vJobFreq > 0)
 					{
-						tempV = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+						tempV = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
 								((float)((g_vJobFreq * 2) - 1)));
 					}
 					if (g_tJobFreq > 0)
 					{
-						tempT = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+						tempT = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
 								((float)((g_tJobFreq * 2) - 1)));
 					}
 				}
@@ -832,24 +771,19 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		//-----------------------------------------------------------------------
 		// Max Air/Max Vector Sum Results
 		//-----------------------------------------------------------------------
-		ByteSet(&buff[0], 0, sizeof(buff));
-		ByteSet(&displayFormat[0], 0, sizeof(displayFormat));
+		memset(&buff[0], 0, sizeof(buff));
+		memset(&displayFormat[0], 0, sizeof(displayFormat));
 		tempA = (float)0.0;
 
 		// Check if displaying the vector sum and if the bar channel isn't just air
 		if ((g_displayAlternateResultState == VECTOR_SUM_RESULTS) && (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL))
 		{
-			if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
-				tempVS = sqrtf((float)g_vsImpulsePeak) / (float)div;
+			if (g_displayBargraphResultsMode == IMPULSE_RESULTS) { tempVS = sqrtf((float)g_vsImpulsePeak) / (float)div; }
 			else if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
-				if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-					tempVS = sqrtf((float)g_bargraphSumIntervalWritePtr->vectorSumPeak) / (float)div;
-				else if (g_triggerRecord.op_mode == COMBO_MODE)
-					tempVS = sqrtf((float)g_comboSumIntervalWritePtr->vectorSumPeak) / (float)div;
+					tempVS = sqrtf((float)g_bargraphSummaryIntervalPtr->vectorSumPeak) / (float)div;
 			}			
-			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
-				tempVS = sqrtf((float)g_vsJobPeak) / (float)div;
+			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS) { tempVS = sqrtf((float)g_vsJobPeak) / (float)div; }
 
 			if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
 			{
@@ -871,32 +805,16 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
-				if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-				{
-					tempR = g_bargraphSumIntervalWritePtr->r.peak;
-					tempV = g_bargraphSumIntervalWritePtr->v.peak;
-					tempT = g_bargraphSumIntervalWritePtr->t.peak;
+				tempR = g_bargraphSummaryIntervalPtr->r.peak;
+				tempV = g_bargraphSummaryIntervalPtr->v.peak;
+				tempT = g_bargraphSummaryIntervalPtr->t.peak;
 
-					rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-							((float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1)));
-					vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-							((float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1)));
-					tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-							((float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1)));
-				}
-				else if (g_triggerRecord.op_mode == COMBO_MODE)
-				{
-					tempR = g_comboSumIntervalWritePtr->r.peak;
-					tempV = g_comboSumIntervalWritePtr->v.peak;
-					tempT = g_comboSumIntervalWritePtr->t.peak;
-
-					rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-							((float)((g_comboSumIntervalWritePtr->r.frequency * 2) - 1)));
-					vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-							((float)((g_comboSumIntervalWritePtr->v.frequency * 2) - 1)));
-					tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-							((float)((g_comboSumIntervalWritePtr->t.frequency * 2) - 1)));
-				}
+				rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
+						((float)((g_bargraphSummaryIntervalPtr->r.frequency * 2) - 1)));
+				vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
+						((float)((g_bargraphSummaryIntervalPtr->v.frequency * 2) - 1)));
+				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
+						((float)((g_bargraphSummaryIntervalPtr->t.frequency * 2) - 1)));
 			}
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 			{
@@ -904,11 +822,11 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tempV = g_vJobPeak;
 				tempT = g_tJobPeak;
 
-				rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+				rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
 						((float)((g_rJobFreq * 2) - 1)));
-				vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+				vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
 						((float)((g_vJobFreq * 2) - 1)));
-				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
 						((float)((g_tJobFreq * 2) - 1)));
 			}
 
@@ -965,16 +883,16 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			if(g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
-				tempR = g_bargraphSumIntervalWritePtr->r.peak;
-				tempV = g_bargraphSumIntervalWritePtr->v.peak;
-				tempT = g_bargraphSumIntervalWritePtr->t.peak;
+				tempR = g_bargraphSummaryIntervalPtr->r.peak;
+				tempV = g_bargraphSummaryIntervalPtr->v.peak;
+				tempT = g_bargraphSummaryIntervalPtr->t.peak;
 
 				rFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
-				((float)((g_bargraphSumIntervalWritePtr->r.frequency * 2) - 1)));
+				((float)((g_bargraphSummaryIntervalPtr->r.frequency * 2) - 1)));
 				vFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
-				((float)((g_bargraphSumIntervalWritePtr->v.frequency * 2) - 1)));
+				((float)((g_bargraphSummaryIntervalPtr->v.frequency * 2) - 1)));
 				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
-				((float)((g_bargraphSumIntervalWritePtr->t.frequency * 2) - 1)));
+				((float)((g_bargraphSummaryIntervalPtr->t.frequency * 2) - 1)));
 			}
 			else if(g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 			{
@@ -1059,46 +977,26 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				{
 					if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 					{
-						if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+						if (g_bargraphSummaryIntervalPtr->a.frequency > 0)
 						{
-							if (g_bargraphSumIntervalWritePtr->a.frequency > 0)
-							{
-								tempA = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-										((float)((g_bargraphSumIntervalWritePtr->a.frequency * 2) - 1)));
-							}
-
-							if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-							{
-								sprintf(buff, "AIR %0.3f mb ", HexToMB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
-							}
-							else // Report Air in DB
-							{
-								sprintf(buff, "AIR %4.1f dB ", HexToDB(g_bargraphSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
-							}
+							tempA = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
+									((float)((g_bargraphSummaryIntervalPtr->a.frequency * 2) - 1)));
 						}
-						else if (g_triggerRecord.op_mode == COMBO_MODE)
-						{
-							if (g_comboSumIntervalWritePtr->a.frequency > 0)
-							{
-								tempA = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
-										((float)((g_comboSumIntervalWritePtr->a.frequency * 2) - 1)));
-							}
 
-							if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-							{
-								sprintf(buff, "AIR %0.3f mb ", HexToMB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
-							}
-							else // Report Air in DB
-							{
-								sprintf(buff, "AIR %4.1f dB ", HexToDB(g_comboSumIntervalWritePtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
-							}
+						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
+						{
+							sprintf(buff, "AIR %0.3f mb ", HexToMB(g_bargraphSummaryIntervalPtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+						}
+						else // Report Air in DB
+						{
+							sprintf(buff, "AIR %4.1f dB ", HexToDB(g_bargraphSummaryIntervalPtr->a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
 						}
 					}
 					else // g_displayBargraphResultsMode == JOB_PEAK_RESULTS
 					{
 						if (g_aJobFreq > 0)
 						{
-							tempA = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / 
+							tempA = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
 									((float)((g_aJobFreq * 2) - 1)));
 						}
 
@@ -1129,7 +1027,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 		{
-			ByteSet(&buff[0], 0, sizeof(buff));
+			memset(&buff[0], 0, sizeof(buff));
 		
 			length = (uint8)sprintf(buff, "(%d %s)", g_triggerRecord.berec.impulseMenuUpdateSecs, (g_triggerRecord.berec.impulseMenuUpdateSecs == 1) ?
 									getLangText(SECOND_TEXT) : getLangText(SECONDS_TEXT));

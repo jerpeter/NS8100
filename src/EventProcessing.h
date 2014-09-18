@@ -59,7 +59,8 @@ typedef enum {
 	CREATE_EVENT_FILE,
 	//CREATE_EVENT_FILE_WITH_OVERWRITE,
 	READ_EVENT_FILE,
-	APPEND_EVENT_FILE	
+	APPEND_EVENT_FILE,
+	OVERWRITE_EVENT_FILE
 } EVENT_FILE_OPTION;
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -78,7 +79,8 @@ uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr);
 void CompleteRamEventSummary(SUMMARY_DATA* , SUMMARY_DATA*);
 uint16* GetFlashDataPointer(void);
 void StoreData(uint16* dataPtr, uint16 dataWords);
-void UpdateFlashUsageStats(void);
+void GetSDCardUsageStats(void);
+void UpdateSDCardUsageStats(uint32 removeSize);
 void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
 void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
 void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize);

@@ -5,6 +5,7 @@
 ///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
+#if 0
 #ifndef _PROCESS_COMBO_H_
 #define _PROCESS_COMBO_H_
 
@@ -22,25 +23,16 @@
 ///	Prototypes
 ///----------------------------------------------------------------------------
 void StartNewCombo(void);
-void ProcessComboData(void);
-void ProcessComboDataSkipBargraphDuringCal(void);
 uint8 CalculateComboData(void);
-void ProcessComboSampleData(void) ;
-void ProcessComboBargraphData(void); 
-void UpdateComboJobTotals(CALCULATED_DATA_STRUCT *);
+void UpdateComboJobTotals(void);
 void EndCombo(void);
-
-uint32 MoveComboBarIntervalDataToFile(void);
+void CompleteComboSummaryInterval(void);
+void MoveComboBarIntervalDataToFile(void);
 void MoveComboSummaryIntervalDataToFile(void);
 void MoveComboWaveformEventToFile(void);
 void MoveStartOfComboEventRecordToFile(void);
 void MoveEndOfComboEventRecordToFile(void);
-
 void AdvanceComboBarIntervalBufPtr(uint8);
-void AdvanceComboSumIntervalBufPtr(uint8);
-
-#if 0 // Unused
-BOOLEAN CheckSpaceForComboBarSummaryInterval(void);
-#endif
 
 #endif //_DATABUFFS_H_
+#endif

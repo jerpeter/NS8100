@@ -49,7 +49,7 @@ void InitRamSummaryTbl(void)
 	debug("Initializing ram summary table...\r\n");
 
 	// Basically copying all FF's to the ram summary table
-	ByteSet(&__ramFlashSummaryTbl[0], 0xFF, (sizeof(SUMMARY_DATA) * TOTAL_RAM_SUMMARIES));
+	memset(&__ramFlashSummaryTbl[0], 0xFF, (sizeof(SUMMARY_DATA) * TOTAL_RAM_SUMMARIES));
 
 	__ramFlashSummaryTblKey = VALID_RAM_SUMMARY_TABLE_KEY;
 }
@@ -63,10 +63,6 @@ void CopyValidFlashEventSummariesToRam(void)
 {
 	uint16 ramSummaryIndex = 0;
 	uint16 eventMajorVersion = (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK);
-
-	OverlayMessage("SUMMARY LIST", "INITIALIZING SUMMARY LIST WITH STORED EVENT INFO", 1 * SOFT_SECS);
-
-#if 1 // ns8100 ---------------------------------------------------------------------------------------
 	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(g_eventDataBuffer[0]);
 	uint16 entriesFound = 0;
 	char* fileName = (char*)&g_spareBuffer[0];
@@ -78,140 +74,100 @@ void CopyValidFlashEventSummariesToRam(void)
 	char overlayText[50];
 	uint8 i = 0;
 	
+	OverlayMessage("SUMMARY LIST", "INITIALIZING SUMMARY LIST WITH STORED EVENT INFO", 1 * SOFT_SECS);
 	debug("Copying valid SD event summaries to ram...\r\n");
 
-	fl_directory_start_cluster("C:\\Events", &dirStartCluster);
-    ListDirectory(dirStartCluster, dirList, NO);
-
-	while(dirList[entriesFound].type != FAT32_END_LIST)
+	if (g_fileAccessLock != AVAILABLE)
 	{
-		if (dirList[entriesFound].type == FAT32_FILE)
+		ReportFileSystemAccessProblem("Copy summaries to RAM");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
+
+		fl_directory_start_cluster("C:\\Events", &dirStartCluster);
+		ListDirectory(dirStartCluster, dirList, NO);
+
+		while(dirList[entriesFound].type != FAT32_END_LIST)
 		{
-			//_______________________________________________________________________________
-			//___Create the idea of progress with scrolling dots
-			ByteSet(&overlayText[0], 0, sizeof(overlayText));
-			ByteSet(&dotBuff[0], 0, sizeof(dotBuff));
+			if (dirList[entriesFound].type == FAT32_FILE)
+			{
+				//_______________________________________________________________________________
+				//___Create the idea of progress with scrolling dots
+				memset(&overlayText[0], 0, sizeof(overlayText));
+				memset(&dotBuff[0], 0, sizeof(dotBuff));
 	
-			for (i = 0; i < dotState; i++) { dotBuff[i] = '.'; }
-			for (; i < (TOTAL_DOTS - 1); i++) { dotBuff[i] = ' '; }
+				for (i = 0; i < dotState; i++) { dotBuff[i] = '.'; }
+				for (; i < (TOTAL_DOTS - 1); i++) { dotBuff[i] = ' '; }
 
-			if (++dotState >= TOTAL_DOTS) { dotState = 0; }
+				if (++dotState >= TOTAL_DOTS) { dotState = 0; }
 
-			sprintf((char*)&overlayText[0], "INITIALIZING SUMMARY LIST WITH STORED EVENT INFO%s", (char*)&dotBuff[0]);
-			OverlayMessage("SUMMARY LIST", (char*)&overlayText[0], 0);
+				sprintf((char*)&overlayText[0], "INITIALIZING SUMMARY LIST WITH STORED EVENT INFO%s", (char*)&dotBuff[0]);
+				OverlayMessage("SUMMARY LIST", (char*)&overlayText[0], 0);
 
-			//_______________________________________________________________________________
-			//___Handle the next file found
-			sprintf(fileName, "C:\\Events\\%s", dirList[entriesFound].name);
-			eventFile = fl_fopen(fileName, "r");
+				//_______________________________________________________________________________
+				//___Handle the next file found
+				sprintf(fileName, "C:\\Events\\%s", dirList[entriesFound].name);
+				eventFile = fl_fopen(fileName, "r");
 
-			if (eventFile == NULL)
-			{
-				debugErr("Event File %s not found\r\n", dirList[entriesFound].name);
-				OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
-			}			
-			else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
-			{
-				debugErr("Event File %s is corrupt\r\n", dirList[entriesFound].name);
-				OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
-			}			
-			else
-			{
-				//fl_fread(eventFile, (uint8*)&tempEventRecord.header, sizeof(EVENT_HEADER_STRUCT));
-				fl_fread(eventFile, (uint8*)&tempEventRecord.header, sizeof(EVT_RECORD));
-
-				// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
-				if ((tempEventRecord.header.startFlag == EVENT_RECORD_START_FLAG) &&
-					((tempEventRecord.header.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
-					(tempEventRecord.header.headerLength == sizeof(EVENT_HEADER_STRUCT)))
+				if (eventFile == NULL)
 				{
-					//fl_fread(eventFile, (uint8*)&tempEventRecord.summary, sizeof(EVENT_SUMMARY_STRUCT));
-
-#if 0
-					debug("Found Valid Event File: %s, with Event #: %d, Mode: %d, Size: %s, RSI: %d\r\n", 
-							dirList[entriesFound].name, tempEventRecord.summary.eventNumber, tempEventRecord.summary.mode, 
-							(eventFile->filelength == (tempEventRecord.header.headerLength + tempEventRecord.header.summaryLength + 
-							tempEventRecord.header.dataLength)) ? "Correct" : "Incorrect", ramSummaryIndex);
-#endif				
-					__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = tempEventRecord.summary.eventNumber;
-
-#if 0
-					char popupText[50];
-					ClearLCDscreen();
-					sprintf(popupText, "Adding Event #%d to RAM Summary Table (%d)", 
-							(int)__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum,
-							(int)tempEventRecord.summary.eventNumber);
-					OverlayMessage(fileName, popupText, 200 * SOFT_MSECS);
-#endif
-					// Check to make sure ram summary index doesnt get out of range, if so reset to zero
-					if (++ramSummaryIndex >= TOTAL_RAM_SUMMARIES)
-					{
-						ramSummaryIndex = 0;
-					}
+					debugErr("Event File %s not found\r\n", dirList[entriesFound].name);
+					OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+				}
+				else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+				{
+					debugErr("Event File %s is corrupt\r\n", dirList[entriesFound].name);
+					OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
 				}
 				else
 				{
-					debugWarn("Event File: %s is not valid for this unit.\r\n", dirList[entriesFound].name);
-				}
+					//fl_fread(eventFile, (uint8*)&tempEventRecord.header, sizeof(EVENT_HEADER_STRUCT));
+					fl_fread(eventFile, (uint8*)&tempEventRecord.header, sizeof(EVT_RECORD));
 
-				fl_fclose(eventFile);
-			}		
-		}
+					// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
+					if ((tempEventRecord.header.startFlag == EVENT_RECORD_START_FLAG) &&
+						((tempEventRecord.header.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
+						(tempEventRecord.header.headerLength == sizeof(EVENT_HEADER_STRUCT)))
+					{
+						//fl_fread(eventFile, (uint8*)&tempEventRecord.summary, sizeof(EVENT_SUMMARY_STRUCT));
 
-		entriesFound++;
-	}
-	
-#else // ns7100 ---------------------------------------------------------------------------------------
-	uint16 eventHeaderSize = sizeof(EVENT_HEADER_STRUCT);
-	uint32 eventSize = 0;
-	EVT_RECORD* flashEventPtr = (EVT_RECORD*)FLASH_EVENT_START;
+#if 0
+						debug("Found Valid Event File: %s, with Event #: %d, Mode: %d, Size: %s, RSI: %d\r\n",
+								dirList[entriesFound].name, tempEventRecord.summary.eventNumber, tempEventRecord.summary.mode,
+								(eventFile->filelength == (tempEventRecord.header.headerLength + tempEventRecord.header.summaryLength +
+								tempEventRecord.header.dataLength)) ? "Correct" : "Incorrect", ramSummaryIndex);
+#endif				
+						__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = tempEventRecord.summary.eventNumber;
 
-	debug("Copying valid flash event summaries to ram...\r\n");
-
-	// Start with beginning of flash event table
-	while (flashEventPtr < (EVT_RECORD*)FLASH_EVENT_END)
-	{
-		// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
-		if ((flashEventPtr->header.startFlag == EVENT_RECORD_START_FLAG) &&
-			((flashEventPtr->header.recordVersion & EVENT_MAJOR_VERSION_MASK) == eventMajorVersion) &&
-			(flashEventPtr->header.headerLength == eventHeaderSize))
-		{
-			//debugRaw("*** Found Event (%d) at: 0x%x with sizes: 0x%x, 0x%x, 0x%x, event #: %d, mode: 0x%x\r\n",
-			//	ramSummaryIndex+1, flashEventPtr, flashEventPtr->header.headerLength,
-			//	flashEventPtr->header.summaryLength, flashEventPtr->header.dataLength,
-			//	flashEventPtr->summary.eventNumber, flashEventPtr->summary.mode);
-
-			__ramFlashSummaryTbl[ramSummaryIndex].linkPtr = (uint16*)flashEventPtr;
-
-			// Check to make sure ram summary index doesnt get out of range, if so reset to zero
-			if (++ramSummaryIndex >= TOTAL_RAM_SUMMARIES)
-			{
-				ramSummaryIndex = 0;
-			}
-
-			eventSize = (flashEventPtr->header.headerLength + flashEventPtr->header.summaryLength +
-						flashEventPtr->header.dataLength);
-
-			if (((uint32)flashEventPtr + eventSize) >= FLASH_EVENT_END)
-			{
-				//debugRaw("\nDiscovered a Flash Event that wraps.\r\n");
-				//debugRaw("Assuming the end of events to find.\r\n");
-				break;
-			}
-
-			flashEventPtr = (EVT_RECORD*)((uint32)flashEventPtr + eventSize);
-
-			//debugRaw("Next flashEventPtr (0x%x) Start Flag: 0x%x\r\n", flashEventPtr, flashEventPtr->header.startFlag);
-		}
-
-		// Else increment the flash event pointer, move two words, scanning memory.
-		else
-		{
-			flashEventPtr = (EVT_RECORD*)((uint32)flashEventPtr + 2);
-		}
-
-	}
+#if 0
+						char popupText[50];
+						ClearLCDscreen();
+						sprintf(popupText, "Adding Event #%d to RAM Summary Table (%d)",
+								(int)__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum,
+								(int)tempEventRecord.summary.eventNumber);
+						OverlayMessage(fileName, popupText, 200 * SOFT_MSECS);
 #endif
+						// Check to make sure ram summary index doesnt get out of range, if so reset to zero
+						if (++ramSummaryIndex >= TOTAL_RAM_SUMMARIES)
+						{
+							ramSummaryIndex = 0;
+						}
+					}
+					else
+					{
+						debugWarn("Event File: %s is not valid for this unit.\r\n", dirList[entriesFound].name);
+					}
+
+					fl_fclose(eventFile);
+				}
+			}
+
+			entriesFound++;
+		}
+
+		g_fileAccessLock = AVAILABLE;
+	}
 
 	//debug("Done copying events to summary (discovered %d)\r\n", ramSummaryIndex);
 }
@@ -431,10 +387,10 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 {
 	uint8 i;
 
-	ByteSet(eventRec, 0x00, sizeof(EVT_RECORD));
-	ByteSet(eventRec->summary.parameters.unused, 0xAF, sizeof(eventRec->summary.parameters.unused));
-	ByteSet(eventRec->summary.captured.unused, 0xBF, sizeof(eventRec->summary.captured.unused));
-	ByteSet(eventRec->summary.calculated.unused, 0xCF, sizeof(eventRec->summary.calculated.unused));
+	memset(eventRec, 0x00, sizeof(EVT_RECORD));
+	memset(eventRec->summary.parameters.unused, 0xAF, sizeof(eventRec->summary.parameters.unused));
+	memset(eventRec->summary.captured.unused, 0xBF, sizeof(eventRec->summary.captured.unused));
+	memset(eventRec->summary.calculated.unused, 0xCF, sizeof(eventRec->summary.calculated.unused));
 
 	//--------------------------------
 	eventRec->header.startFlag = (uint16)EVENT_RECORD_START_FLAG;
@@ -453,21 +409,21 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.captured.comboEventsRecordedStartNumber = 0;
 	eventRec->summary.captured.comboEventsRecordedEndNumber = 0;
 	//-----------------------
-	ByteSet(&(eventRec->summary.parameters.companyName[0]), 0, COMPANY_NAME_STRING_SIZE);
-	ByteCpy(&(eventRec->summary.parameters.companyName[0]), &(g_triggerRecord.trec.client[0]), COMPANY_NAME_STRING_SIZE - 1);
-	ByteSet(&(eventRec->summary.parameters.seismicOperator[0]), 0, SEISMIC_OPERATOR_STRING_SIZE);
-	ByteCpy(&(eventRec->summary.parameters.seismicOperator[0]), &(g_triggerRecord.trec.oper[0]), SEISMIC_OPERATOR_STRING_SIZE - 1);
-	ByteSet(&(eventRec->summary.parameters.sessionLocation[0]), 0, SESSION_LOCATION_STRING_SIZE);
-	ByteCpy(&(eventRec->summary.parameters.sessionLocation[0]), &(g_triggerRecord.trec.loc[0]), SESSION_LOCATION_STRING_SIZE - 1);
-	ByteSet(&(eventRec->summary.parameters.sessionComments[0]), 0, SESSION_COMMENTS_STRING_SIZE);
-	ByteCpy(&(eventRec->summary.parameters.sessionComments[0]), &(g_triggerRecord.trec.comments[0]), sizeof(g_triggerRecord.trec.comments));
+	memset(&(eventRec->summary.parameters.companyName[0]), 0, COMPANY_NAME_STRING_SIZE);
+	memcpy(&(eventRec->summary.parameters.companyName[0]), &(g_triggerRecord.trec.client[0]), COMPANY_NAME_STRING_SIZE - 1);
+	memset(&(eventRec->summary.parameters.seismicOperator[0]), 0, SEISMIC_OPERATOR_STRING_SIZE);
+	memcpy(&(eventRec->summary.parameters.seismicOperator[0]), &(g_triggerRecord.trec.oper[0]), SEISMIC_OPERATOR_STRING_SIZE - 1);
+	memset(&(eventRec->summary.parameters.sessionLocation[0]), 0, SESSION_LOCATION_STRING_SIZE);
+	memcpy(&(eventRec->summary.parameters.sessionLocation[0]), &(g_triggerRecord.trec.loc[0]), SESSION_LOCATION_STRING_SIZE - 1);
+	memset(&(eventRec->summary.parameters.sessionComments[0]), 0, SESSION_COMMENTS_STRING_SIZE);
+	memcpy(&(eventRec->summary.parameters.sessionComments[0]), &(g_triggerRecord.trec.comments[0]), sizeof(g_triggerRecord.trec.comments));
 	//-----------------------
-	ByteSet(&(eventRec->summary.version.modelNumber[0]), 0, MODEL_STRING_SIZE);
-	ByteCpy(&(eventRec->summary.version.modelNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
-	ByteSet(&(eventRec->summary.version.serialNumber[0]), 0, SERIAL_NUMBER_STRING_SIZE);
-	ByteCpy(&(eventRec->summary.version.serialNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
-	ByteSet(&(eventRec->summary.version.softwareVersion[0]), 0, VERSION_STRING_SIZE);
-	ByteCpy(&(eventRec->summary.version.softwareVersion[0]), (void*)&g_buildVersion[0], strlen(g_buildVersion));
+	memset(&(eventRec->summary.version.modelNumber[0]), 0, MODEL_STRING_SIZE);
+	memcpy(&(eventRec->summary.version.modelNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
+	memset(&(eventRec->summary.version.serialNumber[0]), 0, SERIAL_NUMBER_STRING_SIZE);
+	memcpy(&(eventRec->summary.version.serialNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
+	memset(&(eventRec->summary.version.softwareVersion[0]), 0, VERSION_STRING_SIZE);
+	memcpy(&(eventRec->summary.version.softwareVersion[0]), (void*)&g_buildVersion[0], strlen(g_buildVersion));
 
 	//-----------------------
 	eventRec->summary.parameters.bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_10_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ? 
@@ -665,71 +621,6 @@ uint16 GetLastStoredEventNumber(void)
 ///----------------------------------------------------------------------------
 void StoreCurrentEventNumber(void)
 {
-#if 0
-	//uint16* uniqueEventStorePtr = (uint16*)(FLASH_BASE_ADDR + FLASH_BOOT_SECTOR_SIZE_x8);
-	uint16 uniqueEventStoreOffset = FLASH_BOOT_SECTOR_SIZE_x8;
-	uint16 positionsToAdvance = 0;
-	uint16 eventNumber = 0;
-
-	// If the Current Event Number is 0, then we have wrapped (>65535) in which case we will reinitialize
-	if (g_nextEventNumberToUse == 0)
-	{
-		//SectorErase(uniqueEventStorePtr, 1);
-		EraseParameterMemory(uniqueEventStoreOffset, FLASH_BOOT_SECTOR_SIZE_x8);
-		InitCurrentEventNumber();
-	}
-	// Check if at the boundary of a flash sectors worth of Unique Event numbers
-	else if (((g_nextEventNumberToUse - 1) % 4096) == 0)
-	{
-		// Check to make sure this isnt the initial (first) event number
-		if (g_nextEventNumberToUse != 1)
-		{
-			//SectorErase(uniqueEventStorePtr, 1);
-			EraseParameterMemory(uniqueEventStoreOffset, FLASH_BOOT_SECTOR_SIZE_x8);
-		}
-	}
-	else // Still room to store Unique Event numbers
-	{
-		// Get the positions to advance based on the current event number mod'ed by the storage size in event numbers
-		positionsToAdvance = (uint16)((g_nextEventNumberToUse - 1) % 4096);
-
-		// Set the offset to the event number positions adjusted to bytes
-		uniqueEventStoreOffset += (positionsToAdvance * 2);
-	}
-
-	GetParameterMemory((uint8*)&eventNumber, uniqueEventStoreOffset, sizeof(eventNumber));
-
-	// Check to make sure Current location is empty
-	if (eventNumber == 0xFFFF)
-	{
-		GetParameterMemory((uint8*)&eventNumber, (uint16)(uniqueEventStoreOffset - 1), sizeof(eventNumber));
-
-		// Check if the first location to be used or if a valid Unique Number
-		// preceeded the Current Event Number to be stored
-		if ((positionsToAdvance == 0) || (eventNumber != 0xFFFF))
-		{
-			// Store the Current Event number as the newest Unique Event number
-			//ProgramFlashWord(uniqueEventStorePtr, g_nextEventNumberToUse);
-			SaveParameterMemory((uint8*)&g_nextEventNumberToUse, uniqueEventStoreOffset, sizeof(g_nextEventNumberToUse));
-
-			// Store as the last Event recorded in AutoDialout table
-			__autoDialoutTbl.lastStoredEvent = g_nextEventNumberToUse;
-
-			// Increment to a new Event number
-			g_nextEventNumberToUse++;
-			debug("Unique Event numbers stored: %d, Current Event number: %d\r\n",
-				(g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
-
-			return;
-		}
-	}
-
-	// If we get here, then we failed a validation check
-	debugErr("Unique Event number storage doesnt match Current Event Number. (0x%x, %d)\r\n",
-				uniqueEventStoreOffset, g_nextEventNumberToUse);
-#endif // end of ns7100
-
-#if 1 // Updated to use config
 	CURRENT_EVENT_NUMBER_STRUCT currentEventNumberRecord;
 
 	// Store the Current Event number as the newest Unique Event number
@@ -744,7 +635,6 @@ void StoreCurrentEventNumber(void)
 	debug("Saved Event ID: %d, Next Event ID to use: %d\r\n", (g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
 
 	return;
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -766,52 +656,63 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 	EVENT_HEADER_STRUCT fileEventHeader;
 	EVENT_SUMMARY_STRUCT fileSummary;
 	
-	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
-	eventFile = fl_fopen(fileName, "r");
+	if (g_fileAccessLock != AVAILABLE)
+	{
+		ReportFileSystemAccessProblem("Check event file");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
 
-	// Verify file ID
-	if (eventFile == NULL)
-	{
-		debugErr("Event File %s not found\r\n", fileName);
-		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
-	}	
-	// Verify file is big enough
-	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
-	{
-		debugErr("Event File %s is corrupt\r\n", fileName);
-		OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
-	}	
-	else
-	{
-		fl_fread(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
+		sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
+		eventFile = fl_fopen(fileName, "r");
 
-		// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
-		if ((fileEventHeader.startFlag == EVENT_RECORD_START_FLAG) &&
+		// Verify file ID
+		if (eventFile == NULL)
+		{
+			debugErr("Event File %s not found\r\n", fileName);
+			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+		}
+		// Verify file is big enough
+		else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+		{
+			debugErr("Event File %s is corrupt\r\n", fileName);
+			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+		}
+		else
+		{
+			fl_fread(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
+
+			// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
+			if ((fileEventHeader.startFlag == EVENT_RECORD_START_FLAG) &&
 			((fileEventHeader.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
 			(fileEventHeader.headerLength == sizeof(EVENT_HEADER_STRUCT)))
-		{
-			debug("Found Valid Event File: %s\r\n", fileName);
-
-			fl_fread(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
-			
-			if (cacheDataToRamBuffer == YES)
 			{
-				fl_fread(eventFile, (uint8*)&g_eventDataBuffer[0], 
-							(eventFile->filelength - (sizeof(EVENT_HEADER_STRUCT) - sizeof(EVENT_SUMMARY_STRUCT))));
+				debug("Found Valid Event File: %s\r\n", fileName);
+
+				fl_fread(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
+			
+				if (cacheDataToRamBuffer == YES)
+				{
+					fl_fread(eventFile, (uint8*)&g_eventDataBuffer[0],
+					(eventFile->filelength - (sizeof(EVENT_HEADER_STRUCT) - sizeof(EVENT_SUMMARY_STRUCT))));
+				}
 			}
+
+			fl_fclose(eventFile);
 		}
 
-		fl_fclose(eventFile);
+		g_fileAccessLock = AVAILABLE;
 	}
 
 	if (eventHeaderPtr != NULL)
 	{
-		ByteCpy(eventHeaderPtr, &fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
+		memcpy(eventHeaderPtr, &fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
 	}
 
 	if (eventSummaryPtr != NULL)
 	{
-		ByteCpy(eventSummaryPtr, &fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
+		memcpy(eventSummaryPtr, &fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
 	}	
 }
 
@@ -823,34 +724,45 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
 	FL_FILE* eventFile;
 	
-	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
-	eventFile = fl_fopen(fileName, "r");
+	if (g_fileAccessLock != AVAILABLE)
+	{
+		ReportFileSystemAccessProblem("Get event file");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
 
-	// Verify file ID
-	if (eventFile == NULL)
-	{
-		debugErr("Event File %s not found\r\n", fileName);
-		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
-	}	
-	// Verify file is big enough
-	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
-	{
-		debugErr("Event File %s is corrupt\r\n", fileName);
-		OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
-	}	
-	else
-	{
-		fl_fread(eventFile, (uint8*)eventRecord, sizeof(EVT_RECORD));
+		sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
+		eventFile = fl_fopen(fileName, "r");
 
-		// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
-		if ((eventRecord->header.startFlag == EVENT_RECORD_START_FLAG) &&
+		// Verify file ID
+		if (eventFile == NULL)
+		{
+			debugErr("Event File %s not found\r\n", fileName);
+			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+		}
+		// Verify file is big enough
+		else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+		{
+			debugErr("Event File %s is corrupt\r\n", fileName);
+			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+		}
+		else
+		{
+			fl_fread(eventFile, (uint8*)eventRecord, sizeof(EVT_RECORD));
+
+			// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
+			if ((eventRecord->header.startFlag == EVENT_RECORD_START_FLAG) &&
 			((eventRecord->header.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
 			(eventRecord->header.headerLength == sizeof(EVENT_HEADER_STRUCT)))
-		{
-			debug("Found Valid Event File: %s\r\n", fileName);
+			{
+				debug("Found Valid Event File: %s\r\n", fileName);
+			}
+
+			fl_fclose(eventFile);
 		}
 
-		fl_fclose(eventFile);
+		g_fileAccessLock = AVAILABLE;
 	}
 }
 
@@ -861,10 +773,21 @@ void DeleteEventFileRecord(uint16 eventNumber)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
 	
-	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
-	if (fl_remove(fileName) == -1)
+	if (g_fileAccessLock != AVAILABLE)
 	{
-		OverlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
+		ReportFileSystemAccessProblem("Delete event file");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
+
+		sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
+		if (fl_remove(fileName) == -1)
+		{
+			OverlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
+		}
+
+		g_fileAccessLock = AVAILABLE;
 	}
 }
 
@@ -882,29 +805,40 @@ void DeleteEventFileRecords(void)
 	
 	debug("Deleting Events...\r\n");
 
-	fl_directory_start_cluster("C:\\Events", &dirStartCluster);
-    ListDirectory(dirStartCluster, dirList, NO);
-
-	while(dirList[entriesIndex].type != FAT32_END_LIST)
+	if (g_fileAccessLock != AVAILABLE)
 	{
-		if (dirList[entriesIndex].type == FAT32_FILE)
-		{
-			sprintf(fileName, "C:\\Events\\%s", dirList[entriesIndex].name);
-			if (fl_remove(fileName) == -1)
-			{
-				OverlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
-			}
-			else
-			{
-				eventsDeleted++;
-			}
-		}
-		
-		entriesIndex++;
+		ReportFileSystemAccessProblem("Delete multiple events");
 	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
 
-	sprintf(popupText, "REMOVED %d EVENTS", eventsDeleted);
-	OverlayMessage("DELETE EVENTS", popupText, 3 * SOFT_SECS);
+		fl_directory_start_cluster("C:\\Events", &dirStartCluster);
+		ListDirectory(dirStartCluster, dirList, NO);
+
+		while(dirList[entriesIndex].type != FAT32_END_LIST)
+		{
+			if (dirList[entriesIndex].type == FAT32_FILE)
+			{
+				sprintf(fileName, "C:\\Events\\%s", dirList[entriesIndex].name);
+				if (fl_remove(fileName) == -1)
+				{
+					OverlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
+				}
+				else
+				{
+					eventsDeleted++;
+				}
+			}
+		
+			entriesIndex++;
+		}
+
+		sprintf(popupText, "REMOVED %d EVENTS", eventsDeleted);
+		OverlayMessage("DELETE EVENTS", popupText, 3 * SOFT_SECS);
+
+		g_fileAccessLock = AVAILABLE;
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -915,30 +849,41 @@ void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
 	FL_FILE* eventFile;
 	
-	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
-	eventFile = fl_fopen(fileName, "r");
+	if (g_fileAccessLock != AVAILABLE)
+	{
+		ReportFileSystemAccessProblem("Cache event data");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
 
-	// Verify file ID
-	if (eventFile == NULL)
-	{
-		debugErr("Event File %s not found\r\n", fileName);
-		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
-	}	
-	// Verify file is big enough
-	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
-	{
-		debugErr("Event File %s is corrupt\r\n", fileName);
-		OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
-	}	
-	else
-	{
-		fl_fclose(eventFile);
+		sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
 		eventFile = fl_fopen(fileName, "r");
 
-		fl_fseek(eventFile, sizeof(EVT_RECORD), SEEK_SET);
-		fl_fread(eventFile, (uint8*)&g_eventDataBuffer[0], dataSize);
+		// Verify file ID
+		if (eventFile == NULL)
+		{
+			debugErr("Event File %s not found\r\n", fileName);
+			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+		}
+		// Verify file is big enough
+		else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+		{
+			debugErr("Event File %s is corrupt\r\n", fileName);
+			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+		}
+		else
+		{
+			fl_fclose(eventFile);
+			eventFile = fl_fopen(fileName, "r");
 
-		fl_fclose(eventFile);
+			fl_fseek(eventFile, sizeof(EVT_RECORD), SEEK_SET);
+			fl_fread(eventFile, (uint8*)&g_eventDataBuffer[0], dataSize);
+
+			fl_fclose(eventFile);
+		}
+
+		g_fileAccessLock = AVAILABLE;
 	}
 }
 
@@ -950,25 +895,36 @@ void CacheEventToRam(uint16 eventNumber)
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
 	FL_FILE* eventFile;
 	
-	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
-	eventFile = fl_fopen(fileName, "r");
+	if (g_fileAccessLock != AVAILABLE)
+	{
+		ReportFileSystemAccessProblem("Cache event");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
 
-	// Verify file ID
-	if (eventFile == NULL)
-	{
-		debugErr("Event File %s not found\r\n", fileName);
-		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
-	}	
-	// Verify file is big enough
-	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
-	{
-		debugErr("Event File %s is corrupt\r\n", fileName);
-		OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
-	}	
-	else
-	{
-		fl_fread(eventFile, (uint8*)&g_eventDataBuffer[0], eventFile->filelength);
-		fl_fclose(eventFile);
+		sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
+		eventFile = fl_fopen(fileName, "r");
+
+		// Verify file ID
+		if (eventFile == NULL)
+		{
+			debugErr("Event File %s not found\r\n", fileName);
+			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+		}
+		// Verify file is big enough
+		else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+		{
+			debugErr("Event File %s is corrupt\r\n", fileName);
+			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+		}
+		else
+		{
+			fl_fread(eventFile, (uint8*)&g_eventDataBuffer[0], eventFile->filelength);
+			fl_fclose(eventFile);
+		}
+
+		g_fileAccessLock = AVAILABLE;
 	}
 }
 
@@ -982,36 +938,47 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 	EVENT_HEADER_STRUCT fileEventHeader;
 	BOOLEAN validFile = NO;
 	
-	sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
-	eventFile = fl_fopen(fileName, "r");
+	if (g_fileAccessLock != AVAILABLE)
+	{
+		ReportFileSystemAccessProblem("Check valid event");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		g_fileAccessLock = FILE_LOCK;
 
-	// Verify file ID
-	if (eventFile == NULL)
-	{
-		debugErr("Event File %s not found\r\n", fileName);
-		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
-	}		
-	// Verify file is big enough
-	else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
-	{
-		debugErr("Event File %s is corrupt\r\n", fileName);
-		OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
-	}		
-	else
-	{
-		fl_fread(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
+		sprintf(fileName, "C:\\Events\\Evt%d.ns8", eventNumber);
+		eventFile = fl_fopen(fileName, "r");
 
-		// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
-		if ((fileEventHeader.startFlag == EVENT_RECORD_START_FLAG) &&
-			((fileEventHeader.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
-			(fileEventHeader.headerLength == sizeof(EVENT_HEADER_STRUCT)))
+		// Verify file ID
+		if (eventFile == NULL)
 		{
-			//debug("Found Valid Event File: %s", fileName);
+			debugErr("Event File %s not found\r\n", fileName);
+			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+		}
+		// Verify file is big enough
+		else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+		{
+			debugErr("Event File %s is corrupt\r\n", fileName);
+			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+		}
+		else
+		{
+			fl_fread(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
 
-			validFile =  YES;
+			// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
+			if ((fileEventHeader.startFlag == EVENT_RECORD_START_FLAG) &&
+				((fileEventHeader.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
+				(fileEventHeader.headerLength == sizeof(EVENT_HEADER_STRUCT)))
+			{
+				//debug("Found Valid Event File: %s", fileName);
+
+				validFile =  YES;
+			}
+
+			fl_fclose(eventFile);
 		}
 
-		fl_fclose(eventFile);
+		g_fileAccessLock = AVAILABLE;
 	}
 
 	return(validFile);
@@ -1123,12 +1090,19 @@ FL_FILE* GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 			break;
 			
 		case READ_EVENT_FILE:
+			debug("File to read: %s\r\n", fileName);
 			strcpy(&fileOption[0], "r");
 			break;
 			
 		case APPEND_EVENT_FILE:
+			debug("File to append: %s\r\n", fileName);
 			strcpy(&fileOption[0], "a+");
 			break;
+
+		case OVERWRITE_EVENT_FILE:
+			debug("File to overwrite: %s\r\n", fileName);
+			strcpy(&fileOption[0], "r+");
+		break;
 	}
 
 	// Check if trying to create a file but the filename exists
@@ -1136,7 +1110,7 @@ FL_FILE* GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 	{
 		fileHandle = fl_fopen(fileName, "r");
 		
-		// File alraedy exists
+		// File already exists
 		if (fileHandle != NULL)
 		{
 			fl_fclose(fileHandle);
@@ -1338,7 +1312,7 @@ void StoreData(uint16* dataPtr, uint16 dataWords)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #include "navigation.h"
-void UpdateFlashUsageStats(void)
+void GetSDCardUsageStats(void)
 {
 	uint32 waveSize;
 	uint32 barSize;
@@ -1356,42 +1330,84 @@ void UpdateFlashUsageStats(void)
 #if NS8100_ORIGINAL
     sd_mmc_spi_get_capacity();
 
-	g_flashUsageStats.sizeUsed = 0;
-	g_flashUsageStats.sizeFree = capacity - g_flashUsageStats.sizeUsed;
-	g_flashUsageStats.percentUsed = (uint8)((g_flashUsageStats.sizeUsed * 100) / capacity);
-	g_flashUsageStats.percentFree = (uint8)(100 - g_flashUsageStats.percentUsed);
+	g_sdCardUsageStats.sizeUsed = 0;
+	g_sdCardUsageStats.sizeFree = capacity - g_sdCardUsageStats.sizeUsed;
+	g_sdCardUsageStats.percentUsed = (uint8)((g_sdCardUsageStats.sizeUsed * 100) / capacity);
+	g_sdCardUsageStats.percentFree = (uint8)(100 - g_sdCardUsageStats.percentUsed);
 #else // NS8100_ALPHA
-	nav_drive_set(0); // Select SD MMC card as drive
-
 	if(!nav_partition_mount()) // Mount drive
 	{
 		debugErr("SD MMC Card: Unable to mount volume\r\n");
 	}
 
-	g_flashUsageStats.sizeFree = (nav_partition_freespace() << FS_SHIFT_B_TO_SECTOR);
-	g_flashUsageStats.sizeUsed = (nav_partition_space() << FS_SHIFT_B_TO_SECTOR) - g_flashUsageStats.sizeFree;
-	g_flashUsageStats.percentFree = (uint8)(nav_partition_freespace_percent());
-	g_flashUsageStats.percentUsed = (uint8)(100 - g_flashUsageStats.percentFree);
+	g_sdCardUsageStats.sizeFree = (nav_partition_freespace() << FS_SHIFT_B_TO_SECTOR);
+	g_sdCardUsageStats.sizeUsed = (nav_partition_space() << FS_SHIFT_B_TO_SECTOR) - g_sdCardUsageStats.sizeFree;
+	g_sdCardUsageStats.percentFree = (uint8)(nav_partition_freespace_percent());
+	g_sdCardUsageStats.percentUsed = (uint8)(100 - g_sdCardUsageStats.percentFree);
 #endif
-	g_flashUsageStats.waveEventsLeft = (uint16)(g_flashUsageStats.sizeFree / waveSize);
-	g_flashUsageStats.barHoursLeft = (uint16)(g_flashUsageStats.sizeFree / barSize);
-	g_flashUsageStats.manualCalsLeft = (uint16)(g_flashUsageStats.sizeFree / manualCalSize);
-	g_flashUsageStats.wrapped = NO;
-	g_flashUsageStats.roomForBargraph = (g_flashUsageStats.sizeFree > newBargraphMinSize) ? YES : NO;
+	g_sdCardUsageStats.waveEventsLeft = (uint16)(g_sdCardUsageStats.sizeFree / waveSize);
+	g_sdCardUsageStats.barHoursLeft = (uint16)(g_sdCardUsageStats.sizeFree / barSize);
+	g_sdCardUsageStats.manualCalsLeft = (uint16)(g_sdCardUsageStats.sizeFree / manualCalSize);
+	g_sdCardUsageStats.wrapped = NO;
+	g_sdCardUsageStats.roomForBargraph = (g_sdCardUsageStats.sizeFree > newBargraphMinSize) ? YES : NO;
 
 #if 0 // Fill in at some point
-	if (usage.wrapped == YES)
+	if (g_sdCardUsageStats.wrapped == YES)
 	{
 		// Recalc parameters
-		usage.sizeUsed = (FLASH_EVENT_END - FLASH_EVENT_START) - ((uint32)s_endFlashSectorPtr - (uint32)s_flashDataPtr);
-		usage.sizeFree = ((uint32)s_endFlashSectorPtr - (uint32)s_flashDataPtr);
-		usage.percentUsed = (uint8)(((uint32)usage.sizeUsed * 100) / (FLASH_EVENT_END - FLASH_EVENT_START));
-		usage.percentFree = (uint8)(100 - usage.percentUsed);
-		usage.waveEventsLeft = (uint16)(usage.sizeFree / waveSize);
-		usage.barHoursLeft = (uint16)(usage.sizeFree / barSize);
-		usage.manualCalsLeft = (uint16)(usage.sizeFree / manualCalSize);
-		usage.roomForBargraph = (usage.sizeFree > newBargraphMinSize) ? YES : NO;
+		g_sdCardUsageStats.sizeUsed = (FLASH_EVENT_END - FLASH_EVENT_START) - ((uint32)s_endFlashSectorPtr - (uint32)s_flashDataPtr);
+		g_sdCardUsageStats.sizeFree = ((uint32)s_endFlashSectorPtr - (uint32)s_flashDataPtr);
+		g_sdCardUsageStats.percentUsed = (uint8)(((uint32)g_sdCardUsageStats.sizeUsed * 100) / (FLASH_EVENT_END - FLASH_EVENT_START));
+		g_sdCardUsageStats.percentFree = (uint8)(100 - g_sdCardUsageStats.percentUsed);
+		g_sdCardUsageStats.waveEventsLeft = (uint16)(g_sdCardUsageStats.sizeFree / waveSize);
+		g_sdCardUsageStats.barHoursLeft = (uint16)(g_sdCardUsageStats.sizeFree / barSize);
+		g_sdCardUsageStats.manualCalsLeft = (uint16)(g_sdCardUsageStats.sizeFree / manualCalSize);
+		g_sdCardUsageStats.roomForBargraph = (g_sdCardUsageStats.sizeFree > newBargraphMinSize) ? YES : NO;
 	}
 #endif
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void UpdateSDCardUsageStats(uint32 removeSize)
+{
+	uint32 waveSize;
+	uint32 barSize;
+	uint32 manualCalSize;
+	uint32 newBargraphMinSize;
+
+	waveSize = sizeof(EVT_RECORD) + (100 * 8) + (uint32)(g_triggerRecord.trec.sample_rate * 2) +
+	(uint32)(g_triggerRecord.trec.sample_rate * g_triggerRecord.trec.record_time * 8);
+	barSize = (uint32)(((3600 * 8) / g_triggerRecord.bgrec.barInterval) + (sizeof(EVT_RECORD) / 24) +
+	((3600 * sizeof(CALCULATED_DATA_STRUCT)) / g_triggerRecord.bgrec.summaryInterval));
+	manualCalSize = sizeof(EVT_RECORD) + (100 * 8);
+	newBargraphMinSize = (manualCalSize + sizeof(EVT_RECORD) + (sizeof(CALCULATED_DATA_STRUCT) * 2) +
+	(((g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval) + 1) * 8 * 2));
+
+	g_sdCardUsageStats.sizeFree -= removeSize;
+	g_sdCardUsageStats.sizeUsed += removeSize;
+	g_sdCardUsageStats.percentFree = (uint8)((float)((float)g_sdCardUsageStats.sizeFree / (float)(g_sdCardUsageStats.sizeFree + g_sdCardUsageStats.sizeUsed)) * 100);
+	g_sdCardUsageStats.percentUsed = (uint8)(100 - g_sdCardUsageStats.percentFree);
+
+	g_sdCardUsageStats.waveEventsLeft = (uint16)(g_sdCardUsageStats.sizeFree / waveSize);
+	g_sdCardUsageStats.barHoursLeft = (uint16)(g_sdCardUsageStats.sizeFree / barSize);
+	g_sdCardUsageStats.manualCalsLeft = (uint16)(g_sdCardUsageStats.sizeFree / manualCalSize);
+	g_sdCardUsageStats.wrapped = NO;
+	g_sdCardUsageStats.roomForBargraph = (g_sdCardUsageStats.sizeFree > newBargraphMinSize) ? YES : NO;
+
+	#if 0 // Fill in at some point
+	if (g_sdCardUsageStats.wrapped == YES)
+	{
+		// Recalc parameters
+		g_sdCardUsageStats.sizeUsed = (FLASH_EVENT_END - FLASH_EVENT_START) - ((uint32)s_endFlashSectorPtr - (uint32)s_flashDataPtr);
+		g_sdCardUsageStats.sizeFree = ((uint32)s_endFlashSectorPtr - (uint32)s_flashDataPtr);
+		g_sdCardUsageStats.percentUsed = (uint8)(((uint32)g_sdCardUsageStats.sizeUsed * 100) / (FLASH_EVENT_END - FLASH_EVENT_START));
+		g_sdCardUsageStats.percentFree = (uint8)(100 - g_sdCardUsageStats.percentUsed);
+		g_sdCardUsageStats.waveEventsLeft = (uint16)(g_sdCardUsageStats.sizeFree / waveSize);
+		g_sdCardUsageStats.barHoursLeft = (uint16)(g_sdCardUsageStats.sizeFree / barSize);
+		g_sdCardUsageStats.manualCalsLeft = (uint16)(g_sdCardUsageStats.sizeFree / manualCalSize);
+		g_sdCardUsageStats.roomForBargraph = (g_sdCardUsageStats.sizeFree > newBargraphMinSize) ? YES : NO;
+	}
+	#endif
+}

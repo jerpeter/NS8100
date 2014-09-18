@@ -187,7 +187,7 @@ void setupMnDef(void)
 	if (!g_factorySetupRecord.invalid)
 	{
 		// Print the Factory Setup Record to the console
-		ByteSet(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		ConvertTimeStampToString(buff, &g_factorySetupRecord.cal_date, REC_DATE_TIME_TYPE);
 
 		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&g_spareBuffer, "Acc"); }
@@ -344,6 +344,7 @@ void InitSoftwareSettings_NS8100(void)
 	nav_reset();
 	nav_select(0);
 	nav_drive_set(0);
+	nav_partition_mount();
 #endif
 
 	//-------------------------------------------------------------------------
@@ -357,7 +358,7 @@ void InitSoftwareSettings_NS8100(void)
 	//-------------------------------------------------------------------------
 	debug("Updating Flash Usage Stats...\r\n");
 	OverlayMessage(getLangText(STATUS_TEXT), "CALCULATING EVENT STORAGE SPACE FREE", 0);
-	UpdateFlashUsageStats();
+	GetSDCardUsageStats();
 
 	//-------------------------------------------------------------------------
 	// Check for Timer mode activation

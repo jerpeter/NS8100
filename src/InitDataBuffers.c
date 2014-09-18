@@ -156,7 +156,7 @@ void InitDataBuffs(uint8 op_mode)
 			// Start the total off with zero (incremented when bar and summary intervals are stored)
 			g_pendingBargraphRecord.header.dataLength = 0;
 
-			StartNewCombo();
+			StartNewBargraph();
 		}
 	}
 	else if (op_mode == BARGRAPH_MODE)
