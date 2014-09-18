@@ -649,12 +649,6 @@
     <Compile Include="src\ProcessBargraph.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\ProcessCombo.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\ProcessCombo.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\ProcessManualCal.c">
       <SubType>compile</SubType>
     </Compile>
