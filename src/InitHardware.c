@@ -716,11 +716,7 @@ void InitSerial232(void)
 	}
 
 	// Initialize it in RS232 mode.
-	#if 1 // Normal
 	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
-	#else // Test (12Mhz)
-	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, 12000000);
-	#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -740,13 +736,9 @@ void InitDebug232(void)
 	};
 
 	// Initialize it in RS232 mode.
-#if 1 // Normal
 	usart_init_rs232(&AVR32_USART0, &usart_0_rs232_options, FOSC0);
-#else // Test (12Mhz)
-	usart_init_rs232(&AVR32_USART0, &usart_0_rs232_options, 12000000);
-#endif
-#endif
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
