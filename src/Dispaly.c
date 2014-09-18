@@ -65,6 +65,9 @@ void LcdResetPulse(void)
 	// Reset is active low, put LCD in reset
 	*lcd &= ~LCD_RESET_BIT;
 
+	// Preload the register to prevent an issue where the first write command isn't reveiced correctly
+	*lcd = 0x62;
+
 	// Take LCD out of reset
 	*lcd |= LCD_RESET_BIT;
 }
