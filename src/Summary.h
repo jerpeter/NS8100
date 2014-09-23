@@ -127,13 +127,12 @@ typedef struct
 	uint32				batteryLevel;						// Battery Level
 	uint8				printerStatus;						// Printer status information.
 	uint8				externalTrigger;					// Mark if triggered with an External signal
-	uint8				comboEventsRecordedDuringSession;	// Combo - Bargraph events recorded during session
-	uint8				unused01;							// Unused
+	uint16				comboEventsRecordedDuringSession;	// Combo - Bargraph events recorded during session
 	DATE_TIME_STRUCT	eventTime;							// Waveform and bargraph start information. 
 	DATE_TIME_STRUCT	endTime;							// Bargraph specific
 
-	uint16 comboEventsRecordedStartNumber;
-	uint16 comboEventsRecordedEndNumber;
+	uint16				comboEventsRecordedStartNumber;
+	uint16				comboEventsRecordedEndNumber;
 	uint8				unused[UNUSED_CAPTURE_SIZE];		// Space for expansion
 } CAPTURE_INFO_STRUCT;
 #pragma pack()

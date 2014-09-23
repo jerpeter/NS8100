@@ -2293,14 +2293,15 @@ void PrintMonitorLogMenuHandler(uint8 keyPressed, void* data)
 // Power Savings Menu
 //=============================================================================
 //*****************************************************************************
-#define POWER_SAVINGS_MENU_ENTRIES 6
+#define POWER_SAVINGS_MENU_ENTRIES 7
 USER_MENU_STRUCT powerSavingsMenu[POWER_SAVINGS_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, POWER_SAVINGS_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, POWER_SAVINGS_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 0, NONE_TEXT,	NO_TAG, {POWER_SAVINGS_NONE}},
-{ITEM_2, 0, MINIMUM_TEXT,	NO_TAG, {POWER_SAVINGS_MINIMUM}},
-{ITEM_3, 0, MOST_TEXT,	NO_TAG, {POWER_SAVINGS_MOST}},
-{ITEM_4, 0, MAX_TEXT,	NO_TAG, {POWER_SAVINGS_MAX}},
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, POWER_SAVINGS_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
+{NO_TAG, 0, NONE_TEXT,					NO_TAG, {POWER_SAVINGS_NONE}},
+{NO_TAG, 0, MINIMUM_TEXT,				NO_TAG, {POWER_SAVINGS_MINIMUM}},
+{NO_TAG, 0, NORMAL_DEFAULT_TEXT,		NO_TAG, {POWER_SAVINGS_NORMAL}},
+{NO_TAG, 0, NORM_AND_NO_USB_TEXT,		NO_TAG, {POWER_SAVINGS_MOST}},
+{NO_TAG, 0, NORM_AND_NO_USB_CRAFT_TEXT,	NO_TAG, {POWER_SAVINGS_MAX}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&PowerSavingsMenuHandler}}
 };
 
@@ -2314,11 +2315,15 @@ void PowerSavingsMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_unitConfig.powerSavingsLevel = (uint8)powerSavingsMenu[newItemIndex].data;
+		// Check if the power savings level changed
+		if (g_unitConfig.powerSavingsLevel != (uint8)powerSavingsMenu[newItemIndex].data)
+		{
+			g_unitConfig.powerSavingsLevel = (uint8)powerSavingsMenu[newItemIndex].data;
 
-		AdjustPowerSavings();
-
-		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+			// Adjust and save record
+			AdjustPowerSavings();
+			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+		}
 
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}

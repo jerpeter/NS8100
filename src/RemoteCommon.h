@@ -250,15 +250,15 @@ typedef struct
 // Command processing structure
 typedef struct
 {
-	uint8 cmd[HDR_CMD_LEN + 1];
-	uint8 type[HDR_TYPE_LEN + 1];
-	uint8 dataLength[HDR_DATALENGTH_LEN + 1];
-	uint8 unitModel[HDR_UNITMODEL_LEN + 1];
-	uint8 unitSn[HDR_SERIALNUMBER_LEN + 1];
-	uint8 compressCrcFlags[HDR_COMPRESSCRC_LEN + 1];
-	uint8 softwareVersion[HDR_SOFTWAREVERSION_LEN + 1];
-	uint8 dataVersion[HDR_DATAVERSION_LEN + 1];
-	uint8 spare[HDR_SPARE_LEN + 1];
+	uint8 cmd[HDR_CMD_LEN + 1]; // 4
+	uint8 type[HDR_TYPE_LEN + 1]; // 2
+	uint8 dataLength[HDR_DATALENGTH_LEN + 1]; // 8
+	uint8 unitModel[HDR_UNITMODEL_LEN + 1]; // 8
+	uint8 unitSn[HDR_SERIALNUMBER_LEN + 1]; // 8
+	uint8 compressCrcFlags[HDR_COMPRESSCRC_LEN + 1]; // 2
+	uint8 softwareVersion[HDR_SOFTWAREVERSION_LEN + 1]; // 2
+	uint8 dataVersion[HDR_DATAVERSION_LEN + 1]; // 2
+	uint8 spare[HDR_SPARE_LEN + 1]; // 2
 } COMMAND_MESSAGE_HEADER;
 
 // Command processing structure

@@ -641,11 +641,12 @@ void UsbDeviceManager(void)
 		//___________________________________________________________________________________________
 		// Check if processing is needed elsewhere
 		if ((g_sampleProcessing == ACTIVE_STATE) || (getSystemEventState(TRIGGER_EVENT)) || (g_fileProcessActiveUsbLockout == ON) ||
-			(g_activeMenu == CAL_SETUP_MENU))
+			(g_activeMenu == CAL_SETUP_MENU) || (g_unitConfig.powerSavingsLevel > POWER_SAVINGS_NORMAL))
 		{
 			// Need to disable USB for other processing
 			debug("USB disabled for other processing\r\n");
-			Usb_disable();
+
+			if (Is_usb_enabled()) { Usb_disable(); }
 
 			usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
 			ms_usb_prevent_sleep = NO;
@@ -815,7 +816,7 @@ void UsbDeviceManager(void)
 	else if (usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
 	{
 		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_fileProcessActiveUsbLockout == OFF) &&
-			(g_activeMenu != CAL_SETUP_MENU))
+			(g_activeMenu != CAL_SETUP_MENU) && (g_unitConfig.powerSavingsLevel < POWER_SAVINGS_MOST))
 		{
 			debug("USB enabled for processing again\r\n");
 			Usb_enable();

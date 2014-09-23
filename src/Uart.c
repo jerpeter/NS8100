@@ -216,7 +216,7 @@ uint8 ModemPutc(uint8 byteData, uint8 convertAsciiFlag)
 				asciiData = NibbleToA(hexData);
 
 				// Send the top nibble
-				UartPutc(asciiData,CRAFT_COM_PORT);
+				UartPutc(asciiData, CRAFT_COM_PORT);
 
 				// Convert the bottom nibble to hex
 				hexData = (uint8)(0x0F & byteData);
@@ -281,14 +281,21 @@ void UartPutc(uint8 c, int32 channel)
 	if (channel == CRAFT_COM_PORT)
 	{
 #if 0 // Can't use this function without screwing up the craft since CRLF is being turned into CRCRLF
-		usart_putchar(DBG_USART, c);
+		usart_putchar(&AVR32_USART1, c);
 #else // Localized version with retries
-		status = usart_write_char(DBG_USART, c);
-		
-		while ((status == USART_TX_BUSY) && (retries))
+		//----------------------------------------------------------------------------------
+		// Craft USART
+		//----------------------------------------------------------------------------------
+		// Check if the craft USART processor module is powered (USART1)
+		if (g_unitConfig.powerSavingsLevel < POWER_SAVINGS_MAX)
 		{
-			retries--;
-			status = usart_write_char(DBG_USART, c);
+			status = usart_write_char(&AVR32_USART1, c);
+
+			while ((status == USART_TX_BUSY) && (retries))
+			{
+				retries--;
+				status = usart_write_char(&AVR32_USART1, c);
+			}
 		}
 #endif
 	}
@@ -299,14 +306,25 @@ void UartPutc(uint8 c, int32 channel)
 #if NS8100_ALPHA
 	else if (channel == GLOBAL_DEBUG_PRINT_PORT)
 	{
-		status = usart_write_char(&AVR32_USART0, c);
-
-		while ((status == USART_TX_BUSY) && (retries))
+		//----------------------------------------------------------------------------------
+		// Debug USART
+		//----------------------------------------------------------------------------------
+		// Check if the debug USART processor module is powered (USART0)
+		if (g_unitConfig.powerSavingsLevel < POWER_SAVINGS_NORMAL)
 		{
-			retries--;
+			// Dump the character to the serial port
 			status = usart_write_char(&AVR32_USART0, c);
+
+			while ((status == USART_TX_BUSY) && (retries))
+			{
+				retries--;
+				status = usart_write_char(&AVR32_USART0, c);
+			}
 		}
 
+		//----------------------------------------------------------------------------------
+		// Debug buffer
+		//----------------------------------------------------------------------------------
 		// Check if the buffer count doesn't equal the max (protect overrunning the buffer)
 		if (g_debugBufferCount != sizeof(g_debugBuffer))
 		{

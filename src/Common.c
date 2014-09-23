@@ -25,6 +25,7 @@
 #include "FAT32_FileLib.h"
 #include "usart.h"
 #include "ctype.h"
+#include "usb_drv.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -784,11 +785,51 @@ void AdjustPowerSavings(void)
 				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC, USBB; Disable: PDCA, MACB
 				AVR32_PM.hsbmask = 0x0000004F;
 
+				// Leave active: USART0, USART 1, USART 3, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 2, PDCA
+				AVR32_PM.pbamask = 0x00004BFB;
+
+				// Leave active: SMC, FLASHC, HMATRIX, USBB; Disable: SDRAMC, MACB
+				AVR32_PM.pbbmask = 0x00000017;
+
+				// Check if the USB is disabled
+				if (!Is_usb_enabled())
+				{
+					// Enable the USB
+					Usb_enable();
+				}
+
+				// Enable rs232 driver and receiver (Active low control)
+				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+				PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+			break;
+
+			//----------------------------------------------------------------------------
+			case POWER_SAVINGS_NORMAL:
+			//----------------------------------------------------------------------------
+				// Wait for serial data to pushed out to prevent the driver from lagging the system
+				while (((AVR32_USART0.csr & AVR32_USART_CSR_TXRDY_MASK) == 0) && usartRetries)
+				{
+					usartRetries--;
+				}
+
+				// Leave active: SYSTIMER; Disable: OCD
+				AVR32_PM.cpumask = 0x00010000;
+
+				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC, USBB; Disable: PDCA, MACB
+				AVR32_PM.hsbmask = 0x0000004F;
+
 				// Leave active: USART 1, USART 3, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 2, PDCA
 				AVR32_PM.pbamask = 0x00004AFB;
 
 				// Leave active: SMC, FLASHC, HMATRIX, USBB; Disable: SDRAMC, MACB
 				AVR32_PM.pbbmask = 0x00000017;
+
+				// Check if the USB is disabled
+				if (!Is_usb_enabled())
+				{
+					// Enable the USB
+					Usb_enable();
+				}
 
 				// Enable rs232 driver and receiver (Active low control)
 				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
@@ -798,6 +839,13 @@ void AdjustPowerSavings(void)
 			//----------------------------------------------------------------------------
 			case POWER_SAVINGS_MOST:
 			//----------------------------------------------------------------------------
+				// Check if the USB is enabled
+				if (Is_usb_enabled())
+				{
+					// Disable the USB
+					Usb_disable();
+				}
+
 				// Leave active: SYSTIMER; Disable: OCD
 				AVR32_PM.cpumask = 0x00010000;
 
@@ -822,6 +870,13 @@ void AdjustPowerSavings(void)
 				while (((AVR32_USART1.csr & AVR32_USART_CSR_TXRDY_MASK) == 0) && usartRetries)
 				{
 					usartRetries--;
+				}
+
+				// Check if the USB is enabled
+				if (Is_usb_enabled())
+				{
+					// Disable the USB
+					Usb_disable();
 				}
 
 				// Leave active: SYSTIMER; Disable: OCD
@@ -855,6 +910,13 @@ void AdjustPowerSavings(void)
 
 				// Leave active: All; Disable: None
 				AVR32_PM.pbbmask = 0x0000003F;
+
+				// Check if the USB is disabled
+				if (!Is_usb_enabled())
+				{
+					// Enable the USB
+					Usb_enable();
+				}
 
 				// Enable rs232 driver and receiver (Active low control)
 				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
