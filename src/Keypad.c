@@ -160,34 +160,6 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		Start_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
 	}
 
-#if 0
-	if (SUPERGRAPH_UNIT)
-	{
-		// Check if multiple keys were found
-		if (numKeysPressed > 1)
-		{
-			if (ctrlKeyPressed == YES)
-				debug("Keypad: Handling ctrl key combination\r\n");
-			if (shiftKeyPressed == YES)
-				debug("Keypad: Handling shift key combination\r\n");
-
-			// Check if processing a combo key for the second time (under a second)
-			if (((shiftKeyPressed == YES) || (ctrlKeyPressed == YES)) && (keyPressed != KEY_NONE))
-			{
-				// Check if the 1 second repeat delay hasn't been meet
-				if (lookForComboKeyRepeatTickCount > g_keypadTimerTicks)
-				{
-					// Reset delay to 20 msecs before looking again
-					g_kpadLookForKeyTickCount = CHECK_FOR_COMBO_KEY_DELAY + g_keypadTimerTicks;
-
-					// Finished processing
-					return (PASSED);
-				}
-			}
-		}
-	}
-#endif
-
 	// Check specific condition after a combo sequence where the special key was released before the regular key
 	if ((numKeysPressed == 1) && (g_kpadLastKeyPressed == keyPressed) &&
 		(shiftKeyPressed == NO) && (ctrlKeyPressed == NO))
@@ -231,35 +203,9 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 			s_fixedSpecialSpeed = 10000;
 		}
 
-		if (SUPERGRAPH_UNIT)
-		{
-			p_msg->length = 1;
-
-			if (ctrlKeyPressed == ON)
-			{
-				p_msg->cmd = CTRL_CMD;
-			}
-			else
-			{
-				p_msg->cmd = KEYPRESS_MENU_CMD;
-			}
-
-			if (shiftKeyPressed == ON)
-			{
-				p_msg->data[0] = GetShiftChar(keyPressed);
-				//debug("Keypad: Shifted key: %c\r\n", (char)p_msg->data[0]);
-			}
-			else
-			{
-				p_msg->data[0] = keyPressed;
-			}
-		}
-		else // MINIGRAPH_UNIT
-		{
-			p_msg->length = 1;
-			p_msg->cmd = KEYPRESS_MENU_CMD;
-			p_msg->data[0] = keyPressed;
-		}
+		p_msg->length = 1;
+		p_msg->cmd = KEYPRESS_MENU_CMD;
+		p_msg->data[0] = keyPressed;
 
 		if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 		{
@@ -285,37 +231,8 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		g_kpadKeyRepeatCount = 0;
 		s_fixedSpecialSpeed = 0;
 
-		if (SUPERGRAPH_UNIT)
-		{
-			// Check if we are dealing with a combination sequence
-			if ((ctrlKeyPressed == YES) || (shiftKeyPressed == YES))
-			{
-				// Set delay to 20 msecs before looking to possibly complete the combination key capture
-				g_kpadLookForKeyTickCount = CHECK_FOR_COMBO_KEY_DELAY + g_keypadTimerTicks;
-
-				// Check if still waiting for a key to be pressed
-				if (keyPressed == KEY_NONE)
-				{
-					// Reset combination sequence repeat delay
-					lookForComboKeyRepeatTickCount = g_keypadTimerTicks;
-				}
-				else // completed combination key sequence
-				{
-					// Set delay to handle waiting 1 sec before considering a combination sequence repeating
-					lookForComboKeyRepeatTickCount = CHECK_FOR_REPEAT_KEY_DELAY + g_keypadTimerTicks;
-				}
-			}
-			else
-			{
-				// Set delay for 1 sec before considering key repeating
-				g_kpadLookForKeyTickCount = CHECK_FOR_REPEAT_KEY_DELAY + g_keypadTimerTicks;
-			}
-		}
-		else
-		{
-			// Set delay for 1 sec before considering key repeating
-			g_kpadLookForKeyTickCount = CHECK_FOR_REPEAT_KEY_DELAY + g_keypadTimerTicks;
-		}
+		// Set delay for 1 sec before considering key repeating
+		g_kpadLookForKeyTickCount = CHECK_FOR_REPEAT_KEY_DELAY + g_keypadTimerTicks;
 
 		//---------------------------------------------------------------------------------
 		// Send new key message for action
@@ -358,46 +275,19 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 			else // all other keys
 			{
 				p_msg->length = 1;
-
-				if (SUPERGRAPH_UNIT)
-				{
-					if (ctrlKeyPressed == ON)
-					{
-						p_msg->cmd = CTRL_CMD;
-					}
-					else
-					{
-						p_msg->cmd = KEYPRESS_MENU_CMD;
-					}
-
-					if (shiftKeyPressed == ON)
-					{
-						p_msg->data[0] = GetShiftChar(keyPressed);
-						//debug("Keypad: Shifted key: %c\r\n", (char)p_msg->data[0]);
-					}
-					else
-					{
-						p_msg->data[0] = keyPressed;
-					}
-				}
-				else
-				{
-					p_msg->data[0] = keyPressed;
-					p_msg->cmd = KEYPRESS_MENU_CMD;
-				}
+				p_msg->data[0] = keyPressed;
+				p_msg->cmd = KEYPRESS_MENU_CMD;
 			}
 
 			//---------------------------------------------------------------------------------
 			// Factory setup staging
 			//---------------------------------------------------------------------------------
 			// Handle factory setup special sequence
-			if ((g_factorySetupSequence == STAGE_1) && ((SUPERGRAPH_UNIT && (keyPressed == 'F')) ||
-				(keyPressed == KEY_UPARROW)))
+			if ((g_factorySetupSequence == STAGE_1) && (keyPressed == KEY_UPARROW))
 			{
 				g_factorySetupSequence = STAGE_2;
 			}
-			else if ((g_factorySetupSequence == STAGE_2) && ((SUPERGRAPH_UNIT && (keyPressed == 'S')) ||
-				(keyPressed == KEY_DOWNARROW)))
+			else if ((g_factorySetupSequence == STAGE_2) && (keyPressed == KEY_DOWNARROW))
 			{
 				// Check if actively in Monitor mode
 				if (g_sampleProcessing == ACTIVE_STATE)

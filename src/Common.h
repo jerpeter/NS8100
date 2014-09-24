@@ -15,29 +15,6 @@
 #include "board.h"
 
 ///----------------------------------------------------------------------------
-///	Unit Type
-///----------------------------------------------------------------------------
-// Change the value of SUPERGRAPH_UNIT to select type
-// 1 = Supergraph unit
-// 0 = Minigraph unit
-#define SUPERGRAPH_UNIT		0
-
-// This will auto-select the Minigraph setting based on the Supergraph
-// Do not modify these lines!!!
-#if SUPERGRAPH_UNIT
-#define MINIGRAPH_UNIT		0
-#else
-#define MINIGRAPH_UNIT		1
-#endif
-
-// Print Specific Flags
-#define DISABLE_DEBUG_PRINTING	0
-#define MODEM_DEBUG_TEST_FLAG	0
-
-// Test Exception Handling
-#define TEST_EXCEPTION_HANDLING	1
-
-///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
 #define SOFT_VERSION  		"1.11"

@@ -451,19 +451,9 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr)
 	rec_ptr->reportDisplacement = DISABLED;
 	rec_ptr->reportPeakAcceleration = DISABLED;
 	rec_ptr->autoCalForWaveform = NO;
-
-	if (SUPERGRAPH_UNIT)
-	{
-		rec_ptr->autoPrint = ON;
-		rec_ptr->freqPlotMode = ON;
-		rec_ptr->printMonitorLog = YES;
-	}
-	else // Mini unit
-	{
-		rec_ptr->autoPrint = OFF;
-		rec_ptr->freqPlotMode = OFF;
-		rec_ptr->printMonitorLog = NO;
-	}
+	rec_ptr->autoPrint = OFF;
+	rec_ptr->freqPlotMode = OFF;
+	rec_ptr->printMonitorLog = NO;
 }
 
 ///----------------------------------------------------------------------------

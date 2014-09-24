@@ -38,14 +38,6 @@
 ///----------------------------------------------------------------------------
 #define DUMMY_READ(x) if ((volatile int)x == 0) {}
 
-#if SUPERGRAPH_UNIT
-#define ESC_KEY_ROW			0x02
-#define ESC_KEY_POSITION	0x20
-#else // MINIGRAPH_UNIT
-#define ESC_KEY_ROW			0x04
-#define ESC_KEY_POSITION	0x01
-#endif
-
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------

@@ -171,8 +171,8 @@ void setupMnDef(void)
 	SoftUsecWait(3 * SOFT_SECS);
 
 	//-------------------------------------------------------------------------
-	// Check if the unit is set for Mini and auto print is enabled
-	if ((MINIGRAPH_UNIT) && (g_unitConfig.autoPrint == YES))
+	// Check if auto print is enabled
+	if (g_unitConfig.autoPrint == YES)
 	{
 		// Disable Auto printing
 		g_unitConfig.autoPrint = NO;

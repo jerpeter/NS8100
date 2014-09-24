@@ -209,20 +209,7 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg,
 				case (ENTER_KEY):
 					if (g_sampleProcessing != ACTIVE_STATE)
 					{
-						if (SUPERGRAPH_UNIT)
-						{
-	 						if (g_summaryListMenuActive == YES)
-	 						{
-							}
-							else // User hit enter on waveform results that were processed in real time after leaving monitor mode
-							{
-								SETUP_MENU_MSG(MAIN_MENU);
-							}
-						}
-						else // MINIGRAPH_UNIT
-						{
-							MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
-						}
+						MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 					}
     	        break;
 

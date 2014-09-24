@@ -717,10 +717,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		// Auto print
 		if ((cfg.extraUnitCfg.autoPrint == NO) || (cfg.extraUnitCfg.autoPrint == YES))
 		{
-			if (SUPERGRAPH_UNIT)
-			{
-				g_unitConfig.autoPrint = cfg.extraUnitCfg.autoPrint;
-			}
+			g_unitConfig.autoPrint = cfg.extraUnitCfg.autoPrint;
 		}
 		else
 		{

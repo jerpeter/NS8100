@@ -350,6 +350,6 @@ void CraftInitStatusFlags(void)
 	// Modem is being tested/debugged set debug to true.
 	g_modemStatus.testingPrintFlag = g_disableDebugPrinting;		
 	// Modem is being tested/debugged, set to print to the PC
-	g_modemStatus.testingFlag = MODEM_DEBUG_TEST_FLAG;
+	g_modemStatus.testingFlag = OFF;
 }
 

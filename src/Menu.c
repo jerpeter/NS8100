@@ -927,16 +927,7 @@ void DisplaySplashScreen(void)
 	//----------------------------------------------------------------------------------------
 	memset(&buff[0], 0, sizeof(buff));
 
-	if (SUPERGRAPH_UNIT)
-	{
-		sprintf((char*)(&buff[0]), "%s", "SUPERGRAPH");
-	}
-	else // Minigraph
-	{
-		sprintf((char*)(&buff[0]), "%s", "NOMIS 8100 GRAPH");
-	}
-	length = (uint8)strlen((char*)(&buff[0]));
-
+	length = sprintf((char*)(&buff[0]), "%s", "NOMIS 8100 GRAPH");
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_ONE;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	WndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
