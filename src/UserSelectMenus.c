@@ -31,6 +31,7 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
+extern USER_MENU_STRUCT airTriggerMenu[];
 extern USER_MENU_STRUCT alarmOneMenu[];
 extern USER_MENU_STRUCT alarmTwoMenu[];
 extern USER_MENU_STRUCT alarmOneTimeMenu[];
@@ -119,33 +120,37 @@ void AirScaleMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{
-		if (g_triggerRecord.op_mode == WAVEFORM_MODE)
-		{
-			// If alarm mode is off, the proceed to save setup
-			if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) && (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
-			{
-				SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
-			}
-			else // Goto Alarm setup menus
-			{
-				SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
-			}
-		}
-		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
-		{
-			SETUP_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
-		}
-	}
-	else if (keyPressed == ESC_KEY)
-	{
-		if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 		{
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 				RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 		}
-		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+		else // (g_triggerRecord.op_mode == BARGRAPH_MODE)
 		{
-			SETUP_USER_MENU_MSG(&barChannelMenu, 0);
+			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+		}
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
+		{
+			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+
+			if(g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
+				AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+			}
+			else
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
+				AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
+			}
+		}
+		else // (g_triggerRecord.op_mode == BARGRAPH_MODE)
+		{
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
+				LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
 		}
 	}
 
@@ -411,15 +416,8 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
 		{
-			if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
-			{
-				SETUP_USER_MENU_MSG(&airScaleMenu, 0);
-			}
-			else
-			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
-					RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
-			}
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
+				RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 		}
 		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 		{
@@ -1087,8 +1085,16 @@ void BarResultMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
-			LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+		if ((g_triggerRecord.op_mode == BARGRAPH_MODE) && (!g_factorySetupRecord.invalid) &&
+			(g_factorySetupRecord.aweight_option == ENABLED))
+		{
+			SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
+		}
+		else
+		{
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
+				LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+		}
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -1336,15 +1342,7 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (COPIES):
-				if (SUPERGRAPH_UNIT)
-				{
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&copiesMenu, &g_unitConfig.copies,
-						COPIES_DEFAULT_VALUE, COPIES_MIN_VALUE, COPIES_MAX_VALUE);
-				}
-				else // MINIGRAPH_UNIT
-				{
-					MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
-				}
+				MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 			break;
 
 			case (DATE_TIME):
@@ -1365,14 +1363,7 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (FREQUENCY_PLOT):
-				if (SUPERGRAPH_UNIT)
-				{
-					SETUP_USER_MENU_MSG(&freqPlotMenu, g_unitConfig.freqPlotMode);
-				}
-				else // MINIGRAPH_UNIT
-				{
-					MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
-				}
+				MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 			break;
 
 			case (LANGUAGE):
@@ -1401,25 +1392,11 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (PRINTER):
-				if (SUPERGRAPH_UNIT)
-				{
-					SETUP_USER_MENU_MSG(&printerEnableMenu, g_unitConfig.autoPrint);
-				}
-				else // MINIGRAPH_UNIT
-				{
-					MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
-				}
+				MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 			break;
 
 			case (PRINT_MONITOR_LOG):
-				if (SUPERGRAPH_UNIT)
-				{
-					SETUP_USER_MENU_MSG(&printMonitorLogMenu, g_unitConfig.printMonitorLog);
-				}
-				else
-				{
-					MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
-				}
+				MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 			break;
 
 			case (POWER_SAVINGS):
@@ -2510,15 +2487,8 @@ void SaveSetupMenuHandler(uint8 keyPressed, void* data)
 				if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) &&
 					(g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
 				{
-					if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
-					{
-						SETUP_USER_MENU_MSG(&airScaleMenu, 0);
-					}
-					else
-					{
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
-							RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
-					}
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
+						RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 				}
 				else
 				{

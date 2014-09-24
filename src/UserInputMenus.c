@@ -115,8 +115,16 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 			MessageBox(getLangText(WARNING_TEXT), "UNIT SET FOR EXTERNAL TRIGGER.", MB_OK);
 		}
 
-		SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
-			RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
+		// Check if the A-weighting option is enabled
+		if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
+		{
+			SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
+		}
+		else // A-weighting is not enabled
+		{
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
+				RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
+		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
@@ -702,7 +710,16 @@ void LcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 
 		SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
-		SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+		// Check if Bargraph mode and A-weighting is enabled
+		if ((g_triggerRecord.op_mode == BARGRAPH_MODE) && (!g_factorySetupRecord.invalid) &&
+			(g_factorySetupRecord.aweight_option == ENABLED))
+		{
+			SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
+		}
+		else
+		{
+			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
@@ -1081,36 +1098,37 @@ void RecordTimeMenuHandler(uint8 keyPressed, void* data)
 		g_triggerRecord.trec.record_time = *((uint32*)data);
 		debug("Record Time: %d\r\n", g_triggerRecord.trec.record_time);
 
-		if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
+		// If alarm mode is off, then proceed to save setup
+		if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) && (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
 		{
-			SETUP_USER_MENU_MSG(&airScaleMenu, 0);
+			SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
 		}
-		else
+		else // Goto Alarm setup menus
 		{
-			// If alarm mode is off, then proceed to save setup
-			if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) && (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
-			{
-				SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
-			}
-			else // Goto Alarm setup menus
-			{
-				SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
-			}
+			SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-
-		if(g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+		// Check if the A-weighting option is enabled
+		if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
-												AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+			SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
 		}
 		else
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
-												AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
+			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+
+			if(g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
+				AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+			}
+			else
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
+				AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
+			}
 		}
 	}
 
