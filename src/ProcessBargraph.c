@@ -81,8 +81,8 @@ void EndBargraph(void)
 {
 	while (CalculateBargraphData() == BG_BUFFER_NOT_EMPTY) {}
 
-	// Check if any bar intervals are cached
-	if (g_bargraphBarIntervalsCached)
+	// Check if any bar intervals are cached or if no summaries have yet been recorded
+	if ((g_bargraphBarIntervalsCached) || (g_summaryCount == 0))
 	{
 		// Save the Bar and Summary intervals
 		MoveSummaryIntervalDataToFile();
