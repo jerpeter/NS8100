@@ -210,11 +210,13 @@ void SystemEventManager(void)
 			raiseSystemEventFlag(LOW_BATTERY_WARNING_EVENT);
 		}
 
+#if 0 // Removed debug log file due to inducing system problems
 		if ((g_debugBufferCount > GLOBAL_DEBUG_BUFFER_THRESHOLD) && (g_fileAccessLock == AVAILABLE))
 		{
 			debug("Dumping debug output to debug log file\r\n");
 			WriteDebugBufferToFile();
 		}
+#endif
 
 		CheckForMidnight();
 	}
@@ -1137,9 +1139,11 @@ void BootLoadManager(void)
 
 		fl_fclose(file);
 
+#if 0 // Removed debug log file due to inducing system problems
 		debug("Dumping debug output to debug log file\r\n");
 		debug("Adding On/Off Log timestamp before jumping to boot\r\n");
 		WriteDebugBufferToFile();
+#endif
 		AddOnOffLogTimestamp(JUMP_TO_BOOT);
 
 		// Enable half second tick
