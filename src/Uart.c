@@ -322,6 +322,7 @@ void UartPutc(uint8 c, int32 channel)
 			}
 		}
 
+#if 0 // Removed debug log file due to inducing system problems
 		//----------------------------------------------------------------------------------
 		// Debug buffer
 		//----------------------------------------------------------------------------------
@@ -332,6 +333,7 @@ void UartPutc(uint8 c, int32 channel)
 			g_debugBuffer[g_debugBufferCount++] = c;
 		}
 		// else do nothing (Assuming it's more important how we got here than where we're going)
+#endif
 	}
 #endif
 }
