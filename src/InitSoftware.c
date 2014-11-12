@@ -242,9 +242,11 @@ void setupMnDef(void)
 	debug("Adding On/Off Log timestamp\r\n");
 	AddOnOffLogTimestamp(ON);
 	
+#if 0 // Removed debug log file due to inducing system problems
 	//-------------------------------------------------------------------------
 	// Switch Debug Log file
 	SwitchDebugLogFile();
+#endif
 	
 	//-------------------------------------------------------------------------
 	// Init Global Unique Event Number
