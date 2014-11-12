@@ -237,34 +237,17 @@ void Usart_1_rs232_irq(void)
 	uint32 usart_1_status;
 	uint8 recieveData;
 
-#if 1	
+	// Read control/status register to clear flags
 	usart_1_status = AVR32_USART1.csr;
+
+	// Read the data received (in combo with control/status read clears the interrupt)
 	recieveData = AVR32_USART1.rhr;
 
+	// Check if receive operation was successful
 	if (usart_1_status & AVR32_USART_CSR_RXRDY_MASK)
 	{
-#if 0 // Craft buffer fill
-static uint8 craftBufferCount = 0;
-
-		if (processCraftCmd == NO)
-		{
-			switch (recieveData)
-			{
-				case '\r':
-				case '\n':
-					g_input_buffer[craftBufferCount] = recieveData;
-					craftBufferCount = 0;
-					processCraftCmd = YES;
-					break;
-
-				default:
-					g_input_buffer[craftBufferCount++] = recieveData;
-					break;
-			}
-		}
-#endif
 		// Write the received data into the buffer
-		*(g_isrMessageBufferPtr->writePtr) = recieveData;
+		*g_isrMessageBufferPtr->writePtr = recieveData;
 
 		// Advance the buffer pointer
 		g_isrMessageBufferPtr->writePtr++;
@@ -281,23 +264,11 @@ static uint8 craftBufferCount = 0;
 	}
 	else if (usart_1_status & (AVR32_USART_CSR_OVRE_MASK | AVR32_USART_CSR_FRAME_MASK | AVR32_USART_CSR_PARE_MASK))
 	{
-		g_isrMessageBufferPtr->status = CMD_MSG_OVERFLOW_ERR;
-	}		
-	//else // USART_RX_EMPTY
-#endif
+		//g_isrMessageBufferPtr->status = CMD_MSG_OVERFLOW_ERR;
 
-#if 0 // Raw
-	// Check if USART_RX_ERROR
-	if (AVR32_USART1.csr & (AVR32_USART_CSR_OVRE_MASK | AVR32_USART_CSR_FRAME_MASK | AVR32_USART_CSR_PARE_MASK))
-		g_isrMessageBufferPtr->status = CMD_MSG_OVERFLOW_ERR;
-
-	// Check if we received a char
-	if ((AVR32_USART1.csr & AVR32_USART_CSR_RXRDY_MASK) != 0)
-	{
-		*(g_isrMessageBufferPtr->writePtr) = ((AVR32_USART1.rhr & AVR32_USART_RHR_RXCHR_MASK) >> AVR32_USART_RHR_RXCHR_OFFSET);
+		AVR32_USART1.cr = AVR32_USART_CR_RSTSTA_MASK;
+		usart_1_status = AVR32_USART1.csr;
 	}
-	//else USART_RX_EMPTY;
-#endif
 }
 
 ///----------------------------------------------------------------------------
