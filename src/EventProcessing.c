@@ -62,12 +62,8 @@ void InitRamSummaryTbl(void)
 void CopyValidFlashEventSummariesToRam(void)
 {
 	uint16 ramSummaryIndex = 0;
-	uint16 eventMajorVersion = (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK);
 	FAT32_DIRLIST* dirList = (FAT32_DIRLIST*)&(g_eventDataBuffer[0]);
 	uint16 entriesFound = 0;
-	char* fileName = (char*)&g_spareBuffer[0];
-	FL_FILE* eventFile;
-	EVT_RECORD tempEventRecord;
 	unsigned long int dirStartCluster;
 	uint8 dotBuff[TOTAL_DOTS];
 	static uint8 dotState = 0;
@@ -104,6 +100,32 @@ void CopyValidFlashEventSummariesToRam(void)
 
 				sprintf((char*)&overlayText[0], "INITIALIZING SUMMARY LIST WITH STORED EVENT INFO%s", (char*)&dotBuff[0]);
 				OverlayMessage("SUMMARY LIST", (char*)&overlayText[0], 0);
+
+#if 1 // Test
+				char eventNumBuffer[6];
+				uint8 j;
+
+				j = 3;
+				memset(&eventNumBuffer, 0, sizeof(eventNumBuffer));
+
+				while (dirList[entriesFound].name[j] != '.')
+				{
+					eventNumBuffer[j-3] = dirList[entriesFound].name[j];
+					j++;
+				}
+
+				__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum = atoi((char*)eventNumBuffer);
+
+				// Check to make sure ram summary index doesnt get out of range, if so reset to zero
+				if (++ramSummaryIndex >= TOTAL_RAM_SUMMARIES)
+				{
+					ramSummaryIndex = 0;
+				}
+#else // Normal, but extremely slow
+				uint16 eventMajorVersion = (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK);
+				char* fileName = (char*)&g_spareBuffer[0];
+				FL_FILE* eventFile;
+				EVT_RECORD tempEventRecord;
 
 				//_______________________________________________________________________________
 				//___Handle the next file found
@@ -161,6 +183,7 @@ void CopyValidFlashEventSummariesToRam(void)
 
 					fl_fclose(eventFile);
 				}
+#endif
 			}
 
 			entriesFound++;
@@ -350,8 +373,10 @@ void InitFlashBuffs(void)
 		// Re-init the table
 		InitRamSummaryTbl();
 
+#if 1 // Test removing an old mechanism since it's an extremely slow process for large numbers of files
 		// Find all flash events and recreate ram summary entries for them
 		CopyValidFlashEventSummariesToRam();
+#endif
 
 		// Re-count the number of summary structures with a valid (non-FF) link pointer
 		s_numOfFlashSummarys = 0;
