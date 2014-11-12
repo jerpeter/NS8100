@@ -400,9 +400,16 @@ BOOLEAN GetPowerControlState(POWER_MGMT_OPTIONS option)
 void PowerUnitOff(uint8 powerOffMode)
 {
 	OverlayMessage(getLangText(STATUS_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 0);
+#if 0 // Removed debug log file due to inducing system problems
 	debug("Dumping debug output to debug log file\r\n");
+#endif
+
 	debug("Adding On/Off Log timestamp\r\n");
+
+#if 0 // Removed debug log file due to inducing system problems
 	WriteDebugBufferToFile();
+#endif
+
 	AddOnOffLogTimestamp(OFF);
 
 	// Disable Power Off Protection
