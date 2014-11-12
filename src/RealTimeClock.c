@@ -118,8 +118,9 @@ void StartExternalRtcClock(uint16 sampleRate)
 	RTC_MEM_MAP_STRUCT rtcMap;
 	uint8 clockRate;
 
+#if 0 // Potential to call during ISR, so don't use beyond testing
 	debug("Starting External RTC Interrupt (%d ticks/sec)...\r\n", sampleRate);
-
+#endif
 	switch (sampleRate)
 	{
 		case 32768	: clockRate = 0x00; break;
