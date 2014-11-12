@@ -1121,6 +1121,7 @@ USER_MENU_STRUCT baudRateMenu[BAUD_RATE_MENU_ENTRIES] = {
 // Baud Rate Menu Handler
 //-----------------------
 #include "usart.h"
+#include "RemoteHandler.h"
 void BaudRateMenuHandler(uint8 keyPressed, void* data)
 {
 	uint32 usartRetries = USART_DEFAULT_TIMEOUT;
@@ -1171,6 +1172,8 @@ void BaudRateMenuHandler(uint8 keyPressed, void* data)
 
 			// Re-Initialize the RS232 with the new baud rate
 			usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
+
+			InitCraftInterruptBuffers();
 
 extern void Setup_8100_Usart_RS232_ISR(void);
 			// Re-setup the interrupt since the handler is removed on usart_reset (buried in the usart_init)
@@ -1420,6 +1423,9 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (SUMMARIES_EVENTS):
+				// Display a message to be patient while the software loads info from event files
+				OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
+
 				SETUP_MENU_MSG(SUMMARY_MENU); mn_msg.data[0] = START_FROM_TOP;
 			break;
 
