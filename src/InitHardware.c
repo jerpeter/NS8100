@@ -691,11 +691,7 @@ void InitSerial232(void)
 	// Setup debug serial port
 	usart_options_t usart_1_rs232_options =
 	{
-		#if 1 // Normal
 		.baudrate = 115200,
-		#else // Test (12Mhz)
-		.baudrate = 38400,
-		#endif
 		.charlength = 8,
 		.paritytype = USART_NO_PARITY,
 		.stopbits = USART_1_STOPBIT,
@@ -715,6 +711,7 @@ void InitSerial232(void)
 			case BAUD_RATE_38400: usart_1_rs232_options.baudrate = 38400; break;
 			case BAUD_RATE_19200: usart_1_rs232_options.baudrate = 19200; break;
 			case BAUD_RATE_9600: usart_1_rs232_options.baudrate = 9600; break;
+			default: usart_1_rs232_options.baudrate = 115200; break;
 		}
 	}
 
@@ -1114,13 +1111,6 @@ void InitSystemHardware_NS8100(void)
 #endif
 
 	//-------------------------------------------------------------------------
-	// Turn on rs232 driver and receiver (Active low control)
-	//-------------------------------------------------------------------------
-	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
-	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
-	InitSerial232();
-
-	//-------------------------------------------------------------------------
 	// Set RTC Timestamp pin high (Active low control)
 	//-------------------------------------------------------------------------
 	PowerControl(RTC_TIMESTAMP, OFF);
@@ -1296,6 +1286,13 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init and configure the A/D to prevent the unit from burning current charging internal reference (default config)
 	InitExternalAD();
+
+	//-------------------------------------------------------------------------
+	// Turn on rs232 driver and receiver (Active low control)
+	//-------------------------------------------------------------------------
+	InitSerial232();
+	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
 
 	//-------------------------------------------------------------------------
 	// Set the power savings mode based on the saved setting
