@@ -282,7 +282,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			buffDex += 2;
 		}		
 
-		// Check if the SuperGraphics version is non-zero suppesting that it's a version that supports sending back CRC
+		// Check if the SuperGraphics version is non-zero suggesting that it's a version that supports sending back CRC
 		if (cfg.sgVersion)
 		{
 			// Get the CRC value from the data stream
@@ -337,6 +337,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case MANUAL_TRIGGER_MODE:
 			default:
 				returnCode = CFG_ERR_TRIGGER_MODE;
+				goto SEND_UCM_ERROR_CODE;
 				break;
 		}
 		
@@ -361,6 +362,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				(cfg.currentTime.year > 99))
 			{
 				returnCode = CFG_ERR_SYSTEM_DATE;
+				goto SEND_UCM_ERROR_CODE;
 			}
 			else
 			{
@@ -382,6 +384,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				(cfg.currentTime.hour > 23)) 
 			{
 				returnCode = CFG_ERR_SYSTEM_TIME;
+				goto SEND_UCM_ERROR_CODE;
 			}
 			else
 			{
@@ -407,6 +410,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		if (cfg.eventCfg.distToSource > (uint32)(DISTANCE_TO_SOURCE_MAX_VALUE * 100))
 		{
 			returnCode = CFG_ERR_DIST_TO_SRC;
+			goto SEND_UCM_ERROR_CODE;
 		}
 		else
 		{
@@ -419,6 +423,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		if (cfg.eventCfg.weightPerDelay > (uint32)(WEIGHT_PER_DELAY_MAX_VALUE * 100))
 		{
 			returnCode = CFG_ERR_WEIGHT_DELAY;
+			goto SEND_UCM_ERROR_CODE;
 		}
 		else
 		{
@@ -436,6 +441,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				(cfg.eventCfg.sampleRate > SAMPLE_RATE_4K))
 			{
 				returnCode = CFG_ERR_SAMPLE_RATE;
+				goto SEND_UCM_ERROR_CODE;
 			}
 			else
 			{
@@ -445,6 +451,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_SAMPLE_RATE;
+			goto SEND_UCM_ERROR_CODE;
 		}
 
 		//--------------------------------
@@ -462,6 +469,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_SEISMIC_TRIG_LVL;
+			goto SEND_UCM_ERROR_CODE;
 		}
 		
 		//--------------------------------
@@ -491,6 +499,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_A_WEIGHTING;
+			goto SEND_UCM_ERROR_CODE;
 		}
 
 		//--------------------------------
@@ -528,6 +537,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_SOUND_TRIG_LVL;
+			goto SEND_UCM_ERROR_CODE;
 		}
 
 		//--------------------------------
@@ -549,6 +559,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_RECORD_TIME;
+			goto SEND_UCM_ERROR_CODE;
 		}
 		
 		// Contains the bargraph scale range
@@ -570,6 +581,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 			default:
 				returnCode = CFG_ERR_BAR_INTERVAL;
+				goto SEND_UCM_ERROR_CODE;
 				break;
 		}
 
@@ -589,6 +601,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 			default:
 				returnCode = CFG_ERR_SUM_INTERVAL;
+				goto SEND_UCM_ERROR_CODE;
 				break;
 		}
 
@@ -606,6 +619,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_SENSITIVITY;
+			goto SEND_UCM_ERROR_CODE;
 		}
 		
 		if ((1 == cfg.eventCfg.calDataNumOfSamples) || (2 == cfg.eventCfg.calDataNumOfSamples) ||
@@ -616,6 +630,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_SCALING;
+			goto SEND_UCM_ERROR_CODE;
 		}
 
 		if (cfg.eventCfg.activeChannels <= BAR_AIR_CHANNEL) // Implied (cfg.eventCfg.activeChannels >= 0)
@@ -625,6 +640,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_BAR_PRINT_CHANNEL;
+			goto SEND_UCM_ERROR_CODE;
 		}
 #else // Updated with notes
 		if ((cfg.extraUnitCfg.sensitivity == LOW) || (cfg.extraUnitCfg.sensitivity == HIGH))
@@ -634,6 +650,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_SENSITIVITY;
+			goto SEND_UCM_ERROR_CODE;
 		}
 		
 		if ((cfg.extraUnitCfg.barScale == 1) || (cfg.extraUnitCfg.barScale == 2) || (cfg.extraUnitCfg.barScale == 4) || (cfg.extraUnitCfg.barScale == 8))
@@ -643,6 +660,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_SCALING;
+			goto SEND_UCM_ERROR_CODE;
 		}
 
 		if (cfg.extraUnitCfg.barChannel <= BAR_AIR_CHANNEL)
@@ -652,6 +670,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_BAR_PRINT_CHANNEL;
+			goto SEND_UCM_ERROR_CODE;
 		}
 
 		if ((cfg.eventCfg.pretrigBufferDivider == PRETRIGGER_BUFFER_QUARTER_SEC_DIV) || (cfg.eventCfg.pretrigBufferDivider == PRETRIGGER_BUFFER_HALF_SEC_DIV) ||
@@ -662,6 +681,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_PRETRIG_BUFFER_DIV;
+			goto SEND_UCM_ERROR_CODE;
 		}
 #endif
 
@@ -673,6 +693,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_BIT_ACCURACY;
+			goto SEND_UCM_ERROR_CODE;
 		}
 		
 		if ((cfg.eventCfg.adjustForTempDrift == YES) || (cfg.eventCfg.adjustForTempDrift == NO))
@@ -682,6 +703,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_TEMP_ADJUST;
+			goto SEND_UCM_ERROR_CODE;
 		}
 
 		// Auto Monitor Mode check
@@ -696,6 +718,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				
 			default:
 				returnCode = CFG_ERR_AUTO_MON_MODE;
+				goto SEND_UCM_ERROR_CODE;
 				break;
 		}
 
@@ -711,6 +734,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				
 			default:
 				returnCode = CFG_ERR_AUTO_CAL_MODE;
+				goto SEND_UCM_ERROR_CODE;
 				break;
 		}
 
@@ -722,6 +746,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_AUTO_PRINT;
+			goto SEND_UCM_ERROR_CODE;
 		}
 		
 		// Language Mode	
@@ -741,6 +766,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					
 			default:
 				returnCode = CFG_ERR_LANGUAGE_MODE;
+				goto SEND_UCM_ERROR_CODE;
 				break;	
 		}
 
@@ -752,6 +778,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_VECTOR_SUM;
+			goto SEND_UCM_ERROR_CODE;
 		}
 		
 		// Units of Measure check
@@ -762,6 +789,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_UNITS_OF_MEASURE;
+			goto SEND_UCM_ERROR_CODE;
 		}
 		
 		// Frequency plot mode , Yes or No or On or Off
@@ -772,6 +800,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		else
 		{
 			returnCode = CFG_ERR_FREQ_PLOT_MODE;
+			goto SEND_UCM_ERROR_CODE;
 		}
 
 		// Frequency plot mode , Yes or No or On or Off
@@ -787,6 +816,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					
 			default:
 				returnCode = CFG_ERR_FREQ_PLOT_TYPE;
+				goto SEND_UCM_ERROR_CODE;
 				break;	
 		}
 
@@ -809,6 +839,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				default:
 					g_unitConfig.alarmOneMode = ALARM_MODE_OFF;
 					returnCode = CFG_ERR_ALARM_ONE_MODE;
+					goto SEND_UCM_ERROR_CODE;
 					break;	
 			}
 
@@ -828,6 +859,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				else
 				{					
 					returnCode = CFG_ERR_ALARM_ONE_SEISMIC_LVL;
+					goto SEND_UCM_ERROR_CODE;
 				}
 			}
 
@@ -843,6 +875,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				else
 				{
 					returnCode = CFG_ERR_ALARM_ONE_SOUND_LVL;
+					goto SEND_UCM_ERROR_CODE;
 				}
 			}
 
@@ -860,11 +893,13 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				else
 				{
 					returnCode = CFG_ERR_ALARM_ONE_TIME;
+					goto SEND_UCM_ERROR_CODE;
 				}
 			}
 			else
 			{
 				returnCode = CFG_ERR_ALARM_ONE_TIME;
+				goto SEND_UCM_ERROR_CODE;
 			}
 		}			
 
@@ -890,6 +925,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				default:
 					g_unitConfig.alarmTwoMode = ALARM_MODE_OFF;
 					returnCode = CFG_ERR_ALARM_TWO_MODE;
+					goto SEND_UCM_ERROR_CODE;
 					break;	
 			}
 
@@ -909,6 +945,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				else
 				{
 					returnCode = CFG_ERR_ALARM_TWO_SEISMIC_LVL;
+					goto SEND_UCM_ERROR_CODE;
 				}
 			}
 			
@@ -924,6 +961,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				else
 				{
 					returnCode = CFG_ERR_ALARM_TWO_SOUND_LVL;
+					goto SEND_UCM_ERROR_CODE;
 				}
 			}
 
@@ -941,11 +979,13 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				else
 				{
 					returnCode = CFG_ERR_ALARM_TWO_TIME;
+					goto SEND_UCM_ERROR_CODE;
 				}
 			}
 			else
 			{
 				returnCode = CFG_ERR_ALARM_TWO_TIME;
+				goto SEND_UCM_ERROR_CODE;
 			}
 		}
 
@@ -968,6 +1008,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					
 					default:
 						returnCode = CFG_ERR_TIMER_MODE_FREQ;
+						goto SEND_UCM_ERROR_CODE;
 						break;
 				}
 
@@ -979,6 +1020,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					 (cfg.timerCfg.timer_start.day  >= 1) && (cfg.timerCfg.timer_start.day  < 32)))
 				{
 					returnCode = CFG_ERR_START_TIME;
+					goto SEND_UCM_ERROR_CODE;
 				}
 
 				if (!((cfg.timerCfg.timer_stop.hour < 24) && 
@@ -988,6 +1030,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					 (cfg.timerCfg.timer_stop.day  >= 1) && (cfg.timerCfg.timer_stop.day  < 32)))
 				{
 					returnCode = CFG_ERR_STOP_TIME;
+					goto SEND_UCM_ERROR_CODE;
 				}
 				
 				if ((CFG_ERR_START_TIME != returnCode) && (CFG_ERR_STOP_TIME != returnCode) &&
@@ -1018,6 +1061,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			{	
 				// In valid value for the timer mode, return an error
 				returnCode = CFG_ERR_TIMER_MODE;
+				goto SEND_UCM_ERROR_CODE;
 			}
 		}
 	
@@ -1032,13 +1076,17 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			{
 				// Invalid value for the flash wrapping option
 				returnCode = CFG_ERR_FLASH_WRAPPING;
+				goto SEND_UCM_ERROR_CODE;
 			}
 		}
 
+		if (returnCode == CFG_ERR_NONE)
+		{
 		// Check if it has all been verified and now save the data. Data in error is not saved.
 		SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 		SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+	}
 	}
 
 	if (TRUE == timerModeModified)
@@ -1051,6 +1099,11 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 	}
 	
+SEND_UCM_ERROR_CODE:
+	if (returnCode != CFG_ERR_NONE)
+	{
+		debug("UCM error encountered: %d\r\n", returnCode);
+	}
 
 	// -------------------------------------
 	// Return codes
