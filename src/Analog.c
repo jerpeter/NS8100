@@ -21,6 +21,7 @@
 #include "tc.h"
 #include "twi.h"
 #include "spi.h"
+#include "string.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines

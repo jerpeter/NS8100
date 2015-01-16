@@ -24,8 +24,10 @@
 #include "ProcessBargraph.h"
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
+#if 0 // Port fat driver
 #include "FAT32_Disk.h"
 #include "FAT32_Access.h"
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -351,6 +353,7 @@ void ProcessWaveformData(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#include "fsaccess.h"
 void MoveWaveformEventToFile(void)
 {
 	static FLASH_MOV_STATE waveformProcessingState = FLASH_IDLE;
@@ -367,7 +370,12 @@ void MoveWaveformEventToFile(void)
 	INPUT_MSG_STRUCT msg;
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
+
+#if 1 // Atmel fat driver
+	int waveformFileHandle = -1;
+#else // Port fat driver
 	FL_FILE* waveformFileHandle = NULL;
+#endif
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
@@ -542,7 +550,11 @@ void MoveWaveformEventToFile(void)
 					// Get new event file handle
 					waveformFileHandle = GetEventFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
 
+#if 1 // Atmel fat driver
+					if (waveformFileHandle == -1)
+#else // Port fat driver
 					if (waveformFileHandle == NULL)
+#endif
 					{
 						debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.op_mode == WAVEFORM_MODE) ? "Waveform" : "Combo - Waveform");
 					}					
@@ -552,6 +564,16 @@ void MoveWaveformEventToFile(void)
 								(g_triggerRecord.op_mode == WAVEFORM_MODE) ? "WAVEFORM" : "COMBO - WAVEFORM", g_pendingEventRecord.summary.eventNumber);
 						OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
+#if 1 // Atmel fat driver
+						// Write the event record header and summary
+						write(waveformFileHandle, &g_pendingEventRecord, sizeof(EVT_RECORD));
+
+						// Write the event data, containing the Pretrigger, event and cal
+						write(waveformFileHandle, g_currentEventStartPtr, (g_wordSizeInEvent * 2));
+
+						// Done writing the event file, close the file handle
+						close(waveformFileHandle);
+#else // Port fat driver
 						// Write the event record header and summary
 						fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, waveformFileHandle);
 
@@ -560,15 +582,20 @@ void MoveWaveformEventToFile(void)
 
 						// Done writing the event file, close the file handle
 						fl_fclose(waveformFileHandle);
+#endif
+
 						debug("Waveform Event file closed\r\n");
 
 						ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 					
 						UpdateMonitorLogEntry();
 
+#if 0 // Prevent spam storing the event number if there are multiple events
 						// After event numbers have been saved, store current event number in persistent storage.
 						StoreCurrentEventNumber();
-
+#else // Just increment the number and save when the monitor session is done
+						IncrementCurrentEventNumber();
+#endif
 						UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_wordSizeInEvent);
 
 						// Now store the updated event number in the universal ram storage.

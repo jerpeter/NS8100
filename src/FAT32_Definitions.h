@@ -1,3 +1,4 @@
+#if 0
 #ifndef FAT32_DEFINITIONS_H_
 #define FAT32_DEFINITIONS_H_
 
@@ -122,3 +123,4 @@ typedef struct
 
 
 #endif /*FAT32_DEFINITIONS_H_*/
+#endif

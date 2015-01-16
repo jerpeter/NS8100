@@ -1,3 +1,4 @@
+#if 0
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //					        FAT32 File IO Library
@@ -51,9 +52,9 @@ static int			Filelib_Init = FALSE;
 static BOOL				_open_directory(char *path, UINT32 *pathCluster);
 static FL_FILE*			_find_spare_file();
 static void				_fl_init();
-static FL_FILE*			_read_file(char *path);
+//static FL_FILE*			_read_file(char *path);
 static BOOL				_write_block(FL_FILE *file, BYTE *data, UINT32 length);
-static FL_FILE*			_create_file(char *filename, UINT32 size);
+//static FL_FILE*			_create_file(char *filename, UINT32 size);
 
 //-----------------------------------------------------------------------------
 // _fl_init: Initialise File Library
@@ -88,7 +89,7 @@ static FL_FILE* _find_spare_file()
 //-----------------------------------------------------------------------------
 // _check_file_open: Returns true if the file is already open
 //-----------------------------------------------------------------------------
-static BOOL _check_file_open(FL_FILE* file)
+BOOL _check_file_open(FL_FILE* file)
 {
 	int i;
 
@@ -202,6 +203,7 @@ void fl_shutdown()
 //-----------------------------------------------------------------------------
 // fopen: Open or Create a file for reading or writing
 //-----------------------------------------------------------------------------
+#if 0
 FL_FILE* fl_fopen(char *path, char *mode)
 {
 	int modlen, i;
@@ -303,10 +305,13 @@ FL_FILE* fl_fopen(char *path, char *mode)
 
 	return file;	
 }
+#endif
+
 //-----------------------------------------------------------------------------
 // _read_file: Open a file for reading
 //-----------------------------------------------------------------------------
-static FL_FILE* _read_file(char *path)
+#if 0
+FL_FILE* _read_file(char *path)
 {
 	FL_FILE* file; 
 	FAT32_ShortEntry sfEntry;
@@ -368,9 +373,12 @@ static FL_FILE* _read_file(char *path)
 
 	return NULL;
 }
+#endif
+
 //-----------------------------------------------------------------------------
 // fl_fclose: Close an open file
 //-----------------------------------------------------------------------------
+#if 0
 void fl_fclose(FL_FILE *file)
 {
 	// If first call to library, initialise
@@ -387,6 +395,8 @@ void fl_fclose(FL_FILE *file)
 		FAT32_PurgeFATBuffer();
 	}
 }
+#endif
+
 //-----------------------------------------------------------------------------
 // fl_fgetc: Get a character in the stream
 //-----------------------------------------------------------------------------
@@ -442,6 +452,7 @@ int fl_fgetc(FL_FILE *file)
 //-----------------------------------------------------------------------------
 // fl_fread: Read a block of data from the file
 //-----------------------------------------------------------------------------
+#if 0
 int fl_fread (FL_FILE *file, BYTE * buffer, UINT32 count)
 {
 	UINT32 sector;
@@ -526,6 +537,8 @@ int fl_fread (FL_FILE *file, BYTE * buffer, UINT32 count)
 
 	return bytesRead;
 }
+#endif
+
 //-----------------------------------------------------------------------------
 // fl_fseek: Seek to a specific place in the file
 // TODO: This should support -ve numbers with SEEK END and SEEK CUR
@@ -595,7 +608,8 @@ int fl_fgetpos(FL_FILE *file , UINT32 * position)
 // _create_file: Create a new file
 //-----------------------------------------------------------------------------
 #ifdef INCLUDE_WRITE_SUPPORT
-static FL_FILE* _create_file(char *filename, UINT32 size)
+#if 0
+FL_FILE* _create_file(char *filename, UINT32 size)
 {
 	FL_FILE* file; 
 	FAT32_ShortEntry sfEntry;
@@ -683,6 +697,8 @@ static FL_FILE* _create_file(char *filename, UINT32 size)
 	return file;
 }
 #endif
+#endif
+
 //-----------------------------------------------------------------------------
 // fl_fputc: Write a character to the stream
 //-----------------------------------------------------------------------------
@@ -718,6 +734,7 @@ int fl_fputc(int c, FL_FILE *file)
 // fl_fwrite: Write a block of data to the stream
 //-----------------------------------------------------------------------------
 #ifdef INCLUDE_WRITE_SUPPORT
+#if 0
 int fl_fwrite(const void * data, int size, int count, FL_FILE *file )
 {
 	// If first call to library, initialise
@@ -741,6 +758,8 @@ int fl_fwrite(const void * data, int size, int count, FL_FILE *file )
 		return -1;
 }
 #endif
+#endif
+
 //-----------------------------------------------------------------------------
 // fl_fputs: Write a character string to the stream
 //-----------------------------------------------------------------------------
@@ -944,3 +963,4 @@ int fl_remove( const char * filename )
 }
 #endif
 
+#endif

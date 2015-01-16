@@ -42,17 +42,20 @@
 #include "twi.h"
 #include "M23018.h"
 #include "sd_mmc_spi.h"
-#include "FAT32_Disk.h"
-#include "FAT32_Access.h"
 #include "adc.h"
 #include "usb_task.h"
 #include "device_mass_storage_task.h"
 #include "usb_drv.h"
-#include "FAT32_FileLib.h"
 #include "srec.h"
 #include "flashc.h"
 #include "rtc.h"
 #include "NomisLogo.h"
+#include "navigation.h"
+#if 0 // Port fat driver
+#include "FAT32_Disk.h"
+#include "FAT32_Access.h"
+#include "FAT32_FileLib.h"
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -897,12 +900,36 @@ void InitSDAndFileSystem(void)
 		}
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 
+#if 1 // Atmel fat driver
+		// Init the NAV and select the SD MMC Card
+		nav_reset();
+		nav_select(0);
+
+		// Check if the drive select was successful
+		if (nav_drive_set(0) == TRUE)
+		{
+			// Check if the partition mount was unsuccessful (otherwise passes through without an error case)
+			if (nav_partition_mount() == FALSE)
+			{
+				// Error case
+				debugErr("FAT32 SD Card mount failed\r\n");
+				OverlayMessage("ERROR", "FAILED TO MOUNT SD CARD!", 0);
+			}
+		}
+		else // Error case
+		{
+			debugErr("FAT32 SD Card drive select failed\r\n");
+			OverlayMessage("ERROR", "FAILED TO SELECT SD CARD DRIVE!", 0);
+		}
+
+#else // Port fat driver
 		FAT32_InitDrive();
 		if (FAT32_InitFAT() == FALSE)
 		{
 			debugErr("FAT32 Initialization failed\r\n");
 			OverlayMessage("ERROR", "FAILED TO INIT FILE SYSTEM ON SD CARD!", 0);
 		}
+#endif
 	}
 	else
 	{

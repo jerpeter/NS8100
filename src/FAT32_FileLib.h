@@ -1,3 +1,4 @@
+#if 0
 #ifndef FAT32_FILELIB_H_
 #define FAT32_FILELIB_H_
 
@@ -60,3 +61,4 @@ int					fl_fgetpos(FL_FILE *file , UINT32 * position);
 int					fl_remove( const char * filename );			
 
 #endif /*FAT32_FILELIB_H_*/
+#endif

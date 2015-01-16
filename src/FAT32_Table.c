@@ -1,3 +1,4 @@
+#if 0
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //					        FAT32 File IO Library
@@ -316,4 +317,5 @@ BOOL FAT32_AddClusterToEndofChain(UINT32 StartCluster, UINT32 newEntry)
 
 	return TRUE;
 } 
+#endif
 #endif

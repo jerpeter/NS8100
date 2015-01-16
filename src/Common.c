@@ -615,38 +615,51 @@ void InitVersionMsg(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#include "fsaccess.h"
 void BuildLanguageLinkTable(uint8 languageSelection)
 {
 	uint16 i, currIndex;
 	char* languageTablePtr;
+#if 1 // Atmel fat driver
+	int languageFile = -1;
+#else // Port fat driver
 	FL_FILE* languageFile = NULL;
+#endif
 	char languageFilename[50];
+
+	memset((char*)&languageFilename[0], 0, sizeof(languageFilename));
+
+#if 1 // Atmel fat driver
+	strcpy((char*)&languageFilename[0], "A:\\Language\\");
+#else // Port fat driver
+	strcpy((char*)&languageFilename[0], "C:\\Language\\");
+#endif
 
 	switch (languageSelection)
 	{
 		case ENGLISH_LANG: languageTablePtr = englishLanguageTable;
-			sprintf((char*)&languageFilename[0], "C:\\Language\\English.tbl");
+			strcat((char*)&languageFilename[0], "English.tbl");
 			break;
 
 		case FRENCH_LANG: languageTablePtr = frenchLanguageTable;
-			sprintf((char*)&languageFilename[0], "C:\\Language\\French.tbl");
+			strcat((char*)&languageFilename[0], "French.tbl");
 			break;
 
 		case ITALIAN_LANG: languageTablePtr = italianLanguageTable;
-			sprintf((char*)&languageFilename[0], "C:\\Language\\Italian.tbl");
+			strcat((char*)&languageFilename[0], "Italian.tbl");
 			break;
 
 		case GERMAN_LANG: languageTablePtr = germanLanguageTable;
-			sprintf((char*)&languageFilename[0], "C:\\Language\\German.tbl");
+			strcat((char*)&languageFilename[0], "German.tbl");
 			break;
 
 		case SPANISH_LANG: languageTablePtr = spanishLanguageTable;
-			sprintf((char*)&languageFilename[0], "C:\\Language\\Spanish.tbl");
+			strcat((char*)&languageFilename[0], "Spanish.tbl");
 			break;
 
 		default:
 			languageTablePtr = englishLanguageTable;
-			sprintf((char*)&languageFilename[0], "C:\\Language\\English.tbl");
+			strcat((char*)&languageFilename[0], "English.tbl");
 			g_unitConfig.languageMode = ENGLISH_LANG;
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 			break;
@@ -664,25 +677,45 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 		g_fileAccessLock = FILE_LOCK;
 
 		// Attempt to find the file on the SD file system
+#if 1 // Atmel fat driver
+		languageFile = open((char*)&languageFilename[0], O_RDONLY);
+#else // Port fat driver
 		languageFile = fl_fopen((char*)&languageFilename[0], "r");
+#endif
 
+#if 1 // Atmel fat driver
+		if (languageFile != -1)
+#else // Port fat driver
 		if (languageFile)
+#endif
 		{
-			debug("Loading language table from file: %s, Length: %d\r\n", (char*)&languageFilename[0], languageFile->filelength);
+			debug("Loading language table from file: %s, Length: %d\r\n", (char*)&languageFilename[0], fsaccess_file_get_size(languageFile));
 
 			memset(&g_languageTable, '\0', sizeof(g_languageTable));
 
-			if (languageFile->filelength > LANGUAGE_TABLE_MAX_SIZE)
+			if (fsaccess_file_get_size(languageFile) > LANGUAGE_TABLE_MAX_SIZE)
 			{
 				// Error case - Just read the maximum buffer size and pray
+#if 1 // Atmel fat driver
+				read(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
+#else // Port fat driver
 				fl_fread(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
+#endif
 			}
 			else
 			{
+#if 1 // Atmel fat driver
+				read(languageFile, (uint8*)&g_languageTable[0], fsaccess_file_get_size(languageFile));
+#else // Port fat driver
 				fl_fread(languageFile, (uint8*)&g_languageTable[0], languageFile->filelength);
+#endif
 			}
 
+#if 1 // Atmel fat driver
+			close(languageFile);
+#else // Port fat driver
 			fl_fclose(languageFile);
+#endif
 		}
 
 		g_fileAccessLock = AVAILABLE;
@@ -735,7 +768,11 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 extern const char default_boot_name[];
 void CheckBootloaderAppPresent(void)
 {
+#if 1 // Atmel fat driver
+	int file = -1;
+#else // Port fat driver
 	FL_FILE* file = NULL;
+#endif
 
 	if (g_fileAccessLock != AVAILABLE)
 	{
@@ -745,12 +782,33 @@ void CheckBootloaderAppPresent(void)
 	{
 		g_fileAccessLock = FILE_LOCK;
 
-		sprintf((char*)g_spareBuffer,"C:\\System\\%s", default_boot_name);
+#if 1 // Atmel fat driver
+		strcpy((char*)g_spareBuffer, "A:\\System\\%s");
+#else // Port fat driver
+		strcpy((char*)g_spareBuffer, "C:\\System\\%s");
+#endif
+
+		strcat((char*)g_spareBuffer, default_boot_name);
+
+#if 1 // Atmel fat driver
+		file = open((char*)g_spareBuffer, O_RDONLY);
+#else // Port fat driver
 		file = fl_fopen((char*)g_spareBuffer, "r");
+#endif
+
+#if 1 // Atmel fat driver
+		if (file != -1)
+#else // Port fat driver
 		if (file)
+#endif
 		{
 			debug("Bootloader found and available\r\n");
+
+#if 1 // Atmel fat driver
+			close(file);
+#else // Port fat driver
 			fl_fclose(file);
+#endif
 		}
 
 		g_fileAccessLock = AVAILABLE;

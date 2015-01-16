@@ -1,3 +1,4 @@
+#if 0
 #ifndef FAT32_MUISC_H_
 #define FAT32_MUISC_H_
 
@@ -39,3 +40,4 @@ BOOL FATMisc_CreateSFN(char *sfn_output, char *filename);
 BOOL FATMisc_GenerateTail(char *sfn_output, char *sfn_input, UINT32 tailNum);
 
 #endif /*FAT32_MUISC_H_*/
+#endif

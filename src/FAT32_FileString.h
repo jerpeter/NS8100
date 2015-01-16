@@ -1,3 +1,4 @@
+#if 0
 #ifndef FAT32_FILESTRING_H_
 #define FAT32_FILESTRING_H_
 
@@ -19,3 +20,4 @@ int FileString_Compare(char* strA, char* strB);
 #endif
 
 #endif /*FAT32_FILESTRING_H_*/
+#endif

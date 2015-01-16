@@ -1,3 +1,4 @@
+#if 0
 #ifndef FAT32_BASE_H_
 #define FAT32_BASE_H_
 
@@ -32,3 +33,4 @@ UINT32 FAT32_LBAofCluster(UINT32 Cluster_Number);
 BOOL FAT32_Init(void);
 
 #endif /*FAT32_BASE_H_*/
+#endif

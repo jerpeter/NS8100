@@ -100,7 +100,12 @@ static char * Srec_UartGets( char *s, int channel )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#include "fsaccess.h"
+#if 1 // Atmel fat driver
+int Get_and_save_srec( int file )
+#else // Port fat driver
 int Get_and_save_srec( FL_FILE* file )
+#endif
 {
    uint16 badrecords = 0;
    int imageType = -1;
@@ -125,9 +130,15 @@ int Get_and_save_srec( FL_FILE* file )
        else
        {
            records++;
+#if 1 // Atmel fat driver
+           write(file, (char*)&asciidata, sizeof(asciidata));
+           file_putc(0x0D);
+           file_putc(0x0A);
+#else // Port fat driver
            fl_fputs((char *)&asciidata, file);
            fl_fputc(0x0D, file);
            fl_fputc(0x0A, file);
+#endif
 
            linedata = Srec_convert_line( asciidata );
 
@@ -138,7 +149,12 @@ int Get_and_save_srec( FL_FILE* file )
            }
            else if( linedata.RecordType == SREC_END )
            {
+#if 1 // Atmel fat driver
+               file_putc(0x00);
+#else // Port fat driver
                fl_fputc(0x00, file);
+#endif
+
                lastrecord = TRUE;
                Srec_ack( );
            }
@@ -171,7 +187,11 @@ int Get_and_save_srec( FL_FILE* file )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 1 // Atmel fat driver
+int Unpack_srec( int file )
+#else // Port fat driver
 int Unpack_srec( FL_FILE* file )
+#endif
 {
     uint8  lineDone;
     uint8  *tempcode;
@@ -194,7 +214,13 @@ int Unpack_srec( FL_FILE* file )
     code = (uint16*)eventDataBuff;
     tempcode = (uint8*)code;
     records = 0;
+
+#if 1 // Atmel fat driver
+    filelength = fsaccess_file_get_size(file);
+#else // Port fat driver
     filelength = file->filelength; //fl_get_length(file);
+#endif
+
     progress = 0;
     bytes_loaded = 0;
 
@@ -213,7 +239,12 @@ int Unpack_srec( FL_FILE* file )
         lineDone = FALSE;
         while(lineDone == FALSE)
         {
+#if 1 // Atmel fat driver
+            *fileData = file_getc();
+#else // Port fat driver
             *fileData = fl_fgetc(file);
+#endif
+
             if(*fileData == 0x0A)
             {
                 lineDone = TRUE;
@@ -383,12 +414,12 @@ RECORD_DATA Srec_convert_line( ASCII_SREC_DATA linedata )
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-bool Srec_checksum( RECORD_DATA linedata )
+BOOL Srec_checksum( RECORD_DATA linedata )
 {
     uint8 bytecount;
     uint8 checksum = 0;
     uint8 index = 0;
-    bool result = FALSE;
+    BOOL result = FALSE;
 
     bytecount = linedata.Length;
 

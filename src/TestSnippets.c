@@ -42,15 +42,17 @@
 #include "twi.h"
 #include "M23018.h"
 #include "sd_mmc_spi.h"
-#include "FAT32_Disk.h"
-#include "FAT32_Access.h"
 #include "adc.h"
 #include "usb_task.h"
 #include "device_mass_storage_task.h"
 #include "usb_drv.h"
-#include "FAT32_FileLib.h"
 #include "srec.h"
 #include "flashc.h"
+#if 0 // Port fat driver
+#include "FAT32_Disk.h"
+#include "FAT32_Access.h"
+#include "FAT32_FileLib.h"
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines

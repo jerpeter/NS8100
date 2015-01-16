@@ -1,3 +1,4 @@
+#if 0
 #ifndef FAT32_TABLE_H_
 #define FAT32_TABLE_H_
 
@@ -20,3 +21,4 @@ BOOL FAT32_AddClusterToEndofChain(UINT32 StartCluster, UINT32 newEntry);
 BOOL FAT32_FreeClusterChain(UINT32 StartCluster);
 
 #endif /*FAT32_TABLE_H_*/
+#endif

@@ -24,9 +24,11 @@
 #include "ProcessBargraph.h"
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
+#if 0 // Port fat driver
 #include "FAT32_FileLib.h"
 #include "FAT32_Disk.h"
 #include "FAT32_Access.h"
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -44,6 +46,7 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#include "fsaccess.h"
 void MoveManualCalToFile(void)
 {
 	static SUMMARY_DATA* sumEntry;
@@ -55,7 +58,12 @@ void MoveManualCalToFile(void)
 	uint16 lowA = 0xFFFF, lowR = 0xFFFF, lowV = 0xFFFF, lowT = 0xFFFF;
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
+
+#if 1 // Atmel fat driver
+	int manualCalFileHandle = -1;
+#else // Port fat driver
 	FL_FILE* manualCalFileHandle = NULL;
+#endif
 
 	debug("Processing Manual Cal to be saved\r\n");
 
@@ -171,7 +179,11 @@ void MoveManualCalToFile(void)
 			// Get new event file handle
 			manualCalFileHandle = GetEventFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
 
+#if 1 // Atmel fat driver
+			if (manualCalFileHandle == -1)
+#else // Port fat driver
 			if (manualCalFileHandle == NULL)
+#endif
 			{
 				debugErr("Failed to get a new file handle for the Manual Cal event\r\n");
 			}
@@ -180,6 +192,16 @@ void MoveManualCalToFile(void)
 				sprintf((char*)&g_spareBuffer[0], "CALIBRATION EVENT #%d BEING SAVED...", g_pendingEventRecord.summary.eventNumber);
 				OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
+#if 1 // Atmel fat driver
+				// Write the event record header and summary
+				write(manualCalFileHandle, &g_pendingEventRecord, sizeof(EVT_RECORD));
+
+				// Write the event data, containing the Pretrigger, event and cal
+				write(manualCalFileHandle, g_currentEventStartPtr, (g_wordSizeInCal * 2));
+
+				// Done writing the event file, close the file handle
+				close(manualCalFileHandle);
+#else // Port fat driver
 				// Write the event record header and summary
 				fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, manualCalFileHandle);
 
@@ -188,6 +210,8 @@ void MoveManualCalToFile(void)
 
 				// Done writing the event file, close the file handle
 				fl_fclose(manualCalFileHandle);
+#endif
+
 				debug("Manual Cal Event file closed\r\n");
 
 				ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;

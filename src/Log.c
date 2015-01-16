@@ -17,6 +17,7 @@
 #include "SysEvents.h"
 #include "TextTypes.h"
 #include "FAT32_FileLib.h"
+#include "string.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -203,8 +204,20 @@ void UpdateMonitorLogEntry()
 void CloseMonitorLogEntry()
 {
 	//char spareBuffer[40];
+	CURRENT_EVENT_NUMBER_STRUCT currentEventNumberRecord;
 
 	//debug("Closing entry at Monitor Log table index: %d, total recorded: %d\r\n", __monitorLogTblIndex, __monitorLogTbl[__monitorLogTblIndex].eventsRecorded);
+
+	// Check if the mode was Waveform which now postpones saving the current event number
+	if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+	{
+		// Set the current event number to be saved
+		currentEventNumberRecord.currentEventNumber = (g_nextEventNumberToUse - 1);
+
+		SaveRecordData(&currentEventNumberRecord, DEFAULT_RECORD, REC_UNIQUE_EVENT_ID_TYPE);
+
+		debug("Saved Event ID: %d\r\n", (g_nextEventNumberToUse - 1));
+	}
 
 	if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
 	{
@@ -343,10 +356,9 @@ uint16 NumOfNewMonitorLogEntries(uint16 uid)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#include "fsaccess.h"
 void AppendMonitorLogEntryFile(void)
 {
-	FL_FILE* monitorLogFile;
-	FL_FILE* monitorLogHumanReadableFile;
 	char modeString[10];
 	char statusString[10];
 	char startTimeString[20];
@@ -367,35 +379,62 @@ void AppendMonitorLogEntryFile(void)
 	{
 		g_fileAccessLock = FILE_LOCK;
 
+#if 1 // Atmel fat driver
+		int monitorLogFile;
+		monitorLogFile = open("A:\\Logs\\MonitorLog.ns8", O_APPEND);
+#else // Port fat driver
+		FL_FILE* monitorLogFile;
 		monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "a+");
+#endif
 
 		// Verify file ID
+#if 1 // Atmel fat driver
+		if (monitorLogFile == -1)
+#else // Port fat driver
 		if (monitorLogFile == NULL)
+#endif
 		{
 			debugErr("Monitor Log File not found\r\n");
 			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
 		}
 		else // Monitor log file contains entries
 		{
-			if (monitorLogFile->filelength % sizeof(MONITOR_LOG_ENTRY_STRUCT) != 0)
+			if (fsaccess_file_get_size(monitorLogFile) % sizeof(MONITOR_LOG_ENTRY_STRUCT) != 0)
 			{
 				debugWarn("Monitor Log File size does not comprise all whole entries\r\n");
 			}
 
 			debug("Writing Monitor log entry to log file...\r\n");
 
+#if 1 // Atmel fat driver
+			write(monitorLogFile, (uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT));
+
+			// Done writing, close the monitor log file
+			close(monitorLogFile);
+#else // Port fat driver
 			fl_fwrite((uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT), 1, monitorLogFile);
 
-			// Done reading, close the monitor log file
+			// Done writing, close the monitor log file
 			fl_fclose(monitorLogFile);
+#endif
 
 			debug("Monitor log entry appended to log file\r\n");
 		}
 
+#if 1 // Atmel fat driver
+		int monitorLogHumanReadableFile;
+		monitorLogHumanReadableFile = open("A:\\Logs\\MonitorLogReadable.txt", O_APPEND);
+#else // Port fat driver
+		FL_FILE* monitorLogHumanReadableFile;
 		monitorLogHumanReadableFile = fl_fopen("C:\\Logs\\MonitorLogReadable.txt", "a+");
+#endif
 
 		// Verify file ID
+#if 1 // Atmel fat driver
+		if (monitorLogHumanReadableFile == -1)
+#else // Port fat driver
 		if (monitorLogHumanReadableFile == NULL)
+#endif
 		{
 			debugErr("Monitor Log Readable File not found\r\n");
 			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLogReadable.txt", 3 * SOFT_SECS);
@@ -449,10 +488,17 @@ void AppendMonitorLogEntryFile(void)
 					(char*)seisString, (char*)airString, mle->bitAccuracy, ((mle->adjustForTempDrift == YES) ? "YES" : "NO"),
 					(char*)sensorString, ((mle->sensitivity == LOW) ? "LOW" : "HIGH"));
 
+#if 1 // Atmel fat driver
+			write(monitorLogHumanReadableFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+
+			// Done writing, close the monitor log file
+			close(monitorLogHumanReadableFile);
+#else // Port fat driver
 			fl_fwrite((uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer), 1, monitorLogHumanReadableFile);
 
-			// Done reading, close the monitor log file
+			// Done writing, close the monitor log file
 			fl_fclose(monitorLogHumanReadableFile);
+#endif
 
 			debug("Monitor log readable entry appended to log file\r\n");
 		}
@@ -470,16 +516,27 @@ void AppendMonitorLogEntryFile(void)
 			return;
 		}
 
+#if 1 // Atmel fat driver
+		int testBufferFile;
+		testBufferFile = open("A:\\Logs\\TestBuffer.txt", O_APPEND);
+#else // Port fat driver
 		FL_FILE* testBufferFile;
-
 		testBufferFile = fl_fopen("C:\\Logs\\TestBuffer.txt", "a+");
+#endif
 
 		debug("Writing Test Buffer Data to log file...\r\n");
 
+#if 1 // Atmel fat driver
+		write(testBufferFile, (uint8*)&(g_eventDataBuffer), (samplesCollected * 2));
+
+		// Done writing, close the monitor log file
+		close(testBufferFile);
+#else // Port fat driver
 		fl_fwrite((uint8*)&(g_eventDataBuffer), (samplesCollected * 2), 1, testBufferFile);
 
-		// Done reading, close the monitor log file
+		// Done writing, close the monitor log file
 		fl_fclose(testBufferFile);
+#endif
 
 		samplesCollected = 0;
 
@@ -493,7 +550,6 @@ void AppendMonitorLogEntryFile(void)
 ///----------------------------------------------------------------------------
 void InitMonitorLogTableFromLogFile(void)
 {
-	FL_FILE* monitorLogFile;
 	MONITOR_LOG_ENTRY_STRUCT monitorLogEntry;
 	int32 bytesRead = 0;
 	uint16 lowestId = 0;
@@ -508,15 +564,25 @@ void InitMonitorLogTableFromLogFile(void)
 	{
 		g_fileAccessLock = FILE_LOCK;
 
+#if 1 // Atmel fat driver
+		int monitorLogFile;
+		monitorLogFile = open("A:\\Logs\\MonitorLog.ns8", O_RDONLY);
+#else // Port fat driver
+		FL_FILE* monitorLogFile;
 		monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "r");
+#endif
 
 		// Verify file ID
+#if 1 // Atmel fat driver
+		if (monitorLogFile == -1)
+#else // Port fat driver
 		if (monitorLogFile == NULL)
+#endif
 		{
 			debugWarn("Warning: Monitor Log File not found or has not yet been created\r\n");
 		}
 		// Verify file is big enough
-		else if (monitorLogFile->filelength < sizeof(MONITOR_LOG_ENTRY_STRUCT))
+		else if (fsaccess_file_get_size(monitorLogFile) < sizeof(MONITOR_LOG_ENTRY_STRUCT))
 		{
 			debugErr("Monitor Log File is corrupt\r\n");
 			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
@@ -525,8 +591,11 @@ void InitMonitorLogTableFromLogFile(void)
 		{
 			OverlayMessage("MONITOR LOG", "INITIALIZING MONITOR LOG WITH SAVED ENTRIES", 1 * SOFT_SECS);
 
+#if 1 // Atmel fat driver
+			bytesRead = read(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+#else // Port fat driver
 			bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
-
+#endif
 			// Loop while data continues to be read from MONITOR log file
 			while (bytesRead > 0)
 			{
@@ -584,12 +653,20 @@ void InitMonitorLogTableFromLogFile(void)
 			
 					AdvanceMonitorLogIndex();
 
+#if 1 // Atmel fat driver
+					bytesRead = read(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+#else // Port fat driver
 					bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+#endif
 				}
 			}
 
 			// Done reading, close the monitor log file
+#if 1 // Atmel fat driver
+			close(monitorLogFile);
+#else // Port fat driver
 			fl_fclose(monitorLogFile);
+#endif
 
 			debug("Found Valid Monitor Log Entries, ID's: %d --> %d\r\n", lowestId, highestId);
 		}
@@ -603,7 +680,6 @@ void InitMonitorLogTableFromLogFile(void)
 ///----------------------------------------------------------------------------
 void AddOnOffLogTimestamp(uint8 onOffState)
 {
-	FL_FILE* onOffLogHumanReadableFile;
 	DATE_TIME_STRUCT time = GetCurrentTime();
 	float extCharge = GetExternalVoltageLevelAveraged(EXT_CHARGE_VOLTAGE);
 	char onOffStateString[6];
@@ -618,10 +694,20 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 	{
 		g_fileAccessLock = FILE_LOCK;
 
+#if 1 // Atmel fat driver
+		int onOffLogHumanReadableFile;
+		onOffLogHumanReadableFile = open("A:\\Logs\\OnOffLogReadable.txt", O_APPEND);
+#else // Port fat driver
+		FL_FILE* onOffLogHumanReadableFile;
 		onOffLogHumanReadableFile = fl_fopen("C:\\Logs\\OnOffLogReadable.txt", "a+");
+#endif
 
 		// Verify file ID
+#if 1 // Atmel fat driver
+		if (onOffLogHumanReadableFile == -1)
+#else // Port fat driver
 		if (onOffLogHumanReadableFile == NULL)
+#endif
 		{
 			debugErr("On/Off Log File not found\r\n");
 			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\OnOffLogReadable.txt", 3 * SOFT_SECS);
@@ -642,10 +728,17 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 					((g_unitConfig.timerMode == ENABLED) ? "Timer" : "Normal"), (char*)timeString,
 					GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE), extChargeString);
 
+#if 1 // Atmel fat driver
+			write(onOffLogHumanReadableFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+
+			// Done writing, close the on/off log file
+			close(onOffLogHumanReadableFile);
+#else // Port fat driver
 			fl_fwrite((uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer), 1, onOffLogHumanReadableFile);
 
-			// Done reading, close the monitor log file
+			// Done writing, close the on/off log file
 			fl_fclose(onOffLogHumanReadableFile);
+#endif
 		}
 
 		g_fileAccessLock = AVAILABLE;
@@ -667,22 +760,37 @@ void WriteDebugBufferToFile(void)
 
 		if (g_debugBufferCount)
 		{
+#if 1 // Atmel fat driver
+			int debugLogFile;
+			debugLogFile = open("A:\\Logs\\DebugLogReadable.txt", O_APPEND);
+#else // Port fat driver
 			FL_FILE* debugLogFile;
-
 			debugLogFile = fl_fopen("C:\\Logs\\DebugLogReadable.txt", "a+");
+#endif
 
 			// Verify file ID
+#if 1 // Atmel fat driver
+			if (debugLogFile == -1)
+#else // Port fat driver
 			if (debugLogFile == NULL)
+#endif
 			{
 				debugErr("Debug Log File not found\r\n");
 				OverlayMessage("FILE NOT FOUND", "C:\\Logs\\DebugLogReadable.txt", 3 * SOFT_SECS);
 			}
 			else // File successfully created or opened
 			{
+#if 1 // Atmel fat driver
+				write(debugLogFile, (uint8*)&g_debugBuffer, g_debugBufferCount);
+
+				// Done writing, close the debug log file
+				close(debugLogFile);
+#else // Port fat driver
 				fl_fwrite((uint8*)&g_debugBuffer, g_debugBufferCount, 1, debugLogFile);
 
-				// Done reading, close the monitor log file
+				// Done writing, close the debug log file
 				fl_fclose(debugLogFile);
+#endif
 			}
 
 			memset(&g_debugBuffer, 0, sizeof(g_debugBuffer));

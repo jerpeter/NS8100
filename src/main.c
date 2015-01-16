@@ -42,17 +42,19 @@
 #include "twi.h"
 #include "M23018.h"
 #include "sd_mmc_spi.h"
-#include "FAT32_Disk.h"
-#include "FAT32_Access.h"
 #include "adc.h"
 #include "usb_task.h"
 #include "device_mass_storage_task.h"
 #include "host_mass_storage_task.h"
 #include "usb_drv.h"
-#include "FAT32_FileLib.h"
 #include "srec.h"
 #include "flashc.h"
 #include "ushell_task.h"
+#if 0 // Port fat driver
+#include "FAT32_Disk.h"
+#include "FAT32_Access.h"
+#include "FAT32_FileLib.h"
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -1043,6 +1045,7 @@ const char default_boot_name[] = {
 
 #include "rtc.h"
 #include "tc.h"
+#include "fsaccess.h"
 uint8 quickBootEntryJump = NO;
 void BootLoadManager(void)
 {
@@ -1051,8 +1054,13 @@ void BootLoadManager(void)
 	char textBuffer[50];
 	static void (*func)(void);
 	func = (void(*)())APPLICATION;
-	FL_FILE* file;
 	uint32 i;
+
+#if 1 // Atmel fat driver
+	int file = -1;
+#else // Port fat driver
+	FL_FILE* file;
+#endif
 
 	usart_status = USART_RX_EMPTY;
 	i = 0;
@@ -1096,10 +1104,19 @@ void BootLoadManager(void)
 			ReportFileSystemAccessProblem("Bootloader access");
 		}
 
-		sprintf(textBuffer,"C:\\System\\%s", default_boot_name);
+#if 1 // Atmel fat driver
+		sprintf(textBuffer, "A:\\System\\%s", default_boot_name);
+		file = open(textBuffer, O_RDONLY);
+#else // Port fat driver
+		sprintf(textBuffer, "C:\\System\\%s", default_boot_name);
 		file = fl_fopen(textBuffer, "r");
+#endif
 
+#if 1 // Atmel fat driver
+		while (file == -1)
+#else // Port fat driver
 		while (file == NULL)
+#endif
 		{
 			//WriteLCD_smText( 0, 64, (unsigned char *)"Connect USB..", NORMAL_LCD);
 			OverlayMessage("BOOTLOADER", "BOOT FILE NOT FOUND. CONNECT THE USB CABLE", 0);
@@ -1122,7 +1139,11 @@ void BootLoadManager(void)
 			
 			SoftUsecWait(250 * SOFT_MSECS);
 			
+#if 1 // Atmel fat driver
+			file = open(textBuffer, O_RDONLY);
+#else // Port fat driver
 			file = fl_fopen(textBuffer, "r");
+#endif
 		}
 
 		// Display initializing message
@@ -1137,7 +1158,11 @@ void BootLoadManager(void)
 			debugErr("SREC unpack unsuccessful\r\n");
 		}
 
+#if 1 // Atmel fat driver
+		close(file);
+#else // Port fat driver
 		fl_fclose(file);
+#endif
 
 #if 0 // Removed debug log file due to inducing system problems
 		debug("Dumping debug output to debug log file\r\n");

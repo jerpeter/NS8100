@@ -1,3 +1,4 @@
+#if 0
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //					        FAT32 File IO Library
@@ -296,3 +297,4 @@ BOOL FAT32_AddFileEntry(UINT32 dirCluster, char *filename, char *shortfilename, 
 }
 #endif
 
+#endif

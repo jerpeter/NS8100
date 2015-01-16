@@ -8,11 +8,14 @@
 #ifndef SREC_H_
 #define SREC_H_
 
-#include "typedefs.h"
+#include "Typedefs.h"
+#include "define.h"
 
+#if 0
 #include "FAT32_Base.h"
 #include "FAT32_Access.h"
 #include "FAT32_Filelib.h"
+#endif
 
 //#define srec_h_Rev "$Revision: 1.1 $"
 
@@ -73,12 +76,18 @@ typedef enum
 /***************************************************************/
 /* srecord routines                                            */
 /***************************************************************/
+#if 1 // Atmel fat driver
+int            Get_and_save_srec( int file );
+int            Unpack_srec(  int file  );
+#else // Port fat driver
 int            Get_and_save_srec( FL_FILE* file );
 int            Unpack_srec(  FL_FILE* file  );
+#endif
+
 void           Srec_get_line( ASCII_SREC_DATA *);
 void           Srec_file_get_line( ASCII_SREC_DATA *);
 RECORD_DATA    Srec_convert_line( ASCII_SREC_DATA linedata );
-bool           Srec_checksum( RECORD_DATA linedata );
+BOOL           Srec_checksum( RECORD_DATA linedata );
 void           Srec_get_data( RECORD_DATA linedata, uint8 *data );
 
 void           Srec_ack( void );

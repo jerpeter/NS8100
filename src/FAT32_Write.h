@@ -1,3 +1,4 @@
+#if 0
 #ifndef FAT32_WRITE_H_
 #define FAT32_WRITE_H_
 
@@ -14,3 +15,4 @@ BOOL FAT32_AllocateFreeSpace(BOOL newFile, UINT32 *startCluster, UINT32 size);
 
 
 #endif /*FAT32_WRITE_H_*/
+#endif

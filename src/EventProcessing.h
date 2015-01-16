@@ -74,6 +74,7 @@ void InitEventRecord(uint8 op_mode);
 void InitCurrentEventNumber(void);
 uint16 GetLastStoredEventNumber(void);
 void StoreCurrentEventNumber(void);
+void IncrementCurrentEventNumber(void);
 uint16 GetUniqueEventNumber(SUMMARY_DATA* currentSummary);
 uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr);
 void CompleteRamEventSummary(SUMMARY_DATA* , SUMMARY_DATA*);
@@ -86,7 +87,6 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
 void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize);
 void CacheEventToRam(uint16 eventNumber);
 BOOLEAN CheckValidEventFile(uint16 eventNumber);
-FL_FILE* GetEventFileHandle(uint16 eventNumber, EVENT_FILE_OPTION option);
 void DeleteEventFileRecord(uint16 eventNumber);
 void DeleteEventFileRecords(void);
 void ReInitSdCardAndFat32(void);
@@ -95,6 +95,12 @@ void PowerDownSDCard(void);
 void PowerUpSDCardAndInitFat32(void);
 uint16 AirTriggerConvert(uint32 airTriggerToConvert);
 uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert);
+
+#if 1 // Atmel fat driver
+int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option);
+#else // Port fat driver
+FL_FILE* GetEventFileHandle(uint16 eventNumber, EVENT_FILE_OPTION option);
+#endif
 
 void CacheResultsEventInfo(EVT_RECORD* eventRecordToCache);
 

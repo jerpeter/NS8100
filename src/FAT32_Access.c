@@ -1,3 +1,4 @@
+#if 0
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //					        FAT32 File IO Library
@@ -670,3 +671,4 @@ void ListDirectory(UINT32 StartCluster, FAT32_DIRLIST* dirList, BOOL displayResu
 		print_dbg(tempBuffer);
 } 
 
+#endif

@@ -19,9 +19,11 @@
 #include "Menu.h"
 #include "ProcessBargraph.h"
 #include "EventProcessing.h"
+#if 0 // Port fat driver
 #include "FAT32_FileLib.h"
 #include "FAT32_Disk.h"
 #include "FAT32_Access.h"
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -95,9 +97,14 @@ void EndBargraph(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#include "fsaccess.h"
 void MoveBarIntervalDataToFile(void)
 {
+#if 1 // Atmel fat driver
+	int bargraphFileHandle = -1;
+#else // Port fat driver
 	FL_FILE* bargraphFileHandle = NULL;
+#endif
 
 	// If Bar Intervals have been cached
 	if (g_bargraphBarIntervalsCached > 0)
@@ -115,7 +122,12 @@ void MoveBarIntervalDataToFile(void)
 
 			while (g_bargraphBarIntervalsCached)
 			{
+#if 1 // Atmel fat driver
+				write(bargraphFileHandle, g_bargraphBarIntervalReadPtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
+#else // Port fat driver
 				fl_fwrite(g_bargraphBarIntervalReadPtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, bargraphFileHandle);
+#endif
+
 				g_pendingBargraphRecord.header.dataLength += sizeof(BARGRAPH_BAR_INTERVAL_DATA);
 
 				// Advance the Bar Interval global buffer pointer
@@ -124,7 +136,11 @@ void MoveBarIntervalDataToFile(void)
 				g_bargraphBarIntervalsCached--;
 			}
 
+#if 1 // Atmel fat driver
+			close(bargraphFileHandle);
+#else // Port fat driver
 			fl_fclose(bargraphFileHandle);
+#endif
 			debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 			g_fileAccessLock = AVAILABLE;
@@ -180,7 +196,11 @@ void CompleteSummaryInterval(void)
 ///----------------------------------------------------------------------------
 void MoveSummaryIntervalDataToFile(void)
 {
+#if 1 // Atmel fat driver
+	int bargraphFileHandle = -1;
+#else // Port fat driver
 	FL_FILE* bargraphFileHandle = NULL;
+#endif
 
 	CompleteSummaryInterval();
 
@@ -198,7 +218,12 @@ void MoveSummaryIntervalDataToFile(void)
 		// Write any cached bar intervals before storing the summary interval (may not match with bar interval write threshold)
 		while (g_bargraphBarIntervalsCached)
 		{
+#if 1 // Atmel fat driver
+			write(bargraphFileHandle, g_bargraphBarIntervalReadPtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
+#else // Port fat driver
 			fl_fwrite(g_bargraphBarIntervalReadPtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA), 1, bargraphFileHandle);
+#endif
+
 			g_pendingBargraphRecord.header.dataLength += sizeof(BARGRAPH_BAR_INTERVAL_DATA);
 
 			// Advance the Bar Interval global buffer pointer
@@ -207,10 +232,20 @@ void MoveSummaryIntervalDataToFile(void)
 			g_bargraphBarIntervalsCached--;
 		}
 
+#if 1 // Atmel fat driver
+		write(bargraphFileHandle, g_bargraphSummaryIntervalPtr, sizeof(CALCULATED_DATA_STRUCT));
+#else // Port fat driver
 		fl_fwrite(g_bargraphSummaryIntervalPtr, sizeof(CALCULATED_DATA_STRUCT), 1, bargraphFileHandle);
+#endif
+
 		g_pendingBargraphRecord.header.dataLength += sizeof(CALCULATED_DATA_STRUCT);
 
+#if 1 // Atmel fat driver
+		close(bargraphFileHandle);
+#else // Port fat driver
 		fl_fclose(bargraphFileHandle);
+#endif
+
 		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 		g_fileAccessLock = AVAILABLE;
@@ -807,7 +842,11 @@ uint8 CalculateBargraphData(void)
 ///----------------------------------------------------------------------------
 void MoveStartOfBargraphEventRecordToFile(void)
 {
+#if 1 // Atmel fat driver
+	int bargraphFileHandle = -1;
+#else // Port fat driver
 	FL_FILE* bargraphFileHandle = NULL;
+#endif
 
 	if (g_fileAccessLock != AVAILABLE)
 	{
@@ -821,12 +860,22 @@ void MoveStartOfBargraphEventRecordToFile(void)
 		// Create new Bargraph event file
 		bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, CREATE_EVENT_FILE);
 
+#if 1 // Atmel fat driver
+		if (bargraphFileHandle == -1)
+#else // Port fat driver
 		if (bargraphFileHandle == NULL)
+#endif
 		{ debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph"); }
 
 		// Write in the current but unfinished event record to provide an offset to start writing in the data
+#if 1 // Atmel fat driver
+		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
+		close(bargraphFileHandle);
+#else // Port fat driver
 		fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, bargraphFileHandle);
 		fl_fclose(bargraphFileHandle);
+#endif
+
 		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 		// Consume event number (also allow other events to be recorded during a Combo - Bargraph session)
@@ -847,7 +896,11 @@ void MoveStartOfBargraphEventRecordToFile(void)
 ///----------------------------------------------------------------------------
 void MoveEndOfBargraphEventRecordToFile(void)
 {
+#if 1 // Atmel fat driver
+	int bargraphFileHandle = -1;
+#else // Port fat driver
 	FL_FILE* bargraphFileHandle = NULL;
+#endif
 
 	if (g_fileAccessLock != AVAILABLE)
 	{
@@ -885,6 +938,15 @@ void MoveEndOfBargraphEventRecordToFile(void)
 
 		bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, OVERWRITE_EVENT_FILE);
 
+#if 1 // Atmel fat driver
+		// Make sure at the beginning of the file
+		file_seek(0, FS_SEEK_SET);
+
+		// Rewrite the event record
+		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
+
+		close(bargraphFileHandle);
+#else // Port fat driver
 		// Make sure at the beginning of the file
 		fl_fseek(bargraphFileHandle, 0, SEEK_SET);
 
@@ -892,6 +954,8 @@ void MoveEndOfBargraphEventRecordToFile(void)
 		fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, bargraphFileHandle);
 
 		fl_fclose(bargraphFileHandle);
+#endif
+
 		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 		g_fileAccessLock = AVAILABLE;
