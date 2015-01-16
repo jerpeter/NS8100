@@ -111,7 +111,8 @@ uint8 RemoteCmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 		
 	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
 
-	debug("\nCMH:<%s>\r\n", cmdMsg->msg);
+	// Commented out since one command (UCM) can blow the buffer and lockup the unit
+	//debug("\nCMH:<%s>\r\n", cmdMsg->msg);
 
 	// Fill in the data
 	CHAR_UPPER_CASE(cmdMsg->msg[0]);
