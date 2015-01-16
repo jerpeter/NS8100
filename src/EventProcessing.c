@@ -87,7 +87,7 @@ void CopyValidFlashEventSummariesToRam(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		nav_setcwd("A:\\Events\\", TRUE, FALSE);
@@ -806,7 +806,7 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		int eventFile;
@@ -903,7 +903,7 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		int eventFile;
@@ -975,7 +975,7 @@ void DeleteEventFileRecord(uint16 eventNumber)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		sprintf(fileName, "A:\\Events\\Evt%d.ns8", eventNumber);
@@ -1015,7 +1015,7 @@ void DeleteEventFileRecords(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 	while (nav_setcwd("A:\\Events", TRUE, FALSE) == TRUE)
@@ -1079,7 +1079,7 @@ void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		int eventFile;
@@ -1146,7 +1146,7 @@ void CacheEventToRam(uint16 eventNumber)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		int eventFile;
@@ -1208,7 +1208,7 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		int eventFile;
@@ -1411,6 +1411,30 @@ void PowerUpSDCardAndInitFat32(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void SetFileDateTimestamp(uint8 option)
+{
+	char dateTimeBuffer[20];
+	DATE_TIME_STRUCT dateTime;
+
+	// Set the creation date and time
+	dateTime = GetCurrentTime();
+
+	// ASCII string date/time format to write: "YYYYMMDDHHMMSSMS" = year, month, day, hour, min, sec, ms
+	sprintf((char*)&dateTimeBuffer[0], "%04d%02d%02d%02d%02d%02d%02d", (dateTime.year + 2000), dateTime.month, dateTime.day, dateTime.hour, dateTime.min, dateTime.sec, dateTime.hundredths);
+
+	if (option == FS_DATE_CREATION)
+	{
+		nav_file_dateset((char*)&dateTimeBuffer[0], FS_DATE_CREATION);
+	}
+	else
+	{
+		nav_file_dateset((char*)&dateTimeBuffer[0], FS_DATE_LAST_WRITE);
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 1 // Atmel fat driver
 int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 #else // Port fat driver
@@ -1482,6 +1506,11 @@ FL_FILE* GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 		{
 			fileHandle = open(fileName, fileOption);
 		}
+	}
+
+	if (option == CREATE_EVENT_FILE)
+	{
+		SetFileDateTimestamp(FS_DATE_CREATION);
 	}
 
 	return (fileHandle);
@@ -1589,7 +1618,11 @@ inline void AdjustSampleForBitAccuracy(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 0 // Old
 void CompleteRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
+#else
+void CompleteRamEventSummary(SUMMARY_DATA* ramSummaryPtr)
+#endif
 {
 	//--------------------------------
 	// EVT_RECORD -
@@ -1604,10 +1637,10 @@ void CompleteRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 	debug("Copy calculated from Waveform buffer to global ram event record\r\n");
 		
 	// Fill in calculated data (Bargraph data filled in at the end of bargraph)
-	g_pendingEventRecord.summary.calculated.a.peak = flashSummPtr->waveShapeData.a.peak = ramSummPtr->waveShapeData.a.peak;
-	g_pendingEventRecord.summary.calculated.r.peak = flashSummPtr->waveShapeData.r.peak = ramSummPtr->waveShapeData.r.peak;
-	g_pendingEventRecord.summary.calculated.v.peak = flashSummPtr->waveShapeData.v.peak = ramSummPtr->waveShapeData.v.peak;
-	g_pendingEventRecord.summary.calculated.t.peak = flashSummPtr->waveShapeData.t.peak = ramSummPtr->waveShapeData.t.peak;
+	g_pendingEventRecord.summary.calculated.a.peak = ramSummaryPtr->waveShapeData.a.peak;
+	g_pendingEventRecord.summary.calculated.r.peak = ramSummaryPtr->waveShapeData.r.peak;
+	g_pendingEventRecord.summary.calculated.v.peak = ramSummaryPtr->waveShapeData.v.peak;
+	g_pendingEventRecord.summary.calculated.t.peak = ramSummaryPtr->waveShapeData.t.peak;
 
 	debug("Newly stored peaks: a:%04x r:%04x v:%04x t:%04x\r\n", 
 			g_pendingEventRecord.summary.calculated.a.peak, 
@@ -1615,10 +1648,10 @@ void CompleteRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 			g_pendingEventRecord.summary.calculated.v.peak,
 			g_pendingEventRecord.summary.calculated.t.peak);
 
-	g_pendingEventRecord.summary.calculated.a.frequency = flashSummPtr->waveShapeData.a.freq = ramSummPtr->waveShapeData.a.freq;
-	g_pendingEventRecord.summary.calculated.r.frequency = flashSummPtr->waveShapeData.r.freq = ramSummPtr->waveShapeData.r.freq;
-	g_pendingEventRecord.summary.calculated.v.frequency = flashSummPtr->waveShapeData.v.freq = ramSummPtr->waveShapeData.v.freq;
-	g_pendingEventRecord.summary.calculated.t.frequency = flashSummPtr->waveShapeData.t.freq = ramSummPtr->waveShapeData.t.freq;
+	g_pendingEventRecord.summary.calculated.a.frequency = ramSummaryPtr->waveShapeData.a.freq;
+	g_pendingEventRecord.summary.calculated.r.frequency = ramSummaryPtr->waveShapeData.r.freq;
+	g_pendingEventRecord.summary.calculated.v.frequency = ramSummaryPtr->waveShapeData.v.freq;
+	g_pendingEventRecord.summary.calculated.t.frequency = ramSummaryPtr->waveShapeData.t.freq;
 
 	debug("Newly stored freq: a:%d r:%d v:%d t:%d\r\n", 
 			g_pendingEventRecord.summary.calculated.a.frequency, 
@@ -1629,18 +1662,32 @@ void CompleteRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPt
 	// Calculate Displacement as PPV/(2 * PI * Freq) with 1000000 to shift to keep accuracy and the 10 to adjust the frequency
 	g_pendingEventRecord.summary.calculated.a.displacement = 0;
 
-	g_pendingEventRecord.summary.calculated.r.displacement = (uint32)(ramSummPtr->waveShapeData.r.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.r.freq * 10);
-	g_pendingEventRecord.summary.calculated.v.displacement = (uint32)(ramSummPtr->waveShapeData.v.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.v.freq * 10);
-	g_pendingEventRecord.summary.calculated.t.displacement = (uint32)(ramSummPtr->waveShapeData.t.peak * 1000000 / 2 / PI / ramSummPtr->waveShapeData.t.freq * 10);
+	if (ramSummaryPtr->waveShapeData.r.freq != 0)
+	{
+		g_pendingEventRecord.summary.calculated.r.displacement = (uint32)(ramSummaryPtr->waveShapeData.r.peak * 1000000 / 2 / PI / ramSummaryPtr->waveShapeData.r.freq * 10);
+	}
+	else { g_pendingEventRecord.summary.calculated.r.displacement = 0; }
+
+	if (ramSummaryPtr->waveShapeData.v.freq != 0)
+	{
+		g_pendingEventRecord.summary.calculated.v.displacement = (uint32)(ramSummaryPtr->waveShapeData.v.peak * 1000000 / 2 / PI / ramSummaryPtr->waveShapeData.v.freq * 10);
+	}
+	else { g_pendingEventRecord.summary.calculated.v.displacement = 0; }
+
+	if (ramSummaryPtr->waveShapeData.t.freq != 0)
+	{
+		g_pendingEventRecord.summary.calculated.t.displacement = (uint32)(ramSummaryPtr->waveShapeData.t.peak * 1000000 / 2 / PI / ramSummaryPtr->waveShapeData.t.freq * 10);
+	}
+	else { g_pendingEventRecord.summary.calculated.t.displacement = 0; }
 
 	// Calculate Peak Acceleration as (2 * PI * PPV * Freq) / 1G, where 1G = 386.4in/sec2 or 9814.6 mm/sec2, using 1000 to shift to keep accuracy
 	// The divide by 10 at the end to adjust the frequency, since freq stored as freq * 10
 	// Not dividing by 1G at this time. Before displaying Peak Acceleration, 1G will need to be divided out
 	g_pendingEventRecord.summary.calculated.a.acceleration = 0;
 
-	g_pendingEventRecord.summary.calculated.r.acceleration = (uint32)(ramSummPtr->waveShapeData.r.peak * 1000 * 2 * PI * ramSummPtr->waveShapeData.r.freq / 10);
-	g_pendingEventRecord.summary.calculated.v.acceleration = (uint32)(ramSummPtr->waveShapeData.v.peak * 1000 * 2 * PI * ramSummPtr->waveShapeData.v.freq / 10);
-	g_pendingEventRecord.summary.calculated.t.acceleration = (uint32)(ramSummPtr->waveShapeData.t.peak * 1000 * 2 * PI * ramSummPtr->waveShapeData.t.freq / 10);
+	g_pendingEventRecord.summary.calculated.r.acceleration = (uint32)(ramSummaryPtr->waveShapeData.r.peak * 1000 * 2 * PI * ramSummaryPtr->waveShapeData.r.freq / 10);
+	g_pendingEventRecord.summary.calculated.v.acceleration = (uint32)(ramSummaryPtr->waveShapeData.v.peak * 1000 * 2 * PI * ramSummaryPtr->waveShapeData.v.freq / 10);
+	g_pendingEventRecord.summary.calculated.t.acceleration = (uint32)(ramSummaryPtr->waveShapeData.t.peak * 1000 * 2 * PI * ramSummaryPtr->waveShapeData.t.freq / 10);
 
 	//--------------------------------
 	// EVENT_HEADER_STRUCT  -

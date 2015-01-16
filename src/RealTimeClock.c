@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "Typedefs.h"
 #include "RealTimeClock.h"
 #include "SoftTimer.h"
@@ -92,15 +93,15 @@ BOOLEAN InitExternalRtc(void)
 	UpdateCurrentTime();
 
 	// Check for RTC reset
-	if ((g_currentTime.year == 0) || (g_currentTime.month == 0) || (g_currentTime.day == 0))
+	if ((g_lastReadExternalRtcTime.year == 0) || (g_lastReadExternalRtcTime.month == 0) || (g_lastReadExternalRtcTime.day == 0))
 	{
 		debugWarn("Warning: External RTC date not set, assuming power loss reset... applying a default date\r\n");
 		// BCD formats
-		g_currentTime.year = 0x12;
-		g_currentTime.month = 0x08;
-		g_currentTime.day = 0x01;
+		g_lastReadExternalRtcTime.year = 0x14;
+		g_lastReadExternalRtcTime.month = 0x01;
+		g_lastReadExternalRtcTime.day = 0x01;
 
-		SetExternalRtcDate(&g_currentTime);
+		SetExternalRtcDate(&g_lastReadExternalRtcTime);
 	}
 
 	// Set the clock out control to turn off any clock interrupt generation
@@ -238,8 +239,15 @@ DATE_TIME_STRUCT GetExternalRtcTime(void)
 ///----------------------------------------------------------------------------
 void UpdateCurrentTime(void)
 {
+	if (g_spi1AccessLock == AVAILABLE)
+	{
+		g_spi1AccessLock = RTC_TIME_LOCK;
+
 	g_rtcCurrentTickCount = 0;
-	g_currentTime = GetExternalRtcTime();
+		g_lastReadExternalRtcTime = GetExternalRtcTime();
+
+		g_spi1AccessLock = AVAILABLE;
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -247,15 +255,103 @@ void UpdateCurrentTime(void)
 ///----------------------------------------------------------------------------
 DATE_TIME_STRUCT GetCurrentTime(void)
 {
-	DATE_TIME_STRUCT currentTime = g_currentTime;
-	uint16 expiredSecs = (uint16)(g_rtcCurrentTickCount / 2);
+	DATE_TIME_STRUCT currentTime = g_lastReadExternalRtcTime;
+	uint32 accumulatedSeconds = (g_rtcCurrentTickCount / 2);
+	struct tm convertTime;
+	time_t epochTime;
 
+	if (accumulatedSeconds)
+	{
+		convertTime.tm_year = (g_lastReadExternalRtcTime.year + 100); // From 1900;
+		convertTime.tm_mon = (g_lastReadExternalRtcTime.month - 1); // Month, 0 - jan
+		convertTime.tm_mday = g_lastReadExternalRtcTime.day; // Day of the month
+		convertTime.tm_hour = g_lastReadExternalRtcTime.hour;
+		convertTime.tm_min = g_lastReadExternalRtcTime.min;
+		convertTime.tm_sec = g_lastReadExternalRtcTime.sec;
+		convertTime.tm_isdst = -1; // Is DST on? 1 = yes, 0 = no, -1 = unknown
+		epochTime = mktime(&convertTime);
+
+		epochTime += accumulatedSeconds;
+
+		convertTime = *localtime(&epochTime);
+
+		currentTime.year = (convertTime.tm_year - 100);
+		currentTime.month = (convertTime.tm_mon + 1);
+		currentTime.day = convertTime.tm_mday;
+		currentTime.hour = convertTime.tm_hour;
+		currentTime.min = convertTime.tm_min;
+		currentTime.sec = convertTime.tm_sec;
+		currentTime.weekday = GetDayOfWeek(currentTime.year, currentTime.month, currentTime.day);
+	}
+
+#if 0 // No longer used
+#if 1 // New attempt at just adjusting time based on tick count increase
+	// Check if there are any accumulated seconds since last time update
+	if (accumulatedTime)
+	{
+		// Pull out seconds and adjust time and decrement from accumulated seconds and convert to accumulated minutes
+		currentTime.sec += (accumulatedTime % 60);
+		accumulatedTime -= (accumulatedTime % 60);
+		accumulatedTime /= 60;
+
+		// Check if there are any accumulated minutes since last time update
+		if (accumulatedTime)
+		{
+			// Pull out minutes and adjust time and decrement from accumulated minutes and convert to accumulated hours
+			currentTime.min += (accumulatedTime % 60);
+			accumulatedTime -= (accumulatedTime % 60);
+			accumulatedTime /= 60;
+
+			// Check if there are any accumulated hours since last time update
+			if (accumulatedTime)
+			{
+				currentTime.hour += (accumulatedTime % 24);
+				accumulatedTime -= (accumulatedTime % 24);
+				accumulatedTime /= 24;
+			}
+		}
+	}
+
+	// Check if there is any accumulated time left
+	if (accumulatedTime)
+	{
+		// Day crossing logic gets deep, just update the real time
+		UpdateCurrentTime();
+		currentTime = g_lastReadExternalRtcTime;
+	}
+	else // Check for wrapping conditions
+	{
+		// Check if seconds wrapped
+		if (currentTime.sec >= 60)
+		{
+			// Adjust seconds wrap and add a minute
+			currentTime.sec -= 60;
+			currentTime.min++;
+		}
+
+		// Check if minutes wrapped
+		if (currentTime.min >= 60)
+		{
+			// Adjust minutes wrap and add a hour
+			currentTime.min -= 60;
+			currentTime.hour++;
+		}
+
+		// Check if hours wrapped
+		if (currentTime.hour >= 24)
+		{
+			// Day crossing logic gets deep, just update the real time
+			UpdateCurrentTime();
+			currentTime = g_lastReadExternalRtcTime;
+		}
+	}
+#else
 	// Check if the real time hasn't been updated in the last minute (Should occur every 30 seconds)
 	if (expiredSecs >= 60)
 	{
 		// Unlikely this case will ever occur. It's been over a minute, just re-read the real time
 		UpdateCurrentTime();
-		currentTime = g_currentTime;
+		currentTime = g_lastReadExternalRtcTime;
 	}
 	// Check if the amount of expired seconds results in a minute change
 	else if ((currentTime.sec + expiredSecs) > 59)
@@ -268,7 +364,7 @@ DATE_TIME_STRUCT GetCurrentTime(void)
 			{
 				// Quit fooling around, and re-read the real time
 				UpdateCurrentTime();
-				currentTime = g_currentTime;
+				currentTime = g_lastReadExternalRtcTime;
 			}
 			else // Still within the day
 			{
@@ -292,6 +388,8 @@ DATE_TIME_STRUCT GetCurrentTime(void)
 	{
 		currentTime.sec += expiredSecs;
 	}
+#endif
+#endif
 
 	return (currentTime);
 }

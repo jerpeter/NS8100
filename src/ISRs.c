@@ -558,6 +558,10 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
 			{
 				//___________________________________________________________________________________________
+				//__Save date and timestamp of new trigger
+				g_startOfEventDateTimestampBufferPtr[g_eventBufferWriteIndex] = GetCurrentTime();
+
+				//___________________________________________________________________________________________
 				//__Setup new event buffer pointers, counts, and flags
 				s_pretrigPtr = g_startOfEventBufferPtr + (g_eventBufferWriteIndex * g_wordSizeInEvent);
 				s_samplePtr = s_pretrigPtr + g_wordSizeInPretrig;
@@ -703,7 +707,8 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 	//___Check if handling cal pulse samples
 	else if ((s_calPulse == YES) && (s_calSampleCount))
 	{
-		if (g_spi1AccessLock != EVENT_LOCK)
+		// Check if the SPI is available to access or already locked to handle a Cal pulse
+		if ((g_spi1AccessLock == AVAILABLE) || (g_spi1AccessLock == CAL_PULSE_LOCK))
 		{
 			// If SPI lock is available, grab it and flag for cal pulse
 			if (g_spi1AccessLock == AVAILABLE) { g_spi1AccessLock = CAL_PULSE_LOCK;	}

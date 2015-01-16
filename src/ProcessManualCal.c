@@ -49,7 +49,7 @@
 #include "fsaccess.h"
 void MoveManualCalToFile(void)
 {
-	static SUMMARY_DATA* sumEntry;
+	//static SUMMARY_DATA* sumEntry;
 	static SUMMARY_DATA* ramSummaryEntry;
 	uint16 i;
 	uint16 sample;
@@ -76,14 +76,16 @@ void MoveManualCalToFile(void)
 
 		g_pendingEventRecord.summary.captured.eventTime = GetCurrentTime();
 
+#if 0 // Old
 		sumEntry = &g_summaryTable[g_eventBufferReadIndex];
-		sumEntry->mode = MANUAL_CAL_MODE;
+#endif
+		ramSummaryEntry->mode = MANUAL_CAL_MODE;
 
 		// Initialize the freq data counts.
-		sumEntry->waveShapeData.a.freq = 0;
-		sumEntry->waveShapeData.r.freq = 0;
-		sumEntry->waveShapeData.v.freq = 0;
-		sumEntry->waveShapeData.t.freq = 0;
+		ramSummaryEntry->waveShapeData.a.freq = 0;
+		ramSummaryEntry->waveShapeData.r.freq = 0;
+		ramSummaryEntry->waveShapeData.v.freq = 0;
+		ramSummaryEntry->waveShapeData.t.freq = 0;
 
 		startOfEventPtr = g_currentEventStartPtr;
 		endOfEventDataPtr = g_currentEventStartPtr + g_wordSizeInCal;
@@ -101,10 +103,10 @@ void MoveManualCalToFile(void)
 
 			normalizedData = FixDataToZero(sample);
 
-			if (normalizedData > sumEntry->waveShapeData.a.peak)
+			if (normalizedData > ramSummaryEntry->waveShapeData.a.peak)
 			{
-				sumEntry->waveShapeData.a.peak = normalizedData;
-				sumEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
+				ramSummaryEntry->waveShapeData.a.peak = normalizedData;
+				ramSummaryEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
 			}
 
 			//=========================================================
@@ -116,10 +118,10 @@ void MoveManualCalToFile(void)
 
 			normalizedData = FixDataToZero(sample);
 
-			if (normalizedData > sumEntry->waveShapeData.r.peak)
+			if (normalizedData > ramSummaryEntry->waveShapeData.r.peak)
 			{
-				sumEntry->waveShapeData.r.peak = normalizedData;
-				sumEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
+				ramSummaryEntry->waveShapeData.r.peak = normalizedData;
+				ramSummaryEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
 			}
 
 			//=========================================================
@@ -131,10 +133,10 @@ void MoveManualCalToFile(void)
 
 			normalizedData = FixDataToZero(sample);
 
-			if (normalizedData > sumEntry->waveShapeData.v.peak)
+			if (normalizedData > ramSummaryEntry->waveShapeData.v.peak)
 			{
-				sumEntry->waveShapeData.v.peak = normalizedData;
-				sumEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
+				ramSummaryEntry->waveShapeData.v.peak = normalizedData;
+				ramSummaryEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
 			}
 
 			//=========================================================
@@ -146,26 +148,31 @@ void MoveManualCalToFile(void)
 
 			normalizedData = FixDataToZero(sample);
 
-			if (normalizedData > sumEntry->waveShapeData.t.peak)
+			if (normalizedData > ramSummaryEntry->waveShapeData.t.peak)
 			{
-				sumEntry->waveShapeData.t.peak = normalizedData;
-				sumEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
+				ramSummaryEntry->waveShapeData.t.peak = normalizedData;
+				ramSummaryEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
 			}
 
 			g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 		}
 
-		sumEntry->waveShapeData.a.peak = (uint16)(hiA - lowA + 1);
-		sumEntry->waveShapeData.r.peak = (uint16)(hiR - lowR + 1);
-		sumEntry->waveShapeData.v.peak = (uint16)(hiV - lowV + 1);
-		sumEntry->waveShapeData.t.peak = (uint16)(hiT - lowT + 1);
+		ramSummaryEntry->waveShapeData.a.peak = (uint16)(hiA - lowA + 1);
+		ramSummaryEntry->waveShapeData.r.peak = (uint16)(hiR - lowR + 1);
+		ramSummaryEntry->waveShapeData.v.peak = (uint16)(hiV - lowV + 1);
+		ramSummaryEntry->waveShapeData.t.peak = (uint16)(hiT - lowT + 1);
 
-		sumEntry->waveShapeData.a.freq = CalcSumFreq(sumEntry->waveShapeData.a.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
-		sumEntry->waveShapeData.r.freq = CalcSumFreq(sumEntry->waveShapeData.r.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);   
-		sumEntry->waveShapeData.v.freq = CalcSumFreq(sumEntry->waveShapeData.v.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);   
-		sumEntry->waveShapeData.t.freq = CalcSumFreq(sumEntry->waveShapeData.t.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);       
+		ramSummaryEntry->waveShapeData.a.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.a.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
+		ramSummaryEntry->waveShapeData.r.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.r.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
+		ramSummaryEntry->waveShapeData.v.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.v.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
+		ramSummaryEntry->waveShapeData.t.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.t.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
 
+#if 0 // Old
 		CompleteRamEventSummary(ramSummaryEntry, sumEntry);
+#else // Updated
+		CompleteRamEventSummary(ramSummaryEntry);
+#endif
+
 		CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 
 		if (g_fileAccessLock != AVAILABLE)
@@ -174,7 +181,7 @@ void MoveManualCalToFile(void)
 		}
 		else // (g_fileAccessLock == AVAILABLE)
 		{
-			g_fileAccessLock = FILE_LOCK;
+			//g_fileAccessLock = FILE_LOCK;
 
 			// Get new event file handle
 			manualCalFileHandle = GetEventFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
@@ -198,6 +205,8 @@ void MoveManualCalToFile(void)
 
 				// Write the event data, containing the Pretrigger, event and cal
 				write(manualCalFileHandle, g_currentEventStartPtr, (g_wordSizeInCal * 2));
+
+				SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 				// Done writing the event file, close the file handle
 				close(manualCalFileHandle);

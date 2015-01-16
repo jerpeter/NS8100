@@ -674,7 +674,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 		// Attempt to find the file on the SD file system
 #if 1 // Atmel fat driver
@@ -780,7 +780,7 @@ void CheckBootloaderAppPresent(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		strcpy((char*)g_spareBuffer, "A:\\System\\%s");

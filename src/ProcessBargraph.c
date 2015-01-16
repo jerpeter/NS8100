@@ -116,7 +116,7 @@ void MoveBarIntervalDataToFile(void)
 		}
 		else // (g_fileAccessLock == AVAILABLE)
 		{
-			g_fileAccessLock = FILE_LOCK;
+			//g_fileAccessLock = FILE_LOCK;
 
 			bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, APPEND_EVENT_FILE);
 
@@ -137,6 +137,8 @@ void MoveBarIntervalDataToFile(void)
 			}
 
 #if 1 // Atmel fat driver
+			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
 			close(bargraphFileHandle);
 #else // Port fat driver
 			fl_fclose(bargraphFileHandle);
@@ -211,7 +213,7 @@ void MoveSummaryIntervalDataToFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 		bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, APPEND_EVENT_FILE);
 
@@ -241,6 +243,8 @@ void MoveSummaryIntervalDataToFile(void)
 		g_pendingBargraphRecord.header.dataLength += sizeof(CALCULATED_DATA_STRUCT);
 
 #if 1 // Atmel fat driver
+		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
 		close(bargraphFileHandle);
 #else // Port fat driver
 		fl_fclose(bargraphFileHandle);
@@ -855,7 +859,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 		// Create new Bargraph event file
 		bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, CREATE_EVENT_FILE);
@@ -870,6 +874,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 		// Write in the current but unfinished event record to provide an offset to start writing in the data
 #if 1 // Atmel fat driver
 		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
+		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 		close(bargraphFileHandle);
 #else // Port fat driver
 		fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, bargraphFileHandle);
@@ -909,7 +914,7 @@ void MoveEndOfBargraphEventRecordToFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 		// The following data will be filled in when the data has been moved over to flash.
 		g_pendingBargraphRecord.header.summaryChecksum = 0xAABB;
@@ -944,6 +949,8 @@ void MoveEndOfBargraphEventRecordToFile(void)
 
 		// Rewrite the event record
 		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
+
+		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 		close(bargraphFileHandle);
 #else // Port fat driver

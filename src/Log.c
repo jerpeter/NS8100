@@ -377,7 +377,7 @@ void AppendMonitorLogEntryFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		int monitorLogFile;
@@ -408,6 +408,8 @@ void AppendMonitorLogEntryFile(void)
 
 #if 1 // Atmel fat driver
 			write(monitorLogFile, (uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT));
+
+			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 			// Done writing, close the monitor log file
 			close(monitorLogFile);
@@ -491,6 +493,8 @@ void AppendMonitorLogEntryFile(void)
 #if 1 // Atmel fat driver
 			write(monitorLogHumanReadableFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
 
+			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
 			// Done writing, close the monitor log file
 			close(monitorLogHumanReadableFile);
 #else // Port fat driver
@@ -562,7 +566,7 @@ void InitMonitorLogTableFromLogFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		int monitorLogFile;
@@ -692,7 +696,7 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 #if 1 // Atmel fat driver
 		int onOffLogHumanReadableFile;
@@ -731,6 +735,8 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 #if 1 // Atmel fat driver
 			write(onOffLogHumanReadableFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
 
+			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
 			// Done writing, close the on/off log file
 			close(onOffLogHumanReadableFile);
 #else // Port fat driver
@@ -756,7 +762,7 @@ void WriteDebugBufferToFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 		if (g_debugBufferCount)
 		{
@@ -782,6 +788,8 @@ void WriteDebugBufferToFile(void)
 			{
 #if 1 // Atmel fat driver
 				write(debugLogFile, (uint8*)&g_debugBuffer, g_debugBufferCount);
+
+				SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 				// Done writing, close the debug log file
 				close(debugLogFile);
@@ -815,7 +823,7 @@ void SwitchDebugLogFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		g_fileAccessLock = FILE_LOCK;
+		//g_fileAccessLock = FILE_LOCK;
 
 		nav_drive_set(0);
 		nav_partition_mount();

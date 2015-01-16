@@ -102,18 +102,24 @@ void InitDataBuffs(uint8 op_mode)
 		if (op_mode == COMBO_MODE)
 		{
 			// Calculate total event buffers available (partial event buffer size)
-			g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS) / g_wordSizeInEvent);
+			g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS) / (g_wordSizeInEvent + (sizeof(DATE_TIME_STRUCT) / 2)));
 
-			// Init starting event buffer pointers
-			g_startOfEventBufferPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS]);
+			// Init the starting event date and timestamp buffer to the beginning of the event buffer past the bargraph portion
+			g_startOfEventDateTimestampBufferPtr = (DATE_TIME_STRUCT*)&(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS]);
+
+			// Init starting event buffer pointer beyond the event date and timestamp buffer
+			g_startOfEventBufferPtr = &(g_eventDataBuffer[(COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS + (g_maxEventBuffers * (sizeof(DATE_TIME_STRUCT) / 2)))]);
 		}
 		else // ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE))
 		{
-			// Calculate total event buffers available (full event buffer size)
-			g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / g_wordSizeInEvent);
+			// Calculate total event buffers available (full event buffer size plus date and time structure)
+			g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / (g_wordSizeInEvent + (sizeof(DATE_TIME_STRUCT) / 2)));
 
-			// Init starting event buffer pointers
-			g_startOfEventBufferPtr = &(g_eventDataBuffer[0]);
+			// Init the starting event date and timestamp buffer to the beginning of the event buffer
+			g_startOfEventDateTimestampBufferPtr = (DATE_TIME_STRUCT*)&(g_eventDataBuffer[0]);
+
+			// Init starting event buffer pointer beyond the event date and timestamp buffer
+			g_startOfEventBufferPtr = &(g_eventDataBuffer[(g_maxEventBuffers * (sizeof(DATE_TIME_STRUCT) / 2))]);
 		}
 
 		g_freeEventBuffers = g_maxEventBuffers;

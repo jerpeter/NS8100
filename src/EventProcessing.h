@@ -77,7 +77,11 @@ void StoreCurrentEventNumber(void);
 void IncrementCurrentEventNumber(void);
 uint16 GetUniqueEventNumber(SUMMARY_DATA* currentSummary);
 uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr);
+#if 0 // Old
 void CompleteRamEventSummary(SUMMARY_DATA* , SUMMARY_DATA*);
+#else // Updated
+void CompleteRamEventSummary(SUMMARY_DATA* ramSummaryPtr);
+#endif
 uint16* GetFlashDataPointer(void);
 void StoreData(uint16* dataPtr, uint16 dataWords);
 void GetSDCardUsageStats(void);
@@ -95,6 +99,8 @@ void PowerDownSDCard(void);
 void PowerUpSDCardAndInitFat32(void);
 uint16 AirTriggerConvert(uint32 airTriggerToConvert);
 uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert);
+
+void SetFileDateTimestamp(uint8 option);
 
 #if 1 // Atmel fat driver
 int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option);
