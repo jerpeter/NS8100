@@ -494,17 +494,17 @@ void SetSeismicGainSelect(uint8 seismicGain)
 {
 	if(seismicGain == SEISMIC_GAIN_LOW)
 	{
-#if 0 // Incorrect
+#if 0 // Incorrect control (swapped)
 		g_analogControl.bit.seismicGainSelect = 0;
-#else // Swapped
+#else // Correct
 		g_analogControl.bit.seismicGainSelect = 1;
 #endif
 	}
 	else // seismicGain == SEISMIC_GAIN_HIGH
 	{
-#if 0 // Incorrect
+#if 0 // Incorrect control (swapped)
 		g_analogControl.bit.seismicGainSelect = 1;
-#else // Swapped
+#else // Correct
 		g_analogControl.bit.seismicGainSelect = 0;
 #endif
 	}
