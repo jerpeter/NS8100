@@ -79,13 +79,18 @@ void MoveManualCalToFile(void)
 #if 0 // Old
 		sumEntry = &g_summaryTable[g_eventBufferReadIndex];
 #endif
-		ramSummaryEntry->mode = MANUAL_CAL_MODE;
 
+#if 1 // Need to clear out the Summary entry since it's initialized to all 0xFF's
+		memset(ramSummaryEntry, 0, sizeof(SUMMARY_DATA));
+#else // Old
 		// Initialize the freq data counts.
 		ramSummaryEntry->waveShapeData.a.freq = 0;
 		ramSummaryEntry->waveShapeData.r.freq = 0;
 		ramSummaryEntry->waveShapeData.v.freq = 0;
 		ramSummaryEntry->waveShapeData.t.freq = 0;
+#endif
+
+		ramSummaryEntry->mode = MANUAL_CAL_MODE;
 
 		startOfEventPtr = g_currentEventStartPtr;
 		endOfEventDataPtr = g_currentEventStartPtr + g_wordSizeInCal;
