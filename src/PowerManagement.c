@@ -412,6 +412,9 @@ void PowerUnitOff(uint8 powerOffMode)
 
 	AddOnOffLogTimestamp(OFF);
 
+	// Make sure all open files are closed and data is flushed
+	nav_exit();
+
 	// Disable Power Off Protection
 	PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 
