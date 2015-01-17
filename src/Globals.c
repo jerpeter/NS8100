@@ -263,5 +263,6 @@ volatile uint32 g_sampleCount = 0;
 uint32 g_sampleCountHold = 0;
 uint8 g_channelSyncError = NO;
 uint8 g_powerOffActivated = NO;
+SAMPLE_DATA_STRUCT sensorCalPeaks[4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
 
 // End of the list

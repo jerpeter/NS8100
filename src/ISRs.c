@@ -32,6 +32,7 @@
 #include "twi.h"
 #include "spi.h"
 #include "usart.h"
+#include "string.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -62,6 +63,8 @@ static uint32 s_pendingCalCount = 0;
 static uint32 s_pretriggerCount = 0;
 static uint16 s_consecSeismicTriggerCount = 0;
 static uint16 s_consecAirTriggerCount = 0;
+static uint16 s_sensorCalSampleCount = CALIBRATION_FIXED_SAMPLE_RATE;
+
 static uint8 s_pretriggerFull = NO;
 static uint8 s_checkForTempDrift = NO;
 static uint8 s_channelConfig = CHANNELS_R_AND_V_SCHEMATIC;
@@ -898,6 +901,33 @@ static inline void checkForTemperatureDrift_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+static inline void saveMaxPeaksLastThreeSecondsForSensorCal_ISR_Inline(void)
+{
+	s_sensorCalSampleCount--;
+
+	if (s_R_channelReading > sensorCalPeaks[0].r) { sensorCalPeaks[0].r = s_R_channelReading; }
+	if (s_V_channelReading > sensorCalPeaks[0].v) { sensorCalPeaks[0].v = s_V_channelReading; }
+	if (s_T_channelReading > sensorCalPeaks[0].t) { sensorCalPeaks[0].t = s_T_channelReading; }
+	if (s_A_channelReading > sensorCalPeaks[0].a) { sensorCalPeaks[0].a = s_A_channelReading; }
+
+	if (s_sensorCalSampleCount == 0)
+	{
+		// Reset the counter
+		s_sensorCalSampleCount = CALIBRATION_FIXED_SAMPLE_RATE;
+
+		// Shift the Peaks out after a second (index 1 being the current peak for the last second, index 2 for the peak the second before, etc)
+		sensorCalPeaks[3] = sensorCalPeaks[2];
+		sensorCalPeaks[2] = sensorCalPeaks[1];
+		sensorCalPeaks[1] = sensorCalPeaks[0];
+
+		// Clear out the first Peak hold values
+		memset(&sensorCalPeaks[0], 0, sizeof(SAMPLE_DATA_STRUCT));
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 {
 	// Apply channel zero offset
@@ -1293,6 +1323,13 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 	if (g_sampleProcessing == IDLE_STATE)
 	{
 		// Idle and not processing, could adjust the channel offsets
+
+		// Isolate processing for just the sensor calibration, testing feature (remove reference and check at some point)
+		if (g_activeMenu == CAL_SETUP_MENU)
+		{
+			normalizeSampleData_ISR_Inline();
+			saveMaxPeaksLastThreeSecondsForSensorCal_ISR_Inline();
+		}
 	}
 	//___________________________________________________________________________________________
 	//___Check if the Pretrigger buffer is not full, which is necessary for an event

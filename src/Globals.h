@@ -238,5 +238,6 @@ extern uint8 g_channelSyncError;
 extern volatile uint32 g_sampleCount;
 extern uint32 g_sampleCountHold;
 extern uint8 g_powerOffActivated;
+extern SAMPLE_DATA_STRUCT sensorCalPeaks[];
 
 #endif /* GLOBALS_H_ */

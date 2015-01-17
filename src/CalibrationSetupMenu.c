@@ -40,7 +40,8 @@ enum {
 	CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY,
 	CAL_MENU_CALIBRATED_DISPLAY,
 	CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY,
-	CAL_MENU_DISPLAY_SAMPLES
+	CAL_MENU_DISPLAY_SAMPLES,
+	CAL_MENU_CALIBRATE_SENSOR
 };
 
 ///----------------------------------------------------------------------------
@@ -58,6 +59,7 @@ extern void SetupADChannelConfig(uint32 sampleRate);
 ///----------------------------------------------------------------------------
 static uint32 s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
 static uint32 s_calSavedSampleRate = 0;
+static uint8 s_pauseDisplay = NO;
 
 #if 0
 static union {
@@ -93,6 +95,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 {
 	static WND_LAYOUT_STRUCT wnd_layout;
 	static MN_LAYOUT_STRUCT mn_layout;
+	static uint8 s_pausedDisplay = NO;
 	volatile uint32 tempTicks = 0;
 	//uint8 cursorLine = 0;
 	volatile uint32 key = 0;
@@ -120,7 +123,10 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 					UpdateCurrentTime();
 
 					// Create the Cal Setup menu
-					CalSetupMnDsply(&wnd_layout);
+					if (s_pausedDisplay == NO)
+					{
+						CalSetupMnDsply(&wnd_layout);
+					}
 
 					WriteMapToLcd(g_mmap);
 
@@ -130,12 +136,19 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 
 				key = GetKeypadKey(CHECK_ONCE_FOR_KEY);
 
-				SoftUsecWait(50 * SOFT_MSECS);
+				SoftUsecWait(5 * SOFT_MSECS);
 
 				switch (key)
 				{
 					case UP_ARROW_KEY:
-						if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
+						SoftUsecWait(150 * SOFT_MSECS);
+						if (s_calDisplayScreen == CAL_MENU_CALIBRATE_SENSOR)
+						{
+							//debug("Cal Menu Screen NP selected\r\n");
+							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY SUCCESSIVE SAMPLES", (1 * SOFT_SECS));
+							s_calDisplayScreen = CAL_MENU_DISPLAY_SAMPLES;
+						}
+						else if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
 						{
 							//debug("Cal Menu Screen NP selected\r\n");
 							OverlayMessage(getLangText(STATUS_TEXT), "CHANNEL NOISE PERCENTAGES", (1 * SOFT_SECS));
@@ -164,6 +177,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 						break;
 
 					case DOWN_ARROW_KEY:
+						SoftUsecWait(150 * SOFT_MSECS);
 						if (s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY)
 						{
 							// Stop A/D data collection clock
@@ -205,24 +219,27 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY SUCCESSIVE SAMPLES", (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_DISPLAY_SAMPLES;
 						}
+						else if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
+						{
+							//debug("Cal Menu Screen DS selected\r\n");
+							OverlayMessage(getLangText(STATUS_TEXT), "SENSOR CALIBRATION", (1 * SOFT_SECS));
+							s_calDisplayScreen = CAL_MENU_CALIBRATE_SENSOR;
+						}
 
 						key = 0;
 						break;
 
+					case HELP_KEY:
+						SoftUsecWait(150 * SOFT_MSECS);
+						if (s_pauseDisplay == NO) { s_pauseDisplay = YES; }
+						else if (s_pauseDisplay == YES) { s_pauseDisplay = NO; }
+						break;
+
 					case ENTER_KEY:
 					case ESC_KEY:
+						SoftUsecWait(150 * SOFT_MSECS);
 						// Not really used, keys are grabbed in CalSetupMn
 						mbChoice = MessageBox(getLangText(STATUS_TEXT), getLangText(ARE_YOU_DONE_WITH_CAL_SETUP_Q_TEXT), MB_YESNO);
-						if ((mbChoice == MB_SECOND_CHOICE) || (mbChoice == MB_NO_ACTION))
-						{
-							// Don't leave
-							key = 0;
-						}
-						break;
-						
-					case HELP_KEY:
-						// Not really used, keys are grabbed in CalSetupMn
-						mbChoice = MessageBox(getLangText(SAMPLE_RATE_TEXT), "", MB_YESNO);
 						if ((mbChoice == MB_SECOND_CHOICE) || (mbChoice == MB_NO_ACTION))
 						{
 							// Don't leave
@@ -350,13 +367,25 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	uint16 i = 0, j = 0;
 	uint16 sampleDataMidpoint = 0x8000;
 	DATE_TIME_STRUCT time;
+	float div;
+	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
 
 	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
 	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
 	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
-	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	div = (float)(g_bitAccuracyMidpoint * g_sensorInfoPtr->sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.sensor_type);
+
+	if (s_pauseDisplay == NO)
+	{
+		memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	}
+	else
+	{
+		memset(&(g_mmap[1][0]), 0, (sizeof(g_mmap) / 8));
+		memset(&(g_mmap[2][0]), 0, (sizeof(g_mmap) / 8));
+	}
 
 	s_calibrationData = (CALIBRATION_DATA*)&g_eventDataBuffer[0];
 
@@ -407,7 +436,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 
 	if ((s_calDisplayScreen == CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) || (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY) ||
-		(s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES))
+		(s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES) || (s_calDisplayScreen == CAL_MENU_CALIBRATE_SENSOR))
 	{
 		// PRINT CAL_SETUP
 		memset(&buff[0], 0, sizeof(buff));
@@ -443,7 +472,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 		}
-		else // CAL_MENU_DISPLAY_SAMPLES
+		else if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
 		{
 			// PRINT Table separator
 			memset(&buff[0], 0, sizeof(buff));
@@ -452,8 +481,66 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
 			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 		}
+		else // CAL_MENU_CALIBRATE_SENSOR
+		{
+			if (s_pauseDisplay == YES)
+			{
+				// PRINT Table separator
+				memset(&buff[0], 0, sizeof(buff));
+				//sprintf((char*)buff, "--------------------");
+				sprintf((char*)buff, "--CAL SEN (PAUSED)--");
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
+				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
+			}
+			else
+			{
+				// PRINT Table separator
+				memset(&buff[0], 0, sizeof(buff));
+				//sprintf((char*)buff, "--------------------");
+				sprintf((char*)buff, "-----CAL SENSOR-----");
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
+				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
+			}
+		}
 
-		if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
+		if (s_calDisplayScreen == CAL_MENU_CALIBRATE_SENSOR)
+		{
+			if (s_pauseDisplay == NO)
+			{
+				// PRINT Table header
+				memset(&buff[0], 0, sizeof(buff));
+				sprintf((char*)buff, "C| Curr|  -1s|  -2s|");
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
+				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
+
+				// PRINT R,V,T,A Min, Max and Avg
+				memset(&buff[0], 0, sizeof(buff));
+				sprintf((char*)buff, "R|%01.3f|%01.3f|%01.3f|", (float)((float)sensorCalPeaks[1].r / (float)div), (float)((float)sensorCalPeaks[2].r / (float)div),
+				(float)((float)sensorCalPeaks[3].r / (float)div));
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
+				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+				memset(&buff[0], 0, sizeof(buff));
+				sprintf((char*)buff, "V|%01.3f|%01.3f|%01.3f|", (float)((float)sensorCalPeaks[1].v / (float)div), (float)((float)sensorCalPeaks[2].v / (float)div),
+				(float)((float)sensorCalPeaks[3].v / (float)div));
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
+				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+				memset(&buff[0], 0, sizeof(buff));
+				sprintf((char*)buff, "T|%01.3f|%01.3f|%01.3f|", (float)((float)sensorCalPeaks[1].t / (float)div), (float)((float)sensorCalPeaks[2].t / (float)div),
+				(float)((float)sensorCalPeaks[3].t / (float)div));
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
+				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+				memset(&buff[0], 0, sizeof(buff));
+				sprintf((char*)buff, "A|%01.3f|%01.3f|%01.3f|", HexToMB(sensorCalPeaks[1].a, DATA_NORMALIZED, g_bitAccuracyMidpoint),
+				HexToMB(sensorCalPeaks[2].a, DATA_NORMALIZED, g_bitAccuracyMidpoint),
+				HexToMB(sensorCalPeaks[3].a, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
+				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			}
+		}
+		else if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
 		{
 			// PRINT Table header
 			memset(&buff[0], 0, sizeof(buff));
