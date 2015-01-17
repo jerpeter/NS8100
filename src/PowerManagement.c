@@ -17,6 +17,7 @@
 #include "gpio.h"
 #include "M23018.h"
 #include "lcd.h"
+#include "navigation.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
