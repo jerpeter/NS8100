@@ -64,6 +64,7 @@ void AssignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 		return;
 	}
 
+	// Check that the timeout condition is set for some time in the future
 	if (timeout > 0)
 	{
 		g_rtcTimerBank[timerNum].state = TIMER_ASSIGNED;
@@ -71,6 +72,10 @@ void AssignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 		g_rtcTimerBank[timerNum].timePeriod = g_rtcSoftTimerTickCount + timeout;
 		g_rtcTimerBank[timerNum].timeoutValue = timeout;
 		g_rtcTimerBank[timerNum].callback = callback;
+	}
+	else // Timeout is zero, go ahead and clear the timer just in case it's already set/active
+	{
+		ClearSoftTimer(timerNum);
 	}
 
 	return;
