@@ -243,7 +243,7 @@ void UpdateCurrentTime(void)
 	{
 		g_spi1AccessLock = RTC_TIME_LOCK;
 
-	g_rtcCurrentTickCount = 0;
+		g_rtcCurrentTickCount = 0;
 		g_lastReadExternalRtcTime = GetExternalRtcTime();
 
 		g_spi1AccessLock = AVAILABLE;

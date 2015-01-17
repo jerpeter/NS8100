@@ -536,21 +536,21 @@ void MoveWaveformEventToFile(void)
 
 				waveformProcessingState = WAVE_CALCULATE;
 				break;
-				
+
 			case WAVE_CALCULATE:
-					startOfEventPtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
-					endOfEventDataPtr = startOfEventPtr + (g_wordSizeInPretrig + g_wordSizeInEvent);
+				startOfEventPtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
+				endOfEventDataPtr = startOfEventPtr + (g_wordSizeInPretrig + g_wordSizeInEvent);
 				ramSummaryEntry->waveShapeData.a.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.a.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 				ramSummaryEntry->waveShapeData.r.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.r.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 				ramSummaryEntry->waveShapeData.v.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.v.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 				ramSummaryEntry->waveShapeData.t.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.t.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 
 #if 0 // Old
-					CompleteRamEventSummary(ramSummaryEntry, sumEntry);
+				CompleteRamEventSummary(ramSummaryEntry, sumEntry);
 #else // Updated
 				CompleteRamEventSummary(ramSummaryEntry);
 #endif
-					CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
+				CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 
 				waveformProcessingState = WAVE_STORE;
 				break;
@@ -608,70 +608,70 @@ void MoveWaveformEventToFile(void)
 				break;
 
 			case WAVE_COMPLETE:
-						ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
+				ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 					
-						UpdateMonitorLogEntry();
+				UpdateMonitorLogEntry();
 
 #if 0 // Prevent spam storing the event number if there are multiple events
-						// After event numbers have been saved, store current event number in persistent storage.
-						StoreCurrentEventNumber();
+				// After event numbers have been saved, store current event number in persistent storage.
+				StoreCurrentEventNumber();
 #else // Just increment the number and save when the monitor session is done
-						IncrementCurrentEventNumber();
+				IncrementCurrentEventNumber();
 #endif
-						UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_wordSizeInEvent);
+				UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_wordSizeInEvent);
 
-						// Now store the updated event number in the universal ram storage.
-						g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
+				// Now store the updated event number in the universal ram storage.
+				g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 
-					// Update event buffer count and pointers
-					if (++g_eventBufferReadIndex == g_maxEventBuffers)
-					{
-						g_eventBufferReadIndex = 0;
-						g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr;
-					}
-					else
-					{
-						g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
-					}
+				// Update event buffer count and pointers
+				if (++g_eventBufferReadIndex == g_maxEventBuffers)
+				{
+					g_eventBufferReadIndex = 0;
+					g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr;
+				}
+				else
+				{
+					g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
+				}
 
-					// fix_ns8100 - Currently does nothing since freeing of buffer happens below and a check is at the start
-					if (g_freeEventBuffers == g_maxEventBuffers)
-					{
-						clearSystemEventFlag(TRIGGER_EVENT);
-					}
+				// fix_ns8100 - Currently does nothing since freeing of buffer happens below and a check is at the start
+				if (g_freeEventBuffers == g_maxEventBuffers)
+				{
+					clearSystemEventFlag(TRIGGER_EVENT);
+				}
 
-					g_lastCompletedRamSummaryIndex = ramSummaryEntry;
+				g_lastCompletedRamSummaryIndex = ramSummaryEntry;
 
-					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
-					{
-						raiseMenuEventFlag(RESULTS_MENU_EVENT);
-					}
-					// else (g_triggerRecord.op_mode == COMBO_MODE)
-					// Leave in monitor mode menu display processing for bargraph
+				if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+				{
+					raiseMenuEventFlag(RESULTS_MENU_EVENT);
+				}
+				// else (g_triggerRecord.op_mode == COMBO_MODE)
+				// Leave in monitor mode menu display processing for bargraph
 
 				//debug("DataBuffs: Changing flash move state: %s\r\n", "WAVE_INIT");
 				waveformProcessingState = WAVE_INIT;
-					g_freeEventBuffers++;
+				g_freeEventBuffers++;
 
-					if (GetPowerControlState(LCD_POWER_ENABLE) == OFF)
+				if (GetPowerControlState(LCD_POWER_ENABLE) == OFF)
+				{
+					AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
+					AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
+				}
+
+				// Check to see if there is room for another event, if not send a signal to stop monitoring
+				if (g_unitConfig.flashWrapping == NO)
+				{
+					if (g_sdCardUsageStats.waveEventsLeft == 0)
 					{
-						AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
-						AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
+						msg.cmd = STOP_MONITORING_CMD;
+						msg.length = 1;
+						(*menufunc_ptrs[MONITOR_MENU])(msg);
 					}
+				}
 
-					// Check to see if there is room for another event, if not send a signal to stop monitoring
-					if (g_unitConfig.flashWrapping == NO)
-					{
-						if (g_sdCardUsageStats.waveEventsLeft == 0)
-						{
-							msg.cmd = STOP_MONITORING_CMD;
-							msg.length = 1;
-							(*menufunc_ptrs[MONITOR_MENU])(msg);
-						}
-					}
-
-					// Check if AutoDialout is enabled and signal the system if necessary
-					CheckAutoDialoutStatus();
+				// Check if AutoDialout is enabled and signal the system if necessary
+				CheckAutoDialoutStatus();
 			break;
 		}
 	}

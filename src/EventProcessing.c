@@ -1442,7 +1442,7 @@ FL_FILE* GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 #endif
 {
 	char* fileName = (char*)&g_spareBuffer[0];
-	
+
 #if 1 // Atmel fat driver
 	int fileHandle;
 	int fileOption;
