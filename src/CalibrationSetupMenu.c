@@ -102,7 +102,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 	uint8 mbChoice = 0;
 	INPUT_MSG_STRUCT mn_msg;
 	uint8 previousMode = g_triggerRecord.op_mode;
-
+	uint8 clearedFSRecord = NO;
 	uint8 choice = MessageBox(getLangText(VERIFY_TEXT), "START CAL DIAGNOSTICS?", MB_YESNO);
 
 	if (choice == MB_FIRST_CHOICE)
@@ -259,9 +259,19 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 				// Store Calibration Date
 				g_factorySetupRecord.cal_date = GetCurrentTime();
 			}
+			else if (MessageBox(getLangText(CONFIRM_TEXT), "ERASE FACTORY SETUP?", MB_YESNO) == MB_FIRST_CHOICE)
+			{
+				memset(&g_factorySetupRecord, 0xFF, sizeof(g_factorySetupRecord));
+				SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_CLEAR_TYPE);
+				clearedFSRecord = YES;
+			}
 		}
 
-		SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+		// Check that the Factory setup wasn't cleared
+		if (clearedFSRecord == NO)
+		{
+			SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+		}
 
 		g_factorySetupSequence = SEQ_NOT_STARTED;
 

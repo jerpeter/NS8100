@@ -84,6 +84,17 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
+		case REC_FACTORY_SETUP_CLEAR_TYPE:
+			debug("Programming Factory Setup Record...\r\n");
+
+			((FACTORY_SETUP_STRUCT *)src_ptr)->invalid = 0xFFFF;
+
+			rec_size = sizeof(FACTORY_SETUP_STRUCT);
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) +
+			sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT));
+			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
+			break;
+
 		case REC_UNIQUE_EVENT_ID_TYPE:
 			debug("Programming Current Event Number Record...\r\n");
 
