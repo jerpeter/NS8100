@@ -88,7 +88,7 @@
 #define FS_NB_CACHE_CLUSLIST  1
 
 //! Maximal number of simultaneous navigators.
-#define FS_NB_NAVIGATOR       2
+#define FS_NB_NAVIGATOR       4
 
 //! Number of reserved navigators (ids from \c 0 to <tt>(FS_NB_RESERVED_NAVIGATOR - 1)</tt>).
 #define FS_NB_RESERVED_NAV    0
@@ -101,9 +101,14 @@
  */
 //! @{
 
-//! The explorer uses the navigator ID 1 to open the `copy file' and the ID 0 to open the `paste file'.
-#define FS_NAV_ID_COPYFILE    1
-#define FS_NAV_ID_USHELL_CMD  0
+// Nav ID needed for generic/default file processing and a specific needed for the Summary list
+#define FS_NAV_ID_DEFAULT		0
+#define FS_NAV_ID_SUMMARY_LIST  1
+
+
+//! The explorer uses a navigator ID to open the `copy file' and another ID to open the `paste file'.
+#define FS_NAV_ID_USHELL_CMD  2
+#define FS_NAV_ID_COPYFILE    3
 //! @}
 
 /*! \name Playlist Configuration

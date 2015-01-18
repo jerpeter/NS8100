@@ -900,7 +900,7 @@ void InitSDAndFileSystem(void)
 #if 1 // Atmel fat driver
 		// Init the NAV and select the SD MMC Card
 		nav_reset();
-		nav_select(0);
+		nav_select(FS_NAV_ID_DEFAULT);
 
 		// Check if the drive select was successful
 		if (nav_drive_set(0) == TRUE)

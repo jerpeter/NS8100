@@ -347,7 +347,7 @@ void InitSoftwareSettings_NS8100(void)
 	// Init the NAV and select the SD MMC Card
 	//-------------------------------------------------------------------------
 	nav_reset();
-	nav_select(0);
+	nav_select(FS_NAV_ID_DEFAULT);
 	nav_drive_set(0);
 	nav_partition_mount();
 #endif
