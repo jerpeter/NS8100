@@ -371,6 +371,9 @@ void MoveWaveformEventToFile(void)
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
 
+	uint32 bytesWritten;
+	uint32 remainingDataLength;
+
 #if 1 // Atmel fat driver
 	int waveformFileHandle = -1;
 #else // Port fat driver
@@ -560,6 +563,7 @@ void MoveWaveformEventToFile(void)
 				{
 					g_spi1AccessLock = EVENT_LOCK;
 					//g_fileAccessLock = FILE_LOCK;
+					nav_select(FS_NAV_ID_DEFAULT);
 
 					// Get new event file handle
 					waveformFileHandle = GetEventFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
@@ -580,10 +584,43 @@ void MoveWaveformEventToFile(void)
 
 #if 1 // Atmel fat driver
 						// Write the event record header and summary
-						write(waveformFileHandle, &g_pendingEventRecord, sizeof(EVT_RECORD));
+						bytesWritten = write(waveformFileHandle, &g_pendingEventRecord, sizeof(EVT_RECORD));
 
-						// Write the event data, containing the Pretrigger, event and cal
-						write(waveformFileHandle, g_currentEventStartPtr, (g_wordSizeInEvent * 2));
+						if (bytesWritten != sizeof(EVT_RECORD))
+						{
+							debugErr("Waveform Event Record written size incorrect (%d)\r\n", bytesWritten);
+						}
+
+						remainingDataLength = (g_wordSizeInEvent * 2);
+
+						while (remainingDataLength)
+						{
+							if (remainingDataLength > WAVEFORM_FILE_WRITE_CHUNK_SIZE)
+							{
+								// Write the event data, containing the Pretrigger, event and cal
+								bytesWritten = write(waveformFileHandle, g_currentEventStartPtr, WAVEFORM_FILE_WRITE_CHUNK_SIZE);
+
+								if (bytesWritten != WAVEFORM_FILE_WRITE_CHUNK_SIZE)
+								{
+									debugErr("Waveform Event Data written size incorrect (%d)\r\n", bytesWritten);
+								}
+
+								remainingDataLength -= WAVEFORM_FILE_WRITE_CHUNK_SIZE;
+								g_currentEventStartPtr += (WAVEFORM_FILE_WRITE_CHUNK_SIZE / 2);
+							}
+							else // Remaining data size is less than the file write chunk size
+							{
+								// Write the event data, containing the Pretrigger, event and cal
+								bytesWritten = write(waveformFileHandle, g_currentEventStartPtr, remainingDataLength);
+
+								if (bytesWritten != remainingDataLength)
+								{
+									debugErr("Waveform Event Data written size incorrect (%d)\r\n", bytesWritten);
+								}
+
+								remainingDataLength = 0;
+							}
+						}
 
 						SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
@@ -601,6 +638,8 @@ void MoveWaveformEventToFile(void)
 #endif
 						debug("Waveform Event file closed\r\n");
 					}
+
+					AddEventToSummaryList(&g_pendingEventRecord);
 
 					g_spi1AccessLock = AVAILABLE;
 					waveformProcessingState = WAVE_COMPLETE;

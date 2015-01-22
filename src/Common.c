@@ -675,6 +675,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		//g_fileAccessLock = FILE_LOCK;
+		nav_select(FS_NAV_ID_DEFAULT);
 
 		// Attempt to find the file on the SD file system
 #if 1 // Atmel fat driver
@@ -697,7 +698,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			{
 				// Error case - Just read the maximum buffer size and pray
 #if 1 // Atmel fat driver
-				read(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
+				readWithSizeFix(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
 #else // Port fat driver
 				fl_fread(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
 #endif
@@ -705,7 +706,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			else
 			{
 #if 1 // Atmel fat driver
-				read(languageFile, (uint8*)&g_languageTable[0], fsaccess_file_get_size(languageFile));
+				readWithSizeFix(languageFile, (uint8*)&g_languageTable[0], fsaccess_file_get_size(languageFile));
 #else // Port fat driver
 				fl_fread(languageFile, (uint8*)&g_languageTable[0], languageFile->filelength);
 #endif
@@ -781,6 +782,7 @@ void CheckBootloaderAppPresent(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		//g_fileAccessLock = FILE_LOCK;
+		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
 		strcpy((char*)g_spareBuffer, "A:\\System\\%s");
@@ -1147,5 +1149,18 @@ void ReportFileSystemAccessProblem(char* attemptedProcess)
 	debugErr("Unable to access file system during: %s\r\n", attemptedProcess);
 	for (; i < strlen(attemptedProcess); i++) { attemptedProcess[i] = toupper(attemptedProcess[i]); }
 	sprintf((char*)g_spareBuffer, "FILE SYSTEM BUSY DURING: %s", attemptedProcess);
+	OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ReportFileAccessProblem(char* attemptedFile)
+{
+	uint16 i = 0;
+
+	debugErr("Unable to access file: %s\r\n", attemptedFile);
+	for (; i < strlen(attemptedFile); i++) { attemptedFile[i] = toupper(attemptedFile[i]); }
+	sprintf((char*)g_spareBuffer, "ERROR TRYING TO ACCESS: %s", attemptedFile);
 	OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 }
