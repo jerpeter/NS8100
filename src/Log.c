@@ -357,6 +357,9 @@ uint16 NumOfNewMonitorLogEntries(uint16 uid)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #include "fsaccess.h"
+static char s_monitorLogFilename[] = "A:\\Logs\\MonitorLog.ns8";
+static char s_monitorLogHumanReadableFilename[] = "A:\\Logs\\MonitorLogReadable.txt";
+//static char testBufferFilename[] = "A:\\Logs\\TestBuffer.txt";
 void AppendMonitorLogEntryFile(void)
 {
 	char modeString[10];
@@ -378,10 +381,16 @@ void AppendMonitorLogEntryFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		//g_fileAccessLock = FILE_LOCK;
+		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
 		int monitorLogFile;
-		monitorLogFile = open("A:\\Logs\\MonitorLog.ns8", O_APPEND);
+		monitorLogFile = open(s_monitorLogFilename, O_APPEND);
+		if (monitorLogFile == -1)
+		{
+			nav_setcwd(s_monitorLogFilename, TRUE, TRUE);
+			monitorLogFile = open(s_monitorLogFilename, O_APPEND);
+		}
 #else // Port fat driver
 		FL_FILE* monitorLogFile;
 		monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "a+");
@@ -425,7 +434,12 @@ void AppendMonitorLogEntryFile(void)
 
 #if 1 // Atmel fat driver
 		int monitorLogHumanReadableFile;
-		monitorLogHumanReadableFile = open("A:\\Logs\\MonitorLogReadable.txt", O_APPEND);
+		monitorLogHumanReadableFile = open(s_monitorLogHumanReadableFilename, O_APPEND);
+		if (monitorLogHumanReadableFile == -1)
+		{
+			nav_setcwd(s_monitorLogHumanReadableFilename, TRUE, TRUE);
+			monitorLogHumanReadableFile = open(s_monitorLogHumanReadableFilename, O_APPEND);
+		}
 #else // Port fat driver
 		FL_FILE* monitorLogHumanReadableFile;
 		monitorLogHumanReadableFile = fl_fopen("C:\\Logs\\MonitorLogReadable.txt", "a+");
@@ -522,7 +536,12 @@ void AppendMonitorLogEntryFile(void)
 
 #if 1 // Atmel fat driver
 		int testBufferFile;
-		testBufferFile = open("A:\\Logs\\TestBuffer.txt", O_APPEND);
+		testBufferFile = open((char*)testBufferFilename, O_APPEND);
+		if (testBufferFile == -1)
+		{
+			nav_setcwd((char*)testBufferFilename, TRUE, TRUE);
+			testBufferFile = open((char*)testBufferFilename, O_APPEND);
+		}
 #else // Port fat driver
 		FL_FILE* testBufferFile;
 		testBufferFile = fl_fopen("C:\\Logs\\TestBuffer.txt", "a+");
@@ -567,10 +586,11 @@ void InitMonitorLogTableFromLogFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		//g_fileAccessLock = FILE_LOCK;
+		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
 		int monitorLogFile;
-		monitorLogFile = open("A:\\Logs\\MonitorLog.ns8", O_RDONLY);
+		monitorLogFile = open(s_monitorLogFilename, O_RDONLY);
 #else // Port fat driver
 		FL_FILE* monitorLogFile;
 		monitorLogFile = fl_fopen("C:\\Logs\\MonitorLog.ns8", "r");
@@ -596,7 +616,7 @@ void InitMonitorLogTableFromLogFile(void)
 			OverlayMessage("MONITOR LOG", "INITIALIZING MONITOR LOG WITH SAVED ENTRIES", 1 * SOFT_SECS);
 
 #if 1 // Atmel fat driver
-			bytesRead = read(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+			bytesRead = readWithSizeFix(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 #else // Port fat driver
 			bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 #endif
@@ -658,7 +678,7 @@ void InitMonitorLogTableFromLogFile(void)
 					AdvanceMonitorLogIndex();
 
 #if 1 // Atmel fat driver
-					bytesRead = read(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+					bytesRead = readWithSizeFix(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 #else // Port fat driver
 					bytesRead = fl_fread(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 #endif
@@ -682,6 +702,7 @@ void InitMonitorLogTableFromLogFile(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+static char s_onOffLogHumanReadableFilename[] = "A:\\Logs\\OnOffLogReadable.txt";
 void AddOnOffLogTimestamp(uint8 onOffState)
 {
 	DATE_TIME_STRUCT time = GetCurrentTime();
@@ -697,10 +718,16 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		//g_fileAccessLock = FILE_LOCK;
+		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
 		int onOffLogHumanReadableFile;
-		onOffLogHumanReadableFile = open("A:\\Logs\\OnOffLogReadable.txt", O_APPEND);
+		onOffLogHumanReadableFile = open(s_onOffLogHumanReadableFilename, O_APPEND);
+		if (onOffLogHumanReadableFile == -1)
+		{
+			nav_setcwd(s_onOffLogHumanReadableFilename, TRUE, TRUE);
+			onOffLogHumanReadableFile = open(s_onOffLogHumanReadableFilename, O_APPEND);
+		}
 #else // Port fat driver
 		FL_FILE* onOffLogHumanReadableFile;
 		onOffLogHumanReadableFile = fl_fopen("C:\\Logs\\OnOffLogReadable.txt", "a+");
@@ -754,6 +781,7 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+static char s_debugLogFilename[] = "A:\\Logs\\DebugLogReadable.txt";
 void WriteDebugBufferToFile(void)
 {
 	if (g_fileAccessLock != AVAILABLE)
@@ -763,12 +791,18 @@ void WriteDebugBufferToFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		//g_fileAccessLock = FILE_LOCK;
+		nav_select(FS_NAV_ID_DEFAULT);
 
 		if (g_debugBufferCount)
 		{
 #if 1 // Atmel fat driver
 			int debugLogFile;
-			debugLogFile = open("A:\\Logs\\DebugLogReadable.txt", O_APPEND);
+			debugLogFile = open(s_debugLogFilename, O_APPEND);
+			if (debugLogFile == -1)
+			{
+				nav_setcwd(s_debugLogFilename, TRUE, TRUE);
+				debugLogFile = open(s_debugLogFilename, O_APPEND);
+			}
 #else // Port fat driver
 			FL_FILE* debugLogFile;
 			debugLogFile = fl_fopen("C:\\Logs\\DebugLogReadable.txt", "a+");
@@ -827,6 +861,7 @@ void SwitchDebugLogFile(void)
 
 		nav_drive_set(0);
 		nav_partition_mount();
+		nav_select(FS_NAV_ID_DEFAULT);
 
 		// Remove old run debug file (if it exists)
 		if(nav_setcwd("A:\\Logs\\DebugLogLastRun.txt", TRUE, FALSE))
