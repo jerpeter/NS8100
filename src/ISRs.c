@@ -290,7 +290,7 @@ void Soft_timer_tick_irq(void)
 	raiseTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
 
 	// Every 8 ticks (4 secs) trigger the cyclic event flag
-	if (++g_cyclicEventDelay == 8)
+	if (++g_cyclicEventDelay == CYCLIC_EVENT_TIME_THRESHOLD)
 	{
 		g_cyclicEventDelay = 0;
 		raiseSystemEventFlag(CYCLIC_EVENT);
@@ -301,8 +301,8 @@ void Soft_timer_tick_irq(void)
 #endif
 	}
 
-	// Every 60 ticks (30 secs) get the rtc time.
-	if (++g_rtcCurrentTickCount >= 60)
+	// Every so often flag for updating to the External RTC time.
+	if (++g_rtcCurrentTickCount >= UPDATE_TIME_EVENT_THRESHOLD)
 	{
 		raiseSystemEventFlag(UPDATE_TIME_EVENT);
 	}

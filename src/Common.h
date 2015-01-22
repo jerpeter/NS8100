@@ -160,6 +160,9 @@ enum {
 #define LOW_VOLTAGE_THRESHOLD		5.4
 #define EXTERNAL_VOLTAGE_PRESENT	5.0
 
+#define CYCLIC_EVENT_TIME_THRESHOLD		(4 * 2)
+#define UPDATE_TIME_EVENT_THRESHOLD		(60 * 2)
+
 /* Uart Info */
 #define CRAFT_BAUDRATE	115200 //14400 //38400
 #define CRAFT_COM_PORT	0
@@ -211,6 +214,17 @@ enum {
 	POWER_SAVINGS_NORMAL,
 	POWER_SAVINGS_MOST,
 	POWER_SAVINGS_MAX
+};
+
+enum USB_STATES {
+	USB_INIT_DRIVER,
+	USB_NOT_CONNECTED,
+	USB_READY,
+	USB_CONNECTED_AND_PROCESSING,
+	USB_HOST_MODE_WAITING_FOR_DEVICE,
+	USB_DISABLED_FOR_OTHER_PROCESSING,
+	USB_DEVICE_MODE_SELECTED,
+	USB_HOST_MODE_SELECTED
 };
 
 ///----------------------------------------------------------------------------
@@ -274,5 +288,6 @@ void InitTimeMsg(void);
 
 // Error routines
 void ReportFileSystemAccessProblem(char*);
+void ReportFileAccessProblem(char* attemptedFile);
 
 #endif // _COMMON_H_

@@ -557,16 +557,6 @@ void init_hmatrix(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-enum USB_STATES {
-	USB_INIT_DRIVER,
-	USB_NOT_CONNECTED,
-	USB_READY,
-	USB_CONNECTED_AND_PROCESSING,
-	USB_HOST_MODE_WAITING_FOR_DEVICE,
-	USB_DISABLED_FOR_OTHER_PROCESSING,
-	USB_DEVICE_MODE_SELECTED,
-	USB_HOST_MODE_SELECTED
-};
 extern uint8 g_sampleProcessing;
 extern volatile U8 device_state;
 extern Bool wrong_class_connected;
@@ -574,12 +564,7 @@ extern Bool ms_process_first_connect_disconnect;
 extern Bool ms_usb_prevent_sleep;
 extern Bool ushell_cmd_syncevents(uint16_t*, uint16_t*);
 #include "ushell_task.h"
-#if 1 // Test - need access in main() to determine sleep level
-uint8 usbMassStorageState = USB_INIT_DRIVER;
-uint8 usbMode;
-uint8 usbThumbDriveWasConnected = NO;
-//uint8 promptForUsbOtgHostCableRemoval = NO;
-#endif
+
 void UsbDeviceManager(void)
 {
 #if 0 // Test - need access in main() to determine sleep level
@@ -1105,6 +1090,7 @@ void BootLoadManager(void)
 		}
 
 #if 1 // Atmel fat driver
+		nav_select(FS_NAV_ID_DEFAULT);
 		sprintf(textBuffer, "A:\\System\\%s", default_boot_name);
 		file = open(textBuffer, O_RDONLY);
 #else // Port fat driver

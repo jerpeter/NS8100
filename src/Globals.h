@@ -224,6 +224,7 @@ extern uint32 g_cyclicEventDelay;
 extern uint32 g_updateOffsetCount;
 extern uint32 g_tempTriggerLevelForMenuAdjsutment;
 extern FLASH_USAGE_STRUCT g_sdCardUsageStats;
+extern SUMMARY_LIST_FILE_DETAILS g_summaryList;
 extern volatile uint16 g_storedTempReading;
 extern volatile uint16 g_currentTempReading;
 extern volatile uint16 g_previousTempReading;
@@ -238,6 +239,9 @@ extern uint8 g_channelSyncError;
 extern volatile uint32 g_sampleCount;
 extern uint32 g_sampleCountHold;
 extern uint8 g_powerOffActivated;
+extern uint8 usbMassStorageState;
+extern uint8 usbMode;
+extern uint8 usbThumbDriveWasConnected;
 extern SAMPLE_DATA_STRUCT sensorCalPeaks[];
 
 #endif /* GLOBALS_H_ */

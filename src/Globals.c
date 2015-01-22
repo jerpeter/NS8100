@@ -259,10 +259,14 @@ uint8 g_debugBuffer[GLOBAL_DEBUG_BUFFER_SIZE];
 uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
 uint32 g_execCycles = 0;
 FLASH_USAGE_STRUCT g_sdCardUsageStats;
+SUMMARY_LIST_FILE_DETAILS g_summaryList;
 volatile uint32 g_sampleCount = 0;
 uint32 g_sampleCountHold = 0;
 uint8 g_channelSyncError = NO;
 uint8 g_powerOffActivated = NO;
+uint8 usbMassStorageState = USB_INIT_DRIVER;
+uint8 usbMode;
+uint8 usbThumbDriveWasConnected = NO;
 SAMPLE_DATA_STRUCT sensorCalPeaks[4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
 
 // End of the list
