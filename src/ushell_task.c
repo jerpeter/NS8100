@@ -67,7 +67,7 @@
   #include "host_mass_storage_task.h"
 #endif
 #include "ushell_task.h"
-
+#include "EventProcessing.h"
 
 //_____ M A C R O S ________________________________________________________
 
@@ -1372,6 +1372,10 @@ Bool ushell_cmd_sync( void )
 		if (fs_g_status != FS_ERR_FILE_EXIST)
 		{
 #endif
+			// Set file creation and last access for new copied file
+			SetFileDateTimestamp(FS_DATE_CREATION);
+			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
          // Copy running
          {
          uint8_t status;
@@ -1597,6 +1601,10 @@ Bool ushell_cmd_syncevents(uint16_t* eventsCopied, uint16_t* eventsSkipped)
 		if (fs_g_status != FS_ERR_FILE_EXIST)
 		{
 #endif
+			// Set file creation and last access for new copied file
+			SetFileDateTimestamp(FS_DATE_CREATION);
+			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
          // Copy running
          {
          uint8_t status;
