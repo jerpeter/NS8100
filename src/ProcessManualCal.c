@@ -187,6 +187,7 @@ void MoveManualCalToFile(void)
 		else // (g_fileAccessLock == AVAILABLE)
 		{
 			//g_fileAccessLock = FILE_LOCK;
+			nav_select(FS_NAV_ID_DEFAULT);
 
 			// Get new event file handle
 			manualCalFileHandle = GetEventFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
@@ -229,7 +230,9 @@ void MoveManualCalToFile(void)
 				debug("Manual Cal Event file closed\r\n");
 
 				ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
-					
+
+				AddEventToSummaryList(&g_pendingEventRecord);
+
 				// Don't log a monitor entry for Manual Cal
 				//UpdateMonitorLogEntry();
 

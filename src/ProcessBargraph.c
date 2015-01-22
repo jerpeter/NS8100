@@ -117,6 +117,7 @@ void MoveBarIntervalDataToFile(void)
 		else // (g_fileAccessLock == AVAILABLE)
 		{
 			//g_fileAccessLock = FILE_LOCK;
+			nav_select(FS_NAV_ID_DEFAULT);
 
 			bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, APPEND_EVENT_FILE);
 
@@ -214,6 +215,7 @@ void MoveSummaryIntervalDataToFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		//g_fileAccessLock = FILE_LOCK;
+		nav_select(FS_NAV_ID_DEFAULT);
 
 		bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, APPEND_EVENT_FILE);
 
@@ -860,6 +862,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		//g_fileAccessLock = FILE_LOCK;
+		nav_select(FS_NAV_ID_DEFAULT);
 
 		// Create new Bargraph event file
 		bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, CREATE_EVENT_FILE);
@@ -915,6 +918,7 @@ void MoveEndOfBargraphEventRecordToFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		//g_fileAccessLock = FILE_LOCK;
+		nav_select(FS_NAV_ID_DEFAULT);
 
 		// The following data will be filled in when the data has been moved over to flash.
 		g_pendingBargraphRecord.header.summaryChecksum = 0xAABB;
@@ -964,6 +968,8 @@ void MoveEndOfBargraphEventRecordToFile(void)
 #endif
 
 		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
+
+		AddEventToSummaryList(&g_pendingBargraphRecord);
 
 		g_fileAccessLock = AVAILABLE;
 

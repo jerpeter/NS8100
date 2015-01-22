@@ -62,6 +62,18 @@ typedef enum {
 	APPEND_EVENT_FILE,
 	OVERWRITE_EVENT_FILE
 } EVENT_FILE_OPTION;
+
+typedef struct
+{
+	int16 file;
+	uint16 totalEntries;
+	uint16 validEntries;
+	uint16 deletedEntries;
+	uint16 currentEntryIndex;
+	uint32 currentMonitorSessionStartSummary;
+	SUMMARY_LIST_ENTRY_STRUCT cachedEntry;
+} SUMMARY_LIST_FILE_DETAILS;
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
@@ -101,6 +113,7 @@ uint16 AirTriggerConvert(uint32 airTriggerToConvert);
 uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert);
 
 void SetFileDateTimestamp(uint8 option);
+int readWithSizeFix(int file, void* bufferPtr, uint32 length);
 
 #if 1 // Atmel fat driver
 int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option);
@@ -109,5 +122,14 @@ FL_FILE* GetEventFileHandle(uint16 eventNumber, EVENT_FILE_OPTION option);
 #endif
 
 void CacheResultsEventInfo(EVT_RECORD* eventRecordToCache);
+
+void DumpSummaryListFileToEventBuffer(void);
+SUMMARY_LIST_ENTRY_STRUCT* GetSummaryFromSummaryList(uint16 eventNumber);
+void CacheNextSummaryListEntry(void);
+void CachePreviousSummaryListEntry(void);
+void CacheSummaryEntryByIndex(uint16 index);
+void ParseAndCountSummaryListEntries(void);
+void AddEventToSummaryList(EVT_RECORD* event);
+void InitSummaryListFile(void);
 
 #endif // _FLASHEVTS_H_

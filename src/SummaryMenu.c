@@ -53,6 +53,11 @@ static SUMMARY_DATA *s_flashReadSummaryTablePtr = &__ramFlashSummaryTbl[0];
 static uint16 s_topMenuSummaryIndex = 0;
 static uint16 s_currentSummaryIndex = 0;
 static uint32 cacheEntries = 0;
+#if 0 // Old method
+static uint16 s_totalRamSummaries = TOTAL_RAM_SUMMARIES;
+#else
+static uint16 s_totalRamSummaries = 0;
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -72,6 +77,7 @@ uint16 GetFirstValidRamSummaryIndex(void);
 uint16 GetNextValidRamSummaryIndex(uint16 currentValidSummaryIndex);
 uint16 GetPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex);
 BOOLEAN CheckRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex);
+void cacheSummaryListEntry(uint16 tempSummaryIndex);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -98,7 +104,6 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
                    WND_LAYOUT_STRUCT *wnd_layout_ptr,
                    SUMMARY_DATA *rd_summary_ptr)
 {
-	SUMMARY_MENU_EVENT_CACHE_STRUCT* eventInfo;
 	INPUT_MSG_STRUCT mn_msg;
 	uint16 tempSummaryIndex = 0;
 
@@ -111,8 +116,16 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
 		wnd_layout_ptr->start_row = SUMMARY_WND_STARTING_ROW;   /* 8 */
 		wnd_layout_ptr->end_row =   SUMMARY_WND_END_ROW;        /* 6 */
 
+		DumpSummaryListFileToEventBuffer();
+
 		g_summaryListMenuActive = YES;
 		
+#if 0 // Old method
+		s_totalRamSummaries = TOTAL_RAM_SUMMARIES;
+#else
+		s_totalRamSummaries = g_summaryList.validEntries;
+#endif
+
 		if (msg.data[0] == START_FROM_TOP)
 		{
 			// Find the first valid summary index and set the top and current index to match
@@ -128,17 +141,24 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
 		{
 			case (ENTER_KEY):
 				// Check if the top menu summary index represents a valid index
+#if 0 // Old method
 				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
+#else
+				if (s_topMenuSummaryIndex < g_summaryList.validEntries)
+#endif
 				{
 					// Grab the event info, assuming it's cached
+#if 0 // Old method
 					eventInfo = GetSummaryEventInfo(s_currentSummaryIndex);
-
-					g_summaryEventNumber = eventInfo->eventNumber;
+#else
+					cacheSummaryListEntry(s_currentSummaryIndex);
+#endif
+					g_summaryEventNumber = g_summaryList.cachedEntry.eventNumber;
 					g_updateResultsEventRecord = YES;
 
-					debug("Summary menu: Calling Results Menu for Event #%d\r\n", eventInfo->eventNumber);
+					debug("Summary menu: Calling Results Menu for Event #%d\r\n", g_summaryEventNumber);
 
-					switch (eventInfo->mode)
+					switch (g_summaryList.cachedEntry.mode)
 					{
 						case WAVEFORM_MODE:
 						case MANUAL_CAL_MODE:
@@ -159,14 +179,14 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
 				
 			case (DOWN_ARROW_KEY):
 				// Check if the top menu summary index represents a valid index
-				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
+				if (s_topMenuSummaryIndex < s_totalRamSummaries)
 				{
 					SummaryMenuScroll(DOWN);
 				}
 				break;
 			case (UP_ARROW_KEY):
 				// Check if the top menu summary index represents a valid index
-				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
+				if (s_topMenuSummaryIndex < s_totalRamSummaries)
 				{
 					SummaryMenuScroll(UP);
 				}
@@ -176,7 +196,7 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
 				tempSummaryIndex = GetFirstValidRamSummaryIndex();
 				
 				// Check if the top menu summary index represents a valid index and if the current index isn't the first
-				if ((s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES) && (tempSummaryIndex != s_currentSummaryIndex))
+				if ((s_topMenuSummaryIndex < s_totalRamSummaries) && (tempSummaryIndex != s_currentSummaryIndex))
 				{
 					s_topMenuSummaryIndex = s_currentSummaryIndex = tempSummaryIndex;
 
@@ -234,7 +254,7 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
 	// Check if s_topMenuSummaryIndex is valid
-	if (s_topMenuSummaryIndex == TOTAL_RAM_SUMMARIES)
+	if (s_topMenuSummaryIndex == s_totalRamSummaries)
 	{
 		debug("Summary List: No valid summary found for display\r\n");
 		sprintf(lineBuff, "<%s>", getLangText(EMPTY_TEXT));
@@ -245,18 +265,19 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	{
 		tempSummaryIndex = s_topMenuSummaryIndex;
 
-		while ((itemsDisplayed <= SUMMARY_MENU_ACTIVE_ITEMS) && (tempSummaryIndex < TOTAL_RAM_SUMMARIES))
+		while ((itemsDisplayed <= SUMMARY_MENU_ACTIVE_ITEMS) && (tempSummaryIndex < s_totalRamSummaries))
 		{
 			// Check if entry is cached to prevent long delay reading files
 			eventInfo = GetSummaryEventInfo(tempSummaryIndex);
 
 			// Clear and setup the time stamp string for the current event
 			memset(&dateBuff[0], 0, sizeof(dateBuff));
-			ConvertTimeStampToString(dateBuff, (void*)(&(eventInfo->eventTime)),
-										REC_DATE_TIME_DISPLAY);
+
+			ConvertTimeStampToString(dateBuff, (void*)(&(eventInfo->eventTime)), REC_DATE_TIME_DISPLAY);
 
 			// Clear and setup the mode string for the curent event
 			memset(&modeBuff[0], 0, sizeof(modeBuff));
+
 			switch (eventInfo->mode)
 			{
 				case WAVEFORM_MODE: 		strcpy(modeBuff, "W"); break;
@@ -290,7 +311,7 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 		}
 
 		// Check if the summary index is at the end of the list and still room on the LCD
-		if ((itemsDisplayed <= SUMMARY_MENU_ACTIVE_ITEMS) && (tempSummaryIndex == TOTAL_RAM_SUMMARIES))
+		if ((itemsDisplayed <= SUMMARY_MENU_ACTIVE_ITEMS) && (tempSummaryIndex == s_totalRamSummaries))
 		{
 			debug("Summary List: End of the list\r\n");
 			sprintf(lineBuff, "<%s>", getLangText(END_TEXT));
@@ -316,7 +337,7 @@ void SummaryMenuScroll(char direction)
 		{
 			tempSummaryIndex = GetNextValidRamSummaryIndex(s_currentSummaryIndex);
 			
-			if (tempSummaryIndex < TOTAL_RAM_SUMMARIES)
+			if (tempSummaryIndex < s_totalRamSummaries)
 			{
 				s_currentSummaryIndex = tempSummaryIndex;
 				
@@ -334,7 +355,8 @@ void SummaryMenuScroll(char direction)
 			}
 			
 			compareCurrentSummaryIndex = GetNextValidRamSummaryIndex(s_currentSummaryIndex);
-			if(compareCurrentSummaryIndex == TOTAL_RAM_SUMMARIES)
+
+			if(compareCurrentSummaryIndex == s_totalRamSummaries)
 			{
 				g_summaryListArrowChar = UP_ARROW_CHAR;
 			}
@@ -346,7 +368,7 @@ void SummaryMenuScroll(char direction)
 		{
 			tempSummaryIndex = GetPreviousValidRamSummaryIndex(s_currentSummaryIndex);
 			
-			if (tempSummaryIndex < TOTAL_RAM_SUMMARIES)
+			if (tempSummaryIndex < s_totalRamSummaries)
 			{
 				s_currentSummaryIndex = tempSummaryIndex;
 				
@@ -357,7 +379,8 @@ void SummaryMenuScroll(char direction)
 			}
 
 			compareCurrentSummaryIndex = GetPreviousValidRamSummaryIndex(s_currentSummaryIndex);
-			if(compareCurrentSummaryIndex == TOTAL_RAM_SUMMARIES)
+
+			if(compareCurrentSummaryIndex == s_totalRamSummaries)
 			{
 				g_summaryListArrowChar = DOWN_ARROW_CHAR;
 			}
@@ -375,7 +398,7 @@ uint16 GetFirstValidRamSummaryIndex(void)
 {
 	uint16 ramSummaryIndex = 0;
 	
-	while ((ramSummaryIndex < TOTAL_RAM_SUMMARIES) && (CheckRamSummaryIndexForValidEventLink(ramSummaryIndex) == NO))
+	while ((ramSummaryIndex < s_totalRamSummaries) && (CheckRamSummaryIndexForValidEventLink(ramSummaryIndex) == NO))
 		ramSummaryIndex++;
 
 	return (ramSummaryIndex);
@@ -388,11 +411,11 @@ uint16 GetNextValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 {
 	uint16 ramSummaryIndex = currentValidSummaryIndex;
 
-	if (ramSummaryIndex < TOTAL_RAM_SUMMARIES)
+	if (ramSummaryIndex < s_totalRamSummaries)
 	{
 		while (CheckRamSummaryIndexForValidEventLink(++ramSummaryIndex) == NO)
 		{
-			if (ramSummaryIndex == TOTAL_RAM_SUMMARIES)
+			if (ramSummaryIndex == s_totalRamSummaries)
 			{
 				break;
 			}
@@ -411,7 +434,7 @@ uint16 GetPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 
 	if (ramSummaryIndex == 0)
 	{
-		ramSummaryIndex = TOTAL_RAM_SUMMARIES;
+		ramSummaryIndex = s_totalRamSummaries;
 	}
 	else
 	{
@@ -419,7 +442,7 @@ uint16 GetPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 		{
 			if (ramSummaryIndex == 0)
 			{
-				ramSummaryIndex = TOTAL_RAM_SUMMARIES;
+				ramSummaryIndex = s_totalRamSummaries;
 				break;
 			}
 		}
@@ -434,10 +457,15 @@ uint16 GetPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 BOOLEAN CheckRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 {
 	BOOLEAN validEventLink = NO;
+	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
 
-	if (ramSummaryIndex < TOTAL_RAM_SUMMARIES)
+	if (ramSummaryIndex < s_totalRamSummaries)
 	{
+#if 0 // Old method
 		if ((uint32)(__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum) != NO_EVENT_LINK)
+#else
+		if (summaryListCache[ramSummaryIndex].eventNumber != 0)
+#endif
 		{
 			validEventLink = YES;
 		}
@@ -451,8 +479,9 @@ BOOLEAN CheckRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 ///----------------------------------------------------------------------------
 SUMMARY_MENU_EVENT_CACHE_STRUCT* GetSummaryEventInfo(uint16 tempSummaryIndex)
 {
+#if 0 // Old method
 	EVT_RECORD resultsEventRecord;
-	SUMMARY_MENU_EVENT_CACHE_STRUCT* cacheSummaryLineEntry = (SUMMARY_MENU_EVENT_CACHE_STRUCT*)&g_eventDataBuffer[0];
+	SUMMARY_MENU_EVENT_CACHE_STRUCT* cacheSummaryLineEntry = (SUMMARY_MENU_EVENT_CACHE_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
 	uint32 i = 0;
 
 	// Check if entry is cached to prevent long delay reading files
@@ -478,6 +507,30 @@ SUMMARY_MENU_EVENT_CACHE_STRUCT* GetSummaryEventInfo(uint16 tempSummaryIndex)
 	cacheSummaryLineEntry[cacheEntries].subMode = resultsEventRecord.summary.subMode;
 	cacheSummaryLineEntry[cacheEntries].eventTime = resultsEventRecord.summary.captured.eventTime;
 	cacheSummaryLineEntry[cacheEntries].validFlag = YES;
-		
+
 	return (&cacheSummaryLineEntry[cacheEntries++]);
+#else
+	static SUMMARY_MENU_EVENT_CACHE_STRUCT summaryMenuCacheEntry;
+	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
+
+	//debug("Summary Menu: Get Summary Info for index: %d\r\n", tempSummaryIndex);
+
+	summaryMenuCacheEntry.eventNumber = summaryListCache[tempSummaryIndex].eventNumber;
+	summaryMenuCacheEntry.mode = summaryListCache[tempSummaryIndex].mode;
+	summaryMenuCacheEntry.subMode = summaryListCache[tempSummaryIndex].subMode;
+	summaryMenuCacheEntry.eventTime = summaryListCache[tempSummaryIndex].eventTime;
+	summaryMenuCacheEntry.validFlag = YES;
+
+	return (&summaryMenuCacheEntry);
+#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void cacheSummaryListEntry(uint16 tempSummaryIndex)
+{
+	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
+
+	memcpy(&g_summaryList.cachedEntry, &summaryListCache[tempSummaryIndex], sizeof(SUMMARY_LIST_ENTRY_STRUCT));
 }

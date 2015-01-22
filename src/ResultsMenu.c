@@ -44,7 +44,9 @@
 ///----------------------------------------------------------------------------
 static uint16 s_monitorSessionFirstEvent = 0;
 static uint16 s_monitorSessionLastEvent = 0;
+#if 0
 static EVT_RECORD resultsEventRecord;
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -332,18 +334,33 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	uint16 bitAccuracyScale;
 	uint8 calResults = PASSED;
 
+#if 0 // Old method
 	EVT_RECORD* eventRecord = &resultsEventRecord;
-	
+#endif
+
 	if ((g_updateResultsEventRecord == YES) || (g_forcedCalibration == YES))
 	{
 		if (g_summaryListMenuActive == YES)
 		{
+#if 0 // Old method
 			debug("Results menu: updating event record cache\r\n");
 			GetEventFileRecord(g_summaryEventNumber, &resultsEventRecord);
+#else
+			// Results cached in g_summaryList.cachedEntry
+
+			//debug("Results menu: Getting Summary List entry\r\n");
+			//GetSummaryFromSummaryList(g_summaryEventNumber);
+			//debug("Results menu: Caching Summary List entry\r\n");
+			//CacheSummaryEntryByIndex(g_summaryList.currentEntryIndex);
+#endif
 		}			
 		else
 		{
+#if 0 // Old method
 			GetResultsEventInfoFromCache(g_resultsRamSummaryPtr->fileEventNum);
+#else
+			GetSummaryFromSummaryList(g_resultsRamSummaryPtr->fileEventNum);
+#endif
 
 			// Old and too slow - Throw away at some point
 			//GetEventFileRecord(g_resultsRamSummaryPtr->fileEventNum, &resultsEventRecord);
@@ -351,12 +368,21 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		g_updateResultsEventRecord = NO;
 
+#if 0 // Old method
 		debugRaw("\n\tResults Evt: %04d, Mode: %d\r\n", eventRecord->summary.eventNumber, eventRecord->summary.mode);
 		debugRaw("\tStored peaks: a:%x r:%x v:%x t:%x\r\n",
 				eventRecord->summary.calculated.a.peak, 
 				eventRecord->summary.calculated.r.peak,
 				eventRecord->summary.calculated.v.peak,
 				eventRecord->summary.calculated.t.peak);
+#else
+		debugRaw("\n\tResults Evt: %04d, Mode: %d\r\n", g_summaryList.cachedEntry.eventNumber, g_summaryList.cachedEntry.mode);
+		debugRaw("\tStored peaks: a:%x r:%x v:%x t:%x\r\n",
+		g_summaryList.cachedEntry.channelSummary.a.peak,
+		g_summaryList.cachedEntry.channelSummary.r.peak,
+		g_summaryList.cachedEntry.channelSummary.v.peak,
+		g_summaryList.cachedEntry.channelSummary.t.peak);
+#endif
 	}
 
 	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
@@ -366,13 +392,21 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     //-------------------------------------------------------------
 	
 	// Set the gain factor that was used to record the event (sensitivity)
-	if ((eventRecord->summary.parameters.channel[0].options & 0x01) == GAIN_SELECT_x2)
-		gainFactor = 2;
-	else
-		gainFactor = 4;
+#if 0 // Old method
+	if ((eventRecord->summary.parameters.channel[0].options & 0x01) == GAIN_SELECT_x2) { gainFactor = 2; }
+	else { gainFactor = 4; }
+#else
+	if ((g_summaryList.cachedEntry.gainSelect & 0x01) == GAIN_SELECT_x2) { gainFactor = 2; }
+	else { gainFactor = 4; }
+#endif
+
 
 	// Set the scale based on the stored bit accuracy the event was recorded with
+#if 0 // Old method
 	switch (eventRecord->summary.parameters.bitAccuracy)
+#else
+	switch (g_summaryList.cachedEntry.bitAccuracy)
+#endif
 	{
 		case ACCURACY_10_BIT: { bitAccuracyScale = ACCURACY_10_BIT_MIDPOINT; } break;
 		case ACCURACY_12_BIT: {	bitAccuracyScale = ACCURACY_12_BIT_MIDPOINT; } break;
@@ -383,8 +417,13 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 
 	// Calculate the divider used for converting stored A/D peak counts to units of measure
+#if 0 // Old method
 	div = (float)(bitAccuracyScale * SENSOR_ACCURACY_100X_SHIFT * gainFactor) /
 			(float)(eventRecord->summary.parameters.seismicSensorType);
+#else
+	div = (float)(bitAccuracyScale * SENSOR_ACCURACY_100X_SHIFT * gainFactor) /
+			(float)(g_summaryList.cachedEntry.seismicSensorType);
+#endif
 
 	//-----------------------------------------------------------------------
 	// PRINT MONITORING
@@ -427,7 +466,11 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else
 	{
+#if 0 // Old method
 		switch (eventRecord->summary.mode)
+#else
+		switch (g_summaryList.cachedEntry.mode)
+#endif
 		{
 			case MANUAL_CAL_MODE:
 				length = sprintf(buff, "%s", getLangText(CAL_SUMMARY_TEXT));
@@ -442,10 +485,17 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				break;
 
 			case COMBO_MODE:
+#if 0 // Old method
 				if (eventRecord->summary.subMode == WAVEFORM_MODE)
 					length = sprintf(buff, "%s", "COMBO - EVENT SUM");
 				else if (eventRecord->summary.subMode == BARGRAPH_MODE)
 					length = sprintf(buff, "%s", "COMBO - BARGRAPH");
+#else
+				if (g_summaryList.cachedEntry.subMode == WAVEFORM_MODE)
+					length = sprintf(buff, "%s", "COMBO - EVENT SUM");
+				else if (g_summaryList.cachedEntry.subMode == BARGRAPH_MODE)
+					length = sprintf(buff, "%s", "COMBO - BARGRAPH");
+#endif
 				break;
 
 			default:
@@ -467,6 +517,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if (g_monitorOperationMode == WAVEFORM_MODE)
 		{
 			//if (GetUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionFirstEvent)
+#if 0 // Old method
 			if (eventRecord->summary.eventNumber == s_monitorSessionFirstEvent)
 				arrowChar = DOWN_ARROW_CHAR;
 			//else if (GetUniqueEventNumber(g_resultsRamSummaryPtr) == s_monitorSessionLastEvent)
@@ -474,6 +525,14 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				arrowChar = UP_ARROW_CHAR;
 			else
 				arrowChar = BOTH_ARROWS_CHAR;
+#else
+			if (g_summaryList.cachedEntry.eventNumber == s_monitorSessionFirstEvent)
+				arrowChar = DOWN_ARROW_CHAR;
+			else if (g_summaryList.cachedEntry.eventNumber == s_monitorSessionLastEvent)
+				arrowChar = UP_ARROW_CHAR;
+			else
+				arrowChar = BOTH_ARROWS_CHAR;
+#endif
 
 			if (s_monitorSessionFirstEvent != s_monitorSessionLastEvent)
 			{
@@ -496,7 +555,11 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// Advance to next row
 	wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
+#if 0 // Old method
 	if ((g_sampleProcessing == ACTIVE_STATE) && (eventRecord->summary.mode != MANUAL_CAL_MODE))
+#else
+	if ((g_sampleProcessing == ACTIVE_STATE) && (g_summaryList.cachedEntry.mode != MANUAL_CAL_MODE))
+#endif
 	{
 		// Date & Time
 		time = GetCurrentTime();
@@ -521,8 +584,11 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     //-------------------------------------------------------------
     // Date Time Info
     memset(&buff[0], 0, sizeof(buff));
-    ConvertTimeStampToString(
-    	buff, (void*)(&eventRecord->summary.captured.eventTime), REC_DATE_TIME_DISPLAY);
+#if 0 // Old method
+    ConvertTimeStampToString(buff, (void*)(&eventRecord->summary.captured.eventTime), REC_DATE_TIME_DISPLAY);
+#else
+    ConvertTimeStampToString(buff, (void*)(&g_summaryList.cachedEntry.eventTime), REC_DATE_TIME_DISPLAY);
+#endif
 
     WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
     wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
@@ -533,7 +599,11 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	// Remove commented code assuming display works
 	//if (g_summaryListMenuActive == YES)
+#if 0 // Old method
 		sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), eventRecord->summary.eventNumber);
+#else
+		sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), g_summaryList.cachedEntry.eventNumber);
+#endif
 	//else sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), GetUniqueEventNumber(g_resultsRamSummaryPtr));
 
     WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
@@ -541,7 +611,11 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     //-------------------------------------------------------------
     // Units inches or millimeters LABEL
     memset(&buff[0], 0, sizeof(buff));
+#if 0 // Old Method
 	if (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
+#else
+	if (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC)
+#endif
 	{
 		sprintf(buff, "mg/s");
 	}
@@ -572,6 +646,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     //-------------------------------------------------------------
     // R DATA
     // Using the Sensor times 100 definition.
+#if 0 // Old method
     normalize_max_peak = (float)eventRecord->summary.calculated.r.peak / (float)div;
 
 	if (eventRecord->summary.mode == MANUAL_CAL_MODE)
@@ -584,6 +659,20 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     {
     	normalize_max_peak *= (float)METRIC;
     }
+#else
+    normalize_max_peak = (float)g_summaryList.cachedEntry.channelSummary.r.peak / (float)div;
+
+    if (g_summaryList.cachedEntry.mode == MANUAL_CAL_MODE)
+    {
+	    if ((normalize_max_peak < 0.375) || (normalize_max_peak > 0.625))
+	    calResults = FAILED;
+    }
+
+    if ((g_summaryList.cachedEntry.seismicSensorType != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
+    {
+	    normalize_max_peak *= (float)METRIC;
+    }
+#endif
 
     memset(&buff[0], 0, sizeof(buff));
     if (normalize_max_peak >= 100)
@@ -599,6 +688,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
     //-------------------------------------------------------------
     // T DATA
+#if 0 // Old method
     normalize_max_peak = (float)eventRecord->summary.calculated.t.peak / (float)div;
 
 	if (eventRecord->summary.mode == MANUAL_CAL_MODE)
@@ -611,6 +701,20 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     {
     	normalize_max_peak *= (float)METRIC;
 	}
+#else
+	normalize_max_peak = (float)g_summaryList.cachedEntry.channelSummary.t.peak / (float)div;
+
+	if (g_summaryList.cachedEntry.mode == MANUAL_CAL_MODE)
+	{
+		if ((normalize_max_peak < 0.375) || (normalize_max_peak > 0.625))
+		calResults = FAILED;
+	}
+
+	if ((g_summaryList.cachedEntry.seismicSensorType != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
+	{
+		normalize_max_peak *= (float)METRIC;
+	}
+#endif
 
     memset(&buff[0], 0, sizeof(buff));
     if (normalize_max_peak >= 100)
@@ -626,6 +730,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
     //-------------------------------------------------------------
     // V DATA
+#if 0 // Old method
     normalize_max_peak = (float)eventRecord->summary.calculated.v.peak / (float)div;
 
 	if (eventRecord->summary.mode == MANUAL_CAL_MODE)
@@ -638,6 +743,20 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     {
     	normalize_max_peak *= (float)METRIC;
 	}
+#else
+	normalize_max_peak = (float)g_summaryList.cachedEntry.channelSummary.v.peak / (float)div;
+
+	if (g_summaryList.cachedEntry.mode == MANUAL_CAL_MODE)
+	{
+		if ((normalize_max_peak < 0.375) || (normalize_max_peak > 0.625))
+		calResults = FAILED;
+	}
+
+	if ((g_summaryList.cachedEntry.seismicSensorType != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
+	{
+		normalize_max_peak *= (float)METRIC;
+	}
+#endif
 
     memset(&buff[0], 0, sizeof(buff));
     if (normalize_max_peak >= 100)
@@ -655,6 +774,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     //-------------------------------------------------------------
     // R FREQ, T FREQ, V FREQ
 	memset(&buff[0], 0, sizeof(buff));
+#if 0 // Old method
 	if ((eventRecord->summary.mode == BARGRAPH_MODE) || 
 			((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
 	{
@@ -670,6 +790,23 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			((float)eventRecord->summary.calculated.t.frequency / (float)10.0),
 			((float)eventRecord->summary.calculated.v.frequency / (float)10.0));
 	}
+#else
+	if ((g_summaryList.cachedEntry.mode == BARGRAPH_MODE) ||
+	((g_summaryList.cachedEntry.mode == COMBO_MODE) && (g_summaryList.cachedEntry.subMode == BARGRAPH_MODE)))
+	{
+		sprintf(buff,"%5.2f %5.2f %5.2f Hz",
+		((float)g_summaryList.cachedEntry.sampleRate / (float)((g_summaryList.cachedEntry.channelSummary.r.frequency * 2) - 1)),
+		((float)g_summaryList.cachedEntry.sampleRate / (float)((g_summaryList.cachedEntry.channelSummary.t.frequency * 2) - 1)),
+		((float)g_summaryList.cachedEntry.sampleRate / (float)((g_summaryList.cachedEntry.channelSummary.v.frequency * 2) - 1)));
+	}
+	else // mode == WAVEFORM_MODE or MANUAL_CAL_MODE
+	{
+		sprintf(buff,"%5.2f %5.2f %5.2f Hz",
+		((float)g_summaryList.cachedEntry.channelSummary.r.frequency / (float)10.0),
+		((float)g_summaryList.cachedEntry.channelSummary.t.frequency / (float)10.0),
+		((float)g_summaryList.cachedEntry.channelSummary.v.frequency / (float)10.0));
+	}
+#endif
 
 	// Setup current column, Write string to screen,
     wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
@@ -681,11 +818,23 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    memset(&buff[0], 0, sizeof(buff));
 		memset(&displayFormat[0], 0, sizeof(displayFormat));
 
+#if 0 // Old method
 		tempVS = sqrtf((float)eventRecord->summary.calculated.vectorSumPeak) / (float)div;
+#else
+		tempVS = sqrtf((float)g_summaryList.cachedEntry.vectorSumPeak) / (float)div;
+#endif
 
+#if 0 // Old method
 		if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
+#else
+		if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
+#endif
 		{
+#if 0 // Old method
 			if (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
+#else
+			if (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC)
+#endif
 				strcpy(displayFormat, "mg/s");
 			else
 				strcpy(displayFormat, "in/s");
@@ -707,6 +856,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		memset(&buff[0], 0, sizeof(buff));
 		memset(&displayFormat[0], 0, sizeof(displayFormat));
 
+#if 0 // Old method
 		if(eventRecord->summary.calculated.r.displacement > eventRecord->summary.calculated.v.displacement)
 		{
 			// R is max
@@ -731,12 +881,46 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tempPeakDisp = (float)eventRecord->summary.calculated.t.displacement;
 			}
 		}
+#else
+		if(g_summaryList.cachedEntry.channelSummary.r.displacement > g_summaryList.cachedEntry.channelSummary.v.displacement)
+		{
+			// R is max
+			if(g_summaryList.cachedEntry.channelSummary.r.displacement > g_summaryList.cachedEntry.channelSummary.t.displacement)
+			{
+				tempPeakDisp = (float)g_summaryList.cachedEntry.channelSummary.r.displacement;
+			}
+			else // T is max
+			{
+				tempPeakDisp = (float)g_summaryList.cachedEntry.channelSummary.t.displacement;
+			}
+		}
+		else
+		{
+			// V is max
+			if(g_summaryList.cachedEntry.channelSummary.v.displacement > g_summaryList.cachedEntry.channelSummary.t.displacement)
+			{
+				tempPeakDisp = (float)g_summaryList.cachedEntry.channelSummary.r.displacement;
+			}
+			else // T is max
+			{
+				tempPeakDisp = (float)g_summaryList.cachedEntry.channelSummary.t.displacement;
+			}
+		}
+#endif
 
 		tempPeakDisp = (float)tempPeakDisp / (float)1000000 / (float)div;
 
+#if 0 // Old method
 		if((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
+#else
+		if((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
+#endif
 		{
+#if 0 // Old method
 			if(eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC)
+#else
+			if(g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC)
+#endif
 				strcpy(displayFormat, "mg");
 			else
 				strcpy(displayFormat, "in");
@@ -754,6 +938,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else if(g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS)
 	{
+#if 0 // Old method
 		if(eventRecord->summary.calculated.r.acceleration > eventRecord->summary.calculated.v.acceleration)
 		{
 			// R is max
@@ -778,10 +963,40 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tempPeakAcc = (float)eventRecord->summary.calculated.t.acceleration;
 			}
 		}
+#else
+		if(g_summaryList.cachedEntry.channelSummary.r.acceleration > g_summaryList.cachedEntry.channelSummary.v.acceleration)
+		{
+			// R is max
+			if(g_summaryList.cachedEntry.channelSummary.r.acceleration > g_summaryList.cachedEntry.channelSummary.t.acceleration)
+			{
+				tempPeakAcc = (float)g_summaryList.cachedEntry.channelSummary.r.acceleration;
+			}
+			else // T is max
+			{
+				tempPeakAcc = (float)g_summaryList.cachedEntry.channelSummary.t.acceleration;
+			}
+		}
+		else
+		{
+			// V is max
+			if(g_summaryList.cachedEntry.channelSummary.v.acceleration > g_summaryList.cachedEntry.channelSummary.t.acceleration)
+			{
+				tempPeakAcc = (float)g_summaryList.cachedEntry.channelSummary.v.acceleration;
+			}
+			else // T is max
+			{
+				tempPeakAcc = (float)g_summaryList.cachedEntry.channelSummary.t.acceleration;
+			}
+		}
+#endif
 
 		tempPeakAcc = (float)tempPeakAcc / (float)1000 / (float)div;
 
+#if 0 // Old method
 		if((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
+#else
+		if((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
+#endif
 		{
 			tempPeakAcc /= (float)ONE_GRAVITY_IN_INCHES;
 		}
@@ -814,11 +1029,19 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		// Display based on what the units current setting
 		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
+#if 0 // Old method
 		    sprintf(buff,"%0.3f mb", HexToMB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+#else
+		    sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+#endif
 		}
 		else // Report Air in DB
 		{
+#if 0 // Old method
 		    sprintf(buff,"%0.1f dB", HexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+#else
+		    sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+#endif
 		}
 
 	    adjust = (uint8)strlen(buff);
@@ -835,15 +1058,25 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		// A FREQ
 		memset(&buff[0], 0, sizeof(buff));
 
-		if ((eventRecord->summary.mode == BARGRAPH_MODE) ||
-				((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
+#if 0 // Old method
+		if ((eventRecord->summary.mode == BARGRAPH_MODE) || ((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == BARGRAPH_MODE)))
+#else
+		if ((g_summaryList.cachedEntry.mode == BARGRAPH_MODE) || ((g_summaryList.cachedEntry.mode == COMBO_MODE) && (g_summaryList.cachedEntry.subMode == BARGRAPH_MODE)))
+#endif
 		{
-			sprintf(buff,"%.1f Hz", ((float)eventRecord->summary.parameters.sampleRate /
-					(float)((eventRecord->summary.calculated.a.frequency * 2) - 1)));
+#if 0 // Old method
+			sprintf(buff,"%.1f Hz", ((float)eventRecord->summary.parameters.sampleRate / (float)((eventRecord->summary.calculated.a.frequency * 2) - 1)));
+#else
+			sprintf(buff,"%.1f Hz", ((float)g_summaryList.cachedEntry.sampleRate / (float)((g_summaryList.cachedEntry.channelSummary.a.frequency * 2) - 1)));
+#endif
 		}
 		else // mode == WAVEFORM_MODE or MANUAL_CAL_MODE
 		{
+#if 0 // Old method
 			sprintf(buff,"%.1f Hz", (float)(eventRecord->summary.calculated.a.frequency)/(float)10.0);
+#else
+			sprintf(buff,"%.1f Hz", (float)(g_summaryList.cachedEntry.channelSummary.a.frequency)/(float)10.0);
+#endif
 		}
 
 		// Setup current column, Write string to screen,
@@ -851,7 +1084,11 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	}
 
+#if 0 // Old method
 	if (eventRecord->summary.mode == MANUAL_CAL_MODE)
+#else
+	if (g_summaryList.cachedEntry.mode == MANUAL_CAL_MODE)
+#endif
 	{
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ONE;
 
@@ -894,6 +1131,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 0 // Old method
 EVT_RECORD* GetResultsEventInfoFromCache(uint32 fileEventNumber)
 {
 	uint32 i = 0;
@@ -921,6 +1159,7 @@ EVT_RECORD* GetResultsEventInfoFromCache(uint32 fileEventNumber)
 	//return (&resultsEventRecord);
 	return (NULL);
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break

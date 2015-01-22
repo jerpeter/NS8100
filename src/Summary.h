@@ -256,6 +256,39 @@ typedef struct
 	SUMMARY_WAVESHAPE waveShapeData;
 } SUMMARY_DATA;
 
+// New Summary List sub structures
+typedef struct
+{
+	union
+	{
+		CHANNEL_CALCULATED_DATA_STRUCT chan[4];
+		struct {
+			CHANNEL_CALCULATED_DATA_STRUCT a;
+			CHANNEL_CALCULATED_DATA_STRUCT r;
+			CHANNEL_CALCULATED_DATA_STRUCT v;
+			CHANNEL_CALCULATED_DATA_STRUCT t;
+		};
+	};
+} CHANNEL_SUMMARY;
+
+// New Summary List structure
+typedef struct
+{
+	uint16 eventNumber;
+	uint8 mode;
+	uint8 subMode;
+	CHANNEL_SUMMARY channelSummary;
+	DATE_TIME_STRUCT eventTime;
+	uint8 serialNumber[SERIAL_NUMBER_STRING_SIZE];
+	uint16 seismicSensorType;
+	uint16 sampleRate;
+	uint8 unitsOfMeasure;
+	uint8 unitsOfAir;
+	uint8 gainSelect;
+	uint8 bitAccuracy;
+	uint32 vectorSumPeak;
+} SUMMARY_LIST_ENTRY_STRUCT;
+
 ////////////////////////////////////////////////////////////
 // structs for flash summarys
 

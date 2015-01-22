@@ -628,6 +628,11 @@ void HandleDQM(CMD_BUFFER_STRUCT* inCmd)
 	g_modemStatus.xferPrintState = g_unitConfig.autoPrint;
 	g_transferCount = 0;
 
+	if (g_sampleProcessing == IDLE_STATE)
+	{
+		DumpSummaryListFileToEventBuffer();
+	}
+
 	return;
 }
 
@@ -638,7 +643,9 @@ uint8 sendDQMData(void)
 {
 	uint8 idex;
 	uint8 xferState = DQMx_CMD;
+#if 0 // Old method
 	EVT_RECORD* eventRecord;
+#endif
 
 	// If the beginning of sending data, send the crlf.
 	if (HEADER_XFER_STATE == g_dqmXferStructPtr->xferStateFlag)
@@ -673,7 +680,11 @@ uint8 sendDQMData(void)
 	// xfer the event record structure.
 	else if (SUMMARY_TABLE_SEARCH_STATE == g_dqmXferStructPtr->xferStateFlag)
 	{
+#if 0 // Old method
 		if (g_dqmXferStructPtr->ramTableIndex >= TOTAL_RAM_SUMMARIES)
+#else
+		if (g_dqmXferStructPtr->ramTableIndex >= g_summaryList.validEntries)
+#endif
 		{
 			memset((uint8*)g_dqmXferStructPtr->dqmData, 0xCC, sizeof(DQMx_DATA_STRUCT));
 			g_dqmXferStructPtr->dqmData[0].endFlag = 0xEE;
@@ -695,8 +706,13 @@ uint8 sendDQMData(void)
 		{
 			idex = 0;
 			while ((idex < DQM_XFER_SIZE) &&
+#if 0 // Old method
 				(g_dqmXferStructPtr->ramTableIndex < TOTAL_RAM_SUMMARIES))
+#else
+				(g_dqmXferStructPtr->ramTableIndex < g_summaryList.validEntries))
+#endif
 			{
+#if 0 // Old method
 				if (__ramFlashSummaryTbl[g_dqmXferStructPtr->ramTableIndex].fileEventNum != 0xFFFFFFFF)
 				{
 					static EVT_RECORD resultsEventRecord;
@@ -713,7 +729,24 @@ uint8 sendDQMData(void)
 					g_dqmXferStructPtr->dqmData[idex].endFlag = 0xEE;
 					idex++;
 				}
+
 				g_dqmXferStructPtr->ramTableIndex++;
+#else
+				CacheSummaryEntryByIndex(g_dqmXferStructPtr->ramTableIndex);
+
+				if (g_summaryList.cachedEntry.eventNumber)
+				{
+					g_dqmXferStructPtr->dqmData[idex].dqmxFlag = 0xCC;
+					g_dqmXferStructPtr->dqmData[idex].mode = g_summaryList.cachedEntry.mode;
+					g_dqmXferStructPtr->dqmData[idex].eventNumber = g_summaryList.cachedEntry.eventNumber;
+					memcpy(g_dqmXferStructPtr->dqmData[idex].serialNumber, g_summaryList.cachedEntry.serialNumber, SERIAL_NUMBER_STRING_SIZE);
+					g_dqmXferStructPtr->dqmData[idex].eventTime = g_summaryList.cachedEntry.eventTime;
+					g_dqmXferStructPtr->dqmData[idex].endFlag = 0xEE;
+					idex++;
+				}
+
+				g_dqmXferStructPtr->ramTableIndex = ++g_summaryList.currentEntryIndex;
+#endif
 			}
 
 			g_transmitCRC = CalcCCITT32((uint8*)g_dqmXferStructPtr->dqmData,
