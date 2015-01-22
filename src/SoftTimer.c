@@ -472,6 +472,11 @@ void AutoMonitorTimerCallBack(void)
 
 	debug("Auto Monitor Timer callback: activated.\r\n");
 
+	if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+	{
+		AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
+	}
+
 	// Make sure the Auto Monitor timer is disabled
 	ClearSoftTimer(AUTO_MONITOR_TIMER_NUM);
 
