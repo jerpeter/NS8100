@@ -244,7 +244,7 @@ uint8 ModemPutc(uint8 byteData, uint8 convertAsciiFlag)
 ///----------------------------------------------------------------------------
 uint8 ModemPuts(uint8* byteData, uint32 dataLength, uint8 convertAsciiFlag)
 {
-	uint16 dataDex;
+	uint32 dataDex;
 	uint8* theData = byteData;
 
 	// Sending modem data, signal that data is being transfered
