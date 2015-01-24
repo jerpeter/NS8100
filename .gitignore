@@ -12,3 +12,5 @@ Makefile
 *.bin
 *.auto
 *.exe
+*.desktop
+*.laptop
