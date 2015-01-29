@@ -714,7 +714,7 @@ uint8 sendDQMData(void)
 #if 0 // Old method
 				(g_dqmXferStructPtr->ramTableIndex < TOTAL_RAM_SUMMARIES))
 #else
-				(g_dqmXferStructPtr->ramTableIndex < g_summaryList.validEntries))
+				(g_dqmXferStructPtr->ramTableIndex < g_summaryList.totalEntries))
 #endif
 			{
 #if 0 // Old method
