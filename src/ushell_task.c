@@ -1467,8 +1467,24 @@ Bool ushell_cmd_syncevents(uint16_t* eventsCopied, uint16_t* eventsSkipped)
    nav_select( FS_NAV_ID_USHELL_CMD );
    sprintf((char*)&pBuffer[0], "Destination directory: %s\n\r", g_s_arg[1]);
    usart_write_line((&AVR32_USART0), (char*)&pBuffer[0]);
+#if 1 // Normal
    if( !nav_setcwd( (FS_STRING)g_s_arg[1], TRUE, TRUE ) )
       goto ushell_cmd_syncevents_error;
+#else // Test
+	// Set CWD to directory
+   if( !nav_setcwd( (FS_STRING)g_s_arg[1], TRUE, FALSE ) )
+   {
+	   // Directory not found, try to create
+	   if( !nav_setcwd( (FS_STRING)g_s_arg[1], TRUE, FALSE ) )
+	   {
+			goto ushell_cmd_syncevents_error;
+	   }
+	   else // Created, now add creation time
+	   {
+			SetFileDateTimestamp(FS_DATE_CREATION);
+	   }
+   }
+#endif
    nav_filelist_reset();
 
    // loop to scan and create ALL folders and files
@@ -1641,6 +1657,9 @@ ushell_cmd_syncevents_error:
 ushell_cmd_syncevents_finish:
    // Restore the position
    nav_select( FS_NAV_ID_USHELL_CMD );
+#if 0 // Add last access timestamp
+	SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+#endif
    nav_gotoindex(&sav_index);
    sprintf((char*)&pBuffer[0], "Events copied: %d\r\nEnd of copy\n\r", *eventsCopied);
    usart_write_line((&AVR32_USART0), pBuffer);
