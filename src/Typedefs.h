@@ -173,16 +173,6 @@ enum {FAILED = 0, PASSED};
 #define PASSED 1
 #endif
 
-#if 0 // Redefined in other code
-#ifndef FAIL
-#define FAIL 0
-#endif
-
-#ifndef PASS
-#define PASS 1
-#endif
-#endif
-
 #define FOREVER while (TRUE)
 
 #define SHOW_EVENT_STATE_CHANGES 0
