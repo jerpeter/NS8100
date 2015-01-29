@@ -42,6 +42,11 @@
 	{	flashPtr = (uint16*)((uint32)flashPtr - (uint32)FLASH_EVENT_END); 	\
 		flashPtr = (uint16*)((uint32)FLASH_EVENT_START + (uint32)flashPtr); }
 
+enum {
+	EVENT_CACHE_FAILURE = 0,
+	EVENT_CACHE_SUCCESS,
+};
+
 typedef struct
 {
 	uint32 sizeUsed;
@@ -101,7 +106,7 @@ void UpdateSDCardUsageStats(uint32 removeSize);
 void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
 void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
 void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize);
-void CacheEventToRam(uint16 eventNumber);
+uint8 CacheEventToRam(uint16 eventNumber);
 BOOLEAN CheckValidEventFile(uint16 eventNumber);
 void DeleteEventFileRecord(uint16 eventNumber);
 void DeleteEventFileRecords(void);
@@ -131,5 +136,8 @@ void CacheSummaryEntryByIndex(uint16 index);
 void ParseAndCountSummaryListEntries(void);
 void AddEventToSummaryList(EVT_RECORD* event);
 void InitSummaryListFile(void);
+
+void VerifyCacheEventToRam(uint16 eventNumber, char* subMessage);
+void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber);
 
 #endif // _FLASHEVTS_H_

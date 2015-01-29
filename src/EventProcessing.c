@@ -1596,13 +1596,105 @@ void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void CacheEventToRam(uint16 eventNumber)
+#define VERIFY_CHUNK_SIZE	1024
+void VerifyCacheEventToRam(uint16 eventNumber, char* subMessage)
+{
+	uint16 i = 0;
+	uint32 remainingData = 0;
+	uint32 index = 0;
+	uint32 readCount = 0;
+	uint16 errorCount = 0;
+	uint8* dataPtr = (uint8*)&g_eventDataBuffer[0];
+	uint8* verifyPtr = (uint8*)&g_spareBuffer[(SPARE_BUFFER_SIZE - VERIFY_CHUNK_SIZE - 1)];
+	int eventFile;
+	char fileName[50];
+	char message[50];
+
+	sprintf(fileName, "A:\\Events\\Evt%d.ns8", eventNumber);
+
+	nav_select(FS_NAV_ID_DEFAULT);
+
+	eventFile = open(fileName, O_RDONLY);
+
+	file_seek(0, FS_SEEK_SET);
+	remainingData = nav_file_lgt();
+
+	debug("Verify Cache data bytes: %d\r\n", remainingData);
+
+	while (remainingData)
+	{
+		if (remainingData > VERIFY_CHUNK_SIZE)
+		{
+			readCount = read(eventFile, verifyPtr, VERIFY_CHUNK_SIZE);
+
+			if (readCount != VERIFY_CHUNK_SIZE)
+			{
+				debugErr("CacheEventToRam Read Data size incorrect (%d)\r\n", readCount);
+				close (eventFile);
+				return;
+			}
+
+			for (i = 0; i < VERIFY_CHUNK_SIZE; i++)
+			{
+				if (verifyPtr[i] != dataPtr[index])
+				{
+					debugErr("CacheEventToRam verification failed: %x != %x, index: %d\r\n", verifyPtr[i], dataPtr[index], index);
+
+					if (errorCount++ > 1024) { debugErr("Too many errors, bailing\r\n\r\n"); close (eventFile); return; }
+				}
+
+				index++;
+			}
+
+			remainingData -= VERIFY_CHUNK_SIZE;
+		}
+		else // Remaining data size is less than the access limit
+		{
+			readCount = read(eventFile, &verifyPtr[0], remainingData);
+
+			if (readCount != remainingData)
+			{
+				debugErr("CacheEventToRam Read Data size incorrect (%d)\r\n", readCount);
+				close (eventFile);
+				return;
+			}
+
+			for (i = 0; i < remainingData; i++)
+			{
+				if (verifyPtr[(index % VERIFY_CHUNK_SIZE)] != dataPtr[index])
+				{
+					debugErr("CacheEventToRam verification failed: %x != %x, index: %d\r\n", verifyPtr[(index % 8192)], dataPtr[index], index);
+
+					if (errorCount++ > 1024) { debugErr("Too many errors, bailing\r\n\r\n"); close (eventFile); return; }
+				}
+
+				index++;
+			}
+
+			remainingData = 0;
+		}
+	}
+
+	if (errorCount)
+	{
+		sprintf(message, "EVENT %d CACHE VERIFY FAILED (%s SEND)", eventNumber, subMessage);
+		MessageBox(getLangText(ERROR_TEXT), message, MB_OK);
+	}
+
+	close (eventFile);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 CacheEventToRam(uint16 eventNumber)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
 	
 	if (g_fileAccessLock != AVAILABLE)
 	{
 		ReportFileSystemAccessProblem("Cache event");
+		return EVENT_CACHE_FAILURE;
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
@@ -1628,6 +1720,7 @@ void CacheEventToRam(uint16 eventNumber)
 		{
 			debugErr("Event File %s not found\r\n", fileName);
 			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+			return EVENT_CACHE_FAILURE;
 		}
 		// Verify file is big enough
 #if 1 // Atmel fat driver
@@ -1638,6 +1731,7 @@ void CacheEventToRam(uint16 eventNumber)
 		{
 			debugErr("Event File %s is corrupt\r\n", fileName);
 			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+			return EVENT_CACHE_FAILURE;
 		}
 		else
 		{
@@ -1650,7 +1744,12 @@ void CacheEventToRam(uint16 eventNumber)
 #endif
 		}
 
+#if 0 // Test (Add verification step)
+		VerifyCacheEventToRam(eventNumber, "PRE");
+#endif
+
 		g_fileAccessLock = AVAILABLE;
+		return EVENT_CACHE_SUCCESS;
 	}
 }
 
@@ -2329,7 +2428,7 @@ int readWithSizeFix(int file, void* bufferPtr, uint32 length)
 {
 	uint32 remainingByteLengthToRead = length;
 	uint8* readLocationPtr = (uint8*)bufferPtr;
-	uint16 readCount = 0;
+	int readCount = 0;
 
 	while (remainingByteLengthToRead)
 	{
@@ -2339,7 +2438,7 @@ int readWithSizeFix(int file, void* bufferPtr, uint32 length)
 
 			if (readCount != ATMEL_FILESYSTEM_ACCESS_LIMIT)
 			{
-				debugErr("Atmel Read Data size incorrect (%d)\r\n", readCount);
+				if (readCount != -1) { debugErr("Atmel Read Data size incorrect (%d)\r\n", readCount); }
 				return (-1);
 			}
 
@@ -2350,9 +2449,9 @@ int readWithSizeFix(int file, void* bufferPtr, uint32 length)
 		{
 			readCount = read(file, readLocationPtr, remainingByteLengthToRead);
 
-			if (readCount != remainingByteLengthToRead)
+			if (readCount != (int)remainingByteLengthToRead)
 			{
-				debugErr("Atmel Read Data size incorrect (%d)\r\n", readCount);
+				if (readCount != -1) { debugErr("Atmel Read Data size incorrect (%d)\r\n", readCount); }
 				return (-1);
 			}
 
@@ -2361,4 +2460,71 @@ int readWithSizeFix(int file, void* bufferPtr, uint32 length)
 	}
 
 	return (length);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber)
+{
+#if 1
+	UNUSED(eventNumber);
+#else // Test
+	int fileHandle;
+	uint32 remainingDataLength;
+	uint32 bytesWritten = 0;
+
+	// Split the buffer in half, and use the 2nd half for shadow copy
+	uint8* dataPtr = (uint8*)&g_eventDataBuffer[(EVENT_BUFF_SIZE_IN_WORDS / 2)];
+
+	// Get new event file handle
+	fileHandle = GetEventFileHandle(eventNumber, CREATE_EVENT_FILE);
+
+	if (fileHandle == -1)
+	{
+		debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.op_mode == WAVEFORM_MODE) ? "Waveform" : "Combo - Waveform");
+	}
+	else // Write the file event to the SD card
+	{
+		sprintf((char*)&g_spareBuffer[0], "EVENT #%d MODEM DL SHADOW COPY BEING SAVED...", eventNumber);
+		OverlayMessage("SHADOW COPY", (char*)&g_spareBuffer[0], 0);
+
+		remainingDataLength = g_spareIndex;
+
+		while (remainingDataLength)
+		{
+			if (remainingDataLength > WAVEFORM_FILE_WRITE_CHUNK_SIZE)
+			{
+				// Write the event data, containing the Pretrigger, event and cal
+				bytesWritten = write(fileHandle, dataPtr, WAVEFORM_FILE_WRITE_CHUNK_SIZE);
+
+				if (bytesWritten != WAVEFORM_FILE_WRITE_CHUNK_SIZE)
+				{
+					debugErr("Remote Event Download to file write size incorrect (%d)\r\n", bytesWritten);
+				}
+
+				remainingDataLength -= WAVEFORM_FILE_WRITE_CHUNK_SIZE;
+				dataPtr += (WAVEFORM_FILE_WRITE_CHUNK_SIZE);
+			}
+			else // Remaining data size is less than the file write chunk size
+			{
+				// Write the event data, containing the Pretrigger, event and cal
+				bytesWritten = write(fileHandle, dataPtr, remainingDataLength);
+
+				if (bytesWritten != remainingDataLength)
+				{
+					debugErr("Remote Event Download to file write size incorrect (%d)\r\n", bytesWritten);
+				}
+
+				remainingDataLength = 0;
+			}
+		}
+
+		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
+		// Done writing the event file, close the file handle
+		close(fileHandle);
+		fat_cache_flush();
+	}
+#endif
 }
