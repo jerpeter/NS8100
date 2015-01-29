@@ -256,7 +256,7 @@ uint16 g_debugBufferCount = 0;
 char g_languageTable[LANGUAGE_TABLE_MAX_SIZE];
 uint8 g_spareBuffer[SPARE_BUFFER_SIZE];
 uint8 g_debugBuffer[GLOBAL_DEBUG_BUFFER_SIZE];
-uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
+uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS_PLUS_EVT_RECORD_PLUS_SUMMARY_LIST];
 uint32 g_execCycles = 0;
 FLASH_USAGE_STRUCT g_sdCardUsageStats;
 SUMMARY_LIST_FILE_DETAILS g_summaryList;
