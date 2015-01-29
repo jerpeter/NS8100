@@ -465,6 +465,11 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr)
 	rec_ptr->autoPrint = OFF;
 	rec_ptr->freqPlotMode = OFF;
 	rec_ptr->printMonitorLog = NO;
+
+	// Set unused fields to zero
+	rec_ptr->unused1 = 0;
+	rec_ptr->unused2 = 0;
+	rec_ptr->unused3 = 0;
 }
 
 ///----------------------------------------------------------------------------
