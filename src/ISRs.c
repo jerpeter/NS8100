@@ -76,6 +76,7 @@ static uint8 s_consecEventsWithoutCal = 0;
 static uint8 s_channelSyncError = NO;
 static uint8 s_channelReadsToSync = 0;
 static int16 s_temperatureDelta = 0;
+static uint8 s_consecutiveEventsWithoutCalThreshold = CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -498,7 +499,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 	//_____________________________________________________________________________________
 	//___Check if not recording _and_ no cal pulse, or if pending cal and all below consecutive threshold
 	if ((((s_recordingEvent == NO) && (s_calPulse == NO)) || (s_pendingCalCount)) && 
-		(s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD))
+		(s_consecEventsWithoutCal < s_consecutiveEventsWithoutCalThreshold))
 	{
 		//_____________________________________________________________________________________
 		//___Check for triggers
@@ -688,7 +689,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			}
 
 			// Check if maximum consecutive events have not been captured, therefore pend Cal pulse
-			if (s_consecEventsWithoutCal < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)
+			if (s_consecEventsWithoutCal < s_consecutiveEventsWithoutCalThreshold)
 			{
 #if 0 // Fixed Pretrigger
 				// Setup delay for Cal pulse (1/4 sample rate)
@@ -931,10 +932,27 @@ static inline void saveMaxPeaksLastThreeSecondsForSensorCal_ISR_Inline(void)
 static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 {
 	// Apply channel zero offset
+#if 1 // Normal
 	s_R_channelReading -= g_channelOffset.r_offset;
 	s_V_channelReading -= g_channelOffset.v_offset;
 	s_T_channelReading -= g_channelOffset.t_offset;
 	s_A_channelReading -= g_channelOffset.a_offset;
+#else // Test (Mark cal pulse with identifable data when no sensor connected)
+	if ((s_calPulse == YES) && (s_calSampleCount))
+	{
+		s_R_channelReading = (0x2000 + s_calSampleCount - 100);
+		s_V_channelReading = (0x3000 + s_calSampleCount - 100);
+		s_T_channelReading = (0x4000 + s_calSampleCount - 100);
+		s_A_channelReading = (0x1000 + s_calSampleCount - 100);
+	}
+	else
+	{
+		s_R_channelReading -= g_channelOffset.r_offset;
+		s_V_channelReading -= g_channelOffset.v_offset;
+		s_T_channelReading -= g_channelOffset.t_offset;
+		s_A_channelReading -= g_channelOffset.a_offset;
+	}
+#endif
 
 	// Store the raw A/D data (adjusted for zero offset) into the Pretrigger buffer
 	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r = s_R_channelReading;
@@ -1215,6 +1233,12 @@ void DataIsrInit(void)
 {
 	s_pretriggerFull = NO;
 	s_checkForTempDrift = NO;
+
+	if ((g_maxEventBuffers - 1) < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)
+	{
+		s_consecutiveEventsWithoutCalThreshold = (g_maxEventBuffers - 1);
+	}
+	else { s_consecutiveEventsWithoutCalThreshold = CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD; }
 
 	if (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SWAPPED) { s_channelConfig = CHANNELS_R_AND_V_SWAPPED; }
 	else { s_channelConfig = CHANNELS_R_AND_V_SCHEMATIC; }
