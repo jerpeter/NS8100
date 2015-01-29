@@ -268,5 +268,6 @@ uint8 usbMassStorageState = USB_INIT_DRIVER;
 uint8 usbMode;
 uint8 usbThumbDriveWasConnected = NO;
 SAMPLE_DATA_STRUCT sensorCalPeaks[4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+uint8 g_remoteEventDownloadMethod = COMPRESS_NONE;
 
 // End of the list

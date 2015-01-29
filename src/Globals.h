@@ -243,5 +243,6 @@ extern uint8 usbMassStorageState;
 extern uint8 usbMode;
 extern uint8 usbThumbDriveWasConnected;
 extern SAMPLE_DATA_STRUCT sensorCalPeaks[];
+extern uint8 g_remoteEventDownloadMethod;
 
 #endif /* GLOBALS_H_ */
