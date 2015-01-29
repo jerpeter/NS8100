@@ -146,7 +146,7 @@ enum
 #define ACCURACY_10_BIT_MIDPOINT 0x200
 
 #define WAVEFORM_FILE_WRITE_CHUNK_SIZE	16384
-#define ATMEL_FILESYSTEM_ACCESS_LIMIT	32768
+#define ATMEL_FILESYSTEM_ACCESS_LIMIT	16384
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
