@@ -497,9 +497,14 @@ static inline void processAndMoveManualCalData_ISR_Inline(void)
 static inline void processAndMoveWaveformData_ISR_Inline(void)
 {
 	//_____________________________________________________________________________________
-	//___Check if not recording _and_ no cal pulse, or if pending cal and all below consecutive threshold
-	if ((((s_recordingEvent == NO) && (s_calPulse == NO)) || (s_pendingCalCount)) && 
-		(s_consecEventsWithoutCal < s_consecutiveEventsWithoutCalThreshold))
+	//___Three main stages to processing:
+	//___1) Look for a trigger, either for the first time or within the window to process a consecutive event which postpones a cal pulse
+	//___2) Capture event data since a trigger has been found
+	//___3) Process the cal pulse to accompany the captured event data
+
+	//_____________________________________________________________________________________
+	//___Check if not recording _and_ no cal pulse, or if pending cal, and only if there are free event buffers
+	if (((((s_recordingEvent == NO) && (s_calPulse == NO)) || (s_pendingCalCount))) && (g_freeEventBuffers))
 	{
 		//_____________________________________________________________________________________
 		//___Check for triggers
@@ -691,13 +696,8 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			// Check if maximum consecutive events have not been captured, therefore pend Cal pulse
 			if (s_consecEventsWithoutCal < s_consecutiveEventsWithoutCalThreshold)
 			{
-#if 0 // Fixed Pretrigger
-				// Setup delay for Cal pulse (1/4 sample rate)
-				s_pendingCalCount = g_triggerRecord.trec.sample_rate / 4;
-#else // Variable Pretrigger
 				// Setup delay for Cal pulse (based on Pretrigger size)
 				s_pendingCalCount = g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider;
-#endif
 			}
 			else // Max number of events have been captured, force a Cal pulse
 			{
@@ -813,8 +813,16 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 	}
 	else
 	{
+#if 1 // Test
+		if (g_freeEventBuffers)
+		{
+			// Should _never_ get here
+			debugErr("Error in ISR processing\r\n");
+		}
+#else // Normal
 		// Should _never_ get here
 		debugErr("Error in ISR processing\r\n");
+#endif
 	}
 }
 
