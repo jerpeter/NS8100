@@ -231,6 +231,9 @@ void ProcessCraftData()
 	{
 		g_isrMessageBufferPtr->status = CMD_MSG_NO_ERR;
 		OverlayMessage(getLangText(STATUS_TEXT), "MODEM SYNC FAILED", 0);
+#if 1 // New
+		return;
+#endif
 	}
 
 	// Check status and then reset it to no error.
@@ -238,6 +241,9 @@ void ProcessCraftData()
 	{
 		g_isrMessageBufferPtr->overRunCheck = 0xBADD;
 		OverlayMessage(getLangText(STATUS_TEXT), "CRAFT OVERRUN ERROR", 0);
+#if 1 // New
+		return;
+#endif
 	}
 
 	while (g_isrMessageBufferPtr->readPtr != g_isrMessageBufferPtr->writePtr)
@@ -254,6 +260,11 @@ void ProcessCraftData()
 			// The buffer is full, go to the next buffer pool.
 			if (g_msgPool[s_msgWriteIndex].size >= (CMD_BUFFER_SIZE-2))
 			{
+#if 1 // New addition to add a null to the end of the message for those that get processed as a string
+				*(g_msgPool[s_msgWriteIndex].writePtr) = '\0';
+				g_msgPool[s_msgWriteIndex].writePtr++;
+				g_msgPool[s_msgWriteIndex].size++;
+#endif
 				newPoolBuffer = YES;
 			}
 		}
@@ -261,6 +272,11 @@ void ProcessCraftData()
 		{
 			if (g_msgPool[s_msgWriteIndex].size > 0)
 			{
+#if 1 // New addition to add a null to the end of the message for those that get processed as a string
+				*(g_msgPool[s_msgWriteIndex].writePtr) = '\0';
+				g_msgPool[s_msgWriteIndex].writePtr++;
+				g_msgPool[s_msgWriteIndex].size++;
+#endif
 				newPoolBuffer = YES;
 			}	
 		}
