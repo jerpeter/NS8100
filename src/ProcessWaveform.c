@@ -354,6 +354,7 @@ void ProcessWaveformData(void)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #include "fsaccess.h"
+#include "M23018.h"
 void MoveWaveformEventToFile(void)
 {
 	static WAVE_PROCESSING_STATE waveformProcessingState = WAVE_INIT;
@@ -370,7 +371,7 @@ void MoveWaveformEventToFile(void)
 	INPUT_MSG_STRUCT msg;
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
-
+	uint8 keypadLedConfig;
 	uint32 bytesWritten;
 	uint32 remainingDataLength;
 
@@ -593,6 +594,13 @@ void MoveWaveformEventToFile(void)
 
 						remainingDataLength = (g_wordSizeInEvent * 2);
 
+						// Check if there are multiple chunks to write
+						if (remainingDataLength > WAVEFORM_FILE_WRITE_CHUNK_SIZE)
+						{
+							// Get the current state of the keypad LED
+							keypadLedConfig = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
+						}
+
 						while (remainingDataLength)
 						{
 							if (remainingDataLength > WAVEFORM_FILE_WRITE_CHUNK_SIZE)
@@ -607,6 +615,12 @@ void MoveWaveformEventToFile(void)
 
 								remainingDataLength -= WAVEFORM_FILE_WRITE_CHUNK_SIZE;
 								g_currentEventStartPtr += (WAVEFORM_FILE_WRITE_CHUNK_SIZE / 2);
+
+								// Quickly toggle the green LED to show status of saving a waveform event (while too busy to update LCD)
+								if (keypadLedConfig & GREEN_LED_PIN) { keypadLedConfig &= ~GREEN_LED_PIN; }
+								else { keypadLedConfig |= GREEN_LED_PIN; }
+
+								WriteMcp23018(IO_ADDRESS_KPD, GPIOA, keypadLedConfig);
 							}
 							else // Remaining data size is less than the file write chunk size
 							{
