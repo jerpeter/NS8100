@@ -557,7 +557,7 @@ void HandleMidnightEvent(void)
 	INPUT_MSG_STRUCT mn_msg;
 	char message[50];
 
-	if ((g_triggerRecord.op_mode == BARGRAPH_MODE) && (g_sampleProcessing == ACTIVE_STATE))
+	if (((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)) && (g_sampleProcessing == ACTIVE_STATE))
 	{
 		// Do not handle midnight calibration since a manual cal is forced at the beginning of Bargraph
 
