@@ -472,23 +472,26 @@ void AutoMonitorTimerCallBack(void)
 
 	debug("Auto Monitor Timer callback: activated.\r\n");
 
+	// Check if the USB is currently handling an active connection
 	if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
 	{
 		AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 	}
-
-	// Make sure the Auto Monitor timer is disabled
-	ClearSoftTimer(AUTO_MONITOR_TIMER_NUM);
-
-	// Check if the unit is not already monitoring
-	if (g_sampleProcessing != ACTIVE_STATE)
+	else
 	{
-		if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
-		else // Safe to enter monitor mode
+		// Make sure the Auto Monitor timer is disabled
+		ClearSoftTimer(AUTO_MONITOR_TIMER_NUM);
+
+		// Check if the unit is not already monitoring
+		if (g_sampleProcessing != ACTIVE_STATE)
 		{
-			// Enter monitor mode with the current mode
-			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
-			JUMP_TO_ACTIVE_MENU();
+			if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
+			else // Safe to enter monitor mode
+			{
+				// Enter monitor mode with the current mode
+				SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+				JUMP_TO_ACTIVE_MENU();
+			}
 		}
 	}
 }
