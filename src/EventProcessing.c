@@ -330,7 +330,7 @@ void DumpSummaryListFileToEventBuffer(void)
 ///----------------------------------------------------------------------------
 void AddEventToSummaryList(EVT_RECORD* event)
 {
-	memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_FILE_DETAILS));
+	memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
 
 	g_summaryList.cachedEntry.eventNumber = event->summary.eventNumber;
 	g_summaryList.cachedEntry.mode = event->summary.mode;
