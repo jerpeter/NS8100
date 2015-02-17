@@ -199,7 +199,7 @@ uint8 g_manualCalFlag = FALSE;
 uint8 g_forcedCalibration = NO;
 uint8 g_skipAutoCalInWaveformAfterMidnightCal = NO;
 uint8 g_autoRetries;
-DATE_TIME_STRUCT  g_lastReadExternalRtcTime;
+DATE_TIME_STRUCT g_lastReadExternalRtcTime;
 SOFT_TIMER_STRUCT g_rtcTimerBank[NUM_OF_SOFT_TIMERS];
 uint32 g_rtcSoftTimerTickCount = 0;
 volatile uint32 g_rtcCurrentTickCount = 0;
