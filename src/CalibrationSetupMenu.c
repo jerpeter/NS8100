@@ -164,7 +164,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 						{
 							//debug("Cal Menu Screen NCD selected\r\n");
 							// Clear the stored offsets so that the A/D channel data is raw
-							memset(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
+							memset(&g_channelOffset, 0, sizeof(g_channelOffset));
 							
 							// Clear the Pretrigger buffer
 							SoftUsecWait(250 * SOFT_MSECS);

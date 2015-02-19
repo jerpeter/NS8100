@@ -52,9 +52,9 @@ void StartNewBargraph(void)
 		return;
 	}
 
-	// Initialize the the buffers (first element only, advance will take care of the rest)
-	memset(&(g_bargraphBarInterval[0]), 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
-	memset(&(g_bargraphSummaryInterval), 0, sizeof(g_bargraphSummaryInterval));
+	// Clear the Bar and Summary Interval buffers
+	memset(&g_bargraphBarInterval[0], 0, sizeof(g_bargraphBarInterval));
+	memset(&g_bargraphSummaryInterval, 0, sizeof(g_bargraphSummaryInterval));
 	memset(&g_bargraphFreqCalcBuffer, 0, sizeof(g_bargraphFreqCalcBuffer));
 
 	// Init counts
@@ -66,9 +66,9 @@ void StartNewBargraph(void)
 	g_bargraphBarIntervalsCached = 0;
 
 	// Init buffer pointers
-	g_bargraphBarIntervalWritePtr = &(g_bargraphBarInterval[0]);
-	g_bargraphBarIntervalReadPtr = &(g_bargraphBarInterval[0]);
-	g_bargraphSummaryIntervalPtr = &(g_bargraphSummaryInterval);
+	g_bargraphBarIntervalWritePtr = &g_bargraphBarInterval[0];
+	g_bargraphBarIntervalReadPtr = &g_bargraphBarInterval[0];
+	g_bargraphSummaryIntervalPtr = &g_bargraphSummaryInterval;
 
 	MoveStartOfBargraphEventRecordToFile();
 

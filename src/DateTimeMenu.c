@@ -386,7 +386,7 @@ void DisplayDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void LoadDateTimeMnDefRec(REC_MN_STRUCT *rec_ptr,DATE_TIME_STRUCT *time_ptr)
+void LoadDateTimeMnDefRec(REC_MN_STRUCT* rec_ptr, DATE_TIME_STRUCT* time_ptr)
 {
 	memset(rec_ptr, 0, (sizeof(REC_MN_STRUCT) * 6));
 

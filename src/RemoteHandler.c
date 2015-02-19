@@ -317,7 +317,7 @@ void ProcessCraftData()
 void RemoteCmdMessageHandlerInit()
 {	
 	// Clear and set up the addresses for the ptrs from the buffer array.
-	memset(g_msgPool, 0, (sizeof(CMD_BUFFER_STRUCT) * CMD_MSG_POOL_SIZE));
+	memset(g_msgPool, 0, sizeof(g_msgPool));
 
 	for (s_msgWriteIndex = 0; s_msgWriteIndex < CMD_MSG_POOL_SIZE; s_msgWriteIndex++)
 	{	
@@ -337,7 +337,7 @@ void RemoteCmdMessageHandlerInit()
 ///----------------------------------------------------------------------------
 void CraftInitStatusFlags(void)
 {
-	memset(&g_modemStatus, 0, sizeof(MODEM_STATUS_STRUCT));
+	memset(&g_modemStatus, 0, sizeof(g_modemStatus));
 
 	// Modem and craft port specific flags.
 	g_modemStatus.connectionState = NOP_CMD;	// State flag to indicate which modem command to handle.

@@ -513,7 +513,7 @@ void ActivateUnitConfigOptions(void)
 void LoadModemSetupRecordDefaults()
 {
 	// Initialize the Unit Config
-	memset(&g_modemSetupRecord, 0, sizeof(MODEM_SETUP_STRUCT));
+	memset(&g_modemSetupRecord, 0, sizeof(g_modemSetupRecord));
 
 	g_modemSetupRecord.modemStatus = NO;
 	g_modemSetupRecord.retries = MODEM_RETRY_DEFAULT_VALUE;

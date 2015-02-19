@@ -565,7 +565,7 @@ void ClearLcdDisplay(void)
 void FillLcdDisplay(void)
 {
 	// Turn all of the LCD pixels on (1's), effectively filling the display
-    memset(&(g_mmap[0][0]), 0xff, sizeof(g_mmap));
+    memset(&(g_mmap[0][0]), 0xFF, sizeof(g_mmap));
     WriteMapToLcd(g_mmap);
 }
 

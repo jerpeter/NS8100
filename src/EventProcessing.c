@@ -52,7 +52,7 @@ void InitRamSummaryTbl(void)
 	debug("Initializing ram summary table...\r\n");
 
 	// Basically copying all FF's to the ram summary table
-	memset(&__ramFlashSummaryTbl[0], 0xFF, (sizeof(SUMMARY_DATA) * TOTAL_RAM_SUMMARIES));
+	memset(&__ramFlashSummaryTbl[0], 0xFF, sizeof(__ramFlashSummaryTbl));
 
 	__ramFlashSummaryTblKey = VALID_RAM_SUMMARY_TABLE_KEY;
 }
@@ -330,7 +330,7 @@ void DumpSummaryListFileToEventBuffer(void)
 ///----------------------------------------------------------------------------
 void AddEventToSummaryList(EVT_RECORD* event)
 {
-	memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+	memset(&g_summaryList.cachedEntry, 0, sizeof(g_summaryList.cachedEntry));
 
 	g_summaryList.cachedEntry.eventNumber = event->summary.eventNumber;
 	g_summaryList.cachedEntry.mode = event->summary.mode;
@@ -383,7 +383,7 @@ void CacheNextSummaryListEntry(void)
 		((g_summaryListMenuActive == YES) || ((g_modemStatus.xferState == DQMx_CMD) && (g_sampleProcessing == IDLE_STATE))))
 	{
 		// Clear the cached entry
-		memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+		memset(&g_summaryList.cachedEntry, 0, sizeof(g_summaryList.cachedEntry));
 
 		while (++g_summaryList.currentEntryIndex < g_summaryList.totalEntries)
 		{
@@ -403,7 +403,7 @@ void CacheNextSummaryListEntry(void)
 	else
 	{
 		// Clear the cached entry
-		memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+		memset(&g_summaryList.cachedEntry, 0, sizeof(g_summaryList.cachedEntry));
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -450,7 +450,7 @@ void CachePreviousSummaryListEntry(void)
 		((g_summaryListMenuActive == YES) || ((g_modemStatus.xferState == DQMx_CMD) && (g_sampleProcessing == IDLE_STATE))))
 	{
 		// Clear the cached entry
-		memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+		memset(&g_summaryList.cachedEntry, 0, sizeof(g_summaryList.cachedEntry));
 
 		if (g_summaryList.currentEntryIndex)
 		{
@@ -477,7 +477,7 @@ void CachePreviousSummaryListEntry(void)
 	else
 	{
 		// Clear the cached entry
-		memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+		memset(&g_summaryList.cachedEntry, 0, sizeof(g_summaryList.cachedEntry));
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -533,7 +533,7 @@ void CacheSummaryEntryByIndex(uint16 index)
 		((g_summaryListMenuActive == YES) || ((g_modemStatus.xferState == DQMx_CMD) && (g_sampleProcessing == IDLE_STATE))))
 	{
 		// Clear the cached entry
-		memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+		memset(&g_summaryList.cachedEntry, 0, sizeof(g_summaryList.cachedEntry));
 
 		while (index < g_summaryList.totalEntries)
 		{
@@ -561,7 +561,7 @@ void CacheSummaryEntryByIndex(uint16 index)
 	else // Resort to file access
 	{
 		// Clear the cached entry
-		memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+		memset(&g_summaryList.cachedEntry, 0, sizeof(g_summaryList.cachedEntry));
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -622,7 +622,7 @@ SUMMARY_LIST_ENTRY_STRUCT* GetSummaryFromSummaryList(uint16 eventNumber)
 	if (eventNumber != g_summaryList.cachedEntry.eventNumber)
 	{
 		// Clear the cached entry
-		memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+		memset(&g_summaryList.cachedEntry, 0, sizeof(g_summaryList.cachedEntry));
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -701,7 +701,7 @@ void ParseAndCountSummaryListEntries(void)
 ///----------------------------------------------------------------------------
 void InitSummaryListFile(void)
 {
-	memset(&g_summaryList, 0, sizeof(SUMMARY_LIST_FILE_DETAILS));
+	memset(&g_summaryList, 0, sizeof(g_summaryList));
 
 	if (nav_setcwd(s_summaryListFileName, TRUE, TRUE))
 	{

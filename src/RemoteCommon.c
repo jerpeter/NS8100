@@ -319,7 +319,7 @@ void InitAutoDialout(void)
 	if (__autoDialoutTblKey != VALID_AUTODIALOUT_TABLE_KEY)
 	{
 		// Clear AutoDialout Log table
-		memset(&__autoDialoutTbl, 0x0, sizeof(AUTODIALOUT_STRUCT));
+		memset(&__autoDialoutTbl, 0, sizeof(__autoDialoutTbl));
 
 		// No need to set the following since the memset takes care of this
 		//__autoDialoutTbl.lastDownloadedEvent = 0;
