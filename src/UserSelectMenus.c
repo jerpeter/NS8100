@@ -266,7 +266,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmOneSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
-					else // g_triggerRecord.op_mode == BARGRAPH_MODE
+					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
 					{
 						g_unitConfig.alarmOneSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
@@ -311,7 +311,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmOneAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
-					else // g_triggerRecord.op_mode == BARGRAPH_MODE
+					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
 					{
 						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 						{
@@ -365,7 +365,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmOneSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
-					else // g_triggerRecord.op_mode == BARGRAPH_MODE
+					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
 					{
 						g_unitConfig.alarmOneSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
@@ -493,7 +493,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmTwoSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
-					else // g_triggerRecord.op_mode == BARGRAPH_MODE
+					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
 					{
 						g_unitConfig.alarmTwoSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
@@ -538,7 +538,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmTwoAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
-					else // g_triggerRecord.op_mode == BARGRAPH_MODE
+					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
 					{
 						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 						{
@@ -592,7 +592,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmTwoSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
-					else // g_triggerRecord.op_mode == BARGRAPH_MODE
+					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
 					{
 						g_unitConfig.alarmTwoSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
@@ -612,7 +612,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmTwoAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
-					else // g_triggerRecord.op_mode == BARGRAPH_MODE
+					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
 					{
 						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 						{
@@ -1643,7 +1643,7 @@ void EraseSettingsMenuHandler(uint8 keyPressed, void* data)
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
 			// Clear out modem setup and save
-			memset(&g_modemSetupRecord, 0, sizeof(MODEM_SETUP_STRUCT));
+			memset(&g_modemSetupRecord, 0, sizeof(g_modemSetupRecord));
 			g_modemSetupRecord.modemStatus = NO;
 			SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
 

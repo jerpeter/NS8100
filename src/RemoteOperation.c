@@ -59,7 +59,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	UNUSED(inCmd);
 
-	memset(&cfg, 0, sizeof(SYSTEM_CFG));
+	memset(&cfg, 0, sizeof(cfg));
 
 	cfg.mode = g_triggerRecord.op_mode;
 	cfg.monitorStatus = g_sampleProcessing; 
@@ -249,7 +249,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 	uint32 timeCheck;
 	uint32 maxRecordTime;
 	uint32 returnCode = CFG_ERR_NONE;
-	uint32 sizeOfCfg;
 	uint32 msgCRC = 0;
 	uint32 inCRC;
 	uint16 j = 0;
@@ -264,18 +263,17 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	else
 	{	
-	 	sizeOfCfg = sizeof(SYSTEM_CFG);
-		memset((uint8*)&cfg, 0, sizeOfCfg);
+		memset(&cfg, 0, sizeof(cfg));
 
 		// Check to see if the incoming message is the correct size
-		if ((uint32)((inCmd->size - 16)/2) < sizeOfCfg)
+		if ((uint32)((inCmd->size - 16)/2) < sizeof(cfg))
 		{
-			debug("WARNING:Msg Size incorrect msgSize=%d cfgSize=%d \r\n", ((inCmd->size - 16)/2), sizeOfCfg);
+			debug("WARNING:Msg Size incorrect msgSize=%d cfgSize=%d \r\n", ((inCmd->size - 16)/2), sizeof(cfg));
 		}
 		
 		// Move the string data into the configuration structure. String is (2 * cfgSize)
 		buffDex = MESSAGE_HEADER_SIMPLE_LENGTH;
-		while ((buffDex < inCmd->size) && (buffDex < (MESSAGE_HEADER_SIMPLE_LENGTH + (sizeOfCfg * 2))) && 
+		while ((buffDex < inCmd->size) && (buffDex < (MESSAGE_HEADER_SIMPLE_LENGTH + (sizeof(cfg) * 2))) &&
 				(buffDex < CMD_BUFFER_SIZE))
 		{	
 			*cfgPtr++ = ConvertAscii2Binary(inCmd->msg[buffDex], inCmd->msg[buffDex + 1]);
@@ -463,8 +461,17 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			  (cfg.eventCfg.seismicTriggerLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
 		{
 			g_triggerRecord.trec.seismicTriggerLevel = cfg.eventCfg.seismicTriggerLevel;
-			g_unitConfig.alarmOneSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
-			g_unitConfig.alarmTwoSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
+
+			if (cfg.mode == WAVEFORM_MODE)
+			{
+				g_unitConfig.alarmOneSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
+				g_unitConfig.alarmTwoSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
+			}
+			else // All other modes
+			{
+				g_unitConfig.alarmOneSeismicMinLevel = SEISMIC_TRIGGER_MIN_VALUE;
+				g_unitConfig.alarmTwoSeismicMinLevel = SEISMIC_TRIGGER_MIN_VALUE;
+			}
 		}
 		else
 		{
@@ -531,8 +538,16 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 #else // Air trigger as 16-bit A/D count
 			g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
 #endif
-			g_unitConfig.alarmOneAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
-			g_unitConfig.alarmTwoAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
+			if (cfg.mode == WAVEFORM_MODE)
+			{
+				g_unitConfig.alarmOneAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
+				g_unitConfig.alarmTwoAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
+			}
+			else // All other modes
+			{
+				g_unitConfig.alarmOneAirMinLevel = AIR_TRIGGER_MIN_COUNT;
+				g_unitConfig.alarmTwoAirMinLevel = AIR_TRIGGER_MIN_COUNT;
+			}
 		}
 		else
 		{
@@ -849,10 +864,17 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			if ((ALARM_MODE_BOTH == g_unitConfig.alarmOneMode) ||
 				(ALARM_MODE_SEISMIC == g_unitConfig.alarmOneMode))
 			{
-				// Alarm One Seismic trigger level check.
-				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneSeismicLevel) 	||
+				// Alarm One Seismic trigger level check for Waveform mode only
+				if ((cfg.mode == WAVEFORM_MODE) && ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneSeismicLevel) 	||
 					((cfg.alarmCfg.alarmOneSeismicLevel >= g_triggerRecord.trec.seismicTriggerLevel) &&
-					  (cfg.alarmCfg.alarmOneSeismicLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
+					(cfg.alarmCfg.alarmOneSeismicLevel <= SEISMIC_TRIGGER_MAX_VALUE))))
+				{
+					g_unitConfig.alarmOneSeismicLevel = cfg.alarmCfg.alarmOneSeismicLevel;
+				}
+				// Alarm One Seismic trigger level check for other modes
+				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneSeismicLevel) 	||
+						((cfg.alarmCfg.alarmOneSeismicLevel >= SEISMIC_TRIGGER_MIN_VALUE) &&
+						(cfg.alarmCfg.alarmOneSeismicLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
 				{
 					g_unitConfig.alarmOneSeismicLevel = cfg.alarmCfg.alarmOneSeismicLevel;
 				}
@@ -865,10 +887,17 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 			if ((ALARM_MODE_BOTH == g_unitConfig.alarmOneMode) || (ALARM_MODE_AIR == g_unitConfig.alarmOneMode))
 			{
-	            // Alarm One Air trigger level check DB/MB.
-				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) ||
+	            // Alarm One Air trigger level check DB/MB for Waveform mode only
+				if ((cfg.mode == WAVEFORM_MODE) && ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) ||
 					((cfg.alarmCfg.alarmOneAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
-					(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_COUNT)))
+					(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_COUNT))))
+				{
+					g_unitConfig.alarmOneAirLevel = cfg.alarmCfg.alarmOneAirLevel;
+				}
+	            // Alarm One Air trigger level check DB/MB for other modes
+				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) ||
+						((cfg.alarmCfg.alarmOneAirLevel >= AIR_TRIGGER_MIN_COUNT) &&
+						(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_COUNT)))
 				{
 					g_unitConfig.alarmOneAirLevel = cfg.alarmCfg.alarmOneAirLevel;
 				}
@@ -935,10 +964,17 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			if ((ALARM_MODE_BOTH == g_unitConfig.alarmTwoMode) ||
 				(ALARM_MODE_SEISMIC == g_unitConfig.alarmTwoMode))
 			{
-				// Alarm Two Seismic trigger level check.
-				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoSeismicLevel) 	||
+				// Alarm Two Seismic trigger level check for Waveform mode only
+				if ((cfg.mode == WAVEFORM_MODE) && ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoSeismicLevel) 	||
 					((cfg.alarmCfg.alarmTwoSeismicLevel >= g_triggerRecord.trec.seismicTriggerLevel) &&
-					  (cfg.alarmCfg.alarmTwoSeismicLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
+					  (cfg.alarmCfg.alarmTwoSeismicLevel <= SEISMIC_TRIGGER_MAX_VALUE))))
+				{
+					g_unitConfig.alarmTwoSeismicLevel = cfg.alarmCfg.alarmTwoSeismicLevel;
+				}
+				// Alarm Two Seismic trigger level check for other modes
+				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoSeismicLevel) 	||
+						((cfg.alarmCfg.alarmTwoSeismicLevel >= g_triggerRecord.trec.seismicTriggerLevel) &&
+						(cfg.alarmCfg.alarmTwoSeismicLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
 				{
 					g_unitConfig.alarmTwoSeismicLevel = cfg.alarmCfg.alarmTwoSeismicLevel;
 				}
@@ -951,10 +987,17 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			
 			if ((ALARM_MODE_BOTH == g_unitConfig.alarmTwoMode) || (ALARM_MODE_AIR == g_unitConfig.alarmTwoMode))
 			{
-	            // Alarm Two Air trigger level check DB/MB.
-				if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) 	||
+	            // Alarm Two Air trigger level check DB/MB for Waveform mode only
+				if ((cfg.mode == WAVEFORM_MODE) && ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) ||
 					((cfg.alarmCfg.alarmTwoAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
-					(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_COUNT)))
+					(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_COUNT))))
+				{
+					g_unitConfig.alarmTwoAirLevel = cfg.alarmCfg.alarmTwoAirLevel;
+				}
+	            // Alarm Two Air trigger level check DB/MB for other modes
+				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) 	||
+						((cfg.alarmCfg.alarmTwoAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
+						(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_COUNT)))
 				{
 					g_unitConfig.alarmTwoAirLevel = cfg.alarmCfg.alarmTwoAirLevel;
 				}
@@ -1138,7 +1181,7 @@ void HandleDMM(CMD_BUFFER_STRUCT* inCmd)
 
 	UNUSED(inCmd);
 
-	memset(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
+	memset(&modemCfg, 0, sizeof(modemCfg));
 
 	memcpy((uint8*)&modemCfg, &g_modemSetupRecord, sizeof(MODEM_SETUP_STRUCT));
 
@@ -1180,7 +1223,7 @@ void HandleUMM(CMD_BUFFER_STRUCT* inCmd)
 	uint8 ummHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
 
-	memset(&modemCfg, 0, sizeof(MODEM_SETUP_STRUCT));
+	memset(&modemCfg, 0, sizeof(modemCfg));
 
 	// Move the string data into the configuration structure. String is (2 * cfgSize)
 	i = MESSAGE_HEADER_SIMPLE_LENGTH;
