@@ -43,7 +43,7 @@ void InitMonitorLog(void)
 		//debugRaw("Clearing Monitor Log table\r\n");
 
 		// Clear Monitor Log table
-		memset(&__monitorLogTbl[0], 0x0, (sizeof(MONITOR_LOG_ENTRY_STRUCT) * TOTAL_MONITOR_LOG_ENTRIES));
+		memset(&__monitorLogTbl[0], 0, sizeof(__monitorLogTbl));
 
 		// Set the index to the first element
 		__monitorLogTblIndex = 0;
@@ -105,7 +105,7 @@ uint16 GetStartingEventNumberForCurrentMonitorLog(void)
 void ClearMonitorLogEntry(void)
 {
 	// Set all log entries to all zero's, status to EMPTY_LOG_ENTRY, start and stop times INVALID
-	memset(&__monitorLogTbl[__monitorLogTblIndex], 0x0, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+	memset(&__monitorLogTbl[__monitorLogTblIndex], 0, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 
 	//debugRaw("Clearing entry at Monitor Log table index: %d\r\n", __monitorLogTblIndex);
 }
@@ -178,7 +178,7 @@ void NewMonitorLogEntry(uint8 mode)
 	__monitorLogTbl[__monitorLogTblIndex].sensor_type = g_factorySetupRecord.sensor_type;
 	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
 
-	//memset(&spareBuffer[0], 0x0, sizeof(spareBuffer));
+	//memset(&spareBuffer[0], 0, sizeof(spareBuffer));
 	//ConvertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
 	//debug("\tStart Time: %s\r\n", (char*)&spareBuffer[0]);
 }
@@ -204,9 +204,11 @@ void UpdateMonitorLogEntry()
 void CloseMonitorLogEntry()
 {
 	//char spareBuffer[40];
-	CURRENT_EVENT_NUMBER_STRUCT currentEventNumberRecord;
 
 	//debug("Closing entry at Monitor Log table index: %d, total recorded: %d\r\n", __monitorLogTblIndex, __monitorLogTbl[__monitorLogTblIndex].eventsRecorded);
+
+#if 0 // Reverting back to the original method of saving the event number after every event
+	CURRENT_EVENT_NUMBER_STRUCT currentEventNumberRecord;
 
 	// Check if the mode was Waveform which now postpones saving the current event number
 	if (g_triggerRecord.op_mode == WAVEFORM_MODE)
@@ -218,6 +220,7 @@ void CloseMonitorLogEntry()
 
 		debug("Saved Event ID: %d\r\n", (g_nextEventNumberToUse - 1));
 	}
+#endif
 
 	if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
 	{
@@ -229,7 +232,7 @@ void CloseMonitorLogEntry()
 
 		AppendMonitorLogEntryFile();
 
-		//memset(&spareBuffer[0], 0x0, sizeof(spareBuffer));
+		//memset(&spareBuffer[0], 0, sizeof(spareBuffer));
 		//ConvertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
 		//debug("\tStop Time: %s\r\n", (char*)&spareBuffer[0]);
 	}

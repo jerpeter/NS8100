@@ -359,7 +359,7 @@ void MoveWaveformEventToFile(void)
 {
 	static WAVE_PROCESSING_STATE waveformProcessingState = WAVE_INIT;
 	//static SUMMARY_DATA* sumEntry;
-	static SUMMARY_DATA* ramSummaryEntry;
+	static SUMMARY_DATA* ramSummaryEntryPtr;
 	static int32 sampGrpsLeft;
 	static uint32 vectorSumMax;
 
@@ -386,7 +386,7 @@ void MoveWaveformEventToFile(void)
 		switch (waveformProcessingState)
 		{
 			case WAVE_INIT:
-				if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
+				if (GetRamSummaryEntry(&ramSummaryEntryPtr) == FALSE)
 				{
 					debugErr("Out of Ram Summary Entrys\r\n");
 				}
@@ -408,16 +408,16 @@ void MoveWaveformEventToFile(void)
 #endif
 
 #if 1 // Need to clear out the Summary entry since it's initialized to all 0xFF's
-				memset(ramSummaryEntry, 0, sizeof(SUMMARY_DATA));
+				memset(ramSummaryEntryPtr, 0, sizeof(SUMMARY_DATA));
 #else // Old
 				// Initialize the freq data counts.
-				ramSummaryEntry->waveShapeData.a.freq = 0;
-				ramSummaryEntry->waveShapeData.r.freq = 0;
-				ramSummaryEntry->waveShapeData.v.freq = 0;
-				ramSummaryEntry->waveShapeData.t.freq = 0;
+				ramSummaryEntryPtr->waveShapeData.a.freq = 0;
+				ramSummaryEntryPtr->waveShapeData.r.freq = 0;
+				ramSummaryEntryPtr->waveShapeData.v.freq = 0;
+				ramSummaryEntryPtr->waveShapeData.t.freq = 0;
 #endif
 
-				ramSummaryEntry->mode = WAVEFORM_MODE;
+				ramSummaryEntryPtr->mode = WAVEFORM_MODE;
 				waveformProcessingState = WAVE_PRETRIG;
 				break;
 
@@ -439,26 +439,26 @@ void MoveWaveformEventToFile(void)
 
 				// A channel
 				sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
-				ramSummaryEntry->waveShapeData.a.peak = FixDataToZero(sample);
-				ramSummaryEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
+				ramSummaryEntryPtr->waveShapeData.a.peak = FixDataToZero(sample);
+				ramSummaryEntryPtr->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
 
 				// R channel
 				sample = *(g_currentEventSamplePtr + R_CHAN_OFFSET);
-				tempPeak = ramSummaryEntry->waveShapeData.r.peak = FixDataToZero(sample);
+				tempPeak = ramSummaryEntryPtr->waveShapeData.r.peak = FixDataToZero(sample);
 				vectorSum = (uint32)(tempPeak * tempPeak);
-				ramSummaryEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
+				ramSummaryEntryPtr->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
 
 				// V channel
 				sample = *(g_currentEventSamplePtr + V_CHAN_OFFSET);
-				tempPeak = ramSummaryEntry->waveShapeData.v.peak = FixDataToZero(sample);
+				tempPeak = ramSummaryEntryPtr->waveShapeData.v.peak = FixDataToZero(sample);
 				vectorSum += (uint32)(tempPeak * tempPeak);
-				ramSummaryEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
+				ramSummaryEntryPtr->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
 
 				// T channel
 				sample = *(g_currentEventSamplePtr + T_CHAN_OFFSET);
-				tempPeak = ramSummaryEntry->waveShapeData.t.peak = FixDataToZero(sample);
+				tempPeak = ramSummaryEntryPtr->waveShapeData.t.peak = FixDataToZero(sample);
 				vectorSum += (uint32)(tempPeak * tempPeak);
-				ramSummaryEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
+				ramSummaryEntryPtr->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
 
 				vectorSumMax = (uint32)vectorSum;
 
@@ -477,39 +477,39 @@ void MoveWaveformEventToFile(void)
 					// A channel
 					sample = *(g_currentEventSamplePtr + A_CHAN_OFFSET);
 					normalizedData = FixDataToZero(sample);
-					if (normalizedData > ramSummaryEntry->waveShapeData.a.peak)
+					if (normalizedData > ramSummaryEntryPtr->waveShapeData.a.peak)
 					{
-						ramSummaryEntry->waveShapeData.a.peak = normalizedData;
-						ramSummaryEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
+						ramSummaryEntryPtr->waveShapeData.a.peak = normalizedData;
+						ramSummaryEntryPtr->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
 					}
 
 					// R channel
 					sample = *(g_currentEventSamplePtr + R_CHAN_OFFSET);
 					normalizedData = FixDataToZero(sample);
-					if (normalizedData > ramSummaryEntry->waveShapeData.r.peak)
+					if (normalizedData > ramSummaryEntryPtr->waveShapeData.r.peak)
 					{
-						ramSummaryEntry->waveShapeData.r.peak = normalizedData;
-						ramSummaryEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
+						ramSummaryEntryPtr->waveShapeData.r.peak = normalizedData;
+						ramSummaryEntryPtr->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
 					}
 					vectorSum = (uint32)(normalizedData * normalizedData);
 
 					// V channel
 					sample = *(g_currentEventSamplePtr + V_CHAN_OFFSET);
 					normalizedData = FixDataToZero(sample);
-					if (normalizedData > ramSummaryEntry->waveShapeData.v.peak)
+					if (normalizedData > ramSummaryEntryPtr->waveShapeData.v.peak)
 					{
-						ramSummaryEntry->waveShapeData.v.peak = normalizedData;
-						ramSummaryEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
+						ramSummaryEntryPtr->waveShapeData.v.peak = normalizedData;
+						ramSummaryEntryPtr->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
 					}
 					vectorSum += (normalizedData * normalizedData);
 
 					// T channel
 					sample = *(g_currentEventSamplePtr + T_CHAN_OFFSET);
 					normalizedData = FixDataToZero(sample);
-					if (normalizedData > ramSummaryEntry->waveShapeData.t.peak)
+					if (normalizedData > ramSummaryEntryPtr->waveShapeData.t.peak)
 					{
-						ramSummaryEntry->waveShapeData.t.peak = normalizedData;
-						ramSummaryEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
+						ramSummaryEntryPtr->waveShapeData.t.peak = normalizedData;
+						ramSummaryEntryPtr->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
 					}
 					vectorSum += (normalizedData * normalizedData);
 
@@ -544,15 +544,15 @@ void MoveWaveformEventToFile(void)
 			case WAVE_CALCULATE:
 				startOfEventPtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
 				endOfEventDataPtr = startOfEventPtr + (g_wordSizeInPretrig + g_wordSizeInEvent);
-				ramSummaryEntry->waveShapeData.a.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.a.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
-				ramSummaryEntry->waveShapeData.r.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.r.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
-				ramSummaryEntry->waveShapeData.v.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.v.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
-				ramSummaryEntry->waveShapeData.t.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.t.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
+				ramSummaryEntryPtr->waveShapeData.a.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.a.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
+				ramSummaryEntryPtr->waveShapeData.r.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.r.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
+				ramSummaryEntryPtr->waveShapeData.v.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.v.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
+				ramSummaryEntryPtr->waveShapeData.t.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.t.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 
 #if 0 // Old
-				CompleteRamEventSummary(ramSummaryEntry, sumEntry);
+				CompleteRamEventSummary(ramSummaryEntryPtr, sumEntry);
 #else // Updated
-				CompleteRamEventSummary(ramSummaryEntry);
+				CompleteRamEventSummary(ramSummaryEntryPtr);
 #endif
 				CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 
@@ -661,11 +661,11 @@ void MoveWaveformEventToFile(void)
 				break;
 
 			case WAVE_COMPLETE:
-				ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
+				ramSummaryEntryPtr->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 					
 				UpdateMonitorLogEntry();
 
-#if 0 // Prevent spam storing the event number if there are multiple events
+#if 1 // Always store the event number for every event
 				// After event numbers have been saved, store current event number in persistent storage.
 				StoreCurrentEventNumber();
 #else // Just increment the number and save when the monitor session is done
@@ -693,7 +693,7 @@ void MoveWaveformEventToFile(void)
 					clearSystemEventFlag(TRIGGER_EVENT);
 				}
 
-				g_lastCompletedRamSummaryIndex = ramSummaryEntry;
+				g_lastCompletedRamSummaryIndex = ramSummaryEntryPtr;
 
 				if (g_triggerRecord.op_mode == WAVEFORM_MODE)
 				{

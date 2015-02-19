@@ -50,7 +50,7 @@
 void MoveManualCalToFile(void)
 {
 	//static SUMMARY_DATA* sumEntry;
-	static SUMMARY_DATA* ramSummaryEntry;
+	static SUMMARY_DATA* ramSummaryEntryPtr;
 	uint16 i;
 	uint16 sample;
 	uint16 normalizedData;
@@ -69,7 +69,7 @@ void MoveManualCalToFile(void)
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
-		if (GetRamSummaryEntry(&ramSummaryEntry) == FALSE)
+		if (GetRamSummaryEntry(&ramSummaryEntryPtr) == FALSE)
 		{
 			debugErr("Out of Ram Summary Entrys\r\n");
 		}
@@ -81,16 +81,16 @@ void MoveManualCalToFile(void)
 #endif
 
 #if 1 // Need to clear out the Summary entry since it's initialized to all 0xFF's
-		memset(ramSummaryEntry, 0, sizeof(SUMMARY_DATA));
+		memset(ramSummaryEntryPtr, 0, sizeof(SUMMARY_DATA));
 #else // Old
 		// Initialize the freq data counts.
-		ramSummaryEntry->waveShapeData.a.freq = 0;
-		ramSummaryEntry->waveShapeData.r.freq = 0;
-		ramSummaryEntry->waveShapeData.v.freq = 0;
-		ramSummaryEntry->waveShapeData.t.freq = 0;
+		ramSummaryEntryPtr->waveShapeData.a.freq = 0;
+		ramSummaryEntryPtr->waveShapeData.r.freq = 0;
+		ramSummaryEntryPtr->waveShapeData.v.freq = 0;
+		ramSummaryEntryPtr->waveShapeData.t.freq = 0;
 #endif
 
-		ramSummaryEntry->mode = MANUAL_CAL_MODE;
+		ramSummaryEntryPtr->mode = MANUAL_CAL_MODE;
 
 		startOfEventPtr = g_currentEventStartPtr;
 		endOfEventDataPtr = g_currentEventStartPtr + g_wordSizeInCal;
@@ -108,10 +108,10 @@ void MoveManualCalToFile(void)
 
 			normalizedData = FixDataToZero(sample);
 
-			if (normalizedData > ramSummaryEntry->waveShapeData.a.peak)
+			if (normalizedData > ramSummaryEntryPtr->waveShapeData.a.peak)
 			{
-				ramSummaryEntry->waveShapeData.a.peak = normalizedData;
-				ramSummaryEntry->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
+				ramSummaryEntryPtr->waveShapeData.a.peak = normalizedData;
+				ramSummaryEntryPtr->waveShapeData.a.peakPtr = (g_currentEventSamplePtr + A_CHAN_OFFSET);
 			}
 
 			//=========================================================
@@ -123,10 +123,10 @@ void MoveManualCalToFile(void)
 
 			normalizedData = FixDataToZero(sample);
 
-			if (normalizedData > ramSummaryEntry->waveShapeData.r.peak)
+			if (normalizedData > ramSummaryEntryPtr->waveShapeData.r.peak)
 			{
-				ramSummaryEntry->waveShapeData.r.peak = normalizedData;
-				ramSummaryEntry->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
+				ramSummaryEntryPtr->waveShapeData.r.peak = normalizedData;
+				ramSummaryEntryPtr->waveShapeData.r.peakPtr = (g_currentEventSamplePtr + R_CHAN_OFFSET);
 			}
 
 			//=========================================================
@@ -138,10 +138,10 @@ void MoveManualCalToFile(void)
 
 			normalizedData = FixDataToZero(sample);
 
-			if (normalizedData > ramSummaryEntry->waveShapeData.v.peak)
+			if (normalizedData > ramSummaryEntryPtr->waveShapeData.v.peak)
 			{
-				ramSummaryEntry->waveShapeData.v.peak = normalizedData;
-				ramSummaryEntry->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
+				ramSummaryEntryPtr->waveShapeData.v.peak = normalizedData;
+				ramSummaryEntryPtr->waveShapeData.v.peakPtr = (g_currentEventSamplePtr + V_CHAN_OFFSET);
 			}
 
 			//=========================================================
@@ -153,29 +153,29 @@ void MoveManualCalToFile(void)
 
 			normalizedData = FixDataToZero(sample);
 
-			if (normalizedData > ramSummaryEntry->waveShapeData.t.peak)
+			if (normalizedData > ramSummaryEntryPtr->waveShapeData.t.peak)
 			{
-				ramSummaryEntry->waveShapeData.t.peak = normalizedData;
-				ramSummaryEntry->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
+				ramSummaryEntryPtr->waveShapeData.t.peak = normalizedData;
+				ramSummaryEntryPtr->waveShapeData.t.peakPtr = (g_currentEventSamplePtr + T_CHAN_OFFSET);
 			}
 
 			g_currentEventSamplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 		}
 
-		ramSummaryEntry->waveShapeData.a.peak = (uint16)(hiA - lowA + 1);
-		ramSummaryEntry->waveShapeData.r.peak = (uint16)(hiR - lowR + 1);
-		ramSummaryEntry->waveShapeData.v.peak = (uint16)(hiV - lowV + 1);
-		ramSummaryEntry->waveShapeData.t.peak = (uint16)(hiT - lowT + 1);
+		ramSummaryEntryPtr->waveShapeData.a.peak = (uint16)(hiA - lowA + 1);
+		ramSummaryEntryPtr->waveShapeData.r.peak = (uint16)(hiR - lowR + 1);
+		ramSummaryEntryPtr->waveShapeData.v.peak = (uint16)(hiV - lowV + 1);
+		ramSummaryEntryPtr->waveShapeData.t.peak = (uint16)(hiT - lowT + 1);
 
-		ramSummaryEntry->waveShapeData.a.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.a.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
-		ramSummaryEntry->waveShapeData.r.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.r.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
-		ramSummaryEntry->waveShapeData.v.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.v.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
-		ramSummaryEntry->waveShapeData.t.freq = CalcSumFreq(ramSummaryEntry->waveShapeData.t.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
+		ramSummaryEntryPtr->waveShapeData.a.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.a.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
+		ramSummaryEntryPtr->waveShapeData.r.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.r.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
+		ramSummaryEntryPtr->waveShapeData.v.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.v.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
+		ramSummaryEntryPtr->waveShapeData.t.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.t.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
 
 #if 0 // Old
-		CompleteRamEventSummary(ramSummaryEntry, sumEntry);
+		CompleteRamEventSummary(ramSummaryEntryPtr, sumEntry);
 #else // Updated
-		CompleteRamEventSummary(ramSummaryEntry);
+		CompleteRamEventSummary(ramSummaryEntryPtr);
 #endif
 
 		CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
@@ -229,7 +229,7 @@ void MoveManualCalToFile(void)
 
 				debug("Manual Cal Event file closed\r\n");
 
-				ramSummaryEntry->fileEventNum = g_pendingEventRecord.summary.eventNumber;
+				ramSummaryEntryPtr->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 
 				AddEventToSummaryList(&g_pendingEventRecord);
 
@@ -256,7 +256,7 @@ void MoveManualCalToFile(void)
 			}
 			clearSystemEventFlag(MANUAL_CAL_EVENT);
 
-			g_lastCompletedRamSummaryIndex = ramSummaryEntry;
+			g_lastCompletedRamSummaryIndex = ramSummaryEntryPtr;
 
 			// Set printout mode to allow the results menu processing to know this is a manual cal pulse
 			raiseMenuEventFlag(RESULTS_MENU_EVENT);
