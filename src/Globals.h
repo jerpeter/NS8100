@@ -215,6 +215,7 @@ extern char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
 extern char g_languageTable[LANGUAGE_TABLE_MAX_SIZE];
 extern uint8 g_fileProcessActiveUsbLockout;
 extern uint32 g_sleepModeState;
+extern uint8 g_sleepModeEngaged;
 extern volatile uint8 g_spi1AccessLock;
 extern volatile uint8 g_fileAccessLock;
 extern volatile uint8 g_externalTrigger;

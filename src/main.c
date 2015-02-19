@@ -270,17 +270,17 @@ void SystemEventManager(void)
 	}
 
 	//___________________________________________________________________________________________
-	if (getSystemEventState(UPDATE_OFFSET_EVENT))
-	{
-		UpdateChannelOffsetsForTempChange();
-	}
-
-	//___________________________________________________________________________________________
 	if (getSystemEventState(AUTO_DIALOUT_EVENT))
 	{
 		clearSystemEventFlag(AUTO_DIALOUT_EVENT);
 
 		StartAutoDialoutProcess();
+	}
+
+	//___________________________________________________________________________________________
+	if (getSystemEventState(UPDATE_OFFSET_EVENT))
+	{
+		UpdateChannelOffsetsForTempChange();
 	}
 
 	//___________________________________________________________________________________________
@@ -1286,11 +1286,13 @@ void PowerManager(void)
 	}
 #endif
 
-	// Check if no System Events and LCD is off and Modem is not transferring and USB is not connected
-	if ((g_systemEventFlags.wrd == 0x0000) && (GetPowerControlState(LCD_POWER_ENABLE) == OFF) &&
+	// Check if no System Events (or just update offset) and LCD is off and Modem is not transferring and USB is not connected
+	if (((g_systemEventFlags.wrd == NO_SYSTEM_EVENT_ACTIVE) || (g_systemEventFlags.wrd == UPDATE_OFFSET_EVENT)) && (GetPowerControlState(LCD_POWER_ENABLE) == OFF) &&
 		(g_modemStatus.xferState == NOP_CMD) && (ms_usb_prevent_sleep == NO)) //(usbMassStorageState != USB_CONNECTED_AND_PROCESSING))
 	{
 		SetupPowerSavingsBeforeSleeping();
+
+		g_sleepModeEngaged = YES;
 
 		// Check if actively monitoring
 		if (g_sampleProcessing == ACTIVE_STATE)
@@ -1350,6 +1352,10 @@ void PowerManager(void)
 		{
 			RevertPowerSavingsAfterSleeping();
 		}
+	}
+	else // To busy to sleep
+	{
+		g_sleepModeEngaged = NO;
 	}
 }
 

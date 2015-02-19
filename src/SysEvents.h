@@ -49,6 +49,7 @@ typedef struct
 #define CRAFT_PORT_EVENT			0x4000
 #define EXT_TRIGGER_EVENT			0x8000
 #define ANY_SYSTEM_EVENT			0xFFFF
+#define NO_SYSTEM_EVENT_ACTIVE		0x0000
 
 // Timer Events
 #define TIMER_MODE_TIMER_EVENT		0x0080

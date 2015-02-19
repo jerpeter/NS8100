@@ -593,10 +593,10 @@ void GenerateCalSignal(void)
 void InitAndSeedChannelOffsetVariables(void)
 {
 	// Seed totals to ensure count is non-zero (count initialized to 1 for this reason)
-	s_workingChannelOffset.rTotal = ACCURACY_16_BIT_MIDPOINT;
-	s_workingChannelOffset.vTotal = ACCURACY_16_BIT_MIDPOINT;
-	s_workingChannelOffset.tTotal = ACCURACY_16_BIT_MIDPOINT;
-	s_workingChannelOffset.aTotal = ACCURACY_16_BIT_MIDPOINT;
+	s_workingChannelOffset.rTotal = ACCURACY_16_BIT_MIDPOINT - g_channelOffset.r_offset;
+	s_workingChannelOffset.vTotal = ACCURACY_16_BIT_MIDPOINT - g_channelOffset.v_offset;
+	s_workingChannelOffset.tTotal = ACCURACY_16_BIT_MIDPOINT - g_channelOffset.t_offset;
+	s_workingChannelOffset.aTotal = ACCURACY_16_BIT_MIDPOINT - g_channelOffset.a_offset;
 
 	// Seed the counts
 	s_workingChannelCounts.rCount = 1;
@@ -625,7 +625,7 @@ void GetChannelOffsets(uint32 sampleRate)
 	}
 
 	// Reset offset values
-	memset(&g_channelOffset, 0, sizeof(OFFSET_DATA_STRUCT));
+	memset(&g_channelOffset, 0, sizeof(g_channelOffset));
 
 	debug("Get Channel Offset: Read and pitch... (Address boundary: %s)\r\n", ((uint32)(&s_tempData) % 4 == 0) ? "YES" : "NO");
 	// Read and pitch samples
@@ -747,7 +747,7 @@ void GetChannelOffsets(uint32 sampleRate)
 void UpdateChannelOffsetsForTempChange(void)
 {
 	// Make sure system isn't processing an event, not handling any system events but UPDATE_OFFSET_EVENT and not handling a manual cal pulse
-	if ((g_busyProcessingEvent == NO) && (anySystemEventExcept(UPDATE_OFFSET_EVENT) == NO) && (g_triggerRecord.op_mode != MANUAL_CAL_MODE))
+	if ((g_sleepModeEngaged == YES) && (g_busyProcessingEvent == NO) && (anySystemEventExcept(UPDATE_OFFSET_EVENT) == NO) && (g_triggerRecord.op_mode != MANUAL_CAL_MODE))
 	{
 		// Check if the count has been established which means init has processed
 		if (g_updateOffsetCount)
@@ -827,8 +827,8 @@ void UpdateChannelOffsetsForTempChange(void)
 							clearSystemEventFlag(UPDATE_OFFSET_EVENT);
 						}
 
-						// Clear the comparison structure
-						memset(&s_compareChannelOffset, sizeof(s_compareChannelOffset), 0);
+						// Clear the comparison structure (either case where a match is found or not)
+						memset(&s_compareChannelOffset, 0, sizeof(s_compareChannelOffset));
 					}
 				}
 				// else with the flag UPDATE_OFFSET_EVENT still set and g_updateOffsetCount == 0, the process will start over
@@ -852,4 +852,15 @@ void UpdateChannelOffsetsForTempChange(void)
 			InitAndSeedChannelOffsetVariables();
 		}
 	}
+#if 0 // Test resetting the process if the unit wakes up
+	// Check if the unit woke from sleep and the recalibrate was in the middle of processing
+	else if ((g_sleepModeEngaged == NO) && (g_updateOffsetCount))
+	{
+		// Restart the process since it was interrupted for an event that woke the system
+		g_updateOffsetCount = 0;
+
+		// Clear the comparison structure
+		memset(&s_compareChannelOffset, 0, sizeof(s_compareChannelOffset));
+	}
+#endif
 }

@@ -87,7 +87,11 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 #endif
 
 	// This is for error checking, If these checks are true, the defaults are not being set.
+#if 0 // Original which also filtered trigger levels for Combo
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
+#else // Updated to only filter for Waveform
+	if (op_mode == WAVEFORM_MODE)
+#endif
 	{
 		if ((g_unitConfig.alarmOneMode == ALARM_MODE_SEISMIC) || (g_unitConfig.alarmOneMode == ALARM_MODE_BOTH))
 		{
@@ -313,6 +317,17 @@ void StartDataCollection(uint32 sampleRate)
 void StopMonitoring(uint8 mode, uint8 operation)
 {
 	OverlayMessage(getLangText(STATUS_TEXT), "CLOSING MONITOR SESSION...", 0);
+
+	// Check if the system was trying to recalibrate the offset due to temperature change
+	if (getSystemEventState(UPDATE_OFFSET_EVENT))
+	{
+		debug("Clearing Update offset event\r\n");
+
+		// Reset the update offset count
+		g_updateOffsetCount = 0;
+
+		clearSystemEventFlag(UPDATE_OFFSET_EVENT);
+	}
 
 	// Check if the unit is currently monitoring
 	if (g_sampleProcessing == ACTIVE_STATE)
