@@ -1394,7 +1394,7 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 
 		//___________________________________________________________________________________________
 		//___Move the sample data for bar calculations in bargraph or combo mode (when combo mode isn't handling a cal pulse)
-		if ((g_triggerRecord.op_mode == BARGRAPH_MODE) || ((g_triggerRecord.op_mode == COMBO_MODE) && (s_calPulse == NO)))
+		if ((g_triggerRecord.op_mode == BARGRAPH_MODE) || ((g_triggerRecord.op_mode == COMBO_MODE) && (s_calPulse != YES)))
 		{
 			moveBargraphData_ISR_Inline();
 		}
