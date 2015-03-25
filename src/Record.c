@@ -435,7 +435,7 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr)
 	memset(rec_ptr, 0, sizeof(UNIT_CONFIG_STRUCT));
 
 	// Set default conditions
-	rec_ptr->powerSavingsLevel = POWER_SAVINGS_NONE;
+	rec_ptr->powerSavingsLevel = POWER_SAVINGS_NORMAL;
 	rec_ptr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
 	rec_ptr->airScale = AIR_SCALE_LINEAR;
 	rec_ptr->flashWrapping = YES;
