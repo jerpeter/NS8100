@@ -170,7 +170,7 @@ enum {
 #define RS485_BAUDRATE	2000000 //19200
 #define RS485_COM_PORT	1
 
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 // Define Debug port
 #define DEBUG_BAUDRATE	115200
 #define DEBUG_COM_PORT	2
@@ -187,9 +187,9 @@ enum {
 /* Battery Level defines */
 #define BATT_MIN_VOLTS 			4.0
 
-#if NS8100_ORIGINAL
+#if NS8100_ORIGINAL_PROTOTYPE
 #define REFERENCE_VOLTAGE       (float)3.3
-#else // NS8100_ALPHA
+#else // (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 #define REFERENCE_VOLTAGE       (float)2.5
 #endif
 #define BATT_RESOLUTION         (float)1024  // 10-bit resolution
@@ -226,6 +226,18 @@ enum USB_STATES {
 	USB_DEVICE_MODE_SELECTED,
 	USB_HOST_MODE_SELECTED
 };
+
+#if NS8100_BETA_PROTOTYPE
+enum SDMMC_CARD_DETECT_STATE {
+	SDMMC_CARD_DETECTED = 0,
+	SDMMC_CARD_NOT_PRESENT
+};
+#elif NS8100_ALPHA_PROTOTYPE
+enum SDMMC_CARD_DETECT_STATE {
+	SDMMC_CARD_NOT_PRESENT = 0,
+	SDMMC_CARD_DETECTED
+};
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Prototypes

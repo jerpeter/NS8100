@@ -210,7 +210,7 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 		//----------------------------------------------------------------------------
 		case SERIAL_485_RECEIVER_ENABLE:
 		//----------------------------------------------------------------------------
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 			//debug("Serial 485 Receiver Enable: %s.\r\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{

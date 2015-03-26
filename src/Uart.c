@@ -303,7 +303,7 @@ void UartPutc(uint8 c, int32 channel)
 	{
 		// fix_ns8100
 	}
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	else if (channel == GLOBAL_DEBUG_PRINT_PORT)
 	{
 		//----------------------------------------------------------------------------------
@@ -597,7 +597,7 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 	if (mode == RAW)
 	{
 		// Print the raw string
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 		UartWrite(buf, length, GLOBAL_DEBUG_PRINT_PORT);
 #else
 		UartWrite(buf, length, CRAFT_COM_PORT);
@@ -611,7 +611,7 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 		{
 			// Print the repeat count of the previous repeated string
 			sprintf(repeatCountStr, "(%d)\n", (int)repeatingBuf);
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 			UartPuts(repeatCountStr, GLOBAL_DEBUG_PRINT_PORT);
 #else
 			UartPuts(repeatCountStr, CRAFT_COM_PORT);
@@ -623,7 +623,7 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 		else if (strippedNewline == YES)
 		{
 			// Issue a carrige return and a line feed
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 			UartPutc('\r', GLOBAL_DEBUG_PRINT_PORT);
 			UartPutc('\n', GLOBAL_DEBUG_PRINT_PORT);
 #else
@@ -693,7 +693,7 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 		}
 
 		// Print the new string
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 		UartWrite(buf, length, GLOBAL_DEBUG_PRINT_PORT);
 #else
 		UartWrite(buf, length, CRAFT_COM_PORT);
@@ -705,7 +705,7 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 		repeatingBuf++;
 
 		// Print a '!' (bang) so signify that the output was repeated
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 		UartPutc('!', GLOBAL_DEBUG_PRINT_PORT);
 #else
 		UartPutc('!', CRAFT_COM_PORT);
@@ -723,7 +723,7 @@ void DebugPrintChar(uint8 charData)
 {
 	if (g_disableDebugPrinting == NO)
 	{
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 		UartPutc(charData, GLOBAL_DEBUG_PRINT_PORT);
 #else
 		UartPutc(charData, CRAFT_COM_PORT);

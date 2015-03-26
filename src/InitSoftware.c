@@ -342,7 +342,7 @@ void InitSoftwareSettings_NS8100(void)
 	CheckBootloaderAppPresent();
 
 #if 0 // Moved to hardware init
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	//-------------------------------------------------------------------------
 	// Init the NAV and select the SD MMC Card
 	//-------------------------------------------------------------------------

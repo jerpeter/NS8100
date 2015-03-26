@@ -1857,7 +1857,7 @@ void ReInitSdCardAndFat32(void)
 	SoftUsecWait(10 * SOFT_MSECS);
 
 	// Check if SD Detect pin 
-	if (gpio_get_pin_value(AVR32_PIN_PA02) == ON)
+	if (gpio_get_pin_value(AVR32_PIN_PA02) == SDMMC_CARD_DETECTED)
 	{
 		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		sd_mmc_spi_internal_init();
@@ -1930,7 +1930,7 @@ void PowerUpSDCardAndInitFat32(void)
 	SoftUsecWait(10 * SOFT_MSECS);
 
 	// Check if SD Detect pin 
-	if (gpio_get_pin_value(AVR32_PIN_PA02) == ON)
+	if (gpio_get_pin_value(AVR32_PIN_PA02) == SDMMC_CARD_DETECTED)
 	{
 		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		sd_mmc_spi_internal_init();
@@ -2339,14 +2339,14 @@ void GetSDCardUsageStats(void)
 	newBargraphMinSize = (manualCalSize + sizeof(EVT_RECORD) + (sizeof(CALCULATED_DATA_STRUCT) * 2) +
 							(((g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval) + 1) * 8 * 2));
 
-#if NS8100_ORIGINAL
+#if NS8100_ORIGINAL_PROTOTYPE
     sd_mmc_spi_get_capacity();
 
 	g_sdCardUsageStats.sizeUsed = 0;
 	g_sdCardUsageStats.sizeFree = capacity - g_sdCardUsageStats.sizeUsed;
 	g_sdCardUsageStats.percentUsed = (uint8)((g_sdCardUsageStats.sizeUsed * 100) / capacity);
 	g_sdCardUsageStats.percentFree = (uint8)(100 - g_sdCardUsageStats.percentUsed);
-#else // NS8100_ALPHA
+#else // (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	nav_select(FS_NAV_ID_DEFAULT);
 	nav_drive_set(0);
 

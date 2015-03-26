@@ -51,12 +51,21 @@
 #include <avr32/io.h>
 
 // Select between hardware board versions
-#define NS8100_ALPHA		1
+//#define NS8100_ORIGINAL_PROTOTYPE		1
+//#define NS8100_ALPHA_PROTOTYPE		1
+#define NS8100_BETA_PROTOTYPE			1
 
-#if NS8100_ALPHA
-#define NS8100_ORIGINAL		0
+#if NS8100_ORIGINAL_PROTOTYPE
+#define NS8100_BETA_PROTOTYPE		0
+#define NS8100_ALPHA_PROTOTYPE		0
+#elif NS8100_ALPHA_PROTOTYPE
+#define NS8100_BETA_PROTOTYPE		0
+#define NS8100_ORIGINAL_PROTOTYPE	0
+#elif NS8100_BETA_PROTOTYPE
+#define NS8100_ALPHA_PROTOTYPE		0
+#define NS8100_ORIGINAL_PROTOTYPE	0
 #else
-#define NS8100_ORIGINAL		1
+#error "Board type not defined"
 #endif
 
 /*! \name Base Boards

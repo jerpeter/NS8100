@@ -55,7 +55,7 @@ float GetExternalVoltageLevelAveraged(uint8 type)
 	uint32 adVoltageReadValue = 0;
 	float adVoltageLevel = (float)0.0;
 
-#if NS8100_ORIGINAL
+#if NS8100_ORIGINAL_PROTOTYPE
 	uint32 adChannelValueLow = 0xFFFF;
 	uint32 adChannelValueHigh = 0;
 	uint32 adChannelSum = 0;
@@ -114,7 +114,7 @@ float GetExternalVoltageLevelAveraged(uint8 type)
 			adVoltageLevel *= (REFERENCE_VOLTAGE * VOLTAGE_RATIO_BATT);
 			break;
 	}
-#else // NS8100_ALPHA
+#else // (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	switch (type)
 	{
 		case EXT_CHARGE_VOLTAGE:

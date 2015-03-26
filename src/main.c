@@ -580,7 +580,7 @@ void UsbDeviceManager(void)
 		// Check if the USB and Mass Storage Driver have never been initialized
 		debug("Init USB Mass Storage Driver...\r\n");
 
-#if 1 // NS8100_ALPHA
+#if 1 // (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 		if (Is_usb_id_device())
 		{
 			// Disable VBUS power

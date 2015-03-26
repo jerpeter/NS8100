@@ -432,7 +432,7 @@ void Avr32_enable_muxed_pins(void)
 		{AVR32_EBI_ADDR_20_1_PIN, AVR32_EBI_ADDR_20_1_FUNCTION},
 		{AVR32_EBI_ADDR_21_1_PIN, AVR32_EBI_ADDR_21_1_FUNCTION},
 		{AVR32_EBI_ADDR_22_1_PIN, AVR32_EBI_ADDR_22_1_FUNCTION},
-#if NS8100_ORIGINAL
+#if NS8100_ORIGINAL_PROTOTYPE
 		{AVR32_EBI_ADDR_23_PIN, AVR32_EBI_ADDR_23_FUNCTION},
 #endif
 
@@ -452,12 +452,12 @@ void Avr32_enable_muxed_pins(void)
 		{AVR32_EIC_EXTINT_5_PIN, AVR32_EIC_EXTINT_5_FUNCTION},
 
 		// External RTC sampling interrupt
-#if (EXTERNAL_SAMPLING_SOURCE || NS8100_ALPHA)
+#if (EXTERNAL_SAMPLING_SOURCE || NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 		{AVR32_EIC_EXTINT_1_PIN, AVR32_EIC_EXTINT_1_FUNCTION},
 #endif
 
 		// Low battery interrupt
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 		{AVR32_EIC_EXTINT_0_PIN, AVR32_EIC_EXTINT_0_FUNCTION},
 #endif
 
@@ -468,14 +468,14 @@ void Avr32_enable_muxed_pins(void)
 
 		//=====================================================
 		// USB
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 		{AVR32_USBB_USB_VBOF_0_1_PIN, AVR32_USBB_USB_VBOF_0_1_FUNCTION},
 		{AVR32_USBB_USB_ID_0_1_PIN, AVR32_USBB_USB_ID_0_1_FUNCTION},
 #endif
 
 		//=====================================================
 		// Usart 0 - RS232 Debug
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 		{AVR32_USART0_RXD_0_0_PIN, AVR32_USART0_RXD_0_0_FUNCTION},
 		{AVR32_USART0_TXD_0_0_PIN, AVR32_USART0_TXD_0_0_FUNCTION},
 #endif
@@ -511,7 +511,7 @@ void Avr32_enable_muxed_pins(void)
 ///----------------------------------------------------------------------------
 void InitProcessorNoConnectPins(void)
 {
-#if NS8100_ORIGINAL
+#if NS8100_ORIGINAL_PROTOTYPE
 	gpio_clr_gpio_pin(AVR32_PIN_PA00); // USART0_RXD
 	gpio_clr_gpio_pin(AVR32_PIN_PA01); // USART0_TXD
 	gpio_clr_gpio_pin(AVR32_PIN_PB19); // GPIO 51
@@ -521,7 +521,7 @@ void InitProcessorNoConnectPins(void)
 	gpio_clr_gpio_pin(AVR32_EBI_SDWE_0_PIN);
 	gpio_clr_gpio_pin(AVR32_EBI_SDCS_0_PIN);
 	gpio_clr_gpio_pin(AVR32_EBI_NWAIT_0_PIN);
-#else // NS8100_ALPHA (Pins brought to connector so can be an input or output)
+#else // (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE) (Pins brought to connector so can be an input or output)
 	gpio_clr_gpio_pin(AVR32_PIN_PB30); // GPIO 62 (Pin 21)
 	gpio_clr_gpio_pin(AVR32_PIN_PB13); // GPIO 45 (Pin 126)
 	gpio_clr_gpio_pin(AVR32_PIN_PB14); // GPIO 46 (Pin 127)
@@ -722,7 +722,7 @@ void InitSerial232(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 void InitDebug232(void)
 {
 	// Setup debug serial port
@@ -827,7 +827,7 @@ void InitExternalKeypad(void)
 		debugWarn("Keypad key being pressed, likely a bug. Key: %x", keyScan);
 	}
 
-#if NS8100_ORIGINAL
+#if NS8100_ORIGINAL_PROTOTYPE
 	// Turn on the red keypad LED while loading
 	WriteMcp23018(IO_ADDRESS_KPD, GPIOA, ((ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0xCF) | RED_LED_PIN));
 #endif
@@ -871,15 +871,23 @@ void InitSDAndFileSystem(void)
 	// Necessary ? (No, setting an output will configure it)
 	// Set SD Power pin as GPIO
 	gpio_enable_gpio_pin(AVR32_PIN_PB15);
-	
+
 	// Necessary ? (No, pin is configured as an input on power up)
 	// Set SD Write Protect pin as GPIO (Active low control)
 	gpio_enable_gpio_pin(AVR32_PIN_PA07);
 	
+#if 1 // NS8100_BETA_PROTOTYPE
+	gpio_enable_pin_pull_up(AVR32_PIN_PA07);
+#endif
+
 	// Necessary ? (No, pin is configured as an input on power up)
 	// Set SD Detect pin as GPIO
 	gpio_enable_gpio_pin(AVR32_PIN_PA02);
 	
+#if 1 // NS8100_BETA_PROTOTYPE
+	gpio_enable_pin_pull_up(AVR32_PIN_PA02);
+#endif
+
 	// Enable Power to SD
 	PowerControl(SD_POWER, ON);
 
@@ -887,7 +895,7 @@ void InitSDAndFileSystem(void)
 	SoftUsecWait(10 * SOFT_MSECS);
 
 	// Check if SD Detect pin
-	if (gpio_get_pin_value(AVR32_PIN_PA02) == ON)
+	if (gpio_get_pin_value(AVR32_PIN_PA02) == SDMMC_CARD_DETECTED)
 	{
 		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		if (sd_mmc_spi_internal_init() != OK)
@@ -1102,7 +1110,7 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Configure Debug rs232
 	//-------------------------------------------------------------------------
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	InitDebug232();
 
 	usart_write_line((&AVR32_USART0), "\r\n=========================================================\r\n");
@@ -1157,14 +1165,14 @@ void InitSystemHardware_NS8100(void)
 	// Turn on rs485 driver and receiver
 	//-------------------------------------------------------------------------
 	PowerControl(SERIAL_485_DRIVER_ENABLE, ON);
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	PowerControl(SERIAL_485_RECEIVER_ENABLE, ON);
 #endif
 
 	InitSerial485();
 
 	PowerControl(SERIAL_485_DRIVER_ENABLE, OFF);
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	PowerControl(SERIAL_485_RECEIVER_ENABLE, OFF);
 #endif
 	
@@ -1198,7 +1206,7 @@ void InitSystemHardware_NS8100(void)
 	Set_Contrast(DEFUALT_CONTRAST);
 	InitDisplay();
 
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	memcpy(g_mmap, sign_on_logo, (8*128));
 	WriteMapToLcd(g_mmap);
 #endif
@@ -1229,7 +1237,7 @@ void InitSystemHardware_NS8100(void)
 	device_mass_storage_task_init();
 #endif
 
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	// Disable USB LED
 	PowerControl(USB_LED, OFF);
 #endif
@@ -1244,7 +1252,7 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init External RTC Interrupt for interrupt source
 	//-------------------------------------------------------------------------
-#if (EXTERNAL_SAMPLING_SOURCE || NS8100_ALPHA)
+#if (EXTERNAL_SAMPLING_SOURCE || NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	// The internal pull up for this pin needs to be enables to bring the line high, otherwise the clock out will only reach half level
 	gpio_enable_pin_pull_up(AVR32_EIC_EXTINT_1_PIN);
 #endif
@@ -1252,12 +1260,12 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Enable pullups on input pins that may be floating
 	//-------------------------------------------------------------------------
-#if NS8100_ORIGINAL
+#if NS8100_ORIGINAL_PROTOTYPE
 	// USB ID
 	gpio_enable_pin_pull_up(AVR32_PIN_PA21);
 #endif
 
-#if NS8100_ALPHA
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	// USB ID
 	gpio_enable_pin_pull_up(AVR32_USBB_USB_ID_0_1_PIN);
 	// RTC PFO (Active low)
