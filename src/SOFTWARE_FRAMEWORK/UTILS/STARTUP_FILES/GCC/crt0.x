@@ -71,7 +71,7 @@ _start:
 _stext:
   // Set initial stack pointer.
   //lda.w   sp, _estack
-  lda.w   sp, 0x1000
+  lda.w   sp, 0x4000
 
   // Set up EVBA so interrupts can be enabled.
   lda.w   r0, _evba
@@ -79,6 +79,14 @@ _stext:
 
   // Enable the exception processing.
   csrf    AVR32_SR_EM_OFFSET
+
+  // ET Test
+  pushm	r10
+  mfdr	r10, 0x8
+  orh	r10, 0x2000
+  orl	r10, 0x2000
+  mtdr  0x8, r10
+  popm  r10
 
   // Must run our own init startup to init the External SDRAM for the data and BSS sections to be initialize wihout a bus exception
   call _init_startup
