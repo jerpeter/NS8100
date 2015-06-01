@@ -25,6 +25,7 @@
 #include "TextTypes.h"
 #include "Analog.h"
 #include "RealTimeClock.h"
+#include "Sensor.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -101,6 +102,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 	volatile uint32 key = 0;
 	uint8 mbChoice = 0;
 	INPUT_MSG_STRUCT mn_msg;
+	DATE_TIME_STRUCT tempTime;
 	uint8 previousMode = g_triggerRecord.op_mode;
 	uint8 clearedFSRecord = NO;
 	uint8 choice = MessageBox(getLangText(VERIFY_TEXT), "START CAL DIAGNOSTICS?", MB_YESNO);
@@ -130,6 +132,9 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 
 					WriteMapToLcd(g_mmap);
 
+#if 1 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
+					g_execCycles++;
+#endif
 					// Set to current half second
 					tempTicks = g_rtcSoftTimerTickCount;
 				}
@@ -240,7 +245,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 						SoftUsecWait(150 * SOFT_MSECS);
 						// Not really used, keys are grabbed in CalSetupMn
 						mbChoice = MessageBox(getLangText(STATUS_TEXT), getLangText(ARE_YOU_DONE_WITH_CAL_SETUP_Q_TEXT), MB_YESNO);
-						if ((mbChoice == MB_SECOND_CHOICE) || (mbChoice == MB_NO_ACTION))
+						if (mbChoice != MB_FIRST_CHOICE)
 						{
 							// Don't leave
 							key = 0;
@@ -257,14 +262,19 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 			if (MessageBox(getLangText(CONFIRM_TEXT), getLangText(DO_YOU_WANT_TO_SAVE_THE_CAL_DATE_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 			{
 				// Store Calibration Date
-				g_factorySetupRecord.cal_date = GetCurrentTime();
+				tempTime = GetCurrentTime();
+				ConvertDateTimeToCalDate(&g_factorySetupRecord.calDate, &tempTime);
 			}
-			else if (MessageBox(getLangText(CONFIRM_TEXT), "ERASE FACTORY SETUP?", MB_YESNO) == MB_FIRST_CHOICE)
+			// Check if no Smart sensor is connected
+			else if (CheckIfNoSmartSensorsPresent() == YES)
+			{
+				if (MessageBox(getLangText(CONFIRM_TEXT), "ERASE FACTORY SETUP?", MB_YESNO) == MB_FIRST_CHOICE)
 			{
 				memset(&g_factorySetupRecord, 0xFF, sizeof(g_factorySetupRecord));
 				SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_CLEAR_TYPE);
 				clearedFSRecord = YES;
 			}
+		}
 		}
 
 		// Check that the Factory setup wasn't cleared
@@ -274,6 +284,8 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 		}
 
 		g_factorySetupSequence = SEQ_NOT_STARTED;
+
+		UpdateWorkingCalibrationDate();
 
 		MessageBox(getLangText(STATUS_TEXT), getLangText(FACTORY_SETUP_COMPLETE_TEXT), MB_OK);
 
@@ -342,7 +354,7 @@ void CalSetupMnProc(INPUT_MSG_STRUCT msg,
 
 				case (ESC_KEY):
 					mbChoice = MessageBox(getLangText(WARNING_TEXT), getLangText(DO_YOU_WANT_TO_LEAVE_CAL_SETUP_MODE_Q_TEXT), MB_YESNO);
-					if ((mbChoice == MB_SECOND_CHOICE) || (mbChoice == MB_NO_ACTION))
+					if (mbChoice != MB_FIRST_CHOICE)
 					{
 						// Dont leave, escape to continue
 						break;
@@ -385,7 +397,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
 	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
-	div = (float)(g_bitAccuracyMidpoint * g_sensorInfoPtr->sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.sensor_type);
+	div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.sensor_type);
 
 	if (s_pauseDisplay == NO)
 	{
