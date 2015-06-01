@@ -106,6 +106,10 @@ void Eic_external_rtc_irq(void)
 
 	// clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int1 = 1;
+
+#if 1 // Test reads to clear the bus
+	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -150,6 +154,10 @@ void Eic_keypad_irq(void)
 
 	// Clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int5 = 1;
+
+#if 1 // Test reads to clear the bus
+	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -227,6 +235,10 @@ void Eic_system_irq(void)
 
 	// Clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int4 = 1;
+
+#if 1 // Test reads to clear the bus
+	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -273,14 +285,25 @@ void Usart_1_rs232_irq(void)
 		AVR32_USART1.cr = AVR32_USART_CR_RSTSTA_MASK;
 		usart_1_status = AVR32_USART1.csr;
 	}
+
+#if 1 // Test reads to clear the bus
+	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
+#endif
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 1 // ET test
+static uint32 s_testForForeverLoop = 0;
+static uint32 s_lastExecCycles = 0;
+#endif
+
 __attribute__((__interrupt__))
 void Soft_timer_tick_irq(void)
 {
+	g_testAfterSleepISR = Get_system_register(AVR32_COUNT);
+
 	// Test print to verify the interrupt is running
 	//debugRaw("`");
 
@@ -308,8 +331,35 @@ void Soft_timer_tick_irq(void)
 		raiseSystemEventFlag(UPDATE_TIME_EVENT);
 	}
 
+#if 1 // ET test
+	// Check if the exec cycles if the same meaning that the main loop isn't running
+	if (g_execCycles == s_lastExecCycles)
+	{
+		s_testForForeverLoop++;
+
+		if (s_testForForeverLoop > 120)
+		{
+			// Signal error condition
+			//OverlayMessage(getLangText(ERROR_TEXT), "UNIT STUCK IN NON ISR LOOP", (3 * SOFT_SECS));
+			if (g_debugBufferCount == 1) { g_breakpointCause = BP_MB_LOOP; }
+			else { g_breakpointCause = BP_SOFT_LOOP; }
+
+			__asm__ __volatile__ ("breakpoint");
+		}
+	}
+	else // Capture current exec cycles and clear loop count
+	{
+		s_lastExecCycles = g_execCycles;
+		s_testForForeverLoop = 0;
+	}
+#endif
+
 	// clear the interrupt flag
 	rtc_clear_interrupt(&AVR32_RTC);
+
+#if 1 // Test reads to clear the bus
+	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -373,6 +423,10 @@ void Tc_typematic_irq(void)
 
 	// clear the interrupt flag
 	DUMMY_READ(AVR32_TC.channel[TC_TYPEMATIC_TIMER_CHANNEL].sr);
+
+#if 1 // Test reads to clear the bus
+	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -533,6 +587,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		{
 			//debug("--> Trigger Found! %x %x %x %x\r\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
 			//usart_write_char(&AVR32_USART1, '$');
+			g_testTimeSinceLastTrigger = g_rtcSoftTimerTickCount;
 			
 			// Check if this event was triggered by an external trigger signal
 			if (g_externalTrigger == YES)
@@ -722,6 +777,8 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			{
 				// Check if on high sensitivity and if so set to low sensitivity for Cal pulse
 				if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
+
+				g_testTimeSinceLastCalPulse = g_rtcSoftTimerTickCount;
 
 				// Swap to alternate timer/counter for default 1024 sample rate for Cal
 #if INTERNAL_SAMPLING_SOURCE
@@ -1258,6 +1315,8 @@ void DataIsrInit(void)
 __attribute__((__interrupt__))
 void Tc_sample_irq(void)
 {
+	g_testAfterSleepISR = Get_system_register(AVR32_COUNT);
+
 #if 0 // Test
 	static uint32 isrCounter = 0;
 
@@ -1326,6 +1385,9 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 		//___Check for channel sync error
 		if (s_channelSyncError == YES)
 		{
+			g_breakpointCause = BP_AD_CHAN_SYNC_ERR;
+			__asm__ __volatile__ ("breakpoint");
+
 			HandleChannelSyncError_ISR_Inline();
 
 			// clear the interrupt flags and bail
@@ -1402,7 +1464,7 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 
 	//___________________________________________________________________________________________
 	//___Advance to the next sample in the buffer
-	g_tailOfPretriggerBuff += g_sensorInfoPtr->numOfChannels;
+	g_tailOfPretriggerBuff += g_sensorInfo.numOfChannels;
 
 	// Check if the end of the Pretrigger buffer has been reached
 	if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
@@ -1417,5 +1479,9 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 	DUMMY_READ(AVR32_TC.channel[TC_CALIBRATION_TIMER_CHANNEL].sr);
 #elif EXTERNAL_SAMPLING_SOURCE
 	AVR32_EIC.ICR.int1 = 1;
+#endif
+
+#if 1 // Test reads to clear the bus
+	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
 #endif
 }
