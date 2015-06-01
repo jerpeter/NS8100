@@ -133,7 +133,7 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	if (op_mode == WAVEFORM_MODE)
 	{
 		debug("--- Waveform Mode Settings ---\r\n");
-		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\r\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
+		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\r\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfo.numOfChannels);
 
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
@@ -154,7 +154,7 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	else if (op_mode == COMBO_MODE)
 	{
 		debug("--- Combo Mode Settings ---\r\n");
-		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\r\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
+		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\r\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfo.numOfChannels);
 
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
@@ -175,7 +175,7 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	else if (op_mode == MANUAL_CAL_MODE)
 	{
 		debug("--- Manual Cal Mode Settings ---\r\n");
-		debug("\tSample Rate: %d, Channels: %d\r\n", trig_mn.sample_rate, g_sensorInfoPtr->numOfChannels);
+		debug("\tSample Rate: %d, Channels: %d\r\n", trig_mn.sample_rate, g_sensorInfo.numOfChannels);
 	}
 
 	debug("---------------------------\r\n");
