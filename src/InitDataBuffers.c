@@ -54,14 +54,14 @@ void InitDataBuffs(uint8 op_mode)
 		sampleRate = MANUAL_CAL_DEFAULT_SAMPLE_RATE;
 
 		// Variable Pretrigger size in words; sample rate / Pretrigger buffer divider times channels plus 1 extra sample (to ensure a full Pretrigger plus a trigger sample)
-		pretriggerBufferSize = ((uint32)(sampleRate / MANUAL_CAL_PRETRIGGER_BUFFER_DIVIDER) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
+		pretriggerBufferSize = ((uint32)(sampleRate / MANUAL_CAL_PRETRIGGER_BUFFER_DIVIDER) * g_sensorInfo.numOfChannels) + g_sensorInfo.numOfChannels;
 	}
 	else // Waveform, Bargraph, Combo
 	{
 		sampleRate = g_triggerRecord.trec.sample_rate;
 
 		// Variable Pretrigger size in words; sample rate / Pretrigger buffer divider times channels plus 1 extra sample (to ensure a full Pretrigger plus a trigger sample)
-		pretriggerBufferSize = ((uint32)(sampleRate / g_unitConfig.pretrigBufferDivider) * g_sensorInfoPtr->numOfChannels) + g_sensorInfoPtr->numOfChannels;
+		pretriggerBufferSize = ((uint32)(sampleRate / g_unitConfig.pretrigBufferDivider) * g_sensorInfo.numOfChannels) + g_sensorInfo.numOfChannels;
 	}
 
 	// Setup the Pretrigger buffer pointers
@@ -94,9 +94,9 @@ void InitDataBuffs(uint8 op_mode)
 		g_samplesInEvent = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
 
 		// Calculate word size for each section and total event, since buffer is an array of words
-		g_wordSizeInPretrig = g_samplesInPretrig * g_sensorInfoPtr->numOfChannels;
-		g_wordSizeInBody = g_samplesInBody * g_sensorInfoPtr->numOfChannels;
-		g_wordSizeInCal = g_samplesInCal * g_sensorInfoPtr->numOfChannels;
+		g_wordSizeInPretrig = g_samplesInPretrig * g_sensorInfo.numOfChannels;
+		g_wordSizeInBody = g_samplesInBody * g_sensorInfo.numOfChannels;
+		g_wordSizeInCal = g_samplesInCal * g_sensorInfo.numOfChannels;
 		g_wordSizeInEvent = g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal;
 
 		if (op_mode == COMBO_MODE)
