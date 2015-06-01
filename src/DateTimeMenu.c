@@ -164,7 +164,9 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 					if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
 					{
 						if (!g_factorySetupRecord.invalid)
+						{
 							tempPtr = &g_factorySetupRecord.serial_num;
+						}
 
 						SETUP_USER_MENU_MSG(&serialNumberMenu, tempPtr);
 					}
@@ -204,7 +206,9 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 						if (MessageBox(getLangText(WARNING_TEXT), getLangText(PROCEED_WITHOUT_SETTING_DATE_AND_TIME_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 						{
 							if (!g_factorySetupRecord.invalid)
+							{
 								tempPtr = &g_factorySetupRecord.serial_num;
+							}
 
 							SETUP_USER_MENU_MSG(&serialNumberMenu, tempPtr);
 						}
