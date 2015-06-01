@@ -61,6 +61,7 @@
 #define DELETE_KEY 		KEY_DELETE
 #define SHIFT_KEY		KEY_SHIFT
 #define CTRL_KEY 		KEY_CTRL
+#define ON_ESC_KEY		0xAA	// Key defines a mess, just making a unique value
 
 // Power Keys
 #define ON_KEY			0x04

@@ -108,7 +108,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 	}
 
 	if (s_keyMap[0]) { debugRaw(" (Key Pressed: %x)", s_keyMap[0]); }
-	else { debugRaw(" (Key Release)", s_keyMap[0]); }
+	else { debugRaw(" (Key Release)"); }
 
 	//---------------------------------------------------------------------------------
 	// Find key
@@ -315,20 +315,19 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 						p_msg->cmd = CTRL_CMD;
 						p_msg->data[0] = 'C';
 					}
-#if 1 // Test
 					else if (keyPressed == ESC_KEY)
 					{
-extern uint8 quickBootEntryJump;
-extern void BootLoadManager(void);
+#if 0 // Test
 						if (g_sampleProcessing == IDLE_STATE)
 						{
-							quickBootEntryJump = YES;
+							g_quickBootEntryJump = YES;
 							BootLoadManager();
 						}
+#endif
 					}
 					else if (keyPressed == HELP_KEY)
 					{
-#if 1 // Test
+#if 0 // Test
 						if (g_remoteEventDownloadMethod == COMPRESS_MINILZO)
 						{
 							g_remoteEventDownloadMethod = COMPRESS_NONE;
@@ -341,13 +340,11 @@ extern void BootLoadManager(void);
 						}
 
 						return(PASSED);
-#else // Test
-						//CycleSleepMode();
-						//PowerUnitOff(RESET_UNIT);
 #endif
 					}
 					else if (keyPressed == KEY_BACKLIGHT)
 					{
+#if 1
 						DisplayTimerCallBack();
 						LcdPwTimerCallBack();
 						
@@ -418,7 +415,7 @@ void KeypressEventMgr(void)
 	if (g_lcdBacklightFlag == DISABLED)
 	{
 		g_lcdBacklightFlag = ENABLED;
-		SetLcdBacklightState(BACKLIGHT_DIM);
+		SetLcdBacklightState(BACKLIGHT_BRIGHT);
 		AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 	}
 	else // Reassign the LCD Backlight countdown timer
@@ -520,6 +517,17 @@ uint8 GetKeypadKey(uint8 mode)
 			keyPressed = ScanKeypad();
 		}
 
+#if 1 // New ability to process On-Esc as a special ability
+		if (keyPressed == ESC_KEY)
+		{
+			// Check if the On key is also being pressed
+			if (ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0x04)
+			{
+				keyPressed = ON_ESC_KEY;
+			}
+		}
+#endif
+
 		// Wait for a key to be pressed
 		while (ScanKeypad() != KEY_NONE)
 		{
@@ -544,8 +552,19 @@ uint8 GetKeypadKey(uint8 mode)
 				ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 			}
 
-			return (0);
+			return (KEY_NONE);
 		}
+
+#if 1 // New ability to process On-Esc as a special ability
+		if (keyPressed == ESC_KEY)
+		{
+			// Check if the On key is also being pressed
+			if (ReadMcp23018(IO_ADDRESS_KPD, GPIOA) & 0x04)
+			{
+				keyPressed = ON_ESC_KEY;
+			}
+		}
+#endif
 	}
 
 	SoftUsecWait(1000);
