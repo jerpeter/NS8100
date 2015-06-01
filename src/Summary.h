@@ -13,6 +13,7 @@
 ///----------------------------------------------------------------------------
 #include "Typedefs.h"
 #include "Common.h"
+#include "Sensor.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -48,14 +49,22 @@
 // New Event Record Sub-Structures
 // ===============================
 
+#if 0 // Prior to added ROM
+#define UNUSED_VERSION_SIZE		20
+#else // Added Smart Sensor Rom data
+#define UNUSED_VERSION_SIZE		4
+#endif
+
 // Version Information, version, model, and serial number.
 typedef struct
 {
 	// System unit information.
-	uint8	modelNumber[MODEL_STRING_SIZE];
-	uint8	serialNumber[SERIAL_NUMBER_STRING_SIZE];
-	uint8	softwareVersion[VERSION_STRING_SIZE];
-	uint8	unused[20];
+	uint8 modelNumber[MODEL_STRING_SIZE];
+	uint8 serialNumber[SERIAL_NUMBER_STRING_SIZE];
+	uint8 softwareVersion[VERSION_STRING_SIZE];
+	SMART_SENSOR_ROM seismicSensorRom;
+	SMART_SENSOR_ROM acousticSensorRom;
+	uint8	unused[UNUSED_VERSION_SIZE];
 } VERSION_INFO_STRUCT;
 
 // Seismic Channel Information - describes the initial channel data.
@@ -71,7 +80,9 @@ typedef struct
 #if 0 // Prior to added fields (ns7100)
 #define UNUSED_PARAMETERS_SIZE	40
 #else // 8100
-#define UNUSED_PARAMETERS_SIZE	28
+//#define UNUSED_PARAMETERS_SIZE	28
+// Added Smart sensor information, 12 bytes each for seismic and acoustic
+#define UNUSED_PARAMETERS_SIZE	4
 #endif
 
 #pragma pack(1)
@@ -114,16 +125,26 @@ typedef struct
 	uint32	seismicTriggerInUnits;
 	uint32	airTriggerInUnits;
 
-	uint8	unused[UNUSED_PARAMETERS_SIZE];		// Space for expansion, currently 28
+	uint8 seismicSensorSerialNumber[6];
+	uint8 seismicSensorCurrentCalDate[4];
+	uint8 seismicSensorFacility;
+	uint8 seismicSensorInstrument;
+
+	uint8 acousticSensorSerialNumber[6];
+	uint8 acousticSensorCurrentCalDate[4];
+	uint8 acousticSensorFacility;
+	uint8 acousticSensorInstrument;
+
+	uint8	unused[UNUSED_PARAMETERS_SIZE];		// Space for expansion, currently 4
 } PARAMETERS_STRUCT;
 #pragma pack()
 
 // Capture Information - After an event, System data at the end of an event. 
-#define UNUSED_CAPTURE_SIZE	16
+#define UNUSED_CAPTURE_SIZE	14
 #pragma pack(1)
 typedef struct
 {
-	DATE_TIME_STRUCT	calDate;							// Calibration date
+	DATE_TIME_STRUCT	calDateTime;						// Calibration date
 	uint32				batteryLevel;						// Battery Level
 	uint8				printerStatus;						// Printer status information.
 	uint8				externalTrigger;					// Mark if triggered with an External signal
@@ -133,6 +154,7 @@ typedef struct
 
 	uint16				comboEventsRecordedStartNumber;
 	uint16				comboEventsRecordedEndNumber;
+	uint16				comboBargraphEventNumberLink;
 	uint8				unused[UNUSED_CAPTURE_SIZE];		// Space for expansion
 } CAPTURE_INFO_STRUCT;
 #pragma pack()
