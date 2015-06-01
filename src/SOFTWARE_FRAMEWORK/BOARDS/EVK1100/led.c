@@ -51,6 +51,7 @@
 #include "evk1100.h"
 #include "led.h"
 
+#if 0 // Not using EVK1100 eval board
 
 //! Structure describing LED hardware connections.
 typedef const struct
@@ -79,7 +80,6 @@ static tLED_DESCRIPTOR LED_DESCRIPTOR[LED_COUNT] =
   MREPEAT(LED_COUNT, INSERT_LED_DESCRIPTOR, ~)
 #undef INSERT_LED_DESCRIPTOR
 };
-
 
 //! Saved state of all LEDs.
 static volatile U32 LED_State = (1 << LED_COUNT) - 1;
@@ -341,3 +341,4 @@ void LED_Set_Intensity(U32 leds, U8 intensity)
     led_gpio_port->gperc = led_descriptor->GPIO.PIN_MASK;
   }
 }
+#endif
