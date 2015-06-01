@@ -27,6 +27,7 @@
 #include "TextTypes.h"
 #include "EventProcessing.h"
 #include "Analog.h"
+#include "Sensor.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -119,8 +120,29 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 				}
 			}
 			
+			// Special call before Monitoring to disable USB processing
+extern void UsbDeviceManager(void);
+			UsbDeviceManager();
+
+			// Read and cache Smart Sensor data
+			SmartSensorReadRomAndMemory(SEISMIC_SENSOR);
+			SmartSensorReadRomAndMemory(ACOUSTIC_SENSOR);
+
+			if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+			{
+				g_factorySetupRecord.sensor_type = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+			}
+
 			// Make sure the parameters are up to date based on the trigger setup information
 			InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
+
+#if 0 // Rolled into one call
+			// Make sure sensors have warmed up from cold start
+			if (g_rtcSoftTimerTickCount < (SENSOR_WARMUP_PERIOD * TICKS_PER_SEC)) { PromptUserWaitingForSensorWarmup(); }
+			else { PromptUserWaitingForSensorZeroing(); }
+#else
+			PromptUserWaitingForSensorZeroing();
+#endif
 
 			switch(g_monitorOperationMode)
 			{
@@ -611,8 +633,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-		div = (float)(g_bitAccuracyMidpoint * g_sensorInfoPtr->sensorAccuracy * gainFactor) / 
-				(float)(g_factorySetupRecord.sensor_type);
+		div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.sensor_type);
 
 		if (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL)
 		{
@@ -652,14 +673,14 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tempV = ((float)g_vImpulsePeak / (float)div);
 			}
 
-			if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
 			{
 				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
 					strcpy(buff, "mg/s |");
 				else
 					strcpy(buff, "in/s |");
 			}
-			else // g_sensorInfoPtr->unitsFlag == METRIC_TYPE
+			else // g_sensorInfo.unitsFlag == METRIC_TYPE
 			{
 				tempR *= (float)METRIC;
 				tempT *= (float)METRIC;
@@ -785,7 +806,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			}			
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS) { tempVS = sqrtf((float)g_vsJobPeak) / (float)div; }
 
-			if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
 			{
 				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
 					strcpy(displayFormat, "mg/s");
@@ -863,7 +884,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			tempPeakDisp = (float)normalize_max_peak / ((float)2 * (float)PI * (float)tempFreq);
 
-			if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
 			{
 				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
 					strcpy(displayFormat, "mg");
@@ -938,7 +959,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			tempPeakAcc = (float)normalize_max_peak * (float)2 * (float)PI * (float)tempFreq;
 
-			if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
 			{
 				tempPeakAcc /= (float)ONE_GRAVITY_IN_INCHES;
 
