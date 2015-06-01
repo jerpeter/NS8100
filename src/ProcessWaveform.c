@@ -91,7 +91,7 @@ void ProcessWaveformData(void)
 						g_tailOfPretriggerBuff += 4;
 
 						// Check if the number of Active channels is less than or equal to 4 (one seismic sensor)
-						if (g_sensorInfoPtr->numOfChannels <= 4)
+						if (g_sensorInfo.numOfChannels <= 4)
 						{
 							// Check if the end of the Pretrigger buffer buffer has been reached
 							if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
@@ -177,7 +177,7 @@ void ProcessWaveformData(void)
 
 				default:
 					// Advance the Pretrigger buffer buffer the number of active channels
-					g_tailOfPretriggerBuff += g_sensorInfoPtr->numOfChannels;
+					g_tailOfPretriggerBuff += g_sensorInfo.numOfChannels;
 					break;
 			}
 		}
@@ -302,7 +302,7 @@ void ProcessWaveformData(void)
 		}
 
 		// Check if the number of Active channels is less than or equal to 4 (one seismic sensor)
-		if (g_sensorInfoPtr->numOfChannels <= 4)
+		if (g_sensorInfo.numOfChannels <= 4)
 		{
 			// Check if there are still PreTrigger data samples in the Pretrigger buffer
 			if ((g_samplesInBody - g_isTriggered) < g_samplesInPretrig)
@@ -549,11 +549,8 @@ void MoveWaveformEventToFile(void)
 				ramSummaryEntryPtr->waveShapeData.v.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.v.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 				ramSummaryEntryPtr->waveShapeData.t.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.t.peakPtr, g_triggerRecord.trec.sample_rate, startOfEventPtr, endOfEventDataPtr);
 
-#if 0 // Old
-				CompleteRamEventSummary(ramSummaryEntryPtr, sumEntry);
-#else // Updated
 				CompleteRamEventSummary(ramSummaryEntryPtr);
-#endif
+
 				CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 
 				waveformProcessingState = WAVE_STORE;
@@ -639,6 +636,7 @@ void MoveWaveformEventToFile(void)
 						SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 						// Done writing the event file, close the file handle
+						g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 						close(waveformFileHandle);
 #else // Port fat driver
 						// Write the event record header and summary
