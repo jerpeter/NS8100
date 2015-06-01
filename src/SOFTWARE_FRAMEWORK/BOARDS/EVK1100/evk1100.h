@@ -118,10 +118,30 @@
 //! Active level of the USB_VBOF output pin.
 #define USB_VBOF_ACTIVE_LEVEL       LOW
 
+//! @}
+
+
+/*! \name GPIO and SPI Connections of the SD/MMC Connector
+ */
+//! @{
+#define SD_MMC_CARD_DETECT_PIN      AVR32_PIN_PA02
+#define SD_MMC_WRITE_PROTECT_PIN    AVR32_PIN_PA07
+#define SD_MMC_SPI                  (&AVR32_SPI1)
+#define SD_MMC_SPI_NPCS             2
+#define SD_MMC_SPI_SCK_PIN          AVR32_SPI1_SCK_0_0_PIN
+#define SD_MMC_SPI_SCK_FUNCTION     AVR32_SPI1_SCK_0_0_FUNCTION
+#define SD_MMC_SPI_MISO_PIN         AVR32_SPI1_MISO_0_0_PIN
+#define SD_MMC_SPI_MISO_FUNCTION    AVR32_SPI1_MISO_0_0_FUNCTION
+#define SD_MMC_SPI_MOSI_PIN         AVR32_SPI1_MOSI_0_0_PIN
+#define SD_MMC_SPI_MOSI_FUNCTION    AVR32_SPI1_MOSI_0_0_FUNCTION
+#define SD_MMC_SPI_NPCS_PIN         AVR32_SPI1_NPCS_2_0_PIN
+#define SD_MMC_SPI_NPCS_FUNCTION    AVR32_SPI1_NPCS_2_0_FUNCTION
+//! @}
+
+
+#if 0
 //! USB overcurrent detection pin.
 #define USB_OVERCURRENT_DETECT_PIN  AVR32_PIN_PX33
-
-//! @}
 
 
 //! GPIO connection of the MAC PHY PWR_DOWN/INT signal.
@@ -280,24 +300,6 @@
 //! @}
 
 
-/*! \name GPIO and SPI Connections of the SD/MMC Connector
- */
-//! @{
-#define SD_MMC_CARD_DETECT_PIN      AVR32_PIN_PA02
-#define SD_MMC_WRITE_PROTECT_PIN    AVR32_PIN_PA07
-#define SD_MMC_SPI                  (&AVR32_SPI1)
-#define SD_MMC_SPI_NPCS             2
-#define SD_MMC_SPI_SCK_PIN          AVR32_SPI1_SCK_0_0_PIN
-#define SD_MMC_SPI_SCK_FUNCTION     AVR32_SPI1_SCK_0_0_FUNCTION
-#define SD_MMC_SPI_MISO_PIN         AVR32_SPI1_MISO_0_0_PIN
-#define SD_MMC_SPI_MISO_FUNCTION    AVR32_SPI1_MISO_0_0_FUNCTION
-#define SD_MMC_SPI_MOSI_PIN         AVR32_SPI1_MOSI_0_0_PIN
-#define SD_MMC_SPI_MOSI_FUNCTION    AVR32_SPI1_MOSI_0_0_FUNCTION
-#define SD_MMC_SPI_NPCS_PIN         AVR32_SPI1_NPCS_2_0_PIN
-#define SD_MMC_SPI_NPCS_FUNCTION    AVR32_SPI1_NPCS_2_0_FUNCTION
-//! @}
-
-
 /*! \name TWI Connections of the Spare TWI Connector
  */
 //! @{
@@ -323,7 +325,7 @@
 #define SPARE_SPI_NPCS_PIN          AVR32_SPI0_NPCS_0_0_PIN
 #define SPARE_SPI_NPCS_FUNCTION     AVR32_SPI0_NPCS_0_0_FUNCTION
 //! @}
-
+#endif
 
 #endif  // !EVK1100_REVA
 
