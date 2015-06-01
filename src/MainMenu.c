@@ -16,6 +16,7 @@
 #include "Uart.h"
 #include "Keypad.h"
 #include "TextTypes.h"
+#include "Sensor.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -278,5 +279,53 @@ void PromptUserUnableToEnterMonitoring(void)
 		debugWarn("Monitoring unavailable due to low battery voltage\r\n");
 		sprintf((char*)g_spareBuffer, "%s %s (%3.2f)", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT), (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE)));
 		OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void PromptUserWaitingForSensorWarmup(void)
+{
+	debugWarn("Monitoring temporarily unavailable due to sensors warming up\r\n");
+
+	sprintf((char*)g_spareBuffer, "%s", getLangText(ZEROING_SENSORS_TEXT));
+	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+
+	while ((volatile uint32)g_rtcSoftTimerTickCount < 120)
+	{
+		strcat((char*)g_spareBuffer, ".");
+		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void PromptUserWaitingForSensorZeroing(void)
+{
+	uint8 i = 3;
+
+	debug("Monitor pending sensor zeroing\r\n");
+
+	// Personally I hate a forced useless delay
+	sprintf((char*)g_spareBuffer, "%s", getLangText(ZEROING_SENSORS_TEXT));
+	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+
+	while (i--)
+	{
+		strcat((char*)g_spareBuffer, ".");
+		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+	}
+
+	if (g_rtcSoftTimerTickCount < 120)
+	{
+		debugWarn("Sensors still warming up\r\n");
+
+		while ((volatile uint32)g_rtcSoftTimerTickCount < 120)
+		{
+			strcat((char*)g_spareBuffer, ".");
+			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+		}
 	}
 }
