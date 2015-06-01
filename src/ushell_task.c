@@ -1609,6 +1609,10 @@ Bool ushell_cmd_syncevents(uint16_t* eventsCopied, uint16_t* eventsSkipped)
 			memset(&g_spareBuffer, 0, 80);
 			sprintf((char*)g_spareBuffer, "SYNC PROGRESS, EVENT: %s EXISTS", (char*)g_s_arg[0]);
 			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
+
+#if 1 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
+			g_execCycles++;
+#endif
 			*eventsSkipped += 1;
 			break;
 #endif
@@ -1639,6 +1643,10 @@ Bool ushell_cmd_syncevents(uint16_t* eventsCopied, uint16_t* eventsSkipped)
 			memset(&g_spareBuffer, 0, 80);
 			sprintf((char*)g_spareBuffer, "SYNC PROGRESS, EVENT: %s SYNCING", (char*)g_s_arg[0]);
 			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
+
+#if 1 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
+			g_execCycles++;
+#endif
 			*eventsCopied += 1;
 #if 1 // Test
 		 }
