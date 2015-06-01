@@ -21,6 +21,7 @@
 #include "FAT32_Access.h"
 #include "sd_mmc_spi.h"
 #include "PowerManagement.h"
+#include "Sensor.h"
 #if 0 // Port fat driver
 #include "FAT32_Disk.h"
 #endif
@@ -174,6 +175,7 @@ void CopyValidFlashEventSummariesToRam(void)
 						debugWarn("Event File: %s is not valid for this unit.\r\n", fileName);
 					}
 
+					g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 					close(eventFile);
 #endif
 			}
@@ -316,6 +318,7 @@ void DumpSummaryListFileToEventBuffer(void)
 			debug("Dumping Summary list with file size: %d\r\n", nav_file_lgt());
 
 			readWithSizeFix(g_summaryList.file, summaryListCache, nav_file_lgt());
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(g_summaryList.file);
 		}
 		else
@@ -356,6 +359,7 @@ void AddEventToSummaryList(EVT_RECORD* event)
 		g_summaryList.file = open(s_summaryListFileName, O_APPEND);
 		//file_seek(0, FS_SEEK_END);
 		write(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(g_summaryList.file);
 	}
 	else
@@ -427,6 +431,7 @@ void CacheNextSummaryListEntry(void)
 				}
 			}
 
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(g_summaryList.file);
 		}
 		else
@@ -510,6 +515,7 @@ void CachePreviousSummaryListEntry(void)
 				debug("Start of Summary list entries\r\n");
 			}
 
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(g_summaryList.file);
 		}
 		else
@@ -599,6 +605,7 @@ void CacheSummaryEntryByIndex(uint16 index)
 				//debug("Caching Summary File event: %d\r\n", g_summaryList.cachedEntry.eventNumber);
 			}
 
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(g_summaryList.file);
 		}
 		else
@@ -653,6 +660,7 @@ SUMMARY_LIST_ENTRY_STRUCT* GetSummaryFromSummaryList(uint16 eventNumber)
 				debugErr("No Summary List entry found for Event Number: %d\r\n", eventNumber);
 			}
 
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(g_summaryList.file);
 		}
 		else
@@ -724,6 +732,7 @@ void InitSummaryListFile(void)
 		ReportFileAccessProblem(s_summaryListFileName);
 	}
 
+	g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 	close(g_summaryList.file);
 	//nav_select(FS_NAV_ID_DEFAULT);
 }
@@ -961,11 +970,27 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.captured.endTime = GetCurrentTime();
 	eventRec->summary.captured.batteryLevel = (uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 	eventRec->summary.captured.printerStatus = (uint8)(g_unitConfig.autoPrint);
-	eventRec->summary.captured.calDate = g_factorySetupRecord.cal_date;
 	eventRec->summary.captured.externalTrigger = NO;
 	eventRec->summary.captured.comboEventsRecordedDuringSession = 0;
 	eventRec->summary.captured.comboEventsRecordedStartNumber = 0;
 	eventRec->summary.captured.comboEventsRecordedEndNumber = 0;
+	eventRec->summary.captured.comboBargraphEventNumberLink = 0;
+	//--------------------------------
+	memset(&(eventRec->summary.captured.calDateTime), 0, sizeof(eventRec->summary.captured.calDateTime));
+	ConvertCalDatetoDateTime(&eventRec->summary.captured.calDateTime, &g_factorySetupRecord.calDate);
+	//-----------------------
+	memset(&(eventRec->summary.parameters.seismicSensorSerialNumber[0]), 0, SENSOR_SERIAL_NUMBER_SIZE);
+	memcpy(&(eventRec->summary.parameters.seismicSensorSerialNumber[0]), &(g_seismicSmartSensorMemory.serialNumber[0]), SENSOR_SERIAL_NUMBER_SIZE);
+	memset(&(eventRec->summary.parameters.seismicSensorCurrentCalDate[0]), 0, SENSOR_CAL_DATE_SIZE);
+	memcpy(&(eventRec->summary.parameters.seismicSensorCurrentCalDate[0]), &(g_seismicSmartSensorMemory.currentCal.calDate), SENSOR_CAL_DATE_SIZE);
+	eventRec->summary.parameters.seismicSensorFacility = g_seismicSmartSensorMemory.currentCal.calFacility;
+	eventRec->summary.parameters.seismicSensorInstrument = g_seismicSmartSensorMemory.currentCal.calInstrument;
+	memset(&(eventRec->summary.parameters.acousticSensorSerialNumber[0]), 0, SENSOR_SERIAL_NUMBER_SIZE);
+	memcpy(&(eventRec->summary.parameters.acousticSensorSerialNumber[0]), &(g_acousticSmartSensorMemory.serialNumber[0]), SENSOR_SERIAL_NUMBER_SIZE);
+	memset(&(eventRec->summary.parameters.acousticSensorCurrentCalDate[0]), 0, SENSOR_CAL_DATE_SIZE);
+	memcpy(&(eventRec->summary.parameters.acousticSensorCurrentCalDate[0]), &(g_acousticSmartSensorMemory.currentCal.calDate), SENSOR_CAL_DATE_SIZE);
+	eventRec->summary.parameters.acousticSensorFacility = g_acousticSmartSensorMemory.currentCal.calFacility;
+	eventRec->summary.parameters.acousticSensorInstrument = g_acousticSmartSensorMemory.currentCal.calInstrument;
 	//-----------------------
 	memset(&(eventRec->summary.parameters.companyName[0]), 0, COMPANY_NAME_STRING_SIZE);
 	memcpy(&(eventRec->summary.parameters.companyName[0]), &(g_triggerRecord.trec.client[0]), COMPANY_NAME_STRING_SIZE - 1);
@@ -982,6 +1007,10 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	memcpy(&(eventRec->summary.version.serialNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
 	memset(&(eventRec->summary.version.softwareVersion[0]), 0, VERSION_STRING_SIZE);
 	memcpy(&(eventRec->summary.version.softwareVersion[0]), (void*)&g_buildVersion[0], strlen(g_buildVersion));
+	memset(&(eventRec->summary.version.seismicSensorRom), 0, sizeof(g_seismicSmartSensorRom));
+	memcpy(&(eventRec->summary.version.seismicSensorRom), (void*)&g_seismicSmartSensorRom, sizeof(g_seismicSmartSensorRom));
+	memset(&(eventRec->summary.version.acousticSensorRom), 0, sizeof(g_acousticSmartSensorRom));
+	memcpy(&(eventRec->summary.version.acousticSensorRom), (void*)&g_acousticSmartSensorRom, sizeof(g_acousticSmartSensorRom));
 
 	//-----------------------
 	eventRec->summary.parameters.bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_10_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ? 
@@ -1304,6 +1333,7 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 			}
 
 #if 1 // Atmel fat driver
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(eventFile);
 #else // Port fat driver
 			fl_fclose(eventFile);
@@ -1387,6 +1417,7 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 			}
 
 #if 1 // Atmel fat driver
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(eventFile);
 #else // Port fat driver
 			fl_fclose(eventFile);
@@ -1476,6 +1507,9 @@ void DeleteEventFileRecords(void)
 				else
 				{
 					eventsDeleted++;
+#if 1 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
+					g_execCycles++;
+#endif
 				}
 			}
 		}
@@ -1583,6 +1617,7 @@ void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 			file_seek(sizeof(EVT_RECORD), FS_SEEK_SET);
 			readWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], dataSize);
 
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(eventFile);
 #else // Port fat driver
 			fl_fclose(eventFile);
@@ -1743,6 +1778,7 @@ uint8 CacheEventToRam(uint16 eventNumber)
 		{
 #if 1 // Atmel fat driver
 			readWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], fsaccess_file_get_size(eventFile));
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(eventFile);
 #else // Port fat driver
 			fl_fread(eventFile, (uint8*)&g_eventDataBuffer[0], eventFile->filelength);
@@ -1826,6 +1862,7 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 			}
 
 #if 1 // Atmel fat driver
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(eventFile);
 #else // Port fat driver
 			fl_fclose(eventFile);
@@ -2092,6 +2129,7 @@ FL_FILE* GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 		// File already exists
 		if (fileHandle != -1)
 		{
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(fileHandle);
 			nav_file_del(TRUE);
 		}
@@ -2185,11 +2223,7 @@ inline void AdjustSampleForBitAccuracy(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 0 // Old
-void CompleteRamEventSummary(SUMMARY_DATA* flashSummPtr, SUMMARY_DATA* ramSummPtr)
-#else
 void CompleteRamEventSummary(SUMMARY_DATA* ramSummaryPtr)
-#endif
 {
 	//--------------------------------
 	// EVT_RECORD -
@@ -2200,6 +2234,14 @@ void CompleteRamEventSummary(SUMMARY_DATA* ramSummaryPtr)
 			(g_pendingEventRecord.summary.mode == COMBO_MODE))
 	{
 #endif
+
+	if (g_pendingEventRecord.summary.mode == COMBO_MODE)
+	{
+		g_pendingEventRecord.summary.captured.comboEventsRecordedDuringSession = (g_pendingEventRecord.summary.eventNumber - g_pendingBargraphRecord.summary.eventNumber);
+		g_pendingEventRecord.summary.captured.comboEventsRecordedStartNumber = (g_pendingBargraphRecord.summary.eventNumber + 1);
+		g_pendingEventRecord.summary.captured.comboEventsRecordedEndNumber = g_pendingEventRecord.summary.eventNumber;
+		g_pendingEventRecord.summary.captured.comboBargraphEventNumberLink = g_pendingBargraphRecord.summary.eventNumber;
+	}
 
 	debug("Copy calculated from Waveform buffer to global ram event record\r\n");
 		
@@ -2529,6 +2571,7 @@ void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber)
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 		// Done writing the event file, close the file handle
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(fileHandle);
 		fat_cache_flush();
 	}
