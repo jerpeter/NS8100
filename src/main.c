@@ -50,6 +50,9 @@
 #include "srec.h"
 #include "flashc.h"
 #include "ushell_task.h"
+#include "rtc.h"
+#include "tc.h"
+#include "fsaccess.h"
 #if 0 // Port fat driver
 #include "FAT32_Disk.h"
 #include "FAT32_Access.h"
@@ -86,6 +89,7 @@ void MenuEventManager(void);
 void CraftManager(void);
 void MessageManager(void);
 void FactorySetupManager(void);
+void CheckInternalMemoryForCorruption(void);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -221,6 +225,8 @@ void SystemEventManager(void)
 #endif
 
 		CheckForMidnight();
+
+		CheckInternalMemoryForCorruption();
 	}
 
 	//___________________________________________________________________________________________
@@ -228,6 +234,8 @@ void SystemEventManager(void)
 	{
 		debug("Midnight Event\r\n");
 		clearSystemEventFlag(MIDNIGHT_EVENT);
+
+		g_testTimeSinceLastMidnight = g_rtcSoftTimerTickCount;
 
 		HandleMidnightEvent();
 	}
@@ -630,7 +638,7 @@ void UsbDeviceManager(void)
 		//___________________________________________________________________________________________
 		// Check if processing is needed elsewhere
 		if ((g_sampleProcessing == ACTIVE_STATE) || (getSystemEventState(TRIGGER_EVENT)) || (g_fileProcessActiveUsbLockout == ON) ||
-			(g_activeMenu == CAL_SETUP_MENU) || (g_unitConfig.powerSavingsLevel > POWER_SAVINGS_NORMAL))
+			(g_activeMenu == CAL_SETUP_MENU) || (g_unitConfig.powerSavingsLevel > POWER_SAVINGS_NORMAL) || (g_activeMenu == MONITOR_MENU))
 		{
 			// Need to disable USB for other processing
 			debug("USB disabled for other processing\r\n");
@@ -1028,10 +1036,6 @@ const char default_boot_name[] = {
 	"Boot.s\0"
 };
 
-#include "rtc.h"
-#include "tc.h"
-#include "fsaccess.h"
-uint8 quickBootEntryJump = NO;
 void BootLoadManager(void)
 {
 	int16 usart_status;
@@ -1055,16 +1059,16 @@ void BootLoadManager(void)
 #if 0
 	if (craft_char == CTRL_B)
 #else
-	if ((craft_char == CTRL_B) || (quickBootEntryJump == YES))
+	if ((craft_char == CTRL_B) || (g_quickBootEntryJump == YES))
 #endif
 	{
 #if 1
-		if (quickBootEntryJump == YES)
+		if (g_quickBootEntryJump == YES)
 		{
 			if (g_sampleProcessing == ACTIVE_STATE)
 			{
 				// Don't allow hidden jumping to boot during Monitoring
-				quickBootEntryJump = NO;
+				g_quickBootEntryJump = NO;
 				return;
 			}
 			// else (g_sampleProcessing == IDLE_STATE)
@@ -1075,7 +1079,11 @@ void BootLoadManager(void)
 				PowerControl(LCD_POWER_ENABLE, ON);
 				SoftUsecWait(LCD_ACCESS_DELAY);
 				InitLcdDisplay();
-				SetLcdBacklightState(BACKLIGHT_DIM);
+				SetLcdBacklightState(BACKLIGHT_BRIGHT);
+			}
+			else
+			{
+				SetLcdBacklightState(BACKLIGHT_BRIGHT);
 			}
 
 			OverlayMessage("BOOTLOADER", "HIDDEN ENTRY...", 2 * SOFT_SECS);
@@ -1145,6 +1153,7 @@ void BootLoadManager(void)
 		}
 
 #if 1 // Atmel fat driver
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(file);
 #else // Port fat driver
 		fl_fclose(file);
@@ -1200,22 +1209,33 @@ extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
 static uint8 rs232PutToSleepState = NO;
 inline void SetupPowerSavingsBeforeSleeping(void)
 {
+	g_testApplyPS = Get_system_register(AVR32_COUNT);
+
 #if 1
 	// Only disable for Min and Most since None and Max are either permanently on or off
-	if ((g_unitConfig.powerSavingsLevel == POWER_SAVINGS_MINIMUM) || (g_unitConfig.powerSavingsLevel == POWER_SAVINGS_MOST))
+	if ((g_unitConfig.powerSavingsLevel >= POWER_SAVINGS_MINIMUM) || (g_unitConfig.powerSavingsLevel <= POWER_SAVINGS_MOST))
 	{
+#if 0 // Error - Can't read pin value from a GPIO assigned as a peripheral function
 		if (gpio_get_pin_value(AVR32_PIN_PB24) == 1)
+#else // Corrected
+		if (READ_DCD == NO_CONNECTION)
+#endif
 		{
 			rs232PutToSleepState = YES;
 
+#if 1 // Normal
 			// Disable rs232 driver and receiver (Active low control)
 			PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
 			PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
+#else
+			SoftUsecWait(5);
+			SoftUsecWait(5);
+#endif
 		}
 	}
 #endif
 
-#if 1
+#if 1 // Normal
 	// Enable pull ups on the data lines
 	AVR32_GPIO.port[2].puers = 0xFC00; // 1111 1100 0000 0000
 	AVR32_GPIO.port[3].puers = 0x03FF; // 0000 0011 1111 1111
@@ -1229,7 +1249,9 @@ inline void SetupPowerSavingsBeforeSleeping(void)
 ///----------------------------------------------------------------------------
 inline void RevertPowerSavingsAfterSleeping(void)
 {
-#if 1
+	g_testRevertPS = Get_system_register(AVR32_COUNT);
+
+#if 1 // Normal
 	// Disable pull ups on the data lines
 	AVR32_GPIO.port[2].puerc = 0xFC00; // 1111 1100 0000 0000
 	AVR32_GPIO.port[3].puerc = 0x03FF; // 0000 0011 1111 1111
@@ -1237,15 +1259,20 @@ inline void RevertPowerSavingsAfterSleeping(void)
 
 #if 1
 	// Only enable for Min and Most since None and Max are either permanently on or off
-	if ((g_unitConfig.powerSavingsLevel == POWER_SAVINGS_MINIMUM) || (g_unitConfig.powerSavingsLevel == POWER_SAVINGS_MOST))
+	if ((g_unitConfig.powerSavingsLevel >= POWER_SAVINGS_MINIMUM) || (g_unitConfig.powerSavingsLevel <= POWER_SAVINGS_MOST))
 	{
 		if (rs232PutToSleepState == YES)
 		{
 			rs232PutToSleepState = NO;
 
+#if 1 // Normal
 			// Enable rs232 driver and receiver (Active low control)
 			PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
 			PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+#else
+			SoftUsecWait(5);
+			SoftUsecWait(5);
+#endif
 		}
 	}
 #endif
@@ -1261,6 +1288,7 @@ void PowerManager(void)
 	uint8 sleepStateNeeded;
 
 #if 0 // No current signal to show a serial connection has been re-established
+	/*
 	static uint8 rs232State = ON;
 
 	// Check if not set to the Max power savings
@@ -1284,6 +1312,7 @@ void PowerManager(void)
 			debug("USART1 RS232 Rx/Tx Drivers enabled\r\n");
 		}
 	}
+	*/
 #endif
 
 	// Check if no System Events (or just update offset) and LCD is off and Modem is not transferring and USB is not connected
@@ -1325,7 +1354,7 @@ void PowerManager(void)
 
 		// Check if not already set for Idle sleep and not max power savings and a remote/craft is connected (DSR and DCD)
 		if ((sleepStateNeeded != AVR32_PM_SMODE_IDLE) && (g_unitConfig.powerSavingsLevel != POWER_SAVINGS_MAX) &&
-			((gpio_get_pin_value(AVR32_PIN_PB23) == 0) && (gpio_get_pin_value(AVR32_PIN_PB24) == 0)))
+			((READ_DSR == MODEM_CONNECTED) && (READ_DCD == CONNECTION_ESTABLISHED)))
 		{
 			sleepStateNeeded = AVR32_PM_SMODE_FROZEN;
 		}
@@ -1342,11 +1371,22 @@ void PowerManager(void)
 			else if (g_sleepModeState == AVR32_PM_SMODE_STOP) { debug("Changing Sleep mode to Stop\r\n"); }
 		}
 
+#if 1 // Test reads to clear the bus
+		PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
+#endif
+
+#if 0 // Normal
 		if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { SLEEP(AVR32_PM_SMODE_IDLE); }
 		else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { SLEEP(AVR32_PM_SMODE_FROZEN); }
 		else if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { SLEEP(AVR32_PM_SMODE_STANDBY); }
 		else if (g_sleepModeState == AVR32_PM_SMODE_STOP) { SLEEP(AVR32_PM_SMODE_STOP); }
+#else // Fix to prevent STOP mode which causes random exceptions
+		if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { SLEEP(AVR32_PM_SMODE_IDLE); }
+		else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { SLEEP(AVR32_PM_SMODE_FROZEN); }
+		else { SLEEP(AVR32_PM_SMODE_STANDBY); }
 
+		g_testAfterSleep = Get_system_register(AVR32_COUNT);
+#endif
 		// Check if needing to revert the power savings (if monitoring then the ISR will handle this operation)
 		if (g_powerSavingsForSleepEnabled == YES)
 		{
@@ -1399,15 +1439,427 @@ extern void StartExternalRtcClock(uint16 sampleRate);
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#include "nlao_exceptions.h"
+#define MAX_STATES	2
+#define LAST_STATE	(MAX_STATES - 1)
+__attribute__((__interrupt__))
+void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t exception_number, uint32_t lr, uint32_t r7, uint32_t r6, uint32_t r5, uint32_t r4,
+                uint32_t r3, uint32_t r2, uint32_t r1, uint32_t r0, uint32_t sp, uint32_t sr, uint32_t pc, uint32_t stack0, uint32_t stack1, uint32_t stack2)
+{
+	char exceptionText[30];
+	char exceptionMessage[75];
+	int LFST = -1;
+	int LTT = -1;
+	int LMT = -1;
+	int LCPT = -1;
+	uint16 testCounter = 0;
+	uint16* intMem = (uint16*)0x3000;
+	uint32 testKPGetExtVoltage;
+	uint32 testKPReadMCP23018;
+	uint32 testKPWriteMCP23018;
+	uint32 testAfterSleepISR;
+	uint32 testAfterSleep;
+	uint32 testRevertPS;
+	uint32 testApplyPS;
+	uint32 testCycleCount;
+
+	//uint8 state = 0;
+	//uint8 key = KEY_NONE;
+
+    /* Adjust SP to pre-exception value.
+        * PC and SR are 4 bytes each.
+        */
+    sp += 8;
+
+	testCycleCount = Get_system_register(AVR32_COUNT);
+
+	UNUSED(r12);
+	UNUSED(r11);
+	UNUSED(r10);
+	UNUSED(r9);
+	UNUSED(lr);
+	UNUSED(r7);
+	UNUSED(r6);
+	UNUSED(r5);
+	UNUSED(r4);
+	UNUSED(r3);
+	UNUSED(r2);
+	UNUSED(r1);
+	UNUSED(r0);
+	UNUSED(sp);
+	UNUSED(sr);
+	UNUSED(stack0);
+	UNUSED(stack1);
+	UNUSED(stack2);
+
+	//debugRaw("\r\n\nERROR - Exception: ");
+
+	switch (((exception_number * 4) - 4))
+	{
+		case EVBA_UNRECOVERABLE: strcpy((char*)&exceptionText, "Unrecoverable"); debugRaw("Unrecoverable"); break;
+		case EVBA_TLB_MULTIPLE:	strcpy((char*)&exceptionText, "TLB Multiple Hit"); debugRaw("TLB Multiple Hit"); break;
+		case EVBA_BUS_ERROR_DATA: strcpy((char*)&exceptionText, "Bus Error Data Fetch"); debugRaw("Bus Error Data Fetch"); break;
+		case EVBA_BUS_ERROR_INSTR: strcpy((char*)&exceptionText, "Bus Error instruction Fetch"); debugRaw("Bus Error instruction Fetch"); break;
+		case EVBA_NMI: strcpy((char*)&exceptionText, "NMI"); debugRaw("NMI"); break;
+		case EVBA_INSTR_ADDR: strcpy((char*)&exceptionText, "Instruction Address"); debugRaw("Instruction Address"); break;
+		case EVBA_ITLB_PROT: strcpy((char*)&exceptionText, "ITLB Protection"); debugRaw("ITLB Protection"); break;
+		case EVBA_BREAKPOINT: strcpy((char*)&exceptionText, "Breakpoint"); debugRaw("Breakpoint"); break;
+		case EVBA_ILLEGAL_OPCODE: strcpy((char*)&exceptionText, "Illegal Opcode"); debugRaw("Illegal Opcode"); break;
+		case EVBA_UNIMPLEMENTED: strcpy((char*)&exceptionText, "Unimplemented Instruction"); debugRaw("Unimplemented Instruction"); break;
+		case EVBA_PRIVILEGE_VIOL: strcpy((char*)&exceptionText, "Privilege Violation"); debugRaw("Privilege Violation"); break;
+		case EVBA_FLOATING_POINT: strcpy((char*)&exceptionText, "Floating Point"); debugRaw("Floating Point"); break;
+		case EVBA_COP_ABSENT: strcpy((char*)&exceptionText, "Coprocessor Absent"); debugRaw("Coprocessor Absent"); break;
+		case EVBA_DATA_ADDR_R: strcpy((char*)&exceptionText, "Data Address (Read)"); debugRaw("Data Address (Read)"); break;
+		case EVBA_DATA_ADDR_W: strcpy((char*)&exceptionText, "Data Address (Write)"); debugRaw("Data Address (Write)"); break;
+		case EVBA_DTLB_PROT_R: strcpy((char*)&exceptionText, "DLTB Protection (Read)"); debugRaw("DLTB Protection (Read)"); break;
+		case EVBA_DTLB_PROT_W: strcpy((char*)&exceptionText, "DTLB Protection (Write)"); debugRaw("DTLB Protection (Write)"); break;
+		case EVBA_DTLB_MODIFIED: strcpy((char*)&exceptionText, "DTLB Modified"); debugRaw("DTLB Modified"); break;
+		case EVBA_ITLB_MISS: strcpy((char*)&exceptionText, "ITLB Miss"); debugRaw("ITLB Miss"); break;
+		case EVBA_DTLB_MISS_R: strcpy((char*)&exceptionText, "DTLB Miss (Read)"); debugRaw("DTLB Miss (Read)"); break;
+		case EVBA_DTLB_MISS_W: strcpy((char*)&exceptionText, "DTLB Miss (Write)"); debugRaw("DTLB Miss (Write)"); break;
+		case EVBA_SCALL: strcpy((char*)&exceptionText, "Scall"); debugRaw("Scall"); break;
+		default: strcpy((char*)&exceptionText, "Unknown EVBA offset"); debugErr("Unknown EVBA offset"); break;
+	}
+
+	//debugRaw(" at PC = 0x%x\r\n\n", pc);
+
+	// Check if the LCD Power was turned off
+	if (g_lcdPowerFlag == DISABLED)
+	{
+		g_lcdPowerFlag = ENABLED;
+		SetLcdContrast(g_contrast_value);
+		PowerControl(LCD_POWER_ENABLE, ON);
+		SoftUsecWait(LCD_ACCESS_DELAY);
+		InitLcdDisplay();
+	}
+
+	// Check if the LCD Backlight was turned off
+	if (g_lcdBacklightFlag == DISABLED)
+	{
+		g_lcdBacklightFlag = ENABLED;
+		SetLcdBacklightState(BACKLIGHT_BRIGHT);
+	}
+
+#if 1
+	if (g_rtcSoftTimerTickCount >= g_testTimeSinceLastFSWrite) { LFST = (g_rtcSoftTimerTickCount - g_testTimeSinceLastFSWrite); }
+	if (g_rtcSoftTimerTickCount >= g_testTimeSinceLastTrigger) { LTT = (g_rtcSoftTimerTickCount - g_testTimeSinceLastTrigger); }
+	if (g_rtcSoftTimerTickCount >= g_testTimeSinceLastMidnight) { LMT = (g_rtcSoftTimerTickCount - g_testTimeSinceLastMidnight); }
+	if (g_rtcSoftTimerTickCount >= g_testTimeSinceLastCalPulse) { LCPT = (g_rtcSoftTimerTickCount - g_testTimeSinceLastCalPulse); }
+#endif
+
+#if 1
+	while (intMem < (uint16*)0x4000)
+	{
+		// Check internal memory locations below the stack
+		if (*intMem == 0xD673)
+		{
+			testCounter += 2;
+			intMem++;
+		}
+		else break;
+	}
+#endif
+
+#if 1
+	if (testCycleCount > g_testKPGetExtVoltage) { testKPGetExtVoltage = testCycleCount - g_testKPGetExtVoltage; }
+	else { testKPGetExtVoltage = 0xFFFFFFFF - g_testKPGetExtVoltage + testCycleCount; }
+
+	if (testCycleCount > g_testKPReadMCP23018) { testKPReadMCP23018 = testCycleCount - g_testKPReadMCP23018; }
+	else { testKPReadMCP23018 = 0xFFFFFFFF - g_testKPReadMCP23018 + testCycleCount; }
+
+	if (testCycleCount > g_testKPWriteMCP23018) { testKPWriteMCP23018 = testCycleCount - g_testKPWriteMCP23018; }
+	else { testKPWriteMCP23018 = 0xFFFFFFFF - g_testKPWriteMCP23018 + testCycleCount; }
+
+	if (testCycleCount > g_testAfterSleepISR) { testAfterSleepISR = testCycleCount - g_testAfterSleepISR; }
+	else { testAfterSleepISR = 0xFFFFFFFF - g_testAfterSleepISR + testCycleCount; }
+
+	if (testCycleCount > g_testAfterSleep) { testAfterSleep = testCycleCount - g_testAfterSleep; }
+	else { testAfterSleep = 0xFFFFFFFF - g_testAfterSleep + testCycleCount; }
+
+	if (testCycleCount > g_testRevertPS) { testRevertPS = testCycleCount - g_testRevertPS; }
+	else { testRevertPS = 0xFFFFFFFF - g_testRevertPS + testCycleCount; }
+
+	if (testCycleCount > g_testApplyPS) { testApplyPS = testCycleCount - g_testApplyPS; }
+	else { testApplyPS = 0xFFFFFFFF - g_testApplyPS + testCycleCount; }
+#endif
+
+	while (1)
+	{
+		if (((exception_number * 4) - 4) == EVBA_BREAKPOINT)
+		{
+			switch (g_breakpointCause)
+			{
+				case BP_INT_MEM_CORRUPTED: sprintf((char*)&exceptionMessage, "BREAKPOINT: INTERNAL MEM TAMPERED"); break;
+				case BP_SOFT_LOOP: sprintf((char*)&exceptionMessage, "BREAKPOINT: NON ISR FOREVER LOOP DETECTED"); break;
+				case BP_MB_LOOP: sprintf((char*)&exceptionMessage, "BREAKPOINT: MESSAGE BOX FOREVER LOOP DETECTED"); break;
+				case BP_UNHANDLED_INT: sprintf((char*)&exceptionMessage, "BREAKPOINT: UNHANDLED INTERRUPT DETECTED"); break;
+				case BP_AD_CHAN_SYNC_ERR: sprintf((char*)&exceptionMessage, "BREAKPOINT: A/D CHAN SYNC ERROR"); break;
+				default: sprintf((char*)&exceptionMessage, "BREAKPOINT: CAUSE UNKNOWN");
+			}
+			OverlayMessage("EXC SCREEN 1", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+			if (g_breakpointCause == BP_MB_LOOP)
+			{
+				sprintf((char*)&exceptionMessage, "MSG TEXT: %s", (char*)g_debugBuffer);
+				//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
+				OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
+			}
+			else if (g_breakpointCause == BP_INT_MEM_CORRUPTED)
+			{
+				testCounter = 0;
+				intMem = (uint16*)0x0004;
+				while (intMem < (uint16*)0x3000)
+				{
+					if (*intMem != 0xD673)
+					{
+						testCounter++;
+					}
+
+					intMem++;
+				}
+
+				intMem = (uint16*)0x4000;
+				while (intMem < (uint16*)0x10000)
+				{
+					if (*intMem != 0xD673)
+					{
+						testCounter++;
+					}
+
+					intMem++;
+				}
+
+				intMem = (uint16*)0x0004;
+				while (intMem < (uint16*)0x3000)
+				{
+					if (*intMem != 0xD673)
+					{
+						break;
+					}
+
+					intMem++;
+				}
+
+				if (intMem >= (uint16*)0x3000)
+				{
+					intMem = (uint16*)0x4000;
+					while (intMem < (uint16*)0x10000)
+					{
+						if (*intMem != 0xD673)
+						{
+							break;
+						}
+
+						intMem++;
+					}
+				}
+
+				sprintf((char*)&exceptionMessage, "FIRST ADDR:%p COUNT:%d", intMem, testCounter);
+				//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
+				OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
+			}
+			else
+			{
+				sprintf((char*)&exceptionMessage, "MAX SD:%d bytes (TOP ADDR:%p)", (int)(0x1000 - testCounter), intMem);
+				//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
+				OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
+			}
+		}
+		else
+		{
+			sprintf((char*)&exceptionMessage, "EXC: %s at PC:0x%lx", (char*)exceptionText, pc);
+			OverlayMessage("EXC SCREEN 1", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+			sprintf((char*)&exceptionMessage, "MAX SD:%d bytes (TOP ADDR:%p)", (int)(0x1000 - testCounter), intMem);
+			//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
+			OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
+		}
+
+		sprintf((char*)&exceptionMessage, "SP:0x%lx S0:0x%lx S1:0x%lx S2:0x%lx", sp, stack0, stack1, stack2);
+		OverlayMessage("EXC SCREEN 2", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+		sprintf((char*)&exceptionMessage, "SR:0x%lx LR:0x%lx EXC:0x%lx", sr, lr, exception_number);
+		OverlayMessage("EXC SCREEN 3", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+		sprintf((char*)&exceptionMessage, "R0:0x%lx R1:0x%lx R2:0x%lx R3:0x%lx", r0, r1, r2, r3);
+		OverlayMessage("EXC SCREEN 4", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+		sprintf((char*)&exceptionMessage, "R4:0x%lx R5:0x%lx R6:0x%lx R7:0x%lx", r4, r5, r6, r7);
+		OverlayMessage("EXC SCREEN 5", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+		sprintf((char*)&exceptionMessage, "R9:0x%lx R10:0x%lx R11:0x%lx R12:0x%lx", r9, r10, r11, r12);
+		OverlayMessage("EXC SCREEN 6", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+		sprintf((char*)&exceptionMessage, "SR:%lu FS:%d T:%d CP:%d M:%d", g_rtcSoftTimerTickCount, LFST, LTT, LCPT, LMT);
+		OverlayMessage("EXC SCREEN 7", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+		sprintf((char*)&exceptionMessage, "GEV:%lu RMCP:%lu WMCP:%lu", testKPGetExtVoltage, testKPReadMCP23018, testKPWriteMCP23018);
+		OverlayMessage("EXC SCREEN 8", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+		sprintf((char*)&exceptionMessage, "ASI: %lu AS:%lu APS:%lu RPS:%lu", testAfterSleepISR, testAfterSleep, testApplyPS, testRevertPS);
+		OverlayMessage("EXC SCREEN 9", (char*)&exceptionMessage, (8 * SOFT_SECS));
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 intMemProblem = NO;
+uint8 spareBufferTitle[100];
+uint8 spareBufferText[100];
+uint32 intMemCount = 0;
+void TestIntMem(char* titleString)
+{
+#if 1 // ET Test
+	uint16* intMem = (uint16*)0x0004;
+	while (intMem < (uint16*)0x3000)
+	{
+		// Check internal memory locations below the stack
+		if (*intMem != 0xD673)
+		{
+			intMemCount = 0;
+			sprintf((char*)spareBufferText, "UNUSED INT MEM CHANGED: ADDR %p = 0x%x", intMem, *intMem);
+			//OverlayMessage(titleString, (char*)g_spareBuffer, (3 * SOFT_SECS));
+			intMemProblem = YES;
+			strcpy((char*)spareBufferTitle, titleString);
+
+			while (intMem < (uint16*)0x3000)
+			{
+				if (*intMem != 0xD673) { intMemCount++; }
+				*intMem++ = 0xD673;
+			}
+			break;
+		}
+
+		intMem++;
+	}
+
+	intMem = (uint16*)0x4000;
+	while (intMem < (uint16*)0x10000)
+	{
+		// Check internal memory locations below the stack
+		if (*intMem != 0xD673)
+		{
+			intMemCount = 0;
+			sprintf((char*)spareBufferText, "UNUSED INT MEM CHANGED: ADDR %p = 0x%x", intMem, *intMem);
+			//OverlayMessage(titleString, (char*)g_spareBuffer, (3 * SOFT_SECS));
+			intMemProblem = YES;
+			strcpy((char*)spareBufferTitle, titleString);
+
+			while (intMem < (uint16*)0x10000)
+			{
+				if (*intMem != 0xD673) { intMemCount++; }
+				*intMem++ = 0xD673;
+			}
+			break;
+		}
+
+		intMem++;
+	}
+#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void CheckInternalMemoryForCorruption(void)
+{
+#if 1 // ET Test
+	uint16* intMem = (uint16*)0x0004;
+
+	while (intMem < (uint16*)0x3000)
+	{
+		// Check internal memory locations below the stack
+		if (*intMem != 0xD673)
+		{
+#if 1
+			g_breakpointCause = BP_INT_MEM_CORRUPTED;
+			__asm__ __volatile__ ("breakpoint");
+#endif
+			sprintf((char*)g_spareBuffer, "UNUSED INT MEM CHANGED: ADDR %p = 0x%x", intMem, *intMem);
+			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+
+			while (intMem < (uint16*)0x3000)
+			{
+				*intMem++ = 0xD673;
+			}
+			break;
+		}
+
+		intMem++;
+	}
+
+	intMem = (uint16*)0x4000;
+	while (intMem < (uint16*)0x10000)
+	{
+		// Check internal memory locations below the stack
+		if (*intMem != 0xD673)
+		{
+#if 1
+			g_breakpointCause = BP_INT_MEM_CORRUPTED;
+			__asm__ __volatile__ ("breakpoint");
+#endif
+			sprintf((char*)g_spareBuffer, "UNUSED INT MEM CHANGED: ADDR %p = 0x%x", intMem, *intMem);
+			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+
+			while (intMem < (uint16*)0x10000)
+			{
+				*intMem++ = 0xD673;
+			}
+			break;
+		}
+
+		intMem++;
+	}
+#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void InternalMemoryFill(void)
+{
+	uint16* intMem = (uint16*)0x0004;
+	while (intMem < (uint16*)0x10000)
+	{
+		// Ignore the top of the stack
+		if ((uint32)intMem < 0x3F00 || (uint32)intMem >= 0x4000)
+		{
+			*intMem = 0xD673;
+		}
+
+		intMem++;
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void EnableGlobalException(void)
+{
+	// Import the Exception Vector Base Address.
+	extern void _evba;
+
+	Set_system_register(AVR32_EVBA, (int)&_evba);
+
+	// Enable exceptions.
+	Enable_global_exception();
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 int main(void)
 {
     // Initialize the system
+	InternalMemoryFill();
 	InitSystemHardware_NS8100();
 	InitInterrupts_NS8100();
 	InitSoftwareSettings_NS8100();
 
 	BootLoadManager();
 	DisplayVersionToCraft();
+	EnableGlobalException();
 
  	// ==============
 	// Executive loop
