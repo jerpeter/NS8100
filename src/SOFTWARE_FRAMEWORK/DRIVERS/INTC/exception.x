@@ -73,113 +73,164 @@ _evba:
         .org  0x000
         // Unrecoverable Exception.
 _handle_Unrecoverable_Exception:
-        rjmp $
+        //rjmp $
+        mov r8, 1
+        rjmp isr_exception
 
         .org  0x004
         // TLB Multiple Hit: UNUSED IN AVR32UC.
 _handle_TLB_Multiple_Hit:
-        rjmp $
+        //rjmp $
+        mov r8, 2
+        rjmp isr_exception
 
         .org  0x008
         // Bus Error Data Fetch.
 _handle_Bus_Error_Data_Fetch:
-        rjmp $
+        //rjmp $
+        mov r8, 3
+        rjmp isr_exception
 
         .org  0x00C
          // Bus Error Instruction Fetch.
 _handle_Bus_Error_Instruction_Fetch:
-        rjmp $
+        //rjmp $
+        mov r8, 4
+        rjmp isr_exception
 
         .org  0x010
         // NMI.
 _handle_NMI:
-        rjmp $
+        //rjmp $
+        mov r8, 5
+        rjmp isr_exception
 
         .org  0x014
         // Instruction Address.
 _handle_Instruction_Address:
-        rjmp $
+        //rjmp $
+        mov r8, 6
+        rjmp isr_exception
 
         .org  0x018
         // ITLB Protection.
 _handle_ITLB_Protection:
-        rjmp $
+        //rjmp $
+        mov r8, 7
+        rjmp isr_exception
 
         .org  0x01C
         // Breakpoint.
 _handle_Breakpoint:
-        rjmp $
+        //rjmp $
+        mov r8, 8
+        rjmp isr_exception
 
         .org  0x020
         // Illegal Opcode.
 _handle_Illegal_Opcode:
-        rjmp $
+        //rjmp $
+        mov r8, 9
+        rjmp isr_exception
 
         .org  0x024
         // Unimplemented Instruction.
 _handle_Unimplemented_Instruction:
-        rjmp $
+        //rjmp $
+        mov r8, 10
+        rjmp isr_exception
 
         .org  0x028
         // Privilege Violation.
 _handle_Privilege_Violation:
-        rjmp $
+        //rjmp $
+        mov r8, 11
+        rjmp isr_exception
 
         .org  0x02C
         // Floating-Point: UNUSED IN AVR32UC.
 _handle_Floating_Point:
-        rjmp $
+        //rjmp $
+        mov r8, 12
+        rjmp isr_exception
 
         .org  0x030
         // Coprocessor Absent: UNUSED IN AVR32UC.
 _handle_Coprocessor_Absent:
-        rjmp $
+        //rjmp $
+        mov r8, 13
+        rjmp isr_exception
 
         .org  0x034
         // Data Address (Read).
 _handle_Data_Address_Read:
-        rjmp $
+        //rjmp $
+        mov r8, 14
+        rjmp isr_exception
 
         .org  0x038
         // Data Address (Write).
 _handle_Data_Address_Write:
-        rjmp $
+        //rjmp $
+        mov r8, 15
+        rjmp isr_exception
 
         .org  0x03C
         // DTLB Protection (Read).
 _handle_DTLB_Protection_Read:
-        rjmp $
+        //rjmp $
+        mov r8, 16
+        rjmp isr_exception
 
         .org  0x040
         // DTLB Protection (Write).
 _handle_DTLB_Protection_Write:
-        rjmp $
+        //rjmp $
+        mov r8, 17
+        rjmp isr_exception
 
         .org  0x044
         // DTLB Modified: UNUSED IN AVR32UC.
 _handle_DTLB_Modified:
-        rjmp $
+        //rjmp $
+        mov r8, 18
+        rjmp isr_exception
 
         .org  0x050
         // ITLB Miss: UNUSED IN AVR32UC.
 _handle_ITLB_Miss:
-        rjmp $
+        //rjmp $
+        mov r8, 19
+        rjmp isr_exception
 
         .org  0x060
         // DTLB Miss (Read): UNUSED IN AVR32UC.
 _handle_DTLB_Miss_Read:
-        rjmp $
+        //rjmp $
+        mov r8, 20
+        rjmp isr_exception
 
         .org  0x070
         // DTLB Miss (Write): UNUSED IN AVR32UC.
 _handle_DTLB_Miss_Write:
-        rjmp $
+        //rjmp $
+        mov r8, 21
+        rjmp isr_exception
 
         .org  0x100
         // Supervisor Call.
 _handle_Supervisor_Call:
-        rjmp $
+        //rjmp $
+        mov r8, 22
+        rjmp isr_exception
 
+// ISR exception handler here
+
+        .balign 4
+isr_exception:
+        st.w    --sp,sp
+        pushm   r0-r7,lr
+        bral    exception
 
 // Interrupt support.
 // The interrupt controller must provide the offset address relative to EVBA.
