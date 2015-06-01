@@ -49,6 +49,7 @@
 #include "srec.h"
 #include "flashc.h"
 #include "rtc.h"
+#include "Sensor.h"
 #include "NomisLogo.h"
 #include "navigation.h"
 #if 0 // Port fat driver
@@ -615,6 +616,20 @@ void _init_startup(void)
 	gpio_clr_gpio_pin(AVR32_PM_XOUT32_0_PIN);
 #endif
 
+#if 0 // ET test
+	uint16* intMem = (uint16*)0x0;
+	while (intMem < (uint16*)0x8000)
+	{
+		// Ignore the top of the stack
+		if ((uint32)intMem != 0xFFC && (uint32)intMem != 0xFFE)
+		{
+			*intMem = 0xD673;
+		}
+
+		intMem++;
+	}
+#endif
+
 	SoftUsecWait(1000);
 }
 
@@ -1090,6 +1105,12 @@ void TestExternalRAM(void)
 void InitSystemHardware_NS8100(void)
 {
 	//-------------------------------------------------------------------------
+	// Set General Purpose Low-Power registers
+	//-------------------------------------------------------------------------
+	AVR32_PM.gplp[0] = 0x12345678;
+	AVR32_PM.gplp[1] = 0x90ABCDEF;
+
+	//-------------------------------------------------------------------------
 	// Disable all interrupts and clear all interrupt vectors 
 	//-------------------------------------------------------------------------
 	Disable_global_interrupt();
@@ -1140,16 +1161,9 @@ void InitSystemHardware_NS8100(void)
 	PowerControl(USB_LED, OFF);
 
 	//-------------------------------------------------------------------------
-	// Smart Sensor data in (Hardware pull up on signal)
+	// Smart Sensor data/control init (Hardware pull up on signal)
 	//-------------------------------------------------------------------------
-	// Nothing needs to be done. Pin should default to an input on power up and has external pull up
-	// Pin - AVR32_PIN_PB01
-
-	//-------------------------------------------------------------------------
-	// Set SDATA and ADATA high (Active low control)
-	//-------------------------------------------------------------------------
-	PowerControl(SDATA, OFF);
-	PowerControl(ADATA, OFF);
+	OneWireInit();
 
 	//-------------------------------------------------------------------------
 	// Init the SPI interfaces
@@ -1312,10 +1326,19 @@ void InitSystemHardware_NS8100(void)
 	TestExternalRAM();
 #endif
 
+#if 1 // Remove for testing
 	//-------------------------------------------------------------------------
 	// Enable Power off protection
 	debug("Enabling Power Off protection\r\n");
 	PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
+#else
+	debugWarn("Not Enabling Power Off protection\r\n");
+#endif
+
+	//-------------------------------------------------------------------------
+	// Read and cache Smart Sensor data
+	SmartSensorReadRomAndMemory(SEISMIC_SENSOR);
+	SmartSensorReadRomAndMemory(ACOUSTIC_SENSOR);
 
 #if 0 // Test (Now done with AdjustPowerSavings)
 	//-------------------------------------------------------------------------
