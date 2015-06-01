@@ -283,7 +283,13 @@ typedef struct
 typedef struct
 {
 	uint16 invalid;
+#if 0 // Normal
 	DATE_TIME_STRUCT cal_date;
+#else // Smart Sensor Change
+	CALIBRATION_DATE_STRUCT calDate;
+	uint8 useSmartSensorCalDate;
+	uint8 unused[7];
+#endif
 	uint16 sensor_type;
 	char serial_num[16];
 	uint8 aweight_option;
@@ -344,7 +350,7 @@ typedef struct
 ///----------------------------------------------------------------------------
 void SaveRecordData(void*, uint32, uint8);
 void GetRecordData(void*, uint32, uint8);
-void ConvertTimeStampToString(char*, void*, uint8);
+void ConvertTimeStampToString(char*, DATE_TIME_STRUCT*, uint8);
 void CopyFlashBlock(uint16* src, uint16* dst, uint32 len);
 void CopyRecordIntoFlashBk(uint16*, uint16*, uint32, uint32);
 uint8 CheckForAvailableTriggerRecordEntry(char* name, uint8* match);

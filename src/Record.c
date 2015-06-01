@@ -181,17 +181,20 @@ void GetRecordData(void* dst_ptr, uint32 num, uint8 type)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void ConvertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
+void ConvertTimeStampToString(char* buff, DATE_TIME_STRUCT* timeReference, uint8 displayType)
 {        
+#if 0 // Old method
 	REC_EVENT_MN_STRUCT *ttemp;
-	DATE_TIME_STRUCT *tempTime;
+#endif
+	DATE_TIME_STRUCT* tempTime;
 	uint8 tbuff[5];
 
 	// Clear the buffer.
 	memset(&tbuff[0], 0, sizeof(tbuff));
 
-	switch (type)
+	switch (displayType)
 	{
+#if 0 // Old method
 		case REC_TRIGGER_USER_MENU_TYPE:
 			ttemp = (REC_EVENT_MN_STRUCT *)rec_ptr;
 
@@ -199,9 +202,10 @@ void ConvertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 				ttemp->time_stamp.month, ttemp->time_stamp.day, ttemp->time_stamp.year, 
 				ttemp->time_stamp.hour,	ttemp->time_stamp.min);
 			break;
+#endif
 
 		case REC_DATE_TYPE:
-			tempTime = (DATE_TIME_STRUCT *)rec_ptr;
+			tempTime = timeReference;
 
 			if((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
@@ -216,7 +220,7 @@ void ConvertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 			break;
 
 		case REC_DATE_TIME_TYPE:
-			tempTime = (DATE_TIME_STRUCT *)rec_ptr;
+			tempTime = timeReference;
 
 			if ((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
@@ -233,7 +237,7 @@ void ConvertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 			break;
 
 		case REC_DATE_TIME_AM_PM_TYPE:
-			tempTime = (DATE_TIME_STRUCT *)rec_ptr;
+			tempTime = timeReference;
 
 			if ((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
@@ -259,7 +263,7 @@ void ConvertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 			break;
 
 		case REC_DATE_TIME_DISPLAY:
-			tempTime = (DATE_TIME_STRUCT *)rec_ptr;
+			tempTime = timeReference;
 			
 			if ((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
@@ -276,7 +280,7 @@ void ConvertTimeStampToString(char* buff,void* rec_ptr,uint8 type)
 			break;
 
 		case REC_DATE_TIME_MONITOR:
-			tempTime = (DATE_TIME_STRUCT *)rec_ptr;
+			tempTime = timeReference;
 			
 			if ((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
@@ -395,6 +399,8 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 	rec_ptr->trec.record_time = 0;
 	rec_ptr->trec.seismicTriggerLevel = NO_TRIGGER_CHAR;
 	rec_ptr->trec.airTriggerLevel = NO_TRIGGER_CHAR;
+	rec_ptr->trec.adjustForTempDrift = NO;
+	rec_ptr->trec.bitAccuracy = ACCURACY_16_BIT;
 	rec_ptr->bgrec.barInterval = SIXTY_SEC_PRD;
 	rec_ptr->bgrec.summaryInterval = ONE_HOUR_INTVL;
 	rec_ptr->berec.barScale = BAR_SCALE_FULL;
@@ -487,8 +493,8 @@ void ActivateUnitConfigOptions(void)
 	SetLcdContrast(g_contrast_value);
 
 	// The choices are between metric and sae measurement systems.
-	g_sensorInfoPtr->unitsFlag = g_unitConfig.unitsOfMeasure;
-	g_sensorInfoPtr->airUnitsFlag = g_unitConfig.unitsOfAir;
+	g_sensorInfo.unitsFlag = g_unitConfig.unitsOfMeasure;
+	g_sensorInfo.airUnitsFlag = g_unitConfig.unitsOfAir;
 
 	AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 
