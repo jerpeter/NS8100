@@ -39,6 +39,8 @@ PHDRS
 
 SECTIONS
 {
+  /* __stack_size__ = DEFINED(__stack_size__) ? __stack_size__ : 4K; */
+
   /* Read-only sections, merged into text segment: */
   PROVIDE (__executable_start = 0x80000000); . = 0x80000000;
   .interp         : { *(.interp) } >FLASH AT>FLASH :FLASH
@@ -213,11 +215,15 @@ SECTIONS
   .debug_funcnames 0 : { *(.debug_funcnames) }
   .debug_typenames 0 : { *(.debug_typenames) }
   .debug_varnames  0 : { *(.debug_varnames) }
-  .stack         ORIGIN(INTERNALRAM) + LENGTH(INTERNALRAM) - 0x4000 :
+  /* .stack         ORIGIN(INTERNALRAM) + LENGTH(INTERNALRAM) - __stack_size__ : */
+  /* .stack         ORIGIN(INTERNALRAM) + LENGTH(INTERNALRAM) - 0x4000 : */
+  .stack         12K :
   {
     _stack = .;
     *(.stack)
-    . = 0x4000;
+    /* . = __stack_size__; */
+	/* . = 0x4000; */
+	. = 4K;
     _estack = .;
   } >INTERNALRAM AT>INTERNALRAM :INTERNALRAM
 /*
