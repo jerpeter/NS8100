@@ -268,6 +268,8 @@ void KeypadLedUpdateTimerCallBack(void)
 	uint8 config; // = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 	BOOLEAN externalChargePresent = CheckExternalChargeVoltagePresent();
 
+	g_testKPGetExtVoltage = Get_system_register(AVR32_COUNT);
+
 	// States
 	// 1) Init complete, not monitoring, not charging --> Static Green
 	// 2) Init complete, not monitoring, charging --> Static Red
@@ -338,6 +340,7 @@ void KeypadLedUpdateTimerCallBack(void)
 	if (ledState != lastLedState)
 	{
 		config = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
+		g_testKPReadMCP23018 = Get_system_register(AVR32_COUNT);
 		
 		switch (ledState)
 		{
@@ -362,6 +365,7 @@ void KeypadLedUpdateTimerCallBack(void)
 		}
 
 		WriteMcp23018(IO_ADDRESS_KPD, GPIOA, config);
+		g_testKPWriteMCP23018 = Get_system_register(AVR32_COUNT);
 	}
 
 	AssignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, KeypadLedUpdateTimerCallBack);
