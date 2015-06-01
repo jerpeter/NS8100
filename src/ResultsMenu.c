@@ -585,9 +585,9 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
     // Date Time Info
     memset(&buff[0], 0, sizeof(buff));
 #if 0 // Old method
-    ConvertTimeStampToString(buff, (void*)(&eventRecord->summary.captured.eventTime), REC_DATE_TIME_DISPLAY);
+    ConvertTimeStampToString(buff, &eventRecord->summary.captured.eventTime, REC_DATE_TIME_DISPLAY);
 #else
-    ConvertTimeStampToString(buff, (void*)(&g_summaryList.cachedEntry.eventTime), REC_DATE_TIME_DISPLAY);
+    ConvertTimeStampToString(buff, &g_summaryList.cachedEntry.eventTime, REC_DATE_TIME_DISPLAY);
 #endif
 
     WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
@@ -619,7 +619,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		sprintf(buff, "mg/s");
 	}
-	else if (g_sensorInfoPtr->unitsFlag == IMPERIAL)
+	else if (g_sensorInfo.unitsFlag == IMPERIAL)
 	{
 		sprintf(buff, "in/s");
 	}
@@ -825,9 +825,9 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 #endif
 
 #if 0 // Old method
-		if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
+		if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
 #else
-		if ((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
+		if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
 #endif
 		{
 #if 0 // Old method
@@ -911,9 +911,9 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		tempPeakDisp = (float)tempPeakDisp / (float)1000000 / (float)div;
 
 #if 0 // Old method
-		if((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
+		if((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
 #else
-		if((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
+		if((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
 #endif
 		{
 #if 0 // Old method
@@ -993,9 +993,9 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		tempPeakAcc = (float)tempPeakAcc / (float)1000 / (float)div;
 
 #if 0 // Old method
-		if((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
+		if((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC))
 #else
-		if((g_sensorInfoPtr->unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
+		if((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
 #endif
 		{
 			tempPeakAcc /= (float)ONE_GRAVITY_IN_INCHES;
