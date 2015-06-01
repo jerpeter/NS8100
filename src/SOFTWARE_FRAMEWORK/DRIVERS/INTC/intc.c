@@ -92,7 +92,10 @@ __interrupt
 static void _unhandled_interrupt(void)
 {
   // Catch unregistered interrupts.
-  while (TRUE);
+  //while (TRUE);
+extern unsigned char g_breakpointCause;
+	g_breakpointCause = 1; // BP_UNHANDLED_INT
+	__asm__ __volatile__ ("breakpoint");
 }
 
 
