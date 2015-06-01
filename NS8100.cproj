@@ -285,7 +285,7 @@
         <avr32gcc.compiler.warnings.AllWarnings>True</avr32gcc.compiler.warnings.AllWarnings>
         <avr32gcc.compiler.warnings.ExtraWarnings>True</avr32gcc.compiler.warnings.ExtraWarnings>
         <avr32gcc.compiler.warnings.WarningsAsErrors>True</avr32gcc.compiler.warnings.WarningsAsErrors>
-        <avr32gcc.compiler.miscellaneous.OtherFlags>-c -fmessage-length=0 -march=ucr2</avr32gcc.compiler.miscellaneous.OtherFlags>
+  <avr32gcc.compiler.miscellaneous.OtherFlags>-c -fmessage-length=0 -march=ucr2 -fverbose-asm</avr32gcc.compiler.miscellaneous.OtherFlags>
         <avr32gcc.linker.general.DoNotUseStandardStartFiles>True</avr32gcc.linker.general.DoNotUseStandardStartFiles>
         <avr32gcc.linker.libraries.Libraries>
           <ListValues>
