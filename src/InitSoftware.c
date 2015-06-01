@@ -17,6 +17,7 @@
 #include "print_funcs.h"
 #include "lcd.h"
 #include <stdio.h>
+#include <math.h>
 
 // Added in NS7100 includes
 #include <stdlib.h>
@@ -43,6 +44,7 @@
 #include "M23018.h"
 #include "sd_mmc_spi.h"
 #include "adc.h"
+#include "Sensor.h"
 #include "usb_task.h"
 #include "device_mass_storage_task.h"
 #include "usb_drv.h"
@@ -77,6 +79,7 @@
 void setupMnDef(void)
 {
 	char buff[50];
+	DATE_TIME_STRUCT tempTime;
 
 	//-------------------------------------------------------------------------
 	// Turn the LCD on
@@ -181,6 +184,10 @@ void setupMnDef(void)
 	}
 
 	//-------------------------------------------------------------------------
+	// Display Smart Sensor information if found
+	DisplaySmartSensorInfo(INFO_ON_INIT);
+
+	//-------------------------------------------------------------------------
 	// Load the Factory Setup Record
 	debug("Loading Factory setup record\r\n");
 	GetRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
@@ -188,9 +195,17 @@ void setupMnDef(void)
 	// Check if the Factory Setup Record is valid
 	if (!g_factorySetupRecord.invalid)
 	{
+		if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+		{
+			g_factorySetupRecord.sensor_type = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+		}
+
+		UpdateWorkingCalibrationDate();
+
 		// Print the Factory Setup Record to the console
 		memset(&buff[0], 0, sizeof(buff));
-		ConvertTimeStampToString(buff, &g_factorySetupRecord.cal_date, REC_DATE_TIME_TYPE);
+		ConvertCalDatetoDateTime(&tempTime, &g_currentCalDate);
+		ConvertTimeStampToString(buff, &tempTime, REC_DATE_TYPE);
 
 		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&g_spareBuffer, "Acc"); }
 		else { sprintf((char*)&g_spareBuffer, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
@@ -284,33 +299,33 @@ void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
 	uint8 gainFactor = (uint8)((sensitivity == LOW) ? 2 : 4);
 
 	// Sensor type information
-	g_sensorInfoPtr->numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;		// The number of channels from a sensor.
-	g_sensorInfoPtr->unitsFlag = g_unitConfig.unitsOfMeasure;			// 0 = SAE; 1 = Metric
+	g_sensorInfo.numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;		// The number of channels from a sensor.
+	g_sensorInfo.unitsFlag = g_unitConfig.unitsOfMeasure;			// 0 = SAE; 1 = Metric
 
-	g_sensorInfoPtr->sensorAccuracy = SENSOR_ACCURACY_100X_SHIFT;		// 100, sensor values are X 100 for accuaracy.
-	g_sensorInfoPtr->ADCResolution = ADC_RESOLUTION;				// Raw data Input Range, unless ADC is changed
+	g_sensorInfo.sensorAccuracy = SENSOR_ACCURACY_100X_SHIFT;		// 100, sensor values are X 100 for accuaracy.
+	g_sensorInfo.ADCResolution = ADC_RESOLUTION;				// Raw data Input Range, unless ADC is changed
 
 	// Get the shift value
-	g_sensorInfoPtr->shiftVal = 1;
+	g_sensorInfo.shiftVal = 1;
 
-	g_sensorInfoPtr->sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
+	g_sensorInfo.sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
 
 	if((IMPERIAL_TYPE == g_unitConfig.unitsOfMeasure) || (sensor_type == SENSOR_ACC))
 	{
-		g_sensorInfoPtr->measurementRatio = (float)IMPERIAL; 				// 1 = SAE; 25.4 = Metric
+		g_sensorInfo.measurementRatio = (float)IMPERIAL; 				// 1 = SAE; 25.4 = Metric
 	}
 	else
 	{
-		g_sensorInfoPtr->measurementRatio = (float)METRIC; 				// 1 = SAE; 25.4 = Metric
+		g_sensorInfo.measurementRatio = (float)METRIC; 				// 1 = SAE; 25.4 = Metric
 	}
 
 	// Get the sensor type in terms of the measurement units.
-	g_sensorInfoPtr->sensorTypeNormalized = (float)(g_sensorInfoPtr->sensorTypeNormalized) * (float)(g_sensorInfoPtr->measurementRatio);
+	g_sensorInfo.sensorTypeNormalized = (float)(g_sensorInfo.sensorTypeNormalized) * (float)(g_sensorInfo.measurementRatio);
 
 	// the conversion is length(in or mm) = hexValue * (sensor scale/ADC Max Value)
-	g_sensorInfoPtr->hexToLengthConversion = (float)( (float)ADC_RESOLUTION / (float)g_sensorInfoPtr->sensorTypeNormalized );
+	g_sensorInfo.hexToLengthConversion = (float)( (float)ADC_RESOLUTION / (float)g_sensorInfo.sensorTypeNormalized );
 
-	g_sensorInfoPtr->sensorValue = (uint16)(g_factorySetupRecord.sensor_type / gainFactor); // sensor value X 100.
+	g_sensorInfo.sensorValue = (uint16)(g_factorySetupRecord.sensor_type / gainFactor); // sensor value X 100.
 }
 
 ///----------------------------------------------------------------------------
