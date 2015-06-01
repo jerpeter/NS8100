@@ -424,6 +424,7 @@ void AppendMonitorLogEntryFile(void)
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 			// Done writing, close the monitor log file
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(monitorLogFile);
 #else // Port fat driver
 			fl_fwrite((uint8*)&(__monitorLogTbl[__monitorLogTblIndex]), sizeof(MONITOR_LOG_ENTRY_STRUCT), 1, monitorLogFile);
@@ -513,6 +514,7 @@ void AppendMonitorLogEntryFile(void)
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 			// Done writing, close the monitor log file
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(monitorLogHumanReadableFile);
 #else // Port fat driver
 			fl_fwrite((uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer), 1, monitorLogHumanReadableFile);
@@ -556,6 +558,7 @@ void AppendMonitorLogEntryFile(void)
 		write(testBufferFile, (uint8*)&(g_eventDataBuffer), (samplesCollected * 2));
 
 		// Done writing, close the monitor log file
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(testBufferFile);
 #else // Port fat driver
 		fl_fwrite((uint8*)&(g_eventDataBuffer), (samplesCollected * 2), 1, testBufferFile);
@@ -690,6 +693,7 @@ void InitMonitorLogTableFromLogFile(void)
 
 			// Done reading, close the monitor log file
 #if 1 // Atmel fat driver
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(monitorLogFile);
 #else // Port fat driver
 			fl_fclose(monitorLogFile);
@@ -768,6 +772,7 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 			// Done writing, close the on/off log file
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(onOffLogHumanReadableFile);
 #else // Port fat driver
 			fl_fwrite((uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer), 1, onOffLogHumanReadableFile);
@@ -829,6 +834,7 @@ void WriteDebugBufferToFile(void)
 				SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 				// Done writing, close the debug log file
+				g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 				close(debugLogFile);
 #else // Port fat driver
 				fl_fwrite((uint8*)&g_debugBuffer, g_debugBufferCount, 1, debugLogFile);
