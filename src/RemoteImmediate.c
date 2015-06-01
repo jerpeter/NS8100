@@ -78,6 +78,12 @@ void HandleUNL(CMD_BUFFER_STRUCT* inCmd)
 
 	if (YES == matchFlag)
 	{
+#if 0 // Test
+		uint32* testPtr = (uint32*)0x40000000;
+		uint32 testData = *testPtr;
+		testData++;
+#endif
+
 		debug("HandleUNL-MatchCode=<%s>\r\n", dataStart);
 
 		memset(&sendStr[0], 0, sizeof(sendStr));
@@ -169,8 +175,6 @@ void HandleDDP(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-extern uint8 quickBootEntryJump;
-extern void BootLoadManager(void);
 void HandleDAI(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
@@ -178,7 +182,7 @@ void HandleDAI(CMD_BUFFER_STRUCT* inCmd)
 	debug("HandleDAI:Here\r\n");
 
 	// If we jump to boot this call will never return, otherwise proceed as if we can't jump
-	quickBootEntryJump = YES;
+	g_quickBootEntryJump = YES;
 	BootLoadManager();
 
 	// Issue something to the user to alert them that the DAI command is not functional with this unit
