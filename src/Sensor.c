@@ -8,11 +8,15 @@
 ///----------------------------------------------------------------------------
 ///	Includes
 ///----------------------------------------------------------------------------
+#include <stdio.h>
+#include <math.h>
 #include "Typedefs.h"
 #include "Board.h"
 #include "Sensor.h"
 #include "Uart.h"
 #include "Crc.h"
+#include "string.h"
+#include "PowerManagement.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -21,6 +25,7 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -31,6 +36,7 @@
 ///----------------------------------------------------------------------------
 void OneWireInit(void)
 {
+#if 0 // ns7100
 	// Already handled in basic processor init
 	// Set port data to one (idle state)
 	// reg_PORTE.reg |= (SEISMIC_SENSOR | ACOUSTIC_SENSOR);
@@ -38,13 +44,18 @@ void OneWireInit(void)
 	// reg_DDRE.reg |= (SEISMIC_SENSOR | ACOUSTIC_SENSOR);
 	// Set data direction to input
 	// reg_DDRQB.reg &= ~READ_SENSOR;
+#else // ns8100
+	gpio_enable_gpio_pin(SMART_SENSOR_DATA);
+	PowerControl(SEISMIC_SENSOR_DATA_CONTROL, OFF);
+	PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, OFF);
+#endif
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 0
-uint8 OneWireReset(uint8 sensor)
+#if 1
+uint8 OneWireReset(SMART_SENSOR_TYPE sensor)
 {
 	//    500  30 110 (us)
 	// __       _     ________
@@ -55,29 +66,46 @@ uint8 OneWireReset(uint8 sensor)
 	uint8 presenceDetect = NO;
 
 	// Set data direction to output to drive a 0
+#if 0 // ns7100
 	//reg_DDRE.reg |= sensor;
 	reg_PORTE.reg &= ~sensor;
+#else // ns8100
+	if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, ON); }
+	else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, ON); }
+#endif
 
 	// Hold low for 500us
-	//SoftUsecWait(400);
-	SoftUsecWait(500);
+	//SoftUsecWait(500); // Looks like 540
+	//SoftUsecWait(460); // Looks like 480
+	SoftUsecWait(480);
 
 	// Release line (allow pullup to take affect)
+#if 0 // ns7100
 	//reg_DDRE.reg &= ~sensor;
 	reg_PORTE.reg |= sensor;
+#else // ns8100
+	if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, OFF); }
+	else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, OFF); }
+#endif
 
 	// Wait 30us + 50us (80us total)
-	//SoftUsecWait(64);
-	SoftUsecWait(80);
+	//SoftUsecWait(80);
+	//SoftUsecWait(74);
+	SoftUsecWait(77);
 
+#if 0 // ns7100
 	if ((reg_PORTQB.reg & READ_SENSOR) == LOW)
+#else // ns8100
+	if (READ_SMART_SENSOR_ONE_WIRE_STATE() == LOW)
+#endif
 	{
 		presenceDetect = YES;
 	}
 
 	// Wait 100us make sure device is not driving the line
-	//SoftUsecWait(80);
-	SoftUsecWait(100);
+	//SoftUsecWait(100);
+	//SoftUsecWait(93);
+	SoftUsecWait(97);
 
 	return (presenceDetect);
 }
@@ -86,8 +114,8 @@ uint8 OneWireReset(uint8 sensor)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 0
-void OneWireWriteByte(uint8 sensor, uint8 data)
+#if 1
+void OneWireWriteByte(SMART_SENSOR_TYPE sensor, uint8 data)
 {
 	uint8 i;
 
@@ -95,36 +123,51 @@ void OneWireWriteByte(uint8 sensor, uint8 data)
 	for (i = 0; i <= 7; i++)
 	{
 		// Set data direction to output to drive a 0
+#if 0 // ns7100
 		//reg_DDRE.reg |= sensor;
 		reg_PORTE.reg &= ~sensor;
+#else // ns8100
+		if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, ON); }
+		else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, ON); }
+#endif
 
 		// Check if the bit is a 1
 		if (data & 0x01)
 		{
 			// Hold low for 5us
-			//SoftUsecWait(4);
 			SoftUsecWait(5);
 
 			// Release the line
+#if 0 // ns7100
 			//reg_DDRE.reg &= ~sensor;
 			reg_PORTE.reg |= sensor;
+#else // ns8100
+			if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, OFF); }
+			else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, OFF); }
+#endif
 
 			// Wait for 65us, recovery time
-			//SoftUsecWait(52);
-			SoftUsecWait(65);
+			//SoftUsecWait(65);
+			//SoftUsecWait(60);
+			SoftUsecWait(63);
 		}
 		else
 		{
 			// Hold low for 65us
-			//SoftUsecWait(52);
-			SoftUsecWait(65);
+			//SoftUsecWait(65);
+			//SoftUsecWait(60);
+			SoftUsecWait(63);
 
 			// Release the line
+#if 0 // ns7100
 			//reg_DDRE.reg &= ~sensor;
 			reg_PORTE.reg |= sensor;
+#else // ns8100
+			if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, OFF); }
+			else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, OFF); }
+#endif
 
 			// Wait for 5us, recovery time
-			//SoftUsecWait(4);
 			SoftUsecWait(5);
 		}
 
@@ -137,8 +180,8 @@ void OneWireWriteByte(uint8 sensor, uint8 data)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 0
-uint8 OneWireReadByte(uint8 sensor)
+#if 1
+uint8 OneWireReadByte(SMART_SENSOR_TYPE sensor)
 {
 	uint8 data = 0;
 	uint8 i;
@@ -147,26 +190,38 @@ uint8 OneWireReadByte(uint8 sensor)
 	for (i = 0; i <= 7; i++)
 	{
 		// Set data direction to output to drive a 0
+#if 0 // ns7100
 		//reg_DDRE.reg |= sensor;
 		reg_PORTE.reg &= ~sensor;
+#else // ns8100
+		if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, ON); }
+		else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, ON); }
+#endif
 
 		// Hold low for 5us
-		//SoftUsecWait(4);
 		SoftUsecWait(5);
 
 		// Release the line
+#if 0 // ns7100
 		//reg_DDRE.reg &= ~sensor;
 		reg_PORTE.reg |= sensor;
+#else // ns8100
+		if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, OFF); }
+		else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, OFF); }
+#endif
 
 		// Wait for 5us
-		//SoftUsecWait(4);
 		SoftUsecWait(5);
 
 		// Shift the data over 1 bit
 		data >>= 1;
 
 		// Check if the data bit is a 1
+#if 0 // ns7100
 		if (reg_PORTQB.reg & READ_SENSOR)
+#else // ns8100
+		if (READ_SMART_SENSOR_ONE_WIRE_STATE())
+#endif
 		{
 			// Or in a 1
 			data |= 0x80;
@@ -178,8 +233,9 @@ uint8 OneWireReadByte(uint8 sensor)
 		}
 
 		// Hold for 60us, recovery time
-		//SoftUsecWait(48);
-		SoftUsecWait(60);
+		//SoftUsecWait(60);
+		//SoftUsecWait(56);
+		SoftUsecWait(58);
 	}
 
 	return (data);
@@ -189,7 +245,7 @@ uint8 OneWireReadByte(uint8 sensor)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void OneWireTest(uint8 sensor)
+void OneWireTest(SMART_SENSOR_TYPE sensor)
 {
 	uint8 romData[8];
 	uint8 i = 0;
@@ -197,7 +253,7 @@ void OneWireTest(uint8 sensor)
 
 	if (OneWireReset(sensor) == YES)
 	{
-		OneWireWriteByte(sensor, 0x33);
+		OneWireWriteByte(sensor, DS2431_READ_ROM);
 
 		for (i = 0; i < 8; i++)
 		{
@@ -232,9 +288,15 @@ void OneWireTest(uint8 sensor)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void OneWireFunctions(uint8 sensor)
+void OneWireFunctions(SMART_SENSOR_TYPE sensor)
 {
 	uint8 i = 0;
+	uint16 crc16 = 0;
+	uint16 crc16seed0 = 0;
+	uint16 crc16invert = 0;
+	uint16 returnCrc16 = 0;
+	uint8 data;
+	uint8 dataAdjust = 2;
 
 	// Read Memory (0xF0), Address: 0x00 -> 0x1F (wrap)
 	if (OneWireReset(sensor) == YES)
@@ -242,19 +304,29 @@ void OneWireFunctions(uint8 sensor)
 		debugRaw("Read Memory\r\n");
 
 		// Skip ROM
-		OneWireWriteByte(sensor, 0xCC);
+		OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 		// Read Memory
-		OneWireWriteByte(sensor, 0xF0);
+		OneWireWriteByte(sensor, DS2431_READ_MEMORY);
 
-		// Address
+		// Address (Lower)
 		OneWireWriteByte(sensor, 0x00);
 
-		debugRaw("  Data:");
+		// Address (Upper)
+		OneWireWriteByte(sensor, 0x00);
+
+		debugRaw("  Data: ");
 
 		// Data
-		for (i = 0; i < 32; i++)
-			debugRaw("%x ", OneWireReadByte(sensor));
+		for (i = 0; i < 128; i++)
+		{
+			debugRaw("%02x ", OneWireReadByte(sensor));
+
+			if (((i + 1) % 32) == 0)
+			{
+				debugRaw("\r\n\t");
+			}
+		}
 
 		debugRaw("\r\n");
 
@@ -262,25 +334,46 @@ void OneWireFunctions(uint8 sensor)
 	}
 	else return;
 
-	// Write Scratchpad (0x0F), Address: 0x00 -> 0x1F (wrap)
+	// Write Scratchpad (0x0F), Address: 0x00 -> 0x07
 	if (OneWireReset(sensor) == YES)
 	{
 		debugRaw("Write Scratchpad\r\n");
 
 		// Skip ROM
-		OneWireWriteByte(sensor, 0xCC);
+		OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 		// Write Scratchpad
-		OneWireWriteByte(sensor, 0x0F);
+		OneWireWriteByte(sensor, DS2431_WRITE_SCRATCHPAD);
+		data = DS2431_WRITE_SCRATCHPAD; crc16 = CalcCrc16(&data, 1, 0xFFFF); crc16seed0 = CalcCrc16(&data, 1, 0); crc16invert = ~CalcCrc16(&data, 1, ~0);
 
-		// Address
+		// Address (Lower)
 		OneWireWriteByte(sensor, 0x00);
+		data = 0x00; crc16 = CalcCrc16(&data, 1, crc16); crc16seed0 = CalcCrc16(&data, 1, crc16seed0); crc16invert = ~CalcCrc16(&data, 1, ~crc16invert);
+
+		// Address (Upper)
+		OneWireWriteByte(sensor, 0x00);
+		data = 0x00; crc16 = CalcCrc16(&data, 1, crc16); crc16seed0 = CalcCrc16(&data, 1, crc16seed0); crc16invert = ~CalcCrc16(&data, 1, ~crc16invert);
+
+		debugRaw("  Data: ");
 
 		// Data
-		for (i = 0; i < 32; i++)
+		for (i = 0; i < 8; i++)
 		{
-			OneWireWriteByte(sensor, (uint8)((i + 1) * 2));
+			OneWireWriteByte(sensor, (uint8)((i + 1) * dataAdjust));
+			data = (uint8)((i + 1) * dataAdjust); crc16 = CalcCrc16(&data, 1, crc16); crc16seed0 = CalcCrc16(&data, 1, crc16seed0); crc16invert = ~CalcCrc16(&data, 1, ~crc16invert);
+			debugRaw("%02x ", (uint8)((i + 1) * dataAdjust));
 		}
+
+		// Read CRC16 (only for full Scratchpad write)
+		returnCrc16 = OneWireReadByte(sensor);
+		returnCrc16 |= (OneWireReadByte(sensor) << 8);
+
+		if (crc16 == returnCrc16) { debugRaw("(CRC16 match seed 0xFFFF)"); }
+		else if (crc16seed0 == returnCrc16) { debugRaw("(CRC16 match seed 0)"); }
+		else if (crc16invert == returnCrc16) { debugRaw("(CRC16 match invert)"); }
+		else { debugRaw("(CRC16 0xFFFF: 0x%04x, CRC16 0: 0x%04x, CRC16 Invert: 0x%04x, Return CRC16: 0x%04x / 0x%04x)", crc16, crc16seed0, crc16invert, returnCrc16, ~returnCrc16); }
+
+		debugRaw("\r\n");
 
 		OneWireReset(sensor);
 	}
@@ -292,19 +385,27 @@ void OneWireFunctions(uint8 sensor)
 		debugRaw("Read Scratchpad\r\n");
 
 		// Skip ROM
-		OneWireWriteByte(sensor, 0xCC);
+		OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 		// Read Scratchpad
-		OneWireWriteByte(sensor, 0xAA);
+		OneWireWriteByte(sensor, DS2431_READ_SCRATCHPAD);
 
-		// Address
+		// Address (Lower)
 		OneWireWriteByte(sensor, 0x00);
 
-		debugRaw("  Data:");
+		// Address (Upper)
+		OneWireWriteByte(sensor, 0x00);
+
+		// ES
+		OneWireWriteByte(sensor, 0x00);
+
+		debugRaw("  Data: ");
 
 		// Data
-		for (i = 0; i < 32; i++)
-			debugRaw("%x ", OneWireReadByte(sensor));
+		for (i = 0; i < 8; i++)
+		{
+			debugRaw("%02x ", OneWireReadByte(sensor));
+		}
 
 		debugRaw("\r\n");
 
@@ -318,10 +419,10 @@ void OneWireFunctions(uint8 sensor)
 		debugRaw("Copy Scratchpad\r\n");
 
 		// Skip ROM
-		OneWireWriteByte(sensor, 0xCC);
+		OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 		// Copy Scratchpad
-		OneWireWriteByte(sensor, 0x55);
+		OneWireWriteByte(sensor, DS2431_COPY_SCRATCHPAD);
 
 		// Validation Key
 		OneWireWriteByte(sensor, 0xA5);
@@ -338,7 +439,7 @@ void OneWireFunctions(uint8 sensor)
 		debugRaw("Write App Register\r\n");
 
 		// Skip ROM
-		OneWireWriteByte(sensor, 0xCC);
+		OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 		// Write App Register
 		OneWireWriteByte(sensor, 0x99);
@@ -362,7 +463,7 @@ void OneWireFunctions(uint8 sensor)
 		debugRaw("Read Status Register\r\n");
 
 		// Skip ROM
-		OneWireWriteByte(sensor, 0xCC);
+		OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 		// Read Status Register
 		OneWireWriteByte(sensor, 0x66);
@@ -370,10 +471,10 @@ void OneWireFunctions(uint8 sensor)
 		// Validation key
 		OneWireWriteByte(sensor, 0x00);
 
-		debugRaw("  Data:");
+		debugRaw("  Data: ");
 
 		// Data
-		debugRaw("%x\r\n", OneWireReadByte(sensor));
+		debugRaw("%02x\r\n", OneWireReadByte(sensor));
 
 		OneWireReset(sensor);
 	}
@@ -385,7 +486,7 @@ void OneWireFunctions(uint8 sensor)
 		debugRaw("Read App Register\r\n");
 
 		// Skip ROM
-		OneWireWriteByte(sensor, 0xCC);
+		OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 		// Read App Register
 		OneWireWriteByte(sensor, 0xC3);
@@ -393,12 +494,12 @@ void OneWireFunctions(uint8 sensor)
 		// Address
 		OneWireWriteByte(sensor, 0x00);
 
-		debugRaw("  Data:");
+		debugRaw("  Data: ");
 
 		// Data
 		for (i = 0; i < 8; i++)
 		{
-			debugRaw("%x ", OneWireReadByte(sensor));
+			debugRaw("%02x ", OneWireReadByte(sensor));
 		}
 
 		debugRaw("\r\n");
@@ -413,46 +514,51 @@ void OneWireFunctions(uint8 sensor)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 OneWireReadROM(uint8 sensor)
+uint8 OneWireReadROM(SMART_SENSOR_TYPE sensor, SMART_SENSOR_ROM* romData)
 {
 	uint8 status = FAILED;
 	uint8 i = 0;
-	uint8 romData[8];
+	uint8* romDataPtr = (uint8*)romData;
 	uint8 crc;
 
 	// Read ROM
 	if (OneWireReset(sensor) == YES)
 	{
 		// Read ROM command
-		OneWireWriteByte(sensor, 0x33);
+		OneWireWriteByte(sensor, DS2431_READ_ROM);
 
 		for (i = 0; i < 8; i++)
 		{
-			romData[i] = OneWireReadByte(sensor);
+			romDataPtr[i] = OneWireReadByte(sensor);
 		}
 
-		crc = CalcCrc8(&romData[0], 7, 0x00);
+		crc = CalcCrc8(romDataPtr, 7, 0x00);
 
+#if 0 // Debug
 		debugRaw("\nOne Wire Rom Data: ");
 
 		for (i = 0; i < 8; i++)
 		{
-			debugRaw("0x%x ", romData[i]);
+			debugRaw("0x%x ", romDataPtr[i]);
 		}
 
-		if (crc == romData[7])
+		if (crc == romDataPtr[7])
 		{
+			status = PASSED;
 			debugRaw("(CRC: %x, success)\r\n", crc);
-			OneWireFunctions(sensor);
 		}
 		else
 		{
 			debugRaw("(CRC: %x, fail)\r\n", crc);
 		}
+#else
+		if (crc == romDataPtr[7])
+		{
+			status = PASSED;
+		}
+#endif
 
 		OneWireReset(sensor);
-
-		status = PASSED;
 	}
 
 	return (status);
@@ -461,24 +567,27 @@ uint8 OneWireReadROM(uint8 sensor)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 OneWireReadMemory(uint8 sensor, uint8 address, uint8 length, uint8* data)
+uint8 OneWireReadMemory(SMART_SENSOR_TYPE sensor, uint16 address, uint8 length, uint8* data)
 {
 	uint8 status = FAILED;
 	uint8 i = 0;
 
-	if ((data != NULL) && (address <= 0x1F) && (length <= 32))
+	if ((data != NULL) && (address <= 0x1F) && (length <= 128))
 	{
 		// Read Memory (0xF0), Address: 0x00 -> 0x1F (wrap)
 		if (OneWireReset(sensor) == YES)
 		{
 			// Skip ROM
-			OneWireWriteByte(sensor, 0xCC);
+			OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 			// Read Memory
-			OneWireWriteByte(sensor, 0xF0);
+			OneWireWriteByte(sensor, DS2431_READ_MEMORY);
 
-			// Address
-			OneWireWriteByte(sensor, address);
+			// Address (Lower)
+			OneWireWriteByte(sensor, (address & 0xFF));
+
+			// Address (Upper)
+			OneWireWriteByte(sensor, ((address >> 8) & 0xFF));
 
 			// Data
 			for (i = 0; i < length; i++)
@@ -498,24 +607,27 @@ uint8 OneWireReadMemory(uint8 sensor, uint8 address, uint8 length, uint8* data)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 OneWireWriteScratchpad(uint8 sensor, uint8 address, uint8 length, uint8* data)
+uint8 OneWireWriteScratchpad(SMART_SENSOR_TYPE sensor, uint16 address, uint8 length, uint8* data)
 {
 	uint8 status = FAILED;
 	uint8 i = 0;
 
-	if ((data != NULL) && (address <= 0x1F) && (length <= 32))
+	if ((data != NULL) && (address <= 0x1F) && (length <= 8))
 	{
 		// Write Scratchpad (0x0F), Address: 0x00 -> 0x1F (wrap)
 		if (OneWireReset(sensor) == YES)
 		{
 			// Skip ROM
-			OneWireWriteByte(sensor, 0xCC);
+			OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 			// Write Scratchpad
-			OneWireWriteByte(sensor, 0x0F);
+			OneWireWriteByte(sensor, DS2431_WRITE_SCRATCHPAD);
 
-			// Address
-			OneWireWriteByte(sensor, address);
+			// Address (Lower)
+			OneWireWriteByte(sensor, (address & 0xFF));
+
+			// Address (Upper)
+			OneWireWriteByte(sensor, ((address >> 8) & 0xFF));
 
 			// Data
 			for (i = 0; i < length; i++)
@@ -535,24 +647,30 @@ uint8 OneWireWriteScratchpad(uint8 sensor, uint8 address, uint8 length, uint8* d
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 OneWireReadScratchpad(uint8 sensor, uint8 address, uint8 length, uint8* data)
+uint8 OneWireReadScratchpad(SMART_SENSOR_TYPE sensor, uint16 address, uint8 length, uint8* data)
 {
 	uint8 status = FAILED;
 	uint8 i = 0;
 
-	if ((data != NULL) && (address <= 0x1F) && (length <= 32))
+	if ((data != NULL) && (address <= 0x1F) && (length <= 8))
 	{
 		// Read Scratchpad (0xAA), Address: 0x00 -> 0x1F (wrap)
 		if (OneWireReset(sensor) == YES)
 		{
 			// Skip ROM
-			OneWireWriteByte(sensor, 0xCC);
+			OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 			// Read Scratchpad
-			OneWireWriteByte(sensor, 0xAA);
+			OneWireWriteByte(sensor, DS2431_READ_SCRATCHPAD);
 
-			// Address
-			OneWireWriteByte(sensor, address);
+			// Address (Lower)
+			OneWireWriteByte(sensor, (address & 0xFF));
+
+			// Address (Upper)
+			OneWireWriteByte(sensor, ((address >> 8) & 0xFF));
+
+			// ES
+			OneWireWriteByte(sensor, 0x00);
 
 			// Data
 			for (i = 0; i < length; i++)
@@ -572,7 +690,7 @@ uint8 OneWireReadScratchpad(uint8 sensor, uint8 address, uint8 length, uint8* da
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 OneWireCopyScratchpad(uint8 sensor)
+uint8 OneWireCopyScratchpad(SMART_SENSOR_TYPE sensor)
 {
 	uint8 status = FAILED;
 	//uint8 i = 0;
@@ -581,10 +699,10 @@ uint8 OneWireCopyScratchpad(uint8 sensor)
 	if (OneWireReset(sensor) == YES)
 	{
 		// Skip ROM
-		OneWireWriteByte(sensor, 0xCC);
+		OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 		// Copy Scratchpad
-		OneWireWriteByte(sensor, 0x55);
+		OneWireWriteByte(sensor, DS2431_COPY_SCRATCHPAD);
 
 		// Validation Key
 		OneWireWriteByte(sensor, 0xA5);
@@ -602,7 +720,7 @@ uint8 OneWireCopyScratchpad(uint8 sensor)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 OneWireWriteAppRegister(uint8 sensor, uint8 address, uint8 length, uint8* data)
+uint8 OneWireWriteAppRegister(SMART_SENSOR_TYPE sensor, uint16 address, uint8 length, uint8* data)
 {
 	uint8 status = FAILED;
 	uint8 i = 0;
@@ -613,7 +731,7 @@ uint8 OneWireWriteAppRegister(uint8 sensor, uint8 address, uint8 length, uint8* 
 		if (OneWireReset(sensor) == YES)
 		{
 			// Skip ROM
-			OneWireWriteByte(sensor, 0xCC);
+			OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 			// Write App Register
 			OneWireWriteByte(sensor, 0x99);
@@ -639,7 +757,7 @@ uint8 OneWireWriteAppRegister(uint8 sensor, uint8 address, uint8 length, uint8* 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 OneWireReadStatusRegister(uint8 sensor, uint8* data)
+uint8 OneWireReadStatusRegister(SMART_SENSOR_TYPE sensor, uint8* data)
 {
 	uint8 status = FAILED;
 	//uint8 i = 0;
@@ -650,7 +768,7 @@ uint8 OneWireReadStatusRegister(uint8 sensor, uint8* data)
 		if (OneWireReset(sensor) == YES)
 		{
 			// Skip ROM
-			OneWireWriteByte(sensor, 0xCC);
+			OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 			// Read Status Register
 			OneWireWriteByte(sensor, 0x66);
@@ -672,7 +790,7 @@ uint8 OneWireReadStatusRegister(uint8 sensor, uint8* data)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 OneWireReadAppRegister(uint8 sensor, uint8 address, uint8 length, uint8* data)
+uint8 OneWireReadAppRegister(SMART_SENSOR_TYPE sensor, uint16 address, uint8 length, uint8* data)
 {
 	uint8 status = FAILED;
 	uint8 i = 0;
@@ -683,7 +801,7 @@ uint8 OneWireReadAppRegister(uint8 sensor, uint8 address, uint8 length, uint8* d
 		if (OneWireReset(sensor) == YES)
 		{
 			// Skip ROM
-			OneWireWriteByte(sensor, 0xCC);
+			OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 			// Read App Register
 			OneWireWriteByte(sensor, 0xC3);
@@ -709,7 +827,7 @@ uint8 OneWireReadAppRegister(uint8 sensor, uint8 address, uint8 length, uint8* d
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 OneWireCopyAndLockAppRegister(uint8 sensor)
+uint8 OneWireCopyAndLockAppRegister(SMART_SENSOR_TYPE sensor)
 {
 	uint8 status = FAILED;
 	//uint8 i = 0;
@@ -724,7 +842,7 @@ uint8 OneWireCopyAndLockAppRegister(uint8 sensor)
 			if (OneWireReset(sensor) == YES)
 			{
 				// Skip ROM
-				OneWireWriteByte(sensor, 0xCC);
+				OneWireWriteByte(sensor, DS2431_SKIP_ROM);
 
 				// Copy and Lock App Register
 				OneWireWriteByte(sensor, 0x5A);
@@ -742,4 +860,210 @@ uint8 OneWireCopyAndLockAppRegister(uint8 sensor)
 	}
 
 	return (status);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void SmartSensorDebug(SMART_SENSOR_TYPE sensor)
+{
+	SMART_SENSOR_STRUCT smartSensorData;
+	uint16 zeroed = 0;
+	uint16 i = 0;
+	uint32 crc32 = 0;
+	uint32 crc16 = 0;
+	uint32 crc16seed0 = 0;
+
+	debugRaw("\r\n--------%s Sensor Data-------\r\n\n", (sensor == SEISMIC_SENSOR) ? "Seismic" : "Acoustic");
+
+	OneWireReadMemory(sensor, 0x0, sizeof(SMART_SENSOR_STRUCT), (uint8*)&smartSensorData);
+
+	crc32 = CalcCCITT32((uint8*)&smartSensorData.serialNumber[0], smartSensorData.dataLength, 0xFFFFFFFF);
+	crc16 = CalcCrc16((uint8*)&smartSensorData.currentCal, (sizeof(CALIBRATION_DATA_SET_STRUCT) - 2), 0xFFFF);
+	crc16seed0 = CalcCrc16((uint8*)&smartSensorData.currentCal, (sizeof(CALIBRATION_DATA_SET_STRUCT) - 2), 0x0);
+
+	debugRaw("\tSmart Sensor Version: 0x%x\r\n", smartSensorData.version);
+	debugRaw("\tData Length: %d\r\n", smartSensorData.dataLength);
+	debugRaw("\tCrc-32: 0x%x (Match: %s)\r\n", smartSensorData.crc, (crc32 == smartSensorData.crc) ? "YES": "NO");
+	debugRaw("\tSerial Number: %02x-%02x-%02x-%02x-%02x-%02x\r\n", smartSensorData.serialNumber[0], smartSensorData.serialNumber[1], smartSensorData.serialNumber[2],
+				smartSensorData.serialNumber[3], smartSensorData.serialNumber[4], smartSensorData.serialNumber[5]);
+	debugRaw("\tSensor Type: %4.2f (0x%02x)\r\n", (smartSensorData.sensorType < 0x80) ? (pow(2,smartSensorData.sensorType) * 2.56) : ((pow(2, (smartSensorData.sensorType - 0x80)) * 65.535)),
+				smartSensorData.sensorType);
+	debugRaw("\tCalibration Count: 0x%x\r\n", smartSensorData.calCount);
+
+	for (i = 0; i < 16; i++) { zeroed += smartSensorData.reserved[i]; }
+	debugRaw("\tReserved Empty: %s\r\n", (zeroed == 0) ? "YES" : "NO");
+
+	//convertTime = *localtime((time_t*)&smartSensorData.currentCal.calibrationDate);
+	debugRaw("\tCurrent Calibration Date: %s/%d/%d (0x%08x)\r\n", (char*)g_monthTable[(smartSensorData.currentCal.calDate.month)].name,
+				smartSensorData.currentCal.calDate.day, smartSensorData.currentCal.calDate.year, smartSensorData.currentCal.calDate.epochTime);
+	debugRaw("\tCurrent Calibration Facility: 0x%x\r\n", smartSensorData.currentCal.calFacility);
+	debugRaw("\tCurrent Calibration Instrument: 0x%x\r\n", smartSensorData.currentCal.calInstrument);
+	debugRaw("\tCurrent Calibration Crc-16: 0x%x (Match: %s (0x%04x), Match Seed 0: %s (0x%04x))\r\n", smartSensorData.currentCal.calCrc,
+				(crc16 == smartSensorData.currentCal.calCrc) ? "YES": "NO", crc16,
+				(crc16seed0 == smartSensorData.currentCal.calCrc) ? "YES": "NO", crc16seed0);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void SmartSensorReadRomAndMemory(SMART_SENSOR_TYPE sensor)
+{
+	SMART_SENSOR_ROM* smartSensorRom = ((sensor == SEISMIC_SENSOR) ? &g_seismicSmartSensorRom : &g_acousticSmartSensorRom);
+	SMART_SENSOR_STRUCT* smartSensorData = ((sensor == SEISMIC_SENSOR) ? &g_seismicSmartSensorMemory : &g_acousticSmartSensorMemory);
+	uint8 status = FAILED;
+
+	if (OneWireReadROM(sensor, smartSensorRom) == PASSED)
+	{
+		if (OneWireReadMemory(sensor, 0x0, sizeof(SMART_SENSOR_STRUCT), (uint8*)smartSensorData) == PASSED)
+		{
+			if (smartSensorData->crc == CalcCCITT32((uint8*)&smartSensorData->serialNumber[0], smartSensorData->dataLength, 0xFFFFFFFF))
+			{
+				// Overlay key onto version information
+				smartSensorData->version |= SMART_SENSOR_OVERLAY_KEY;
+
+				status = PASSED;
+			}
+			else
+			{
+				debugErr("Failed CRC32 check on %s Smart Sensor memory\r\n", (sensor == SEISMIC_SENSOR) ? "Seismic" : "Acoustic");
+			}
+		}
+		else // Failed to read sensor memory
+		{
+			debugErr("Failed memory read on %s Smart Sensor\r\n", (sensor == SEISMIC_SENSOR) ? "Seismic" : "Acoustic");
+		}
+	}
+	else
+	{
+		debugErr("Failed ROM read on %s Smart Sensor\r\n", (sensor == SEISMIC_SENSOR) ? "Seismic" : "Acoustic");
+	}
+
+	if (status == FAILED)
+	{
+		memset(smartSensorData, 0x0, sizeof(SMART_SENSOR_STRUCT));
+		memset(smartSensorRom, 0x0, sizeof(SMART_SENSOR_ROM));
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void DisplaySmartSensorInfo(SMART_SENSOR_INFO situation)
+{
+	if (situation == INFO_ON_CHECK)
+	{
+		SmartSensorReadRomAndMemory(SEISMIC_SENSOR);
+		SmartSensorReadRomAndMemory(ACOUSTIC_SENSOR);
+	}
+
+	if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+	{
+		// ST(0) = 2.5 = X8, ST(1) = 5.12 = X4, ST(2) = 10.24 = X2, ST(3) = 20.48 = X1
+		sprintf((char*)&g_spareBuffer, "DISCOVERED: SEISMIC SMART SENSOR, TYPE: X%d (%4.2f %s)", (uint8)(8 / pow(2, g_seismicSmartSensorMemory.sensorType)),
+		(g_seismicSmartSensorMemory.sensorType < 0x80) ? (pow(2,g_seismicSmartSensorMemory.sensorType) * 2.56) : ((pow(2, (g_seismicSmartSensorMemory.sensorType - 0x80)) * 65.535)),
+		(g_seismicSmartSensorMemory.sensorType < 0x80) ? ("IN") : ("MM"));
+		OverlayMessage(getLangText(STATUS_TEXT), (char*)&g_spareBuffer, (5 * SOFT_SECS));
+	}
+	else if (situation == INFO_ON_CHECK)
+	{
+		sprintf((char*)&g_spareBuffer, "NO SEISMIC SMART SENSOR FOUND");
+		OverlayMessage(getLangText(STATUS_TEXT), (char*)&g_spareBuffer, (3 * SOFT_SECS));
+	}
+
+	if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+	{
+		sprintf((char*)&g_spareBuffer, "DISCOVERED: ACOUSTIC SMART SENSOR, TYPE: %s", "STANDARD");
+		OverlayMessage(getLangText(STATUS_TEXT), (char*)&g_spareBuffer, (5 * SOFT_SECS));
+	}
+	else if (situation == INFO_ON_CHECK)
+	{
+		sprintf((char*)&g_spareBuffer, "NO ACOUSTIC SMART SENSOR FOUND");
+		OverlayMessage(getLangText(STATUS_TEXT), (char*)&g_spareBuffer, (3 * SOFT_SECS));
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void DisplaySmartSensorSerialNumber(SMART_SENSOR_TYPE sensor)
+{
+	char serialNumber[10];
+	uint8* serialNumBuffer = NULL;
+
+	if ((sensor == SEISMIC_SENSOR) && (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
+	{
+		serialNumBuffer = &g_seismicSmartSensorMemory.serialNumber[0];
+		sprintf(serialNumber, "%d%d%d%d%d%d", serialNumBuffer[0], serialNumBuffer[1], serialNumBuffer[2], serialNumBuffer[3], serialNumBuffer[4], serialNumBuffer[5]);
+		sprintf((char*)&g_spareBuffer, "SEISMIC SN: %s, TYPE: X%d (%4.2f %s)", serialNumber, (uint8)(8 / pow(2, g_seismicSmartSensorMemory.sensorType)),
+		(g_seismicSmartSensorMemory.sensorType < 0x80) ? (pow(2,g_seismicSmartSensorMemory.sensorType) * 2.56) : ((pow(2, (g_seismicSmartSensorMemory.sensorType - 0x80)) * 65.535)),
+		(g_seismicSmartSensorMemory.sensorType < 0x80) ? ("IN") : ("MM"));
+		MessageBox(getLangText(STATUS_TEXT), (char*)&g_spareBuffer, MB_OK);
+	}
+	else if ((sensor == ACOUSTIC_SENSOR) && (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
+	{
+		serialNumBuffer = &g_acousticSmartSensorMemory.serialNumber[0];
+		sprintf(serialNumber, "%d%d%d%d%d%d", serialNumBuffer[0], serialNumBuffer[1], serialNumBuffer[2], serialNumBuffer[3], serialNumBuffer[4], serialNumBuffer[5]);
+		sprintf((char*)&g_spareBuffer, "ACOUSTIC SN: %s, TYPE: %s", serialNumber, "STANDARD");
+		MessageBox(getLangText(STATUS_TEXT), (char*)&g_spareBuffer, MB_OK);
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 CheckIfBothSmartSensorsPresent(void)
+{
+	if ((g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY) && (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
+	{
+		return YES;
+	}
+	else
+	{
+		return NO;
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 CheckIfNoSmartSensorsPresent(void)
+{
+	if (((g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY) != SMART_SENSOR_OVERLAY_KEY) && ((g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY) != SMART_SENSOR_OVERLAY_KEY))
+	{
+		return YES;
+	}
+	else
+	{
+		return NO;
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void UpdateWorkingCalibrationDate(void)
+{
+	// By default use the unit Calibration date
+	g_currentCalDate = g_factorySetupRecord.calDate;
+
+	// Check if optioned to use Acoustic Smart Sensor Calibration date
+	if ((g_factorySetupRecord.useSmartSensorCalDate == ACOUSTIC_SENSOR) && (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
+	{
+		// Check if Current Calibration date crc checks out
+		if (CalcCCITT16((uint8*)&g_acousticSmartSensorMemory.currentCal, 6, 0xFFFF) == g_acousticSmartSensorMemory.currentCal.calCrc)
+		{
+			// Set Acoustic Calibration date as working Calibration date
+			g_currentCalDate = g_acousticSmartSensorMemory.currentCal.calDate;
+		}
+	}
+	else if ((g_factorySetupRecord.useSmartSensorCalDate == SEISMIC_SENSOR) && (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
+	{
+		// Check if Current Calibration date crc checks out
+		if (CalcCCITT16((uint8*)&g_seismicSmartSensorMemory.currentCal, 6, 0xFFFF) == g_seismicSmartSensorMemory.currentCal.calCrc)
+		{
+			// Set Acoustic Calibration date as working Calibration date
+			g_currentCalDate = g_seismicSmartSensorMemory.currentCal.calDate;
+		}
+	}
 }
