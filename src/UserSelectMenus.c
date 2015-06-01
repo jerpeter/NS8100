@@ -21,6 +21,7 @@
 #include "InitDataBuffers.h"
 #include "RemoteCommon.h"
 #include "PowerManagement.h"
+#include "Sensor.h"
 #include "TextTypes.h"
 
 ///----------------------------------------------------------------------------
@@ -86,6 +87,7 @@ extern USER_MENU_STRUCT timerModeFreqMenu[];
 extern USER_MENU_STRUCT timerModeMenu[];
 extern USER_MENU_STRUCT unitsOfMeasureMenu[];
 extern USER_MENU_STRUCT unitsOfAirMenu[];
+extern USER_MENU_STRUCT useSmartSensorCalDateMenu[];
 extern USER_MENU_STRUCT vectorSumMenu[];
 extern USER_MENU_STRUCT waveformAutoCalMenu[];
 extern USER_MENU_STRUCT zeroEventNumberMenu[];
@@ -191,13 +193,17 @@ void AirSetupMenuHandler(uint8 keyPressed, void* data)
 
 		SETUP_MENU_MSG(CAL_SETUP_MENU);
 
-		// Special call before Calibration setup (can't remember the reason)
+		// Special call before Calibration setup to disable USB processing
 extern void UsbDeviceManager(void);
 		UsbDeviceManager();
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+#if 0
 		SETUP_USER_MENU_MSG(&analogChannelConfigMenu, g_factorySetupRecord.analogChannelConfig);
+#else
+		SETUP_USER_MENU_MSG(&useSmartSensorCalDateMenu, g_factorySetupRecord.useSmartSensorCalDate);
+#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -723,10 +729,26 @@ void AnalogChannelConfigMenuHandler(uint8 keyPressed, void* data)
 
 		debug("Factory Setup: Channel R & V %s option selected\r\n", (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC) ? "Schematic" : "Swapped");
 
+#if 0
 		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
+#else
+		SETUP_USER_MENU_MSG(&useSmartSensorCalDateMenu, g_factorySetupRecord.useSmartSensorCalDate);
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+#if 0 // No longer skipping
+		if (CheckIfBothSmartSensorsPresent() == YES)
+		{
+			if (!g_factorySetupRecord.invalid)
+			{
+				tempPtr = &g_factorySetupRecord.serial_num;
+			}
+
+			SETUP_USER_MENU_MSG(&serialNumberMenu, tempPtr);
+		}
+#endif
+
 		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
 	}
 
@@ -1269,7 +1291,11 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
+#if 0 // Power Savings is no longer a unit configurable setting
 #define CONFIG_MENU_ENTRIES 30
+#else
+#define CONFIG_MENU_ENTRIES 29
+#endif
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1290,7 +1316,9 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, MODEM_SETUP_TEXT,			NO_TAG, {MODEM_SETUP}},
 {NO_TAG, 0, MONITOR_LOG_TEXT,			NO_TAG, {MONITOR_LOG}},
 {NO_TAG, 0, PRETRIGGER_SIZE_TEXT,		NO_TAG, {PRETRIGGER_SIZE}},
+#if 0 // No longer a unit configurable setting
 {NO_TAG, 0, POWER_SAVINGS_TEXT,			NO_TAG, {POWER_SAVINGS}},
+#endif
 {NO_TAG, 0, REPORT_DISPLACEMENT_TEXT,	NO_TAG, {REPORT_DISPLACEMENT}},
 {NO_TAG, 0, REPORT_PEAK_ACC_TEXT,		NO_TAG, {REPORT_PEAK_ACC}},
 {NO_TAG, 0, SENSOR_GAIN_TYPE_TEXT,		NO_TAG, {SENSOR_GAIN_TYPE}},
@@ -1402,10 +1430,11 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 			break;
 
+#if 0 // No longer a unit configurable setting
 			case (POWER_SAVINGS):
 				SETUP_USER_MENU_MSG(&powerSavingsMenu, g_unitConfig.powerSavingsLevel);
 			break;
-
+#endif
 			case (REPORT_DISPLACEMENT):
 				SETUP_USER_MENU_MSG(&displacementMenu, g_unitConfig.reportDisplacement);
 			break;
@@ -1790,12 +1819,14 @@ void FreqPlotStandardMenuHandler(uint8 keyPressed, void* data)
 // Help Menu
 //=============================================================================
 //*****************************************************************************
-#define HELP_MENU_ENTRIES 4
+#define HELP_MENU_ENTRIES 5
 USER_MENU_STRUCT helpMenu[HELP_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, HELP_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, HELP_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, CONFIG_AND_OPTIONS_TEXT,	NO_TAG, {CONFIG}},
 {ITEM_2, 0, HELP_INFORMATION_TEXT,		NO_TAG, {INFORMATION}},
+{ITEM_3, 0, SENSOR_CHECK_TEXT,			NO_TAG, {SENSOR_CHECK}},
+//{ITEM_4, 0, TESTING_TEXT,				NO_TAG, {TESTING}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&HelpMenuHandler}}
 };
 
@@ -1814,10 +1845,67 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 		{
 			SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 		}
-		else
+		else if (helpMenu[newItemIndex].data == INFORMATION)
 		{
 			sprintf(buildString, "%s %s %s", getLangText(SOFTWARE_VER_TEXT), (char*)g_buildVersion, (char*)g_buildDate);
-			MessageBox(getLangText(STATUS_TEXT), buildString, MB_OK);
+			if (MessageBox(getLangText(STATUS_TEXT), buildString, MB_OK) == MB_SPECIAL_ACTION)
+			{
+				g_quickBootEntryJump = YES;
+				BootLoadManager();
+			}
+		}
+		else if (helpMenu[newItemIndex].data == SENSOR_CHECK)
+		{
+			DisplaySmartSensorInfo(INFO_ON_CHECK);
+		}
+		else // Testing
+		{
+#if 1 // Smart Sensor testing
+#include "Sensor.h"
+			if (OneWireReset(SEISMIC_SENSOR) == YES) { debug("Seismic Smart Sensor discovered\r\n"); }
+			else { debug("Seismic Smart Sensor not found\r\n"); }
+
+			if (OneWireReset(ACOUSTIC_SENSOR) == YES) { debug("Acoustic Smart Sensor discovered\r\n"); }
+			else { debug("Acoustic Smart Sensor not found\r\n"); }
+
+			debugRaw("\r\n----------Seismic Sensor----------\r\n");
+			OneWireTest(SEISMIC_SENSOR);
+			debugRaw("\r\n----------Acoustic Sensor----------\r\n");
+			OneWireTest(ACOUSTIC_SENSOR);
+
+			debugRaw("\r\n----------Seismic Sensor----------\r\n");
+			OneWireFunctions(SEISMIC_SENSOR);
+			debugRaw("\r\n----------Acoustic Sensor----------\r\n");
+			OneWireFunctions(ACOUSTIC_SENSOR);
+
+			SmartSensorDebug(SEISMIC_SENSOR);
+			SmartSensorDebug(ACOUSTIC_SENSOR);
+			debugRaw("\r\n----------End----------\r\n");
+#endif
+#if 0 // ET Test
+			uint32* testPtr = (uint32*)0x40000000;
+			uint32 testData = *testPtr;
+			testData++;
+#endif
+#if 0 // ET Test
+			uint32* testPtr = (uint32*)0xd0000007;
+			uint32 testData = *testPtr;
+			testData++;
+#endif
+#if 0 // ET Test
+			while(1 == 1) {;}
+#endif
+#if 0 // ET Test
+			uint16* testPtr = (uint16*)0x2040;
+			*testPtr = 0x8888;
+			//testPtr = (uint16*)(0x7000 + ((g_rtcSoftTimerTickCount % 0x800) * 2));
+			testPtr = (uint16*)0x7030;
+			*testPtr = 0xABCD;
+#endif
+#if 0 // ET Test
+			OverlayMessage("STATUS", "EXEC BREAKPOINT INSTR", (3 * SOFT_SECS));
+			__asm__ __volatile__ ("breakpoint");
+#endif
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -2429,9 +2517,9 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 
 			// fix_ns8100 - Add in Combo mode calc that accounts for Bargraph buffers
 			g_triggerRecord.trec.record_time_max = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS -
-				((g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider) * g_sensorInfoPtr->numOfChannels) -
-				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * g_sensorInfoPtr->numOfChannels)) /
-				(g_triggerRecord.trec.sample_rate * g_sensorInfoPtr->numOfChannels))));
+				((g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider) * g_sensorInfo.numOfChannels) -
+				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * g_sensorInfo.numOfChannels)) /
+				(g_triggerRecord.trec.sample_rate * g_sensorInfo.numOfChannels))));
 
 			debug("New Max Record Time: %d\r\n", g_triggerRecord.trec.record_time_max);
 
@@ -2790,13 +2878,13 @@ void UnitsOfMeasureMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_unitConfig.unitsOfMeasure == IMPERIAL_TYPE)
 		{
-			g_sensorInfoPtr->unitsFlag = IMPERIAL_TYPE;
-			g_sensorInfoPtr->measurementRatio = (float)IMPERIAL;
+			g_sensorInfo.unitsFlag = IMPERIAL_TYPE;
+			g_sensorInfo.measurementRatio = (float)IMPERIAL;
 		}
 		else // Metric
 		{
-			g_sensorInfoPtr->unitsFlag = METRIC_TYPE;
-			g_sensorInfoPtr->measurementRatio = (float)METRIC;
+			g_sensorInfo.unitsFlag = METRIC_TYPE;
+			g_sensorInfo.measurementRatio = (float)METRIC;
 		}
 
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
@@ -2841,13 +2929,13 @@ void UnitsOfAirMenuHandler(uint8 keyPressed, void* data)
 
 			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{
-				g_sensorInfoPtr->airUnitsFlag = DB_TYPE;
-				g_sensorInfoPtr->ameasurementRatio = (float)DECIBEL;
+				g_sensorInfo.airUnitsFlag = DB_TYPE;
+				g_sensorInfo.ameasurementRatio = (float)DECIBEL;
 			}
 			else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 			{
-				g_sensorInfoPtr->airUnitsFlag = MB_TYPE;
-				g_sensorInfoPtr->ameasurementRatio = (float)MILLIBAR;
+				g_sensorInfo.airUnitsFlag = MB_TYPE;
+				g_sensorInfo.ameasurementRatio = (float)MILLIBAR;
 			}
 
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
@@ -2858,6 +2946,46 @@ void UnitsOfAirMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&configMenu, UNITS_OF_AIR);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Use Smart Sensor Cal Date Menu
+//=============================================================================
+//*****************************************************************************
+#define USE_SMART_SENSOR_CAL_DATE_MENU_ENTRIES 5
+USER_MENU_STRUCT useSmartSensorCalDateMenu[USE_SMART_SENSOR_CAL_DATE_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, CAL_DATE_STORED_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, USE_SMART_SENSOR_CAL_DATE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, SENSOR_A_TEXT,	NO_TAG, {ACOUSTIC_SENSOR}},
+{ITEM_2, 0, SENSOR_B_TEXT,	NO_TAG, {SEISMIC_SENSOR}},
+{ITEM_3, 0, CALIBRATION_GRAPH_TEXT,	NO_TAG, {NO}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&UseSmartSensorCalDateMenuHandler}}
+};
+
+//---------------------------------------
+// Use Smart Sensor Cal Date Menu Handler
+//---------------------------------------
+void UseSmartSensorCalDateMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_factorySetupRecord.useSmartSensorCalDate = useSmartSensorCalDateMenu[newItemIndex].data;
+
+		if (g_factorySetupRecord.useSmartSensorCalDate == NO) { debug("Factory Setup: Use Cal Date from: Unit\r\n"); }
+		else { debug("Factory Setup: Use Cal Date from: %s Smart Sensor\r\n", (g_factorySetupRecord.useSmartSensorCalDate == SEISMIC_SENSOR) ? "Seismic" : "Acoustic"); }
+
+		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&analogChannelConfigMenu, g_factorySetupRecord.analogChannelConfig);
 	}
 
 	JUMP_TO_ACTIVE_MENU();

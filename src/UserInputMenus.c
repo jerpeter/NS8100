@@ -20,6 +20,7 @@
 #include "RemoteCommon.h"
 #include "RemoteHandler.h"
 #include "TextTypes.h"
+#include "Sensor.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -38,6 +39,7 @@ extern USER_MENU_STRUCT alarmOneTimeMenu[];
 extern USER_MENU_STRUCT alarmTwoTimeMenu[];
 extern USER_MENU_STRUCT alarmOneMenu[];
 extern USER_MENU_STRUCT alarmTwoMenu[];
+extern USER_MENU_STRUCT analogChannelConfigMenu[];
 extern USER_MENU_STRUCT airScaleMenu[];
 extern USER_MENU_STRUCT barChannelMenu[];
 extern USER_MENU_STRUCT barResultMenu[];
@@ -1383,6 +1385,17 @@ void SerialNumberMenuHandler(uint8 keyPressed, void* data)
 	{	
 		debug("Serial #: <%s>, Length: %d\r\n", (char*)data, strlen((char*)data));
 		strcpy((char*)g_factorySetupRecord.serial_num, (char*)data);
+
+#if 0 // First Pass
+		// Check if both Seismic and Acoustic Smart Sensors were discovered on startup
+		if (CheckIfBothSmartSensorsPresent() == YES)
+		{
+			DisplaySmartSensorSerialNumber(SEISMIC_SENSOR);
+			DisplaySmartSensorSerialNumber(ACOUSTIC_SENSOR);
+		}
+#else // Re-read and display Smart Sensor info
+		DisplaySmartSensorInfo(INFO_ON_CHECK);
+#endif
 
 		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
 	}
