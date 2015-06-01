@@ -172,11 +172,7 @@ void MoveManualCalToFile(void)
 		ramSummaryEntryPtr->waveShapeData.v.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.v.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
 		ramSummaryEntryPtr->waveShapeData.t.freq = CalcSumFreq(ramSummaryEntryPtr->waveShapeData.t.peakPtr, SAMPLE_RATE_1K, startOfEventPtr, endOfEventDataPtr);
 
-#if 0 // Old
-		CompleteRamEventSummary(ramSummaryEntryPtr, sumEntry);
-#else // Updated
 		CompleteRamEventSummary(ramSummaryEntryPtr);
-#endif
 
 		CacheResultsEventInfo((EVT_RECORD*)&g_pendingEventRecord);
 
@@ -186,6 +182,9 @@ void MoveManualCalToFile(void)
 		}
 		else // (g_fileAccessLock == AVAILABLE)
 		{
+			while ((volatile uint8)g_spi1AccessLock != AVAILABLE) {;}
+			g_spi1AccessLock = EVENT_LOCK;
+
 			//g_fileAccessLock = FILE_LOCK;
 			nav_select(FS_NAV_ID_DEFAULT);
 
@@ -215,6 +214,7 @@ void MoveManualCalToFile(void)
 				SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 				// Done writing the event file, close the file handle
+				g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 				close(manualCalFileHandle);
 #else // Port fat driver
 				// Write the event record header and summary
@@ -258,12 +258,16 @@ void MoveManualCalToFile(void)
 
 			g_lastCompletedRamSummaryIndex = ramSummaryEntryPtr;
 
-			// Set printout mode to allow the results menu processing to know this is a manual cal pulse
-			raiseMenuEventFlag(RESULTS_MENU_EVENT);
+			if (g_triggerRecord.op_mode != COMBO_MODE)
+			{
+				// Set printout mode to allow the results menu processing to know this is a manual cal pulse
+				raiseMenuEventFlag(RESULTS_MENU_EVENT);
+			}
 
 			g_freeEventBuffers++;
 
 			g_fileAccessLock = AVAILABLE;
+			g_spi1AccessLock = AVAILABLE;
 		}
 	}
 	else
