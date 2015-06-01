@@ -814,6 +814,9 @@ uint8 MessageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 	uint8 activeChoice = MB_FIRST_CHOICE;
 	volatile uint8 key = 0;
 
+	g_debugBufferCount = 1;
+	strcpy((char*)g_debugBuffer, textString);
+
 	// Build MessageBox into g_mmap with the following calls
 	MessageBorder();
 	MessageTitle(titleString);
@@ -825,7 +828,7 @@ uint8 MessageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 	debug("MB: Look for a key\r\n");
 
 	// Loop forever unitl an enter or escape key is found
-	while ((key != ENTER_KEY) && (key != ESC_KEY))
+	while ((key != ENTER_KEY) && (key != ESC_KEY) && (key != ON_ESC_KEY))
 	{
 		// Blocking call to wait for a key to be pressed on the keypad
 		key = GetKeypadKey(WAIT_FOR_KEY);
@@ -865,10 +868,14 @@ uint8 MessageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 	WriteMapToLcd(g_mmap);
 
-	if (key == ENTER_KEY)
-		return (activeChoice);
+	g_debugBufferCount = 0;
+
+	if (key == ENTER_KEY) { return (activeChoice); }
+	if (key == ON_ESC_KEY) { return (MB_SPECIAL_ACTION); }
 	else // key == ESC_KEY (escape)
+	{
 		return (MB_NO_ACTION);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -978,12 +985,15 @@ void DisplayCalDate(void)
 {
 	char dateString[35];
 	char mesage[75];
+	DATE_TIME_STRUCT tempTime;
 
 	if (!g_factorySetupRecord.invalid)
 	{
 		memset(&dateString[0], 0, sizeof(dateString));
 		memset(&mesage[0], 0, sizeof(mesage));
-		ConvertTimeStampToString(dateString, &g_factorySetupRecord.cal_date, REC_DATE_TIME_TYPE);
+
+		ConvertCalDatetoDateTime(&tempTime, &g_currentCalDate);
+		ConvertTimeStampToString(dateString, &tempTime, REC_DATE_TYPE);
 
 		sprintf((char*)mesage, "%s: %s", getLangText(CALIBRATION_DATE_TEXT), (char*)dateString);
 		MessageBox(getLangText(STATUS_TEXT), (char*)mesage, MB_OK);
