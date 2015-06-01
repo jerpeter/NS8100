@@ -116,6 +116,9 @@ void MoveBarIntervalDataToFile(void)
 		}
 		else // (g_fileAccessLock == AVAILABLE)
 		{
+			while ((volatile uint8)g_spi1AccessLock != AVAILABLE) {;}
+			g_spi1AccessLock = EVENT_LOCK;
+
 			//g_fileAccessLock = FILE_LOCK;
 			nav_select(FS_NAV_ID_DEFAULT);
 
@@ -140,6 +143,7 @@ void MoveBarIntervalDataToFile(void)
 #if 1 // Atmel fat driver
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(bargraphFileHandle);
 #else // Port fat driver
 			fl_fclose(bargraphFileHandle);
@@ -147,6 +151,7 @@ void MoveBarIntervalDataToFile(void)
 			debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 			g_fileAccessLock = AVAILABLE;
+			g_spi1AccessLock = AVAILABLE;
 		}
 	}
 }
@@ -214,6 +219,9 @@ void MoveSummaryIntervalDataToFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
+		while ((volatile uint8)g_spi1AccessLock != AVAILABLE) {;}
+		g_spi1AccessLock = EVENT_LOCK;
+
 		//g_fileAccessLock = FILE_LOCK;
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -247,6 +255,7 @@ void MoveSummaryIntervalDataToFile(void)
 #if 1 // Atmel fat driver
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(bargraphFileHandle);
 #else // Port fat driver
 		fl_fclose(bargraphFileHandle);
@@ -255,6 +264,7 @@ void MoveSummaryIntervalDataToFile(void)
 		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 		g_fileAccessLock = AVAILABLE;
+		g_spi1AccessLock = AVAILABLE;
 	}
 
 	// Update the job totals.
@@ -816,7 +826,7 @@ uint8 CalculateBargraphData(void)
 			AdvanceBarIntervalBufPtr(WRITE_PTR);
 
 			// Check if enough bar intervals have been cached
-			if (g_bargraphBarIntervalsCached > NUM_OF_BAR_INTERVALS_TO_HOLD)
+			if (g_bargraphBarIntervalsCached >= NUM_OF_BAR_INTERVALS_TO_HOLD)
 			{
 				MoveBarIntervalDataToFile();
 			}
@@ -878,6 +888,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 #if 1 // Atmel fat driver
 		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(bargraphFileHandle);
 #else // Port fat driver
 		fl_fwrite(&g_pendingBargraphRecord, sizeof(EVT_RECORD), 1, bargraphFileHandle);
@@ -956,6 +967,7 @@ void MoveEndOfBargraphEventRecordToFile(void)
 
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(bargraphFileHandle);
 #else // Port fat driver
 		// Make sure at the beginning of the file
