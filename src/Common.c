@@ -713,6 +713,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			}
 
 #if 1 // Atmel fat driver
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(languageFile);
 #else // Port fat driver
 			fl_fclose(languageFile);
@@ -807,6 +808,7 @@ void CheckBootloaderAppPresent(void)
 			debug("Bootloader found and available\r\n");
 
 #if 1 // Atmel fat driver
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(file);
 #else // Port fat driver
 			fl_fclose(file);
@@ -822,8 +824,11 @@ void CheckBootloaderAppPresent(void)
 ///----------------------------------------------------------------------------
 void AdjustPowerSavings(void)
 {
+#if 1 // Normal
 	uint32 usartRetries = USART_DEFAULT_TIMEOUT;
+	uint8 powerSavingsLevel = POWER_SAVINGS_NORMAL;
 
+#if 0 // No longer a unit configurable setting
 	// Check if the Unit Config is not valid since there's a chance it's referenced before it's loaded
 	if (g_unitConfig.validationKey != 0xA5A5)
 	{
@@ -832,158 +837,183 @@ void AdjustPowerSavings(void)
 	}
 
 	// Check if the Unit Config is valid
-	if (g_unitConfig.validationKey == 0xA5A5)
+	if (g_unitConfig.validationKey != 0xA5A5) { return; }
+#endif
+
+#if (GLOBAL_DEBUG_PRINT_ENABLED != NO_DEBUG)
+	// With Debug enabled use Minimum setting to enable USART0 for serial output
+	powerSavingsLevel = POWER_SAVINGS_MINIMUM;
+#endif
+
+	switch (powerSavingsLevel)
 	{
-		switch (g_unitConfig.powerSavingsLevel)
-		{
-			//----------------------------------------------------------------------------
-			case POWER_SAVINGS_MINIMUM:
-			//----------------------------------------------------------------------------
-				// Leave active: SYSTIMER; Disable: OCD
-				AVR32_PM.cpumask = 0x00010000;
+		//----------------------------------------------------------------------------
+		case POWER_SAVINGS_MINIMUM:
+		//----------------------------------------------------------------------------
+#if 0 // Normal
+			// Leave active: SYSTIMER; Disable: OCD
+			AVR32_PM.cpumask = 0x00010000;
+#else // Test
+			// Do nothing
+#endif
+			// Leave active: EBI, PBA & PBB BRIDGE, FLASHC, USBB; Disable: PDCA, MACB
+			AVR32_PM.hsbmask = 0x0000004F;
 
-				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC, USBB; Disable: PDCA, MACB
-				AVR32_PM.hsbmask = 0x0000004F;
+			// Leave active: USART0, USART 1, USART 3, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 2, PDCA
+			AVR32_PM.pbamask = 0x00004BFB;
 
-				// Leave active: USART0, USART 1, USART 3, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 2, PDCA
-				AVR32_PM.pbamask = 0x00004BFB;
+			// Leave active: SMC, FLASHC, HMATRIX, USBB; Disable: SDRAMC, MACB
+			AVR32_PM.pbbmask = 0x00000017;
 
-				// Leave active: SMC, FLASHC, HMATRIX, USBB; Disable: SDRAMC, MACB
-				AVR32_PM.pbbmask = 0x00000017;
+			// Check if the USB is disabled
+			if (!Is_usb_enabled())
+			{
+				// Enable the USB
+				Usb_enable();
+			}
 
-				// Check if the USB is disabled
-				if (!Is_usb_enabled())
-				{
-					// Enable the USB
-					Usb_enable();
-				}
+			// Enable rs232 driver and receiver (Active low control)
+			PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+			PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+		break;
 
-				// Enable rs232 driver and receiver (Active low control)
-				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
-				PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
-			break;
+		//----------------------------------------------------------------------------
+		case POWER_SAVINGS_NORMAL:
+		//----------------------------------------------------------------------------
+			// Wait for serial data to pushed out to prevent the driver from lagging the system
+			while (((AVR32_USART0.csr & AVR32_USART_CSR_TXRDY_MASK) == 0) && usartRetries)
+			{
+				usartRetries--;
+			}
 
-			//----------------------------------------------------------------------------
-			case POWER_SAVINGS_NORMAL:
-			//----------------------------------------------------------------------------
-				// Wait for serial data to pushed out to prevent the driver from lagging the system
-				while (((AVR32_USART0.csr & AVR32_USART_CSR_TXRDY_MASK) == 0) && usartRetries)
-				{
-					usartRetries--;
-				}
+#if 0 // Normal
+			// Leave active: SYSTIMER; Disable: OCD
+			AVR32_PM.cpumask = 0x00010000;
+#else // Test
+			// Do nothing
+#endif
 
-				// Leave active: SYSTIMER; Disable: OCD
-				AVR32_PM.cpumask = 0x00010000;
+			// Leave active: EBI, PBA & PBB BRIDGE, FLASHC, USBB; Disable: PDCA, MACB
+			AVR32_PM.hsbmask = 0x0000004F;
 
-				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC, USBB; Disable: PDCA, MACB
-				AVR32_PM.hsbmask = 0x0000004F;
+			// Leave active: USART 1, USART 3, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 2, PDCA
+			AVR32_PM.pbamask = 0x00004AFB;
 
-				// Leave active: USART 1, USART 3, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 2, PDCA
-				AVR32_PM.pbamask = 0x00004AFB;
+			// Leave active: SMC, FLASHC, HMATRIX, USBB; Disable: SDRAMC, MACB
+			AVR32_PM.pbbmask = 0x00000017;
 
-				// Leave active: SMC, FLASHC, HMATRIX, USBB; Disable: SDRAMC, MACB
-				AVR32_PM.pbbmask = 0x00000017;
+			// Check if the USB is disabled
+			if (!Is_usb_enabled())
+			{
+				// Enable the USB
+				Usb_enable();
+			}
 
-				// Check if the USB is disabled
-				if (!Is_usb_enabled())
-				{
-					// Enable the USB
-					Usb_enable();
-				}
+			// Enable rs232 driver and receiver (Active low control)
+			PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+			PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+		break;
 
-				// Enable rs232 driver and receiver (Active low control)
-				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
-				PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
-			break;
+		//----------------------------------------------------------------------------
+		case POWER_SAVINGS_MOST:
+		//----------------------------------------------------------------------------
+			// Check if the USB is enabled
+			if (Is_usb_enabled())
+			{
+				// Disable the USB
+				Usb_disable();
+			}
 
-			//----------------------------------------------------------------------------
-			case POWER_SAVINGS_MOST:
-			//----------------------------------------------------------------------------
-				// Check if the USB is enabled
-				if (Is_usb_enabled())
-				{
-					// Disable the USB
-					Usb_disable();
-				}
+#if 0 // Normal
+			// Leave active: SYSTIMER; Disable: OCD
+			AVR32_PM.cpumask = 0x00010000;
+#else // Test
+			// Do nothing
+#endif
 
-				// Leave active: SYSTIMER; Disable: OCD
-				AVR32_PM.cpumask = 0x00010000;
+			// Leave active: EBI, PBA & PBB BRIDGE, FLASHC; Disable: PDCA, MACB, USBB
+			AVR32_PM.hsbmask = 0x00000047;
 
-				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC; Disable: PDCA, MACB, USBB
-				AVR32_PM.hsbmask = 0x00000047;
+			// Leave active: USART1, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 2 & 3, PDCA
+			AVR32_PM.pbamask = 0x000042FB;
 
-				// Leave active: USART1, TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 2 & 3, PDCA
-				AVR32_PM.pbamask = 0x000042FB;
+			// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
+			AVR32_PM.pbbmask = 0x00000015;
 
-				// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
-				AVR32_PM.pbbmask = 0x00000015;
+			// Enable rs232 driver and receiver (Active low control)
+			PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+			PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+		break;
 
-				// Enable rs232 driver and receiver (Active low control)
-				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
-				PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
-			break;
+		//----------------------------------------------------------------------------
+		case POWER_SAVINGS_MAX:
+		//----------------------------------------------------------------------------
+			// Wait for serial data to pushed out to prevent the driver from lagging the system
+			while (((AVR32_USART1.csr & AVR32_USART_CSR_TXRDY_MASK) == 0) && usartRetries)
+			{
+				usartRetries--;
+			}
 
-			//----------------------------------------------------------------------------
-			case POWER_SAVINGS_MAX:
-			//----------------------------------------------------------------------------
-				// Wait for serial data to pushed out to prevent the driver from lagging the system
-				while (((AVR32_USART1.csr & AVR32_USART_CSR_TXRDY_MASK) == 0) && usartRetries)
-				{
-					usartRetries--;
-				}
+			// Check if the USB is enabled
+			if (Is_usb_enabled())
+			{
+				// Disable the USB
+				Usb_disable();
+			}
 
-				// Check if the USB is enabled
-				if (Is_usb_enabled())
-				{
-					// Disable the USB
-					Usb_disable();
-				}
+#if 0 // Normal
+			// Leave active: SYSTIMER; Disable: OCD
+			AVR32_PM.cpumask = 0x00010000;
+#else // Test
+			// Do nothing
+#endif
 
-				// Leave active: SYSTIMER; Disable: OCD
-				AVR32_PM.cpumask = 0x00010000;
+			// Leave active: EBI, PBA & PBB BRIDGE, FLASHC; Disable: PDCA, MACB, USBB
+			AVR32_PM.hsbmask = 0x0000004F; //0x00000047;
 
-				// Leave active: EBI, PBA & PBB BRIDGE, FLASHC; Disable: PDCA, MACB, USBB
-				AVR32_PM.hsbmask = 0x0000004F; //0x00000047;
+			// Leave active: TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 1 & 2 & 3, PDCA
+			AVR32_PM.pbamask = 0x000040FB;
 
-				// Leave active: TC, TWI, SPI0, SPI1, ADC, PM/RTC/EIC, GPIO, INTC; Disable: ABDAC, SSC, PWM, USART 0 & 1 & 2 & 3, PDCA
-				AVR32_PM.pbamask = 0x000040FB;
+			// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
+			AVR32_PM.pbbmask = 0x00000017; //0x00000015;
 
-				// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
-				AVR32_PM.pbbmask = 0x00000017; //0x00000015;
+			// Disable rs232 driver and receiver (Active low control)
+			PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
+			PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
+		break;
 
-				// Disable rs232 driver and receiver (Active low control)
-				PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
-				PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
-			break;
+		//----------------------------------------------------------------------------
+		default: // POWER_SAVINGS_NONE
+		//----------------------------------------------------------------------------
+#if 0 // Normal
+			// Leave active: All; Disable: None
+			AVR32_PM.cpumask = 0x00010002;
+#else // Test
+			// Do nothing
+#endif
 
-			//----------------------------------------------------------------------------
-			default: // POWER_SAVINGS_NONE
-			//----------------------------------------------------------------------------
-				// Leave active: All; Disable: None
-				AVR32_PM.cpumask = 0x00010002;
+			// Leave active: All; Disable: None
+			AVR32_PM.hsbmask = 0x0000007F;
 
-				// Leave active: All; Disable: None
-				AVR32_PM.hsbmask = 0x0000007F;
+			// Leave active: All; Disable: None
+			AVR32_PM.pbamask = 0x0000FFFF;
 
-				// Leave active: All; Disable: None
-				AVR32_PM.pbamask = 0x0000FFFF;
+			// Leave active: All; Disable: None
+			AVR32_PM.pbbmask = 0x0000003F;
 
-				// Leave active: All; Disable: None
-				AVR32_PM.pbbmask = 0x0000003F;
+			// Check if the USB is disabled
+			if (!Is_usb_enabled())
+			{
+				// Enable the USB
+				Usb_enable();
+			}
 
-				// Check if the USB is disabled
-				if (!Is_usb_enabled())
-				{
-					// Enable the USB
-					Usb_enable();
-				}
-
-				// Enable rs232 driver and receiver (Active low control)
-				PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
-				PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
-			break;
-		}
+			// Enable rs232 driver and receiver (Active low control)
+			PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+			PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+		break;
 	}
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -1163,4 +1193,25 @@ void ReportFileAccessProblem(char* attemptedFile)
 	for (; i < strlen(attemptedFile); i++) { attemptedFile[i] = toupper(attemptedFile[i]); }
 	sprintf((char*)g_spareBuffer, "ERROR TRYING TO ACCESS: %s", attemptedFile);
 	OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ConvertDateTimeToCalDate(CALIBRATION_DATE_STRUCT* calDate, DATE_TIME_STRUCT* dateTime)
+{
+	calDate->day = dateTime->day;
+	calDate->month = dateTime->month;
+	calDate->year = (dateTime->year + 2000);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ConvertCalDatetoDateTime(DATE_TIME_STRUCT* dateTime, CALIBRATION_DATE_STRUCT* calDate)
+{
+	dateTime->day = calDate->day;
+	dateTime->month = calDate->month;
+	dateTime->year = (calDate->year - 2000);
+	dateTime->weekday = GetDayOfWeek(dateTime->year, dateTime->month, dateTime->day);
 }

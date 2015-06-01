@@ -28,6 +28,8 @@
 #define FOSC0	12000000
 #endif
 
+#define PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP	if ((AVR32_FLASHC.fsr + *(uint16*)0xD0000000 + AVR32_PM.gplp[0] == 0)) { UNUSED(AVR32_PM.gplp[0]); } else { UNUSED(AVR32_PM.gplp[0]); }
+
 typedef enum
 {
 	KEYPAD_TIMER,
@@ -40,7 +42,7 @@ typedef struct
 	uint8 month;
 	uint8 day;
 	uint8 weekday;
-	uint8 clk_12_24;
+	uint8 unused0;
 	uint8 hour;
 	uint8 min;
 	uint8 sec;
@@ -50,6 +52,16 @@ typedef struct
 	uint8 unused2;
 	uint8 valid;
 } DATE_TIME_STRUCT;
+
+typedef union {
+	uint32 epochTime;
+	struct {
+		uint16 year;
+		uint8 month;
+		uint8 day;
+	};
+	uint8 rawData[4];
+} CALIBRATION_DATE_STRUCT;
 
 typedef struct
 {
@@ -239,6 +251,15 @@ enum SDMMC_CARD_DETECT_STATE {
 };
 #endif
 
+enum {
+	BP_UNHANDLED_INT = 1,
+	BP_SOFT_LOOP,
+	BP_MB_LOOP,
+	BP_INT_MEM_CORRUPTED,
+	BP_AD_CHAN_SYNC_ERR,
+	BP_END
+};
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
@@ -290,6 +311,7 @@ void CheckBootloaderAppPresent(void);
 
 // Main menu prototype extensions
 void HandleSystemEvents(void);
+void BootLoadManager(void);
 
 // Time routines
 uint8 GetDayOfWeek(uint8 year, uint8 month, uint8 day);
@@ -301,5 +323,10 @@ void InitTimeMsg(void);
 // Error routines
 void ReportFileSystemAccessProblem(char*);
 void ReportFileAccessProblem(char* attemptedFile);
+
+// CalDate/DateTime conversions
+void ConvertDateTimeToCalDate(CALIBRATION_DATE_STRUCT* calDate, DATE_TIME_STRUCT* dateTime);
+void ConvertCalDatetoDateTime(DATE_TIME_STRUCT* dateTime, CALIBRATION_DATE_STRUCT* calDate);
+
 
 #endif // _COMMON_H_
