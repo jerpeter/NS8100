@@ -22,6 +22,8 @@
 ///	Prototypes
 ///----------------------------------------------------------------------------
 uint8 CalcCrc8(uint8*, uint32, uint8);
+uint16 CalcCrc16(uint8*, uint32, uint16);
+uint16 CalcCCITT16(uint8*, uint32, uint16);
 uint32 CalcCCITT32(uint8*, uint32, uint32);
 
 #endif // _CRC_H_
