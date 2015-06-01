@@ -26,6 +26,7 @@
 #include "Keypad.h"
 #include "ProcessBargraph.h"
 #include "Uart.h"
+#include "Sensor.h"
 #include "TextTypes.h"
 
 // Global Defines ---------------------------------------------------------------------
@@ -111,8 +112,7 @@ extern uint32 g_kpadLookForKeyTickCount;
 extern uint32 g_keypadNumberSpeed;
 extern uint8 g_keypadTable[8][8];
 extern unsigned char g_smc_tab_cs_size[4];
-extern SENSOR_PARAMETERS_STRUCT g_SensorInfoStruct;
-extern SENSOR_PARAMETERS_STRUCT* g_sensorInfoPtr;
+extern SENSOR_PARAMETERS_STRUCT g_sensorInfo;
 extern EVT_RECORD g_pendingEventRecord;
 extern EVT_RECORD g_pendingBargraphRecord;
 extern FACTORY_SETUP_STRUCT g_factorySetupRecord;
@@ -245,5 +245,23 @@ extern uint8 usbMode;
 extern uint8 usbThumbDriveWasConnected;
 extern SAMPLE_DATA_STRUCT sensorCalPeaks[];
 extern uint8 g_remoteEventDownloadMethod;
+extern SMART_SENSOR_ROM g_seismicSmartSensorRom;
+extern SMART_SENSOR_ROM g_acousticSmartSensorRom;
+extern SMART_SENSOR_STRUCT g_seismicSmartSensorMemory;
+extern SMART_SENSOR_STRUCT g_acousticSmartSensorMemory;
+extern CALIBRATION_DATE_STRUCT g_currentCalDate;
+extern uint8 g_quickBootEntryJump;
+extern uint8 g_breakpointCause;
+extern uint32 g_testTimeSinceLastFSWrite;
+extern uint32 g_testTimeSinceLastTrigger;
+extern uint32 g_testTimeSinceLastMidnight;
+extern uint32 g_testTimeSinceLastCalPulse;
+extern uint32 g_testKPGetExtVoltage;
+extern uint32 g_testKPReadMCP23018;
+extern uint32 g_testKPWriteMCP23018;
+extern uint32 g_testAfterSleepISR;
+extern uint32 g_testAfterSleep;
+extern uint32 g_testApplyPS;
+extern uint32 g_testRevertPS;
 
 #endif /* GLOBALS_H_ */

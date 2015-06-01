@@ -24,6 +24,7 @@
 #include "Keypad.h"
 #include "ProcessBargraph.h"
 #include "Uart.h"
+#include "Sensor.h"
 #include "TextTypes.h"
 
 ///----------------------------------------------------------------------------
@@ -115,8 +116,7 @@ uint32 g_kpadLookForKeyTickCount = 0;
 uint32 g_keypadNumberSpeed = 1;
 uint8 g_keypadTable[8][8] = { {KEY_BACKLIGHT, KEY_HELP, KEY_ESCAPE, KEY_UPARROW, KEY_DOWNARROW, KEY_MINUS, KEY_PLUS, KEY_ENTER} };
 uint8 g_smc_tab_cs_size[4];
-SENSOR_PARAMETERS_STRUCT g_SensorInfoStruct;
-SENSOR_PARAMETERS_STRUCT* g_sensorInfoPtr = &g_SensorInfoStruct;
+SENSOR_PARAMETERS_STRUCT g_sensorInfo;
 EVT_RECORD g_pendingEventRecord;
 EVT_RECORD g_pendingBargraphRecord;
 EVT_RECORD g_resultsEventCache[50];
@@ -270,5 +270,23 @@ uint8 usbMode;
 uint8 usbThumbDriveWasConnected = NO;
 SAMPLE_DATA_STRUCT sensorCalPeaks[4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
 uint8 g_remoteEventDownloadMethod = COMPRESS_MINILZO;
+SMART_SENSOR_ROM g_seismicSmartSensorRom;
+SMART_SENSOR_ROM g_acousticSmartSensorRom;
+SMART_SENSOR_STRUCT g_seismicSmartSensorMemory;
+SMART_SENSOR_STRUCT g_acousticSmartSensorMemory;
+CALIBRATION_DATE_STRUCT g_currentCalDate;
+uint8 g_quickBootEntryJump = NO;
+uint8 g_breakpointCause = 0;
+uint32 g_testTimeSinceLastFSWrite = 0xffffffff;
+uint32 g_testTimeSinceLastTrigger = 0xffffffff;
+uint32 g_testTimeSinceLastMidnight = 0xffffffff;
+uint32 g_testTimeSinceLastCalPulse = 0xffffffff;
+uint32 g_testKPGetExtVoltage = 0;
+uint32 g_testKPReadMCP23018 = 0;
+uint32 g_testKPWriteMCP23018 = 0;
+uint32 g_testAfterSleepISR = 0;
+uint32 g_testAfterSleep = 0;
+uint32 g_testApplyPS = 0;
+uint32 g_testRevertPS = 0;
 
 // End of the list
