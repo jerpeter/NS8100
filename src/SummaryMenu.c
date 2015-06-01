@@ -273,7 +273,7 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 			// Clear and setup the time stamp string for the current event
 			memset(&dateBuff[0], 0, sizeof(dateBuff));
 
-			ConvertTimeStampToString(dateBuff, (void*)(&(eventInfo->eventTime)), REC_DATE_TIME_DISPLAY);
+			ConvertTimeStampToString(dateBuff, &(eventInfo->eventTime), REC_DATE_TIME_DISPLAY);
 
 			// Clear and setup the mode string for the curent event
 			memset(&modeBuff[0], 0, sizeof(modeBuff));
