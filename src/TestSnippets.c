@@ -483,3 +483,114 @@ void TestSnippetsExecLoop(void)
 
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+#if 0 // Exception testing
+void garbage(void)
+{
+#if 1 // ET test
+	uint16* intMem = (uint16*)0x0004;
+	while (intMem < (uint16*)0x10000)
+	{
+		// Ignore the top of the stack
+		if ((uint32)intMem < 0x3FF0 || (uint32)intMem >= 0x4000)
+		{
+			*intMem = 0xD673;
+		}
+
+		intMem++;
+	}
+#endif
+#if 0 // ET test
+	//for (g_execCycles = 0; g_execCycles < 100000; g_execCycles++) { *(uint16*)0x0004 = 0xD673; }
+	intMem = (uint16*)0x0004;
+	while (intMem < (uint16*)0x10000)
+	{
+		// Ignore the top of the stack
+		if ((uint32)intMem != 0x3FFC && (uint32)intMem != 0x3FFE)
+		{
+			*intMem = 0xD673;
+		}
+
+		intMem++;
+	}
+#endif
+#if 0 // ET test
+	g_currentEventSamplePtr = (uint16*)0x0004;
+	while (g_currentEventSamplePtr < (uint16*)0x10000)
+	{
+		// Ignore the top of the stack
+		if ((uint32)g_currentEventSamplePtr != 0x3FFC && (uint32)g_currentEventSamplePtr != 0x3FFE)
+		{
+			*g_currentEventSamplePtr = 0xD673;
+		}
+
+		g_currentEventSamplePtr++;
+	}
+#endif
+	TestIntMem("After IMEM Init");
+	intMemProblem = NO;
+
+	AVR32_PM.gplp[0] = 0x12345678;
+	AVR32_PM.gplp[1] = 0x90ABCDEF;
+
+	// Initialize the system
+	InitSystemHardware_NS8100(); TestIntMem("After HW Init");
+	InitInterrupts_NS8100(); TestIntMem("After Int Init");
+	InitSoftwareSettings_NS8100(); TestIntMem("After SW Init");
+
+	BootLoadManager(); TestIntMem("After BLM Init");
+	DisplayVersionToCraft(); TestIntMem("After DVC Init");
+
+	if (intMemProblem == YES)
+	{
+		sprintf((char*)g_spareBuffer, "%s (%lu)", (char*)spareBufferText, intMemCount);
+		OverlayMessage((char*)spareBufferTitle, (char*)g_spareBuffer, (12 * SOFT_SECS));
+	}
+#if 0
+	else
+	{
+		sprintf((char*)g_spareBuffer, "Addr intMem: %p", &intMem);
+		OverlayMessage("STATUS", (char*)g_spareBuffer, (12 * SOFT_SECS));
+	}
+#endif
+
+#if 0
+	int i = 0;
+	for (; i < 22; i++)
+	{
+		exceptionHandlerTable[i] = (uint32)&generic_exception;
+	}
+
+	// Load the Exception Vector Base Address in the corresponding system register.
+	Set_system_register(AVR32_EVBA, (int)&exceptionHandlerTable);
+#endif
+
+#if 0
+	// Import the Exception Vector Base Address.
+	extern void _evba;
+
+	Set_system_register(AVR32_EVBA, (int)&_evba);
+
+	int i = 0;
+	for (; i < 22; i++)
+	{
+		_register_exception_handler(&generic_exception, i);
+	}
+
+	// Enable exceptions.
+	Enable_global_exception();
+#endif
+
+#if 1
+	// Import the Exception Vector Base Address.
+	extern void _evba;
+
+	Set_system_register(AVR32_EVBA, (int)&_evba);
+
+	// Enable exceptions.
+	Enable_global_exception();
+#endif
+}
+#endif
