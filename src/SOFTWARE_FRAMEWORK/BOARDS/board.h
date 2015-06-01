@@ -50,10 +50,15 @@
 
 #include <avr32/io.h>
 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // Select between hardware board versions
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 //#define NS8100_ORIGINAL_PROTOTYPE		1
 //#define NS8100_ALPHA_PROTOTYPE		1
 #define NS8100_BETA_PROTOTYPE			1
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// Only change above, rest is auto config
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 #if NS8100_ORIGINAL_PROTOTYPE
 #define NS8100_BETA_PROTOTYPE		0
