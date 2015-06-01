@@ -308,9 +308,9 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			break;
 
 		//----------------------------------------------------------------------------
-		case SDATA: // Active low control
+		case SEISMIC_SENSOR_DATA_CONTROL: // Active low control
 		//----------------------------------------------------------------------------
-			//debug("SDATA Enable: %s.\r\n", mode == ON ? "On" : "Off");
+			//debug("Seismic Sensor Data Control Enable: %s.\r\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB02);
@@ -322,9 +322,9 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			break;
 
 		//----------------------------------------------------------------------------
-		case ADATA: // Active low control
+		case ACOUSTIC_SENSOR_DATA_CONTROL: // Active low control
 		//----------------------------------------------------------------------------
-			//debug("ADATA Enable: %s.\r\n", mode == ON ? "On" : "Off");
+			//debug("Acoustic Sensor Data Control Enable: %s.\r\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB03);
