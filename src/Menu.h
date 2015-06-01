@@ -384,7 +384,9 @@ enum {
 // Help Menu types
 enum {
 	CONFIG = 1,
-	INFORMATION
+	INFORMATION,
+	SENSOR_CHECK,
+	TESTING
 };
 
 // Config Menu types
@@ -722,7 +724,8 @@ enum {
 enum {
 	MB_NO_ACTION = 0,
 	MB_FIRST_CHOICE,
-	MB_SECOND_CHOICE
+	MB_SECOND_CHOICE,
+	MB_SPECIAL_ACTION
 };
 
 // MessageBox choices struct
@@ -865,6 +868,7 @@ void TimerModeMenuHandler(uint8 key, void* data);
 void TimerModeFreqMenuHandler(uint8 key, void* data);
 void UnitsOfMeasureMenuHandler(uint8 key, void* data);
 void UnitsOfAirMenuHandler(uint8 key, void* data);
+void UseSmartSensorCalDateMenuHandler(uint8 key, void* data);
 void VectorSumMenuHandler(uint8 key, void* data);
 void WaveformAutoCalMenuHandler(uint8 key, void* data);
 void ZeroEventNumberMenuHandler(uint8 key, void* data);
@@ -943,5 +947,7 @@ void DisplayAutoDialInfo(void);
 void InitSensorParameters(uint16 sensor_type, uint8 sensitivity);
 void StopMonitoringForLowPowerState(void);
 void PromptUserUnableToEnterMonitoring(void);
+void PromptUserWaitingForSensorWarmup(void);
+void PromptUserWaitingForSensorZeroing(void);
 
 #endif // _MENU_H_
