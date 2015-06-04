@@ -976,19 +976,35 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.captured.comboEventsRecordedEndNumber = 0;
 	eventRec->summary.captured.comboBargraphEventNumberLink = 0;
 	//--------------------------------
+	eventRec->summary.parameters.calibrationDateSource = g_factorySetupRecord.calibrationDateSource;
 	memset(&(eventRec->summary.captured.calDateTime), 0, sizeof(eventRec->summary.captured.calDateTime));
-	ConvertCalDatetoDateTime(&eventRec->summary.captured.calDateTime, &g_factorySetupRecord.calDate);
+	switch (g_factorySetupRecord.calibrationDateSource)
+	{
+		case SEISMIC_SMART_SENSOR_CAL_DATE:
+			ConvertCalDatetoDateTime(&eventRec->summary.captured.calDateTime, &(g_seismicSmartSensorMemory.currentCal.calDate));
+			memcpy(&(eventRec->summary.parameters.seismicSensorCurrentCalDate[0]), &g_factorySetupRecord.calDate, SENSOR_CAL_DATE_SIZE);
+			memcpy(&(eventRec->summary.parameters.acousticSensorCurrentCalDate[0]), &(g_acousticSmartSensorMemory.currentCal.calDate), SENSOR_CAL_DATE_SIZE);
+		break;
+
+		case ACOUSTIC_SMART_SENSOR_CAL_DATE:
+			ConvertCalDatetoDateTime(&eventRec->summary.captured.calDateTime, &(g_acousticSmartSensorMemory.currentCal.calDate));
+			memcpy(&(eventRec->summary.parameters.seismicSensorCurrentCalDate[0]), &(g_seismicSmartSensorMemory.currentCal.calDate), SENSOR_CAL_DATE_SIZE);
+			memcpy(&(eventRec->summary.parameters.acousticSensorCurrentCalDate[0]), &g_factorySetupRecord.calDate, SENSOR_CAL_DATE_SIZE);
+		break;
+
+		default: // covers case UNIT_CAL_DATE:
+			ConvertCalDatetoDateTime(&eventRec->summary.captured.calDateTime, &g_factorySetupRecord.calDate);
+			memcpy(&(eventRec->summary.parameters.seismicSensorCurrentCalDate[0]), &(g_seismicSmartSensorMemory.currentCal.calDate), SENSOR_CAL_DATE_SIZE);
+			memcpy(&(eventRec->summary.parameters.acousticSensorCurrentCalDate[0]), &(g_acousticSmartSensorMemory.currentCal.calDate), SENSOR_CAL_DATE_SIZE);
+		break;
+	}
 	//-----------------------
 	memset(&(eventRec->summary.parameters.seismicSensorSerialNumber[0]), 0, SENSOR_SERIAL_NUMBER_SIZE);
 	memcpy(&(eventRec->summary.parameters.seismicSensorSerialNumber[0]), &(g_seismicSmartSensorMemory.serialNumber[0]), SENSOR_SERIAL_NUMBER_SIZE);
-	memset(&(eventRec->summary.parameters.seismicSensorCurrentCalDate[0]), 0, SENSOR_CAL_DATE_SIZE);
-	memcpy(&(eventRec->summary.parameters.seismicSensorCurrentCalDate[0]), &(g_seismicSmartSensorMemory.currentCal.calDate), SENSOR_CAL_DATE_SIZE);
 	eventRec->summary.parameters.seismicSensorFacility = g_seismicSmartSensorMemory.currentCal.calFacility;
 	eventRec->summary.parameters.seismicSensorInstrument = g_seismicSmartSensorMemory.currentCal.calInstrument;
 	memset(&(eventRec->summary.parameters.acousticSensorSerialNumber[0]), 0, SENSOR_SERIAL_NUMBER_SIZE);
 	memcpy(&(eventRec->summary.parameters.acousticSensorSerialNumber[0]), &(g_acousticSmartSensorMemory.serialNumber[0]), SENSOR_SERIAL_NUMBER_SIZE);
-	memset(&(eventRec->summary.parameters.acousticSensorCurrentCalDate[0]), 0, SENSOR_CAL_DATE_SIZE);
-	memcpy(&(eventRec->summary.parameters.acousticSensorCurrentCalDate[0]), &(g_acousticSmartSensorMemory.currentCal.calDate), SENSOR_CAL_DATE_SIZE);
 	eventRec->summary.parameters.acousticSensorFacility = g_acousticSmartSensorMemory.currentCal.calFacility;
 	eventRec->summary.parameters.acousticSensorInstrument = g_acousticSmartSensorMemory.currentCal.calInstrument;
 	//-----------------------
