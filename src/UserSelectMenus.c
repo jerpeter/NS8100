@@ -48,6 +48,7 @@ extern USER_MENU_STRUCT barScaleMenu[];
 extern USER_MENU_STRUCT barResultMenu[];
 extern USER_MENU_STRUCT baudRateMenu[];
 extern USER_MENU_STRUCT bitAccuracyMenu[];
+extern USER_MENU_STRUCT calibratonDateSourceMenu[];
 extern USER_MENU_STRUCT companyMenu[];
 extern USER_MENU_STRUCT copiesMenu[];
 extern USER_MENU_STRUCT configMenu[];
@@ -87,7 +88,6 @@ extern USER_MENU_STRUCT timerModeFreqMenu[];
 extern USER_MENU_STRUCT timerModeMenu[];
 extern USER_MENU_STRUCT unitsOfMeasureMenu[];
 extern USER_MENU_STRUCT unitsOfAirMenu[];
-extern USER_MENU_STRUCT calibratonDateSourceMenu[];
 extern USER_MENU_STRUCT vectorSumMenu[];
 extern USER_MENU_STRUCT waveformAutoCalMenu[];
 extern USER_MENU_STRUCT zeroEventNumberMenu[];
@@ -1010,9 +1010,9 @@ void BarScaleMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT calibratonDateSourceMenu[CALIBRATION_DATE_SOURCE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CAL_DATE_STORED_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CALIBRATION_DATE_SOURCE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 0, SENSOR_A_TEXT,	NO_TAG, {ACOUSTIC_SENSOR}},
-{ITEM_2, 0, SENSOR_B_TEXT,	NO_TAG, {SEISMIC_SENSOR}},
-{ITEM_3, 0, CALIBRATION_GRAPH_TEXT,	NO_TAG, {NO}},
+{ITEM_1, 0, SENSOR_A_TEXT,	NO_TAG, {ACOUSTIC_SMART_SENSOR_CAL_DATE}},
+{ITEM_2, 0, SENSOR_B_TEXT,	NO_TAG, {SEISMIC_SMART_SENSOR_CAL_DATE}},
+{ITEM_3, 0, CALIBRATION_GRAPH_TEXT,	NO_TAG, {UNIT_CAL_DATE}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&CalibratonDateSourceMenuHandler}}
 };
 
