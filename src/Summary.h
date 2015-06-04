@@ -126,12 +126,12 @@ typedef struct
 	uint32	airTriggerInUnits;
 
 	uint8 seismicSensorSerialNumber[6];
-	uint8 seismicSensorCurrentCalDate[4];
+	CALIBRATION_DATE_STRUCT seismicSensorCurrentCalDate;
 	uint8 seismicSensorFacility;
 	uint8 seismicSensorInstrument;
 
 	uint8 acousticSensorSerialNumber[6];
-	uint8 acousticSensorCurrentCalDate[4];
+	CALIBRATION_DATE_STRUCT acousticSensorCurrentCalDate;
 	uint8 acousticSensorFacility;
 	uint8 acousticSensorInstrument;
 

@@ -53,21 +53,24 @@ typedef struct
 	uint8 valid;
 } DATE_TIME_STRUCT;
 
-typedef union {
-	uint32 epochTime;
-	struct {
-		uint16 year;
-		uint8 month;
-		uint8 day;
-	};
-	uint8 rawData[4];
+typedef struct {
+	uint16 year;
+	uint8 month;
+	uint8 day;
 } CALIBRATION_DATE_STRUCT;
+
+typedef union {
+	uint32 epochDate;
+	CALIBRATION_DATE_STRUCT normalDate;
+	uint8 rawDate[4];
+} CALIBRATION_DATE_UNIVERSAL_STRUCT;
 
 typedef struct
 {
-	uint16 upper;
-	uint16 lower;
-} HALFS;
+	CALIBRATION_DATE_STRUCT date;
+	uint8 source;
+	uint8 unused;
+} WORKING_CAL_DATE_STRUCT;
 
 typedef struct
 {

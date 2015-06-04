@@ -274,7 +274,7 @@ SMART_SENSOR_ROM g_seismicSmartSensorRom;
 SMART_SENSOR_ROM g_acousticSmartSensorRom;
 SMART_SENSOR_STRUCT g_seismicSmartSensorMemory;
 SMART_SENSOR_STRUCT g_acousticSmartSensorMemory;
-CALIBRATION_DATE_STRUCT g_currentCalDate;
+WORKING_CAL_DATE_STRUCT g_currentCalibration;
 uint8 g_quickBootEntryJump = NO;
 uint8 g_breakpointCause = 0;
 uint32 g_testTimeSinceLastFSWrite = 0xffffffff;

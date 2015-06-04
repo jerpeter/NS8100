@@ -204,7 +204,7 @@ void setupMnDef(void)
 
 		// Print the Factory Setup Record to the console
 		memset(&buff[0], 0, sizeof(buff));
-		ConvertCalDatetoDateTime(&tempTime, &g_currentCalDate);
+		ConvertCalDatetoDateTime(&tempTime, &g_currentCalibration.date);
 		ConvertTimeStampToString(buff, &tempTime, REC_DATE_TYPE);
 
 		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&g_spareBuffer, "Acc"); }

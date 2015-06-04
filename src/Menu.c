@@ -992,7 +992,7 @@ void DisplayCalDate(void)
 		memset(&dateString[0], 0, sizeof(dateString));
 		memset(&mesage[0], 0, sizeof(mesage));
 
-		ConvertCalDatetoDateTime(&tempTime, &g_currentCalDate);
+		ConvertCalDatetoDateTime(&tempTime, &g_currentCalibration.date);
 		ConvertTimeStampToString(dateString, &tempTime, REC_DATE_TYPE);
 
 		sprintf((char*)mesage, "%s: %s", getLangText(CALIBRATION_DATE_TEXT), (char*)dateString);

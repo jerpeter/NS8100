@@ -249,7 +249,7 @@ extern SMART_SENSOR_ROM g_seismicSmartSensorRom;
 extern SMART_SENSOR_ROM g_acousticSmartSensorRom;
 extern SMART_SENSOR_STRUCT g_seismicSmartSensorMemory;
 extern SMART_SENSOR_STRUCT g_acousticSmartSensorMemory;
-extern CALIBRATION_DATE_STRUCT g_currentCalDate;
+extern WORKING_CAL_DATE_STRUCT g_currentCalibration;
 extern uint8 g_quickBootEntryJump;
 extern uint8 g_breakpointCause;
 extern uint32 g_testTimeSinceLastFSWrite;
