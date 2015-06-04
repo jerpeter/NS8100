@@ -896,7 +896,7 @@ void SmartSensorDebug(SMART_SENSOR_TYPE sensor)
 
 	//convertTime = *localtime((time_t*)&smartSensorData.currentCal.calibrationDate);
 	debugRaw("\tCurrent Calibration Date: %s/%d/%d (0x%08x)\r\n", (char*)g_monthTable[(smartSensorData.currentCal.calDate.month)].name,
-				smartSensorData.currentCal.calDate.day, smartSensorData.currentCal.calDate.year, smartSensorData.currentCal.calDate.epochTime);
+				smartSensorData.currentCal.calDate.day, smartSensorData.currentCal.calDate.year, ((CALIBRATION_DATE_UNIVERSAL_STRUCT)smartSensorData.currentCal.calDate).epochDate);
 	debugRaw("\tCurrent Calibration Facility: 0x%x\r\n", smartSensorData.currentCal.calFacility);
 	debugRaw("\tCurrent Calibration Instrument: 0x%x\r\n", smartSensorData.currentCal.calInstrument);
 	debugRaw("\tCurrent Calibration Crc-16: 0x%x (Match: %s (0x%04x), Match Seed 0: %s (0x%04x))\r\n", smartSensorData.currentCal.calCrc,
