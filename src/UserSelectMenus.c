@@ -87,7 +87,7 @@ extern USER_MENU_STRUCT timerModeFreqMenu[];
 extern USER_MENU_STRUCT timerModeMenu[];
 extern USER_MENU_STRUCT unitsOfMeasureMenu[];
 extern USER_MENU_STRUCT unitsOfAirMenu[];
-extern USER_MENU_STRUCT useSmartSensorCalDateMenu[];
+extern USER_MENU_STRUCT calibratonDateSourceMenu[];
 extern USER_MENU_STRUCT vectorSumMenu[];
 extern USER_MENU_STRUCT waveformAutoCalMenu[];
 extern USER_MENU_STRUCT zeroEventNumberMenu[];
@@ -202,7 +202,7 @@ extern void UsbDeviceManager(void);
 #if 0
 		SETUP_USER_MENU_MSG(&analogChannelConfigMenu, g_factorySetupRecord.analogChannelConfig);
 #else
-		SETUP_USER_MENU_MSG(&useSmartSensorCalDateMenu, g_factorySetupRecord.useSmartSensorCalDate);
+		SETUP_USER_MENU_MSG(&calibratonDateSourceMenu, g_factorySetupRecord.calibrationDateSource);
 #endif
 	}
 
@@ -732,7 +732,7 @@ void AnalogChannelConfigMenuHandler(uint8 keyPressed, void* data)
 #if 0
 		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
 #else
-		SETUP_USER_MENU_MSG(&useSmartSensorCalDateMenu, g_factorySetupRecord.useSmartSensorCalDate);
+		SETUP_USER_MENU_MSG(&calibratonDateSourceMenu, g_factorySetupRecord.calibrationDateSource);
 #endif
 	}
 	else if (keyPressed == ESC_KEY)
@@ -1003,42 +1003,39 @@ void BarScaleMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
-// Summary Interval Menu
+// Calibration Date Source Menu
 //=============================================================================
 //*****************************************************************************
-#define SUMMARY_INTERVAL_MENU_ENTRIES 10
-USER_MENU_STRUCT summaryIntervalMenu[SUMMARY_INTERVAL_MENU_ENTRIES] = {
-{TITLE_PRE_TAG, 0, SUMMARY_INTERVAL_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, SUMMARY_INTERVAL_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_4)}},
-{ITEM_1, 5,  MINUTES_TEXT,	NO_TAG, {FIVE_MINUTE_INTVL}},
-{ITEM_2, 15, MINUTES_TEXT,	NO_TAG, {FIFTEEN_MINUTE_INTVL}},
-{ITEM_3, 30, MINUTES_TEXT,	NO_TAG, {THIRTY_MINUTE_INTVL}},
-{ITEM_4, 1,  HOUR_TEXT,		NO_TAG, {ONE_HOUR_INTVL}},
-{ITEM_5, 2,  HOURS_TEXT,	NO_TAG, {TWO_HOUR_INTVL}},
-{ITEM_6, 4,  HOURS_TEXT,	NO_TAG, {FOUR_HOUR_INTVL}},
-{ITEM_7, 8,  HOURS_TEXT,	NO_TAG, {EIGHT_HOUR_INTVL}},
-{ITEM_8, 12, HOURS_TEXT,	NO_TAG, {TWELVE_HOUR_INTVL}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SummaryIntervalMenuHandler}}
+#define CALIBRATION_DATE_SOURCE_MENU_ENTRIES 5
+USER_MENU_STRUCT calibratonDateSourceMenu[CALIBRATION_DATE_SOURCE_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, CAL_DATE_STORED_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, CALIBRATION_DATE_SOURCE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, SENSOR_A_TEXT,	NO_TAG, {ACOUSTIC_SENSOR}},
+{ITEM_2, 0, SENSOR_B_TEXT,	NO_TAG, {SEISMIC_SENSOR}},
+{ITEM_3, 0, CALIBRATION_GRAPH_TEXT,	NO_TAG, {NO}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&CalibratonDateSourceMenuHandler}}
 };
 
-//------------------------------
-// Summary Interval Menu Handler
-//------------------------------
-void SummaryIntervalMenuHandler(uint8 keyPressed, void* data)
+//-------------------------------------
+// Calibration Date source Menu Handler
+//-------------------------------------
+void CalibratonDateSourceMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_triggerRecord.bgrec.summaryInterval = summaryIntervalMenu[newItemIndex].data;
+		g_factorySetupRecord.calibrationDateSource = calibratonDateSourceMenu[newItemIndex].data;
 
-		SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
-			LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+		if (g_factorySetupRecord.calibrationDateSource == UNIT_CAL_DATE) { debug("Factory Setup: Use Cal Date from: Unit\r\n"); }
+		else { debug("Factory Setup: Use Cal Date from: %s Smart Sensor\r\n", (g_factorySetupRecord.calibrationDateSource == SEISMIC_SMART_SENSOR_CAL_DATE) ? "Seismic" : "Acoustic"); }
+
+		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
+		SETUP_USER_MENU_MSG(&analogChannelConfigMenu, g_factorySetupRecord.analogChannelConfig);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -2746,6 +2743,49 @@ void SensorTypeMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
+// Summary Interval Menu
+//=============================================================================
+//*****************************************************************************
+#define SUMMARY_INTERVAL_MENU_ENTRIES 10
+USER_MENU_STRUCT summaryIntervalMenu[SUMMARY_INTERVAL_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, SUMMARY_INTERVAL_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, SUMMARY_INTERVAL_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_4)}},
+{ITEM_1, 5,  MINUTES_TEXT,	NO_TAG, {FIVE_MINUTE_INTVL}},
+{ITEM_2, 15, MINUTES_TEXT,	NO_TAG, {FIFTEEN_MINUTE_INTVL}},
+{ITEM_3, 30, MINUTES_TEXT,	NO_TAG, {THIRTY_MINUTE_INTVL}},
+{ITEM_4, 1,  HOUR_TEXT,		NO_TAG, {ONE_HOUR_INTVL}},
+{ITEM_5, 2,  HOURS_TEXT,	NO_TAG, {TWO_HOUR_INTVL}},
+{ITEM_6, 4,  HOURS_TEXT,	NO_TAG, {FOUR_HOUR_INTVL}},
+{ITEM_7, 8,  HOURS_TEXT,	NO_TAG, {EIGHT_HOUR_INTVL}},
+{ITEM_8, 12, HOURS_TEXT,	NO_TAG, {TWELVE_HOUR_INTVL}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SummaryIntervalMenuHandler}}
+};
+
+//------------------------------
+// Summary Interval Menu Handler
+//------------------------------
+void SummaryIntervalMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_triggerRecord.bgrec.summaryInterval = summaryIntervalMenu[newItemIndex].data;
+
+		SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
+			LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
 // Timer Mode Menu
 //=============================================================================
 //*****************************************************************************
@@ -2946,46 +2986,6 @@ void UnitsOfAirMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&configMenu, UNITS_OF_AIR);
-	}
-
-	JUMP_TO_ACTIVE_MENU();
-}
-
-//*****************************************************************************
-//=============================================================================
-// Use Smart Sensor Cal Date Menu
-//=============================================================================
-//*****************************************************************************
-#define USE_SMART_SENSOR_CAL_DATE_MENU_ENTRIES 5
-USER_MENU_STRUCT useSmartSensorCalDateMenu[USE_SMART_SENSOR_CAL_DATE_MENU_ENTRIES] = {
-{TITLE_PRE_TAG, 0, CAL_DATE_STORED_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, USE_SMART_SENSOR_CAL_DATE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 0, SENSOR_A_TEXT,	NO_TAG, {ACOUSTIC_SENSOR}},
-{ITEM_2, 0, SENSOR_B_TEXT,	NO_TAG, {SEISMIC_SENSOR}},
-{ITEM_3, 0, CALIBRATION_GRAPH_TEXT,	NO_TAG, {NO}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&UseSmartSensorCalDateMenuHandler}}
-};
-
-//---------------------------------------
-// Use Smart Sensor Cal Date Menu Handler
-//---------------------------------------
-void UseSmartSensorCalDateMenuHandler(uint8 keyPressed, void* data)
-{
-	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
-	uint16 newItemIndex = *((uint16*)data);
-
-	if (keyPressed == ENTER_KEY)
-	{
-		g_factorySetupRecord.useSmartSensorCalDate = useSmartSensorCalDateMenu[newItemIndex].data;
-
-		if (g_factorySetupRecord.useSmartSensorCalDate == NO) { debug("Factory Setup: Use Cal Date from: Unit\r\n"); }
-		else { debug("Factory Setup: Use Cal Date from: %s Smart Sensor\r\n", (g_factorySetupRecord.useSmartSensorCalDate == SEISMIC_SENSOR) ? "Seismic" : "Acoustic"); }
-
-		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
-	}
-	else if (keyPressed == ESC_KEY)
-	{
-		SETUP_USER_MENU_MSG(&analogChannelConfigMenu, g_factorySetupRecord.analogChannelConfig);
 	}
 
 	JUMP_TO_ACTIVE_MENU();

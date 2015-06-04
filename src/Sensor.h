@@ -43,6 +43,11 @@ typedef enum {
 	INFO_ON_CHECK
 } SMART_SENSOR_INFO;
 
+typedef enum {
+	UNIT_CAL_DATE = 1,
+	SEISMIC_SMART_SENSOR_CAL_DATE,
+	ACOUSTIC_SMART_SENSOR_CAL_DATE
+} CAL_DATE_SOURCE;
 
 #define SENSOR_WARMUP_PERIOD	(60) // Delay in seconds
 //#define SENSOR_WARMUP_DELAY		(SENSOR_WARMUP_PERIOD * TICKS_PER_SEC) // Delay in seconds * 2 (ticks/sec)

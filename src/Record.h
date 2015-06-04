@@ -287,7 +287,7 @@ typedef struct
 	DATE_TIME_STRUCT cal_date;
 #else // Smart Sensor Change
 	CALIBRATION_DATE_STRUCT calDate;
-	uint8 useSmartSensorCalDate;
+	uint8 calibrationDateSource;
 	uint8 unused[7];
 #endif
 	uint16 sensor_type;

@@ -868,7 +868,7 @@ void TimerModeMenuHandler(uint8 key, void* data);
 void TimerModeFreqMenuHandler(uint8 key, void* data);
 void UnitsOfMeasureMenuHandler(uint8 key, void* data);
 void UnitsOfAirMenuHandler(uint8 key, void* data);
-void UseSmartSensorCalDateMenuHandler(uint8 key, void* data);
+void CalibratonDateSourceMenuHandler(uint8 key, void* data);
 void VectorSumMenuHandler(uint8 key, void* data);
 void WaveformAutoCalMenuHandler(uint8 key, void* data);
 void ZeroEventNumberMenuHandler(uint8 key, void* data);

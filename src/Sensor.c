@@ -1048,7 +1048,7 @@ void UpdateWorkingCalibrationDate(void)
 	g_currentCalDate = g_factorySetupRecord.calDate;
 
 	// Check if optioned to use Acoustic Smart Sensor Calibration date
-	if ((g_factorySetupRecord.useSmartSensorCalDate == ACOUSTIC_SENSOR) && (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
+	if ((g_factorySetupRecord.calibrationDateSource == ACOUSTIC_SMART_SENSOR_CAL_DATE) && (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
 	{
 		// Check if Current Calibration date crc checks out
 		if (CalcCCITT16((uint8*)&g_acousticSmartSensorMemory.currentCal, 6, 0xFFFF) == g_acousticSmartSensorMemory.currentCal.calCrc)
@@ -1057,7 +1057,7 @@ void UpdateWorkingCalibrationDate(void)
 			g_currentCalDate = g_acousticSmartSensorMemory.currentCal.calDate;
 		}
 	}
-	else if ((g_factorySetupRecord.useSmartSensorCalDate == SEISMIC_SENSOR) && (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
+	else if ((g_factorySetupRecord.calibrationDateSource == SEISMIC_SMART_SENSOR_CAL_DATE) && (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
 	{
 		// Check if Current Calibration date crc checks out
 		if (CalcCCITT16((uint8*)&g_seismicSmartSensorMemory.currentCal, 6, 0xFFFF) == g_seismicSmartSensorMemory.currentCal.calCrc)
