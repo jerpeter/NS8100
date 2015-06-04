@@ -133,6 +133,8 @@ extern void UsbDeviceManager(void);
 				g_factorySetupRecord.sensor_type = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
 			}
 
+			UpdateWorkingCalibrationDate();
+
 			// Make sure the parameters are up to date based on the trigger setup information
 			InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
 
