@@ -81,8 +81,8 @@ typedef struct
 #define UNUSED_PARAMETERS_SIZE	40
 #else // 8100
 //#define UNUSED_PARAMETERS_SIZE	28
-// Added Smart sensor information, 12 bytes each for seismic and acoustic
-#define UNUSED_PARAMETERS_SIZE	4
+// Added Smart sensor information (12 bytes each for seismic and acoustic) and Cal date source
+#define UNUSED_PARAMETERS_SIZE	3
 #endif
 
 #pragma pack(1)
@@ -134,6 +134,8 @@ typedef struct
 	uint8 acousticSensorCurrentCalDate[4];
 	uint8 acousticSensorFacility;
 	uint8 acousticSensorInstrument;
+
+	uint8 calibrationDateSource;
 
 	uint8	unused[UNUSED_PARAMETERS_SIZE];		// Space for expansion, currently 4
 } PARAMETERS_STRUCT;
