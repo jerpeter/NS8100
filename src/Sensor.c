@@ -1044,26 +1044,30 @@ uint8 CheckIfNoSmartSensorsPresent(void)
 ///----------------------------------------------------------------------------
 void UpdateWorkingCalibrationDate(void)
 {
-	// By default use the unit Calibration date
-	g_currentCalDate = g_factorySetupRecord.calDate;
+	// By default use the Unit Calibration date
+	g_currentCalibration.source = UNIT_CAL_DATE;
+	g_currentCalibration.date = g_factorySetupRecord.calDate;
 
-	// Check if optioned to use Acoustic Smart Sensor Calibration date
-	if ((g_factorySetupRecord.calibrationDateSource == ACOUSTIC_SMART_SENSOR_CAL_DATE) && (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
+	// Check if optioned to use Seismic Smart Sensor Calibration date and Seismic smart sensor was successfully read
+	if ((g_factorySetupRecord.calibrationDateSource == SEISMIC_SMART_SENSOR_CAL_DATE) && (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
 	{
-		// Check if Current Calibration date crc checks out
-		if (CalcCCITT16((uint8*)&g_acousticSmartSensorMemory.currentCal, 6, 0xFFFF) == g_acousticSmartSensorMemory.currentCal.calCrc)
-		{
-			// Set Acoustic Calibration date as working Calibration date
-			g_currentCalDate = g_acousticSmartSensorMemory.currentCal.calDate;
-		}
-	}
-	else if ((g_factorySetupRecord.calibrationDateSource == SEISMIC_SMART_SENSOR_CAL_DATE) && (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
-	{
-		// Check if Current Calibration date crc checks out
+		// Check if Seismic Smart Sensor Calibration date CRC checks out
 		if (CalcCCITT16((uint8*)&g_seismicSmartSensorMemory.currentCal, 6, 0xFFFF) == g_seismicSmartSensorMemory.currentCal.calCrc)
 		{
-			// Set Acoustic Calibration date as working Calibration date
-			g_currentCalDate = g_seismicSmartSensorMemory.currentCal.calDate;
+			// Set Seismic Calibration date as working Calibration date and source
+			g_currentCalibration.source = SEISMIC_SMART_SENSOR_CAL_DATE;
+			g_currentCalibration.date = g_seismicSmartSensorMemory.currentCal.calDate;
+		}
+	}
+	// Check if optioned to use Acoustic Smart Sensor Calibration date and Acoustic smart sensor was successfully read
+	else if ((g_factorySetupRecord.calibrationDateSource == ACOUSTIC_SMART_SENSOR_CAL_DATE) && (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
+	{
+		// Check if Acoustic Smart Sensor Calibration date CRC checks out
+		if (CalcCCITT16((uint8*)&g_acousticSmartSensorMemory.currentCal, 6, 0xFFFF) == g_acousticSmartSensorMemory.currentCal.calCrc)
+		{
+			// Set Acoustic Calibration date as working Calibration date and source
+			g_currentCalibration.source = ACOUSTIC_SMART_SENSOR_CAL_DATE;
+			g_currentCalibration.date = g_acousticSmartSensorMemory.currentCal.calDate;
 		}
 	}
 }
