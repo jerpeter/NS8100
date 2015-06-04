@@ -1026,7 +1026,8 @@ void UpdateBargraphJobTotals(void)
 	}
 	else if (g_bargraphSummaryIntervalPtr->a.peak == g_pendingBargraphRecord.summary.calculated.a.peak)
 	{
-		if (g_bargraphSummaryIntervalPtr->a.frequency < g_pendingBargraphRecord.summary.calculated.a.frequency)
+		// Summary Interval frequency is stored as a count, the higher the count being a lower frequency which is more desired to save
+		if (g_bargraphSummaryIntervalPtr->a.frequency > g_pendingBargraphRecord.summary.calculated.a.frequency)
 		{
 			g_pendingBargraphRecord.summary.calculated.a = g_bargraphSummaryIntervalPtr->a;
 			g_pendingBargraphRecord.summary.calculated.a_Time = g_bargraphSummaryIntervalPtr->a_Time;
@@ -1043,7 +1044,8 @@ void UpdateBargraphJobTotals(void)
 	}
 	else if (g_bargraphSummaryIntervalPtr->r.peak == g_pendingBargraphRecord.summary.calculated.r.peak)
 	{
-		if (g_bargraphSummaryIntervalPtr->r.frequency < g_pendingBargraphRecord.summary.calculated.r.frequency)
+		// Summary Interval frequency is stored as a count, the higher the count being a lower frequency which is more desired to save
+		if (g_bargraphSummaryIntervalPtr->r.frequency > g_pendingBargraphRecord.summary.calculated.r.frequency)
 		{
 			g_pendingBargraphRecord.summary.calculated.r = g_bargraphSummaryIntervalPtr->r;
 			g_pendingBargraphRecord.summary.calculated.r_Time = g_bargraphSummaryIntervalPtr->r_Time;
@@ -1060,7 +1062,8 @@ void UpdateBargraphJobTotals(void)
 	}
 	else if (g_bargraphSummaryIntervalPtr->v.peak == g_pendingBargraphRecord.summary.calculated.v.peak)
 	{
-		if (g_bargraphSummaryIntervalPtr->v.frequency < g_pendingBargraphRecord.summary.calculated.v.frequency)
+		// Summary Interval frequency is stored as a count, the higher the count being a lower frequency which is more desired to save
+		if (g_bargraphSummaryIntervalPtr->v.frequency > g_pendingBargraphRecord.summary.calculated.v.frequency)
 		{
 			g_pendingBargraphRecord.summary.calculated.v = g_bargraphSummaryIntervalPtr->v;
 			g_pendingBargraphRecord.summary.calculated.v_Time = g_bargraphSummaryIntervalPtr->v_Time;
@@ -1077,7 +1080,8 @@ void UpdateBargraphJobTotals(void)
 	}
 	else if (g_bargraphSummaryIntervalPtr->t.peak == g_pendingBargraphRecord.summary.calculated.t.peak)
 	{
-		if (g_bargraphSummaryIntervalPtr->t.frequency < g_pendingBargraphRecord.summary.calculated.t.frequency)
+		// Summary Interval frequency is stored as a count, the higher the count being a lower frequency which is more desired to save
+		if (g_bargraphSummaryIntervalPtr->t.frequency > g_pendingBargraphRecord.summary.calculated.t.frequency)
 		{
 			g_pendingBargraphRecord.summary.calculated.t = g_bargraphSummaryIntervalPtr->t;
 			g_pendingBargraphRecord.summary.calculated.t_Time = g_bargraphSummaryIntervalPtr->t_Time;
