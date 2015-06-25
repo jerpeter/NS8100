@@ -567,6 +567,8 @@ void GetParameterMemory(uint8* dataDest, uint16 startAddr, uint16 dataLength)
 	
 	//debugRaw("\nGPM: Addr: %x -> ", startAddr);
 
+	GetSpi1MutexLock(EEPROM_LOCK);
+
 	spi_selectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
 
 	// Write Command
@@ -586,6 +588,8 @@ void GetParameterMemory(uint8* dataDest, uint16 startAddr, uint16 dataLength)
 	}
 	   
 	spi_unselectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
+
+	ReleaseSpi1MutexLock();
 }
 
 ///----------------------------------------------------------------------------
@@ -603,16 +607,18 @@ void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 	{
 		//debug("SPM: Addr: %x Len: %04d -> ", startAddr, dataLength);
 
+		GetSpi1MutexLock(EEPROM_LOCK);
+
 		// Activate write enable
-		spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
-		spi_write(EEPROM_SPI, EEPROM_WRITE_ENABLE); // Write Command
-		spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+		spi_selectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
+		spi_write(&AVR32_SPI1, EEPROM_WRITE_ENABLE); // Write Command
+		spi_unselectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
 
 		// Write data
-		spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
-		spi_write(EEPROM_SPI, EEPROM_WRITE_DATA); // Write Command
-		spi_write(EEPROM_SPI, (startAddr >> 8) & 0xFF);
-		spi_write(EEPROM_SPI, startAddr & 0xFF);
+		spi_selectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
+		spi_write(&AVR32_SPI1, EEPROM_WRITE_DATA); // Write Command
+		spi_write(&AVR32_SPI1, (startAddr >> 8) & 0xFF);
+		spi_write(&AVR32_SPI1, startAddr & 0xFF);
 
 		// Adjust for page boundaries
 		if(checkForPartialFirstPage == YES)
@@ -652,11 +658,13 @@ void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 			//debugRaw("%02x ", *dataSrc);
 
 			tempData = *dataSrc++;
-			spi_write(EEPROM_SPI, tempData);
+			spi_write(&AVR32_SPI1, tempData);
 		}
 
-		spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+		spi_unselectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
 		SoftUsecWait(5 * SOFT_MSECS);
+
+		ReleaseSpi1MutexLock();
 	}
 }
 
@@ -670,16 +678,18 @@ void EraseParameterMemory(uint16 startAddr, uint16 dataLength)
 
 	while(dataLength)
 	{
+		GetSpi1MutexLock(EEPROM_LOCK);
+
 		// Activate write enable
-		spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
-		spi_write(EEPROM_SPI, EEPROM_WRITE_ENABLE); // Write Command
-		spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+		spi_selectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
+		spi_write(&AVR32_SPI1, EEPROM_WRITE_ENABLE); // Write Command
+		spi_unselectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
 
 		// Write data
-		spi_selectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
-		spi_write(EEPROM_SPI, EEPROM_WRITE_DATA); // Write Command
-		spi_write(EEPROM_SPI, (startAddr >> 8) & 0xFF);
-		spi_write(EEPROM_SPI, startAddr & 0xFF);
+		spi_selectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
+		spi_write(&AVR32_SPI1, EEPROM_WRITE_DATA); // Write Command
+		spi_write(&AVR32_SPI1, (startAddr >> 8) & 0xFF);
+		spi_write(&AVR32_SPI1, startAddr & 0xFF);
 
 		// Check if current data length is less than 32 and can be finished in a page
 		if(dataLength <= 32)
@@ -696,13 +706,15 @@ void EraseParameterMemory(uint16 startAddr, uint16 dataLength)
 			
 		while(pageSize--)
 		{
-			spi_write(EEPROM_SPI, tempData);
+			spi_write(&AVR32_SPI1, tempData);
 			
 			SoftUsecWait(1 * SOFT_MSECS);
 		}
 
-		spi_unselectChip(EEPROM_SPI, EEPROM_SPI_NPCS);
+		spi_unselectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
 		SoftUsecWait(5 * SOFT_MSECS);
+
+		ReleaseSpi1MutexLock();
 	}
 }
 

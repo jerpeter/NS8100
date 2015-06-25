@@ -42,7 +42,6 @@ enum {
 #define VALID_MONITOR_LOG_TABLE_KEY 0x0FF05A5A
 #define VALID_AUTODIALOUT_TABLE_KEY 0x12ABCDEF
 
-#define EEPROM_SPI                  (&AVR32_SPI1)
 #define EEPROM_SPI_NPCS             0
 
 #define EEPROM_WRITE_ENABLE   0x06
