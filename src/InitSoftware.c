@@ -176,12 +176,8 @@ void setupMnDef(void)
 	SoftUsecWait(3 * SOFT_SECS);
 
 	//-------------------------------------------------------------------------
-	// Check if auto print is enabled
-	if (g_unitConfig.autoPrint == YES)
-	{
-		// Disable Auto printing
-		g_unitConfig.autoPrint = NO;
-	}
+	// Disable auto print since there is no printer option
+	g_unitConfig.autoPrint = NO;
 
 	//-------------------------------------------------------------------------
 	// Display Smart Sensor information if found
