@@ -1577,6 +1577,7 @@ void DeleteEventFileRecords(void)
 
 #if 1 // Atmel fat driver
 
+		// Handle removing event files
 		if (nav_setcwd("A:\\Events\\", TRUE, FALSE) == TRUE)
 		{
 			//nav_filelist_reset();
@@ -1604,6 +1605,42 @@ void DeleteEventFileRecords(void)
 			}
 		}
 
+		// Handle removing compressed event data files
+		if (nav_setcwd("A:\\ERData\\", TRUE, FALSE) == TRUE)
+		{
+			//nav_filelist_reset();
+
+			while (nav_filelist_set(0 , FS_FIND_NEXT))
+			{
+				nav_file_getname(&fileName[0], 50);
+				sprintf(popupText, "REMOVING %s", fileName);
+				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+
+				// Delete file or directory
+				if(nav_file_del(FALSE) == FALSE)
+				{
+					nav_file_getname(&fileName[0], 50);
+					OverlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
+					//break;
+				}
+				else
+				{
+					eventsDeleted++;
+					#if 1 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
+					g_execCycles++;
+					#endif
+				}
+			}
+		}
+
+		// Re-create directory
+		if (nav_setcwd("A:\\ERData\\", TRUE, FALSE) == FALSE)
+		{
+			debugErr("Unable to access or create the Events directory\r\n");
+			OverlayMessage(getLangText(ERROR_TEXT), "UNABLE TO ACCESS EVENTS DIR", 3 * SOFT_SECS);
+		}
+
+		// Re-create directory
 		if (nav_setcwd("A:\\Events\\", TRUE, FALSE) == FALSE)
 		{
 			debugErr("Unable to access or create the Events directory\r\n");
