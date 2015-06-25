@@ -245,7 +245,6 @@ extern uint8 usbMassStorageState;
 extern uint8 usbMode;
 extern uint8 usbThumbDriveWasConnected;
 extern SAMPLE_DATA_STRUCT sensorCalPeaks[];
-extern uint8 g_remoteEventDownloadMethod;
 extern SMART_SENSOR_ROM g_seismicSmartSensorRom;
 extern SMART_SENSOR_ROM g_acousticSmartSensorRom;
 extern SMART_SENSOR_STRUCT g_seismicSmartSensorMemory;

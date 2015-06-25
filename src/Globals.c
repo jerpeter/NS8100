@@ -270,7 +270,6 @@ uint8 usbMassStorageState = USB_INIT_DRIVER;
 uint8 usbMode;
 uint8 usbThumbDriveWasConnected = NO;
 SAMPLE_DATA_STRUCT sensorCalPeaks[4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
-uint8 g_remoteEventDownloadMethod = COMPRESS_MINILZO;
 SMART_SENSOR_ROM g_seismicSmartSensorRom;
 SMART_SENSOR_ROM g_acousticSmartSensorRom;
 SMART_SENSOR_STRUCT g_seismicSmartSensorMemory;

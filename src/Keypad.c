@@ -328,18 +328,6 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					else if (keyPressed == HELP_KEY)
 					{
 #if 0 // Test
-						if (g_remoteEventDownloadMethod == COMPRESS_MINILZO)
-						{
-							g_remoteEventDownloadMethod = COMPRESS_NONE;
-							OverlayMessage(getLangText(STATUS_TEXT), "REMOTE EVENT DL STRAIGHT (NO COMPRESSION)", (SOFT_SECS * 2));
-						}
-						else
-						{
-							g_remoteEventDownloadMethod = COMPRESS_MINILZO;
-							OverlayMessage(getLangText(STATUS_TEXT), "REMOTE EVENT DL WILL USE COMPRESSION", (SOFT_SECS * 2));
-						}
-
-						return(PASSED);
 #endif
 					}
 					else if (keyPressed == KEY_BACKLIGHT)
