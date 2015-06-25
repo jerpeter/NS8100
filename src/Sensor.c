@@ -964,22 +964,27 @@ void DisplaySmartSensorInfo(SMART_SENSOR_INFO situation)
 		(g_seismicSmartSensorMemory.sensorType < 0x80) ? (pow(2,g_seismicSmartSensorMemory.sensorType) * 2.56) : ((pow(2, (g_seismicSmartSensorMemory.sensorType - 0x80)) * 65.535)),
 		(g_seismicSmartSensorMemory.sensorType < 0x80) ? ("IN") : ("MM"));
 		OverlayMessage(getLangText(STATUS_TEXT), (char*)&g_spareBuffer, (5 * SOFT_SECS));
+		debug("Discovered: Seismic smart sensor, type: X%d (%4.2f %s)\r\n", (uint8)(8 / pow(2, g_seismicSmartSensorMemory.sensorType)),
+				(pow(2,g_seismicSmartSensorMemory.sensorType) * 2.56), ("IN"));
 	}
 	else if (situation == INFO_ON_CHECK)
 	{
 		sprintf((char*)&g_spareBuffer, "NO SEISMIC SMART SENSOR FOUND");
 		OverlayMessage(getLangText(STATUS_TEXT), (char*)&g_spareBuffer, (3 * SOFT_SECS));
+		debug("No Seismic smart sensor found\r\n");
 	}
 
 	if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
 	{
 		sprintf((char*)&g_spareBuffer, "DISCOVERED: ACOUSTIC SMART SENSOR, TYPE: %s", "STANDARD");
 		OverlayMessage(getLangText(STATUS_TEXT), (char*)&g_spareBuffer, (5 * SOFT_SECS));
+		debug("Discovered: Acoustic smart sensor, type: Standard\r\n");
 	}
 	else if (situation == INFO_ON_CHECK)
 	{
 		sprintf((char*)&g_spareBuffer, "NO ACOUSTIC SMART SENSOR FOUND");
 		OverlayMessage(getLangText(STATUS_TEXT), (char*)&g_spareBuffer, (3 * SOFT_SECS));
+		debug("No Acoustic smart sensor found\r\n");
 	}
 }
 
