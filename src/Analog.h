@@ -39,11 +39,6 @@
 #define CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH	65
 #define CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF	55
 
-#define AD_SPI_0_CHIP_SELECT	0
-
-#define AD_SPI					(&AVR32_SPI0)
-#define AD_CTL_SPI				(&AVR32_SPI1)
-
 #define AD_SPI_NPCS             0
 #define AD_CTL_SPI_NPCS			3
 

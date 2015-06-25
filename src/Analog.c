@@ -98,38 +98,38 @@ void GetAnalogConfigReadback(void)
 	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_WITH_TEMP)
 	{
 		// Chan 0
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dummyData.r));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		debugRaw("\nChan 0 Config: 0x%x, ", channelConfigReadback);
 
 		// Chan 1
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dummyData.t));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		debugRaw("Chan 1 Config: 0x%x, ", channelConfigReadback);
 
 		// Chan 2
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dummyData.v));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		debugRaw("Chan 2 Config: 0x%x, ", channelConfigReadback);
 
 		// Chan 3
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dummyData.a));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		debugRaw("Chan 3 Config: 0x%x, ", channelConfigReadback);
 
 		// Temp
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		debugRaw("Temp Config: 0x%x", channelConfigReadback);
 	}
 }
@@ -150,42 +150,42 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_WITH_TEMP)
 	{
 		// Chan 0
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		//if(channelConfigReadback != 0xe0d0) { configError = YES; debug("Chan 0 Config: 0x%x\r\n", channelConfigReadback);}
 		if(channelConfigReadback != 0xe150) { configError = YES; }
 
 		// Chan 1
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->t));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		//if(channelConfigReadback != 0xe2d0) { configError = YES; debug("Chan 1 Config: 0x%x\r\n", channelConfigReadback);}
 		if(channelConfigReadback != 0xe350) { configError = YES; }
 
 		// Chan 2
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		//if(channelConfigReadback != 0xe4d0) { configError = YES; debug("Chan 2 Config: 0x%x\r\n", channelConfigReadback);}
 		if(channelConfigReadback != 0xe550) { configError = YES; }
 
 		// Chan 3
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->a));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		//if(channelConfigReadback != 0xe6d0) { configError = YES; debug("Chan 3 Config: 0x%x\r\n", channelConfigReadback);}
 		if(channelConfigReadback != 0xe750) { configError = YES; }
 
 		// Temp
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		//if(channelConfigReadback != 0xb6d0) { configError = YES; debug("Temp Config: 0x%x\r\n", channelConfigReadback);}
 		if(channelConfigReadback != 0xb750) { configError = YES; }
 			
@@ -197,51 +197,51 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 	else if (g_adChannelConfig == FOUR_AD_CHANNELS_NO_READBACK_WITH_TEMP)
 	{
 		// Chan 0
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Chan 1
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->t));
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Chan 2
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Chan 3
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->a));
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Temp
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	}
 	else // FOUR_AD_CHANNELS_NO_READBACK_NO_TEMP
 	{
 		// Chan 0
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Chan 1
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->t));
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Chan 2
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Chan 3
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->a));
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	}	
 #endif
 
@@ -311,9 +311,9 @@ void InitAnalogControl(void)
 ///----------------------------------------------------------------------------
 void WriteADConfig(unsigned int config)
 {
-	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	spi_write(&AVR32_SPI0, ((unsigned short) config << 2));
-	spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 }
 
 ///----------------------------------------------------------------------------
@@ -371,9 +371,9 @@ void SetupADChannelConfig(uint32 sampleRate)
 	//Delay for 1.2us at least
 	SoftUsecWait(2);
 
-	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	spi_write(&AVR32_SPI0, 0x0000);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 	SoftUsecWait(2);
 
@@ -381,13 +381,13 @@ void SetupADChannelConfig(uint32 sampleRate)
 	uint16 dummyRead = 0x8000;
 
 	// Need 2 dummy reads to start and sync the channels
-	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &dummyRead);
-	spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
-	spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &dummyRead);
-	spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 #endif
 
 #if 0
@@ -396,9 +396,9 @@ void SetupADChannelConfig(uint32 sampleRate)
 	// Need dummy reads to start and sync the channels
 	while (dummyRead > 0x2000)
 	{
-		spi_selectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &dummyRead);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_0_CHIP_SELECT);
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	}
 #endif
 }
