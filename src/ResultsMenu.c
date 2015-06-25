@@ -80,8 +80,10 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg,
                   MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	UNIT_CONFIG_STRUCT temp_g_unitConfig;
 	uint32 delay = 3 * TICKS_PER_SEC;
+#if 0 // ns7100
+	UNIT_CONFIG_STRUCT temp_g_unitConfig;
+#endif
 
 	if (msg.cmd == ACTIVATE_MENU_CMD)
 	{
@@ -173,10 +175,11 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg,
 						{
 							StopMonitoring(g_triggerRecord.op_mode, EVENT_PROCESSING);
 
+#if 0 // ns7100
 							// Restore the autoPrint just in case the user escaped from the printout
 							GetRecordData(&temp_g_unitConfig, 0, REC_UNIT_CONFIG_TYPE);
 							g_unitConfig.autoPrint = temp_g_unitConfig.autoPrint;
-
+#endif
 							SETUP_MENU_MSG(MAIN_MENU);
 							JUMP_TO_ACTIVE_MENU();
 						}
