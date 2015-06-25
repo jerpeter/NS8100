@@ -1036,11 +1036,11 @@ unsigned char compressedDataCacheBuffer[2];
 unsigned long compressedDataLen;
 
 // Handles incrementing the data length, sending data and managing the temp compressed data buffer
-#define SEND_COMPRESSED_DATA()	compressedDataLen++; if (compressedDataLen > 2) WriteCompressedData(compressedDataCacheBuffer[0]); compressedDataCacheBuffer[0] = compressedDataCacheBuffer[1];
+#define SEND_COMPRESSED_DATA()	compressedDataLen++; if (compressedDataLen > 2) WriteCompressedData(compressedDataCacheBuffer[0], outMode); compressedDataCacheBuffer[0] = compressedDataCacheBuffer[1];
 
 // Compression subroutine (main algorithm)
 static __lzo_noinline lzo_uint
-do_compress (const lzo_bytep in, lzo_uint in_len)
+do_compress (const lzo_bytep in, lzo_uint in_len, lzo_uint outMode)
 {
     register const lzo_bytep ip;
     const lzo_bytep const in_end = in + in_len;
@@ -1062,7 +1062,10 @@ do_compress (const lzo_bytep in, lzo_uint in_len)
 		// Every so often, handle system events
 		if ((compressedDataLen > 255) && ((compressedDataLen % 256) == 0))
 		{
-			HandleSystemEvents();
+			if (outMode == OUT_SERIAL)
+			{
+				HandleSystemEvents();
+			}
 		}
 
         DINDEX1(dindex, ip);
@@ -1279,7 +1282,7 @@ m3_m4_offset:
 
 // Compression Algorithm
 LZO_PUBLIC(unsigned long int)
-DO_COMPRESS      (const lzo_bytep in, lzo_uint in_len)
+DO_COMPRESS      (const lzo_bytep in, lzo_uint in_len, lzo_uint outMode)
 // int lzo1x_1_compress(const lzo_bytep in, lzo_uint in_len)
 {
     lzo_uint t;
@@ -1291,7 +1294,7 @@ DO_COMPRESS      (const lzo_bytep in, lzo_uint in_len)
         t = in_len;
     else
     {
-        t = do_compress(in, in_len);
+        t = do_compress(in, in_len, outMode);
     }
 
     if (t > 0)

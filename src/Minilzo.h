@@ -78,7 +78,7 @@ extern "C" {
 
 /* compression */
 LZO_EXTERN(unsigned long int)
-lzo1x_1_compress        (const lzo_bytep src, lzo_uint src_len);
+lzo1x_1_compress        (const lzo_bytep src, lzo_uint src_len, lzo_uint outMode);
 
 /* decompression */
 LZO_EXTERN(int)
@@ -91,8 +91,6 @@ LZO_EXTERN(int)
 lzo1x_decompress_safe   (const lzo_bytep src, lzo_uint  src_len,
                                 lzo_bytep dst, lzo_uintp dst_len,
                                 lzo_voidp wrkmem /* NOT USED */);
-
-void writeCompressData(unsigned char compressData);
 
 #ifdef __cplusplus
 } /* extern "C" */
