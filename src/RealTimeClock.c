@@ -238,17 +238,19 @@ DATE_TIME_STRUCT GetExternalRtcTime(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void UpdateCurrentTime(void)
+uint8 UpdateCurrentTime(void)
 {
+	uint8 status = FAILED;
+
+	// Check if SPI1 access is available (actual lock is inside Get External RTC time)
 	if (g_spi1AccessLock == AVAILABLE)
 	{
-		g_spi1AccessLock = RTC_TIME_LOCK;
-
 		g_rtcCurrentTickCount = 0;
 		g_lastReadExternalRtcTime = GetExternalRtcTime();
-
-		g_spi1AccessLock = AVAILABLE;
+		status = PASSED;
 	}
+
+	return (status);
 }
 
 ///----------------------------------------------------------------------------
@@ -522,6 +524,11 @@ void ExternalRtcWrite(uint8 registerAddress, int length, uint8* data)
 {
 	uint16 dataContainer = 0;
 
+	if (g_spi1AccessLock != CAL_PULSE_LOCK)
+	{
+		GetSpi1MutexLock(RTC_TIME_LOCK);
+	}
+
 	spi_selectChip(&AVR32_SPI1, RTC_SPI_NPCS);
 
 	// Small delay before the RTC device is accessible
@@ -539,6 +546,11 @@ void ExternalRtcWrite(uint8 registerAddress, int length, uint8* data)
 	}
 
 	spi_unselectChip(&AVR32_SPI1, RTC_SPI_NPCS);
+
+	if (g_spi1AccessLock != CAL_PULSE_LOCK)
+	{
+		ReleaseSpi1MutexLock();
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -547,6 +559,11 @@ void ExternalRtcWrite(uint8 registerAddress, int length, uint8* data)
 void ExternalRtcRead(uint8 registerAddress, int length, uint8* data)
 {
 	uint16 dataContainer = 0;
+
+	if (g_spi1AccessLock != CAL_PULSE_LOCK)
+	{
+		GetSpi1MutexLock(RTC_TIME_LOCK);
+	}
 
 	spi_selectChip(&AVR32_SPI1, RTC_SPI_NPCS);
 
@@ -567,6 +584,11 @@ void ExternalRtcRead(uint8 registerAddress, int length, uint8* data)
 	}
 
 	spi_unselectChip(&AVR32_SPI1, RTC_SPI_NPCS);
+
+	if (g_spi1AccessLock != CAL_PULSE_LOCK)
+	{
+		ReleaseSpi1MutexLock();
+	}
 }
 
 #if 0 // Add / Fix later

@@ -785,7 +785,7 @@ BOOLEAN InitExternalRtc(void);
 uint8 SetExternalRtcTime(DATE_TIME_STRUCT* time);
 uint8 SetExternalRtcDate(DATE_TIME_STRUCT* time);
 DATE_TIME_STRUCT GetExternalRtcTime(void);
-void UpdateCurrentTime(void);
+uint8 UpdateCurrentTime(void);
 DATE_TIME_STRUCT GetCurrentTime(void);
 void DisableExternalRtcAlarm(void);
 void EnableExternalRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second);
