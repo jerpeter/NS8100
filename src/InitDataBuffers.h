@@ -57,25 +57,6 @@ typedef enum
 	SUMM_TBL_FULL 	= 0x0002
 } FULL_FLAGS;
 
-#if 0 // Removed
-typedef enum
-{
-	SAMPLE_DATA 	= 0x0000,
-	TRIG_ONE    	= 0x1000,
-	TRIG_TWO    	= 0x2000,
-	TRIG_THREE  	= 0x3000,
-	EVENT_END   	= 0x4000,
-	EVENT_START 	= 0x5000,
-	CAL_START   	= 0x6000,
-	CAL_END     	= 0x7000,
-	EVENT_END_START = 0x8000,
-	EVENT_START_2ND = 0x9000,
-	EMBEDDED_CMD  	= 0xF000,
-	DATA_MASK		= 0x0FFF,
-	SIGNBIT_MASK	= 0x0800
-} EMBEDDED_CMDS;
-#endif
-
 typedef enum
 {
 	FREQ_VALID_PEAK 			= 4,
@@ -110,15 +91,6 @@ typedef enum
 //	WAVE_STORE_DATA,
 	WAVE_COMPLETE
 } WAVE_PROCESSING_STATE;
-
-enum
-{
-	AVAILABLE = 1,
-	EVENT_LOCK,
-	CAL_PULSE_LOCK,
-	FILE_LOCK,
-	RTC_TIME_LOCK
-};
 
 typedef union
 {
