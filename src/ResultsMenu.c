@@ -622,7 +622,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		sprintf(buff, "mg/s");
 	}
-	else if (g_sensorInfo.unitsFlag == IMPERIAL)
+	else if (g_sensorInfo.unitsFlag == IMPERIAL_TYPE)
 	{
 		sprintf(buff, "in/s");
 	}

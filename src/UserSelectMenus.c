@@ -885,7 +885,7 @@ void BarChannelMenuHandler(uint8 keyPressed, void* data)
 			sprintf((char*)&g_menuTags[BAR_SCALE_EIGHTH_TAG].text, " 12%% (%.0f mg)",
 					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_EIGHTH));
 		}
-		else if (g_unitConfig.unitsOfMeasure == IMPERIAL)
+		else if (g_unitConfig.unitsOfMeasure == IMPERIAL_TYPE)
 		{
 			sprintf((char*)&g_menuTags[BAR_SCALE_FULL_TAG].text, "100%% (%.2f in/s)",
 					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_FULL));
@@ -896,7 +896,7 @@ void BarChannelMenuHandler(uint8 keyPressed, void* data)
 			sprintf((char*)&g_menuTags[BAR_SCALE_EIGHTH_TAG].text, " 12%% (%.2f in/s)",
 					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_EIGHTH));
 		}
-		else // g_unitConfig.unitsOfMeasure == METRIC
+		else // g_unitConfig.unitsOfMeasure == METRIC_TYPE
 		{
 			sprintf((char*)&g_menuTags[BAR_SCALE_FULL_TAG].text, "100%% (%lu mm/s)",
 					(uint32)((float)g_factorySetupRecord.sensor_type * (float)25.4 /
@@ -1288,10 +1288,10 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
-#if 0 // Power Savings is no longer a unit configurable setting
+#if 0 // Power Savings, Report Displacement, Report Peak Acc are no longer a unit configurable setting
 #define CONFIG_MENU_ENTRIES 30
 #else
-#define CONFIG_MENU_ENTRIES 29
+#define CONFIG_MENU_ENTRIES 27
 #endif
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
@@ -1305,6 +1305,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, CALIBRATION_DATE_TEXT,		NO_TAG, {CALIBRATION_DATE}},
 {NO_TAG, 0, DATE_TIME_TEXT,				NO_TAG, {DATE_TIME}},
 {NO_TAG, 0, ERASE_MEMORY_TEXT,			NO_TAG, {ERASE_FLASH}},
+{NO_TAG, 0, EVENT_SUMMARIES_TEXT,		NO_TAG, {EVENT_SUMMARIES}},
 {NO_TAG, 0, FLASH_WRAPPING_TEXT,		NO_TAG, {FLASH_WRAPPING}},
 {NO_TAG, 0, FLASH_STATS_TEXT,			NO_TAG, {FLASH_STATS}},
 {NO_TAG, 0, LANGUAGE_TEXT,				NO_TAG, {LANGUAGE}},
@@ -1315,12 +1316,11 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, PRETRIGGER_SIZE_TEXT,		NO_TAG, {PRETRIGGER_SIZE}},
 #if 0 // No longer a unit configurable setting
 {NO_TAG, 0, POWER_SAVINGS_TEXT,			NO_TAG, {POWER_SAVINGS}},
-#endif
 {NO_TAG, 0, REPORT_DISPLACEMENT_TEXT,	NO_TAG, {REPORT_DISPLACEMENT}},
 {NO_TAG, 0, REPORT_PEAK_ACC_TEXT,		NO_TAG, {REPORT_PEAK_ACC}},
+#endif
 {NO_TAG, 0, SENSOR_GAIN_TYPE_TEXT,		NO_TAG, {SENSOR_GAIN_TYPE}},
 {NO_TAG, 0, SERIAL_NUMBER_TEXT,			NO_TAG, {SERIAL_NUMBER}},
-{NO_TAG, 0, SUMMARIES_EVENTS_TEXT,		NO_TAG, {SUMMARIES_EVENTS}},
 {NO_TAG, 0, TIMER_MODE_TEXT,			NO_TAG, {TIMER_MODE}},
 {NO_TAG, 0, UNITS_OF_MEASURE_TEXT,		NO_TAG, {UNITS_OF_MEASURE}},
 {NO_TAG, 0, UNITS_OF_AIR_TEXT,			NO_TAG, {UNITS_OF_AIR}},
@@ -1381,6 +1381,13 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				SETUP_USER_MENU_MSG(&eraseEventsMenu, YES);
 			break;
 
+			case (EVENT_SUMMARIES):
+				// Display a message to be patient while the software loads info from event files
+				OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
+
+				SETUP_MENU_MSG(SUMMARY_MENU); mn_msg.data[0] = START_FROM_TOP;
+			break;
+
 			case (FLASH_WRAPPING):
 				SETUP_USER_MENU_MSG(&flashWrappingMenu, g_unitConfig.flashWrapping);
 			break;
@@ -1432,27 +1439,22 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				SETUP_USER_MENU_MSG(&powerSavingsMenu, g_unitConfig.powerSavingsLevel);
 			break;
 #endif
+#if 0 // No longer a unit configurable setting
 			case (REPORT_DISPLACEMENT):
 				SETUP_USER_MENU_MSG(&displacementMenu, g_unitConfig.reportDisplacement);
 			break;
-
+#endif
+#if 0 // No longer a unit configurable setting
 			case (REPORT_PEAK_ACC):
 				SETUP_USER_MENU_MSG(&peakAccMenu, g_unitConfig.reportPeakAcceleration);
 			break;
-
+#endif
 			case (SENSOR_GAIN_TYPE):
 				DisplaySensorType();
 			break;
 
 			case (SERIAL_NUMBER):
 				DisplaySerialNumber();
-			break;
-
-			case (SUMMARIES_EVENTS):
-				// Display a message to be patient while the software loads info from event files
-				OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
-
-				SETUP_MENU_MSG(SUMMARY_MENU); mn_msg.data[0] = START_FROM_TOP;
 			break;
 
 			case (TIMER_MODE):

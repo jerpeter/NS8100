@@ -211,7 +211,7 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
 					// Reset the cached entries since the temp space used can be overwritten
 					cacheEntries = 0;
 
-					SETUP_USER_MENU_MSG(&configMenu, SUMMARIES_EVENTS);
+					SETUP_USER_MENU_MSG(&configMenu, EVENT_SUMMARIES);
 					JUMP_TO_ACTIVE_MENU();
 				}
 				break;

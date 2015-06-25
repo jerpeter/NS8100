@@ -1252,7 +1252,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				}
 				else // ((g_factorySetupRecord.sensor_type == SENSOR_2_5_IN) && (g_triggerRecord.srec.sensitivity == HIGH))
 				{
-					if (g_unitConfig.unitsOfMeasure == IMPERIAL)
+					if (g_unitConfig.unitsOfMeasure == IMPERIAL_TYPE)
 						sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.6f-%.3f%s,N)",
 							g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, g_userMenuCacheData.unitText);
 					else

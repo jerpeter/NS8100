@@ -1038,14 +1038,14 @@ void OperatorMenuHandler(uint8 keyPressed, void* data)
 			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.0fmg)", 
 					(float)g_factorySetupRecord.sensor_type / (float)400);
 		}
-		else if (g_unitConfig.unitsOfMeasure == IMPERIAL)
+		else if (g_unitConfig.unitsOfMeasure == IMPERIAL_TYPE)
 		{
 			sprintf((char*)&g_menuTags[LOW_SENSITIVITY_MAX_TAG].text, " (%.2fin)", 
 					(float)g_factorySetupRecord.sensor_type / (float)200);
 			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.2fin)", 
 					(float)g_factorySetupRecord.sensor_type / (float)400);
 		}
-		else // g_unitConfig.unitsOfMeasure == METRIC
+		else // g_unitConfig.unitsOfMeasure == METRIC_TYPE
 		{
 			sprintf((char*)&g_menuTags[LOW_SENSITIVITY_MAX_TAG].text, " (%.2fmm)", 
 					(float)g_factorySetupRecord.sensor_type * (float)25.4 / (float)200);
