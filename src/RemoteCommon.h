@@ -278,7 +278,7 @@ typedef struct
 {
 	uint32				structureFlag;
 	DATE_TIME_STRUCT	downloadDate;
-	EVT_RECORD			event;
+	EVT_RECORD			eventRecord;
 	uint32				endFlag;
 } EVENT_RECORD_DOWNLOAD_STRUCT;
 #pragma pack()
@@ -523,7 +523,7 @@ void SendErrorMsg(uint8*, uint8*);
 uint16 GetInt16Field(uint8*);
 void BuildIntDataField(char*, uint32, uint8);
 uint32 DataLengthStrToUint32(uint8*);
-void WriteCompressedData(uint8 compressedData);
+void WriteCompressedData(uint8 compressedData, uint8 outMode);
 void InitAutoDialout(void);
 void CheckAutoDialoutStatus(void);
 void StartAutoDialoutProcess(void);

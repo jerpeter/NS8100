@@ -20,6 +20,8 @@
 #include "EventProcessing.h"
 #include "SysEvents.h"
 #include "SoftTimer.h"
+#include "file.h"
+#include "fsaccess.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -291,22 +293,36 @@ uint32 DataLengthStrToUint32(uint8* dataLengthStr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void WriteCompressedData(uint8 compressedData)
+void WriteCompressedData(uint8 compressedData, uint8 outMode)
 {
-	g_demXferStructPtr->xmitBuffer[g_demXferStructPtr->xmitSize] = compressedData;
-	g_demXferStructPtr->xmitSize++;
-
-	if (g_demXferStructPtr->xmitSize >= XMIT_SIZE_MONITORING)
+	if (outMode == OUT_SERIAL)
 	{
-		g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
+		g_demXferStructPtr->xmitBuffer[g_demXferStructPtr->xmitSize] = compressedData;
+		g_demXferStructPtr->xmitSize++;
 
-		if (ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
+		if (g_demXferStructPtr->xmitSize >= XMIT_SIZE_MONITORING)
 		{
-			g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
-		}
+			g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
 
-		g_transferCount += g_demXferStructPtr->xmitSize;
-		g_demXferStructPtr->xmitSize = 0;
+			if (ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
+			{
+				g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
+			}
+
+			g_transferCount += g_demXferStructPtr->xmitSize;
+			g_demXferStructPtr->xmitSize = 0;
+		}
+	}
+	else if (outMode == OUT_FILE)
+	{
+		g_spareBuffer[g_spareBufferIndex] = compressedData;
+		g_spareBufferIndex++;
+
+		if (g_spareBufferIndex == SPARE_BUFFER_SIZE)
+		{
+			write(g_globalFileHandle, g_spareBuffer, SPARE_BUFFER_SIZE);
+			g_spareBufferIndex = 0;
+		}
 	}
 }
 
