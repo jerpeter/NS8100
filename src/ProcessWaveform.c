@@ -24,6 +24,9 @@
 #include "ProcessBargraph.h"
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
+#include "M23018.h"
+#include "Minilzo.h"
+#include "fsaccess.h"
 #if 0 // Port fat driver
 #include "FAT32_Disk.h"
 #include "FAT32_Access.h"
@@ -353,8 +356,6 @@ void ProcessWaveformData(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#include "fsaccess.h"
-#include "M23018.h"
 void MoveWaveformEventToFile(void)
 {
 	static WAVE_PROCESSING_STATE waveformProcessingState = WAVE_INIT;
@@ -374,6 +375,8 @@ void MoveWaveformEventToFile(void)
 	uint8 keypadLedConfig;
 	uint32 bytesWritten;
 	uint32 remainingDataLength;
+	uint32 compressSize;
+	uint16* tempDataPtr;
 
 #if 1 // Atmel fat driver
 	int waveformFileHandle = -1;
@@ -559,8 +562,9 @@ void MoveWaveformEventToFile(void)
 			case WAVE_STORE:
 				if ((g_spi1AccessLock == AVAILABLE) && (g_fileAccessLock == AVAILABLE))
 				{
-					g_spi1AccessLock = EVENT_LOCK;
-					//g_fileAccessLock = FILE_LOCK;
+					GetSpi1MutexLock(SDMMC_LOCK);
+					//g_fileAccessLock = SDMMC_LOCK;
+
 					nav_select(FS_NAV_ID_DEFAULT);
 
 					// Get new event file handle
@@ -598,12 +602,14 @@ void MoveWaveformEventToFile(void)
 							keypadLedConfig = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 						}
 
+						tempDataPtr = g_currentEventStartPtr;
+
 						while (remainingDataLength)
 						{
 							if (remainingDataLength > WAVEFORM_FILE_WRITE_CHUNK_SIZE)
 							{
 								// Write the event data, containing the Pretrigger, event and cal
-								bytesWritten = write(waveformFileHandle, g_currentEventStartPtr, WAVEFORM_FILE_WRITE_CHUNK_SIZE);
+								bytesWritten = write(waveformFileHandle, tempDataPtr, WAVEFORM_FILE_WRITE_CHUNK_SIZE);
 
 								if (bytesWritten != WAVEFORM_FILE_WRITE_CHUNK_SIZE)
 								{
@@ -611,7 +617,7 @@ void MoveWaveformEventToFile(void)
 								}
 
 								remainingDataLength -= WAVEFORM_FILE_WRITE_CHUNK_SIZE;
-								g_currentEventStartPtr += (WAVEFORM_FILE_WRITE_CHUNK_SIZE / 2);
+								tempDataPtr += (WAVEFORM_FILE_WRITE_CHUNK_SIZE / 2);
 
 								// Quickly toggle the green LED to show status of saving a waveform event (while too busy to update LCD)
 								if (keypadLedConfig & GREEN_LED_PIN) { keypadLedConfig &= ~GREEN_LED_PIN; }
@@ -622,7 +628,7 @@ void MoveWaveformEventToFile(void)
 							else // Remaining data size is less than the file write chunk size
 							{
 								// Write the event data, containing the Pretrigger, event and cal
-								bytesWritten = write(waveformFileHandle, g_currentEventStartPtr, remainingDataLength);
+								bytesWritten = write(waveformFileHandle, tempDataPtr, remainingDataLength);
 
 								if (bytesWritten != remainingDataLength)
 								{
@@ -638,6 +644,28 @@ void MoveWaveformEventToFile(void)
 						// Done writing the event file, close the file handle
 						g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 						close(waveformFileHandle);
+
+#if 1 // New method to save compressed data file
+						// Get new event file handle
+						g_globalFileHandle = GetERDataFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
+
+						g_spareBufferIndex = 0;
+						compressSize = lzo1x_1_compress((void*)g_currentEventStartPtr, (g_wordSizeInEvent * 2), OUT_FILE);
+
+						if (g_spareBufferIndex)
+						{
+							write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
+							g_spareBufferIndex = 0;
+						}
+						debug("Wave Compressed Data length: %d (Matches file: %s)\r\n", compressSize, (compressSize == nav_file_lgt()) ? "Yes" : "No");
+
+						SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
+						// Done writing the event file, close the file handle
+						g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+						close(g_globalFileHandle);
+#endif
+
 #else // Port fat driver
 						// Write the event record header and summary
 						fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, waveformFileHandle);
@@ -653,14 +681,15 @@ void MoveWaveformEventToFile(void)
 
 					AddEventToSummaryList(&g_pendingEventRecord);
 
-					g_spi1AccessLock = AVAILABLE;
+					ReleaseSpi1MutexLock();
+
 					waveformProcessingState = WAVE_COMPLETE;
 				}
 				break;
 
 			case WAVE_COMPLETE:
 				ramSummaryEntryPtr->fileEventNum = g_pendingEventRecord.summary.eventNumber;
-					
+
 				UpdateMonitorLogEntry();
 
 #if 1 // Always store the event number for every event

@@ -19,6 +19,7 @@
 #include "Menu.h"
 #include "ProcessBargraph.h"
 #include "EventProcessing.h"
+#include "Minilzo.h"
 #if 0 // Port fat driver
 #include "FAT32_FileLib.h"
 #include "FAT32_Disk.h"
@@ -116,10 +117,9 @@ void MoveBarIntervalDataToFile(void)
 		}
 		else // (g_fileAccessLock == AVAILABLE)
 		{
-			while ((volatile uint8)g_spi1AccessLock != AVAILABLE) {;}
-			g_spi1AccessLock = EVENT_LOCK;
+			GetSpi1MutexLock(SDMMC_LOCK);
+			//g_fileAccessLock = SDMMC_LOCK;
 
-			//g_fileAccessLock = FILE_LOCK;
 			nav_select(FS_NAV_ID_DEFAULT);
 
 			bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, APPEND_EVENT_FILE);
@@ -150,8 +150,8 @@ void MoveBarIntervalDataToFile(void)
 #endif
 			debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
-			g_fileAccessLock = AVAILABLE;
-			g_spi1AccessLock = AVAILABLE;
+			//g_fileAccessLock = AVAILABLE;
+			ReleaseSpi1MutexLock();
 		}
 	}
 }
@@ -219,10 +219,9 @@ void MoveSummaryIntervalDataToFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		while ((volatile uint8)g_spi1AccessLock != AVAILABLE) {;}
-		g_spi1AccessLock = EVENT_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
 
-		//g_fileAccessLock = FILE_LOCK;
 		nav_select(FS_NAV_ID_DEFAULT);
 
 		bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, APPEND_EVENT_FILE);
@@ -263,8 +262,8 @@ void MoveSummaryIntervalDataToFile(void)
 
 		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
-		g_fileAccessLock = AVAILABLE;
-		g_spi1AccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 
 	// Update the job totals.
@@ -871,7 +870,9 @@ void MoveStartOfBargraphEventRecordToFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 		// Create new Bargraph event file
@@ -897,6 +898,9 @@ void MoveStartOfBargraphEventRecordToFile(void)
 
 		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
+
 		// Consume event number (also allow other events to be recorded during a Combo - Bargraph session)
 		StoreCurrentEventNumber();
 
@@ -905,8 +909,6 @@ void MoveStartOfBargraphEventRecordToFile(void)
 			// Update the Waveform pending record with the new event number to use
 			g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 		}
-
-		g_fileAccessLock = AVAILABLE;
 	}
 }
 
@@ -915,6 +917,8 @@ void MoveStartOfBargraphEventRecordToFile(void)
 ///----------------------------------------------------------------------------
 void MoveEndOfBargraphEventRecordToFile(void)
 {
+	uint32 compressSize;
+
 #if 1 // Atmel fat driver
 	int bargraphFileHandle = -1;
 #else // Port fat driver
@@ -928,7 +932,9 @@ void MoveEndOfBargraphEventRecordToFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 		// The following data will be filled in when the data has been moved over to flash.
@@ -965,6 +971,15 @@ void MoveEndOfBargraphEventRecordToFile(void)
 		// Rewrite the event record
 		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
 
+#if 1 // Test
+		// Make sure at the beginning of the data
+		file_seek(sizeof(EVT_RECORD), FS_SEEK_SET);
+
+		uint32 dataLength = (nav_file_lgt() - sizeof(EVT_RECORD));
+		// Cache the Bargraph data for compression event file creation below
+		read(bargraphFileHandle, (uint8*)&g_eventDataBuffer[0], dataLength);
+#endif
+
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
@@ -981,9 +996,31 @@ void MoveEndOfBargraphEventRecordToFile(void)
 
 		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
+#if 1 // New method to save compressed data file
+		// Get new event file handle
+		g_globalFileHandle = GetERDataFileHandle(g_pendingBargraphRecord.summary.eventNumber, CREATE_EVENT_FILE);
+
+		g_spareBufferIndex = 0;
+		compressSize = lzo1x_1_compress((void*)&g_eventDataBuffer[0], dataLength, OUT_FILE);
+
+		if (g_spareBufferIndex)
+		{
+			write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
+			g_spareBufferIndex = 0;
+		}
+		debug("Bargraph Compressed Data length: %d (Matches file: %s)\r\n", compressSize, (compressSize == nav_file_lgt()) ? "Yes" : "No");
+
+		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
+		// Done writing the event file, close the file handle
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		close(g_globalFileHandle);
+#endif
+
 		AddEventToSummaryList(&g_pendingBargraphRecord);
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 
 		UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_pendingBargraphRecord.header.dataLength);
 	}

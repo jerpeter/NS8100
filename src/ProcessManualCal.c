@@ -24,6 +24,7 @@
 #include "ProcessBargraph.h"
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
+#include "Minilzo.h"
 #if 0 // Port fat driver
 #include "FAT32_FileLib.h"
 #include "FAT32_Disk.h"
@@ -58,6 +59,7 @@ void MoveManualCalToFile(void)
 	uint16 lowA = 0xFFFF, lowR = 0xFFFF, lowV = 0xFFFF, lowT = 0xFFFF;
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
+	uint32 compressSize;
 
 #if 1 // Atmel fat driver
 	int manualCalFileHandle = -1;
@@ -182,10 +184,9 @@ void MoveManualCalToFile(void)
 		}
 		else // (g_fileAccessLock == AVAILABLE)
 		{
-			while ((volatile uint8)g_spi1AccessLock != AVAILABLE) {;}
-			g_spi1AccessLock = EVENT_LOCK;
+			GetSpi1MutexLock(SDMMC_LOCK);
+			//g_fileAccessLock = SDMMC_LOCK;
 
-			//g_fileAccessLock = FILE_LOCK;
 			nav_select(FS_NAV_ID_DEFAULT);
 
 			// Get new event file handle
@@ -197,6 +198,9 @@ void MoveManualCalToFile(void)
 			if (manualCalFileHandle == NULL)
 #endif
 			{
+				//g_fileAccessLock = AVAILABLE;
+				ReleaseSpi1MutexLock();
+
 				debugErr("Failed to get a new file handle for the Manual Cal event\r\n");
 			}
 			else // Write the file event to the SD card
@@ -216,6 +220,27 @@ void MoveManualCalToFile(void)
 				// Done writing the event file, close the file handle
 				g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 				close(manualCalFileHandle);
+
+#if 1 // New method to save compressed data file
+				// Get new event file handle
+				g_globalFileHandle = GetERDataFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
+
+				g_spareBufferIndex = 0;
+				compressSize = lzo1x_1_compress((void*)g_currentEventStartPtr, (g_wordSizeInCal * 2), OUT_FILE);
+
+				if (g_spareBufferIndex)
+				{
+					write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
+					g_spareBufferIndex = 0;
+				}
+				debug("Manual Cal Compressed Data length: %d (Matches file: %s)\r\n", compressSize, (compressSize == nav_file_lgt()) ? "Yes" : "No");
+
+				SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
+				// Done writing the event file, close the file handle
+				g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+				close(g_globalFileHandle);
+#endif
 #else // Port fat driver
 				// Write the event record header and summary
 				fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, manualCalFileHandle);
@@ -226,6 +251,8 @@ void MoveManualCalToFile(void)
 				// Done writing the event file, close the file handle
 				fl_fclose(manualCalFileHandle);
 #endif
+				//g_fileAccessLock = AVAILABLE;
+				ReleaseSpi1MutexLock();
 
 				debug("Manual Cal Event file closed\r\n");
 
@@ -265,9 +292,6 @@ void MoveManualCalToFile(void)
 			}
 
 			g_freeEventBuffers++;
-
-			g_fileAccessLock = AVAILABLE;
-			g_spi1AccessLock = AVAILABLE;
 		}
 	}
 	else
