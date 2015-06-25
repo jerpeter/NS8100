@@ -337,7 +337,7 @@ void Soft_timer_tick_irq(void)
 	{
 		s_testForForeverLoop++;
 
-		if (s_testForForeverLoop > 120)
+		if (s_testForForeverLoop > (10 * TICKS_PER_MIN))
 		{
 			// Signal error condition
 			//OverlayMessage(getLangText(ERROR_TEXT), "UNIT STUCK IN NON ISR LOOP", (3 * SOFT_SECS));
@@ -1252,12 +1252,12 @@ static inline void getChannelDataNoReadbackNoTemp_ISR_Inline(void)
 static inline void HandleChannelSyncError_ISR_Inline(void)
 {
 	debugErr("AD Channel Sync Error\r\n");
-		
+
 	// Attempt channel recovery (with a channel read to get the config read back value)
-	spi_selectChip(AD_SPI, AD_SPI_NPCS);
-	spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack); // Data insignificant
-	spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack); // Config read back
-	spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack); // Data insignificant
+	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack); // Config read back
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		
 	switch (s_channelConfigReadBack)
 	{
@@ -1284,10 +1284,10 @@ static inline void HandleChannelSyncError_ISR_Inline(void)
 	while (s_channelReadsToSync--)
 	{
 		// Dummy reads to realign channel processing
-		spi_selectChip(AD_SPI, AD_SPI_NPCS); 
-		spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack); // Data insignificant
-		spi_write(AD_SPI, 0x0000); spi_read(AD_SPI, &s_channelConfigReadBack); // Config read back
-		spi_unselectChip(AD_SPI, AD_SPI_NPCS);
+		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack); // Data insignificant
+		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack); // Config read back
+		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	}
 }
 
