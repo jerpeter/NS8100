@@ -206,6 +206,7 @@ extern uint8 g_enterMonitorModeAfterMidnightCal;
 extern void (*g_userMenuHandler)(uint8, void*);
 extern uint16 g_eventBufferWriteIndex;
 extern uint8 g_spareBuffer[SPARE_BUFFER_SIZE];
+extern uint32 g_spareBufferIndex;
 extern uint8 g_debugBuffer[GLOBAL_DEBUG_BUFFER_SIZE];
 extern uint16 g_debugBufferCount;
 extern uint8 g_timerModeLastRun;
@@ -229,7 +230,7 @@ extern SUMMARY_LIST_FILE_DETAILS g_summaryList;
 extern volatile uint16 g_storedTempReading;
 extern volatile uint16 g_currentTempReading;
 extern volatile uint16 g_previousTempReading;
-extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS];
+extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS_PLUS_EVT_RECORD_PLUS_SUMMARY_LIST];
 
 // Version
 extern const char g_buildVersion[];
@@ -250,6 +251,7 @@ extern SMART_SENSOR_ROM g_acousticSmartSensorRom;
 extern SMART_SENSOR_STRUCT g_seismicSmartSensorMemory;
 extern SMART_SENSOR_STRUCT g_acousticSmartSensorMemory;
 extern WORKING_CAL_DATE_STRUCT g_currentCalibration;
+extern int g_globalFileHandle;
 extern uint8 g_quickBootEntryJump;
 extern uint8 g_breakpointCause;
 extern uint32 g_testTimeSinceLastFSWrite;
