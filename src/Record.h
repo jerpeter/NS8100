@@ -238,7 +238,7 @@ typedef struct
 	uint8 powerSavingsLevel;
 	uint8 unused1;
 	uint8 unused2;
-	uint8 unused3;
+	uint8 saveCompressedData;
 	uint8 airScale;
 	uint8 vectorSum;
 	uint8 autoCalForWaveform;

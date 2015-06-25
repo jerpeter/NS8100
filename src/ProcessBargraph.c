@@ -918,6 +918,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 void MoveEndOfBargraphEventRecordToFile(void)
 {
 	uint32 compressSize;
+	uint32 dataLength;
 
 #if 1 // Atmel fat driver
 	int bargraphFileHandle = -1;
@@ -971,13 +972,17 @@ void MoveEndOfBargraphEventRecordToFile(void)
 		// Rewrite the event record
 		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
 
-#if 1 // Test
-		// Make sure at the beginning of the data
-		file_seek(sizeof(EVT_RECORD), FS_SEEK_SET);
+#if 1 // New method to save compressed data file
+		if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
+		{
+			// Make sure at the beginning of the data
+			file_seek(sizeof(EVT_RECORD), FS_SEEK_SET);
 
-		uint32 dataLength = (nav_file_lgt() - sizeof(EVT_RECORD));
-		// Cache the Bargraph data for compression event file creation below
-		read(bargraphFileHandle, (uint8*)&g_eventDataBuffer[0], dataLength);
+			dataLength = (nav_file_lgt() - sizeof(EVT_RECORD));
+
+			// Cache the Bargraph data for compression event file creation below
+			read(bargraphFileHandle, (uint8*)&g_eventDataBuffer[0], dataLength);
+		}
 #endif
 
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
@@ -997,24 +1002,27 @@ void MoveEndOfBargraphEventRecordToFile(void)
 		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 #if 1 // New method to save compressed data file
-		// Get new event file handle
-		g_globalFileHandle = GetERDataFileHandle(g_pendingBargraphRecord.summary.eventNumber, CREATE_EVENT_FILE);
-
-		g_spareBufferIndex = 0;
-		compressSize = lzo1x_1_compress((void*)&g_eventDataBuffer[0], dataLength, OUT_FILE);
-
-		if (g_spareBufferIndex)
+		if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
 		{
-			write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
+			// Get new event file handle
+			g_globalFileHandle = GetERDataFileHandle(g_pendingBargraphRecord.summary.eventNumber, CREATE_EVENT_FILE);
+
 			g_spareBufferIndex = 0;
+			compressSize = lzo1x_1_compress((void*)&g_eventDataBuffer[0], dataLength, OUT_FILE);
+
+			if (g_spareBufferIndex)
+			{
+				write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
+				g_spareBufferIndex = 0;
+			}
+			debug("Bargraph Compressed Data length: %d (Matches file: %s)\r\n", compressSize, (compressSize == nav_file_lgt()) ? "Yes" : "No");
+
+			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
+			// Done writing the event file, close the file handle
+			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			close(g_globalFileHandle);
 		}
-		debug("Bargraph Compressed Data length: %d (Matches file: %s)\r\n", compressSize, (compressSize == nav_file_lgt()) ? "Yes" : "No");
-
-		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
-
-		// Done writing the event file, close the file handle
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
-		close(g_globalFileHandle);
 #endif
 
 		AddEventToSummaryList(&g_pendingBargraphRecord);

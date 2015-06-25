@@ -443,6 +443,7 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr)
 	// Set default conditions
 	rec_ptr->powerSavingsLevel = POWER_SAVINGS_NORMAL;
 	rec_ptr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
+	rec_ptr->saveCompressedData = SAVE_EXTRA_FILE_COMPRESSED_DATA;
 	rec_ptr->airScale = AIR_SCALE_LINEAR;
 	rec_ptr->flashWrapping = YES;
 	rec_ptr->autoMonitorMode = AUTO_NO_TIMEOUT;
@@ -475,7 +476,6 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr)
 	// Set unused fields to zero
 	rec_ptr->unused1 = 0;
 	rec_ptr->unused2 = 0;
-	rec_ptr->unused3 = 0;
 }
 
 ///----------------------------------------------------------------------------

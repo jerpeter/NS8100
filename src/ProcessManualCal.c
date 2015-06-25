@@ -222,24 +222,27 @@ void MoveManualCalToFile(void)
 				close(manualCalFileHandle);
 
 #if 1 // New method to save compressed data file
-				// Get new event file handle
-				g_globalFileHandle = GetERDataFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
-
-				g_spareBufferIndex = 0;
-				compressSize = lzo1x_1_compress((void*)g_currentEventStartPtr, (g_wordSizeInCal * 2), OUT_FILE);
-
-				if (g_spareBufferIndex)
+				if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
 				{
-					write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
+					// Get new event file handle
+					g_globalFileHandle = GetERDataFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
+
 					g_spareBufferIndex = 0;
+					compressSize = lzo1x_1_compress((void*)g_currentEventStartPtr, (g_wordSizeInCal * 2), OUT_FILE);
+
+					if (g_spareBufferIndex)
+					{
+						write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
+						g_spareBufferIndex = 0;
+					}
+					debug("Manual Cal Compressed Data length: %d (Matches file: %s)\r\n", compressSize, (compressSize == nav_file_lgt()) ? "Yes" : "No");
+
+					SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
+					// Done writing the event file, close the file handle
+					g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+					close(g_globalFileHandle);
 				}
-				debug("Manual Cal Compressed Data length: %d (Matches file: %s)\r\n", compressSize, (compressSize == nav_file_lgt()) ? "Yes" : "No");
-
-				SetFileDateTimestamp(FS_DATE_LAST_WRITE);
-
-				// Done writing the event file, close the file handle
-				g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
-				close(g_globalFileHandle);
 #endif
 #else // Port fat driver
 				// Write the event record header and summary

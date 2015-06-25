@@ -74,6 +74,7 @@ extern USER_MENU_STRUCT printMonitorLogMenu[];
 extern USER_MENU_STRUCT powerSavingsMenu[];
 extern USER_MENU_STRUCT recalibrateMenu[];
 extern USER_MENU_STRUCT recordTimeMenu[];
+extern USER_MENU_STRUCT saveCompressedDataMenu[];
 extern USER_MENU_STRUCT saveRecordMenu[];
 extern USER_MENU_STRUCT saveSetupMenu[];
 extern USER_MENU_STRUCT sampleRateMenu[];
@@ -1291,7 +1292,7 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 #if 0 // Power Savings, Report Displacement, Report Peak Acc are no longer a unit configurable setting
 #define CONFIG_MENU_ENTRIES 30
 #else
-#define CONFIG_MENU_ENTRIES 27
+#define CONFIG_MENU_ENTRIES 28
 #endif
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
@@ -1319,6 +1320,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, REPORT_DISPLACEMENT_TEXT,	NO_TAG, {REPORT_DISPLACEMENT}},
 {NO_TAG, 0, REPORT_PEAK_ACC_TEXT,		NO_TAG, {REPORT_PEAK_ACC}},
 #endif
+{NO_TAG, 0, SAVE_COMPRESSED_DATA_TEXT,	NO_TAG, {SAVE_COMPRESSED_DATA}},
 {NO_TAG, 0, SENSOR_GAIN_TYPE_TEXT,		NO_TAG, {SENSOR_GAIN_TYPE}},
 {NO_TAG, 0, SERIAL_NUMBER_TEXT,			NO_TAG, {SERIAL_NUMBER}},
 {NO_TAG, 0, TIMER_MODE_TEXT,			NO_TAG, {TIMER_MODE}},
@@ -1449,6 +1451,10 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				SETUP_USER_MENU_MSG(&peakAccMenu, g_unitConfig.reportPeakAcceleration);
 			break;
 #endif
+			case (SAVE_COMPRESSED_DATA):
+				SETUP_USER_MENU_MSG(&saveCompressedDataMenu, g_unitConfig.saveCompressedData);
+			break;
+
 			case (SENSOR_GAIN_TYPE):
 				DisplaySensorType();
 			break;
@@ -2529,6 +2535,44 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 	{
 		UpdateModeMenuTitle(g_triggerRecord.op_mode);
 		SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Save Compressed Data
+//=============================================================================
+//*****************************************************************************
+#define SAVE_COMPRESSED_DATA_MENU_ENTRIES 4
+USER_MENU_STRUCT saveCompressedDataMenu[SAVE_COMPRESSED_DATA_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, SAVE_COMPRESSED_DATA_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, SAVE_COMPRESSED_DATA_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, YES_FASTER_DOWNLOAD_TEXT,	NO_TAG, {SAVE_EXTRA_FILE_COMPRESSED_DATA}},
+{ITEM_2, 0, NO_TEXT,					NO_TAG, {DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SaveCompressedDataMenuHandler}}
+};
+
+//----------------------------------
+// Save Compressed Data Menu Handler
+//----------------------------------
+void SaveCompressedDataMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_unitConfig.saveCompressedData = (uint8)saveCompressedDataMenu[newItemIndex].data;
+
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu, SAVE_COMPRESSED_DATA);
 	}
 
 	JUMP_TO_ACTIVE_MENU();

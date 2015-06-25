@@ -416,6 +416,7 @@ enum {
 	REPORT_DISPLACEMENT,
 	REPORT_PEAK_ACC,
 	POWER_SAVINGS,
+	SAVE_COMPRESSED_DATA,
 	SENSOR_GAIN_TYPE,
 	SERIAL_NUMBER,
 	TIMER_MODE,
@@ -859,6 +860,7 @@ void PrintOutMenuHandler(uint8 key, void* data);
 void PrintMonitorLogMenuHandler(uint8 key, void* data);
 void PowerSavingsMenuHandler(uint8 key, void* data);
 void RecalibrateMenuHandler(uint8 key, void* data);
+void SaveCompressedDataMenuHandler(uint8 key, void* data);
 void SampleRateMenuHandler(uint8 key, void* data);
 void SaveSetupMenuHandler(uint8 key, void* data);
 void SensitivityMenuHandler(uint8 key, void* data);
