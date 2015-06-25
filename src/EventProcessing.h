@@ -101,8 +101,11 @@ void GetSDCardUsageStats(void);
 void UpdateSDCardUsageStats(uint32 removeSize);
 void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
 void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
+void CacheEventDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize);
+uint32 GetERDataSize(uint16 eventNumber);
+void CacheERDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize);
 void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize);
-uint8 CacheEventToRam(uint16 eventNumber);
+uint8 CacheEventToRam(uint16 eventNumber, EVT_RECORD* eventRecordPtr);
 BOOLEAN CheckValidEventFile(uint16 eventNumber);
 void DeleteEventFileRecord(uint16 eventNumber);
 void DeleteEventFileRecords(void);
@@ -113,6 +116,10 @@ void PowerUpSDCardAndInitFat32(void);
 uint16 AirTriggerConvert(uint32 airTriggerToConvert);
 uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert);
 
+int OpenEventFile(uint16 eventNumber);
+void CloseEventFile(int);
+uint8 CheckCompressedEventDataFileExists(uint16 eventNumber);
+
 void SetFileDateTimestamp(uint8 option);
 int readWithSizeFix(int file, void* bufferPtr, uint32 length);
 
@@ -121,6 +128,7 @@ int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option);
 #else // Port fat driver
 FL_FILE* GetEventFileHandle(uint16 eventNumber, EVENT_FILE_OPTION option);
 #endif
+int GetERDataFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option);
 
 void CacheResultsEventInfo(EVT_RECORD* eventRecordToCache);
 

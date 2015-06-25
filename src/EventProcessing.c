@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "EventProcessing.h"
+#include "Common.h"
 #include "Summary.h"
 #include "Record.h"
 #include "Uart.h"
@@ -89,7 +90,9 @@ void CopyValidFlashEventSummariesToRam(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -293,7 +296,8 @@ void CopyValidFlashEventSummariesToRam(void)
 			entriesFound++;
 		}
 #endif
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 
 	//debug("Done copying events to summary (discovered %d)\r\n", ramSummaryIndex);
@@ -569,6 +573,8 @@ void CacheSummaryEntryByIndex(uint16 index)
 		// Clear the cached entry
 		memset(&g_summaryList.cachedEntry, 0, sizeof(g_summaryList.cachedEntry));
 
+		GetSpi1MutexLock(SDMMC_LOCK);
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 		if (nav_setcwd(s_summaryListFileName, TRUE, FALSE))
@@ -614,6 +620,8 @@ void CacheSummaryEntryByIndex(uint16 index)
 		}
 
 		//nav_select(FS_NAV_ID_DEFAULT);
+
+		ReleaseSpi1MutexLock();
 	}
 }
 
@@ -969,7 +977,7 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	//--------------------------------
 	eventRec->summary.captured.endTime = GetCurrentTime();
 	eventRec->summary.captured.batteryLevel = (uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
-	eventRec->summary.captured.printerStatus = (uint8)(g_unitConfig.autoPrint);
+	eventRec->summary.captured.printerStatus = g_unitConfig.autoPrint;
 	eventRec->summary.captured.externalTrigger = NO;
 	eventRec->summary.captured.comboEventsRecordedDuringSession = 0;
 	eventRec->summary.captured.comboEventsRecordedStartNumber = 0;
@@ -1263,14 +1271,16 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
 	EVENT_HEADER_STRUCT fileEventHeader;
 	EVENT_SUMMARY_STRUCT fileSummary;
-	
+
 	if (g_fileAccessLock != AVAILABLE)
 	{
 		ReportFileSystemAccessProblem("Check event file");
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -1342,7 +1352,8 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 #endif
 		}
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 
 	if (eventHeaderPtr != NULL)
@@ -1359,17 +1370,88 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
+int OpenEventFile(uint16 eventNumber)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
-	
+	int eventFile = 0;
+	uint8 dummy;
+
 	if (g_fileAccessLock != AVAILABLE)
 	{
 		ReportFileSystemAccessProblem("Get event file");
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+
+		//g_fileAccessLock = SDMMC_LOCK;
+		nav_select(FS_NAV_ID_DEFAULT);
+
+		sprintf(fileName, "A:\\Events\\Evt%d.ns8", eventNumber);
+		eventFile = open(fileName, O_RDONLY);
+
+		// Dummy read to cache first sector and set up globals
+		dummy = file_getc();
+		file_seek(0, FS_SEEK_SET);
+	}
+
+	return (eventFile);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void CloseEventFile(int eventFile)
+{
+	g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+	close(eventFile);
+
+	//g_fileAccessLock = AVAILABLE;
+	ReleaseSpi1MutexLock();
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 CheckCompressedEventDataFileExists(uint16 eventNumber)
+{
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+	uint8 fileExistStatus = NO;
+
+	GetSpi1MutexLock(SDMMC_LOCK);
+
+	nav_select(FS_NAV_ID_DEFAULT);
+
+	sprintf(fileName, "A:\\ERData\\Evt%d.nsD", eventNumber);
+
+	// Check if the Compressed data file is not present
+	if (nav_setcwd(fileName, TRUE, FALSE) == TRUE)
+	{
+		fileExistStatus = YES;
+	}
+
+	//g_fileAccessLock = AVAILABLE;
+	ReleaseSpi1MutexLock();
+	
+	return (fileExistStatus);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
+{
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+
+	if (g_fileAccessLock != AVAILABLE)
+	{
+		ReportFileSystemAccessProblem("Get event file");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		GetSpi1MutexLock(SDMMC_LOCK);
+
+		//g_fileAccessLock = SDMMC_LOCK;
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -1426,7 +1508,8 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 #endif
 		}
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 }
 
@@ -1436,14 +1519,16 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 void DeleteEventFileRecord(uint16 eventNumber)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
-	
+
 	if (g_fileAccessLock != AVAILABLE)
 	{
 		ReportFileSystemAccessProblem("Delete event file");
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -1463,7 +1548,8 @@ void DeleteEventFileRecord(uint16 eventNumber)
 		}
 #endif
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 }
 
@@ -1475,7 +1561,7 @@ void DeleteEventFileRecords(void)
 	uint16 eventsDeleted = 0;
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
 	char popupText[50];
-	
+
 	debug("Deleting Events...\r\n");
 
 	if (g_fileAccessLock != AVAILABLE)
@@ -1484,7 +1570,9 @@ void DeleteEventFileRecords(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -1563,8 +1651,116 @@ void DeleteEventFileRecords(void)
 		sprintf(popupText, "REMOVED %d EVENTS", eventsDeleted);
 		OverlayMessage("DELETE EVENTS", popupText, 3 * SOFT_SECS);
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void CacheEventDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize)
+{
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+
+	GetSpi1MutexLock(SDMMC_LOCK);
+	//g_fileAccessLock = SDMMC_LOCK;
+
+	nav_select(FS_NAV_ID_DEFAULT);
+
+	int eventFile;
+	sprintf(fileName, "A:\\Events\\Evt%d.ns8", eventNumber);
+	eventFile = open(fileName, O_RDONLY);
+
+	// Verify file ID
+	if (eventFile == -1)
+	{
+		debugErr("Event File %s not found\r\n", fileName);
+		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+	}
+	else
+	{
+		file_seek(dataOffset, FS_SEEK_SET);
+		readWithSizeFix(eventFile, dataBuffer, dataSize);
+
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		close(eventFile);
+	}
+
+	//g_fileAccessLock = AVAILABLE;
+	ReleaseSpi1MutexLock();
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint32 GetERDataSize(uint16 eventNumber)
+{
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+	uint32 size = 0;
+
+	GetSpi1MutexLock(SDMMC_LOCK);
+	//g_fileAccessLock = SDMMC_LOCK;
+
+	nav_select(FS_NAV_ID_DEFAULT);
+
+	int eventFile;
+	sprintf(fileName, "A:\\ERData\\Evt%d.nsD", eventNumber);
+	eventFile = open(fileName, O_RDONLY);
+
+	// Verify file ID
+	if (eventFile == -1)
+	{
+		debugErr("ER Data File %s not found\r\n", fileName);
+		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+	}
+	else
+	{
+		size = nav_file_lgt();
+
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		close(eventFile);
+	}
+
+	//g_fileAccessLock = AVAILABLE;
+	ReleaseSpi1MutexLock();
+
+	return (size);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void CacheERDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize)
+{
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+
+	GetSpi1MutexLock(SDMMC_LOCK);
+	//g_fileAccessLock = SDMMC_LOCK;
+
+	nav_select(FS_NAV_ID_DEFAULT);
+
+	int eventFile;
+	sprintf(fileName, "A:\\ERData\\Evt%d.nsD", eventNumber);
+	eventFile = open(fileName, O_RDONLY);
+
+	// Verify file ID
+	if (eventFile == -1)
+	{
+		debugErr("ER Data File %s not found\r\n", fileName);
+		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+	}
+	else
+	{
+		file_seek(dataOffset, FS_SEEK_SET);
+		readWithSizeFix(eventFile, dataBuffer, dataSize);
+
+		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		close(eventFile);
+	}
+
+	//g_fileAccessLock = AVAILABLE;
+	ReleaseSpi1MutexLock();
 }
 
 ///----------------------------------------------------------------------------
@@ -1573,14 +1769,16 @@ void DeleteEventFileRecords(void)
 void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
-	
+
 	if (g_fileAccessLock != AVAILABLE)
 	{
 		ReportFileSystemAccessProblem("Cache event data");
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -1632,7 +1830,8 @@ void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 #endif
 		}
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 }
 
@@ -1730,10 +1929,10 @@ void VerifyCacheEventToRam(uint16 eventNumber, char* subMessage)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint8 CacheEventToRam(uint16 eventNumber)
+uint8 CacheEventToRam(uint16 eventNumber, EVT_RECORD* eventRecordPtr)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
-	
+
 	if (g_fileAccessLock != AVAILABLE)
 	{
 		ReportFileSystemAccessProblem("Cache event");
@@ -1741,7 +1940,9 @@ uint8 CacheEventToRam(uint16 eventNumber)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -1763,27 +1964,31 @@ uint8 CacheEventToRam(uint16 eventNumber)
 		{
 			debugErr("Event File %s not found\r\n", fileName);
 			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+			ReleaseSpi1MutexLock();
 			return EVENT_CACHE_FAILURE;
 		}
 		// Verify file is big enough
 #if 1 // Atmel fat driver
-		else if (fsaccess_file_get_size(eventFile) < sizeof(EVENT_HEADER_STRUCT))
+		else if (fsaccess_file_get_size(eventFile) < sizeof(EVT_RECORD))
 #else // Port fat driver
-		else if (eventFile->filelength < sizeof(EVENT_HEADER_STRUCT))
+		else if (eventFile->filelength < sizeof(EVT_RECORD))
 #endif
 		{
 			debugErr("Event File %s is corrupt\r\n", fileName);
 			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+			ReleaseSpi1MutexLock();
 			return EVENT_CACHE_FAILURE;
 		}
 		else
 		{
 #if 1 // Atmel fat driver
-			readWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], fsaccess_file_get_size(eventFile));
+			readWithSizeFix(eventFile, (uint8*)eventRecordPtr, sizeof(EVT_RECORD));
+			readWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], (fsaccess_file_get_size(eventFile) - sizeof(EVT_RECORD)));
 			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(eventFile);
 #else // Port fat driver
-			fl_fread(eventFile, (uint8*)&g_eventDataBuffer[0], eventFile->filelength);
+			fl_fread(eventFile, (uint8*)eventRecordPtr, sizeof(EVT_RECORD));
+			fl_fread(eventFile, (uint8*)&g_eventDataBuffer[0], (eventFile->filelength - sizeof(EVT_RECORD)));
 			fl_fclose(eventFile);
 #endif
 		}
@@ -1792,7 +1997,9 @@ uint8 CacheEventToRam(uint16 eventNumber)
 		VerifyCacheEventToRam(eventNumber, "PRE");
 #endif
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
+
 		return EVENT_CACHE_SUCCESS;
 	}
 }
@@ -1805,14 +2012,16 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
 	EVENT_HEADER_STRUCT fileEventHeader;
 	BOOLEAN validFile = NO;
-	
+
 	if (g_fileAccessLock != AVAILABLE)
 	{
 		ReportFileSystemAccessProblem("Check valid event");
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -1871,7 +2080,8 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 #endif
 		}
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 
 	return(validFile);
@@ -1898,6 +2108,8 @@ void ReInitSdCardAndFat32(void)
 	// Check if SD Detect pin 
 	if (gpio_get_pin_value(AVR32_PIN_PA02) == SDMMC_CARD_DETECTED)
 	{
+		GetSpi1MutexLock(SDMMC_LOCK);
+
 		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		sd_mmc_spi_internal_init();
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
@@ -1932,6 +2144,8 @@ void ReInitSdCardAndFat32(void)
 			OverlayMessage("ERROR", "FAILED TO INIT FILE SYSTEM ON SD CARD!", 0);
 		}
 #endif
+
+		ReleaseSpi1MutexLock();
 	}
 	else
 	{
@@ -1971,6 +2185,8 @@ void PowerUpSDCardAndInitFat32(void)
 	// Check if SD Detect pin 
 	if (gpio_get_pin_value(AVR32_PIN_PA02) == SDMMC_CARD_DETECTED)
 	{
+		GetSpi1MutexLock(SDMMC_LOCK);
+
 		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		sd_mmc_spi_internal_init();
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
@@ -2005,6 +2221,8 @@ void PowerUpSDCardAndInitFat32(void)
 			OverlayMessage("ERROR", "FAILED TO INIT FILE SYSTEM ON SD CARD!", 0);
 		}
 #endif
+
+		ReleaseSpi1MutexLock();
 	}
 	else
 	{
@@ -2049,56 +2267,56 @@ FL_FILE* GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 {
 	char* fileName = (char*)&g_spareBuffer[0];
 
-#if 1 // Atmel fat driver
+	#if 1 // Atmel fat driver
 	int fileHandle;
 	int fileOption;
 
 	sprintf(fileName, "A:\\Events\\Evt%d.ns8", newFileEventNumber);
-#else // Port fat driver
+	#else // Port fat driver
 	FL_FILE* fileHandle;
 	char fileOption[3];
 
 	sprintf(fileName, "C:\\Events\\Evt%d.ns8", newFileEventNumber);
-#endif
+	#endif
 
 	// Set the file option flags for the file process
 	switch (option)
 	{
 		case CREATE_EVENT_FILE:
-			debug("File to create: %s\r\n", fileName);
+		debug("File to create: %s\r\n", fileName);
 #if 1 // Atmel fat driver
-			fileOption = (O_CREAT | O_WRONLY);
+		fileOption = (O_CREAT | O_WRONLY);
 #else // Port fat driver
-			strcpy(&fileOption[0], "w");
+		strcpy(&fileOption[0], "w");
 #endif
-			break;
-			
+		break;
+
 		case READ_EVENT_FILE:
-			debug("File to read: %s\r\n", fileName);
+		debug("File to read: %s\r\n", fileName);
 #if 1 // Atmel fat driver
-			fileOption = O_RDONLY;
+		fileOption = O_RDONLY;
 #else // Port fat driver
-			strcpy(&fileOption[0], "r");
+		strcpy(&fileOption[0], "r");
 #endif
-			break;
-			
+		break;
+
 		case APPEND_EVENT_FILE:
-			debug("File to append: %s\r\n", fileName);
+		debug("File to append: %s\r\n", fileName);
 #if 1 // Atmel fat driver
-			fileOption = O_APPEND;
+		fileOption = O_APPEND;
 #else // Port fat driver
-			strcpy(&fileOption[0], "a+");
+		strcpy(&fileOption[0], "a+");
 #endif
-			break;
+		break;
 
 		case OVERWRITE_EVENT_FILE:
-			debug("File to overwrite: %s\r\n", fileName);
+		debug("File to overwrite: %s\r\n", fileName);
 #if 1 // Atmel fat driver
-			fileOption = O_RDWR;
+		fileOption = O_RDWR;
 #else // Port fat driver
-			strcpy(&fileOption[0], "r+");
+		strcpy(&fileOption[0], "r+");
 #endif
-			break;
+		break;
 	}
 
 #if 1 // New with Atmel fat driver
@@ -2153,6 +2371,47 @@ FL_FILE* GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 	return (fl_fopen(fileName, fileOption));
 #endif
 #endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+int GetERDataFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
+{
+	char* fileName = (char*)&g_spareBuffer[0];
+
+	int fileHandle;
+	int fileOption;
+
+	sprintf(fileName, "A:\\ERData\\Evt%d.nsD", newFileEventNumber);
+
+	// Set the file option flags for the file process
+	switch (option)
+	{
+		case CREATE_EVENT_FILE: debug("File to create: %s\r\n", fileName); fileOption = (O_CREAT | O_WRONLY); break;
+		case READ_EVENT_FILE: debug("File to read: %s\r\n", fileName); fileOption = O_RDONLY; break;
+		case APPEND_EVENT_FILE: debug("File to append: %s\r\n", fileName); fileOption = O_APPEND; break;
+		case OVERWRITE_EVENT_FILE: debug("File to overwrite: %s\r\n", fileName); fileOption = O_RDWR; break;
+	}
+
+	fileHandle = open(fileName, fileOption);
+
+	// Check if trying to create a new event file and one already exists
+	if ((fileHandle == -1) && (option == CREATE_EVENT_FILE))
+	{
+		// Delete the existing file and check if the operation was successful
+		if (nav_file_del(TRUE) == TRUE)
+		{
+			fileHandle = open(fileName, fileOption);
+		}
+	}
+
+	if (option == CREATE_EVENT_FILE)
+	{
+		SetFileDateTimestamp(FS_DATE_CREATION);
+	}
+
+	return (fileHandle);
 }
 
 ///----------------------------------------------------------------------------
