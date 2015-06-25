@@ -912,6 +912,8 @@ void InitSDAndFileSystem(void)
 	// Check if SD Detect pin
 	if (gpio_get_pin_value(AVR32_PIN_PA02) == SDMMC_CARD_DETECTED)
 	{
+		GetSpi1MutexLock(SDMMC_LOCK);
+
 		spi_selectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 		if (sd_mmc_spi_internal_init() != OK)
 		{
@@ -950,6 +952,8 @@ void InitSDAndFileSystem(void)
 			OverlayMessage("ERROR", "FAILED TO INIT FILE SYSTEM ON SD CARD!", 0);
 		}
 #endif
+
+		ReleaseSpi1MutexLock();
 	}
 	else
 	{
