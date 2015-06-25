@@ -674,7 +674,9 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 		// Attempt to find the file on the SD file system
@@ -720,7 +722,8 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 #endif
 		}
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 
 	// Loop and convert all line feeds and carriage returns to nulls, and leaving the last char element as a null
@@ -782,7 +785,9 @@ void CheckBootloaderAppPresent(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -815,7 +820,8 @@ void CheckBootloaderAppPresent(void)
 #endif
 		}
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 }
 
@@ -1214,4 +1220,22 @@ void ConvertCalDatetoDateTime(DATE_TIME_STRUCT* dateTime, CALIBRATION_DATE_STRUC
 	dateTime->month = calDate->month;
 	dateTime->year = (calDate->year - 2000);
 	dateTime->weekday = GetDayOfWeek(dateTime->year, dateTime->month, dateTime->day);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void GetSpi1MutexLock(SPI1_LOCK_TYPE spi1LockType)
+{
+	while (g_spi1AccessLock != AVAILABLE) { /* spin and wait */ }
+
+	g_spi1AccessLock = spi1LockType;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ReleaseSpi1MutexLock(void)
+{
+	g_spi1AccessLock = AVAILABLE;
 }

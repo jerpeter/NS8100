@@ -263,6 +263,16 @@ enum {
 	BP_END
 };
 
+typedef enum
+{
+	AVAILABLE = 1,
+	EVENT_LOCK,
+	CAL_PULSE_LOCK,
+	SDMMC_LOCK,
+	RTC_TIME_LOCK,
+	EEPROM_LOCK
+} SPI1_LOCK_TYPE;
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
@@ -331,5 +341,8 @@ void ReportFileAccessProblem(char* attemptedFile);
 void ConvertDateTimeToCalDate(CALIBRATION_DATE_STRUCT* calDate, DATE_TIME_STRUCT* dateTime);
 void ConvertCalDatetoDateTime(DATE_TIME_STRUCT* dateTime, CALIBRATION_DATE_STRUCT* calDate);
 
+// Spi 1 Mutex Access
+void GetSpi1MutexLock(SPI1_LOCK_TYPE spi1LockType);
+void ReleaseSpi1MutexLock(void);
 
 #endif // _COMMON_H_
