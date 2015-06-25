@@ -243,8 +243,10 @@ void SystemEventManager(void)
 	//___________________________________________________________________________________________
 	if (getSystemEventState(UPDATE_TIME_EVENT))
 	{
-		clearSystemEventFlag(UPDATE_TIME_EVENT);
-		UpdateCurrentTime();
+		if (UpdateCurrentTime() == PASSED)
+		{
+			clearSystemEventFlag(UPDATE_TIME_EVENT);
+		}
 	}
 
 	//___________________________________________________________________________________________
@@ -432,37 +434,45 @@ void CraftManager(void)
 		{
 			g_modemStatus.xferState = sendDEMData();
 
+#if 0 // ns7100
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
 				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
 			}
+#endif
 		}
 		else if (DSMx_CMD == g_modemStatus.xferState)
 		{
 			g_modemStatus.xferState = sendDSMData();
 
+#if 0 // ns7100
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
 				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
 			}
+#endif
 		}
 		else if (DQMx_CMD == g_modemStatus.xferState)
 		{
 			g_modemStatus.xferState = sendDQMData();
 
+#if 0 // ns7100
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
 				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
 			}
+#endif
 		}
 		else if (VMLx_CMD == g_modemStatus.xferState)
 		{
 			sendVMLData();
 
+#if 0 // ns7100
 			if (NOP_CMD == g_modemStatus.xferState)
 			{
 				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
 			}
+#endif
 		}
 	}
 
