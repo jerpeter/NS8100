@@ -383,7 +383,9 @@ void AppendMonitorLogEntryFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -526,52 +528,9 @@ void AppendMonitorLogEntryFile(void)
 			debug("Monitor log readable entry appended to log file\r\n");
 		}
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
-
-#if 0 // Test
-	if (samplesCollected)
-	{
-		if (MessageBox("TEST BUFFER", "SAVE TEST BUFFER?", MB_YESNO) == MB_SECOND_CHOICE)
-		{
-			debug("Cancel save of test buffer\r\n");
-			samplesCollected = 0;
-			return;
-		}
-
-#if 1 // Atmel fat driver
-		int testBufferFile;
-		testBufferFile = open((char*)testBufferFilename, O_APPEND);
-		if (testBufferFile == -1)
-		{
-			nav_setcwd((char*)testBufferFilename, TRUE, TRUE);
-			testBufferFile = open((char*)testBufferFilename, O_APPEND);
-		}
-#else // Port fat driver
-		FL_FILE* testBufferFile;
-		testBufferFile = fl_fopen("C:\\Logs\\TestBuffer.txt", "a+");
-#endif
-
-		debug("Writing Test Buffer Data to log file...\r\n");
-
-#if 1 // Atmel fat driver
-		write(testBufferFile, (uint8*)&(g_eventDataBuffer), (samplesCollected * 2));
-
-		// Done writing, close the monitor log file
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
-		close(testBufferFile);
-#else // Port fat driver
-		fl_fwrite((uint8*)&(g_eventDataBuffer), (samplesCollected * 2), 1, testBufferFile);
-
-		// Done writing, close the monitor log file
-		fl_fclose(testBufferFile);
-#endif
-
-		samplesCollected = 0;
-
-		debug("Test Buffer Data file complete\r\n");
-	}
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -591,7 +550,9 @@ void InitMonitorLogTableFromLogFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -702,7 +663,8 @@ void InitMonitorLogTableFromLogFile(void)
 			debug("Found Valid Monitor Log Entries, ID's: %d --> %d\r\n", lowestId, highestId);
 		}
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 }
 
@@ -724,7 +686,9 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 #if 1 // Atmel fat driver
@@ -782,7 +746,8 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 #endif
 		}
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 }
 
@@ -798,7 +763,9 @@ void WriteDebugBufferToFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
 		nav_select(FS_NAV_ID_DEFAULT);
 
 		if (g_debugBufferCount)
@@ -848,7 +815,8 @@ void WriteDebugBufferToFile(void)
 			g_debugBufferCount = 0;
 		}
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 }
 
@@ -866,7 +834,8 @@ void SwitchDebugLogFile(void)
 	}
 	else // (g_fileAccessLock == AVAILABLE)
 	{
-		//g_fileAccessLock = FILE_LOCK;
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_drive_set(0);
 		nav_partition_mount();
@@ -903,6 +872,7 @@ void SwitchDebugLogFile(void)
 
 		if (status == PASSED) { debug("Debug log file moved to last run debug file\r\n"); }
 
-		g_fileAccessLock = AVAILABLE;
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
 	}
 }
