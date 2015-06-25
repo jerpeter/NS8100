@@ -296,7 +296,9 @@ typedef struct
 	uint8* startDataPtr;
 	uint8* dataPtr;
 	uint8* endDataPtr;
-	uint8   errorStatus;
+	uint8  errorStatus;
+	uint8 downloadMethod;
+	uint8 compressedEventDataFilePresent;
 	uint8 	xmitBuffer[ CMD_BUFFER_SIZE ];
 	uint32 	xmitSize;
 } DEMx_XFER_STRUCT;
