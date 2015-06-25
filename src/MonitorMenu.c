@@ -82,9 +82,10 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 {
 	INPUT_MSG_STRUCT mn_msg;
 	REC_EVENT_MN_STRUCT temp_g_triggerRecord;
+#if 0 // ns7100
 	UNIT_CONFIG_STRUCT temp_g_unitConfig;
-	//uint8 mbChoice = 0;
-	
+#endif
+
 	switch (msg.cmd)
 	{
 		case (ACTIVATE_MENU_WITH_DATA_CMD):
@@ -234,10 +235,11 @@ extern void UsbDeviceManager(void);
 							{
 								StopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
+#if 0 // ns7100
 								// Restore the autoPrint value just in case the user escaped from a printout
 								GetRecordData(&temp_g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 								g_unitConfig.autoPrint = temp_g_unitConfig.autoPrint;
-
+#endif
 								SETUP_MENU_MSG(MAIN_MENU);
 								JUMP_TO_ACTIVE_MENU();
 							}
@@ -389,10 +391,11 @@ extern void UsbDeviceManager(void);
         case STOP_MONITORING_CMD:
 			StopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
+#if 0 // ns7100
 			// Restore the autoPrint value just in case the user escaped from a printout
 			GetRecordData(&temp_g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 			g_unitConfig.autoPrint = temp_g_unitConfig.autoPrint;
-
+#endif
 			SETUP_MENU_MSG(MAIN_MENU);
 			JUMP_TO_ACTIVE_MENU();
 			
