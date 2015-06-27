@@ -62,18 +62,6 @@ static uint32 s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
 static uint32 s_calSavedSampleRate = 0;
 static uint8 s_pauseDisplay = NO;
 
-#if 0
-static union {
-	uint16 chan[4];
-	struct {
-		uint16 a;
-		uint16 r;
-		uint16 v;
-		uint16 t;
-	};
-} s_calPreTrigData[256];
-#endif
-
 typedef struct {
 	uint16 chan[4];
 } CALIBRATION_DATA;
@@ -695,11 +683,6 @@ void MnStartCal(void)
 	SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1);
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
-
-#if 0 // Necessary? Probably need 1 sec for changes, however 1 sec worth of samples thrown away with getting channel offsets 
-	// Delay for Analog cutoff and gain select changes to propagate
-	SoftUsecWait(50 * SOFT_MSECS);
-#endif
 
 	// Enable the A/D
 	debug("Enable the A/D\r\n");

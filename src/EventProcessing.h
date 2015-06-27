@@ -123,11 +123,7 @@ uint8 CheckCompressedEventDataFileExists(uint16 eventNumber);
 void SetFileDateTimestamp(uint8 option);
 int readWithSizeFix(int file, void* bufferPtr, uint32 length);
 
-#if 1 // Atmel fat driver
 int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option);
-#else // Port fat driver
-FL_FILE* GetEventFileHandle(uint16 eventNumber, EVENT_FILE_OPTION option);
-#endif
 int GetERDataFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option);
 
 void CacheResultsEventInfo(EVT_RECORD* eventRecordToCache);

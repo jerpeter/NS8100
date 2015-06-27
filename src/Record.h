@@ -58,19 +58,11 @@ enum {
 
 #define ADC_RESOLUTION				0x8000	// +/- 0x800 (2048)
 
-#if 0 // Must Stay the same
-#define SENSOR_20_IN	2048	//4096	// 65536 // 4096
-#define SENSOR_10_IN	1024	//2048	// 32768 // 2048
-#define SENSOR_5_IN		512		//1024	// 16384 // 1024
-#define SENSOR_2_5_IN	256		//512		// 8192 // 512
-#define SENSOR_ACC		25600	//51200	// 819200 // 51200
-#else // Correct
 #define SENSOR_20_IN	4096
 #define SENSOR_10_IN	2048
 #define SENSOR_5_IN		1024
 #define SENSOR_2_5_IN	512
 #define SENSOR_ACC		51200
-#endif
 
 #define SENSOR_MICROPHONE	1
 
@@ -282,13 +274,9 @@ typedef struct
 typedef struct
 {
 	uint16 invalid;
-#if 0 // Normal
-	DATE_TIME_STRUCT cal_date;
-#else // Smart Sensor Change
 	CALIBRATION_DATE_STRUCT calDate;
 	uint8 calibrationDateSource;
 	uint8 unused[7];
-#endif
 	uint16 sensor_type;
 	char serial_num[16];
 	uint8 aweight_option;
@@ -383,11 +371,5 @@ void SwitchDebugLogFile(void);
 void GetParameterMemory(uint8* dest, uint16 address, uint16 size);
 void SaveParameterMemory(uint8* src, uint16 address, uint16 size);
 void EraseParameterMemory(uint16 address, uint16 size);
-uint8 ReadParameterMemory(uint16 address);
-void WriteParameterMemory(uint16 address, uint8 data);
-void ResetWriteEnableLatchParameterMemory(void);
-void SetWriteEnableLatchParameterMemory(void);
-uint8 ReadStatusParameterMemory(void);
-void WriteStatusParameterMemory(uint8 data);
 
 #endif // _REC_H_

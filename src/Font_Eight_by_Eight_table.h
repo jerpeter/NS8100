@@ -4,8 +4,9 @@
 ///
 ///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
+#define TABLE_REFERENCED	0
 
-#if 0
+#if TABLE_REFERENCED
 const uint8 font_table_88[][10] = {
 /* 0x00 to 0x0f*/
 {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},/* Null*/

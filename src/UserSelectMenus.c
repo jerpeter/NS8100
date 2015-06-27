@@ -200,11 +200,7 @@ extern void UsbDeviceManager(void);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-#if 0
-		SETUP_USER_MENU_MSG(&analogChannelConfigMenu, g_factorySetupRecord.analogChannelConfig);
-#else
 		SETUP_USER_MENU_MSG(&calibratonDateSourceMenu, g_factorySetupRecord.calibrationDateSource);
-#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -730,26 +726,10 @@ void AnalogChannelConfigMenuHandler(uint8 keyPressed, void* data)
 
 		debug("Factory Setup: Channel R & V %s option selected\r\n", (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC) ? "Schematic" : "Swapped");
 
-#if 0
-		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
-#else
 		SETUP_USER_MENU_MSG(&calibratonDateSourceMenu, g_factorySetupRecord.calibrationDateSource);
-#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-#if 0 // No longer skipping
-		if (CheckIfBothSmartSensorsPresent() == YES)
-		{
-			if (!g_factorySetupRecord.invalid)
-			{
-				tempPtr = &g_factorySetupRecord.serial_num;
-			}
-
-			SETUP_USER_MENU_MSG(&serialNumberMenu, tempPtr);
-		}
-#endif
-
 		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
 	}
 
@@ -1289,11 +1269,7 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
-#if 0 // Power Savings, Report Displacement, Report Peak Acc are no longer a unit configurable setting
-#define CONFIG_MENU_ENTRIES 30
-#else
 #define CONFIG_MENU_ENTRIES 28
-#endif
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1473,11 +1449,6 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 					if (MessageBox(getLangText(STATUS_TEXT), getLangText(CANCEL_TIMER_MODE_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 					{
 						g_unitConfig.timerMode = DISABLED;
-
-#if 0 // Test with power off protection always enabled
-						// Disable power off protection
-						PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
-#endif
 
 						// Disable the Power Off timer if it's set
 						ClearSoftTimer(POWER_OFF_TIMER_NUM);
@@ -1886,30 +1857,6 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 			SmartSensorDebug(SEISMIC_SENSOR);
 			SmartSensorDebug(ACOUSTIC_SENSOR);
 			debugRaw("\r\n----------End----------\r\n");
-#endif
-#if 0 // ET Test
-			uint32* testPtr = (uint32*)0x40000000;
-			uint32 testData = *testPtr;
-			testData++;
-#endif
-#if 0 // ET Test
-			uint32* testPtr = (uint32*)0xd0000007;
-			uint32 testData = *testPtr;
-			testData++;
-#endif
-#if 0 // ET Test
-			while(1 == 1) {;}
-#endif
-#if 0 // ET Test
-			uint16* testPtr = (uint16*)0x2040;
-			*testPtr = 0x8888;
-			//testPtr = (uint16*)(0x7000 + ((g_rtcSoftTimerTickCount % 0x800) * 2));
-			testPtr = (uint16*)0x7030;
-			*testPtr = 0xABCD;
-#endif
-#if 0 // ET Test
-			OverlayMessage("STATUS", "EXEC BREAKPOINT INSTR", (3 * SOFT_SECS));
-			__asm__ __volatile__ ("breakpoint");
 #endif
 		}
 	}

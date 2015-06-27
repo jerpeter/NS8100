@@ -52,11 +52,6 @@
 #include "Sensor.h"
 #include "NomisLogo.h"
 #include "navigation.h"
-#if 0 // Port fat driver
-#include "FAT32_Disk.h"
-#include "FAT32_Access.h"
-#include "FAT32_FileLib.h"
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -555,24 +550,27 @@ void Avr32_chip_select_init(unsigned long hsb_hz)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#define TEST_DISABLE_32K_CRYSTAL	0
 void _init_startup(void)
 {
 	// Disable watchdog if reset from boot loader
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_ASSERT | AVR32_WDT_DISABLE_VALUE);
 	AVR32_WDT.ctrl = (AVR32_WDT_KEY_VALUE_DEASSERT | AVR32_WDT_DISABLE_VALUE);
 	
-#if 1 // Enable External 12 MHz oscillator clock
+	//-----------------------------------------------------------------
+	// Enable External 12 MHz oscillator clock
+	//-----------------------------------------------------------------
 	pm_enable_osc0_ext_clock(&AVR32_PM);
-#endif
 
+	//-----------------------------------------------------------------
 	// Switch the main clock to the external oscillator 0 (12 MHz)
-#if 0 // Normal
-	pm_switch_to_osc0(&AVR32_PM, FOSC0, OSC0_STARTUP);
-#else // Test shorter delay to lock for start/restart of clock
+	//-----------------------------------------------------------------
+	// Using shorter delay to lock for start/restart of clock (instead of OSC0_STARTUP)
 	pm_switch_to_osc0(&AVR32_PM, FOSC0, AVR32_PM_OSCCTRL0_STARTUP_0_RCOSC);
-#endif
 
-#if 1 // Normal (Set clock to 66 MHz)
+	//-----------------------------------------------------------------
+	// Set clock to 66 MHz
+	//-----------------------------------------------------------------
 	// Logic to change the clock source to PLL 0
 	// PLL = 0, Multiplier = 10 (actual 11), Divider = 1 (actually 1), OSC = 0, 16 clocks to stabilize
 	pm_pll_setup(&AVR32_PM, 0, 10, 1, 0, 16);
@@ -582,23 +580,12 @@ void _init_startup(void)
 	pm_pll_enable(&AVR32_PM, 0);
 	pm_wait_for_pll0_locked(&AVR32_PM);
 
-#if 0 // Removed - Left over code for setting up the main clock (just burning extra juice)
-	pm_gc_setup(&AVR32_PM, 0, 1, 0, 0, 0);
-	pm_gc_enable(&AVR32_PM, 0);
-	gpio_enable_module_pin(AVR32_PM_GCLK_0_1_PIN, AVR32_PM_GCLK_0_1_FUNCTION);
-#endif
-
 	pm_cksel(&AVR32_PM, 0, 0, 0, 0, 0, 0);
 	flashc_set_wait_state(1);
 	pm_switch_to_clock(&AVR32_PM, AVR32_PM_MCSEL_PLL0);
-#endif
 
 	// Chip Select Initialization
-#if 1 // Normal
 	Avr32_chip_select_init(FOSC0);
-#else // Test (12Mhz)
-	Avr32_chip_select_init(12000000);
-#endif
 	
 	// Disable the unused and non connected clock 1
 	pm_disable_clk1(&AVR32_PM);
@@ -607,27 +594,13 @@ void _init_startup(void)
 	gpio_clr_gpio_pin(AVR32_PM_XIN1_0_PIN);
 	gpio_clr_gpio_pin(AVR32_PM_XOUT1_0_PIN);
 
-#if 0 // Test
+#if TEST_DISABLE_32K_CRYSTAL
 	// Disable the 32KHz crystal
 	pm_disable_clk32(&AVR32_PM);
 	
 	// With the 32KHz crystal disabled, configure GPIO lines to be outputs and low
 	gpio_clr_gpio_pin(AVR32_PM_XIN32_0_PIN);
 	gpio_clr_gpio_pin(AVR32_PM_XOUT32_0_PIN);
-#endif
-
-#if 0 // ET test
-	uint16* intMem = (uint16*)0x0;
-	while (intMem < (uint16*)0x8000)
-	{
-		// Ignore the top of the stack
-		if ((uint32)intMem != 0xFFC && (uint32)intMem != 0xFFE)
-		{
-			*intMem = 0xD673;
-		}
-
-		intMem++;
-	}
 #endif
 
 	SoftUsecWait(1000);
@@ -767,47 +740,6 @@ extern void Sleep8900_LedOn(void);
 	PowerControl(LAN_SLEEP_ENABLE, ON);
 	SoftUsecWait(10 * SOFT_MSECS);
 
-#if 0 // Test (LAN register map read)
-	debug("\n\r\n");
-	*((uint16*)0xC800030A) = 0x0000; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0000, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0002; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0002, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0020; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0020, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0022; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0022, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0024; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0024, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0026; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0026, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0028; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0028, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x002A; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x002A, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x002C; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x002C, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0030; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0030, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0034; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0034, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0040; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0040, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0042; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0042, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0102; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0102, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0104; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0104, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0106; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0106, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0108; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0108, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x010A; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x010A, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0112; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0112, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0114; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0114, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0116; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0116, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0118; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0118, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0120; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0120, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0124; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0124, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0128; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0128, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x012C; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x012C, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0130; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0130, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0132; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0132, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0134; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0134, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0136; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0136, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0138; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0138, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x013C; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x013C, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0144; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0144, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0146; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0146, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0150; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0150, *((uint16*)0xC800030C));
-	*((uint16*)0xC800030A) = 0x0158; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0158, *((uint16*)0xC800030C));
-	debug("\r\n");
-#endif
-
 	//Sleep8900();
 	extern void ToggleLedOn8900(void);
 	extern void ToggleLedOff8900(void);
@@ -869,13 +801,8 @@ void InitInternalAD(void)
 {
 	adc_configure(&AVR32_ADC);
 
-	// Enable the A/D channels.
-#if 0 // Can't use the driver enable because it's a single channel enable only and a write only register
-	//adc_enable(&AVR32_ADC, VBAT_CHANNEL);
-	//adc_enable(&AVR32_ADC, VIN_CHANNEL);
-#else
+	// Enable the A/D channels; Warning: Can't use the driver call 'adc_enable' because it's a single channel enable only (write only register)
 	AVR32_ADC.cher = 0x0C; // Directly enable
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -922,7 +849,6 @@ void InitSDAndFileSystem(void)
 		}
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 
-#if 1 // Atmel fat driver
 		// Init the NAV and select the SD MMC Card
 		nav_reset();
 		nav_select(FS_NAV_ID_DEFAULT);
@@ -943,15 +869,6 @@ void InitSDAndFileSystem(void)
 			debugErr("FAT32 SD Card drive select failed\r\n");
 			OverlayMessage("ERROR", "FAILED TO SELECT SD CARD DRIVE!", 0);
 		}
-
-#else // Port fat driver
-		FAT32_InitDrive();
-		if (FAT32_InitFAT() == FALSE)
-		{
-			debugErr("FAT32 Initialization failed\r\n");
-			OverlayMessage("ERROR", "FAILED TO INIT FILE SYSTEM ON SD CARD!", 0);
-		}
-#endif
 
 		ReleaseSpi1MutexLock();
 	}
@@ -1040,16 +957,6 @@ void KillClocksToModules(void)
 	
 	// Leave active: SMC, FLASHC, HMATRIX; Disable: SDRAMC, MACB, USBB
 	AVR32_PM.pbbmask = 0x0015;
-
-#if 0 // Enable USART1 for debug
-	AVR32_PM.pbamask = 0x42FB;
-#endif
-
-#if 0 // Test
-	// Disable rs232 driver and receiver (Active low control)
-	PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
-	PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -1060,25 +967,6 @@ void TestExternalRAM(void)
 	uint32 i, j;
 	uint32 index;
 	uint32 printErrors = 0;
-
-#if 0
-	debug("External RAM Test: Incrementing index...\r\n");
-	for (i = 0, j = 0, index = 0; index < ((EVENT_BUFF_SIZE_IN_WORDS) - 614400); index++)
-	{
-		g_eventDataBuffer[index] = (uint16)(i + j); i++;
-	}
-
-	for (i = 0, j = 0, index = 0; index < ((EVENT_BUFF_SIZE_IN_WORDS) - 614400); index++)
-	{
-		if (g_eventDataBuffer[index] != (uint16)(i + j))
-		{
-			debugErr("Test of External RAM: failed (Index: %d, Address: 0x%x, Expected: 0x%x, Got: 0x%x)\r\n",
-						index, &g_eventDataBuffer[index], (uint16)(i + j), g_eventDataBuffer[index]);
-			printErrors++; if (printErrors > 5000) { debugErr("Too many errors, bailing on memory test\r\n"); return; }
-		}
-		i++;
-	}
-#endif
 
 	debug("External RAM Test: Incrementing index with rolling increment...\r\n");
 	for (i = 0, j = 0, index = 0; index < ((EVENT_BUFF_SIZE_IN_WORDS) - 614400); index++)

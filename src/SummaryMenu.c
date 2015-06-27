@@ -53,11 +53,7 @@ static SUMMARY_DATA *s_flashReadSummaryTablePtr = &__ramFlashSummaryTbl[0];
 static uint16 s_topMenuSummaryIndex = 0;
 static uint16 s_currentSummaryIndex = 0;
 static uint32 cacheEntries = 0;
-#if 0 // Old method
-static uint16 s_totalRamSummaries = TOTAL_RAM_SUMMARIES;
-#else
 static uint16 s_totalRamSummaries = 0;
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -120,11 +116,7 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
 
 		g_summaryListMenuActive = YES;
 		
-#if 0 // Old method
-		s_totalRamSummaries = TOTAL_RAM_SUMMARIES;
-#else
 		s_totalRamSummaries = g_summaryList.validEntries;
-#endif
 
 		if (msg.data[0] == START_FROM_TOP)
 		{
@@ -141,18 +133,11 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
 		{
 			case (ENTER_KEY):
 				// Check if the top menu summary index represents a valid index
-#if 0 // Old method
-				if (s_topMenuSummaryIndex < TOTAL_RAM_SUMMARIES)
-#else
 				if (s_topMenuSummaryIndex < g_summaryList.validEntries)
-#endif
 				{
 					// Grab the event info, assuming it's cached
-#if 0 // Old method
-					eventInfo = GetSummaryEventInfo(s_currentSummaryIndex);
-#else
 					cacheSummaryListEntry(s_currentSummaryIndex);
-#endif
+
 					g_summaryEventNumber = g_summaryList.cachedEntry.eventNumber;
 					g_updateResultsEventRecord = YES;
 
@@ -461,11 +446,7 @@ BOOLEAN CheckRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 
 	if (ramSummaryIndex < s_totalRamSummaries)
 	{
-#if 0 // Old method
-		if ((uint32)(__ramFlashSummaryTbl[ramSummaryIndex].fileEventNum) != NO_EVENT_LINK)
-#else
 		if (summaryListCache[ramSummaryIndex].eventNumber != 0)
-#endif
 		{
 			validEventLink = YES;
 		}
@@ -479,37 +460,6 @@ BOOLEAN CheckRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 ///----------------------------------------------------------------------------
 SUMMARY_MENU_EVENT_CACHE_STRUCT* GetSummaryEventInfo(uint16 tempSummaryIndex)
 {
-#if 0 // Old method
-	EVT_RECORD resultsEventRecord;
-	SUMMARY_MENU_EVENT_CACHE_STRUCT* cacheSummaryLineEntry = (SUMMARY_MENU_EVENT_CACHE_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
-	uint32 i = 0;
-
-	// Check if entry is cached to prevent long delay reading files
-	while (i < cacheEntries)
-	{		
-		if ((cacheSummaryLineEntry[i].eventNumber == __ramFlashSummaryTbl[tempSummaryIndex].fileEventNum) && 
-				(cacheSummaryLineEntry[i].validFlag == YES))
-		{
-			debug("Summary menu: Found cached event record info\r\n");
-			return (&cacheSummaryLineEntry[i]);
-		}
-		
-		i++;
-	}
-
-	// If here, no cache entry was found, load the event file to get the event record info
-	debug("Summary menu: Adding event record info to cache\r\n");
-
-	GetEventFileRecord(__ramFlashSummaryTbl[tempSummaryIndex].fileEventNum, &resultsEventRecord);
-
-	cacheSummaryLineEntry[cacheEntries].eventNumber = resultsEventRecord.summary.eventNumber;
-	cacheSummaryLineEntry[cacheEntries].mode = resultsEventRecord.summary.mode;
-	cacheSummaryLineEntry[cacheEntries].subMode = resultsEventRecord.summary.subMode;
-	cacheSummaryLineEntry[cacheEntries].eventTime = resultsEventRecord.summary.captured.eventTime;
-	cacheSummaryLineEntry[cacheEntries].validFlag = YES;
-
-	return (&cacheSummaryLineEntry[cacheEntries++]);
-#else
 	static SUMMARY_MENU_EVENT_CACHE_STRUCT summaryMenuCacheEntry;
 	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
 
@@ -522,7 +472,6 @@ SUMMARY_MENU_EVENT_CACHE_STRUCT* GetSummaryEventInfo(uint16 tempSummaryIndex)
 	summaryMenuCacheEntry.validFlag = YES;
 
 	return (&summaryMenuCacheEntry);
-#endif
 }
 
 ///----------------------------------------------------------------------------

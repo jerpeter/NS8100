@@ -261,11 +261,6 @@ void HandleUserPowerOffDuringTimerMode(void)
 		// Save Unit Config
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
-#if 0 // Test with power off protection always enabled
-		// Disable power off protection
-		PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
-#endif
-
 		OverlayMessage(getLangText(STATUS_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), 2 * SOFT_SECS);
 	}
 	else // User decided to stay in Timer mode
@@ -276,11 +271,6 @@ void HandleUserPowerOffDuringTimerMode(void)
 		{
 			MessageBox(getLangText(STATUS_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), MB_OK);
 			MessageBox(getLangText(STATUS_TEXT), getLangText(PLEASE_PRESS_ENTER_TEXT), MB_OK);
-
-#if 0 // Test with power off protection always enabled
-			// Enable power off protection
-			PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
-#endif
 
 			// Turn unit off/sleep
 			debug("Timer mode: Shutting down unit early due to user request. Powering off now...\r\n");

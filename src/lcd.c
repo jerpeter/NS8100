@@ -1217,85 +1217,9 @@ void Write_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half )
 ///----------------------------------------------------------------------------
 void Write_multi_display( uint8 lcd_register, uint8 lcd_data, uint8 display_half )
 {
-#if 0
-    //uint8 temp = 0;
-    uint8 buffer[8];
-
-    //Write data
-//    WriteMcp23018(IO_ADDRESS_LCD, OLATB, lcd_data);
-//    WriteMcp23018(IO_ADDRESS_LCD, OLATB, lcd_data);
-
-//    temp = ReadMcp23018(IO_ADDRESS_LCD, GPIOA);
-    if (lcd_register == COMMAND_REGISTER)
-   {
-      //temp &= 0xFE;
-//      WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp);
-//      WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp & 0xFE);
-//      lcd_port_image &= 0xFE;
-      buffer[0] = temp;
-   }
-   else
-   {
-      //temp |= 0x01;
-//      WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp);
-//      WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp | 0x01);
-//      lcd_port_image |= 0x01;
-      buffer[0] = temp;
-    }
-
-    if (display_half == FIRST_HALF_DISPLAY)
-   {
-        //Set write low and CS2 low
-//      temp = ReadMcp23018(IO_ADDRESS_LCD, GPIOA);
-        //temp &= 0xED;
-//        WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp);
-//        WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp & 0xED);
-//        lcd_port_image &= 0xED;
-        buffer[1] = temp;
-    }
-   else
-   {
-      //Set write low and CS1 low
-//      temp = ReadMcp23018(IO_ADDRESS_LCD, GPIOA);
-       //temp &= 0xF5;
-//	   WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp);
-//      WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp & 0xF5);
-//      lcd_port_image &= 0xF5;
-      buffer[1] = temp;
-   }
-
-   //Set E high
-   temp |= 0x04;
-//   WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp);
-//   temp = ReadMcp23018(IO_ADDRESS_LCD, GPIOA);
-//   WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp | 0x04);
-//   lcd_port_image |= 0x04;
-   buffer[2] = temp;
-
-   //Write data
-//   WriteMcp23018(IO_ADDRESS_LCD, GPIOB, lcd_data);
-
-   //Set E low
-   temp &= 0xFB;
-//   WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp);
-//   temp = ReadMcp23018(IO_ADDRESS_LCD, GPIOA);
-//   WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp & 0xFB);
-//   lcd_port_image &= 0xFB;
-   buffer[3] = temp;
-
-   //Set write, CS1, CS2 and address high
-   temp |= 0x1B;
-//   WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp);
-//   temp = ReadMcp23018(IO_ADDRESS_LCD, GPIOA);
-//   WriteMcp23018(IO_ADDRESS_LCD, GPIOA, temp | 0x1B);
-//   lcd_port_image |= 0x1B;
-   buffer[4] = temp;
-//   WriteMcp23018Bytes(IO_ADDRESS_LCD, GPIOA, buffer, 5);
-#else // Remove warnings
 	UNUSED(lcd_register);
 	UNUSED(lcd_data);
 	UNUSED(display_half);
-#endif
 }
 
 ///----------------------------------------------------------------------------

@@ -374,10 +374,7 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 		s_powerManagement &= ~(1 << option);
 	}
 
-#if 0 // Can no longer wait locally since this can be called from within an interrupt
-	// Let hardware stabilize
-	SoftUsecWait(10 * SOFT_MSECS);
-#endif
+	// Can no longer delay locally since this can be called from within an interrupt
 }
 
 ///----------------------------------------------------------------------------

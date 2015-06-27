@@ -27,10 +27,6 @@
 #include "M23018.h"
 #include "Minilzo.h"
 #include "fsaccess.h"
-#if 0 // Port fat driver
-#include "FAT32_Disk.h"
-#include "FAT32_Access.h"
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -44,314 +40,6 @@
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-#if 0
-void ProcessWaveformData(void)
-{
-	//SUMMARY_DATA* sumEntry;
-
-#if 0 // Removed
-	//static uint16 commandNibble;
-
-	// Store the command nibble for the first channel of data
-	//commandNibble = (uint16)(*(g_tailOfPretriggerBuff) & EMBEDDED_CMD);
-#endif
-
-	// Check if still waiting for an event
-	if (g_isTriggered == NO)
-	{
-		// Check if not processing a cal pulse
-		if (g_processingCal == NO)
-		{
-			// Check the Command Nibble on the first channel (Acoustic)
-			switch (0)//g_waveState)
-			//switch (commandNibble)
-			{
-				case TRIG_ONE:
-					// Check if there are still free event containers and we are still taking new events
-					if ((g_freeEventBuffers != 0) && (g_doneTakingEvents == NO))
-					{
-						// Store the exact time we received the trigger data sample
-						//g_pendingEventRecord.summary.captured.eventTime = GetCurrentTime();
-
-						// Change global wave state flag
-						//g_waveState = PENDING;
-
-						// Set loop counter to 1 minus the total samples to be received in the event body (minus the trigger data sample)
-						g_isTriggered = g_samplesInBody - 1;
-
-						// Copy Pretrigger buffer data over to the Event body buffer
-						*(g_eventBufferBodyPtr + 0) = *(g_tailOfPretriggerBuff + 0);
-						*(g_eventBufferBodyPtr + 1) = *(g_tailOfPretriggerBuff + 1);
-						*(g_eventBufferBodyPtr + 2) = *(g_tailOfPretriggerBuff + 2);
-						*(g_eventBufferBodyPtr + 3) = *(g_tailOfPretriggerBuff + 3);
-
-						// Advance the pointers
-						g_eventBufferBodyPtr += 4;
-						g_tailOfPretriggerBuff += 4;
-
-						// Check if the number of Active channels is less than or equal to 4 (one seismic sensor)
-						if (g_sensorInfo.numOfChannels <= 4)
-						{
-							// Check if the end of the Pretrigger buffer buffer has been reached
-							if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
-
-							// Copy Pretrigger buffer data over to the Event Pretrigger buffer
-							*(g_eventBufferPretrigPtr + 0) = (uint16)((*(g_tailOfPretriggerBuff + 0) & DATA_MASK) | EVENT_START);
-							*(g_eventBufferPretrigPtr + 1) = (uint16)((*(g_tailOfPretriggerBuff + 1) & DATA_MASK) | EVENT_START);
-							*(g_eventBufferPretrigPtr + 2) = (uint16)((*(g_tailOfPretriggerBuff + 2) & DATA_MASK) | EVENT_START);
-							*(g_eventBufferPretrigPtr + 3) = (uint16)((*(g_tailOfPretriggerBuff + 3) & DATA_MASK) | EVENT_START);
-
-							// Advance the pointer (Don't advance g_tailOfPretriggerBuff since just reading Pretrigger buffer data)
-							g_eventBufferPretrigPtr += 4;
-						}
-					}
-					else
-					{
-						// Full or finished
-					}
-					break;
-
-				case CAL_START:
-					// Set loop counter to 1 minus the total cal samples to be recieved (minus the cal start sample)
-					g_processingCal = g_samplesInCal - 1;
-
-					// Change global wave state flag
-					//g_waveState = PENDING;
-
-					switch (g_calTestExpected)
-					{
-						// Received a Cal pulse after the event
-						case 1:
-							// Copy Pretrigger buffer data over to the Event Cal buffer
-							*(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfPretriggerBuff + 0) & DATA_MASK) | CAL_START);
-							*(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfPretriggerBuff + 1) & DATA_MASK) | CAL_START);
-							*(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfPretriggerBuff + 2) & DATA_MASK) | CAL_START);
-							*(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfPretriggerBuff + 3) & DATA_MASK) | CAL_START);
-
-							// Advance the pointers
-							g_eventBufferCalPtr += 4;
-							g_tailOfPretriggerBuff += 4;
-							
-							break;
-
-						// Received a Cal pulse which was delayed once (use/copy the cal for both events)
-						case 2:
-							// Set the pointer to the second event Cal buffer
-							g_delayedOneEventBufferCalPtr = g_eventBufferCalPtr + g_wordSizeInEvent;
-
-							// Copy Pretrigger buffer data over to the Event Cal buffers
-							*(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfPretriggerBuff + 0) & DATA_MASK) | CAL_START);
-							*(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfPretriggerBuff + 1) & DATA_MASK) | CAL_START);
-							*(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfPretriggerBuff + 2) & DATA_MASK) | CAL_START);
-							*(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfPretriggerBuff + 3) & DATA_MASK) | CAL_START);
-
-							// Advance the pointers
-							g_delayedOneEventBufferCalPtr += 4;
-							g_eventBufferCalPtr += 4;
-							g_tailOfPretriggerBuff += 4;
-							break;
-
-						// Received a Cal pulse which was delayed twice (use/copy the cal for all three events)
-						case 3:
-							// Set the pointer to the second event Cal buffer
-							g_delayedOneEventBufferCalPtr = g_eventBufferCalPtr + g_wordSizeInEvent;
-
-							// Set the pointer to the third event Cal buffer
-							g_delayedTwoEventBufferCalPtr = g_delayedOneEventBufferCalPtr + g_wordSizeInEvent;
-
-							// Copy Pretrigger buffer data over to the Event Cal buffers
-							*(g_delayedTwoEventBufferCalPtr + 0) = *(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = (uint16)((*(g_tailOfPretriggerBuff + 0) & DATA_MASK) | CAL_START);
-							*(g_delayedTwoEventBufferCalPtr + 1) = *(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = (uint16)((*(g_tailOfPretriggerBuff + 1) & DATA_MASK) | CAL_START);
-							*(g_delayedTwoEventBufferCalPtr + 2) = *(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = (uint16)((*(g_tailOfPretriggerBuff + 2) & DATA_MASK) | CAL_START);
-							*(g_delayedTwoEventBufferCalPtr + 3) = *(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = (uint16)((*(g_tailOfPretriggerBuff + 3) & DATA_MASK) | CAL_START);
-
-							// Advance the pointers
-							g_delayedTwoEventBufferCalPtr += 4;
-							g_delayedOneEventBufferCalPtr += 4;
-							g_eventBufferCalPtr += 4;
-							g_tailOfPretriggerBuff += 4;
-							break;
-					}
-					break;
-
-				default:
-					// Advance the Pretrigger buffer buffer the number of active channels
-					g_tailOfPretriggerBuff += g_sensorInfo.numOfChannels;
-					break;
-			}
-		}
-		else // g_processingCal != 0
-		{
-			// Received another data sample, decrement the count
-			g_processingCal--;
-
-			switch (g_calTestExpected)
-			{
-				case 1:
-					// Copy Pretrigger buffer data over to the Event Cal buffer
-					*(g_eventBufferCalPtr + 0) = *(g_tailOfPretriggerBuff + 0);
-					*(g_eventBufferCalPtr + 1) = *(g_tailOfPretriggerBuff + 1);
-					*(g_eventBufferCalPtr + 2) = *(g_tailOfPretriggerBuff + 2);
-					*(g_eventBufferCalPtr + 3) = *(g_tailOfPretriggerBuff + 3);
-
-					// Advance the pointers
-					g_eventBufferCalPtr += 4;
-					g_tailOfPretriggerBuff += 4;
-          
-					if (g_processingCal == 0)
-					{
-						// Temp - Add CAL_END command flag
-						//*(g_eventBufferCalPtr - 4) |= CAL_END;
-						//*(g_eventBufferCalPtr - 3) |= CAL_END;
-						//*(g_eventBufferCalPtr - 2) |= CAL_END;
-						//*(g_eventBufferCalPtr - 1) |= CAL_END;
-
-						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
-
-						//debugRaw("TE\r\n");
-						raiseSystemEventFlag(TRIGGER_EVENT);
-						g_calTestExpected = 0;
-					}
-					break;
-
-				case 2:
-					*(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = *(g_tailOfPretriggerBuff + 0);
-					*(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = *(g_tailOfPretriggerBuff + 1);
-					*(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = *(g_tailOfPretriggerBuff + 2);
-					*(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = *(g_tailOfPretriggerBuff + 3);
-
-					// Advance the pointers
-					g_delayedOneEventBufferCalPtr += 4;
-					g_eventBufferCalPtr += 4;
-					g_tailOfPretriggerBuff += 4;
-          
-					if (g_processingCal == 0)
-					{
-						// Temp - Add CAL_END command flag
-						//*(g_delayedOneEventBufferCalPtr - 4) |= CAL_END;	*(g_eventBufferCalPtr - 4) |= CAL_END;
-						//*(g_delayedOneEventBufferCalPtr - 3) |= CAL_END;	*(g_eventBufferCalPtr - 3) |= CAL_END;
-						//*(g_delayedOneEventBufferCalPtr - 2) |= CAL_END;	*(g_eventBufferCalPtr - 2) |= CAL_END;
-						//*(g_delayedOneEventBufferCalPtr - 1) |= CAL_END;	*(g_eventBufferCalPtr - 1) |= CAL_END;
-
-						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
-
-						//debugRaw("TE\r\n");
-						raiseSystemEventFlag(TRIGGER_EVENT);
-						g_calTestExpected = 0;
-					}
-					break;
-
-				case 3:
-					*(g_delayedTwoEventBufferCalPtr + 0) = *(g_delayedOneEventBufferCalPtr + 0) = *(g_eventBufferCalPtr + 0) = *(g_tailOfPretriggerBuff + 0);
-					*(g_delayedTwoEventBufferCalPtr + 1) = *(g_delayedOneEventBufferCalPtr + 1) = *(g_eventBufferCalPtr + 1) = *(g_tailOfPretriggerBuff + 1);
-					*(g_delayedTwoEventBufferCalPtr + 2) = *(g_delayedOneEventBufferCalPtr + 2) = *(g_eventBufferCalPtr + 2) = *(g_tailOfPretriggerBuff + 2);
-					*(g_delayedTwoEventBufferCalPtr + 3) = *(g_delayedOneEventBufferCalPtr + 3) = *(g_eventBufferCalPtr + 3) = *(g_tailOfPretriggerBuff + 3);
-
-					// Advance the pointers
-					g_delayedTwoEventBufferCalPtr += 4;
-					g_delayedOneEventBufferCalPtr += 4;
-					g_eventBufferCalPtr += 4;
-					g_tailOfPretriggerBuff += 4;
-
-					if (g_processingCal == 0)
-					{
-						// Temp - Add CAL_END command flag
-						//*(g_delayedTwoEventBufferCalPtr - 4) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 4) |= CAL_END;	*(g_eventBufferCalPtr - 4) |= CAL_END;
-						//*(g_delayedTwoEventBufferCalPtr - 3) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 3) |= CAL_END;	*(g_eventBufferCalPtr - 3) |= CAL_END;
-						//*(g_delayedTwoEventBufferCalPtr - 2) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 2) |= CAL_END;	*(g_eventBufferCalPtr - 2) |= CAL_END;
-						//*(g_delayedTwoEventBufferCalPtr - 1) |= CAL_END;	*(g_delayedOneEventBufferCalPtr - 1) |= CAL_END;	*(g_eventBufferCalPtr - 1) |= CAL_END;
-
-						g_eventBufferCalPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig + g_wordSizeInBody;
-
-						//debugRaw("TE\r\n");
-						raiseSystemEventFlag(TRIGGER_EVENT);
-						g_calTestExpected = 0;
-					}
-					break;
-			}
-		}
-	}
-	else // g_isTriggered != 0
-	{
-		// Check if this is the last sample of the triggered event
-		if ((g_isTriggered - 1) == 0)
-		{
-			// Copy the channel data over from the Pretrigger buffer to the event buffer
-			// Strip off the command nibble and mark the end of the event
-			*(g_eventBufferBodyPtr + 0) = (uint16)((*(g_tailOfPretriggerBuff + 0) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferBodyPtr + 1) = (uint16)((*(g_tailOfPretriggerBuff + 1) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferBodyPtr + 2) = (uint16)((*(g_tailOfPretriggerBuff + 2) & DATA_MASK) | EVENT_END);
-			*(g_eventBufferBodyPtr + 3) = (uint16)((*(g_tailOfPretriggerBuff + 3) & DATA_MASK) | EVENT_END);
-
-			// Advance the pointers
-			g_eventBufferBodyPtr += 4;
-			g_tailOfPretriggerBuff += 4;
-		}
-		else // Normal samples in the triggered event
-		{
-			// Copy the channel data over from the Pretrigger buffer to the event buffer
-			*(g_eventBufferBodyPtr + 0) = *(g_tailOfPretriggerBuff + 0);
-			*(g_eventBufferBodyPtr + 1) = *(g_tailOfPretriggerBuff + 1);
-			*(g_eventBufferBodyPtr + 2) = *(g_tailOfPretriggerBuff + 2);
-			*(g_eventBufferBodyPtr + 3) = *(g_tailOfPretriggerBuff + 3);
-
-			// Advance the pointers
-			g_eventBufferBodyPtr += 4;
-			g_tailOfPretriggerBuff += 4;
-		}
-
-		// Check if the number of Active channels is less than or equal to 4 (one seismic sensor)
-		if (g_sensorInfo.numOfChannels <= 4)
-		{
-			// Check if there are still PreTrigger data samples in the Pretrigger buffer
-			if ((g_samplesInBody - g_isTriggered) < g_samplesInPretrig)
-			{
-				// Check if the end of the Pretrigger buffer has been reached
-				if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
-
-				// Copy the Pretrigger buffer data samples over to the Pretrigger data buffer
-				*(g_eventBufferPretrigPtr + 0) = *(g_tailOfPretriggerBuff + 0);
-				*(g_eventBufferPretrigPtr + 1) = *(g_tailOfPretriggerBuff + 1);
-				*(g_eventBufferPretrigPtr + 2) = *(g_tailOfPretriggerBuff + 2);
-				*(g_eventBufferPretrigPtr + 3) = *(g_tailOfPretriggerBuff + 3);
-
-				// Advance the pointer (Don't advance g_tailOfPretriggerBuff since just reading Pretrigger buffer data)
-				g_eventBufferPretrigPtr += 4;
-			}
-		}
-
-		// Decrement g_isTriggered since another event sample has been stored
-		g_isTriggered--;
-
-		// Check if all the event data from the Pretrigger buffer has been moved into the event buffer
-		if (g_isTriggered == 0)
-		{
-			g_freeEventBuffers--;
-			g_eventBufferWriteIndex++;
-			g_calTestExpected++;
-
-			if (g_eventBufferWriteIndex < g_maxEventBuffers)
-			{
-				g_eventBufferPretrigPtr = g_eventBufferBodyPtr + g_wordSizeInCal;
-				g_eventBufferBodyPtr = g_eventBufferPretrigPtr + g_wordSizeInPretrig;
-			}
-			else
-			{
-				g_eventBufferWriteIndex = 0;
-				g_eventBufferPretrigPtr = g_startOfEventBufferPtr;
-				g_eventBufferBodyPtr = g_startOfEventBufferPtr + g_wordSizeInPretrig;
-			}
-		}
-	}
-
-	// Check if the end of the Pretrigger buffer buffer has been reached
-	if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
-}
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -377,12 +65,7 @@ void MoveWaveformEventToFile(void)
 	uint32 remainingDataLength;
 	uint32 compressSize;
 	uint16* tempDataPtr;
-
-#if 1 // Atmel fat driver
 	int waveformFileHandle = -1;
-#else // Port fat driver
-	FL_FILE* waveformFileHandle = NULL;
-#endif
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
@@ -406,19 +89,8 @@ void MoveWaveformEventToFile(void)
 					clearSystemEventFlag(EXT_TRIGGER_EVENT);
 				}
 
-#if 0 // Old
-				sumEntry = &g_summaryTable[g_eventBufferReadIndex];
-#endif
-
-#if 1 // Need to clear out the Summary entry since it's initialized to all 0xFF's
+				// Need to clear out the Summary entry since it's initialized to all 0xFF's
 				memset(ramSummaryEntryPtr, 0, sizeof(SUMMARY_DATA));
-#else // Old
-				// Initialize the freq data counts.
-				ramSummaryEntryPtr->waveShapeData.a.freq = 0;
-				ramSummaryEntryPtr->waveShapeData.r.freq = 0;
-				ramSummaryEntryPtr->waveShapeData.v.freq = 0;
-				ramSummaryEntryPtr->waveShapeData.t.freq = 0;
-#endif
 
 				ramSummaryEntryPtr->mode = WAVEFORM_MODE;
 				waveformProcessingState = WAVE_PRETRIG;
@@ -570,11 +242,7 @@ void MoveWaveformEventToFile(void)
 					// Get new event file handle
 					waveformFileHandle = GetEventFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
 
-#if 1 // Atmel fat driver
 					if (waveformFileHandle == -1)
-#else // Port fat driver
-					if (waveformFileHandle == NULL)
-#endif
 					{
 						debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.op_mode == WAVEFORM_MODE) ? "Waveform" : "Combo - Waveform");
 					}					
@@ -584,7 +252,6 @@ void MoveWaveformEventToFile(void)
 								(g_triggerRecord.op_mode == WAVEFORM_MODE) ? "WAVEFORM" : "COMBO - WAVEFORM", g_pendingEventRecord.summary.eventNumber);
 						OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
-#if 1 // Atmel fat driver
 						// Write the event record header and summary
 						bytesWritten = write(waveformFileHandle, &g_pendingEventRecord, sizeof(EVT_RECORD));
 
@@ -667,17 +334,6 @@ void MoveWaveformEventToFile(void)
 							g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 							close(g_globalFileHandle);
 						}
-#endif
-
-#else // Port fat driver
-						// Write the event record header and summary
-						fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, waveformFileHandle);
-
-						// Write the event data, containing the Pretrigger, event and cal
-						fl_fwrite(g_currentEventStartPtr, g_wordSizeInEvent, 2, waveformFileHandle);
-
-						// Done writing the event file, close the file handle
-						fl_fclose(waveformFileHandle);
 #endif
 						debug("Waveform Event file closed\r\n");
 					}

@@ -151,10 +151,6 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 
 						g_unitConfig.timerMode = DISABLED;
 
-#if 0 // Test with power off protection always enabled
-						// Disable the Power Off Protection
-						PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
-#endif
 						// Disable the Power Off timer if it's set
 						ClearSoftTimer(POWER_OFF_TIMER_NUM);
 

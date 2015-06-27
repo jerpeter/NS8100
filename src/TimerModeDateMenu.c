@@ -696,11 +696,6 @@ void ProcessTimerModeSettings(uint8 mode)
 		}
 		else // status == IN_PROGRESS
 		{
-#if 0 // Test with power off protection always enabled
-			// Enable power off protection
-			PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
-#endif
-
 			if (mode == PROMPT)
 			{
 				memset(&stringBuff[0], 0, sizeof(stringBuff));

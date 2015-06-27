@@ -36,25 +36,14 @@
 ///----------------------------------------------------------------------------
 void OneWireInit(void)
 {
-#if 0 // ns7100
-	// Already handled in basic processor init
-	// Set port data to one (idle state)
-	// reg_PORTE.reg |= (SEISMIC_SENSOR | ACOUSTIC_SENSOR);
-	// Set data direction to outputs
-	// reg_DDRE.reg |= (SEISMIC_SENSOR | ACOUSTIC_SENSOR);
-	// Set data direction to input
-	// reg_DDRQB.reg &= ~READ_SENSOR;
-#else // ns8100
 	gpio_enable_gpio_pin(SMART_SENSOR_DATA);
 	PowerControl(SEISMIC_SENSOR_DATA_CONTROL, OFF);
 	PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, OFF);
-#endif
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 1
 uint8 OneWireReset(SMART_SENSOR_TYPE sensor)
 {
 	//    500  30 110 (us)
@@ -66,13 +55,8 @@ uint8 OneWireReset(SMART_SENSOR_TYPE sensor)
 	uint8 presenceDetect = NO;
 
 	// Set data direction to output to drive a 0
-#if 0 // ns7100
-	//reg_DDRE.reg |= sensor;
-	reg_PORTE.reg &= ~sensor;
-#else // ns8100
 	if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, ON); }
 	else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, ON); }
-#endif
 
 	// Hold low for 500us
 	//SoftUsecWait(500); // Looks like 540
@@ -80,24 +64,15 @@ uint8 OneWireReset(SMART_SENSOR_TYPE sensor)
 	SoftUsecWait(480);
 
 	// Release line (allow pullup to take affect)
-#if 0 // ns7100
-	//reg_DDRE.reg &= ~sensor;
-	reg_PORTE.reg |= sensor;
-#else // ns8100
 	if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, OFF); }
 	else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, OFF); }
-#endif
 
 	// Wait 30us + 50us (80us total)
 	//SoftUsecWait(80);
 	//SoftUsecWait(74);
 	SoftUsecWait(77);
 
-#if 0 // ns7100
-	if ((reg_PORTQB.reg & READ_SENSOR) == LOW)
-#else // ns8100
 	if (READ_SMART_SENSOR_ONE_WIRE_STATE() == LOW)
-#endif
 	{
 		presenceDetect = YES;
 	}
@@ -109,12 +84,10 @@ uint8 OneWireReset(SMART_SENSOR_TYPE sensor)
 
 	return (presenceDetect);
 }
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 1
 void OneWireWriteByte(SMART_SENSOR_TYPE sensor, uint8 data)
 {
 	uint8 i;
@@ -123,13 +96,8 @@ void OneWireWriteByte(SMART_SENSOR_TYPE sensor, uint8 data)
 	for (i = 0; i <= 7; i++)
 	{
 		// Set data direction to output to drive a 0
-#if 0 // ns7100
-		//reg_DDRE.reg |= sensor;
-		reg_PORTE.reg &= ~sensor;
-#else // ns8100
 		if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, ON); }
 		else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, ON); }
-#endif
 
 		// Check if the bit is a 1
 		if (data & 0x01)
@@ -138,13 +106,8 @@ void OneWireWriteByte(SMART_SENSOR_TYPE sensor, uint8 data)
 			SoftUsecWait(5);
 
 			// Release the line
-#if 0 // ns7100
-			//reg_DDRE.reg &= ~sensor;
-			reg_PORTE.reg |= sensor;
-#else // ns8100
 			if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, OFF); }
 			else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, OFF); }
-#endif
 
 			// Wait for 65us, recovery time
 			//SoftUsecWait(65);
@@ -159,13 +122,8 @@ void OneWireWriteByte(SMART_SENSOR_TYPE sensor, uint8 data)
 			SoftUsecWait(63);
 
 			// Release the line
-#if 0 // ns7100
-			//reg_DDRE.reg &= ~sensor;
-			reg_PORTE.reg |= sensor;
-#else // ns8100
 			if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, OFF); }
 			else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, OFF); }
-#endif
 
 			// Wait for 5us, recovery time
 			SoftUsecWait(5);
@@ -175,12 +133,10 @@ void OneWireWriteByte(SMART_SENSOR_TYPE sensor, uint8 data)
 		data >>= 1;
 	}
 }
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 1
 uint8 OneWireReadByte(SMART_SENSOR_TYPE sensor)
 {
 	uint8 data = 0;
@@ -190,25 +146,15 @@ uint8 OneWireReadByte(SMART_SENSOR_TYPE sensor)
 	for (i = 0; i <= 7; i++)
 	{
 		// Set data direction to output to drive a 0
-#if 0 // ns7100
-		//reg_DDRE.reg |= sensor;
-		reg_PORTE.reg &= ~sensor;
-#else // ns8100
 		if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, ON); }
 		else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, ON); }
-#endif
 
 		// Hold low for 5us
 		SoftUsecWait(5);
 
 		// Release the line
-#if 0 // ns7100
-		//reg_DDRE.reg &= ~sensor;
-		reg_PORTE.reg |= sensor;
-#else // ns8100
 		if (sensor == SEISMIC_SENSOR) { PowerControl(SEISMIC_SENSOR_DATA_CONTROL, OFF); }
 		else /* ACOUSTIC_SENSOR */ { PowerControl(ACOUSTIC_SENSOR_DATA_CONTROL, OFF); }
-#endif
 
 		// Wait for 5us
 		SoftUsecWait(5);
@@ -217,11 +163,7 @@ uint8 OneWireReadByte(SMART_SENSOR_TYPE sensor)
 		data >>= 1;
 
 		// Check if the data bit is a 1
-#if 0 // ns7100
-		if (reg_PORTQB.reg & READ_SENSOR)
-#else // ns8100
 		if (READ_SMART_SENSOR_ONE_WIRE_STATE())
-#endif
 		{
 			// Or in a 1
 			data |= 0x80;
@@ -240,7 +182,6 @@ uint8 OneWireReadByte(SMART_SENSOR_TYPE sensor)
 
 	return (data);
 }
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -534,7 +475,7 @@ uint8 OneWireReadROM(SMART_SENSOR_TYPE sensor, SMART_SENSOR_ROM* romData)
 
 		crc = CalcCrc8(romDataPtr, 7, 0x00);
 
-#if 0 // Debug
+#if EXTENDED_DEBUG
 		debugRaw("\nOne Wire Rom Data: ");
 
 		for (i = 0; i < 8; i++)

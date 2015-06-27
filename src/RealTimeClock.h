@@ -630,41 +630,6 @@ typedef union
 #define RTC_RAM_WRITE_ADDR			0x1c
 #define RTC_RAM_READ_ADDR			0x1d
 
-#if 0
-typedef struct
-{
-	RTC_CONTROL_1_STRUCT			control_1;
-	RTC_CONTROL_2_STRUCT			control_2;
-	RTC_CONTROL_3_STRUCT			control_3;
-	RTC_SECONDS_STRUCT_TEMP			seconds;
-	RTC_MINUTES_STRUCT_TEMP			minutes;
-	RTC_HOURS_STRUCT_TEMP			hours;
-	RTC_DAYS_STRUCT					days;
-	RTC_WEEKDAYS_STRUCT				weekdays;
-	RTC_MONTHS_STRUCT				months;
-	RTC_YEARS_STRUCT				years;
-	RTC_SECOND_ALARM_STRUCT			second_alarm;
-	RTC_MINUTE_ALARM_STRUCT			minute_alarm;
-	RTC_HOUR_ALARM_STRUCT			hour_alarm;
-	RTC_DAY_ALARM_STRUCT_TEMP		day_alarm;
-	RTC_WEEKDAY_ALARM_STRUCT		weekday_alarm;
-	RTC_CLOCK_OUT_CONTROL_STRUCT	clock_out_control;
-	RTC_WATCHDOG_CONTROL_STRUCT		watchdog_control;
-	RTC_WATCHDOG_STRUCT				watchdog;
-	RTC_TIMESTAMP_CONTROL_STRUCT	timestamp_control;
-	RTC_TIMESTAMP_SECONDS_STRUCT	timestamp_seconds;
-	RTC_TIMESTAMP_MINUTES_STRUCT	timestamp_minutes;
-	RTC_TIMESTAMP_HOURS_STRUCT		timestamp_hours;
-	RTC_TIMESTAMP_DAYS_STRUCT		timestamp_days;
-	RTC_TIMESTAMP_MONTHS_STRUCT		timestamp_months;
-	RTC_TIMESTAMP_YEARS_STRUCT		timestamp_years;
-	RTC_AGING_OFFSET_STRUCT			aging_offset;
-	RTC_RAM_ADDRESS_MSB_STRUCT		ram_address_msb;
-	RTC_RAM_ADDRESS_LSB_STRUCT		ram_address_lsb;
-	RTC_RAM_WRITE_STRUCT			ram_write;
-	RTC_RAM_READ_STRUCT				ram_read;
-} RTC_MEM_MAP_STRUCT;
-#else
 typedef struct
 {
 	uint8 control_1;
@@ -698,20 +663,7 @@ typedef struct
 	uint8 ram_write;
 	uint8 ram_read;
 } RTC_MEM_MAP_STRUCT;
-#endif
 
-#if 0
-typedef struct
-{
-	RTC_SECONDS_STRUCT_TEMP			seconds;
-	RTC_MINUTES_STRUCT_TEMP			minutes;
-	RTC_HOURS_STRUCT_TEMP			hours;
-	RTC_DAYS_STRUCT					days;
-	RTC_WEEKDAYS_STRUCT				weekdays;
-	RTC_MONTHS_STRUCT				months;
-	RTC_YEARS_STRUCT				years;
-} RTC_DATE_TIME_STRUCT;
-#else
 typedef struct
 {
 	uint8 seconds;
@@ -722,17 +674,7 @@ typedef struct
 	uint8 months;
 	uint8 years;
 } RTC_DATE_TIME_STRUCT;
-#endif
 
-#if 0
-typedef struct
-{
-	RTC_DAYS_STRUCT					days;
-	RTC_WEEKDAYS_STRUCT				weekdays;
-	RTC_MONTHS_STRUCT				months;
-	RTC_YEARS_STRUCT				years;
-} RTC_DATE_STRUCT;
-#else
 typedef struct
 {
 	uint8 days;
@@ -740,34 +682,14 @@ typedef struct
 	uint8 months;
 	uint8 years;
 } RTC_DATE_STRUCT;
-#endif
 
-#if 0
-typedef struct
-{
-	RTC_SECONDS_STRUCT_TEMP			seconds;
-	RTC_MINUTES_STRUCT_TEMP			minutes;
-	RTC_HOURS_STRUCT_TEMP			hours;
-} RTC_TIME_STRUCT;
-#else
 typedef struct
 {
 	uint8 seconds;
 	uint8 minutes;
 	uint8 hours;
 } RTC_TIME_STRUCT;
-#endif
 
-#if 0
-typedef struct
-{
-	RTC_SECOND_ALARM_STRUCT			second_alarm;
-	RTC_MINUTE_ALARM_STRUCT			minute_alarm;
-	RTC_HOUR_ALARM_STRUCT			hour_alarm;
-	RTC_DAY_ALARM_STRUCT_TEMP		day_alarm;
-	RTC_WEEKDAY_ALARM_STRUCT		weekday_alarm;
-} RTC_ALARM_STRUCT;
-#else
 typedef struct
 {
 	uint8 second_alarm;
@@ -776,7 +698,6 @@ typedef struct
 	uint8 day_alarm;
 	uint8 weekday_alarm;
 } RTC_ALARM_STRUCT;
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Prototypes

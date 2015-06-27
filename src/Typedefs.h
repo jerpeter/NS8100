@@ -44,10 +44,12 @@ typedef signed long int		int32;  		/* 32 bits */
 // ========================================================================
 
 // Project Debug Modes
-#define ALL_DEBUG 			1
+#define ALL_DEBUG			1
 #define WARNINGS_AND_ERRORS	2
 #define ERRORS				3
 #define NO_DEBUG			4
+
+#define EXTENDED_DEBUG		0
 
 // Debug levels
 enum debugModes {RAW, NORM, WARN, ERR};
@@ -90,22 +92,8 @@ enum debugModes {RAW, NORM, WARN, ERR};
 #endif // End of Global Debug subsection
 // ========================================================================
 
-#define thousands(x) ((x)/1000+'0')
-#define hundreds(x)  (((x)/100)%10+'0')
-#define tens(x)      (((x)/10) %10 +'0')
-#define units(x)     ((x)%10+'0')
-
-#define CLEAR_SCREEN printf("\x1b[2J")
-
-/* The vector macro that puts the address of the interrupt
-   service routine into the specified vector address */
-#define vector(isr,address) (*(void **)(address)=(isr))
-#define vec_offset 32    /* vectored interrupt vectors start at VBR + 32      */
-
-#if 1
 #ifndef NULL
 	#define NULL 0x0
-#endif
 #endif
 
 #ifndef bool
@@ -175,53 +163,5 @@ enum {OUT_SERIAL = 0, OUT_FILE};
 #endif
 
 #define FOREVER while (TRUE)
-
-#define SHOW_EVENT_STATE_CHANGES 0
-/*
- * Routines and macros for accessing Input/Output devices
- */
-#define cpu_iord_8(ADDR)        *((volatile uint8*)(ADDR))
-#define cpu_iord_16(ADDR)       *((volatile uint16*)(ADDR))
-#define cpu_iord_32(ADDR)       *((volatile uint32*)(ADDR))
-
-#define cpu_iowr_8(ADDR,DATA)   *((volatile uint8*)(ADDR)) = (DATA)
-#define cpu_iowr_16(ADDR,DATA)  *((volatile uint16*)(ADDR)) = (DATA)
-#define cpu_iowr_32(ADDR,DATA)  *((volatile uint32*)(ADDR)) = (DATA)
-
-/*#define NULL  0x00 */
-#define EOT   0x04
-#define ACK   0x06
-#define XON   0x11
-#define XOFF  0x13
-#define NACK  0x15
-#define CAN   0x18
-
-enum MCORE_COMMAND
-{
-    M_TIME_COMMAND,
-    M_PRINTER_COMMAND,
-    M_TRIGGER_COMMAND,
-    M_CALIBRATION_COMMAND
-};
-
-enum MCORE_STATUS
-{
-    M_ACK,
-    M_NACK
-};
-
-enum ATOD_COMMAND
-{
-    A_DATA_COMMAND,
-    A_PRINTER_COMMAND,
-    A_TRIGGER_COMMAND,
-    A_CALIBRATION_COMMAND
-};
-
-enum ATOD_STATUS
-{
-    A_ACK,
-    A_NACK
-};
 
 #endif // _TYPEDEFS_H_

@@ -142,11 +142,8 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 	uint16 channelConfigReadback;
 	uint8 configError = NO;
 
-/* 
-Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Config: 0xe750, Temp Config: 0xb750
-*/
+	// Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Config: 0xe750, Temp Config: 0xb750
 
-#if 1
 	if (g_adChannelConfig == FOUR_AD_CHANNELS_WITH_READBACK_WITH_TEMP)
 	{
 		// Chan 0
@@ -243,55 +240,6 @@ Chan 0 Config: 0xe150, Chan 1 Config: 0xe350, Chan 2 Config: 0xe550, Chan 3 Conf
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->a));
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	}	
-#endif
-
-#if 0
-	uint8 delay = 0;
-
-	// Set A0 mux to A1/B1 for R/V by clearing bit
-	reg_PORTE.reg &= ~ANALOG_CONTROL_SHIFT;
-	SoftUsecWait(delay);
-
-	// Set low to start conversion
-	reg_PORTE.reg &= ~ANALOG_CONTROL_DATA;
-	SoftUsecWait(delay);
-	reg_PORTE.reg |= ANALOG_CONTROL_DATA;
-	SoftUsecWait(delay);
-
-	// Read R and V data
-	dataPtr->r = *(uint16*)(ANALOG_ADDRESS + 0x02);
-	dataPtr->v = *(uint16*)(ANALOG_ADDRESS + 0x00);
-
-	SoftUsecWait(delay);
-
-	// Set A0 mux to A2/B2 for T/A by setting bit
-	reg_PORTE.reg |= ANALOG_CONTROL_SHIFT;
-	SoftUsecWait(delay);
-
-	// Set low to start conversion
-	reg_PORTE.reg &= ~ANALOG_CONTROL_DATA;
-	SoftUsecWait(delay);
-	reg_PORTE.reg |= ANALOG_CONTROL_DATA;
-	SoftUsecWait(delay);
-
-	dataPtr->t = *(uint16*)(ANALOG_ADDRESS + 0x02);
-	dataPtr->a = *(uint16*)(ANALOG_ADDRESS + 0x00);
-
-	dataPtr->r -= g_channelOffset.r_16bit;
-	dataPtr->v -= g_channelOffset.v_16bit;
-	dataPtr->t -= g_channelOffset.t_16bit;
-	dataPtr->a -= g_channelOffset.a_16bit;
-#endif
-
-#if 0
-	dataPtr->r = *((uint16*)(ANALOG_ADDRESS | ANALOG_R_CHANNEL_SELECT));
-	dataPtr->v = *((uint16*)(ANALOG_ADDRESS | ANALOG_V_CHANNEL_SELECT));
-
-	// Delay 2.25 us before signaling another conversion
-
-	dataPtr->t = *((uint16*)(ANALOG_ADDRESS | ANALOG_T_CHANNEL_SELECT));
-	dataPtr->a = *((uint16*)(ANALOG_ADDRESS | ANALOG_A_CHANNEL_SELECT));
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -376,31 +324,6 @@ void SetupADChannelConfig(uint32 sampleRate)
     spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 	SoftUsecWait(2);
-
-#if 0
-	uint16 dummyRead = 0x8000;
-
-	// Need 2 dummy reads to start and sync the channels
-	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &dummyRead);
-	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-
-	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &dummyRead);
-	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-#endif
-
-#if 0
-	uint16 dummyRead = 0x8000;
-
-	// Need dummy reads to start and sync the channels
-	while (dummyRead > 0x2000)
-	{
-		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &dummyRead);
-		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-	}
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -494,19 +417,13 @@ void SetSeismicGainSelect(uint8 seismicGain)
 {
 	if(seismicGain == SEISMIC_GAIN_LOW)
 	{
-#if 0 // Incorrect control (swapped)
-		g_analogControl.bit.seismicGainSelect = 0;
-#else // Correct
+		// Control is swapped (Low is 1)
 		g_analogControl.bit.seismicGainSelect = 1;
-#endif
 	}
 	else // seismicGain == SEISMIC_GAIN_HIGH
 	{
-#if 0 // Incorrect control (swapped)
-		g_analogControl.bit.seismicGainSelect = 1;
-#else // Correct
+		// Control is swapped (High is 0)
 		g_analogControl.bit.seismicGainSelect = 0;
-#endif
 	}
 
 	WriteAnalogControl(g_analogControl.reg);
@@ -852,15 +769,4 @@ void UpdateChannelOffsetsForTempChange(void)
 			InitAndSeedChannelOffsetVariables();
 		}
 	}
-#if 0 // Test resetting the process if the unit wakes up
-	// Check if the unit woke from sleep and the recalibrate was in the middle of processing
-	else if ((g_sleepModeEngaged == NO) && (g_updateOffsetCount))
-	{
-		// Restart the process since it was interrupted for an event that woke the system
-		g_updateOffsetCount = 0;
-
-		// Clear the comparison structure
-		memset(&s_compareChannelOffset, 0, sizeof(s_compareChannelOffset));
-	}
-#endif
 }

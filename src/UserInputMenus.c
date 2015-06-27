@@ -207,13 +207,6 @@ void AlarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-#if 0 // ns8100 - No longer needed with temp caching of trigger. Prior: Up convert to 16-bit
-		if (g_unitConfig.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
-		{
-			g_unitConfig.alarmOneSeismicLevel *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
-		}		
-#endif
-
 		SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
 	}
 
@@ -405,13 +398,6 @@ void AlarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-#if 0 // ns8100 - No longer needed with temp caching of trigger. Prior: Up convert to 16-bit
-		if (g_unitConfig.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
-		{
-			g_unitConfig.alarmTwoSeismicLevel *= (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
-		}		
-#endif
-
 		SETUP_USER_MENU_MSG(&alarmTwoMenu, g_unitConfig.alarmTwoMode);
 	}
 
@@ -1340,12 +1326,6 @@ void SeismicTriggerMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-#if 0 // ns8100 - No longer needed with temp caching of trigger. Prior: Up convert to 16-bit
-		if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
-		{
-			g_triggerRecord.trec.seismicTriggerLevel *= (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
-		}		
-#endif
 		if (g_triggerRecord.op_mode == COMBO_MODE)
 		{
 			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
@@ -1386,16 +1366,8 @@ void SerialNumberMenuHandler(uint8 keyPressed, void* data)
 		debug("Serial #: <%s>, Length: %d\r\n", (char*)data, strlen((char*)data));
 		strcpy((char*)g_factorySetupRecord.serial_num, (char*)data);
 
-#if 0 // First Pass
-		// Check if both Seismic and Acoustic Smart Sensors were discovered on startup
-		if (CheckIfBothSmartSensorsPresent() == YES)
-		{
-			DisplaySmartSensorSerialNumber(SEISMIC_SENSOR);
-			DisplaySmartSensorSerialNumber(ACOUSTIC_SENSOR);
-		}
-#else // Re-read and display Smart Sensor info
+		// Re-read and display Smart Sensor info
 		DisplaySmartSensorInfo(INFO_ON_CHECK);
-#endif
 
 		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
 	}

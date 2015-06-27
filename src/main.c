@@ -53,11 +53,6 @@
 #include "rtc.h"
 #include "tc.h"
 #include "fsaccess.h"
-#if 0 // Port fat driver
-#include "FAT32_Disk.h"
-#include "FAT32_Access.h"
-#include "FAT32_FileLib.h"
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -433,46 +428,18 @@ void CraftManager(void)
 		if (DEMx_CMD == g_modemStatus.xferState)
 		{
 			g_modemStatus.xferState = sendDEMData();
-
-#if 0 // ns7100
-			if (NOP_CMD == g_modemStatus.xferState)
-			{
-				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
-			}
-#endif
 		}
 		else if (DSMx_CMD == g_modemStatus.xferState)
 		{
 			g_modemStatus.xferState = sendDSMData();
-
-#if 0 // ns7100
-			if (NOP_CMD == g_modemStatus.xferState)
-			{
-				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
-			}
-#endif
 		}
 		else if (DQMx_CMD == g_modemStatus.xferState)
 		{
 			g_modemStatus.xferState = sendDQMData();
-
-#if 0 // ns7100
-			if (NOP_CMD == g_modemStatus.xferState)
-			{
-				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
-			}
-#endif
 		}
 		else if (VMLx_CMD == g_modemStatus.xferState)
 		{
 			sendVMLData();
-
-#if 0 // ns7100
-			if (NOP_CMD == g_modemStatus.xferState)
-			{
-				g_unitConfig.autoPrint = g_modemStatus.xferPrintState;
-			}
-#endif
 		}
 	}
 
@@ -527,7 +494,7 @@ void FactorySetupManager(void)
 		SETUP_MENU_MSG(DATE_TIME_MENU);
 		JUMP_TO_ACTIVE_MENU();
 	}
-	#if 0 // Added to work around On Key IRQ problem
+#if 0 // Added to work around On Key IRQ problem
 	else if (g_factorySetupRecord.invalid && g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 	{
 		g_factorySetupSequence = PROCESS_FACTORY_SETUP;
@@ -538,7 +505,7 @@ void FactorySetupManager(void)
 		SETUP_MENU_MSG(DATE_TIME_MENU);
 		JUMP_TO_ACTIVE_MENU();
 	}
-	#endif
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -585,9 +552,6 @@ extern Bool ushell_cmd_syncevents(uint16_t*, uint16_t*);
 
 void UsbDeviceManager(void)
 {
-#if 0 // Test - need access in main() to determine sleep level
-	static uint8 usbMassStorageState = USB_INIT_DRIVER;
-#endif
 	INPUT_MSG_STRUCT mn_msg;
 	uint16 totalEventsCopied;
 	uint16 totalEventsSkipped;
@@ -1054,23 +1018,14 @@ void BootLoadManager(void)
 	static void (*func)(void);
 	func = (void(*)())APPLICATION;
 	uint32 i;
-
-#if 1 // Atmel fat driver
 	int file = -1;
-#else // Port fat driver
-	FL_FILE* file;
-#endif
 
 	usart_status = USART_RX_EMPTY;
 	i = 0;
 
 	usart_status = usart_read_char(DBG_USART, &craft_char);
 
-#if 0
-	if (craft_char == CTRL_B)
-#else
 	if ((craft_char == CTRL_B) || (g_quickBootEntryJump == YES))
-#endif
 	{
 #if 1
 		if (g_quickBootEntryJump == YES)
@@ -1107,20 +1062,11 @@ void BootLoadManager(void)
 			ReportFileSystemAccessProblem("Bootloader access");
 		}
 
-#if 1 // Atmel fat driver
 		nav_select(FS_NAV_ID_DEFAULT);
 		sprintf(textBuffer, "A:\\System\\%s", default_boot_name);
 		file = open(textBuffer, O_RDONLY);
-#else // Port fat driver
-		sprintf(textBuffer, "C:\\System\\%s", default_boot_name);
-		file = fl_fopen(textBuffer, "r");
-#endif
 
-#if 1 // Atmel fat driver
 		while (file == -1)
-#else // Port fat driver
-		while (file == NULL)
-#endif
 		{
 			//WriteLCD_smText( 0, 64, (unsigned char *)"Connect USB..", NORMAL_LCD);
 			OverlayMessage("BOOTLOADER", "BOOT FILE NOT FOUND. CONNECT THE USB CABLE", 0);
@@ -1143,11 +1089,7 @@ void BootLoadManager(void)
 			
 			SoftUsecWait(250 * SOFT_MSECS);
 			
-#if 1 // Atmel fat driver
 			file = open(textBuffer, O_RDONLY);
-#else // Port fat driver
-			file = fl_fopen(textBuffer, "r");
-#endif
 		}
 
 		// Display initializing message
@@ -1162,12 +1104,8 @@ void BootLoadManager(void)
 			debugErr("SREC unpack unsuccessful\r\n");
 		}
 
-#if 1 // Atmel fat driver
 		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(file);
-#else // Port fat driver
-		fl_fclose(file);
-#endif
 
 #if 0 // Removed debug log file due to inducing system problems
 		debug("Dumping debug output to debug log file\r\n");
@@ -1221,35 +1159,22 @@ inline void SetupPowerSavingsBeforeSleeping(void)
 {
 	g_testApplyPS = Get_system_register(AVR32_COUNT);
 
-#if 1
 	// Only disable for Min and Most since None and Max are either permanently on or off
 	if ((g_unitConfig.powerSavingsLevel >= POWER_SAVINGS_MINIMUM) || (g_unitConfig.powerSavingsLevel <= POWER_SAVINGS_MOST))
 	{
-#if 0 // Error - Can't read pin value from a GPIO assigned as a peripheral function
-		if (gpio_get_pin_value(AVR32_PIN_PB24) == 1)
-#else // Corrected
 		if (READ_DCD == NO_CONNECTION)
-#endif
 		{
 			rs232PutToSleepState = YES;
 
-#if 1 // Normal
 			// Disable rs232 driver and receiver (Active low control)
 			PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
 			PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
-#else
-			SoftUsecWait(5);
-			SoftUsecWait(5);
-#endif
 		}
 	}
-#endif
 
-#if 1 // Normal
 	// Enable pull ups on the data lines
 	AVR32_GPIO.port[2].puers = 0xFC00; // 1111 1100 0000 0000
 	AVR32_GPIO.port[3].puers = 0x03FF; // 0000 0011 1111 1111
-#endif
 
 	g_powerSavingsForSleepEnabled = YES;
 }

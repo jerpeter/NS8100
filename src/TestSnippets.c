@@ -48,11 +48,6 @@
 #include "usb_drv.h"
 #include "srec.h"
 #include "flashc.h"
-#if 0 // Port fat driver
-#include "FAT32_Disk.h"
-#include "FAT32_Access.h"
-#include "FAT32_FileLib.h"
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -592,5 +587,52 @@ void garbage(void)
 	// Enable exceptions.
 	Enable_global_exception();
 #endif
+}
+#endif
+
+#if 0 // Test (LAN register map read)
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void testLan(void)
+{
+	debug("\n\r\n");
+	*((uint16*)0xC800030A) = 0x0000; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0000, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0002; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0002, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0020; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0020, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0022; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0022, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0024; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0024, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0026; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0026, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0028; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0028, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x002A; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x002A, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x002C; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x002C, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0030; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0030, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0034; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0034, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0040; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0040, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0042; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0042, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0102; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0102, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0104; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0104, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0106; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0106, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0108; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0108, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x010A; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x010A, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0112; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0112, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0114; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0114, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0116; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0116, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0118; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0118, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0120; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0120, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0124; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0124, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0128; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0128, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x012C; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x012C, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0130; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0130, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0132; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0132, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0134; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0134, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0136; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0136, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0138; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0138, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x013C; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x013C, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0144; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0144, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0146; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0146, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0150; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0150, *((uint16*)0xC800030C));
+	*((uint16*)0xC800030A) = 0x0158; debug("Lan Address (0x%04x) returns Data: 0x%x\r\n", 0x0158, *((uint16*)0xC800030C));
+	debug("\r\n");
 }
 #endif

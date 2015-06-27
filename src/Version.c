@@ -5,19 +5,9 @@
 ///	Author: Jeremy Peterson
 ///----------------------------------------------------------------------------
 
-#if 0
-$RCSfile: Version.c,v $
-$Author: jgetz $
-$Date: 2012/04/26 01:10:04 $
-$Source: /Nomis_NS8100/ns7100_Port/src/Version.c,v $
-$Revision: 1.2 $
-#endif
-
 // =====================================================
-// These global strings are automatically updated by CVS
-// ** DO NOT MODIFY **
-//const char applicationVersion[] = "$Revision: 0.9 $";
-//const char applicationDate[] = "$Date: 2012/08/08 01:10:04 $";
+// Build version, system date and time referenced
+// =====================================================
 const char g_buildVersion[] = "2.18.D";
 const char g_buildDate[] = __DATE__ " " __TIME__;
 // =====================================================
@@ -25,8 +15,6 @@ const char g_buildDate[] = __DATE__ " " __TIME__;
 /*=================================================================================================
 =  Notes // ns8100
 ===================================================================================================
-Version 2.0.9:	Fix a cyclic buffer logic bug for Bargraph and Combo mode that 
-				caused a failure to allow monitoring to finish. 
 
 ===================================================================================================
 =  End of Notes // ns8100

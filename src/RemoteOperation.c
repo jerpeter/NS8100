@@ -121,11 +121,6 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	else { cfg.eventCfg.aWeighting = g_factorySetupRecord.aweight_option; }
 
-#if 0 // Old and incorrectly overloaded
-	cfg.eventCfg.preBuffNumOfSamples = (uint16)g_triggerRecord.srec.sensitivity;
-	cfg.eventCfg.calDataNumOfSamples = g_triggerRecord.berec.barScale;
-	cfg.eventCfg.activeChannels = g_triggerRecord.berec.barChannel;
-#else // Updated with notes
 	cfg.eventCfg.preBuffNumOfSamples = (g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider);
 	cfg.eventCfg.calDataNumOfSamples = CALIBRATION_NUMBER_OF_SAMPLES;
 	cfg.eventCfg.activeChannels = NUMBER_OF_CHANNELS_DEFAULT;
@@ -134,7 +129,6 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.extraUnitCfg.sensitivity = (uint8)g_triggerRecord.srec.sensitivity;
 	cfg.extraUnitCfg.barScale = g_triggerRecord.berec.barScale;
 	cfg.extraUnitCfg.barChannel = g_triggerRecord.berec.barChannel;
-#endif
 
 	// Needed for events but not remote config
 	cfg.eventCfg.seismicUnitsOfMeasure = g_unitConfig.unitsOfMeasure;
@@ -367,11 +361,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				SetExternalRtcDate(&(cfg.currentTime));
 				g_unitConfig.timerMode = DISABLED;
 
-#if 0 // Test with power off protection always enabled
-				// Disable Power Off protection
-				PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
-#endif
-				
 				// Disable the Power Off timer if it's set
 				ClearSoftTimer(POWER_OFF_TIMER_NUM);
 			}
@@ -388,11 +377,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			{
 				SetExternalRtcTime(&(cfg.currentTime));
 				g_unitConfig.timerMode = DISABLED;
-				
-#if 0 // Test with power off protection always enabled
-				// Disable Power Off protection
-				PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
-#endif
 				
 				// Disable the Power Off timer if it's set
 				ClearSoftTimer(POWER_OFF_TIMER_NUM);
@@ -516,28 +500,8 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			(NO_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) 	||
 			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_COUNT) && (cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MAX_COUNT)))
 		{
-#if 0 // Old units value
-			// Air trigger changed to be sent as an A/D count. Need to convert to units value for now until internal Air trigger handling is converted to A/D count.
-			if ((cfg.eventCfg.airTriggerLevel == NO_TRIGGER_CHAR) || (cfg.eventCfg.airTriggerLevel == EXTERNAL_TRIGGER_CHAR) ||
-				(cfg.eventCfg.airTriggerLevel == MANUAL_TRIGGER_CHAR))
-			{
-				g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
-			}
-			else
-			{
-				// Convert form A/D count to units value. Incoming as 16-bit A/D count.
-				if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-				{
-					g_triggerRecord.trec.airTriggerLevel = (uint32)(10000 * HexToMB(cfg.eventCfg.airTriggerLevel, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
-				}
-				else // Report Air in DB
-				{
-					g_triggerRecord.trec.airTriggerLevel = HexToDB(cfg.eventCfg.airTriggerLevel, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT);
-				}
-			}
-#else // Air trigger as 16-bit A/D count
 			g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
-#endif
+
 			if (cfg.mode == WAVEFORM_MODE)
 			{
 				g_unitConfig.alarmOneAirMinLevel = g_triggerRecord.trec.airTriggerLevel;
@@ -626,38 +590,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		memcpy((uint8*)g_triggerRecord.trec.loc, cfg.eventCfg.sessionLocation, SESSION_LOCATION_STRING_SIZE - 2);
 		memcpy((uint8*)g_triggerRecord.trec.comments, cfg.eventCfg.sessionComments, SESSION_COMMENTS_STRING_SIZE - 2);
 
-#if 0 // Old and incorrectly overloaded
-		if ((LOW == cfg.eventCfg.preBuffNumOfSamples) || (HIGH == cfg.eventCfg.preBuffNumOfSamples))
-		{
-			g_triggerRecord.srec.sensitivity = cfg.eventCfg.preBuffNumOfSamples; // Sensitivity
-		}
-		else
-		{
-			returnCode = CFG_ERR_SENSITIVITY;
-			goto SEND_UCM_ERROR_CODE;
-		}
-		
-		if ((1 == cfg.eventCfg.calDataNumOfSamples) || (2 == cfg.eventCfg.calDataNumOfSamples) ||
-			(4 == cfg.eventCfg.calDataNumOfSamples) || (8 == cfg.eventCfg.calDataNumOfSamples))
-		{
-			g_triggerRecord.berec.barScale = (uint8)cfg.eventCfg.calDataNumOfSamples;
-		}
-		else
-		{
-			returnCode = CFG_ERR_SCALING;
-			goto SEND_UCM_ERROR_CODE;
-		}
-
-		if (cfg.eventCfg.activeChannels <= BAR_AIR_CHANNEL) // Implied (cfg.eventCfg.activeChannels >= 0)
-		{
-			g_triggerRecord.berec.barChannel = cfg.eventCfg.activeChannels;
-		}
-		else
-		{
-			returnCode = CFG_ERR_BAR_PRINT_CHANNEL;
-			goto SEND_UCM_ERROR_CODE;
-		}
-#else // Updated with notes
 		if ((cfg.extraUnitCfg.sensitivity == LOW) || (cfg.extraUnitCfg.sensitivity == HIGH))
 		{
 			g_triggerRecord.srec.sensitivity = cfg.extraUnitCfg.sensitivity; // Sensitivity
@@ -698,7 +630,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_PRETRIG_BUFFER_DIV;
 			goto SEND_UCM_ERROR_CODE;
 		}
-#endif
 
 		if ((cfg.eventCfg.bitAccuracy == ACCURACY_10_BIT) || (cfg.eventCfg.bitAccuracy == ACCURACY_12_BIT) || 
 			(cfg.eventCfg.bitAccuracy == ACCURACY_14_BIT) || (cfg.eventCfg.bitAccuracy == ACCURACY_16_BIT))

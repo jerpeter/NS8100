@@ -70,52 +70,6 @@ enum {
 	RESET_UNIT
 };
 
-#if 0
-typedef union
-{
-	struct
-	{
-		bitfield unused0:					1;
-		bitfield unused1:					1;
-		bitfield unused2:					1;
-		bitfield unused3:					1;
-		bitfield unused4:					1;
-		bitfield unused5:					1;
-		bitfield unused6:					1;
-		bitfield unused7:					1;
-
-		bitfield unused8:					1;
-		bitfield unused9:					1;
-		bitfield sdPower:					1;
-		bitfield usbLed:					1;
-		bitfield triggerOut:				1;
-		bitfield seismicSensorDataControl:	1;
-		bitfield acousticSensorDataControl:	1;
-		bitfield rtcTimestamp:				1;
-
-		bitfield usbHostSleepEnable:		1;
-		bitfield usbDeviceSleepEnable:		1;
-		bitfield lanSleepEnable:			1;
-		bitfield analogSleepEnable:			1;
-		bitfield lcdSleepEnable:			1;
-		bitfield lcdContrastEnable:			1;
-		bitfield lcdBacklightEnable:		1;
-		bitfield lcdBacklightHiEnable:		1;
-
-		bitfield powerOff:      			1;
-		bitfield powerShutdownEnable:		1;
-		bitfield serial232DriverEnable:		1;
-		bitfield serial232ReceiverEnable:	1;
-		bitfield serial485DriverEnable:		1;
-		bitfield serial485ReceiverEnable:	1;
-		bitfield alarm1Enable:				1;
-		bitfield alarm2Enable:				1;
-	} bit;
-
-	uint16 reg;
-} POWER_MANAGEMENT_STRUCT;
-#endif
-
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------

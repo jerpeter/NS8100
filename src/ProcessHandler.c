@@ -68,30 +68,11 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	// Display a message to be patient while the software disables the power off key and setups up parameters
 	OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
 
-	if (GetPowerControlState(POWER_OFF_PROTECTION_ENABLE) == OFF)
-	{
-		debug("Start Trigger: Enabling Power Off Protection\r\n");
-
-#if 0 // Test with power off protection always enabled
-		// Enable power off protection
-		PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
-#endif
-	}
-
 	// Assign a one second menu update timer
 	AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
 
-#if 0 	// Moved to system init
-	// Assign a one second menu keypad led update timer
-	//AssignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, KeypadLedUpdateTimerCallBack);
-#endif
-
-	// This is for error checking, If these checks are true, the defaults are not being set.
-#if 0 // Original which also filtered trigger levels for Combo
-	if ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
-#else // Updated to only filter for Waveform
+	// Only filter alarms for Waveform to make sure they are above the trigger level
 	if (op_mode == WAVEFORM_MODE)
-#endif
 	{
 		if ((g_unitConfig.alarmOneMode == ALARM_MODE_SEISMIC) || (g_unitConfig.alarmOneMode == ALARM_MODE_BOTH))
 		{
@@ -384,19 +365,6 @@ void StopMonitoring(uint8 mode, uint8 operation)
 		{
 			CloseMonitorLogEntry();
 		}
-		
-#if 0 // Test (Display LCD message with mode for timer mode ending)
-		char modeBuff[10];
-		char msgBuff[50];
-		if (mode == WAVEFORM_MODE)
-			sprintf(&modeBuff[0], "%s", getLangText(WAVEFORM_MODE_TEXT));
-		else if (mode == BARGRAPH_MODE)
-			sprintf(&modeBuff[0], "%s", getLangText(BARGRAPH_MODE_TEXT));
-		else if (mode == COMBO_MODE)
-			sprintf(&modeBuff[0], "%s", getLangText(COMBO_MODE_TEXT));
-		sprintf(&msgBuff[0], "%s MONITORING AND EVENT CLOSURE COMPLETE", modeBuff);
-		OverlayMessage(getLangText(TIMER_MODE_TEXT), msgBuff, 3 * SOFT_SECS);
-#endif		
 	}
 	
 	// Turn on the Green keypad LED
@@ -425,20 +393,6 @@ void StopDataCollection(void)
 	PowerControl(ANALOG_SLEEP_ENABLE, ON);
 
 	ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
-	
-#if 0 // Moved to system init
-	//ClearSoftTimer(KEYPAD_LED_TIMER_NUM);
-#endif
-
-	// Check if not in Timer Mode and if the Power Off protection is enabled
-	if ((g_unitConfig.timerMode != ENABLED) && (GetPowerControlState(POWER_OFF_PROTECTION_ENABLE) == ON))
-	{
-#if 0 // Test with power off protection always enabled
-		// Disable power off protection
-		debug("Stop Trigger: Disabling Power Off Protection\r\n");
-		PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
-#endif
-	}
 }
 
 ///----------------------------------------------------------------------------
@@ -633,14 +587,6 @@ void ForcedCalibration(void)
 	if (getMenuEventState(RESULTS_MENU_EVENT)) 
 	{
 		clearMenuEventFlag(RESULTS_MENU_EVENT);
-
-#if 0 // fix_ns8100
-		SETUP_RESULTS_MENU_MANUAL_CAL_MSG(RESULTS_MENU);
-
-		JUMP_TO_ACTIVE_MENU();
-#else
-		UNUSED(mn_msg);
-#endif
 	}
 
 	// Wait until after the Cal Pulse has completed

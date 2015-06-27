@@ -30,6 +30,8 @@
 
 #define PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP	if ((AVR32_FLASHC.fsr + *(uint16*)0xD0000000 + AVR32_PM.gplp[0] == 0)) { UNUSED(AVR32_PM.gplp[0]); } else { UNUSED(AVR32_PM.gplp[0]); }
 
+#define DISABLED_BUT_FIX_FOR_NS8100	0
+
 typedef enum
 {
 	KEYPAD_TIMER,
@@ -113,12 +115,8 @@ typedef struct
 #define UNUSED(p) ((void)p)
 
 #define	DB_CONVERSION_VALUE			5000000
-#if 0 // Port mistake?
-#define MB_CONVERSION_VALUE			1
-#else // Corrected value
 #define MB_CONVERSION_VALUE			400
 #define ADJUSTED_MB_TO_HEX_VALUE	25
-#endif
 
 enum {
 	INPUT_BUFFER_EMPTY = 0,
@@ -284,7 +282,6 @@ typedef enum
 // Battery routines
 float GetExternalVoltageLevelAveraged(uint8 type);
 BOOLEAN CheckExternalChargeVoltagePresent(void);
-//uint8 AdjustedRawBatteryLevel(void);
 
 // Power Savings
 void AdjustPowerSavings(void);

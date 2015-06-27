@@ -82,9 +82,6 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 {
 	INPUT_MSG_STRUCT mn_msg;
 	REC_EVENT_MN_STRUCT temp_g_triggerRecord;
-#if 0 // ns7100
-	UNIT_CONFIG_STRUCT temp_g_unitConfig;
-#endif
 
 	switch (msg.cmd)
 	{
@@ -139,13 +136,7 @@ extern void UsbDeviceManager(void);
 			// Make sure the parameters are up to date based on the trigger setup information
 			InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
 
-#if 0 // Rolled into one call
-			// Make sure sensors have warmed up from cold start
-			if (g_rtcSoftTimerTickCount < (SENSOR_WARMUP_PERIOD * TICKS_PER_SEC)) { PromptUserWaitingForSensorWarmup(); }
-			else { PromptUserWaitingForSensorZeroing(); }
-#else
 			PromptUserWaitingForSensorZeroing();
-#endif
 
 			switch(g_monitorOperationMode)
 			{
@@ -235,11 +226,6 @@ extern void UsbDeviceManager(void);
 							{
 								StopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
-#if 0 // ns7100
-								// Restore the autoPrint value just in case the user escaped from a printout
-								GetRecordData(&temp_g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
-								g_unitConfig.autoPrint = temp_g_unitConfig.autoPrint;
-#endif
 								SETUP_MENU_MSG(MAIN_MENU);
 								JUMP_TO_ACTIVE_MENU();
 							}
@@ -391,11 +377,6 @@ extern void UsbDeviceManager(void);
         case STOP_MONITORING_CMD:
 			StopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
-#if 0 // ns7100
-			// Restore the autoPrint value just in case the user escaped from a printout
-			GetRecordData(&temp_g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
-			g_unitConfig.autoPrint = temp_g_unitConfig.autoPrint;
-#endif
 			SETUP_MENU_MSG(MAIN_MENU);
 			JUMP_TO_ACTIVE_MENU();
 			
@@ -555,14 +536,6 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
-
-#if 0 // Not needed
-		//-----------------------------------------------------------------------
-		// Skip Line
-		//-----------------------------------------------------------------------
-		WndMpWrtString((uint8*)" ", wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
-#endif
 
 #if 1 // Show hidden RTVA Values
 		if (g_showRVTA == YES)

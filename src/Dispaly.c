@@ -22,9 +22,10 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define DEFAULT_START_LINE 0
-#define DEFAULT_X_LOC 0
-#define	DEFAULT_Y_LOC 0
+#define DEFAULT_START_LINE	0
+#define DEFAULT_X_LOC		0
+#define	DEFAULT_Y_LOC		0
+#define EXCLUDE_LCD_DRIVER_FUNCTIONS	0
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -40,20 +41,8 @@
 ///----------------------------------------------------------------------------
 void LcdInit(void)
 {
-#if 0 // convert to new hardware
-	// Clear the data in Port C and Port D
-	reg_CLRC.reg = 0x00;
-	reg_CLRD.reg = 0x00;
-
-	// Set Port C and Port D pins as outputs
-	reg_DDRC.reg = 0xFF;
-	reg_DDRD.reg = 0xFF;
-#endif	
+	// No special init
 }
-
-// *** NOTE ***
-// reg_PortD converted to reg_PortA
-//
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -85,11 +74,9 @@ void LcdClearPortReg(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+extern uint16 lcd_port_image;
 void LcdWrite(uint8 mode, uint8 data, uint8 segment)
 {
-#if	1
-extern uint16 lcd_port_image;
-
     volatile unsigned short *lcd = ((void *)AVR32_EBI_CS0_ADDRESS);
 	uint8 lcd_register, display_half;
 
@@ -150,54 +137,12 @@ extern uint16 lcd_port_image;
     *lcd = lcd_port_image;
 
     SoftUsecWait(10);
-#endif
-
-#if 0 
-
-	uint16 commandAndDataWord = 0x0;
-
-	if (segment == LCD_SEGMENT1)
-	{
-		commandAndDataWord |= LCD_CS1_BIT;
-		commandAndDataWord &= ~LCD_CS2_BIT;
-	}
-	else // segment == LCD_SEGMENT2
-	{
-		commandAndDataWord &= ~LCD_CS1_BIT;
-		commandAndDataWord |= LCD_CS2_BIT;
-	}
-
-	if (mode == LCD_DATA)
-	{
-		commandAndDataWord |= LCD_RS_BIT;
-	}
-	else // mode == LCD_INSTRUCTION
-	{
-		commandAndDataWord &= ~LCD_RS_BIT;
-	}
-
-	commandAndDataWord &= ~LCD_READ_WRITE_BIT;
-	commandAndDataWord |= LCD_RESET_BIT;
-		
-	commandAndDataWord |= (data & 0x00FF);
-
-#if 0
-	// Set LCD data pins as output
-	reg_DDRC.reg |= 0xFF; // Top bit is not connected, leave as output
-#endif
-
-	// Clock LCD data in by transitioning Enable from high to low
-	*((uint16*)0xC0000000) = (commandAndDataWord | LCD_ENABLE_BIT);
-	SoftUsecWait(10);
-	*((uint16*)0xC0000000) = (commandAndDataWord & ~LCD_ENABLE_BIT);
-	SoftUsecWait(10);
-#endif
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 0
+#if EXCLUDE_LCD_DRIVER_FUNCTIONS
 uint8 LcdRead(uint8 mode, uint8 segment)
 {
 	uint8 data = 0x00;
@@ -226,10 +171,6 @@ uint8 LcdRead(uint8 mode, uint8 segment)
 	reg_PORTA.reg |= LCD_RESET_BIT;
 	
 	// Set Data Pins as input
-#if 0 // Use with new hardware?
-	reg_DDRD.reg &= 0x7F; // Top bit is least significant bit of data
-	reg_DDRC.reg &= 0x80; // Top bit is not connexted, leave as output
-#endif
 	
 	// Clock LCD data in by transitioning Enable from high to low
 	reg_PORTA.reg |= LCD_ENABLE_BIT;
@@ -254,7 +195,7 @@ uint8 LcdRead(uint8 mode, uint8 segment)
 }
 #endif
 
-#if 0
+#if EXCLUDE_LCD_DRIVER_FUNCTIONS
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
@@ -271,7 +212,7 @@ inline uint8 ClockDataFromLcd(uint8 lcdCmd)
 }
 #endif
 
-#if 0
+#if EXCLUDE_LCD_DRIVER_FUNCTIONS
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
@@ -298,7 +239,7 @@ inline void WaitForLcdReady(uint8 segment)
 	//while (LcdRead(LCD_INSTRUCTION, segment) & LCD_BUSY_FLAG) {};
 }
 
-#if 0
+#if EXCLUDE_LCD_DRIVER_FUNCTIONS
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
@@ -308,7 +249,7 @@ inline uint8 ReadLcdData(uint8 segment)
 }
 #endif
 
-#if 0
+#if EXCLUDE_LCD_DRIVER_FUNCTIONS
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------

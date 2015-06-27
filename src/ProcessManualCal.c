@@ -25,11 +25,6 @@
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
 #include "Minilzo.h"
-#if 0 // Port fat driver
-#include "FAT32_FileLib.h"
-#include "FAT32_Disk.h"
-#include "FAT32_Access.h"
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -60,12 +55,7 @@ void MoveManualCalToFile(void)
 	uint16* startOfEventPtr;
 	uint16* endOfEventDataPtr;
 	uint32 compressSize;
-
-#if 1 // Atmel fat driver
 	int manualCalFileHandle = -1;
-#else // Port fat driver
-	FL_FILE* manualCalFileHandle = NULL;
-#endif
 
 	debug("Processing Manual Cal to be saved\r\n");
 
@@ -78,19 +68,8 @@ void MoveManualCalToFile(void)
 
 		g_pendingEventRecord.summary.captured.eventTime = GetCurrentTime();
 
-#if 0 // Old
-		sumEntry = &g_summaryTable[g_eventBufferReadIndex];
-#endif
-
-#if 1 // Need to clear out the Summary entry since it's initialized to all 0xFF's
+		// Need to clear out the Summary entry since it's initialized to all 0xFF's
 		memset(ramSummaryEntryPtr, 0, sizeof(SUMMARY_DATA));
-#else // Old
-		// Initialize the freq data counts.
-		ramSummaryEntryPtr->waveShapeData.a.freq = 0;
-		ramSummaryEntryPtr->waveShapeData.r.freq = 0;
-		ramSummaryEntryPtr->waveShapeData.v.freq = 0;
-		ramSummaryEntryPtr->waveShapeData.t.freq = 0;
-#endif
 
 		ramSummaryEntryPtr->mode = MANUAL_CAL_MODE;
 
@@ -192,11 +171,7 @@ void MoveManualCalToFile(void)
 			// Get new event file handle
 			manualCalFileHandle = GetEventFileHandle(g_pendingEventRecord.summary.eventNumber, CREATE_EVENT_FILE);
 
-#if 1 // Atmel fat driver
 			if (manualCalFileHandle == -1)
-#else // Port fat driver
-			if (manualCalFileHandle == NULL)
-#endif
 			{
 				//g_fileAccessLock = AVAILABLE;
 				ReleaseSpi1MutexLock();
@@ -208,7 +183,6 @@ void MoveManualCalToFile(void)
 				sprintf((char*)&g_spareBuffer[0], "CALIBRATION EVENT #%d BEING SAVED...", g_pendingEventRecord.summary.eventNumber);
 				OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
-#if 1 // Atmel fat driver
 				// Write the event record header and summary
 				write(manualCalFileHandle, &g_pendingEventRecord, sizeof(EVT_RECORD));
 
@@ -243,16 +217,6 @@ void MoveManualCalToFile(void)
 					g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 					close(g_globalFileHandle);
 				}
-#endif
-#else // Port fat driver
-				// Write the event record header and summary
-				fl_fwrite(&g_pendingEventRecord, sizeof(EVT_RECORD), 1, manualCalFileHandle);
-
-				// Write the event data, containing the Pretrigger, event and cal
-				fl_fwrite(g_currentEventStartPtr, g_wordSizeInCal, 2, manualCalFileHandle);
-
-				// Done writing the event file, close the file handle
-				fl_fclose(manualCalFileHandle);
 #endif
 				//g_fileAccessLock = AVAILABLE;
 				ReleaseSpi1MutexLock();

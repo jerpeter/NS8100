@@ -82,9 +82,6 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 	DATE_TIME_STRUCT currentTime = GetCurrentTime();
 	uint32 input;
 	uint8 length;
-#if 0 // Test (Storage for override of main menu keys)
-	RTC_MEM_MAP_STRUCT rtcMap;
-#endif
 
 	switch (msg.cmd)
 	{

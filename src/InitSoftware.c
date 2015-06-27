@@ -50,11 +50,6 @@
 #include "usb_drv.h"
 #include "srec.h"
 #include "flashc.h"
-#if 0 // Port fat driver
-#include "FAT32_Disk.h"
-#include "FAT32_Access.h"
-#include "FAT32_FileLib.h"
-#endif
 
 ///----------------------------------------------------------------------------
 ///	Defines

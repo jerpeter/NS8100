@@ -168,56 +168,10 @@ BOOLEAN CheckExternalChargeVoltagePresent(void)
 	adVoltageLevel = adVoltageReadValue * (REFERENCE_VOLTAGE * VOLTAGE_RATIO_EXT_CHARGE);
 	adVoltageLevel /= BATT_RESOLUTION;
 
-	//debug("Ext Charge Voltage A/D Reading: 0x%x, Value: %f\r\n", adVoltageReadValue, adVoltageLevel);
-
-#if 0 // Test
-	debug("Battery Voltage: %f\r\n", GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
-#endif
-
 	if (adVoltageLevel > EXTERNAL_VOLTAGE_PRESENT)
 		externalChargePresent = YES;
 		
 	return (externalChargePresent);
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-uint8 AdjustedRawBatteryLevel(void)
-{
-	uint8 adjustedRawBattLevel = 0;
-#if 0 // Unused
-	uint16 rawBatteryLevel = 0;
-	uint16 rawMinBatteryLevel = 0;
-	uint16 battResult1 = *((uint16*)(IMM_ADDRESS + DTOA_BATT_VOLT_RESULT_1));
-	uint16 battResult2 = *((uint16*)(IMM_ADDRESS + DTOA_BATT_VOLT_RESULT_2));
-
-	// Get the current raw battery level
-	if (battResult1 > battResult2)
-	{
-		rawBatteryLevel = battResult1;
-	}
-	else
-	{
-		rawBatteryLevel = battResult2;
-	}
-
-	// Calculate the raw minimum battery level
-	rawMinBatteryLevel = (uint16)(((BATT_MIN_VOLTS * BATT_RESOLUTION)/BATT_RESISTOR_RATIO) / REFERENCE_VOLTAGE);
-
-	// Adjust the raw battery level with the raw minimum battery level
-	// If the raw battery is less than the raw minimum, set adjusted to zero.
-	if (rawBatteryLevel <= rawMinBatteryLevel)
-		adjustedRawBattLevel = 0;
-	// If the raw difference is greater than a one byte value (2.7 volts), set to max value stored in one byte
-	else if ((rawBatteryLevel - rawMinBatteryLevel) > 0xff)
-		adjustedRawBattLevel = 0xff;
-	// Calculate the adjusted raw battery level
-	else
-		adjustedRawBattLevel = (uint8)(rawBatteryLevel - rawMinBatteryLevel);
-#endif
-
-	return (adjustedRawBattLevel);
 }
 
 ///----------------------------------------------------------------------------
@@ -496,20 +450,6 @@ uint16 MbToHex(float mb)
 ///----------------------------------------------------------------------------
 uint32 ConvertDBtoMB(uint32 level)
 {
-#if 0 // Poor
-	uint16 hexData;
-	uint32 remainder;
-
-	if (level != NO_TRIGGER_CHAR)
-	{
-		hexData = DbToHex(level);
-		level = (uint32)(10000 * HexToMB((uint16)hexData, DATA_NORMALIZED, g_bitAccuracyMidpoint));
-		remainder = level % AIR_TRIGGER_MB_INC_VALUE;
-		hexData = (uint16)(level - remainder);
-	}
-	
-	return(hexData);
-#else // Better
 	double mbValue;
 	uint32 mbConverted;
 
@@ -532,7 +472,6 @@ uint32 ConvertDBtoMB(uint32 level)
 		
 		return (mbConverted);
 	}
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -540,18 +479,6 @@ uint32 ConvertDBtoMB(uint32 level)
 ///----------------------------------------------------------------------------
 uint32 ConvertMBtoDB(uint32 level)
 {
-#if 0 // Poor
-	uint16 hexData;
-	uint16 returnData;
-
-	if (level != NO_TRIGGER_CHAR)
-	{
-		hexData = MbToHex((float) level);
-		returnData = (uint16)HexToDB((uint16)hexData, DATA_NORMALIZED, g_bitAccuracyMidpoint);
-	}
-	
-	return(returnData);
-#else // Better
 	double dbValue;
 	uint32 dbConverted;
 	
@@ -572,7 +499,6 @@ uint32 ConvertMBtoDB(uint32 level)
 
 		return (dbConverted);
 	}
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -620,20 +546,12 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 {
 	uint16 i, currIndex;
 	char* languageTablePtr;
-#if 1 // Atmel fat driver
 	int languageFile = -1;
-#else // Port fat driver
-	FL_FILE* languageFile = NULL;
-#endif
 	char languageFilename[50];
 
 	memset((char*)&languageFilename[0], 0, sizeof(languageFilename));
 
-#if 1 // Atmel fat driver
 	strcpy((char*)&languageFilename[0], "A:\\Language\\");
-#else // Port fat driver
-	strcpy((char*)&languageFilename[0], "C:\\Language\\");
-#endif
 
 	switch (languageSelection)
 	{
@@ -680,17 +598,9 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 		nav_select(FS_NAV_ID_DEFAULT);
 
 		// Attempt to find the file on the SD file system
-#if 1 // Atmel fat driver
 		languageFile = open((char*)&languageFilename[0], O_RDONLY);
-#else // Port fat driver
-		languageFile = fl_fopen((char*)&languageFilename[0], "r");
-#endif
 
-#if 1 // Atmel fat driver
 		if (languageFile != -1)
-#else // Port fat driver
-		if (languageFile)
-#endif
 		{
 			debug("Loading language table from file: %s, Length: %d\r\n", (char*)&languageFilename[0], fsaccess_file_get_size(languageFile));
 
@@ -699,27 +609,15 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			if (fsaccess_file_get_size(languageFile) > LANGUAGE_TABLE_MAX_SIZE)
 			{
 				// Error case - Just read the maximum buffer size and pray
-#if 1 // Atmel fat driver
 				readWithSizeFix(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
-#else // Port fat driver
-				fl_fread(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
-#endif
 			}
 			else
 			{
-#if 1 // Atmel fat driver
 				readWithSizeFix(languageFile, (uint8*)&g_languageTable[0], fsaccess_file_get_size(languageFile));
-#else // Port fat driver
-				fl_fread(languageFile, (uint8*)&g_languageTable[0], languageFile->filelength);
-#endif
 			}
 
-#if 1 // Atmel fat driver
 			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(languageFile);
-#else // Port fat driver
-			fl_fclose(languageFile);
-#endif
 		}
 
 		//g_fileAccessLock = AVAILABLE;
@@ -757,13 +655,6 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 		g_languageLinkTable[i] = languageTablePtr + currIndex;
 	}
 
-#if 0 // Visible check of the language table
-	for (i = 0; i < TOTAL_TEXT_STRINGS; i++)
-	{
-		debug("Check text: <%s>discovered\r\n", getLangText(i));
-	}
-#endif
-
 	debug("Language Link Table built.\r\n");
 }
 
@@ -773,11 +664,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 extern const char default_boot_name[];
 void CheckBootloaderAppPresent(void)
 {
-#if 1 // Atmel fat driver
 	int file = -1;
-#else // Port fat driver
-	FL_FILE* file = NULL;
-#endif
 
 	if (g_fileAccessLock != AVAILABLE)
 	{
@@ -790,34 +677,18 @@ void CheckBootloaderAppPresent(void)
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
-#if 1 // Atmel fat driver
 		strcpy((char*)g_spareBuffer, "A:\\System\\%s");
-#else // Port fat driver
-		strcpy((char*)g_spareBuffer, "C:\\System\\%s");
-#endif
 
 		strcat((char*)g_spareBuffer, default_boot_name);
 
-#if 1 // Atmel fat driver
 		file = open((char*)g_spareBuffer, O_RDONLY);
-#else // Port fat driver
-		file = fl_fopen((char*)g_spareBuffer, "r");
-#endif
 
-#if 1 // Atmel fat driver
 		if (file != -1)
-#else // Port fat driver
-		if (file)
-#endif
 		{
 			debug("Bootloader found and available\r\n");
 
-#if 1 // Atmel fat driver
 			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(file);
-#else // Port fat driver
-			fl_fclose(file);
-#endif
 		}
 
 		//g_fileAccessLock = AVAILABLE;
@@ -828,23 +699,11 @@ void CheckBootloaderAppPresent(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#define DISABLE_OCD_MODULE	0
 void AdjustPowerSavings(void)
 {
-#if 1 // Normal
 	uint32 usartRetries = USART_DEFAULT_TIMEOUT;
 	uint8 powerSavingsLevel = POWER_SAVINGS_NORMAL;
-
-#if 0 // No longer a unit configurable setting
-	// Check if the Unit Config is not valid since there's a chance it's referenced before it's loaded
-	if (g_unitConfig.validationKey != 0xA5A5)
-	{
-		// Load the Unit Config to get the stored Power Savings setting
-		GetRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
-	}
-
-	// Check if the Unit Config is valid
-	if (g_unitConfig.validationKey != 0xA5A5) { return; }
-#endif
 
 #if (GLOBAL_DEBUG_PRINT_ENABLED != NO_DEBUG)
 	// With Debug enabled use Minimum setting to enable USART0 for serial output
@@ -856,10 +715,10 @@ void AdjustPowerSavings(void)
 		//----------------------------------------------------------------------------
 		case POWER_SAVINGS_MINIMUM:
 		//----------------------------------------------------------------------------
-#if 0 // Normal
+#if DISABLE_OCD_MODULE // Normal
 			// Leave active: SYSTIMER; Disable: OCD
 			AVR32_PM.cpumask = 0x00010000;
-#else // Test
+#else // Exception test
 			// Do nothing
 #endif
 			// Leave active: EBI, PBA & PBB BRIDGE, FLASHC, USBB; Disable: PDCA, MACB
@@ -892,10 +751,10 @@ void AdjustPowerSavings(void)
 				usartRetries--;
 			}
 
-#if 0 // Normal
+#if DISABLE_OCD_MODULE // Normal
 			// Leave active: SYSTIMER; Disable: OCD
 			AVR32_PM.cpumask = 0x00010000;
-#else // Test
+#else // Exception test
 			// Do nothing
 #endif
 
@@ -930,10 +789,10 @@ void AdjustPowerSavings(void)
 				Usb_disable();
 			}
 
-#if 0 // Normal
+#if DISABLE_OCD_MODULE // Normal
 			// Leave active: SYSTIMER; Disable: OCD
 			AVR32_PM.cpumask = 0x00010000;
-#else // Test
+#else // Exception test
 			// Do nothing
 #endif
 
@@ -967,10 +826,10 @@ void AdjustPowerSavings(void)
 				Usb_disable();
 			}
 
-#if 0 // Normal
+#if DISABLE_OCD_MODULE // Normal
 			// Leave active: SYSTIMER; Disable: OCD
 			AVR32_PM.cpumask = 0x00010000;
-#else // Test
+#else // Exception test
 			// Do nothing
 #endif
 
@@ -991,10 +850,10 @@ void AdjustPowerSavings(void)
 		//----------------------------------------------------------------------------
 		default: // POWER_SAVINGS_NONE
 		//----------------------------------------------------------------------------
-#if 0 // Normal
+#if DISABLE_OCD_MODULE // Normal
 			// Leave active: All; Disable: None
 			AVR32_PM.cpumask = 0x00010002;
-#else // Test
+#else // Exception test
 			// Do nothing
 #endif
 
@@ -1019,7 +878,6 @@ void AdjustPowerSavings(void)
 			PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
 		break;
 	}
-#endif
 }
 
 ///----------------------------------------------------------------------------

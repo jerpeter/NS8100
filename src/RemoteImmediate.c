@@ -78,12 +78,6 @@ void HandleUNL(CMD_BUFFER_STRUCT* inCmd)
 
 	if (YES == matchFlag)
 	{
-#if 0 // Test
-		uint32* testPtr = (uint32*)0x40000000;
-		uint32 testData = *testPtr;
-		testData++;
-#endif
-
 		debug("HandleUNL-MatchCode=<%s>\r\n", dataStart);
 
 		memset(&sendStr[0], 0, sizeof(sendStr));
@@ -596,21 +590,8 @@ void HandleDQM(CMD_BUFFER_STRUCT* inCmd)
 
 	memset((uint8*)g_dqmXferStructPtr, 0, sizeof(DQMx_XFER_STRUCT));
 
-#if 0 // Old method
-	uint16 idex;
-
-	// Determine the data size first. This size is needed for the header length.
-	for (idex = 0; idex < TOTAL_RAM_SUMMARIES; idex++)
-	{
-		if (__ramFlashSummaryTbl[idex].fileEventNum != 0xFFFFFFFF)
-		{
-			g_dqmXferStructPtr->numOfRecs++;
-		}
-	}
-#else // Updated to utilize the new Summary List
 	// Set the number of records to the number of valid entries in the summary list
 	g_dqmXferStructPtr->numOfRecs = g_summaryList.validEntries;
-#endif
 
 	// Add 1 additional record as an end marker (which filled with 0xCC's)
 	g_dqmXferStructPtr->numOfRecs++;
@@ -652,9 +633,6 @@ uint8 sendDQMData(void)
 {
 	uint8 idex;
 	uint8 xferState = DQMx_CMD;
-#if 0 // Old method
-	EVT_RECORD* eventRecord;
-#endif
 
 	// If the beginning of sending data, send the crlf.
 	if (HEADER_XFER_STATE == g_dqmXferStructPtr->xferStateFlag)
@@ -689,11 +667,7 @@ uint8 sendDQMData(void)
 	// xfer the event record structure.
 	else if (SUMMARY_TABLE_SEARCH_STATE == g_dqmXferStructPtr->xferStateFlag)
 	{
-#if 0 // Old method
-		if (g_dqmXferStructPtr->ramTableIndex >= TOTAL_RAM_SUMMARIES)
-#else
 		if (g_dqmXferStructPtr->ramTableIndex >= g_summaryList.validEntries)
-#endif
 		{
 			memset((uint8*)g_dqmXferStructPtr->dqmData, 0xCC, sizeof(DQMx_DATA_STRUCT));
 			g_dqmXferStructPtr->dqmData[0].endFlag = 0xEE;
@@ -715,32 +689,8 @@ uint8 sendDQMData(void)
 		{
 			idex = 0;
 			while ((idex < DQM_XFER_SIZE) &&
-#if 0 // Old method
-				(g_dqmXferStructPtr->ramTableIndex < TOTAL_RAM_SUMMARIES))
-#else
 				(g_dqmXferStructPtr->ramTableIndex < g_summaryList.totalEntries))
-#endif
 			{
-#if 0 // Old method
-				if (__ramFlashSummaryTbl[g_dqmXferStructPtr->ramTableIndex].fileEventNum != 0xFFFFFFFF)
-				{
-					static EVT_RECORD resultsEventRecord;
-					eventRecord = &resultsEventRecord;
-	
-					GetEventFileRecord(__ramFlashSummaryTbl[g_dqmXferStructPtr->ramTableIndex].fileEventNum, &resultsEventRecord);
-					
-					g_dqmXferStructPtr->dqmData[idex].dqmxFlag = 0xCC;
-					g_dqmXferStructPtr->dqmData[idex].mode = eventRecord->summary.mode;
-					g_dqmXferStructPtr->dqmData[idex].eventNumber = eventRecord->summary.eventNumber;
-					memcpy(g_dqmXferStructPtr->dqmData[idex].serialNumber,
-						eventRecord->summary.version.serialNumber, SERIAL_NUMBER_STRING_SIZE);
-					g_dqmXferStructPtr->dqmData[idex].eventTime = eventRecord->summary.captured.eventTime;
-					g_dqmXferStructPtr->dqmData[idex].endFlag = 0xEE;
-					idex++;
-				}
-
-				g_dqmXferStructPtr->ramTableIndex++;
-#else
 				CacheSummaryEntryByIndex(g_dqmXferStructPtr->ramTableIndex);
 
 				if (g_summaryList.cachedEntry.eventNumber)
@@ -755,7 +705,6 @@ uint8 sendDQMData(void)
 				}
 
 				g_dqmXferStructPtr->ramTableIndex = ++g_summaryList.currentEntryIndex;
-#endif
 			}
 
 			g_transmitCRC = CalcCCITT32((uint8*)g_dqmXferStructPtr->dqmData,
@@ -921,17 +870,7 @@ uint8 sendDSMData(void)
 		// If not at the end of the table, xfer it over, else we are done and go to the footer state.
 		if (g_dsmXferStructPtr->tableIndex < g_dsmXferStructPtr->tableIndexEnd)
 		{
-#if 0 // Crappy method
-			EVT_RECORD* eventRecord;
-			static EVT_RECORD resultsEventRecord;
-			eventRecord = &resultsEventRecord;
-	
-			GetEventFileRecord(__ramFlashSummaryTbl[g_dsmXferStructPtr->tableIndex].fileEventNum, &resultsEventRecord);
-			
-			g_dsmXferStructPtr->dloadEventRec.event = *eventRecord;
-#else // Utilize storage already define
 			GetEventFileRecord(__ramFlashSummaryTbl[g_dsmXferStructPtr->tableIndex].fileEventNum, &g_dsmXferStructPtr->dloadEventRec.eventRecord);
-#endif
 
 			g_dsmXferStructPtr->dloadEventRec.structureFlag = START_DLOAD_FLAG;
 			g_dsmXferStructPtr->dloadEventRec.downloadDate = GetCurrentTime();
@@ -1070,7 +1009,7 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 
 	}
 
-#if 0 // Test code (Display command components)
+#if EXTENDED_DEBUG // Test code (Display command components)
 	debugRaw("Recieved DEM command: \r\n");
 	for(i=0;i<inCmd->size;i++)
 	{
@@ -1186,26 +1125,20 @@ void prepareDEMDataToSend(COMMAND_MESSAGE_HEADER* inCmdHeaderPtr)
 	dataLength = g_demXferStructPtr->dloadEventRec.eventRecord.header.headerLength + g_demXferStructPtr->dloadEventRec.eventRecord.header.summaryLength +
 					g_demXferStructPtr->dloadEventRec.eventRecord.header.dataLength;
 
-#if 0 // Setting prior to this call now
-	// Find and set the pointer to the beginning of the event data.
-	g_demXferStructPtr->startDataPtr = (uint8*)eventRecordPtr + sizeof(EVT_RECORD);
-
-	// The data ptr is set to the start of data
-	g_demXferStructPtr->dataPtr = g_demXferStructPtr->startDataPtr;
-#endif
-
 	// Build the CRC and compressed fields.
 	flagData = CRC_32BIT;
 	flagData = (uint8)(flagData << 4);
 
 	//----------------------------------------------------
-#if 0 // Old
-	flagData = (uint8)((uint8)(flagData) | ((uint8)COMPRESS_MINILZO));
-	//----------------------------------------------------
-#else // Updated method to set flag for compression or none
-	if (g_demXferStructPtr->downloadMethod == COMPRESS_MINILZO) { flagData = (uint8)((uint8)(flagData) | ((uint8)COMPRESS_MINILZO)); }
-	else { flagData = (uint8)((uint8)(flagData) | ((uint8)COMPRESS_NONE)); }
-#endif
+	// Updated method to set flag for compression or none
+	if (g_demXferStructPtr->downloadMethod == COMPRESS_MINILZO)
+	{
+		flagData = (uint8)((uint8)(flagData) | ((uint8)COMPRESS_MINILZO));
+	}
+	else
+	{
+		flagData = (uint8)((uint8)(flagData) | ((uint8)COMPRESS_NONE));
+	}
 
 	sprintf((char*)g_outCmdHeaderPtr->compressCrcFlags,"%02x", flagData);
 	// Create the message buffer from the outgoing header data.

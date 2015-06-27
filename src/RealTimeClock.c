@@ -120,9 +120,6 @@ void StartExternalRtcClock(uint16 sampleRate)
 	RTC_MEM_MAP_STRUCT rtcMap;
 	uint8 clockRate;
 
-#if 0 // Potential to call during ISR, so don't use beyond testing
-	debug("Starting External RTC Interrupt (%d ticks/sec)...\r\n", sampleRate);
-#endif
 	switch (sampleRate)
 	{
 		case 32768	: clockRate = 0x00; break;
@@ -286,113 +283,6 @@ DATE_TIME_STRUCT GetCurrentTime(void)
 		currentTime.sec = convertTime.tm_sec;
 		currentTime.weekday = GetDayOfWeek(currentTime.year, currentTime.month, currentTime.day);
 	}
-
-#if 0 // No longer used
-#if 1 // New attempt at just adjusting time based on tick count increase
-	// Check if there are any accumulated seconds since last time update
-	if (accumulatedTime)
-	{
-		// Pull out seconds and adjust time and decrement from accumulated seconds and convert to accumulated minutes
-		currentTime.sec += (accumulatedTime % 60);
-		accumulatedTime -= (accumulatedTime % 60);
-		accumulatedTime /= 60;
-
-		// Check if there are any accumulated minutes since last time update
-		if (accumulatedTime)
-		{
-			// Pull out minutes and adjust time and decrement from accumulated minutes and convert to accumulated hours
-			currentTime.min += (accumulatedTime % 60);
-			accumulatedTime -= (accumulatedTime % 60);
-			accumulatedTime /= 60;
-
-			// Check if there are any accumulated hours since last time update
-			if (accumulatedTime)
-			{
-				currentTime.hour += (accumulatedTime % 24);
-				accumulatedTime -= (accumulatedTime % 24);
-				accumulatedTime /= 24;
-			}
-		}
-	}
-
-	// Check if there is any accumulated time left
-	if (accumulatedTime)
-	{
-		// Day crossing logic gets deep, just update the real time
-		UpdateCurrentTime();
-		currentTime = g_lastReadExternalRtcTime;
-	}
-	else // Check for wrapping conditions
-	{
-		// Check if seconds wrapped
-		if (currentTime.sec >= 60)
-		{
-			// Adjust seconds wrap and add a minute
-			currentTime.sec -= 60;
-			currentTime.min++;
-		}
-
-		// Check if minutes wrapped
-		if (currentTime.min >= 60)
-		{
-			// Adjust minutes wrap and add a hour
-			currentTime.min -= 60;
-			currentTime.hour++;
-		}
-
-		// Check if hours wrapped
-		if (currentTime.hour >= 24)
-		{
-			// Day crossing logic gets deep, just update the real time
-			UpdateCurrentTime();
-			currentTime = g_lastReadExternalRtcTime;
-		}
-	}
-#else
-	// Check if the real time hasn't been updated in the last minute (Should occur every 30 seconds)
-	if (expiredSecs >= 60)
-	{
-		// Unlikely this case will ever occur. It's been over a minute, just re-read the real time
-		UpdateCurrentTime();
-		currentTime = g_lastReadExternalRtcTime;
-	}
-	// Check if the amount of expired seconds results in a minute change
-	else if ((currentTime.sec + expiredSecs) > 59)
-	{
-		// Check if the amount of expired seconds results in an hour change
-		if ((currentTime.min + 1) > 59)
-		{
-			// Check if the amount of expired seconds results in a day change
-			if ((currentTime.hour + 1) > 23)
-			{
-				// Quit fooling around, and re-read the real time
-				UpdateCurrentTime();
-				currentTime = g_lastReadExternalRtcTime;
-			}
-			else // Still within the day
-			{
-				// Increment the hour
-				currentTime.hour += 1;
-				// Reset the minutes
-				currentTime.min = 0;
-				// Calculate the number of seconds past the 60 second boundary
-				currentTime.sec = (uint8)((currentTime.sec + expiredSecs) - 60);
-			}
-		}
-		else // Still within the hour
-		{
-			// Increment the minute
-			currentTime.min += 1;
-			// Calculate the number of seconds past the 60 second boundary
-			currentTime.sec = (uint8)((currentTime.sec + expiredSecs) - 60);
-		}
-	}
-	else // Still within the minute
-	{
-		currentTime.sec += expiredSecs;
-	}
-#endif
-#endif
 
 	return (currentTime);
 }
@@ -590,19 +480,3 @@ void ExternalRtcRead(uint8 registerAddress, int length, uint8* data)
 		ReleaseSpi1MutexLock();
 	}
 }
-
-#if 0 // Add / Fix later
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-static DATE_TIME_STRUCT TimestampEventCache[10];
-static uint16 TimestampEventIndex = 0;
-
-void TimestampEvent(void)
-{
-	if (TimestampEventFlag = YES)
-	{
-		
-	}
-}
-#endif

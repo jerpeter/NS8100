@@ -20,16 +20,10 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#if 0 // ns7100
-#define SEISMIC_SENSOR	0x08 // Port bit
-#define ACOUSTIC_SENSOR	0x10 // Port bit
-#define READ_SENSOR		0x04 // Port bit
-#else // ns8100
 // GPIO lines for Smart Sensor
 #define SMART_SENSOR_DATA			AVR32_PIN_PB01
 #define SEISMIC_SENSOR_CONTROL		AVR32_PIN_PB02
 #define ACOUSTIC_SENSOR_CONTROL		AVR32_PIN_PB03
-#endif
 
 #define READ_SMART_SENSOR_ONE_WIRE_STATE()	(gpio_get_pin_value(SMART_SENSOR_DATA))
 

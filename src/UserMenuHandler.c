@@ -298,31 +298,23 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 					}
 					else if ((USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE) || (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_SPECIAL_TYPE))
 					{
-#if 0 // Unneeded check on unsigned value
-						// Check if the current index is greater than or equal to the first position
-						if (g_userMenuCachePtr[CURRENT_TEXT_INDEX].data >= 0)
+						// Check if a space is in the current location, and a null follows it
+						if ((g_userMenuCacheData.text[g_userMenuCachePtr[CURRENT_TEXT_INDEX].data] == ' ') &&
+							(g_userMenuCacheData.text[(g_userMenuCachePtr[CURRENT_TEXT_INDEX].data) + 1] == '\0'))
 						{
-#endif
-							// Check if a space is in the current location, and a null follows it
-							if ((g_userMenuCacheData.text[g_userMenuCachePtr[CURRENT_TEXT_INDEX].data] == ' ') &&
-								(g_userMenuCacheData.text[(g_userMenuCachePtr[CURRENT_TEXT_INDEX].data) + 1] == '\0'))
-							{
-								// Set the current space char to be a null
-								g_userMenuCacheData.text[g_userMenuCachePtr[CURRENT_TEXT_INDEX].data] = '\0';
-							}
-
-							// Check if the index is past the first position
-							if (g_userMenuCachePtr[CURRENT_TEXT_INDEX].data > 0)
-							{
-								// Decrement the index
-								g_userMenuCachePtr[CURRENT_TEXT_INDEX].data--;
-							}
-
-							// Copy the string data to the user menu display
-							CopyDataToMenu(mn_layout_ptr);
-#if 0 // Unneeded check on unsigned value (end bracket)
+							// Set the current space char to be a null
+							g_userMenuCacheData.text[g_userMenuCachePtr[CURRENT_TEXT_INDEX].data] = '\0';
 						}
-#endif
+
+						// Check if the index is past the first position
+						if (g_userMenuCachePtr[CURRENT_TEXT_INDEX].data > 0)
+						{
+							// Decrement the index
+							g_userMenuCachePtr[CURRENT_TEXT_INDEX].data--;
+						}
+
+						// Copy the string data to the user menu display
+						CopyDataToMenu(mn_layout_ptr);
 					}
 				break;
 

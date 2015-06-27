@@ -11,21 +11,6 @@
 #include "Typedefs.h"
 #include "define.h"
 
-#if 0
-#include "FAT32_Base.h"
-#include "FAT32_Access.h"
-#include "FAT32_Filelib.h"
-#endif
-
-//#define srec_h_Rev "$Revision: 1.1 $"
-
-#if 0
-#define    ACK     06
-#define    NACK    21
-#define    XOFF    19
-#define    XON     17
-#define    CAN     24
-#endif
 #define    CTRL_B  02
 
 // srec lengths
@@ -76,13 +61,8 @@ typedef enum
 /***************************************************************/
 /* srecord routines                                            */
 /***************************************************************/
-#if 1 // Atmel fat driver
 int            Get_and_save_srec( int file );
 int            Unpack_srec(  int file  );
-#else // Port fat driver
-int            Get_and_save_srec( FL_FILE* file );
-int            Unpack_srec(  FL_FILE* file  );
-#endif
 
 void           Srec_get_line( ASCII_SREC_DATA *);
 void           Srec_file_get_line( ASCII_SREC_DATA *);

@@ -318,24 +318,6 @@ void KeypadLedUpdateTimerCallBack(void)
 		}
 	}
 	
-#if 0 // Hold
-	// Check if Green enabled
-	if (ledState)
-	{
-		// Clear bits 4 and 5 (bottom nibble is a don't care)
-		config &= ~GREEN_LED_PIN;
-		
-		ledState = OFF;
-	}
-	else // Green on
-	{
-		// Enable Green
-		config |= GREEN_LED_PIN;
-		
-		ledState = ON;
-	}
-#endif
-
 	// Check if the state changed
 	if (ledState != lastLedState)
 	{

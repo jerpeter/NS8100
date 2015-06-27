@@ -362,11 +362,7 @@ void CraftInitStatusFlags(void)
 	g_modemStatus.systemIsLockedFlag = YES;
 
 	g_modemStatus.ringIndicator = 0;
-#if 0 // ns7100
-	g_modemStatus.xferPrintState = g_unitConfig.autoPrint;
-#else // ns8100
 	g_modemStatus.xferPrintState = NO;
-#endif
 	
 	// Modem is being tested/debugged set debug to true.
 	g_modemStatus.testingPrintFlag = g_disableDebugPrinting;		
