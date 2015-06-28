@@ -424,7 +424,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 		}
 		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
 		{
-		     SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
 		}
 	}
 
@@ -912,7 +912,7 @@ void BarChannelMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT barIntervalMenu[BAR_INTERVAL_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, BAR_INTERVAL_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAR_INTERVAL_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_7)}},
-{ITEM_1, 1,  SECOND_TEXT,	NO_TAG, {ONE_SEC_PRD}},
+{ITEM_1, 1,	SECOND_TEXT,	NO_TAG, {ONE_SEC_PRD}},
 {ITEM_2, 10, SECONDS_TEXT,	NO_TAG, {TEN_SEC_PRD}},
 {ITEM_3, 20, SECONDS_TEXT,	NO_TAG, {TWENTY_SEC_PRD}},
 {ITEM_4, 30, SECONDS_TEXT,	NO_TAG, {THIRTY_SEC_PRD}},
@@ -2120,7 +2120,7 @@ void MonitorLogMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT peakAccMenu[PEAK_ACC_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, REPORT_PEAK_ACC_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, PEAK_ACC_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
-{ITEM_1, 0, YES_TEXT,   NO_TAG, {YES}},
+{ITEM_1, 0, YES_TEXT, NO_TAG, {YES}},
 {ITEM_2, 0, NO_TEXT, NO_TAG, {NO}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&PeakAccMenuHandler}}
 };
@@ -2256,7 +2256,7 @@ void PrintOutMenuHandler(uint8 keyPressed, void* data)
 		if (printOutMenu[newItemIndex].data == YES)
 		{
 			// Using tempCopies just to seed with a value of 1 with the understanding that this value will
-			//  be referenced before this routine exits (User Menu Handler) and not at all afterwards
+			// be referenced before this routine exits (User Menu Handler) and not at all afterwards
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&copiesMenu, &tempCopies,
 				COPIES_DEFAULT_VALUE, COPIES_MIN_VALUE, COPIES_MAX_VALUE);
 		}
@@ -2743,13 +2743,13 @@ void SensorTypeMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT summaryIntervalMenu[SUMMARY_INTERVAL_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, SUMMARY_INTERVAL_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, SUMMARY_INTERVAL_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_4)}},
-{ITEM_1, 5,  MINUTES_TEXT,	NO_TAG, {FIVE_MINUTE_INTVL}},
+{ITEM_1, 5, MINUTES_TEXT,	NO_TAG, {FIVE_MINUTE_INTVL}},
 {ITEM_2, 15, MINUTES_TEXT,	NO_TAG, {FIFTEEN_MINUTE_INTVL}},
 {ITEM_3, 30, MINUTES_TEXT,	NO_TAG, {THIRTY_MINUTE_INTVL}},
-{ITEM_4, 1,  HOUR_TEXT,		NO_TAG, {ONE_HOUR_INTVL}},
-{ITEM_5, 2,  HOURS_TEXT,	NO_TAG, {TWO_HOUR_INTVL}},
-{ITEM_6, 4,  HOURS_TEXT,	NO_TAG, {FOUR_HOUR_INTVL}},
-{ITEM_7, 8,  HOURS_TEXT,	NO_TAG, {EIGHT_HOUR_INTVL}},
+{ITEM_4, 1, HOUR_TEXT,		NO_TAG, {ONE_HOUR_INTVL}},
+{ITEM_5, 2, HOURS_TEXT,	NO_TAG, {TWO_HOUR_INTVL}},
+{ITEM_6, 4, HOURS_TEXT,	NO_TAG, {FOUR_HOUR_INTVL}},
+{ITEM_7, 8, HOURS_TEXT,	NO_TAG, {EIGHT_HOUR_INTVL}},
 {ITEM_8, 12, HOURS_TEXT,	NO_TAG, {TWELVE_HOUR_INTVL}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SummaryIntervalMenuHandler}}
 };

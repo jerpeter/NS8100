@@ -8,36 +8,21 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#ifndef _PORTABLE_DATA_TYPES_
-#define _PORTABLE_DATA_TYPES_
-
-    typedef unsigned char  BOOLEAN;
-    typedef unsigned char  INT8U;
-    typedef signed   char  INT8S;
-    typedef unsigned short INT16U;
-    typedef signed   short INT16S;
-    typedef unsigned int   INT32U;
-    typedef signed   int   INT32S;
-    typedef float          FP32;
-    typedef double         FP64;
-
-#endif // _PORTABLE_DATA_TYPES_
-
 #ifndef _TYPEDEFS_H_
 #define _TYPEDEFS_H_
 
-typedef unsigned			bitfield;		/* variable # of bits */
-typedef unsigned long       ADDRESS;
+#ifndef _PORTABLE_DATA_TYPES_
+#define _PORTABLE_DATA_TYPES_
+typedef unsigned char		uint8;	/* 8 bits */
+typedef unsigned short int	uint16;	/* 16 bits */
+typedef unsigned long int	uint32;	/* 32 bits */
+typedef signed char			int8;	/* 8 bits */
+typedef signed short int	int16;	/* 16 bits */
+typedef signed long int		int32;	/* 32 bits */
+#endif // _PORTABLE_DATA_TYPES_
 
-// Defined elsewhere as int, changing to match
-//typedef unsigned char       BOOLEAN;
-
-typedef unsigned char		uint8;  		/*  8 bits */
-typedef unsigned short int	uint16; 		/* 16 bits */
-typedef unsigned long int	uint32; 		/* 32 bits */
-typedef signed char		    int8;   		/*  8 bits */
-typedef signed short int	int16;  		/* 16 bits */
-typedef signed long int		int32;  		/* 32 bits */
+typedef unsigned char	BOOLEAN;
+typedef unsigned		bitfield;		/* variable # of bits */
 
 // ========================================================================
 // This section is devoted to handling debug printing to the craft com port
@@ -60,7 +45,7 @@ enum debugModes {RAW, NORM, WARN, ERR};
 // Print all debug statements
 #if (GLOBAL_DEBUG_PRINT_ENABLED == ALL_DEBUG)
 #define debugRaw(...) 	DebugPrint(RAW, __VA_ARGS__)
-#define debug(...)    	DebugPrint(NORM, __VA_ARGS__)
+#define debug(...)		DebugPrint(NORM, __VA_ARGS__)
 #define debugWarn(...) 	DebugPrint(WARN, __VA_ARGS__)
 #define debugErr(...) 	DebugPrint(ERR, __VA_ARGS__)
 #define debugChar(x) 	DebugPrintChar(x)
@@ -68,7 +53,7 @@ enum debugModes {RAW, NORM, WARN, ERR};
 // Print just warning and error debug statements
 #elif (GLOBAL_DEBUG_PRINT_ENABLED == WARNINGS_AND_ERRORS)
 #define debugRaw(...) 	;
-#define debug(...)    	;
+#define debug(...)		;
 #define debugWarn(...) 	DebugPrint(WARN, __VA_ARGS__)
 #define debugErr(...) 	DebugPrint(ERR, __VA_ARGS__)
 #define debugChar(x) 	;
@@ -76,7 +61,7 @@ enum debugModes {RAW, NORM, WARN, ERR};
 // Print just error debug statements
 #elif (GLOBAL_DEBUG_PRINT_ENABLED == ERRORS)
 #define debugRaw(...) 	;
-#define debug(...)    	;
+#define debug(...)		;
 #define debugWarn(...) 	;
 #define debugErr(...) 	DebugPrint(ERR, __VA_ARGS__)
 #define debugChar(x) 	;
@@ -84,7 +69,7 @@ enum debugModes {RAW, NORM, WARN, ERR};
 // Print no debug statements
 #elif (GLOBAL_DEBUG_PRINT_ENABLED == NO_DEBUG)
 #define debugRaw(...) 	;
-#define debug(...)    	;
+#define debug(...)		;
 #define debugWarn(...) 	;
 #define debugErr(...) 	;
 #define debugChar(x) 	;

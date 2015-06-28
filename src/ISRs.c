@@ -370,7 +370,7 @@ void Start_Data_Clock(TC_CHANNEL_NUM channel)
 	//volatile avr32_tc_t *tc = &AVR32_TC;
 
 	// Start the timer/counter.
-	tc_start(&AVR32_TC, channel);                    // And start the timer/counter.
+	tc_start(&AVR32_TC, channel); // And start the timer/counter.
 
 	switch (channel)
 	{
@@ -395,7 +395,7 @@ void Stop_Data_Clock(TC_CHANNEL_NUM channel)
 	//volatile avr32_tc_t *tc = &AVR32_TC;
 
 	// Stop the timer/counter.
-	tc_stop(&AVR32_TC, channel);                    // And start the timer/counter.
+	tc_stop(&AVR32_TC, channel); // And start the timer/counter.
 
 	switch (channel)
 	{
@@ -896,7 +896,7 @@ static inline void moveWaveformData_ISR_Inline(void)
 	 += NUMBER_OF_CHANNELS_DEFAULT;
 	
 	// Check if write pointer is beyond the end of the circular bounds
-	if ( >= )  = ;
+	if ( >= ) = ;
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
 	raiseSystemEventFlag();
@@ -1042,7 +1042,7 @@ static inline void getChannelDataWithReadbackWithTemp_ISR_Inline(void)
 {
 	//___________________________________________________________________________________________
 	//___Sample Output with return config words for reference
-	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp:  dbe (b6d0)
+	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp: dbe (b6d0)
 	
 	if (s_channelConfig == CHANNELS_R_AND_V_SCHEMATIC)
 	{
@@ -1198,7 +1198,7 @@ static inline void getChannelDataNoReadbackNoTemp_ISR_Inline(void)
 {
 	//___________________________________________________________________________________________
 	//___Sample Output with return config words for reference
-	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp:  dbe (b6d0)
+	// R: 7f26 (e0d0) | V: 7f10 (e2d0) | T: 7f15 (e4d0) | A: 7f13 (e6d0) | Temp: dbe (b6d0)
 	
 	if (s_channelConfig == CHANNELS_R_AND_V_SCHEMATIC)
 	{

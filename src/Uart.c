@@ -146,10 +146,6 @@ uint8 ModemPuts(uint8* byteData, uint32 dataLength, uint8 convertAsciiFlag)
 #include "usart.h"
 extern int usart_putchar(volatile avr32_usart_t *usart, int c);
 extern int usart_write_char(volatile avr32_usart_t *usart, int c);
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
 void UartPutc(uint8 c, int32 channel)
 {
 	uint32 retries = USART_DEFAULT_TIMEOUT;
@@ -220,15 +216,16 @@ void UartPutc(uint8 c, int32 channel)
 ///----------------------------------------------------------------------------
 void UartWrite(void* b, int32 n, int32 channel)
 {
-    char* s = (char*)b;
-    while (n--)
-    {
-        if (*s == '\n')
-        {
-            UartPutc('\r', channel);
-        }
-        UartPutc(*s++, channel);
-    }
+	char* s = (char*)b;
+	while (n--)
+	{
+		if (*s == '\n')
+		{
+			UartPutc('\r', channel);
+		}
+
+		UartPutc(*s++, channel);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -236,14 +233,15 @@ void UartWrite(void* b, int32 n, int32 channel)
 ///----------------------------------------------------------------------------
 void UartPuts(char* s, int32 channel)
 {
-    while (*s)
-    {
-        if (*s == '\n')
-        {
-            UartPutc('\r', channel);
-        }
-        UartPutc(*s++, channel);
-    }
+	while (*s)
+	{
+		if (*s == '\n')
+		{
+			UartPutc('\r', channel);
+		}
+
+		UartPutc(*s++, channel);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -252,18 +250,18 @@ void UartPuts(char* s, int32 channel)
 #if 0
 BOOLEAN UartCharWaiting(int32 channel)
 {
-    BOOLEAN charWaiting = FALSE;
+	BOOLEAN charWaiting = FALSE;
 
-    volatile MMC2114_IMM *imm = mmc2114_get_immp();
+	volatile MMC2114_IMM *imm = mmc2114_get_immp();
 
-    if (channel == CRAFT_COM_PORT)
-    {
-        return ((imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_RDRF) != 0);
-    }
+	if (channel == CRAFT_COM_PORT)
+	{
+		return ((imm->Sci1.SCISR1 & MMC2114_SCI_SCISR1_RDRF) != 0);
+	}
 	else if (channel == RS485_COM_PORT)
-    {
-        return ((imm->Sci2.SCISR1 & MMC2114_SCI_SCISR1_RDRF) != 0);
-    }
+	{
+		return ((imm->Sci2.SCISR1 & MMC2114_SCI_SCISR1_RDRF) != 0);
+	}
 
 	return (charWaiting);
 }
@@ -275,29 +273,29 @@ BOOLEAN UartCharWaiting(int32 channel)
 #if 0
 uint8 UartGetc(int32 channel, uint8 mode)
 {
-    volatile MMC2114_IMM *imm = mmc2114_get_immp();
-    volatile uint32 uartTimeout = UART_TIMEOUT_COUNT;
+	volatile MMC2114_IMM *imm = mmc2114_get_immp();
+	volatile uint32 uartTimeout = UART_TIMEOUT_COUNT;
 
-    if (channel == CRAFT_COM_PORT)
-    {
-        while (!UartCharWaiting(channel))
-        {
+	if (channel == CRAFT_COM_PORT)
+	{
+		while (!UartCharWaiting(channel))
+		{
 			if ((mode == UART_TIMEOUT) && (uartTimeout-- == 0))
 				return (UART_TIMED_OUT);
-        }
+		}
 
-        return (imm->Sci1.SCIDRL);
-    }
-    else if (channel == RS485_COM_PORT)
-    {
-        while (!UartCharWaiting(channel))
-        {
+		return (imm->Sci1.SCIDRL);
+	}
+	else if (channel == RS485_COM_PORT)
+	{
+		while (!UartCharWaiting(channel))
+		{
 			if ((mode == UART_TIMEOUT) && (uartTimeout-- == 0))
 				return (UART_TIMED_OUT);
-        }
+		}
 
-        return (imm->Sci2.SCIDRL);
-    }
+		return (imm->Sci2.SCIDRL);
+	}
 
 	return (0);
 }
@@ -308,63 +306,63 @@ uint8 UartGetc(int32 channel, uint8 mode)
 ///----------------------------------------------------------------------------
 char* UartGets(char* s, int32 channel)
 {
-    char* b = s;
-    BOOLEAN end = FALSE;
-    int32  data;
-    int32  count = 0;
+	char* b = s;
+	BOOLEAN end = FALSE;
+	int32 data;
+	int32 count = 0;
 
-    do
-    {
-        data = UartGetc(channel, UART_BLOCK);
-        switch (data)
-        {
-            case '\b':
-            case 0x7e:
-                if (count)
-                {
-                    count--;
-                    b--;
-                    if (channel != CRAFT_COM_PORT)
-                    {
-                        UartPuts("\b \b", channel);
-					}
-                }
-                break;
-            case '\r':
-            case '\n':
-                if (count)
-                {
-                    *b = 0;
-                    if (channel != CRAFT_COM_PORT)
-                    {
-                        UartPuts("\r\n", channel);
-					}
-                    end = TRUE;
-                }
-                break;
-            case CAN:
-                *b = CAN;
-                *s = CAN;
-                end = TRUE;
-                break;
-            default:
-                if (count < 255)
-                {
-                    count++;
-                    *b++ = (char)data;
-                    if (channel != CRAFT_COM_PORT)
-                    {
-                        UartPutc((uint8)data, channel); // Echo the data back
-                    }
-                }
-                break;
-        }
-    } while (!end);
-    if (*b != CAN)
+	do
 	{
-	    *b = 0;
+		data = UartGetc(channel, UART_BLOCK);
+		switch (data)
+		{
+			case '\b':
+			case 0x7e:
+				if (count)
+				{
+					count--;
+					b--;
+					if (channel != CRAFT_COM_PORT)
+					{
+						UartPuts("\b \b", channel);
+					}
+				}
+				break;
+			case '\r':
+			case '\n':
+				if (count)
+				{
+					*b = 0;
+					if (channel != CRAFT_COM_PORT)
+					{
+						UartPuts("\r\n", channel);
+					}
+					end = TRUE;
+				}
+				break;
+			case CAN:
+				*b = CAN;
+				*s = CAN;
+				end = TRUE;
+				break;
+			default:
+				if (count < 255)
+				{
+					count++;
+					*b++ = (char)data;
+					if (channel != CRAFT_COM_PORT)
+					{
+						UartPutc((uint8)data, channel); // Echo the data back
+					}
+				}
+				break;
+		}
+	} while (!end);
+	if (*b != CAN)
+	{
+		*b = 0;
 	}
-    return (s);
+	return (s);
 }
 
 ///----------------------------------------------------------------------------
@@ -372,17 +370,17 @@ char* UartGets(char* s, int32 channel)
 ///----------------------------------------------------------------------------
 short Craft(char* fmt, ...)
 {
-    va_list arg_ptr;
-    short l;
-    char buf[256];
-    static uint32 repeatingBuf = 0;
-    char repeatCountStr[10];
+	va_list arg_ptr;
+	short l;
+	char buf[256];
+	static uint32 repeatingBuf = 0;
+	char repeatCountStr[10];
 
 	// Initialize arg_ptr to the begenning of the variable argument list
-    va_start(arg_ptr, fmt);
+	va_start(arg_ptr, fmt);
 
-    // Build the string in buf with the format fmt and arguments in arg_ptr
-    l = (short)vsprintf(buf, fmt, arg_ptr);
+	// Build the string in buf with the format fmt and arguments in arg_ptr
+	l = (short)vsprintf(buf, fmt, arg_ptr);
 
 	// Clean up. Invalidates arg_ptr from use again
 	va_end(arg_ptr);
@@ -417,7 +415,7 @@ short Craft(char* fmt, ...)
 	}
 
 	// Return the number of characters
-    return (l);
+	return (l);
 }
 
 ///----------------------------------------------------------------------------
@@ -425,14 +423,14 @@ short Craft(char* fmt, ...)
 ///----------------------------------------------------------------------------
 short DebugPrint(uint8 mode, char* fmt, ...)
 {
-    va_list arg_ptr;
-    short length = 0;
-    char buf[256];
-    static uint32 repeatingBuf = 0;
-    static uint8 strippedNewline = 0;
-    char repeatCountStr[10];
-    char timestampStr[8];
-    int32 tempTime;
+	va_list arg_ptr;
+	short length = 0;
+	char buf[256];
+	static uint32 repeatingBuf = 0;
+	static uint8 strippedNewline = 0;
+	char repeatCountStr[10];
+	char timestampStr[8];
+	int32 tempTime;
 
 	//if (g_disableDebugPrinting == YES)
 	//	return (0);
@@ -441,31 +439,31 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 	memset(&buf[0], 0, sizeof(buf));
 
 	// Initialize arg_ptr to the beginning of the variable argument list
-    va_start(arg_ptr, fmt);
+	va_start(arg_ptr, fmt);
 
 	switch (mode)
 	{
 		case RAW: break;
-		case NORM: strcpy(buf, "(Debug |        ) "); break;
-		case WARN: strcpy(buf, "(Warn  -        ) "); break;
-		case ERR:  strcpy(buf, "(Error *        ) "); break;
+		case NORM:	strcpy(buf, "(Debug |        ) "); break;
+		case WARN:	strcpy(buf, "(Warn  -        ) "); break;
+		case ERR:	strcpy(buf, "(Error *        ) "); break;
 		default: break;
 	}
 
 	if (mode == RAW)
 	{
-    	// Build the string in buf with the format fmt and arguments in arg_ptr
-    	length = (short)vsprintf(buf, fmt, arg_ptr);
-    }
+		// Build the string in buf with the format fmt and arguments in arg_ptr
+		length = (short)vsprintf(buf, fmt, arg_ptr);
+	}
 	else
 	{
-    	// Build the string in buf with the format fmt and arguments in arg_ptr
+		// Build the string in buf with the format fmt and arguments in arg_ptr
 
 		// Initialize the length to the number of chars in the debug string
 		length = 18;
 
-    	// Offset the buf array to start after debug string section
-    	length += (short)vsprintf(&buf[length], fmt, arg_ptr);
+		// Offset the buf array to start after debug string section
+		length += (short)vsprintf(&buf[length], fmt, arg_ptr);
 	}
 
 	// Clean up. Invalidates arg_ptr from use again
@@ -590,7 +588,7 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 	}
 
 	// Return the number of characters
-    return (length);
+	return (length);
 }
 
 ///----------------------------------------------------------------------------

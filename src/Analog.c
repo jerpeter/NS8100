@@ -62,14 +62,14 @@ static CHANNEL_OFFSET_TOTALS s_compareChannelOffset = {0, 0, 0, 0};
 // INB1 - V channel
 // INB2 - A channel
 
-// CNVST (A.L.) | A0 | A/B (A.L.) |    Read		| Address Select
+// CNVST (A.L.) | A0 | A/B (A.L.)	|	Read	| Address Select
 // -------------------------------------------------------------
-//	inactive	| 0  |  	1	  | INA1 (R)	|	0010 - 0x2
-//	active		| 0  |  	0	  |	INB1 (V)	|	0000 - 0x0
-//	inactive	| 1  |  	1	  | INA2 (T)	|	0110 - 0x6
-//	active		| 1  |  	0	  |	INB2 (A)	|	0100 - 0x4
+//	inactive	| 0	 |		1		| INA1 (R)	|	0010 - 0x2
+//	active		| 0	 |		0		| INB1 (V)	|	0000 - 0x0
+//	inactive	| 1	 |		1		| INA2 (T)	|	0110 - 0x6
+//	active		| 1	 |		0		| INB2 (A)	|	0100 - 0x4
 //--------------------------------------------------------------
-// Processor Pin| A2 |	   A1	  |
+// Processor Pin| A2 |		A1		|
 
 /*
 Config readback reference for different reference configs
@@ -321,7 +321,7 @@ void SetupADChannelConfig(uint32 sampleRate)
 
 	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	spi_write(&AVR32_SPI0, 0x0000);
-    spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
+	spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 	SoftUsecWait(2);
 }
@@ -333,7 +333,7 @@ void WriteAnalogControl(uint16 control)
 {
 	spi_selectChip(&AVR32_SPI1, AD_CTL_SPI_NPCS);
 	spi_write(&AVR32_SPI1, (unsigned short) control);
-    spi_unselectChip(&AVR32_SPI1, AD_CTL_SPI_NPCS);
+	spi_unselectChip(&AVR32_SPI1, AD_CTL_SPI_NPCS);
 }
 
 ///----------------------------------------------------------------------------
@@ -485,7 +485,7 @@ void SetCalSignal(uint8 data)
 ///----------------------------------------------------------------------------
 void GenerateCalSignal(void)
 {
-	// Previous NS7100 timing was:
+	// Calibration signal timing
 	// 1) Enable cal (cut off real channels) and delay 5ms
 	// 2) Drive reference high for 10ms
 	// 3) Drive reference low for 20ms

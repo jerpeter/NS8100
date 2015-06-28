@@ -248,11 +248,11 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 	uint16 j = 0;
 	uint8 ucmHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
-	float  timeCheckFloat;
-	float  timeAlarmFloat;
+	float timeCheckFloat;
+	float timeAlarmFloat;
 
 	if (ACTIVE_STATE == g_sampleProcessing)
-	{   
+	{
 		returnCode = CFG_ERR_MONITORING_STATE;
 	}
 	else
@@ -442,7 +442,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.seismicTriggerLevel) 	||
 			(NO_TRIGGER_CHAR == cfg.eventCfg.seismicTriggerLevel) 	||
 			((cfg.eventCfg.seismicTriggerLevel >= SEISMIC_TRIGGER_MIN_VALUE) &&
-			  (cfg.eventCfg.seismicTriggerLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
+			(cfg.eventCfg.seismicTriggerLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
 		{
 			g_triggerRecord.trec.seismicTriggerLevel = cfg.eventCfg.seismicTriggerLevel;
 
@@ -818,14 +818,14 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 			if ((ALARM_MODE_BOTH == g_unitConfig.alarmOneMode) || (ALARM_MODE_AIR == g_unitConfig.alarmOneMode))
 			{
-	            // Alarm One Air trigger level check DB/MB for Waveform mode only
+				// Alarm One Air trigger level check DB/MB for Waveform mode only
 				if ((cfg.mode == WAVEFORM_MODE) && ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) ||
 					((cfg.alarmCfg.alarmOneAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
 					(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_COUNT))))
 				{
 					g_unitConfig.alarmOneAirLevel = cfg.alarmCfg.alarmOneAirLevel;
 				}
-	            // Alarm One Air trigger level check DB/MB for other modes
+				// Alarm One Air trigger level check DB/MB for other modes
 				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) ||
 						((cfg.alarmCfg.alarmOneAirLevel >= AIR_TRIGGER_MIN_COUNT) &&
 						(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_COUNT)))
@@ -898,7 +898,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				// Alarm Two Seismic trigger level check for Waveform mode only
 				if ((cfg.mode == WAVEFORM_MODE) && ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoSeismicLevel) 	||
 					((cfg.alarmCfg.alarmTwoSeismicLevel >= g_triggerRecord.trec.seismicTriggerLevel) &&
-					  (cfg.alarmCfg.alarmTwoSeismicLevel <= SEISMIC_TRIGGER_MAX_VALUE))))
+					(cfg.alarmCfg.alarmTwoSeismicLevel <= SEISMIC_TRIGGER_MAX_VALUE))))
 				{
 					g_unitConfig.alarmTwoSeismicLevel = cfg.alarmCfg.alarmTwoSeismicLevel;
 				}
@@ -918,14 +918,14 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			
 			if ((ALARM_MODE_BOTH == g_unitConfig.alarmTwoMode) || (ALARM_MODE_AIR == g_unitConfig.alarmTwoMode))
 			{
-	            // Alarm Two Air trigger level check DB/MB for Waveform mode only
+				// Alarm Two Air trigger level check DB/MB for Waveform mode only
 				if ((cfg.mode == WAVEFORM_MODE) && ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) ||
 					((cfg.alarmCfg.alarmTwoAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
 					(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_COUNT))))
 				{
 					g_unitConfig.alarmTwoAirLevel = cfg.alarmCfg.alarmTwoAirLevel;
 				}
-	            // Alarm Two Air trigger level check DB/MB for other modes
+				// Alarm Two Air trigger level check DB/MB for other modes
 				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) 	||
 						((cfg.alarmCfg.alarmTwoAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
 						(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_COUNT)))
@@ -988,20 +988,20 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 				// time valid value check.
 				if (!((cfg.timerCfg.timer_start.hour < 24) && 
-					 (cfg.timerCfg.timer_start.min  < 60) && 
+					 (cfg.timerCfg.timer_start.min < 60) &&
 					 (cfg.timerCfg.timer_start.year < 100) &&
-					 (cfg.timerCfg.timer_start.month >= 1) && (cfg.timerCfg.timer_start.month  <= 12) &&
-					 (cfg.timerCfg.timer_start.day  >= 1) && (cfg.timerCfg.timer_start.day  < 32)))
+					 (cfg.timerCfg.timer_start.month >= 1) && (cfg.timerCfg.timer_start.month <= 12) &&
+					 (cfg.timerCfg.timer_start.day >= 1) && (cfg.timerCfg.timer_start.day < 32)))
 				{
 					returnCode = CFG_ERR_START_TIME;
 					goto SEND_UCM_ERROR_CODE;
 				}
 
 				if (!((cfg.timerCfg.timer_stop.hour < 24) && 
-					 (cfg.timerCfg.timer_stop.min  < 60) && 
+					 (cfg.timerCfg.timer_stop.min < 60) &&
 					 (cfg.timerCfg.timer_stop.year < 100) &&
-					 (cfg.timerCfg.timer_stop.month >= 1) && (cfg.timerCfg.timer_stop.month  <= 12) &&
-					 (cfg.timerCfg.timer_stop.day  >= 1) && (cfg.timerCfg.timer_stop.day  < 32)))
+					 (cfg.timerCfg.timer_stop.month >= 1) && (cfg.timerCfg.timer_stop.month <= 12) &&
+					 (cfg.timerCfg.timer_stop.day >= 1) && (cfg.timerCfg.timer_stop.day < 32)))
 				{
 					returnCode = CFG_ERR_STOP_TIME;
 					goto SEND_UCM_ERROR_CODE;

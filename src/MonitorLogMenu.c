@@ -55,16 +55,16 @@ void MonitorLogMnDsply(WND_LAYOUT_STRUCT *);
 ///----------------------------------------------------------------------------
 void MonitorLogMn(INPUT_MSG_STRUCT msg)
 {
-    static WND_LAYOUT_STRUCT wnd_layout;
-    static MN_LAYOUT_STRUCT mn_layout;
+	static WND_LAYOUT_STRUCT wnd_layout;
+	static MN_LAYOUT_STRUCT mn_layout;
 
-    MonitorLogMnProc(msg, &wnd_layout, &mn_layout);
+	MonitorLogMnProc(msg, &wnd_layout, &mn_layout);
 
-    if(g_activeMenu == VIEW_MONITOR_LOG_MENU)
-    {
-        MonitorLogMnDsply(&wnd_layout);
-        WriteMapToLcd(g_mmap);
-    }
+	if(g_activeMenu == VIEW_MONITOR_LOG_MENU)
+	{
+		MonitorLogMnDsply(&wnd_layout);
+		WriteMapToLcd(g_mmap);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -79,13 +79,13 @@ void MonitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 	{
 		case (ACTIVATE_MENU_CMD):
 			wnd_layout_ptr->start_col = MONITOR_LOG_WND_STARTING_COL;
-			wnd_layout_ptr->end_col =   MONITOR_LOG_WND_END_COL;
+			wnd_layout_ptr->end_col = MONITOR_LOG_WND_END_COL;
 			wnd_layout_ptr->start_row = MONITOR_LOG_WND_STARTING_ROW;
-			wnd_layout_ptr->end_row =   MONITOR_LOG_WND_END_ROW;
+			wnd_layout_ptr->end_row = MONITOR_LOG_WND_END_ROW;
 
-			mn_layout_ptr->curr_ln =    1;
-			mn_layout_ptr->top_ln =     1;
-			mn_layout_ptr->sub_ln =     0;
+			mn_layout_ptr->curr_ln = 1;
+			mn_layout_ptr->top_ln = 1;
+			mn_layout_ptr->sub_ln = 0;
 
 			s_MonitorMenuCurrentLogIndex = (int16)GetStartingMonitorLogTableIndex();
 			s_MonitorMenuLastLogIndex = __monitorLogTblIndex;
@@ -178,10 +178,10 @@ void MonitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 ///----------------------------------------------------------------------------
 void MonitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
-    uint8 buff[25];
-    uint8 length;
+	uint8 buff[25];
+	uint8 length;
 
-    memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Add in a title for the menu
 	memset(&buff[0], 0, sizeof(buff));
@@ -199,10 +199,10 @@ void MonitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			memset(&buff[0], 0, sizeof(buff));
 			switch(__monitorLogTbl[s_MonitorMenuCurrentLogIndex].mode)
 			{
-				case WAVEFORM_MODE:   length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(WAVEFORM_MODE_TEXT)); break;
-				case BARGRAPH_MODE:	  length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(BARGRAPH_MODE_TEXT)); break;
+				case WAVEFORM_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(WAVEFORM_MODE_TEXT)); break;
+				case BARGRAPH_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(BARGRAPH_MODE_TEXT)); break;
 				case MANUAL_CAL_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(CALIBRATION_TEXT)); break;
-				case COMBO_MODE:	  length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(COMBO_MODE_TEXT)); break;
+				case COMBO_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(COMBO_MODE_TEXT)); break;
 			}
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;

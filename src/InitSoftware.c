@@ -18,8 +18,6 @@
 #include "lcd.h"
 #include <stdio.h>
 #include <math.h>
-
-// Added in NS7100 includes
 #include <stdlib.h>
 #include <string.h>
 #include "Typedefs.h"

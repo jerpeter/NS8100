@@ -115,7 +115,6 @@ void MenuScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 		default:
 			break;
 	}
-
 }
 
 ///----------------------------------------------------------------------------
@@ -163,65 +162,65 @@ void UserMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout
 ///----------------------------------------------------------------------------
 void DisplaySelectMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr, uint8 titlePosition)
 {
-   uint8 buff[50];
-   uint8 top;
-   uint8 menu_ln;
-   uint32 length;
+	uint8 buff[50];
+	uint8 top;
+	uint8 menu_ln;
+	uint32 length;
 
-   memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
-   menu_ln = 0;
-   top = 0;
-   strcpy((char*)buff, (char*)(g_menuPtr + top + menu_ln)->data);
-   length = strlen((char*)buff);
-   wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
+	menu_ln = 0;
+	top = 0;
+	strcpy((char*)buff, (char*)(g_menuPtr + top + menu_ln)->data);
+	length = strlen((char*)buff);
+	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 
 	if (titlePosition == TITLE_LEFT_JUSTIFIED)
 	{
 		wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-   	}
-   	else // titlePosition is TITLE_CENTERED
-   	{
-   		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-   	}
+	}
+	else // titlePosition is TITLE_CENTERED
+	{
+		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+	}
 
-   WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-   menu_ln = 0;
-   top = (uint8)mn_layout_ptr->top_ln;
-   wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
-   wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-   wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
-   wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
+	menu_ln = 0;
+	top = (uint8)mn_layout_ptr->top_ln;
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
-   while (wnd_layout_ptr->curr_row <= wnd_layout_ptr->end_row)
-   {
-      strcpy((char*)buff, (char*)(g_menuPtr + top + menu_ln)->data);
-      if (strcmp((char*)buff, ".end."))
-      {
-         if (menu_ln == (mn_layout_ptr->curr_ln - mn_layout_ptr->top_ln))
-         {
+	while (wnd_layout_ptr->curr_row <= wnd_layout_ptr->end_row)
+	{
+		strcpy((char*)buff, (char*)(g_menuPtr + top + menu_ln)->data);
+		if (strcmp((char*)buff, ".end."))
+		{
+			if (menu_ln == (mn_layout_ptr->curr_ln - mn_layout_ptr->top_ln))
+			{
 			if (mn_layout_ptr->sub_ln == 0)
 			{
-	            WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
+				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
 			}
 			else
 			{
 				wnd_layout_ptr->index = mn_layout_ptr->sub_ln;
-	            WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_CHAR);
+				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_CHAR);
 			}
-         }
-         else
-         {
-            WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-         }
-      }
-      else
-         break;
+			}
+			else
+			{
+			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			}
+		}
+		else
+			break;
 
-      wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
-      menu_ln++;
-   }/* END OF WHILE LOOP */
+		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+		menu_ln++;
+	}/* END OF WHILE LOOP */
 }
 
 ///----------------------------------------------------------------------------
@@ -268,10 +267,10 @@ void DisplayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_lay
 	top = mn_layout_ptr->top_ln;
 
 	// Reset menu display parameters
-	wnd_layout_ptr->curr_row =   wnd_layout_ptr->start_row;
-	wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
-	wnd_layout_ptr->next_row =   wnd_layout_ptr->start_row;
-	wnd_layout_ptr->next_col =   wnd_layout_ptr->start_col;
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
 	// Handle the rest of the menu table
 	while (wnd_layout_ptr->curr_row <= wnd_layout_ptr->end_row)
@@ -288,13 +287,13 @@ void DisplayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_lay
 				if (mn_layout_ptr->sub_ln == 0)
 				{
 					// Write the text to the LCD map highlighted
-		            WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
+					WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
 				}
 				else
 				{
 					// Write just one char highlighted
 					wnd_layout_ptr->index = mn_layout_ptr->sub_ln;
-		            WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_CHAR);
+					WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_CHAR);
 				}
 			}
 			else // Write text as a regular line
@@ -318,54 +317,54 @@ void DisplayUserMenu(WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_lay
 ///----------------------------------------------------------------------------
 void WndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, int ln_type)
 {
-   const uint8 (*fmap_ptr)[FONT_MAX_COL_SIZE];
-   uint8 mmcurr_row;
-   uint8 mmend_row;
-   uint8 mmcurr_col;
-   uint8 mmend_col;
-   uint8 cbit_size;
-   uint8 crow_size;
-   uint8 ccol_size;
-   uint8 temp1 = 0;
-   int32 index;
-   int32 row;
-   int32 col;
-   int32 bits_wrtn;
-   int32 first_column;
+	const uint8 (*fmap_ptr)[FONT_MAX_COL_SIZE];
+	uint8 mmcurr_row;
+	uint8 mmend_row;
+	uint8 mmcurr_col;
+	uint8 mmend_col;
+	uint8 cbit_size;
+	uint8 crow_size;
+	uint8 ccol_size;
+	uint8 temp1 = 0;
+	int32 index;
+	int32 row;
+	int32 col;
+	int32 bits_wrtn;
+	int32 first_column;
 
-   first_column = 0;
+	first_column = 0;
 
-   switch (font_type)
-   {
+	switch (font_type)
+	{
 
-      case  SIX_BY_EIGHT_FONT:
-            cbit_size = EIGHT_ROW_SIZE;
-            crow_size = (uint8)(cbit_size / 8);
-            if (EIGHT_ROW_SIZE % 8)
-               crow_size++;
-            ccol_size = SIX_COL_SIZE;
-            fmap_ptr = font_table_68;
+		case SIX_BY_EIGHT_FONT:
+			cbit_size = EIGHT_ROW_SIZE;
+			crow_size = (uint8)(cbit_size / 8);
+			if (EIGHT_ROW_SIZE % 8)
+				crow_size++;
+			ccol_size = SIX_COL_SIZE;
+			fmap_ptr = font_table_68;
 
-            wnd_layout->next_row = (uint16)(wnd_layout->curr_row + cbit_size);
-            wnd_layout->next_col = (uint16)(wnd_layout->curr_col + ccol_size);
-            break;
+			wnd_layout->next_row = (uint16)(wnd_layout->curr_row + cbit_size);
+			wnd_layout->next_col = (uint16)(wnd_layout->curr_col + ccol_size);
+			break;
 
-      default:
-            break;
-   }
+		default:
+			break;
+	}
 
-   mmcurr_row  = (uint8)(wnd_layout->curr_row /8);
-   if (wnd_layout->curr_row %8)
-      mmcurr_row++;
+	mmcurr_row = (uint8)(wnd_layout->curr_row /8);
+	if (wnd_layout->curr_row %8)
+		mmcurr_row++;
 
-   mmend_row  = (uint8)(wnd_layout->end_row /8);
-   if (wnd_layout->end_row %8)
-      mmend_row++;
+	mmend_row = (uint8)(wnd_layout->end_row /8);
+	if (wnd_layout->end_row %8)
+		mmend_row++;
 
-   mmcurr_col = (uint8)(wnd_layout->curr_col);
-   mmend_col = (uint8)wnd_layout->end_col;
+	mmcurr_col = (uint8)(wnd_layout->curr_col);
+	mmend_col = (uint8)wnd_layout->end_col;
 
-   index = 0;
+	index = 0;
 
 	// While not at the end of the string
 	while (buff[index] != '\0')
@@ -422,7 +421,7 @@ void WndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
 				{
 					if (((col + mmcurr_col) <= mmend_col) && ((row + mmcurr_row) <= mmend_row))
 					{
-						temp1  = (uint8)((fmap_ptr[buff[index]][col] >> (8 - (wnd_layout->curr_row %8))));
+						temp1 = (uint8)((fmap_ptr[buff[index]][col] >> (8 - (wnd_layout->curr_row %8))));
 						g_mmap[mmcurr_row + row + 1][mmcurr_col + col] = temp1;
 					}
 				}
@@ -432,7 +431,7 @@ void WndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
 					{
 						g_mmap[mmcurr_row + row + 1][mmcurr_col + col] = (uint8)(temp1 & (0xff >> (cbit_size - (cbit_size - bits_wrtn))));
 
-						temp1  = (uint8)((fmap_ptr[buff[index]][col] >> (8 - (wnd_layout->curr_row %8))));
+						temp1 = (uint8)((fmap_ptr[buff[index]][col] >> (8 - (wnd_layout->curr_row %8))));
 						g_mmap[mmcurr_row + row + 1][mmcurr_col + col] = temp1;
 					}
 				}
@@ -479,7 +478,7 @@ void WndMpWrtString(uint8* buff, WND_LAYOUT_STRUCT* wnd_layout, int font_type, i
 
 	// Store next column location
 	wnd_layout->next_col = mmcurr_col;
-}
+	}
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -972,7 +971,7 @@ void DisplaySplashScreen(void)
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	WndMpWrtString(&buff[0], &wnd_layout, SIX_BY_EIGHT_FONT, REG_LN);
 
-    debug("Init Write Splash Screen to LCD...\r\n");
+	debug("Init Write Splash Screen to LCD...\r\n");
 
 	// Write the map to the LCD
 	WriteMapToLcd(g_mmap);

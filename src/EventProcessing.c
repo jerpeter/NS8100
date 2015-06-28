@@ -1772,7 +1772,7 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 			{
 				//debug("Found Valid Event File: %s", fileName);
 
-				validFile =  YES;
+				validFile = YES;
 			}
 
 			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
@@ -2203,7 +2203,7 @@ void GetSDCardUsageStats(void)
 							(((g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval) + 1) * 8 * 2));
 
 #if NS8100_ORIGINAL_PROTOTYPE
-    sd_mmc_spi_get_capacity();
+	sd_mmc_spi_get_capacity();
 
 	g_sdCardUsageStats.sizeUsed = 0;
 	g_sdCardUsageStats.sizeFree = capacity - g_sdCardUsageStats.sizeUsed;

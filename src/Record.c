@@ -37,7 +37,7 @@
 ///	Function Break
 ///----------------------------------------------------------------------------
 void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
-{        
+{
 	uint16 loc;
 	uint16 rec_size;
 
@@ -182,7 +182,7 @@ void GetRecordData(void* dst_ptr, uint32 num, uint8 type)
 ///	Function Break
 ///----------------------------------------------------------------------------
 void ConvertTimeStampToString(char* buff, DATE_TIME_STRUCT* timeReference, uint8 displayType)
-{        
+{
 	DATE_TIME_STRUCT* tempTime;
 	uint8 tbuff[5];
 
@@ -423,7 +423,7 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 ///	Function Break
 ///----------------------------------------------------------------------------
 void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr)
-{  
+{
 	// Initialize the Unit Config
 	memset(rec_ptr, 0, sizeof(UNIT_CONFIG_STRUCT));
 
@@ -475,7 +475,7 @@ void ActivateUnitConfigOptions(void)
 	if ((g_contrast_value < MIN_CONTRAST) || (g_contrast_value > MAX_CONTRAST))
 	{
 		g_unitConfig.lcdContrast = g_contrast_value = DEFUALT_CONTRAST;
-	}               
+	}
 
 	SetLcdContrast(g_contrast_value);
 
@@ -492,7 +492,7 @@ void ActivateUnitConfigOptions(void)
 	AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
 	debug("Auto Monitor Mode: %s\r\n", (g_unitConfig.autoMonitorMode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
-    AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
+	AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 
 	if (g_unitConfig.autoCalMode != AUTO_NO_CAL_TIMEOUT)
 	{
@@ -573,7 +573,7 @@ void GetParameterMemory(uint8* dataDest, uint16 startAddr, uint16 dataLength)
 		// Store the byte data into the data array and inc the pointer			
 		*dataDest++ = (uint8)tempData;
 	}
-	   
+
 	spi_unselectChip(&AVR32_SPI1, EEPROM_SPI_NPCS);
 
 	ReleaseSpi1MutexLock();

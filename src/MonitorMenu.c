@@ -34,9 +34,9 @@
 ///----------------------------------------------------------------------------
 #define MONITOR_MN_TABLE_SIZE 8
 #define MONITOR_WND_STARTING_COL DEFAULT_COL_THREE 
-#define MONITOR_WND_END_COL DEFAULT_END_COL      
+#define MONITOR_WND_END_COL DEFAULT_END_COL
 #define MONITOR_WND_STARTING_ROW DEFAULT_MENU_ROW_ZERO
-#define MONITOR_WND_END_ROW (DEFAULT_MENU_ROW_SEVEN)               
+#define MONITOR_WND_END_ROW (DEFAULT_MENU_ROW_SEVEN)
 #define MONITOR_MN_TBL_START_LINE 0
 #define TOTAL_DOTS 4
 
@@ -60,7 +60,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 ///	Function Break
 ///----------------------------------------------------------------------------
 void MonitorMenu(INPUT_MSG_STRUCT msg)
-{   
+{
 	static WND_LAYOUT_STRUCT wnd_layout;
 	static MN_LAYOUT_STRUCT mn_layout;
 
@@ -86,12 +86,12 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 	switch (msg.cmd)
 	{
 		case (ACTIVATE_MENU_WITH_DATA_CMD):
-			wnd_layout_ptr->start_col =    MONITOR_WND_STARTING_COL;
-			wnd_layout_ptr->end_col =      MONITOR_WND_END_COL;
-			wnd_layout_ptr->start_row =    MONITOR_WND_STARTING_ROW; 
-			wnd_layout_ptr->end_row =      MONITOR_WND_END_ROW;
-			mn_layout_ptr->curr_ln =       MONITOR_MN_TBL_START_LINE;
-			mn_layout_ptr->top_ln =        MONITOR_MN_TBL_START_LINE;
+			wnd_layout_ptr->start_col = MONITOR_WND_STARTING_COL;
+			wnd_layout_ptr->end_col = MONITOR_WND_END_COL;
+			wnd_layout_ptr->start_row = MONITOR_WND_STARTING_ROW;
+			wnd_layout_ptr->end_row = MONITOR_WND_END_ROW;
+			mn_layout_ptr->curr_ln = MONITOR_MN_TBL_START_LINE;
+			mn_layout_ptr->top_ln = MONITOR_MN_TBL_START_LINE;
 
 			memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 			
@@ -142,7 +142,7 @@ extern void UsbDeviceManager(void);
 			{
 				case WAVEFORM_MODE:
 					StartMonitoring(g_triggerRecord.trec, g_triggerRecord.op_mode);
-				break;   
+				break;
 
 				case BARGRAPH_MODE:
 				case COMBO_MODE:
@@ -190,8 +190,8 @@ extern void UsbDeviceManager(void);
 				break;
 
 				default:
-					break;    
-			} 
+					break;
+			}
 		break;
 
 		case (KEYPRESS_MENU_CMD):
@@ -263,7 +263,7 @@ extern void UsbDeviceManager(void);
 				case (ESC_KEY):
 					g_monitorEscapeCheck = YES;
 					g_promtForLeavingMonitorMode = TRUE;
-				break;     
+				break;
 				
 				case (DOWN_ARROW_KEY):
 #if 1
@@ -329,7 +329,7 @@ extern void UsbDeviceManager(void);
 						break;
 						
 						case PEAK_DISPLACEMENT_RESULTS:
-			               g_displayAlternateResultState = VECTOR_SUM_RESULTS;
+							g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 						break;
 
 						case PEAK_ACCELERATION_RESULTS:
@@ -346,7 +346,7 @@ extern void UsbDeviceManager(void);
 					switch (g_displayAlternateResultState)
 					{
 						case DEFAULT_RESULTS: 
-			               g_displayAlternateResultState = VECTOR_SUM_RESULTS;
+							g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 						break;
 							
 						case VECTOR_SUM_RESULTS:
@@ -373,8 +373,8 @@ extern void UsbDeviceManager(void);
 					break;
 			}
 		break;
-        
-        case STOP_MONITORING_CMD:
+
+		case STOP_MONITORING_CMD:
 			StopMonitoring(g_monitorOperationMode, EVENT_PROCESSING);
 
 			SETUP_MENU_MSG(MAIN_MENU);
@@ -382,10 +382,10 @@ extern void UsbDeviceManager(void);
 			
 			OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) MONITOR STOPPED.", (5 * SOFT_SECS));
 		break;
-             
+
 		default:
-			break;             
-	}  
+			break;
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -407,10 +407,10 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	DATE_TIME_STRUCT time;
 
-	wnd_layout_ptr->curr_row =   wnd_layout_ptr->start_row;
-	wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
-	wnd_layout_ptr->next_row =   wnd_layout_ptr->start_row;
-	wnd_layout_ptr->next_col =   wnd_layout_ptr->start_col;
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
 	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
@@ -479,9 +479,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		else // g_displayBargraphResultsMode == IMPULSE_RESULTS
 			arrowChar = DOWN_ARROW_CHAR;
 				
-		sprintf(buff, "%c", arrowChar);                     
-	    wnd_layout_ptr->curr_col = 120;
-	    WndMpWrtString((uint8*)&buff[0], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		sprintf(buff, "%c", arrowChar);
+		wnd_layout_ptr->curr_col = 120;
+		WndMpWrtString((uint8*)&buff[0], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	}
 
 	// Advance to next row
@@ -513,7 +513,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		// Time
 		//-----------------------------------------------------------------------
 		memset(&buff[0], 0, sizeof(buff));
-		length = (uint8)sprintf(buff,"%02d:%02d:%02d",time.hour, time.min, time.sec);                    
+		length = (uint8)sprintf(buff,"%02d:%02d:%02d",time.hour, time.min, time.sec);
 
 		wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
@@ -834,14 +834,14 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				if (tempR > tempT)
 				{
 					// R Disp is max
-				    normalize_max_peak = (float)tempR / (float)div;
-				    tempFreq = rFreq;
+					normalize_max_peak = (float)tempR / (float)div;
+					tempFreq = rFreq;
 				}
 				else
 				{
 					// T Disp is max
-				    normalize_max_peak = (float)tempT / (float)div;
-				    tempFreq = tFreq;
+					normalize_max_peak = (float)tempT / (float)div;
+					tempFreq = tFreq;
 				}
 			}
 			else
@@ -849,14 +849,14 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				if (tempV > tempT)
 				{
 					// V Disp is max
-				    normalize_max_peak = (float)tempV / (float)div;
-				    tempFreq = vFreq;
+					normalize_max_peak = (float)tempV / (float)div;
+					tempFreq = vFreq;
 				}
 				else
 				{
 					// T Disp is max
-				    normalize_max_peak = (float)tempT / (float)div;
-				    tempFreq = tFreq;
+					normalize_max_peak = (float)tempT / (float)div;
+					tempFreq = tFreq;
 				}
 			}
 

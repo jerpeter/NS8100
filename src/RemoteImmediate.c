@@ -743,7 +743,7 @@ void HandleDSM(CMD_BUFFER_STRUCT* inCmd)
 	uint16 idex;
 	uint16 numberOfRecs;					// Count the number of records to send.
 	uint32 dataLength;						// Will hold the new data length of the message
-	uint8  flagData = 0;
+	uint8 flagData = 0;
 
 	// If the process is busy sending data, return;
 	if (YES == g_modemStatus.xferMutex)
@@ -771,7 +771,7 @@ void HandleDSM(CMD_BUFFER_STRUCT* inCmd)
 	memset((uint8*)g_outCmdHeaderPtr, 0, sizeof(COMMAND_MESSAGE_HEADER));
 
 	// Copy the existing header data into the outgoing buffer.
-	memcpy(g_outCmdHeaderPtr, g_inCmdHeaderPtr,  sizeof(COMMAND_MESSAGE_HEADER));
+	memcpy(g_outCmdHeaderPtr, g_inCmdHeaderPtr, sizeof(COMMAND_MESSAGE_HEADER));
 
 	// Start Building the outgoing header. Set the msg type to a one for a response message.
 	sprintf((char*)g_outCmdHeaderPtr->type, "%02d", MSGTYPE_RESPONSE);
@@ -843,7 +843,7 @@ uint8 sendDSMData(void)
 
 		g_transmitCRC = CalcCCITT32((uint8*)g_dsmXferStructPtr->numOfRecStr, FIELD_LEN_06, g_transmitCRC);
 
-		if (MODEM_SEND_FAILED ==  ModemPuts((uint8*)g_dsmXferStructPtr->numOfRecStr,
+		if (MODEM_SEND_FAILED == ModemPuts((uint8*)g_dsmXferStructPtr->numOfRecStr,
 			FIELD_LEN_06, g_binaryXferFlag))
 		{
 			g_dsmXferStructPtr->xferStateFlag = NOP_XFER_STATE;
@@ -1099,14 +1099,14 @@ void prepareDEMDataToSend(COMMAND_MESSAGE_HEADER* inCmdHeaderPtr)
 	uint32 dataLength;						// Will hold the new data length of the message
 	uint32 eventRecordXferLength = 0;		// Will hold the length of the compressed event record data.
 	uint32 eventDataXferLength = 0;		// Will hold the length of the compressed event data.
-	uint8  flagData = 0;
+	uint8 flagData = 0;
 	uint32 dataSizeRemaining;
 	uint32 dataOffset;
 
 	// Now start building the outgoing header. Get the initial values from
 	// the incoming header. Clear the outgoing header data.
 	memset(g_outCmdHeaderPtr, 0, sizeof(COMMAND_MESSAGE_HEADER));
-	memcpy(g_outCmdHeaderPtr, inCmdHeaderPtr,  sizeof(COMMAND_MESSAGE_HEADER));
+	memcpy(g_outCmdHeaderPtr, inCmdHeaderPtr, sizeof(COMMAND_MESSAGE_HEADER));
 
 	// Start Building the outgoing message header. Set the type to a one for a response message.
 	sprintf((char*)g_outCmdHeaderPtr->type, "%02d", MSGTYPE_RESPONSE);
@@ -1599,7 +1599,6 @@ void handleHLT(CMD_BUFFER_STRUCT* inCmd)
 	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	// Stop the processing.
-
 }
 
 ///----------------------------------------------------------------------------

@@ -71,9 +71,7 @@ void ResultsMenu(INPUT_MSG_STRUCT msg)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void ResultsMenuProc(INPUT_MSG_STRUCT msg,
-                  WND_LAYOUT_STRUCT *wnd_layout_ptr,
-                  MN_LAYOUT_STRUCT *mn_layout_ptr)
+void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	uint32 delay = 3 * TICKS_PER_SEC;
@@ -197,14 +195,14 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg,
 		}
 		else // (g_waitForUser == FLASE) && (g_promtForLeavingMonitorMode == FALSE)
 		{
-	        switch (msg.data[0])
-	        {
+			switch (msg.data[0])
+			{
 				case (ENTER_KEY):
 					if (g_sampleProcessing != ACTIVE_STATE)
 					{
 						MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 					}
-    	        break;
+				break;
 
 				case (ESC_KEY):
 					if (g_sampleProcessing == ACTIVE_STATE)
@@ -345,9 +343,9 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
-    //-------------------------------------------------------------
+	//-------------------------------------------------------------
 	// Event specific scaling factors
-    //-------------------------------------------------------------
+	//-------------------------------------------------------------
 	
 	// Set the gain factor that was used to record the event (sensitivity)
 	if ((g_summaryList.cachedEntry.gainSelect & 0x01) == GAIN_SELECT_x2) { gainFactor = 2; }
@@ -455,8 +453,8 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			if (s_monitorSessionFirstEvent != s_monitorSessionLastEvent)
 			{
 				sprintf(buff, "%c", arrowChar);
-			    wnd_layout_ptr->curr_col = 120;
-			    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+				wnd_layout_ptr->curr_col = 120;
+				WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			}
 		}
 	}
@@ -465,8 +463,8 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if (g_summaryListMenuActive == YES)
 		{
 			sprintf(buff, "%c", g_summaryListArrowChar);
-		    wnd_layout_ptr->curr_col = 120;
-		    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			wnd_layout_ptr->curr_col = 120;
+			WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
 	}
 
@@ -477,7 +475,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	{
 		// Date & Time
 		time = GetCurrentTime();
-	    memset(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		length = (uint8)sprintf(buff,"(%02d:%02d:%02d)", time.hour, time.min, time.sec);
 
 		// Setup current column, Write string to screen, Advance to next row
@@ -490,31 +488,31 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// Results
 	//-----------------------------------------------------------------------
 
-    wnd_layout_ptr->curr_row =   wnd_layout_ptr->start_row;
-    wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
-    wnd_layout_ptr->next_row =   wnd_layout_ptr->start_row;
-    wnd_layout_ptr->next_col =   wnd_layout_ptr->start_col;
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
-    //-------------------------------------------------------------
-    // Date Time Info
-    memset(&buff[0], 0, sizeof(buff));
-    ConvertTimeStampToString(buff, &g_summaryList.cachedEntry.eventTime, REC_DATE_TIME_DISPLAY);
+	//-------------------------------------------------------------
+	// Date Time Info
+	memset(&buff[0], 0, sizeof(buff));
+	ConvertTimeStampToString(buff, &g_summaryList.cachedEntry.eventTime, REC_DATE_TIME_DISPLAY);
 
-    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-    wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+	WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-    //-------------------------------------------------------------
-    // Event number
-    memset(&buff[0], 0, sizeof(buff));
+	//-------------------------------------------------------------
+	// Event number
+	memset(&buff[0], 0, sizeof(buff));
 
 	// Remove commented code assuming display works
 	sprintf(buff, "%s %04d", getLangText(EVENT_TEXT), g_summaryList.cachedEntry.eventNumber);
 
-    WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
+	WndMpWrtString((uint8*)(&buff[0]),wnd_layout_ptr,SIX_BY_EIGHT_FONT,REG_LN);
 
-    //-------------------------------------------------------------
-    // Units inches or millimeters LABEL
-    memset(&buff[0], 0, sizeof(buff));
+	//-------------------------------------------------------------
+	// Units inches or millimeters LABEL
+	memset(&buff[0], 0, sizeof(buff));
 	if (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC)
 	{
 		sprintf(buff, "mg/s");
@@ -529,50 +527,50 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 
 	// Setup current column, Write string to screen, Advance to next row
-    wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 12);
-    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-    wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+	wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 12);
+	WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-    //-------------------------------------------------------------
-    // R LABEL, T LABEL, V LABEL
-    memset(&buff[0], 0, sizeof(buff));
-    sprintf(buff,"   R      T      V");
+	//-------------------------------------------------------------
+	// R LABEL, T LABEL, V LABEL
+	memset(&buff[0], 0, sizeof(buff));
+	sprintf(buff,"   R      T      V");
 
 	// Setup current column, Write string to screen,
-    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-    wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+	WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-    //-------------------------------------------------------------
-    // R DATA
-    // Using the Sensor times 100 definition.
-    normalize_max_peak = (float)g_summaryList.cachedEntry.channelSummary.r.peak / (float)div;
+	//-------------------------------------------------------------
+	// R DATA
+	// Using the Sensor times 100 definition.
+	normalize_max_peak = (float)g_summaryList.cachedEntry.channelSummary.r.peak / (float)div;
 
-    if (g_summaryList.cachedEntry.mode == MANUAL_CAL_MODE)
-    {
-	    if ((normalize_max_peak < 0.375) || (normalize_max_peak > 0.625))
-	    calResults = FAILED;
-    }
+	if (g_summaryList.cachedEntry.mode == MANUAL_CAL_MODE)
+	{
+		if ((normalize_max_peak < 0.375) || (normalize_max_peak > 0.625))
+		calResults = FAILED;
+	}
 
-    if ((g_summaryList.cachedEntry.seismicSensorType != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
-    {
-	    normalize_max_peak *= (float)METRIC;
-    }
+	if ((g_summaryList.cachedEntry.seismicSensorType != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
+	{
+		normalize_max_peak *= (float)METRIC;
+	}
 
-    memset(&buff[0], 0, sizeof(buff));
-    if (normalize_max_peak >= 100)
-        sprintf(buff, "%05.2f", normalize_max_peak);
-    else if (normalize_max_peak >= 10)
-        sprintf(buff, "%05.3f", normalize_max_peak);
+	memset(&buff[0], 0, sizeof(buff));
+	if (normalize_max_peak >= 100)
+		sprintf(buff, "%05.2f", normalize_max_peak);
+	else if (normalize_max_peak >= 10)
+		sprintf(buff, "%05.3f", normalize_max_peak);
 	else
-        sprintf(buff, "%05.4f", normalize_max_peak);
+		sprintf(buff, "%05.4f", normalize_max_peak);
 
 	// Setup current column, Write string to screen,
-    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+	WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-    //-------------------------------------------------------------
-    // T DATA
+	//-------------------------------------------------------------
+	// T DATA
 	normalize_max_peak = (float)g_summaryList.cachedEntry.channelSummary.t.peak / (float)div;
 
 	if (g_summaryList.cachedEntry.mode == MANUAL_CAL_MODE)
@@ -586,20 +584,20 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		normalize_max_peak *= (float)METRIC;
 	}
 
-    memset(&buff[0], 0, sizeof(buff));
-    if (normalize_max_peak >= 100)
-        sprintf(buff, "%05.2f", normalize_max_peak);
-    else if (normalize_max_peak >= 10)
-        sprintf(buff, "%05.3f", normalize_max_peak);
+	memset(&buff[0], 0, sizeof(buff));
+	if (normalize_max_peak >= 100)
+		sprintf(buff, "%05.2f", normalize_max_peak);
+	else if (normalize_max_peak >= 10)
+		sprintf(buff, "%05.3f", normalize_max_peak);
 	else
-        sprintf(buff, "%05.4f", normalize_max_peak);
+		sprintf(buff, "%05.4f", normalize_max_peak);
 
 	// Setup current column, Write string to screen,
-    wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 6);
-    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 6);
+	WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-    //-------------------------------------------------------------
-    // V DATA
+	//-------------------------------------------------------------
+	// V DATA
 	normalize_max_peak = (float)g_summaryList.cachedEntry.channelSummary.v.peak / (float)div;
 
 	if (g_summaryList.cachedEntry.mode == MANUAL_CAL_MODE)
@@ -613,21 +611,21 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		normalize_max_peak *= (float)METRIC;
 	}
 
-    memset(&buff[0], 0, sizeof(buff));
-    if (normalize_max_peak >= 100)
-        sprintf(buff, "%05.2f", normalize_max_peak);
-    else if (normalize_max_peak >= 10)
-        sprintf(buff, "%05.3f", normalize_max_peak);
+	memset(&buff[0], 0, sizeof(buff));
+	if (normalize_max_peak >= 100)
+		sprintf(buff, "%05.2f", normalize_max_peak);
+	else if (normalize_max_peak >= 10)
+		sprintf(buff, "%05.3f", normalize_max_peak);
 	else
-        sprintf(buff, "%05.4f", normalize_max_peak);
+		sprintf(buff, "%05.4f", normalize_max_peak);
 
 	// Setup current column, Write string to screen, Advance to next row
-    wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 6);
-    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-    wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+	wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 6);
+	WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-    //-------------------------------------------------------------
-    // R FREQ, T FREQ, V FREQ
+	//-------------------------------------------------------------
+	// R FREQ, T FREQ, V FREQ
 	memset(&buff[0], 0, sizeof(buff));
 	if ((g_summaryList.cachedEntry.mode == BARGRAPH_MODE) ||
 	((g_summaryList.cachedEntry.mode == COMBO_MODE) && (g_summaryList.cachedEntry.subMode == BARGRAPH_MODE)))
@@ -646,13 +644,13 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 
 	// Setup current column, Write string to screen,
-    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-    wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+	WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
 	if (g_displayAlternateResultState == VECTOR_SUM_RESULTS)
 	{
-	    memset(&buff[0], 0, sizeof(buff));
+		memset(&buff[0], 0, sizeof(buff));
 		memset(&displayFormat[0], 0, sizeof(displayFormat));
 
 		tempVS = sqrtf((float)g_summaryList.cachedEntry.vectorSumPeak) / (float)div;
@@ -672,7 +670,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 
 		sprintf(buff,"VS %.2f %s", tempVS, displayFormat);
-	    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+		wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
 		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
@@ -774,36 +772,36 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else // g_displayAlternateResultState == DEFAULT_RESULTS
 	{
-	    //-------------------------------------------------------------
-	    // AIR
-	    memset(&buff[0], 0, sizeof(buff));
-	    sprintf(buff, "%s", getLangText(AIR_TEXT));
-	    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-	    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		//-------------------------------------------------------------
+		// AIR
+		memset(&buff[0], 0, sizeof(buff));
+		sprintf(buff, "%s", getLangText(AIR_TEXT));
+		wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-	    //-------------------------------------------------------------
-	    // Air
-	    memset(&buff[0], 0, sizeof(buff));
+		//-------------------------------------------------------------
+		// Air
+		memset(&buff[0], 0, sizeof(buff));
 
 		// Display based on what the units current setting
 		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
-		    sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+			sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}
 		else // Report Air in DB
 		{
-		    sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+			sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
 		}
 
-	    adjust = (uint8)strlen(buff);
-	    if (adjust > 8)
-	    	adjust = 1;
-	    else
-	    	adjust = 0;
+		adjust = (uint8)strlen(buff);
+		if (adjust > 8)
+			adjust = 1;
+		else
+			adjust = 0;
 
 		// Setup current column, Write string to screen,
-	    wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 4);
-	    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 4);
+		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 		//-------------------------------------------------------------
 		// A FREQ
@@ -819,8 +817,8 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 
 		// Setup current column, Write string to screen,
-	    wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 6 - adjust);
-	    WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		wnd_layout_ptr->curr_col = (uint16)(wnd_layout_ptr->next_col + 6 - adjust);
+		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	}
 
 	if (g_summaryList.cachedEntry.mode == MANUAL_CAL_MODE)

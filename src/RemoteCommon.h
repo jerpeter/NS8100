@@ -296,7 +296,7 @@ typedef struct
 	uint8* startDataPtr;
 	uint8* dataPtr;
 	uint8* endDataPtr;
-	uint8  errorStatus;
+	uint8 errorStatus;
 	uint8 downloadMethod;
 	uint8 compressedEventDataFilePresent;
 	uint8 	xmitBuffer[ CMD_BUFFER_SIZE ];
@@ -423,8 +423,8 @@ typedef struct
 #if 1 // fix_ns8100 - Size changed to uint32, however this field isn't needed
 	uint16 	TimerModeActiveMinutes;
 #endif
-	DATE_TIME_STRUCT  timer_start;
-	DATE_TIME_STRUCT  timer_stop;
+	DATE_TIME_STRUCT timer_start;
+	DATE_TIME_STRUCT timer_stop;
 } TIMER_CFG;
 #pragma pack()
 

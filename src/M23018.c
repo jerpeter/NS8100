@@ -1,10 +1,3 @@
-/********************************************************
- Name          : M23018.c
- Author        : Joseph Getz
- Copyright     : Your copyright notice
- Description   : MCP23018 drivers
- **********************************************************/
-
 ///----------------------------------------------------------------------------
 ///	Includes
 ///----------------------------------------------------------------------------
@@ -17,7 +10,7 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define  TWI_DATA_LENGTH        (sizeof(s_twiData)/sizeof(U8))
+#define	TWI_DATA_LENGTH		(sizeof(s_twiData)/sizeof(U8))
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -57,14 +50,14 @@ void WriteMcp23018(unsigned char chip, unsigned char address, unsigned char data
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void WriteMcp23018Bytes(unsigned char chip, unsigned char address,  unsigned char *data, unsigned char length)
+void WriteMcp23018Bytes(unsigned char chip, unsigned char address, unsigned char *data, unsigned char length)
 {
-    unsigned char count;
+	unsigned char count;
 
 	//Set output latch a with 00
 	for (count=0;count<=length;count++)
 	{
-	    s_twiData[count] = data[count];
+		s_twiData[count] = data[count];
 	}
 
 	// TWI chip address to communicate with
@@ -118,36 +111,36 @@ unsigned char ReadMcp23018(unsigned char chip, unsigned char address)
 void InitMcp23018(unsigned char chip)
 {
 	// I/O Config
-    WriteMcp23018(chip, IOCONA, 0x20);
-    WriteMcp23018(chip, IOCONB, 0x20);
+	WriteMcp23018(chip, IOCONA, 0x20);
+	WriteMcp23018(chip, IOCONB, 0x20);
 
 	// Port Value
 	WriteMcp23018(chip, GPIOA, 0x00);
-    WriteMcp23018(chip, GPIOB, 0x00);
+	WriteMcp23018(chip, GPIOB, 0x00);
 
 	// Port Direction
-    WriteMcp23018(chip, IODIRA, 0x0F);
-    WriteMcp23018(chip, IODIRB, 0xFF);
+	WriteMcp23018(chip, IODIRA, 0x0F);
+	WriteMcp23018(chip, IODIRB, 0xFF);
 
 	// Pullup (Open drain outputs only, without pullups you can't drive)
-    WriteMcp23018(chip, GPPUA, 0xFF);
-    WriteMcp23018(chip, GPPUB, 0xFF);
+	WriteMcp23018(chip, GPPUA, 0xFF);
+	WriteMcp23018(chip, GPPUB, 0xFF);
 
 	// Polarity
-    WriteMcp23018(chip, IOPOLA, 0x0E);
-    WriteMcp23018(chip, IOPOLB, 0xFF);
+	WriteMcp23018(chip, IOPOLA, 0x0E);
+	WriteMcp23018(chip, IOPOLB, 0xFF);
 
 	// Default Value
-    WriteMcp23018(chip, DEFVALA, 0x00);
-    WriteMcp23018(chip, DEFVALB, 0x00);
+	WriteMcp23018(chip, DEFVALA, 0x00);
+	WriteMcp23018(chip, DEFVALB, 0x00);
 
 	// Interrupt on Change Compare
 	WriteMcp23018(chip, INTCONA, 0x00);
 	WriteMcp23018(chip, INTCONB, 0x00);
 
 	// Interrupt Enable on Change
-    WriteMcp23018(chip, GPINTENA, 0x0F);
-    WriteMcp23018(chip, GPINTENB, 0xFF);
+	WriteMcp23018(chip, GPINTENA, 0x0F);
+	WriteMcp23018(chip, GPINTENB, 0xFF);
 
 	// Clear any interrupt generation
 	ReadMcp23018(IO_ADDRESS_KPD, INTFA);

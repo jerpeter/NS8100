@@ -270,48 +270,48 @@ void ProcessInputMsg(INPUT_MSG_STRUCT mn_msg)
 ///----------------------------------------------------------------------------
 uint16 SendInputMsg(INPUT_MSG_STRUCT *msg_ptr)
 {
-    uint16 data_index;
+	uint16 data_index;
 
-    if (s_inputWritePtr != (g_input_buffer + (INPUT_BUFFER_SIZE - 1)))
-    {
-        if ((s_inputWritePtr + 1) != s_inputReadPtr)
-        {
-            s_inputWritePtr->cmd = msg_ptr->cmd;
-            s_inputWritePtr->length = msg_ptr->length;
+	if (s_inputWritePtr != (g_input_buffer + (INPUT_BUFFER_SIZE - 1)))
+	{
+		if ((s_inputWritePtr + 1) != s_inputReadPtr)
+		{
+			s_inputWritePtr->cmd = msg_ptr->cmd;
+			s_inputWritePtr->length = msg_ptr->length;
 
-            for (data_index = 0; data_index < msg_ptr->length; data_index++)
-            {
-                s_inputWritePtr->data[data_index] = msg_ptr->data[data_index];
-            }
+			for (data_index = 0; data_index < msg_ptr->length; data_index++)
+			{
+				s_inputWritePtr->data[data_index] = msg_ptr->data[data_index];
+			}
 
-            s_inputWritePtr++;
-        }
-        else
-        {
-            return (FAILED);
-        }
-    }
-    else
-    {
-        if (s_inputReadPtr != g_input_buffer)
-        {
-            s_inputWritePtr->cmd = msg_ptr->cmd;
-            s_inputWritePtr->length = msg_ptr->length;
+			s_inputWritePtr++;
+		}
+		else
+		{
+			return (FAILED);
+		}
+	}
+	else
+	{
+		if (s_inputReadPtr != g_input_buffer)
+		{
+			s_inputWritePtr->cmd = msg_ptr->cmd;
+			s_inputWritePtr->length = msg_ptr->length;
 
-            for (data_index = 0; data_index < msg_ptr->length; data_index++)
-            {
-                s_inputWritePtr->data[data_index] = msg_ptr->data[data_index];
-            }
+			for (data_index = 0; data_index < msg_ptr->length; data_index++)
+			{
+				s_inputWritePtr->data[data_index] = msg_ptr->data[data_index];
+			}
 
-            s_inputWritePtr = g_input_buffer;
-        }
-        else
-        {
-            return (FAILED);
-        }
-    }
+			s_inputWritePtr = g_input_buffer;
+		}
+		else
+		{
+			return (FAILED);
+		}
+	}
 
-    return (PASSED);
+	return (PASSED);
 }
 
 ///----------------------------------------------------------------------------
@@ -348,14 +348,13 @@ void SpinBar(void)
 ///----------------------------------------------------------------------------
 uint16 SwapInt(uint16 Scr)
 {
-  uint16 swap1;
-  uint16 swap2;
+	uint16 swap1;
+	uint16 swap2;
 
-  swap1 = (uint16)((Scr >> 8) & 0x00ff);
-  swap2 = (uint16)((Scr << 8) & 0xff00);
+	swap1 = (uint16)((Scr >> 8) & 0x00ff);
+	swap2 = (uint16)((Scr << 8) & 0xff00);
 
-  return ((uint16)(swap1 | swap2));
-
+	return ((uint16)(swap1 | swap2));
 }
 
 ///----------------------------------------------------------------------------
@@ -365,7 +364,7 @@ float HexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 {
 	float tempValue;
 
-	tempValue =  HexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint) * (float)DB_CONVERSION_VALUE;
+	tempValue = HexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint) * (float)DB_CONVERSION_VALUE;
 
 	if (tempValue > 0)
 	{
@@ -410,7 +409,7 @@ float HexToPsi(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint
 {
 	float psi;
 
-	psi =  HexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint);
+	psi = HexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint);
 
 	psi = (float)((psi * (float)14.7)/(float)1013.25);
 

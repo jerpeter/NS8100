@@ -193,7 +193,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		// which is determined by multiplying adjustment by g_keypadNumberSpeed.
 		g_kpadKeyRepeatCount++;
 
-		if (g_kpadKeyRepeatCount < 10)      { g_keypadNumberSpeed = 1; }
+		if (g_kpadKeyRepeatCount < 10)		{ g_keypadNumberSpeed = 1; }
 		else if (g_kpadKeyRepeatCount < 20) { g_keypadNumberSpeed = 10; }
 		else if (g_kpadKeyRepeatCount < 30) { g_keypadNumberSpeed = 50; }
 		else if (g_kpadKeyRepeatCount < 40) { g_keypadNumberSpeed = 100; }

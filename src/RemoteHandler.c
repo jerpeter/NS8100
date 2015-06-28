@@ -297,7 +297,7 @@ void ProcessCraftData()
 		
 		*g_isrMessageBufferPtr->readPtr = 0x00;
 		g_isrMessageBufferPtr->readPtr++;
-		if (g_isrMessageBufferPtr->readPtr >=  (g_isrMessageBufferPtr->msg + CMD_BUFFER_SIZE))
+		if (g_isrMessageBufferPtr->readPtr >= (g_isrMessageBufferPtr->msg + CMD_BUFFER_SIZE))
 		{			
 			g_isrMessageBufferPtr->readPtr = g_isrMessageBufferPtr->msg;
 		}

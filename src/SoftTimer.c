@@ -163,7 +163,7 @@ void CheckSoftTimers(void)
 			{
 				// Did the tick count loop around the MAX? Or did we go past the time?
 				if ((g_rtcSoftTimerTickCount < g_rtcTimerBank[softTimerIndex].tickStart) ||
-				   (g_rtcSoftTimerTickCount >= g_rtcTimerBank[softTimerIndex].timePeriod))
+					(g_rtcSoftTimerTickCount >= g_rtcTimerBank[softTimerIndex].timePeriod))
 				{
 					// Once the timer has activated, clear the timer state and other values
 					g_rtcTimerBank[softTimerIndex].state = TIMER_UNASSIGNED;

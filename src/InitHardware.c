@@ -17,8 +17,6 @@
 #include "print_funcs.h"
 #include "lcd.h"
 #include <stdio.h>
-
-// Added in NS7100 includes
 #include <stdlib.h>
 #include <string.h>
 #include "Typedefs.h"
@@ -74,81 +72,81 @@
 #define AD_CTL_SPI_MAX_SPEED		4000000 // Speed should be safe up to 10 MHz, needs to be tested
 
 // Chip select defines
-#define NRD_SETUP     30 //10
-#define NRD_PULSE     30 //135
-#define NRD_CYCLE     75 //180
+#define NRD_SETUP	30 //10
+#define NRD_PULSE	30 //135
+#define NRD_CYCLE	75 //180
 
-#define NCS_RD_SETUP  0 //10
-#define NCS_RD_PULSE  55 //250
+#define NCS_RD_SETUP	0 //10
+#define NCS_RD_PULSE	55 //250
 
-#define NWE_SETUP     0 //20
-#define NWE_PULSE     40 //110
-#define NWE_CYCLE     55 //150
+#define NWE_SETUP	0 //20
+#define NWE_PULSE	40 //110
+#define NWE_CYCLE	55 //150
 
-#define NCS_WR_SETUP  0 //20
-#define NCS_WR_PULSE  45 //230
+#define NCS_WR_SETUP	0 //20
+#define NCS_WR_PULSE	45 //230
 
-#define EXT_SM_SIZE             16
-#define NCS_CONTROLLED_READ     FALSE
-#define NCS_CONTROLLED_WRITE    FALSE
-#define NWAIT_MODE              0
-#define PAGE_MODE               0
-#define PAGE_SIZE               0
-#define SMC_8_BIT_CHIPS         FALSE
-#define SMC_DBW                 16
-#define TDF_CYCLES              0
-#define TDF_OPTIM               0
+#define EXT_SM_SIZE				16
+#define NCS_CONTROLLED_READ		FALSE
+#define NCS_CONTROLLED_WRITE	FALSE
+#define NWAIT_MODE				0
+#define PAGE_MODE				0
+#define PAGE_SIZE				0
+#define SMC_8_BIT_CHIPS			FALSE
+#define SMC_DBW					16
+#define TDF_CYCLES				0
+#define TDF_OPTIM				0
 
 // Configure the SM Controller with SM setup and timing information for all chip select
 #define SMC_CS_SETUP(ncs) { \
-	U32 nwe_setup    = ((NWE_SETUP    * hsb_mhz_up + 999) / 1000); \
+	U32 nwe_setup = ((NWE_SETUP * hsb_mhz_up + 999) / 1000); \
 	U32 ncs_wr_setup = ((NCS_WR_SETUP * hsb_mhz_up + 999) / 1000); \
-	U32 nrd_setup    = ((NRD_SETUP    * hsb_mhz_up + 999) / 1000); \
+	U32 nrd_setup = ((NRD_SETUP * hsb_mhz_up + 999) / 1000); \
 	U32 ncs_rd_setup = ((NCS_RD_SETUP * hsb_mhz_up + 999) / 1000); \
-	U32 nwe_pulse    = ((NWE_PULSE    * hsb_mhz_up + 999) / 1000); \
+	U32 nwe_pulse = ((NWE_PULSE * hsb_mhz_up + 999) / 1000); \
 	U32 ncs_wr_pulse = ((NCS_WR_PULSE * hsb_mhz_up + 999) / 1000); \
-	U32 nrd_pulse    = ((NRD_PULSE    * hsb_mhz_up + 999) / 1000); \
+	U32 nrd_pulse = ((NRD_PULSE * hsb_mhz_up + 999) / 1000); \
 	U32 ncs_rd_pulse = ((NCS_RD_PULSE * hsb_mhz_up + 999) / 1000); \
-	U32 nwe_cycle    = ((NWE_CYCLE    * hsb_mhz_up + 999) / 1000); \
-	U32 nrd_cycle    = ((NRD_CYCLE    * hsb_mhz_up + 999) / 1000); \
+	U32 nwe_cycle = ((NWE_CYCLE * hsb_mhz_up + 999) / 1000); \
+	U32 nrd_cycle = ((NRD_CYCLE * hsb_mhz_up + 999) / 1000); \
 	\
-	/* Some coherence checks...                             */     \
-	/* Ensures CS is active during Rd or Wr                 */     \
-	if( ncs_rd_setup + ncs_rd_pulse < nrd_setup + nrd_pulse )      \
-	ncs_rd_pulse = nrd_setup + nrd_pulse - ncs_rd_setup;         \
-	if( ncs_wr_setup + ncs_wr_pulse < nwe_setup + nwe_pulse )      \
-	ncs_wr_pulse = nwe_setup + nwe_pulse - ncs_wr_setup;         \
+	/* Some coherence checks... */ \
+	/* Ensures CS is active during Rd or Wr */ \
+	if( ncs_rd_setup + ncs_rd_pulse < nrd_setup + nrd_pulse ) \
+	ncs_rd_pulse = nrd_setup + nrd_pulse - ncs_rd_setup; \
+	if( ncs_wr_setup + ncs_wr_pulse < nwe_setup + nwe_pulse ) \
+	ncs_wr_pulse = nwe_setup + nwe_pulse - ncs_wr_setup; \
 	\
-	/* ncs_hold = n_cycle - ncs_setup - ncs_pulse           */     \
-	/* n_hold   = n_cycle - n_setup - n_pulse               */     \
-	/*                                                      */     \
-	/* All holds parameters must be positive or null, so:   */     \
-	/* nwe_cycle shall be >= ncs_wr_setup + ncs_wr_pulse    */     \
-	if( nwe_cycle < ncs_wr_setup + ncs_wr_pulse )                  \
-	nwe_cycle = ncs_wr_setup + ncs_wr_pulse;                     \
+	/* ncs_hold = n_cycle - ncs_setup - ncs_pulse */ \
+	/* n_hold = n_cycle - n_setup - n_pulse */ \
+	/* */ \
+	/* All holds parameters must be positive or null, so: */ \
+	/* nwe_cycle shall be >= ncs_wr_setup + ncs_wr_pulse */ \
+	if( nwe_cycle < ncs_wr_setup + ncs_wr_pulse ) \
+	nwe_cycle = ncs_wr_setup + ncs_wr_pulse; \
 	\
-	/* nwe_cycle shall be >= nwe_setup + nwe_pulse          */     \
-	if( nwe_cycle < nwe_setup + nwe_pulse )                        \
-	nwe_cycle = nwe_setup + nwe_pulse;                           \
+	/* nwe_cycle shall be >= nwe_setup + nwe_pulse */ \
+	if( nwe_cycle < nwe_setup + nwe_pulse ) \
+	nwe_cycle = nwe_setup + nwe_pulse; \
 	\
-	/* nrd_cycle shall be >= ncs_rd_setup + ncs_rd_pulse    */     \
-	if( nrd_cycle < ncs_rd_setup + ncs_rd_pulse )                  \
-	nrd_cycle = ncs_rd_setup + ncs_rd_pulse;                     \
+	/* nrd_cycle shall be >= ncs_rd_setup + ncs_rd_pulse */ \
+	if( nrd_cycle < ncs_rd_setup + ncs_rd_pulse ) \
+	nrd_cycle = ncs_rd_setup + ncs_rd_pulse; \
 	\
-	/* nrd_cycle shall be >= nrd_setup + nrd_pulse          */     \
-	if( nrd_cycle < nrd_setup + nrd_pulse )                        \
-	nrd_cycle = nrd_setup + nrd_pulse;                           \
+	/* nrd_cycle shall be >= nrd_setup + nrd_pulse */ \
+	if( nrd_cycle < nrd_setup + nrd_pulse ) \
+	nrd_cycle = nrd_setup + nrd_pulse; \
 	\
-	AVR32_SMC.cs[ncs].setup = (nwe_setup    << AVR32_SMC_SETUP0_NWE_SETUP_OFFSET) | \
+	AVR32_SMC.cs[ncs].setup = (nwe_setup << AVR32_SMC_SETUP0_NWE_SETUP_OFFSET) | \
 	(ncs_wr_setup << AVR32_SMC_SETUP0_NCS_WR_SETUP_OFFSET) | \
-	(nrd_setup    << AVR32_SMC_SETUP0_NRD_SETUP_OFFSET) | \
+	(nrd_setup << AVR32_SMC_SETUP0_NRD_SETUP_OFFSET) | \
 	(ncs_rd_setup << AVR32_SMC_SETUP0_NCS_RD_SETUP_OFFSET); \
-	AVR32_SMC.cs[ncs].pulse = (nwe_pulse    << AVR32_SMC_PULSE0_NWE_PULSE_OFFSET) | \
+	AVR32_SMC.cs[ncs].pulse = (nwe_pulse << AVR32_SMC_PULSE0_NWE_PULSE_OFFSET) | \
 	(ncs_wr_pulse << AVR32_SMC_PULSE0_NCS_WR_PULSE_OFFSET) | \
-	(nrd_pulse    << AVR32_SMC_PULSE0_NRD_PULSE_OFFSET) | \
+	(nrd_pulse << AVR32_SMC_PULSE0_NRD_PULSE_OFFSET) | \
 	(ncs_rd_pulse << AVR32_SMC_PULSE0_NCS_RD_PULSE_OFFSET); \
-	AVR32_SMC.cs[ncs].cycle = (nwe_cycle    << AVR32_SMC_CYCLE0_NWE_CYCLE_OFFSET) | \
-	(nrd_cycle    << AVR32_SMC_CYCLE0_NRD_CYCLE_OFFSET); \
+	AVR32_SMC.cs[ncs].cycle = (nwe_cycle << AVR32_SMC_CYCLE0_NWE_CYCLE_OFFSET) | \
+	(nrd_cycle << AVR32_SMC_CYCLE0_NRD_CYCLE_OFFSET); \
 	AVR32_SMC.cs[ncs].mode = (((NCS_CONTROLLED_READ) ? AVR32_SMC_MODE0_READ_MODE_NCS_CONTROLLED : \
 	AVR32_SMC_MODE0_READ_MODE_NRD_CONTROLLED) << AVR32_SMC_MODE0_READ_MODE_OFFSET) | \
 	(((NCS_CONTROLLED_WRITE) ? AVR32_SMC_MODE0_WRITE_MODE_NCS_CONTROLLED : \
@@ -156,7 +154,7 @@
 	(NWAIT_MODE << AVR32_SMC_MODE0_EXNW_MODE_OFFSET) | \
 	(((SMC_8_BIT_CHIPS) ? AVR32_SMC_MODE0_BAT_BYTE_WRITE : \
 	AVR32_SMC_MODE0_BAT_BYTE_SELECT) << AVR32_SMC_MODE0_BAT_OFFSET) | \
-	(((SMC_DBW <= 8 ) ? AVR32_SMC_MODE0_DBW_8_BITS  : \
+	(((SMC_DBW <= 8 ) ? AVR32_SMC_MODE0_DBW_8_BITS : \
 	(SMC_DBW <= 16) ? AVR32_SMC_MODE0_DBW_16_BITS : \
 	AVR32_SMC_MODE0_DBW_32_BITS) << AVR32_SMC_MODE0_DBW_OFFSET) | \
 	(TDF_CYCLES << AVR32_SMC_MODE0_TDF_CYCLES_OFFSET) | \
@@ -166,69 +164,69 @@
 	g_smc_tab_cs_size[ncs] = EXT_SM_SIZE; \
 }
 
-#define NRD_SETUP_SPECIAL     10 //10
-#define NRD_PULSE_SPECIAL     250 //135 //135
-#define NRD_CYCLE_SPECIAL     180 //180
+#define NRD_SETUP_SPECIAL	10 //10
+#define NRD_PULSE_SPECIAL	250 //135 //135
+#define NRD_CYCLE_SPECIAL	180 //180
 
-#define NCS_RD_SETUP_SPECIAL  35 //10
-#define NCS_RD_PULSE_SPECIAL  250 //150 //250
+#define NCS_RD_SETUP_SPECIAL	35 //10
+#define NCS_RD_PULSE_SPECIAL	250 //150 //250
 
-#define NWE_SETUP_SPECIAL     20 //20
-#define NWE_PULSE_SPECIAL     110 //110
-#define NWE_CYCLE_SPECIAL     165 //150
+#define NWE_SETUP_SPECIAL	20 //20
+#define NWE_PULSE_SPECIAL	110 //110
+#define NWE_CYCLE_SPECIAL	165 //150
 
-#define NCS_WR_SETUP_SPECIAL  35 //20
-#define NCS_WR_PULSE_SPECIAL  230 //150 //230
+#define NCS_WR_SETUP_SPECIAL	35 //20
+#define NCS_WR_PULSE_SPECIAL	230 //150 //230
 
 #define SMC_CS_SETUP_SPECIAL(ncs) { \
-	U32 nwe_setup    = ((NWE_SETUP_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+	U32 nwe_setup = ((NWE_SETUP_SPECIAL * hsb_mhz_up + 999) / 1000); \
 	U32 ncs_wr_setup = ((NCS_WR_SETUP_SPECIAL * hsb_mhz_up + 999) / 1000); \
-	U32 nrd_setup    = ((NRD_SETUP_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+	U32 nrd_setup = ((NRD_SETUP_SPECIAL * hsb_mhz_up + 999) / 1000); \
 	U32 ncs_rd_setup = ((NCS_RD_SETUP_SPECIAL * hsb_mhz_up + 999) / 1000); \
-	U32 nwe_pulse    = ((NWE_PULSE_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+	U32 nwe_pulse = ((NWE_PULSE_SPECIAL * hsb_mhz_up + 999) / 1000); \
 	U32 ncs_wr_pulse = ((NCS_WR_PULSE_SPECIAL * hsb_mhz_up + 999) / 1000); \
-	U32 nrd_pulse    = ((NRD_PULSE_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+	U32 nrd_pulse = ((NRD_PULSE_SPECIAL * hsb_mhz_up + 999) / 1000); \
 	U32 ncs_rd_pulse = ((NCS_RD_PULSE_SPECIAL * hsb_mhz_up + 999) / 1000); \
-	U32 nwe_cycle    = ((NWE_CYCLE_SPECIAL    * hsb_mhz_up + 999) / 1000); \
-	U32 nrd_cycle    = ((NRD_CYCLE_SPECIAL    * hsb_mhz_up + 999) / 1000); \
+	U32 nwe_cycle = ((NWE_CYCLE_SPECIAL * hsb_mhz_up + 999) / 1000); \
+	U32 nrd_cycle = ((NRD_CYCLE_SPECIAL * hsb_mhz_up + 999) / 1000); \
 	\
-	/* Some coherence checks...                             */     \
-	/* Ensures CS is active during Rd or Wr                 */     \
-	if( ncs_rd_setup + ncs_rd_pulse < nrd_setup + nrd_pulse )      \
-	ncs_rd_pulse = nrd_setup + nrd_pulse - ncs_rd_setup;         \
-	if( ncs_wr_setup + ncs_wr_pulse < nwe_setup + nwe_pulse )      \
-	ncs_wr_pulse = nwe_setup + nwe_pulse - ncs_wr_setup;         \
+	/* Some coherence checks... */ \
+	/* Ensures CS is active during Rd or Wr */ \
+	if( ncs_rd_setup + ncs_rd_pulse < nrd_setup + nrd_pulse ) \
+	ncs_rd_pulse = nrd_setup + nrd_pulse - ncs_rd_setup; \
+	if( ncs_wr_setup + ncs_wr_pulse < nwe_setup + nwe_pulse ) \
+	ncs_wr_pulse = nwe_setup + nwe_pulse - ncs_wr_setup; \
 	\
-	/* ncs_hold = n_cycle - ncs_setup - ncs_pulse           */     \
-	/* n_hold   = n_cycle - n_setup - n_pulse               */     \
-	/*                                                      */     \
-	/* All holds parameters must be positive or null, so:   */     \
-	/* nwe_cycle shall be >= ncs_wr_setup + ncs_wr_pulse    */     \
-	if( nwe_cycle < ncs_wr_setup + ncs_wr_pulse )                  \
-	nwe_cycle = ncs_wr_setup + ncs_wr_pulse;                     \
+	/* ncs_hold = n_cycle - ncs_setup - ncs_pulse */ \
+	/* n_hold = n_cycle - n_setup - n_pulse */ \
+	/* */ \
+	/* All holds parameters must be positive or null, so: */ \
+	/* nwe_cycle shall be >= ncs_wr_setup + ncs_wr_pulse */ \
+	if( nwe_cycle < ncs_wr_setup + ncs_wr_pulse ) \
+	nwe_cycle = ncs_wr_setup + ncs_wr_pulse; \
 	\
-	/* nwe_cycle shall be >= nwe_setup + nwe_pulse          */     \
-	if( nwe_cycle < nwe_setup + nwe_pulse )                        \
-	nwe_cycle = nwe_setup + nwe_pulse;                           \
+	/* nwe_cycle shall be >= nwe_setup + nwe_pulse */ \
+	if( nwe_cycle < nwe_setup + nwe_pulse ) \
+	nwe_cycle = nwe_setup + nwe_pulse; \
 	\
-	/* nrd_cycle shall be >= ncs_rd_setup + ncs_rd_pulse    */     \
-	if( nrd_cycle < ncs_rd_setup + ncs_rd_pulse )                  \
-	nrd_cycle = ncs_rd_setup + ncs_rd_pulse;                     \
+	/* nrd_cycle shall be >= ncs_rd_setup + ncs_rd_pulse */ \
+	if( nrd_cycle < ncs_rd_setup + ncs_rd_pulse ) \
+	nrd_cycle = ncs_rd_setup + ncs_rd_pulse; \
 	\
-	/* nrd_cycle shall be >= nrd_setup + nrd_pulse          */     \
-	if( nrd_cycle < nrd_setup + nrd_pulse )                        \
-	nrd_cycle = nrd_setup + nrd_pulse;                           \
+	/* nrd_cycle shall be >= nrd_setup + nrd_pulse */ \
+	if( nrd_cycle < nrd_setup + nrd_pulse ) \
+	nrd_cycle = nrd_setup + nrd_pulse; \
 	\
-	AVR32_SMC.cs[ncs].setup = (nwe_setup    << AVR32_SMC_SETUP0_NWE_SETUP_OFFSET) | \
+	AVR32_SMC.cs[ncs].setup = (nwe_setup << AVR32_SMC_SETUP0_NWE_SETUP_OFFSET) | \
 	(ncs_wr_setup << AVR32_SMC_SETUP0_NCS_WR_SETUP_OFFSET) | \
-	(nrd_setup    << AVR32_SMC_SETUP0_NRD_SETUP_OFFSET) | \
+	(nrd_setup << AVR32_SMC_SETUP0_NRD_SETUP_OFFSET) | \
 	(ncs_rd_setup << AVR32_SMC_SETUP0_NCS_RD_SETUP_OFFSET); \
-	AVR32_SMC.cs[ncs].pulse = (nwe_pulse    << AVR32_SMC_PULSE0_NWE_PULSE_OFFSET) | \
+	AVR32_SMC.cs[ncs].pulse = (nwe_pulse << AVR32_SMC_PULSE0_NWE_PULSE_OFFSET) | \
 	(ncs_wr_pulse << AVR32_SMC_PULSE0_NCS_WR_PULSE_OFFSET) | \
-	(nrd_pulse    << AVR32_SMC_PULSE0_NRD_PULSE_OFFSET) | \
+	(nrd_pulse << AVR32_SMC_PULSE0_NRD_PULSE_OFFSET) | \
 	(ncs_rd_pulse << AVR32_SMC_PULSE0_NCS_RD_PULSE_OFFSET); \
-	AVR32_SMC.cs[ncs].cycle = (nwe_cycle    << AVR32_SMC_CYCLE0_NWE_CYCLE_OFFSET) | \
-	(nrd_cycle    << AVR32_SMC_CYCLE0_NRD_CYCLE_OFFSET); \
+	AVR32_SMC.cs[ncs].cycle = (nwe_cycle << AVR32_SMC_CYCLE0_NWE_CYCLE_OFFSET) | \
+	(nrd_cycle << AVR32_SMC_CYCLE0_NRD_CYCLE_OFFSET); \
 	AVR32_SMC.cs[ncs].mode = (((NCS_CONTROLLED_READ) ? AVR32_SMC_MODE0_READ_MODE_NCS_CONTROLLED : \
 	AVR32_SMC_MODE0_READ_MODE_NRD_CONTROLLED) << AVR32_SMC_MODE0_READ_MODE_OFFSET) | \
 	(((NCS_CONTROLLED_WRITE) ? AVR32_SMC_MODE0_WRITE_MODE_NCS_CONTROLLED : \
@@ -236,7 +234,7 @@
 	(NWAIT_MODE << AVR32_SMC_MODE0_EXNW_MODE_OFFSET) | \
 	(((SMC_8_BIT_CHIPS) ? AVR32_SMC_MODE0_BAT_BYTE_WRITE : \
 	AVR32_SMC_MODE0_BAT_BYTE_SELECT) << AVR32_SMC_MODE0_BAT_OFFSET) | \
-	(((SMC_DBW <= 8 ) ? AVR32_SMC_MODE0_DBW_8_BITS  : \
+	(((SMC_DBW <= 8 ) ? AVR32_SMC_MODE0_DBW_8_BITS : \
 	(SMC_DBW <= 16) ? AVR32_SMC_MODE0_DBW_16_BITS : \
 	AVR32_SMC_MODE0_DBW_32_BITS) << AVR32_SMC_MODE0_DBW_OFFSET) | \
 	(TDF_CYCLES << AVR32_SMC_MODE0_TDF_CYCLES_OFFSET) | \
@@ -284,23 +282,23 @@ void SPI_0_Init(void)
 {
 	const gpio_map_t spi0Map =
 	{
-		{AVR32_SPI0_SCK_0_0_PIN,  AVR32_SPI0_SCK_0_0_FUNCTION },  // SPI Clock.
-		{AVR32_SPI0_MISO_0_0_PIN, AVR32_SPI0_MISO_0_0_FUNCTION},  // MISO.
-		{AVR32_SPI0_MOSI_0_0_PIN, AVR32_SPI0_MOSI_0_0_FUNCTION},  // MOSI.
-		{AVR32_SPI0_NPCS_0_0_PIN, AVR32_SPI0_NPCS_0_0_FUNCTION}   // Chip Select NPCS.
+		{AVR32_SPI0_SCK_0_0_PIN, AVR32_SPI0_SCK_0_0_FUNCTION }, // SPI Clock.
+		{AVR32_SPI0_MISO_0_0_PIN, AVR32_SPI0_MISO_0_0_FUNCTION}, // MISO.
+		{AVR32_SPI0_MOSI_0_0_PIN, AVR32_SPI0_MOSI_0_0_FUNCTION}, // MOSI.
+		{AVR32_SPI0_NPCS_0_0_PIN, AVR32_SPI0_NPCS_0_0_FUNCTION} // Chip Select NPCS.
 	};
 	
 	// SPI options.
 	spi_options_t spiOptions =
 	{
-		.reg          = 0,
-		.baudrate     = 33000000, //36000000, //33000000, // 33 MHz
-		.bits         = 16,
-		.spck_delay   = 0,
-		.trans_delay  = 0,
-		.stay_act     = 1,
-		.spi_mode     = 0,
-		.modfdis      = 1
+		.reg = 0,
+		.baudrate = 33000000, //36000000, //33000000, // 33 MHz
+		.bits = 16,
+		.spck_delay	= 0,
+		.trans_delay = 0,
+		.stay_act = 1,
+		.spi_mode = 0,
+		.modfdis = 1
 	};
 
 	// Assign I/Os to SPI.
@@ -340,12 +338,12 @@ void SPI_1_Init(void)
 	// Generic SPI options
 	spi_options_t spiOptions =
 	{
-		.bits         = 8,
-		.spck_delay   = 0,
-		.trans_delay  = 0,
-		.stay_act     = 1,
-		.spi_mode     = 0,
-		.modfdis      = 1
+		.bits = 8,
+		.spck_delay = 0,
+		.trans_delay = 0,
+		.stay_act = 1,
+		.spi_mode = 0,
+		.modfdis = 1
 	};
 
 	// Assign I/Os to SPI.

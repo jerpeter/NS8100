@@ -17,8 +17,6 @@
 #include "print_funcs.h"
 #include "lcd.h"
 #include <stdio.h>
-
-// Added in NS7100 includes
 #include <stdlib.h>
 #include <string.h>
 #include "Typedefs.h"
@@ -224,24 +222,24 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 	// Options for waveform generation.
 	tc_waveform_opt_t WAVEFORM_OPT =
 	{
-		.channel  = channel,						   // Channel selection.
-		.bswtrg   = TC_EVT_EFFECT_NOOP,                // Software trigger effect on TIOB.
-		.beevt    = TC_EVT_EFFECT_NOOP,                // External event effect on TIOB.
-		.bcpc     = TC_EVT_EFFECT_NOOP,                // RC compare effect on TIOB.
-		.bcpb     = TC_EVT_EFFECT_NOOP,                // RB compare effect on TIOB.
-		.aswtrg   = TC_EVT_EFFECT_NOOP,                // Software trigger effect on TIOA.
-		.aeevt    = TC_EVT_EFFECT_NOOP,                // External event effect on TIOA.
-		.acpc     = TC_EVT_EFFECT_NOOP,                // RC compare effect on TIOA: toggle.
-		.acpa     = TC_EVT_EFFECT_NOOP,                // RA compare effect on TIOA: toggle (other possibilities are none, set and clear).
-		.wavsel   = TC_WAVEFORM_SEL_UP_MODE_RC_TRIGGER,// Waveform selection: Up mode with automatic trigger(reset) on RC compare.
-		.enetrg   = FALSE,                             // External event trigger enable.
-		.eevt     = 0,                                 // External event selection.
-		.eevtedg  = TC_SEL_NO_EDGE,                    // External event edge selection.
-		.cpcdis   = FALSE,                             // Counter disable when RC compare.
-		.cpcstop  = FALSE,                             // Counter clock stopped with RC compare.
-		.burst    = FALSE,                             // Burst signal selection.
-		.clki     = FALSE,                             // Clock inversion.
-		.tcclks   = TC_CLOCK_SOURCE_TC2                // Internal source clock 2 - connected to PBA/2
+		.channel	= channel,								// Channel selection.
+		.bswtrg		= TC_EVT_EFFECT_NOOP,					// Software trigger effect on TIOB.
+		.beevt		= TC_EVT_EFFECT_NOOP,					// External event effect on TIOB.
+		.bcpc		= TC_EVT_EFFECT_NOOP,					// RC compare effect on TIOB.
+		.bcpb		= TC_EVT_EFFECT_NOOP,					// RB compare effect on TIOB.
+		.aswtrg		= TC_EVT_EFFECT_NOOP,					// Software trigger effect on TIOA.
+		.aeevt		= TC_EVT_EFFECT_NOOP,					// External event effect on TIOA.
+		.acpc		= TC_EVT_EFFECT_NOOP,					// RC compare effect on TIOA: toggle.
+		.acpa		= TC_EVT_EFFECT_NOOP,					// RA compare effect on TIOA: toggle (other possibilities are none, set and clear).
+		.wavsel		= TC_WAVEFORM_SEL_UP_MODE_RC_TRIGGER,	// Waveform selection: Up mode with automatic trigger(reset) on RC compare.
+		.enetrg		= FALSE,								// External event trigger enable.
+		.eevt		= 0,									// External event selection.
+		.eevtedg	= TC_SEL_NO_EDGE,						// External event edge selection.
+		.cpcdis		= FALSE,								// Counter disable when RC compare.
+		.cpcstop	= FALSE,								// Counter clock stopped with RC compare.
+		.burst		= FALSE,								// Burst signal selection.
+		.clki		= FALSE,								// Clock inversion.
+		.tcclks		= TC_CLOCK_SOURCE_TC2					// Internal source clock 2 - connected to PBA/2
 	};
 
 	// Options for interrupt
@@ -250,9 +248,9 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 		.etrgs = 0,
 		.ldrbs = 0,
 		.ldras = 0,
-		.cpcs  = 1,
-		.cpbs  = 0,
-		.cpas  = 0,
+		.cpcs = 1,
+		.cpbs = 0,
+		.cpas = 0,
 		.lovrs = 0,
 		.covfs = 0
 	};
@@ -276,13 +274,13 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 	}
 
 	// Initialize the timer/counter.
-	tc_init_waveform(tc, &WAVEFORM_OPT);         // Initialize the timer/counter waveform.
+	tc_init_waveform(tc, &WAVEFORM_OPT); // Initialize the timer/counter waveform.
 
 	// Set the compare triggers.
 	// Remember TC counter is 16-bits, so counting second is not possible.
 	// We configure it to count ms.
 	// We want: (1/(FOSC0/4)) * RC = 1000 Hz => RC = (FOSC0/4) / 1000 = 3000 to get an interrupt every 1ms
-	//tc_write_rc(tc, TC_CHANNEL_0, (FOSC0/2)/1000);  // Set RC value.
+	//tc_write_rc(tc, TC_CHANNEL_0, (FOSC0/2)/1000); // Set RC value.
 	//tc_write_rc(tc, channel, (FOSC0 / (sampleRate * 2)));
 	tc_write_rc(tc, channel, (32900000 / sampleRate));
 	

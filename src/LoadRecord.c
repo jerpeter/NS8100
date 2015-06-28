@@ -23,7 +23,7 @@
 #define LOAD_REC_WND_STARTING_COL	DEFAULT_COL_THREE
 #define LOAD_REC_WND_END_COL		DEFAULT_END_COL 
 #define LOAD_REC_WND_STARTING_ROW	DEFAULT_MENU_ROW_ONE
-#define LOAD_REC_WND_END_ROW		DEFAULT_MENU_ROW_SEVEN             
+#define LOAD_REC_WND_END_ROW		DEFAULT_MENU_ROW_SEVEN
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -54,16 +54,16 @@ void LoadRecordMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*)
 ///----------------------------------------------------------------------------
 void LoadRecordMenu(INPUT_MSG_STRUCT msg)
 { 
-    static WND_LAYOUT_STRUCT wnd_layout;
-    static MN_LAYOUT_STRUCT mn_layout;
-  
-    LoadRecordMenuProc(msg, &wnd_layout, &mn_layout);
+	static WND_LAYOUT_STRUCT wnd_layout;
+	static MN_LAYOUT_STRUCT mn_layout;
 
-    if (g_activeMenu == LOAD_REC_MENU)
-    {
-        DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
-        WriteMapToLcd(g_mmap);
-    }
+	LoadRecordMenuProc(msg, &wnd_layout, &mn_layout);
+
+	if (g_activeMenu == LOAD_REC_MENU)
+	{
+		DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
+		WriteMapToLcd(g_mmap);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -82,12 +82,12 @@ void LoadRecordMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	{
 		case (ACTIVATE_MENU_CMD):
 			wnd_layout_ptr->start_col = LOAD_REC_WND_STARTING_COL;
-			wnd_layout_ptr->end_col =   LOAD_REC_WND_END_COL;
+			wnd_layout_ptr->end_col = LOAD_REC_WND_END_COL;
 			wnd_layout_ptr->start_row = LOAD_REC_WND_STARTING_ROW;
-			wnd_layout_ptr->end_row =   LOAD_REC_WND_END_ROW;
+			wnd_layout_ptr->end_row = LOAD_REC_WND_END_ROW;
 
-			mn_layout_ptr->curr_ln =    1;
-			mn_layout_ptr->top_ln =     1; 
+			mn_layout_ptr->curr_ln = 1;
+			mn_layout_ptr->top_ln = 1;
 
 			LoadTempMenuTable(s_loadRecordMenuTable);
 
@@ -147,7 +147,7 @@ void LoadRecordMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr,
 							break;
 						case (3):
 							LoadTrigRecordDefaults(&g_triggerRecord, COMBO_MODE);
-							break;  
+							break;
 						default:
 							// Check if the first char matches a "<" for either "<EMPTY>" or "<END>"
 							if (strncmp((char*)&g_menuPtr[mn_layout_ptr->curr_ln].data[0], "<", 1) == 0)
@@ -165,7 +165,7 @@ void LoadRecordMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr,
 					UpdateModeMenuTitle(g_triggerRecord.op_mode);
 					SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 					JUMP_TO_ACTIVE_MENU();
-					break;      
+					break;
 
 				case (DELETE_KEY):
 					// Check if the current line is beyond the default entries
@@ -212,7 +212,7 @@ void LoadRecordMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr,
 					JUMP_TO_ACTIVE_MENU();
 					break;
 				default:
-				      break;
+					break;
 			}
 			break;
 

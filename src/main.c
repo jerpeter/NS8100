@@ -17,8 +17,6 @@
 #include "print_funcs.h"
 #include "lcd.h"
 #include <stdio.h>
-
-// Added in NS7100 includes
 #include <stdlib.h>
 #include <string.h>
 #include "Typedefs.h"
@@ -529,8 +527,8 @@ void init_hmatrix(void)
 {
 	union
 	{
-		unsigned long                 scfg;
-		avr32_hmatrix_scfg_t          SCFG;
+		unsigned long scfg;
+		avr32_hmatrix_scfg_t SCFG;
 	} u_avr32_hmatrix_scfg;
 
 	// For the internal-flash HMATRIX slave, use last master as default.
@@ -1005,7 +1003,7 @@ void UsbDeviceManager(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#define APPLICATION    (((void *)AVR32_EBI_CS1_ADDRESS) + 0x00700000)
+#define APPLICATION		(((void *)AVR32_EBI_CS1_ADDRESS) + 0x00700000)
 const char default_boot_name[] = {
 	"Boot.s\0"
 };
@@ -1379,7 +1377,7 @@ extern void StartExternalRtcClock(uint16 sampleRate);
 #define LAST_STATE	(MAX_STATES - 1)
 __attribute__((__interrupt__))
 void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t exception_number, uint32_t lr, uint32_t r7, uint32_t r6, uint32_t r5, uint32_t r4,
-                uint32_t r3, uint32_t r2, uint32_t r1, uint32_t r0, uint32_t sp, uint32_t sr, uint32_t pc, uint32_t stack0, uint32_t stack1, uint32_t stack2)
+				uint32_t r3, uint32_t r2, uint32_t r1, uint32_t r0, uint32_t sp, uint32_t sr, uint32_t pc, uint32_t stack0, uint32_t stack1, uint32_t stack2)
 {
 	char exceptionText[30];
 	char exceptionMessage[75];
@@ -1401,10 +1399,10 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 	//uint8 state = 0;
 	//uint8 key = KEY_NONE;
 
-    /* Adjust SP to pre-exception value.
-        * PC and SR are 4 bytes each.
-        */
-    sp += 8;
+	/* Adjust SP to pre-exception value.
+		* PC and SR are 4 bytes each.
+		*/
+	sp += 8;
 
 	testCycleCount = Get_system_register(AVR32_COUNT);
 
@@ -1786,7 +1784,7 @@ void EnableGlobalException(void)
 ///----------------------------------------------------------------------------
 int main(void)
 {
-    // Initialize the system
+	// Initialize the system
 	InternalMemoryFill();
 	InitSystemHardware_NS8100();
 	InitInterrupts_NS8100();
@@ -1802,10 +1800,10 @@ int main(void)
 	while (1)
 	{
 		// Handle system events
-	    SystemEventManager();
+		SystemEventManager();
 
 		// Handle menu events
-	    MenuEventManager();
+		MenuEventManager();
 
 		// Handle craft processing
 		CraftManager();
@@ -1824,7 +1822,7 @@ int main(void)
 
 		// Count Exec cycles
 		g_execCycles++;
-	}    
+	}
 	// End of NS8100 Main
 
 	// End of the world

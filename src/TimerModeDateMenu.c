@@ -73,17 +73,17 @@ uint8 ValidateTimerModeSettings(void);
 ///----------------------------------------------------------------------------
 void TimerModeDateMenu (INPUT_MSG_STRUCT msg)
 {
-    static WND_LAYOUT_STRUCT wnd_layout;
-    static MN_LAYOUT_STRUCT mn_layout;
-    static REC_MN_STRUCT mn_rec[6];
+	static WND_LAYOUT_STRUCT wnd_layout;
+	static MN_LAYOUT_STRUCT mn_layout;
+	static REC_MN_STRUCT mn_rec[6];
 
-    TimerModeDateMenuProc(msg, mn_rec, &wnd_layout, &mn_layout);
+	TimerModeDateMenuProc(msg, mn_rec, &wnd_layout, &mn_layout);
 
-    if (g_activeMenu == TIMER_MODE_DATE_MENU)
-    {
-        TimerModeDateMenuDisplay(mn_rec, &wnd_layout, &mn_layout);
-        WriteMapToLcd(g_mmap);
-    }
+	if (g_activeMenu == TIMER_MODE_DATE_MENU)
+	{
+		TimerModeDateMenuDisplay(mn_rec, &wnd_layout, &mn_layout);
+		WriteMapToLcd(g_mmap);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -91,32 +91,31 @@ void TimerModeDateMenu (INPUT_MSG_STRUCT msg)
 ///----------------------------------------------------------------------------
 void TimerModeDateMenuProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
-
 	INPUT_MSG_STRUCT mn_msg;
 	DATE_TIME_STRUCT time;
 	uint32 input;
 	//uint8 dayOfWeek = 0;
 
-   switch (msg.cmd)
-   {
-      case (ACTIVATE_MENU_CMD):
-            wnd_layout_ptr->start_col = TIMER_MODE_DATE_WND_STARTING_COL;
-            wnd_layout_ptr->end_col =   TIMER_MODE_DATE_WND_END_COL;
-            wnd_layout_ptr->start_row = TIMER_MODE_DATE_WND_STARTING_ROW;
-            wnd_layout_ptr->end_row =   TIMER_MODE_DATE_WND_END_ROW;
+	switch (msg.cmd)
+	{
+		case (ACTIVATE_MENU_CMD):
+			wnd_layout_ptr->start_col = TIMER_MODE_DATE_WND_STARTING_COL;
+			wnd_layout_ptr->end_col = TIMER_MODE_DATE_WND_END_COL;
+			wnd_layout_ptr->start_row = TIMER_MODE_DATE_WND_STARTING_ROW;
+			wnd_layout_ptr->end_row = TIMER_MODE_DATE_WND_END_ROW;
 
-            mn_layout_ptr->curr_ln =    0;
-            mn_layout_ptr->top_ln =     0;
-            mn_layout_ptr->sub_ln =     0;
+			mn_layout_ptr->curr_ln = 0;
+			mn_layout_ptr->top_ln = 0;
+			mn_layout_ptr->sub_ln = 0;
 
-            time = GetCurrentTime();
-            LoadTimerModeDateMnDefRec(rec_ptr, &time);
-            rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
-            break;
+			time = GetCurrentTime();
+			LoadTimerModeDateMnDefRec(rec_ptr, &time);
+			rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
+			break;
 
-      case (KEYPRESS_MENU_CMD):
+		case (KEYPRESS_MENU_CMD):
 
-            input = msg.data[0];
+			input = msg.data[0];
 			switch (input)
 			{
 				case (ENTER_KEY):
@@ -132,41 +131,40 @@ void TimerModeDateMenuProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAY
 					SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 					JUMP_TO_ACTIVE_MENU();
 					break;
-               case (DOWN_ARROW_KEY):
-                     if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
-                     {
-                        TimerModeDateMenuDvScroll(DOWN, &rec_ptr[mn_layout_ptr->curr_ln]);
-                     }
-                     break;
-               case (UP_ARROW_KEY):
-                     if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
-                     {
-                        TimerModeDateMenuDvScroll(UP, &rec_ptr[mn_layout_ptr->curr_ln]);
-                     }
-                     break;
-               case (PLUS_KEY):
-                     rec_ptr[mn_layout_ptr->curr_ln].enterflag = FALSE;
-                     TimerModeDateMenuScroll(DOWN, mn_layout_ptr);
-                     rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
-                     break;
-               case (MINUS_KEY):
-                     rec_ptr[mn_layout_ptr->curr_ln].enterflag = FALSE;
-                     TimerModeDateMenuScroll(UP, mn_layout_ptr);
-                     rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
-                     break;
-               case (ESC_KEY):
-                     SETUP_MENU_MSG(TIMER_MODE_TIME_MENU);
-                     JUMP_TO_ACTIVE_MENU();
-                     break;
-               default:
-                     break;
-            }
-            break;
+				case (DOWN_ARROW_KEY):
+						if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
+						{
+						TimerModeDateMenuDvScroll(DOWN, &rec_ptr[mn_layout_ptr->curr_ln]);
+						}
+						break;
+				case (UP_ARROW_KEY):
+						if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
+						{
+						TimerModeDateMenuDvScroll(UP, &rec_ptr[mn_layout_ptr->curr_ln]);
+						}
+						break;
+				case (PLUS_KEY):
+						rec_ptr[mn_layout_ptr->curr_ln].enterflag = FALSE;
+						TimerModeDateMenuScroll(DOWN, mn_layout_ptr);
+						rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
+						break;
+				case (MINUS_KEY):
+						rec_ptr[mn_layout_ptr->curr_ln].enterflag = FALSE;
+						TimerModeDateMenuScroll(UP, mn_layout_ptr);
+						rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
+						break;
+				case (ESC_KEY):
+						SETUP_MENU_MSG(TIMER_MODE_TIME_MENU);
+						JUMP_TO_ACTIVE_MENU();
+						break;
+				default:
+						break;
+			}
+			break;
 
-      default:
-            break;
-   }
-
+		default:
+			break;
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -174,22 +172,22 @@ void TimerModeDateMenuProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAY
 ///----------------------------------------------------------------------------
 void TimerModeDateMenuScroll(char direction, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
-   switch (direction)
-   {
-      case (DOWN):
-           if (mn_layout_ptr->curr_ln < 5)
-           {
-              mn_layout_ptr->curr_ln++;
-           }
-           break;
+	switch (direction)
+	{
+		case (DOWN):
+			if (mn_layout_ptr->curr_ln < 5)
+			{
+				mn_layout_ptr->curr_ln++;
+			}
+		break;
 
-      case (UP):
-           if (mn_layout_ptr->curr_ln > 0)
-           {
-              mn_layout_ptr->curr_ln--;
-           }
-           break;
-   }
+		case (UP):
+			if (mn_layout_ptr->curr_ln > 0)
+			{
+				mn_layout_ptr->curr_ln--;
+			}
+		break;
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -258,10 +256,10 @@ void TimerModeDateMenuDisplay(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_lay
 
 	memset(&sbuff[0], 0, sizeof(sbuff));
 
-	wnd_layout_ptr->curr_row =   wnd_layout_ptr->start_row;
-	wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
-	wnd_layout_ptr->next_row =   wnd_layout_ptr->start_row;
-	wnd_layout_ptr->next_col =   wnd_layout_ptr->start_col;
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
 	rec_ptr[TMD_START_DAY].numrec.nmax = GetDaysPerMonth((uint8)(rec_ptr[TMD_START_MONTH].numrec.tindex),
 																(uint8)(rec_ptr[TMD_START_YEAR].numrec.tindex));
@@ -345,71 +343,71 @@ void TimerModeDateMenuDisplay(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_lay
 ///----------------------------------------------------------------------------
 void LoadTimerModeDateMnDefRec(REC_MN_STRUCT *rec_ptr, DATE_TIME_STRUCT *time_ptr)
 {
-    // START DAY
-    rec_ptr[TMD_START_DAY].enterflag = FALSE;
-    rec_ptr[TMD_START_DAY].type = INPUT_NUM_STRING;
-    rec_ptr[TMD_START_DAY].wrapflag = FALSE;
-    rec_ptr[TMD_START_DAY].numrec.nindex = 0;
-    rec_ptr[TMD_START_DAY].numrec.nmax = 31;
-    rec_ptr[TMD_START_DAY].numrec.nmin = 1;
-    rec_ptr[TMD_START_DAY].numrec.incr_value = 1;
-    rec_ptr[TMD_START_DAY].numrec.tindex = time_ptr->day;
-    rec_ptr[TMD_START_DAY].numrec.num_type = FIXED_TIME_TYPE_DAY;
+	// START DAY
+	rec_ptr[TMD_START_DAY].enterflag = FALSE;
+	rec_ptr[TMD_START_DAY].type = INPUT_NUM_STRING;
+	rec_ptr[TMD_START_DAY].wrapflag = FALSE;
+	rec_ptr[TMD_START_DAY].numrec.nindex = 0;
+	rec_ptr[TMD_START_DAY].numrec.nmax = 31;
+	rec_ptr[TMD_START_DAY].numrec.nmin = 1;
+	rec_ptr[TMD_START_DAY].numrec.incr_value = 1;
+	rec_ptr[TMD_START_DAY].numrec.tindex = time_ptr->day;
+	rec_ptr[TMD_START_DAY].numrec.num_type = FIXED_TIME_TYPE_DAY;
 
-    // START MONTH
-    rec_ptr[TMD_START_MONTH].enterflag = FALSE;
-    rec_ptr[TMD_START_MONTH].type = INPUT_NUM_STRING;
-    rec_ptr[TMD_START_MONTH].wrapflag = FALSE;
-    rec_ptr[TMD_START_MONTH].numrec.nindex = 0;
-    rec_ptr[TMD_START_MONTH].numrec.nmax = 12;
-    rec_ptr[TMD_START_MONTH].numrec.nmin = 1;
-    rec_ptr[TMD_START_MONTH].numrec.incr_value = 1;
-    rec_ptr[TMD_START_MONTH].numrec.tindex = time_ptr->month;
-    rec_ptr[TMD_START_MONTH].numrec.num_type = FIXED_TIME_TYPE_MONTH;
+	// START MONTH
+	rec_ptr[TMD_START_MONTH].enterflag = FALSE;
+	rec_ptr[TMD_START_MONTH].type = INPUT_NUM_STRING;
+	rec_ptr[TMD_START_MONTH].wrapflag = FALSE;
+	rec_ptr[TMD_START_MONTH].numrec.nindex = 0;
+	rec_ptr[TMD_START_MONTH].numrec.nmax = 12;
+	rec_ptr[TMD_START_MONTH].numrec.nmin = 1;
+	rec_ptr[TMD_START_MONTH].numrec.incr_value = 1;
+	rec_ptr[TMD_START_MONTH].numrec.tindex = time_ptr->month;
+	rec_ptr[TMD_START_MONTH].numrec.num_type = FIXED_TIME_TYPE_MONTH;
 
-    // START YEAR
-    rec_ptr[TMD_START_YEAR].enterflag = FALSE;
-    rec_ptr[TMD_START_YEAR].type = INPUT_NUM_STRING;
-    rec_ptr[TMD_START_YEAR].wrapflag = FALSE;
-    rec_ptr[TMD_START_YEAR].numrec.nindex = 0;
-    rec_ptr[TMD_START_YEAR].numrec.nmax = 99;
-    rec_ptr[TMD_START_YEAR].numrec.nmin = 0;
-    rec_ptr[TMD_START_YEAR].numrec.incr_value = 1;
-    rec_ptr[TMD_START_YEAR].numrec.tindex = time_ptr->year;
-    rec_ptr[TMD_START_YEAR].numrec.num_type = FIXED_TIME_TYPE_YEAR;
+	// START YEAR
+	rec_ptr[TMD_START_YEAR].enterflag = FALSE;
+	rec_ptr[TMD_START_YEAR].type = INPUT_NUM_STRING;
+	rec_ptr[TMD_START_YEAR].wrapflag = FALSE;
+	rec_ptr[TMD_START_YEAR].numrec.nindex = 0;
+	rec_ptr[TMD_START_YEAR].numrec.nmax = 99;
+	rec_ptr[TMD_START_YEAR].numrec.nmin = 0;
+	rec_ptr[TMD_START_YEAR].numrec.incr_value = 1;
+	rec_ptr[TMD_START_YEAR].numrec.tindex = time_ptr->year;
+	rec_ptr[TMD_START_YEAR].numrec.num_type = FIXED_TIME_TYPE_YEAR;
 
-    // STOP DAY
-    rec_ptr[TMD_STOP_DAY].enterflag = FALSE;
-    rec_ptr[TMD_STOP_DAY].type = INPUT_NUM_STRING;
-    rec_ptr[TMD_STOP_DAY].wrapflag = FALSE;
-    rec_ptr[TMD_STOP_DAY].numrec.nindex = 0;
-    rec_ptr[TMD_STOP_DAY].numrec.nmax = 31;
-    rec_ptr[TMD_STOP_DAY].numrec.nmin = 1;
-    rec_ptr[TMD_STOP_DAY].numrec.incr_value = 1;
-    rec_ptr[TMD_STOP_DAY].numrec.tindex = time_ptr->day;
-    rec_ptr[TMD_STOP_DAY].numrec.num_type = FIXED_TIME_TYPE_DAY;
+	// STOP DAY
+	rec_ptr[TMD_STOP_DAY].enterflag = FALSE;
+	rec_ptr[TMD_STOP_DAY].type = INPUT_NUM_STRING;
+	rec_ptr[TMD_STOP_DAY].wrapflag = FALSE;
+	rec_ptr[TMD_STOP_DAY].numrec.nindex = 0;
+	rec_ptr[TMD_STOP_DAY].numrec.nmax = 31;
+	rec_ptr[TMD_STOP_DAY].numrec.nmin = 1;
+	rec_ptr[TMD_STOP_DAY].numrec.incr_value = 1;
+	rec_ptr[TMD_STOP_DAY].numrec.tindex = time_ptr->day;
+	rec_ptr[TMD_STOP_DAY].numrec.num_type = FIXED_TIME_TYPE_DAY;
 
-    // STOP MONTH
-    rec_ptr[TMD_STOP_MONTH].enterflag = FALSE;
-    rec_ptr[TMD_STOP_MONTH].type = INPUT_NUM_STRING;
-    rec_ptr[TMD_STOP_MONTH].wrapflag = FALSE;
-    rec_ptr[TMD_STOP_MONTH].numrec.nindex = 0;
-    rec_ptr[TMD_STOP_MONTH].numrec.nmax = 12;
-    rec_ptr[TMD_STOP_MONTH].numrec.nmin = 1;
-    rec_ptr[TMD_STOP_MONTH].numrec.incr_value = 1;
-    rec_ptr[TMD_STOP_MONTH].numrec.tindex = time_ptr->month;
-    rec_ptr[TMD_STOP_MONTH].numrec.num_type = FIXED_TIME_TYPE_MONTH;
+	// STOP MONTH
+	rec_ptr[TMD_STOP_MONTH].enterflag = FALSE;
+	rec_ptr[TMD_STOP_MONTH].type = INPUT_NUM_STRING;
+	rec_ptr[TMD_STOP_MONTH].wrapflag = FALSE;
+	rec_ptr[TMD_STOP_MONTH].numrec.nindex = 0;
+	rec_ptr[TMD_STOP_MONTH].numrec.nmax = 12;
+	rec_ptr[TMD_STOP_MONTH].numrec.nmin = 1;
+	rec_ptr[TMD_STOP_MONTH].numrec.incr_value = 1;
+	rec_ptr[TMD_STOP_MONTH].numrec.tindex = time_ptr->month;
+	rec_ptr[TMD_STOP_MONTH].numrec.num_type = FIXED_TIME_TYPE_MONTH;
 
-    // STOP YEAR
-    rec_ptr[TMD_STOP_YEAR].enterflag = FALSE;
-    rec_ptr[TMD_STOP_YEAR].type = INPUT_NUM_STRING;
-    rec_ptr[TMD_STOP_YEAR].wrapflag = FALSE;
-    rec_ptr[TMD_STOP_YEAR].numrec.nindex = 0;
-    rec_ptr[TMD_STOP_YEAR].numrec.nmax = 99;
-    rec_ptr[TMD_STOP_YEAR].numrec.nmin = 0;
-    rec_ptr[TMD_STOP_YEAR].numrec.incr_value = 1;
-    rec_ptr[TMD_STOP_YEAR].numrec.tindex = (time_ptr->year + 1);
-    rec_ptr[TMD_STOP_YEAR].numrec.num_type = FIXED_TIME_TYPE_YEAR;
+	// STOP YEAR
+	rec_ptr[TMD_STOP_YEAR].enterflag = FALSE;
+	rec_ptr[TMD_STOP_YEAR].type = INPUT_NUM_STRING;
+	rec_ptr[TMD_STOP_YEAR].wrapflag = FALSE;
+	rec_ptr[TMD_STOP_YEAR].numrec.nindex = 0;
+	rec_ptr[TMD_STOP_YEAR].numrec.nmax = 99;
+	rec_ptr[TMD_STOP_YEAR].numrec.nmin = 0;
+	rec_ptr[TMD_STOP_YEAR].numrec.incr_value = 1;
+	rec_ptr[TMD_STOP_YEAR].numrec.tindex = (time_ptr->year + 1);
+	rec_ptr[TMD_STOP_YEAR].numrec.num_type = FIXED_TIME_TYPE_YEAR;
 }
 
 ///----------------------------------------------------------------------------
@@ -469,7 +467,7 @@ void TimerModeActiveMinutes(void)
 
 	debug("Timer Active Minutes: %d\r\n", g_unitConfig.TimerModeActiveMinutes);
 
-    SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+	SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 }
 
 ///----------------------------------------------------------------------------
@@ -490,8 +488,7 @@ uint8 ValidateTimerModeSettings(void)
 	char stop_month = g_unitConfig.timerStopDate.month;
 	char stop_year = g_unitConfig.timerStopDate.year;
 
-	debug("Timer Date: (Start) %d/%d/%d -> (End) %d/%d/%d\r\n", start_month, start_day, start_year,
-															  stop_month, stop_day, stop_year);
+	debug("Timer Date: (Start) %d/%d/%d -> (End) %d/%d/%d\r\n", start_month, start_day, start_year, stop_month, stop_day, stop_year);
 
 	// Check if user picked a start date that is before the current day
 	if ((start_year < time.year) ||

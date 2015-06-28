@@ -19,17 +19,17 @@
 
 // LCD to Processor pins
 // ---------------------
-// CS1 (active low)..........PD0  (Port D)
-// CS2 (active low)..........PD1  (Port D)
-// Reset (active low)........PD2  (Port D)
-// Data/Inst (active low)....PD3  (Port D)
-// Read/Write (active low)...PD4  (Port D)
-// Enable....................PD5  (Port D)
-// No Connect................PD6  (Port D)
-// No Connect................PD7  (Port D)
+// CS1 (active low)..........PD0 (Port D)
+// CS2 (active low)..........PD1 (Port D)
+// Reset (active low)........PD2 (Port D)
+// Data/Inst (active low)....PD3 (Port D)
+// Read/Write (active low)...PD4 (Port D)
+// Enable....................PD5 (Port D)
+// No Connect................PD6 (Port D)
+// No Connect................PD7 (Port D)
 //
-// LD0.......................PD8  (Port C)
-// LD1.......................PD9  (Port C)
+// LD0.......................PD8 (Port C)
+// LD1.......................PD9 (Port C)
 // LD2.......................PD10 (Port C)
 // LD3.......................PD11 (Port C)
 // LD4.......................PD12 (Port C)
@@ -66,7 +66,7 @@
 #define LCD_START_LINE_INSTRUCTION		0xC0 // Lower 6 bits are start line, 0 - 63
 
 // Contrast defines
-#define DEFUALT_CONTRAST        34
+#define DEFUALT_CONTRAST		34
 #define MAX_CONTRAST			50
 #define MIN_CONTRAST			20
 #define DEFAULT_MAX_CONTRAST	63
@@ -110,7 +110,7 @@ typedef enum
 	LIGHTER,
 	DARKER
 } CONTRAST_ADJUSTMENT;
-                             
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------

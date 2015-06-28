@@ -42,14 +42,14 @@ enum {
 #define VALID_MONITOR_LOG_TABLE_KEY 0x0FF05A5A
 #define VALID_AUTODIALOUT_TABLE_KEY 0x12ABCDEF
 
-#define EEPROM_SPI_NPCS             0
+#define EEPROM_SPI_NPCS		0
 
-#define EEPROM_WRITE_ENABLE   0x06
-#define EEPROM_WRITE_DISABLE  0x04
-#define EEPROM_READ_DATA      0x03
-#define EEPROM_WRITE_DATA     0x02
-#define EEPROM_READ_STATUS    0x05
-#define EEPROM_WRITE_STATUS   0x01
+#define EEPROM_WRITE_ENABLE		0x06
+#define EEPROM_WRITE_DISABLE	0x04
+#define EEPROM_READ_DATA		0x03
+#define EEPROM_WRITE_DATA		0x02
+#define EEPROM_READ_STATUS		0x05
+#define EEPROM_WRITE_STATUS		0x01
 
 // Sensor information
 #define NUMBER_OF_CHANNELS_DEFAULT 	4
@@ -115,24 +115,24 @@ enum {
 ///----------------------------------------------------------------------------
 typedef struct {
 	// Sensor type information 
-	uint8	numOfChannels;			// The number of channels from a sensor.
-	uint8   sensorAccuracy;			// = 100, sensor values are X 100 for numeric accuracy. 
-	uint8	unitsFlag;	 			// 0 = SAE, 1 = Metric
-	uint8	airUnitsFlag;			// 0 = Decibel, 1 = Millibar
+	uint8 numOfChannels;			// The number of channels from a sensor
+	uint8 sensorAccuracy;			// = 100, sensor values are X 100 for numeric accuracy
+	uint8 unitsFlag;	 			// 0 = SAE, 1 = Metric
+	uint8 airUnitsFlag;				// 0 = Decibel, 1 = Millibar
 
 	float	hexToLengthConversion;
 	float	measurementRatio;	 	// 1 = SAE, 25.4 = Metric
 	float	ameasurementRatio;		// ? = Decibel, 1 = Millibar
 	float	sensorTypeNormalized;	
 
-	uint16  shiftVal;
-	uint16  ADCResolution;			// = 2048, Raw data Input Range, unless ADC is changed
-	uint32  sensorValue;			// The value of the sensor, both metric and inches are X 100, 
+	uint16 shiftVal;
+	uint16 ADCResolution;			// = 2048, Raw data Input Range, unless ADC is changed
+	uint32 sensorValue;				// The value of the sensor, both metric and inches are X 100
 } SENSOR_PARAMETERS_STRUCT;
 
 typedef struct
 {
-	uint32 cindex;         
+	uint32 cindex;
 	uint32 cmax;
 	uint32 cmin; 
 } CHAR_FIELD_STRUCT;
@@ -144,14 +144,14 @@ typedef struct
 	float nmax;
 	float nmin;
 	float incr_value; 
-	float tindex;        
+	float tindex;
 } NUM_FIELD_STRUCT;
 
 typedef struct
 {
 	uint16 lindex;
 	uint16 lmax;
-	uint16 lmin;  
+	uint16 lmin;
 } LIST_FIELD_STRUCT;
 
 typedef struct
@@ -164,7 +164,7 @@ typedef struct
 	uint16 rlines;
 	uint16 wrapflag;
 	CHAR_FIELD_STRUCT charrec;
-	NUM_FIELD_STRUCT  numrec;
+	NUM_FIELD_STRUCT numrec;
 	LIST_FIELD_STRUCT listrec;
 } REC_MN_STRUCT;
 

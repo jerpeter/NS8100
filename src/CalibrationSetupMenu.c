@@ -302,12 +302,12 @@ void CalSetupMnProc(INPUT_MSG_STRUCT msg,
 	switch (msg.cmd)
 	{
 		case (ACTIVATE_MENU_CMD):
-			wnd_layout_ptr->start_col =    CAL_SETUP_WND_STARTING_COL;
-			wnd_layout_ptr->end_col =      CAL_SETUP_WND_END_COL;
-			wnd_layout_ptr->start_row =    CAL_SETUP_WND_STARTING_ROW;
-			wnd_layout_ptr->end_row =      CAL_SETUP_WND_END_ROW;
-			mn_layout_ptr->curr_ln =       CAL_SETUP_MN_TBL_START_LINE;
-			mn_layout_ptr->top_ln =        CAL_SETUP_MN_TBL_START_LINE;
+			wnd_layout_ptr->start_col = CAL_SETUP_WND_STARTING_COL;
+			wnd_layout_ptr->end_col = CAL_SETUP_WND_END_COL;
+			wnd_layout_ptr->start_row = CAL_SETUP_WND_STARTING_ROW;
+			wnd_layout_ptr->end_row = CAL_SETUP_WND_END_ROW;
+			mn_layout_ptr->curr_ln = CAL_SETUP_MN_TBL_START_LINE;
+			mn_layout_ptr->top_ln = CAL_SETUP_MN_TBL_START_LINE;
 
 			OverlayMessage("STATUS", "PLEASE WAIT...", 0);
 

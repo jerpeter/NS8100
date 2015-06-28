@@ -60,14 +60,8 @@ static uint16 s_totalRamSummaries = 0;
 ///----------------------------------------------------------------------------
 SUMMARY_MENU_EVENT_CACHE_STRUCT* GetSummaryEventInfo(uint16 tempSummaryIndex);
 void SummaryMenu(INPUT_MSG_STRUCT);
-
-void SummaryMenuProc(INPUT_MSG_STRUCT,
-                   WND_LAYOUT_STRUCT *,
-                   SUMMARY_DATA *);
-                   
-void SummaryMenuDisplay(WND_LAYOUT_STRUCT *,
-                    SUMMARY_DATA *);
-                    
+void SummaryMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT *, SUMMARY_DATA *);
+void SummaryMenuDisplay(WND_LAYOUT_STRUCT *, SUMMARY_DATA *);
 void SummaryMenuScroll(char direction);
 uint16 GetFirstValidRamSummaryIndex(void);
 uint16 GetNextValidRamSummaryIndex(uint16 currentValidSummaryIndex);
@@ -79,7 +73,7 @@ void cacheSummaryListEntry(uint16 tempSummaryIndex);
 ///	Function Break
 ///----------------------------------------------------------------------------
 void SummaryMenu(INPUT_MSG_STRUCT msg)
-{  
+{
 	static WND_LAYOUT_STRUCT wnd_layout;
 	//static MN_LAYOUT_STRUCT mn_layout;
 	//BOOL mode = 0;
@@ -96,9 +90,7 @@ void SummaryMenu(INPUT_MSG_STRUCT msg)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void SummaryMenuProc(INPUT_MSG_STRUCT msg,
-                   WND_LAYOUT_STRUCT *wnd_layout_ptr,
-                   SUMMARY_DATA *rd_summary_ptr)
+void SummaryMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, SUMMARY_DATA *rd_summary_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	uint16 tempSummaryIndex = 0;
@@ -107,10 +99,10 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
 
 	if (msg.cmd == ACTIVATE_MENU_CMD)
 	{
-		wnd_layout_ptr->start_col = SUMMARY_WND_STARTING_COL;   /* 6 */
-		wnd_layout_ptr->end_col =   SUMMARY_WND_END_COL;        /* 127 leaving one pixel space at the end */
-		wnd_layout_ptr->start_row = SUMMARY_WND_STARTING_ROW;   /* 8 */
-		wnd_layout_ptr->end_row =   SUMMARY_WND_END_ROW;        /* 6 */
+		wnd_layout_ptr->start_col = SUMMARY_WND_STARTING_COL; /* 6 */
+		wnd_layout_ptr->end_col = SUMMARY_WND_END_COL; /* 127 leaving one pixel space at the end */
+		wnd_layout_ptr->start_row = SUMMARY_WND_STARTING_ROW; /* 8 */
+		wnd_layout_ptr->end_row = SUMMARY_WND_END_ROW; /* 6 */
 
 		DumpSummaryListFileToEventBuffer();
 
@@ -151,7 +143,7 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
 						case COMBO_MODE:
 							SETUP_MENU_MSG(RESULTS_MENU);
 							JUMP_TO_ACTIVE_MENU();
-							break;   
+							break;
 
 						case MANUAL_TRIGGER_MODE:
 							break;
@@ -209,8 +201,7 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg,
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
-                    SUMMARY_DATA *rd_summary_ptr)
+void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr, SUMMARY_DATA *rd_summary_ptr)
 {
 	SUMMARY_MENU_EVENT_CACHE_STRUCT* eventInfo;
 	char dateBuff[25];
@@ -229,7 +220,7 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 	sprintf(lineBuff, "-%s-", getLangText(LIST_OF_SUMMARIES_TEXT));
 	length = (uint8)strlen((char*)lineBuff);
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
-	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));          
+	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	WndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// Setup layout
@@ -267,7 +258,7 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 			{
 				case WAVEFORM_MODE: 		strcpy(modeBuff, "W"); break;
 				case BARGRAPH_MODE: 		strcpy(modeBuff, "B"); break;
-				case COMBO_MODE:    		strcpy(modeBuff, "C"); break;
+				case COMBO_MODE:	 		strcpy(modeBuff, "C"); break;
 				case MANUAL_CAL_MODE:		strcpy(modeBuff, "P"); break;
 				case MANUAL_TRIGGER_MODE:	strcpy(modeBuff, "M"); break;
 			}
@@ -278,11 +269,11 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 
 			// Check if the current line is to be highlighted
 			if (tempSummaryIndex == s_currentSummaryIndex)
-			{           
+			{
 				WndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
 			}
 			else // Print as a regular line
-			{   
+			{
 				WndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			}
 
@@ -309,7 +300,7 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr,
 ///	Function Break
 ///----------------------------------------------------------------------------
 void SummaryMenuScroll(char direction)
-{  
+{
 	uint16 tempSummaryIndex = 0;
 	uint16 compareCurrentSummaryIndex = s_currentSummaryIndex;
 	uint16 i = 0;
@@ -375,7 +366,7 @@ void SummaryMenuScroll(char direction)
 		}
 	}
 }
-    
+
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------

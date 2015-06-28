@@ -43,7 +43,7 @@ enum {
 	WED, // 3
 	THU, // 4
 	FRI, // 5
-	SAT  // 6
+	SAT // 6
 };
 
 typedef struct
@@ -102,11 +102,11 @@ typedef union
 {
 	struct
 	{
-		bitfield ext_test:   	1;
-		bitfield t:			   	1;
-		bitfield stop:		  	1;
-		bitfield tsf1:		   	1;
-		bitfield por_ovrd:	  	1;
+		bitfield ext_test:	 	1;
+		bitfield t:			 	1;
+		bitfield stop:			1;
+		bitfield tsf1:		 	1;
+		bitfield por_ovrd:		1;
 		bitfield format_12_24:	1;
 		bitfield mi:			1;
 		bitfield si:			1;
@@ -123,17 +123,17 @@ typedef union
 {
 	struct
 	{
-		bitfield msf:		   	1;
-		bitfield wdtf:		   	1;
-		bitfield tsf2:		  	1;
-		bitfield af:		   	1;
-		bitfield cdtf:		  	1;
+		bitfield msf:		 	1;
+		bitfield wdtf:			1;
+		bitfield tsf2:			1;
+		bitfield af:		 	1;
+		bitfield cdtf:			1;
 		bitfield tsie:			1;
 		bitfield aie:			1;
 		bitfield cdtie:			1;
 	} bit;
 
-   uint8 reg;
+	uint8 reg;
 } RTC_CONTROL_2_STRUCT;
 
 // ---------------------------
@@ -144,7 +144,7 @@ typedef union
 {
 	struct
 	{
-		bitfield pwrmng:	  	3;
+		bitfield pwrmng:		3;
 		bitfield btse:			1;
 		bitfield bf:			1;
 		bitfield blf:			1;
@@ -235,7 +235,7 @@ typedef union
 {
 	struct
 	{
-		bitfield unused:   	5;
+		bitfield unused: 	5;
 		bitfield weekday:	3;
 	} bit; 
 

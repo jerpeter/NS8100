@@ -50,70 +50,66 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT*);
 ///----------------------------------------------------------------------------
 void BatteryMn(INPUT_MSG_STRUCT msg)
 {
-    static WND_LAYOUT_STRUCT wnd_layout;
-    static MN_LAYOUT_STRUCT mn_layout;
+	static WND_LAYOUT_STRUCT wnd_layout;
+	static MN_LAYOUT_STRUCT mn_layout;
 
-    BatteryMnProc(msg, &wnd_layout, &mn_layout);
+	BatteryMnProc(msg, &wnd_layout, &mn_layout);
 
-    if (g_activeMenu == BATTERY_MENU)
-    {
-        BatteryMnDsply(&wnd_layout);
-        WriteMapToLcd(g_mmap);
-    }
+	if (g_activeMenu == BATTERY_MENU)
+	{
+		BatteryMnDsply(&wnd_layout);
+		WriteMapToLcd(g_mmap);
+	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void BatteryMnProc(INPUT_MSG_STRUCT msg,
-                   WND_LAYOUT_STRUCT *wnd_layout_ptr,
-                   MN_LAYOUT_STRUCT *mn_layout_ptr)
+void BatteryMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
+	INPUT_MSG_STRUCT mn_msg;
+	uint32 input;
 
-   INPUT_MSG_STRUCT mn_msg;
-   uint32 input;
+	switch (msg.cmd)
+	{
+		case (ACTIVATE_MENU_CMD):
+			wnd_layout_ptr->start_col = BATTERY_WND_STARTING_COL;
+			wnd_layout_ptr->end_col = BATTERY_WND_END_COL;
+			wnd_layout_ptr->start_row = BATTERY_WND_STARTING_ROW;
+			wnd_layout_ptr->end_row = BATTERY_WND_END_ROW;
 
-   switch (msg.cmd)
-   {
-      case (ACTIVATE_MENU_CMD):
-            wnd_layout_ptr->start_col = BATTERY_WND_STARTING_COL;
-            wnd_layout_ptr->end_col =   BATTERY_WND_END_COL;
-            wnd_layout_ptr->start_row = BATTERY_WND_STARTING_ROW;
-            wnd_layout_ptr->end_row =   BATTERY_WND_END_ROW;
+			mn_layout_ptr->curr_ln = 1;
+			mn_layout_ptr->top_ln = 1;
+			mn_layout_ptr->sub_ln = 0;
+			break;
 
-            mn_layout_ptr->curr_ln =    1;
-            mn_layout_ptr->top_ln =     1;
-            mn_layout_ptr->sub_ln =     0;
-            break;
+		case (KEYPRESS_MENU_CMD):
 
-      case (KEYPRESS_MENU_CMD):
-
-            input = msg.data[0];
-            switch (input)
-            {
-              case (ENTER_KEY):
+			input = msg.data[0];
+			switch (input)
+			{
+				case (ENTER_KEY):
 					SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 					JUMP_TO_ACTIVE_MENU();
 					break;
-               case (DOWN_ARROW_KEY):
-                     break;
-               case (UP_ARROW_KEY):
-                     break;
-               case (MINUS_KEY): AdjustLcdContrast(DARKER); break;
-               case (PLUS_KEY): AdjustLcdContrast(LIGHTER); break;
-               case (ESC_KEY):
+				case (DOWN_ARROW_KEY):
+						break;
+				case (UP_ARROW_KEY):
+						break;
+				case (MINUS_KEY): AdjustLcdContrast(DARKER); break;
+				case (PLUS_KEY): AdjustLcdContrast(LIGHTER); break;
+				case (ESC_KEY):
 					SETUP_USER_MENU_MSG(&configMenu, BATTERY);
 					JUMP_TO_ACTIVE_MENU();
 					break;
-               default:
-                     break;
-            }
-            break;
+				default:
+						break;
+			}
+			break;
 
-      default:
-            break;
-   }
-
+		default:
+			break;
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -121,15 +117,15 @@ void BatteryMnProc(INPUT_MSG_STRUCT msg,
 ///----------------------------------------------------------------------------
 void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
-    uint8 buff[25];
+	uint8 buff[25];
 	char spaceBuff[25];
-    uint8 batt_buff[20];
-    uint32 x = 0;
-    float curr_batt_volts;
-    float batt_rng;
-    uint8 length;
+	uint8 batt_buff[20];
+	uint32 x = 0;
+	float curr_batt_volts;
+	float batt_rng;
+	uint8 length;
 
-    memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
+	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Add in a title for the menu
 	memset(&buff[0], 0, sizeof(buff));
@@ -140,19 +136,19 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-    wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
-    wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
-    wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
-    curr_batt_volts = GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE);
+	curr_batt_volts = GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE);
 
 	// ********** Print Battery text **********
 	memset(&buff[0], 0, sizeof(buff));
-    sprintf((char*)buff,"%.2f %s", curr_batt_volts, getLangText(VOLTS_TEXT));
+	sprintf((char*)buff,"%.2f %s", curr_batt_volts, getLangText(VOLTS_TEXT));
 	debug("Battery: %s\r\n", (char*)&buff[0]);
 
-    wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
-    WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
+	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// ********** Print the Low and Full text **********
 	memset(&buff[0], 0, sizeof(buff));
@@ -165,31 +161,31 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	sprintf((char*)&buff[0], "%s%s%s", getLangText(LOW_TEXT), (char*)&spaceBuff[0], getLangText(FULL_TEXT));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
-    WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// ********** E========F **********
-    memset(&buff[0], 0, sizeof(buff));
-    memset(&batt_buff[0], 0, sizeof(batt_buff));
-    memset(&batt_buff[0], ' ', (sizeof(batt_buff) - 1));
+	memset(&buff[0], 0, sizeof(buff));
+	memset(&batt_buff[0], 0, sizeof(batt_buff));
+	memset(&batt_buff[0], ' ', (sizeof(batt_buff) - 1));
 
-    batt_rng = (float).25;
-    x = 0;
-    if (curr_batt_volts > BATT_MIN_VOLTS)
-    {
+	batt_rng = (float).25;
+	x = 0;
+	if (curr_batt_volts > BATT_MIN_VOLTS)
+	{
 		curr_batt_volts = (float)(curr_batt_volts - BATT_MIN_VOLTS);
-    }
-    else
-    {
+	}
+	else
+	{
 		curr_batt_volts = 0;
-    }
+	}
 
 	// Creating a string to give the appearance of a battery metter. Using '=' as the bar
-    for (x = 0; x < 10; x++)
+	for (x = 0; x < 10; x++)
 	{
-    	if ((curr_batt_volts > batt_rng) && (x < 9))
-    	{
-    		batt_buff[x] = '=';
-    		curr_batt_volts -= batt_rng;
+		if ((curr_batt_volts > batt_rng) && (x < 9))
+		{
+			batt_buff[x] = '=';
+			curr_batt_volts -= batt_rng;
 		}
 		else
 		{
@@ -197,13 +193,13 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			break;
 		}
 	}
-    batt_buff[10] = 0; // Assign to null
+	batt_buff[10] = 0; // Assign to null
 
 	length = (uint8)sprintf((char*)buff,"[%s]", batt_buff);
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
-    wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
-    WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
+	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// ********** Print other battery voltages **********
 	memset(&buff[0], 0, sizeof(buff));
@@ -216,9 +212,9 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		curr_batt_volts = 0;
 	}
 
-    length = (uint8)sprintf((char*)buff,"(%.2f %s)", curr_batt_volts, getLangText(VOLTS_TEXT));
+	length = (uint8)sprintf((char*)buff,"(%.2f %s)", curr_batt_volts, getLangText(VOLTS_TEXT));
 
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-    wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
-    WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
+	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 }

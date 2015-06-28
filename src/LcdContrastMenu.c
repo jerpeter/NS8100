@@ -49,9 +49,7 @@ static TEMP_MENU_DATA_STRUCT s_lcdContrastTable [LCD_CONTRAST_MN_TABLE_SIZE] = {
 ///	Prototypes
 ///----------------------------------------------------------------------------
 void LcdContrastMn (INPUT_MSG_STRUCT);
-void LcdContrastMnProc(INPUT_MSG_STRUCT,
-                       WND_LAYOUT_STRUCT *,
-                       MN_LAYOUT_STRUCT *);
+void LcdContrastMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT *, MN_LAYOUT_STRUCT *);
 void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr);
 
 ///----------------------------------------------------------------------------
@@ -59,25 +57,23 @@ void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr);
 ///----------------------------------------------------------------------------
 void LcdContrastMn(INPUT_MSG_STRUCT msg)
 {
-    static WND_LAYOUT_STRUCT wnd_layout;
-    static MN_LAYOUT_STRUCT mn_layout;
+	static WND_LAYOUT_STRUCT wnd_layout;
+	static MN_LAYOUT_STRUCT mn_layout;
 
-    LcdContrastMnProc(msg, &wnd_layout, &mn_layout);
+	LcdContrastMnProc(msg, &wnd_layout, &mn_layout);
 
-    if (g_activeMenu == LCD_CONTRAST_MENU)
-    {
-        DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
-        AddLcdContrastLevelDisplay(&wnd_layout);
-        WriteMapToLcd(g_mmap);
-    }
+	if (g_activeMenu == LCD_CONTRAST_MENU)
+	{
+		DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
+		AddLcdContrastLevelDisplay(&wnd_layout);
+		WriteMapToLcd(g_mmap);
+	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void LcdContrastMnProc(INPUT_MSG_STRUCT msg,
-                       WND_LAYOUT_STRUCT *wnd_layout_ptr,
-                       MN_LAYOUT_STRUCT *mn_layout_ptr)
+void LcdContrastMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	uint32 input;
@@ -85,10 +81,10 @@ void LcdContrastMnProc(INPUT_MSG_STRUCT msg,
 	switch (msg.cmd)
 	{
 		case (ACTIVATE_MENU_CMD):
-			wnd_layout_ptr->start_col = LCD_CONTRAST_WND_STARTING_COL;   /* 6 */
-			wnd_layout_ptr->end_col =   LCD_CONTRAST_WND_END_COL;        /* 127 leaving one pixel space at the end*/
-			wnd_layout_ptr->start_row = LCD_CONTRAST_WND_STARTING_ROW;   /*/ 8*/
-			wnd_layout_ptr->end_row =   LCD_CONTRAST_WND_END_ROW;        /*  6 */
+			wnd_layout_ptr->start_col = LCD_CONTRAST_WND_STARTING_COL; /* 6 */
+			wnd_layout_ptr->end_col = LCD_CONTRAST_WND_END_COL; /* 127 leaving one pixel space at the end*/
+			wnd_layout_ptr->start_row = LCD_CONTRAST_WND_STARTING_ROW; /*/ 8*/
+			wnd_layout_ptr->end_row = LCD_CONTRAST_WND_END_ROW; /* 6 */
 
 			mn_layout_ptr->curr_ln = 2;
 			mn_layout_ptr->top_ln = 1;
@@ -130,7 +126,7 @@ void LcdContrastMnProc(INPUT_MSG_STRUCT msg,
 						case (3): // Darker
 							if ((g_contrast_value + CONTRAST_STEPPING) <= MAX_CONTRAST)
 							{
-								g_unitConfig.lcdContrast  = g_contrast_value += CONTRAST_STEPPING;
+								g_unitConfig.lcdContrast = g_contrast_value += CONTRAST_STEPPING;
 							}
 
 							SetLcdContrast(g_contrast_value);
@@ -173,14 +169,14 @@ void LcdContrastMnProc(INPUT_MSG_STRUCT msg,
 ///----------------------------------------------------------------------------
 void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
-    uint8 buff[25];
-    uint8 spaceBuff[25];
+	uint8 buff[25];
+	uint8 spaceBuff[25];
 	uint8 contrast_buff[16];
-    uint8 x;
-    uint8 clvl;
-    uint8 length;
+	uint8 x;
+	uint8 clvl;
+	uint8 length;
 
-	wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
 
 	// *** Print the Light and Dark text ***
 	memset(&buff[0], 0, sizeof(buff));
@@ -193,18 +189,18 @@ void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	sprintf((char*)buff,"%s%s%s", getLangText(LIGHT_TEXT), spaceBuff, getLangText(DARK_TEXT));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
-    WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// *** Print the Contrast Bar
-    memset(&buff[0], 0, sizeof(buff));
-    memset(&contrast_buff[0], 0, sizeof(contrast_buff));
-    memset(&contrast_buff[0], ' ', (sizeof(contrast_buff) - 1));
+	memset(&buff[0], 0, sizeof(buff));
+	memset(&contrast_buff[0], 0, sizeof(contrast_buff));
+	memset(&contrast_buff[0], ' ', (sizeof(contrast_buff) - 1));
 
-    clvl = g_contrast_value;
+	clvl = g_contrast_value;
 	clvl -= MIN_CONTRAST;
 
 	// Creating a string to give the appearance of a contrast level. Using '=' as the bar
-    for (x = 0; x < (sizeof(contrast_buff) - 1); x++)
+	for (x = 0; x < (sizeof(contrast_buff) - 1); x++)
 	{
 		if (clvl == 0) { break; }
 		else if (clvl == 1) { contrast_buff[x] = '-'; break; }
@@ -212,12 +208,12 @@ void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		else { contrast_buff[x] = '='; clvl -= (CONTRAST_STEPPING * 2); }
 	}
 
-    debug("Contrast level: <%s>\r\n", buff);
-    sprintf((char*)buff,"[%s]", contrast_buff);
+	debug("Contrast level: <%s>\r\n", buff);
+	sprintf((char*)buff,"[%s]", contrast_buff);
 
 	length = (uint8)strlen((char*)buff);
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
-    WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 }

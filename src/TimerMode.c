@@ -137,8 +137,8 @@ void ProcessTimerMode(void)
 		// Save Unit Config
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
-	    // Deactivate alarm interrupts
-	    DisableExternalRtcAlarm();
+		// Deactivate alarm interrupts
+		DisableExternalRtcAlarm();
 
 		// Turn unit off/sleep
 		debug("Timer mode: Powering unit off...\r\n");
@@ -192,8 +192,8 @@ void ProcessTimerMode(void)
 		// Signal the timer mode end of session timer to stop timer mode due to this being the last run
 		g_timerModeLastRun = YES;
 
-	    // Deactivate alarm interrupts
-	    DisableExternalRtcAlarm();
+		// Deactivate alarm interrupts
+		DisableExternalRtcAlarm();
 	}
 	// Check if the Timer mode activated on end date and end hour (hourly mode)
 	else if ((g_unitConfig.timerModeFrequency == TIMER_MODE_HOURLY) && (currTime.year == g_unitConfig.timerStopDate.year) &&
@@ -206,8 +206,8 @@ void ProcessTimerMode(void)
 		// Signal the timer mode end of session timer to stop timer mode due to this being the last run
 		g_timerModeLastRun = YES;
 
-	    // Deactivate alarm interrupts
-	    DisableExternalRtcAlarm();
+		// Deactivate alarm interrupts
+		DisableExternalRtcAlarm();
 	}
 	else // Timer mode started during the active dates on a day it's supposed to run
 	{

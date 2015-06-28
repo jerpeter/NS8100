@@ -229,7 +229,7 @@ DATE_TIME_STRUCT GetExternalRtcTime(void)
 
 	//debug("Ext RTC: Get Time: %02d:%02d:%02d (%d), %02d-%02d-%02d\n\r\n", time.hour, time.min, time.sec, time.weekday, time.month, time.day, time.year);
 
-    return (time);
+	return (time);
 }
 
 ///----------------------------------------------------------------------------
@@ -299,7 +299,7 @@ void ConvertCurrentTimeForFat(uint8* fatTimeField)
 	The File Time:	The two bytes at offsets 0x16 and 0x17 are treated as a 16 bit value; remember that the least significant byte is at offset 0x16. They contain the time when the file was created or last updated. The time is mapped in the bits as follows; the first line indicates the byte's offset, the second line indicates (in decimal) individual bit numbers in the 16 bit value, and the third line indicates what is stored in each bit.
 	<------- 0x17 --------> <------- 0x16 -------->
 	15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00
-	h  h  h  h  h  m  m  m  m  m  m  x  x  x  x  x
+	h..h..h..h..h..m..m..m..m..m..m..x..x..x..x..x
 	hhhhh	--> indicates the binary number of hours (0-23)
 	mmmmmm	--> indicates the binary number of minutes (0-59)
 	xxxxx	--> indicates the binary number of two-second periods (0-29), representing seconds 0 to 58.
@@ -325,7 +325,7 @@ void ConvertCurrentDateForFat(uint8* fatDateField)
 	The File Date:	The two bytes at offsets 0x18 and 0x19 are treated as a 16 bit value; remember that the least significant byte is at offset 0x18. They contain the date when the file was created or last updated. The date is mapped in the bits as follows; the first line indicates the byte's offset, the second line indicates (in decimal) individual bit numbers in the 16 bit value, and the third line indicates what is stored in each bit.
 	<------- 0x19 --------> <------- 0x18 -------->
 	15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00
-	y  y  y  y  y  y  y  m  m  m  m  d  d  d  d  d
+	y..y..y..y..y..y..y..m..m..m..m..d..d..d..d..d
 	yyyyyyy	--> indicates the binary year offset from 1980 (0-119), representing the years 1980 to 2099
 	mmmm	--> indicates the binary month number (1-12)
 	ddddd	-->	indicates the binary day number (1-31) 

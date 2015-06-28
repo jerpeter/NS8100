@@ -153,7 +153,6 @@ void BuildOutgoingHeaderBuffer(COMMAND_MESSAGE_HEADER* msgHdrData, uint8* msgHdr
 
 	memcpy(bufPtr, msgHdrData->spare, HDR_SPARE_LEN);
 	bufPtr += HDR_SPARE_LEN;
-
 }
 
 ///----------------------------------------------------------------------------
@@ -220,7 +219,6 @@ uint16 GetInt16Field(uint8* dataPtr)
 	memcpy(dataStr, dataPtr, DATA_FIELD_LEN);
 	int16Data = (uint16)DataLengthStrToUint32(dataStr);
 
-
 	return (int16Data);
 }
 
@@ -264,7 +262,7 @@ uint32 DataLengthStrToUint32(uint8* dataLengthStr)
 
 	// Look and clear all leading zeros and non digits.
 	while (((*dataStr <= '0') 	||
-			(*dataStr >  '9')) 	&&
+			(*dataStr > '9')) 	&&
 		 	(*dataStr != 0x00) 	&&
 		 	(strDex < HDR_DATALENGTH_LEN))
 	{
@@ -276,7 +274,7 @@ uint32 DataLengthStrToUint32(uint8* dataLengthStr)
 	while ((*dataStr != 0x00) && (strDex < HDR_DATALENGTH_LEN))
 	{
 		// Is it a valid digit, if so copy it over.
-		if ((*dataStr >= '0') && (*dataStr <=  '9'))
+		if ((*dataStr >= '0') && (*dataStr <= '9'))
 		{
 			*dataBuf = *dataStr;
 			dataBuf++;

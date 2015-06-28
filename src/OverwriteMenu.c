@@ -23,7 +23,7 @@
 #define OVERWRITE_WND_STARTING_COL	DEFAULT_COL_THREE
 #define OVERWRITE_WND_END_COL		DEFAULT_END_COL 
 #define OVERWRITE_WND_STARTING_ROW	DEFAULT_MENU_ROW_ONE
-#define OVERWRITE_WND_END_ROW		DEFAULT_MENU_ROW_SEVEN             
+#define OVERWRITE_WND_END_ROW		DEFAULT_MENU_ROW_SEVEN
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -54,16 +54,16 @@ void OverwriteMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
 ///----------------------------------------------------------------------------
 void OverwriteMenu(INPUT_MSG_STRUCT msg)
 { 
-    static WND_LAYOUT_STRUCT wnd_layout;
-    static MN_LAYOUT_STRUCT mn_layout;
-  
-    OverwriteMenuProc(msg, &wnd_layout, &mn_layout);
+	static WND_LAYOUT_STRUCT wnd_layout;
+	static MN_LAYOUT_STRUCT mn_layout;
 
-    if (g_activeMenu == OVERWRITE_MENU)
-    {
-        DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
-        WriteMapToLcd(g_mmap);
-    }
+	OverwriteMenuProc(msg, &wnd_layout, &mn_layout);
+
+	if (g_activeMenu == OVERWRITE_MENU)
+	{
+		DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
+		WriteMapToLcd(g_mmap);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -81,13 +81,13 @@ void OverwriteMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 	switch (msg.cmd)
 	{
 		case (ACTIVATE_MENU_WITH_DATA_CMD):
-			wnd_layout_ptr->start_col = OVERWRITE_WND_STARTING_COL;   /* 6 */
-			wnd_layout_ptr->end_col =   OVERWRITE_WND_END_COL;        /* 127 leaving one pixel space at the end*/
-			wnd_layout_ptr->start_row = OVERWRITE_WND_STARTING_ROW;   /*/ 8*/
-			wnd_layout_ptr->end_row =   OVERWRITE_WND_END_ROW;        /*  6 */
+			wnd_layout_ptr->start_col = OVERWRITE_WND_STARTING_COL; /* 6 */
+			wnd_layout_ptr->end_col = OVERWRITE_WND_END_COL; /* 127 leaving one pixel space at the end*/
+			wnd_layout_ptr->start_row = OVERWRITE_WND_STARTING_ROW; /*/ 8*/
+			wnd_layout_ptr->end_row = OVERWRITE_WND_END_ROW; /* 6 */
 
-			mn_layout_ptr->curr_ln =    1;
-			mn_layout_ptr->top_ln =     1; 
+			mn_layout_ptr->curr_ln = 1;
+			mn_layout_ptr->top_ln = 1;
 
 			LoadTempMenuTable(s_overwriteMenuTable);
 

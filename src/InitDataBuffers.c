@@ -50,7 +50,7 @@ void InitDataBuffs(uint8 op_mode)
 	
 	if (op_mode == MANUAL_CAL_MODE)
 	{
-		// Comply with older ns7100 model
+		// Per requirement fix sample rate for Calibration
 		sampleRate = MANUAL_CAL_DEFAULT_SAMPLE_RATE;
 
 		// Variable Pretrigger size in words; sample rate / Pretrigger buffer divider times channels plus 1 extra sample (to ensure a full Pretrigger plus a trigger sample)
@@ -88,7 +88,7 @@ void InitDataBuffs(uint8 op_mode)
 	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))
 	{
 		// Calculate samples for each section and total event
-		g_samplesInPretrig  = (uint32)(sampleRate / g_unitConfig.pretrigBufferDivider);
+		g_samplesInPretrig = (uint32)(sampleRate / g_unitConfig.pretrigBufferDivider);
 		g_samplesInBody = (uint32)(sampleRate * g_triggerRecord.trec.record_time);
 		g_samplesInCal = (uint32)MAX_CAL_SAMPLES;
 		g_samplesInEvent = g_samplesInPretrig + g_samplesInBody + g_samplesInCal;
@@ -197,7 +197,7 @@ uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 			samplePtr -= 4;
 			dataCount++;
 		}
-    
+
 		samplePtr = dataPtr;
 		while ((*samplePtr >= (g_bitAccuracyMidpoint + FREQ_CROSSOVER_FORWARD)) && (samplePtr < (endAddrPtr - 4)))
 		{
@@ -212,7 +212,7 @@ uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 			samplePtr -= 4;
 			dataCount++;
 		}
-    
+
 		samplePtr = dataPtr;
 		while ((*samplePtr <= (g_bitAccuracyMidpoint - FREQ_CROSSOVER_FORWARD)) && (samplePtr < (endAddrPtr - 4)))
 		{
@@ -225,7 +225,7 @@ uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 		// Peak was less than 4 counts, assume to be noise
 		return ((uint16)0);
 	}
-  
+
 	// total counts between 0 crossings
 	dataCount = (uint32)((dataCount - 1) * 2);
 
@@ -243,10 +243,10 @@ uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 ///----------------------------------------------------------------------------
 uint16 FixDataToZero(uint16 data_)
 {
-   if (data_ > g_bitAccuracyMidpoint)
-     data_ = (uint16)(data_ - g_bitAccuracyMidpoint);
-   else
-     data_ = (uint16)(g_bitAccuracyMidpoint - data_);
-     
-   return (data_);  
+	if (data_ > g_bitAccuracyMidpoint)
+		data_ = (uint16)(data_ - g_bitAccuracyMidpoint);
+	else
+		data_ = (uint16)(g_bitAccuracyMidpoint - data_);
+
+	return (data_);
 }

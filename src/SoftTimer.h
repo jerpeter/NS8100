@@ -44,7 +44,7 @@ enum{
 #define ONE_SECOND_TIMEOUT		1 * TICKS_PER_SEC // secs * ticks
 
 #define TIMEOUT_DISABLED		0 // secs
-#define LCD_BACKLIGHT_TIMEOUT	60 * TICKS_PER_SEC  // secs * ticks
+#define LCD_BACKLIGHT_TIMEOUT	60 * TICKS_PER_SEC // secs * ticks
 #define LCD_POWER_TIMEOUT		120 * TICKS_PER_SEC // secs * ticks
 #define MODEM_ATZ_DELAY			15 * TICKS_PER_SEC
 #define MODEM_ATZ_QUICK_DELAY	2 * TICKS_PER_SEC
@@ -52,7 +52,7 @@ enum{
 typedef struct
 {
 	uint32 	state;			// The timer is in use or not
-	uint32  tickStart;		// Tick value when the timer was started		
+	uint32	tickStart;		// Tick value when the timer was started
 	uint32 	timePeriod;		// The time period to wait, number of ticks
 	uint32	timeoutValue;	// Added to hold the value for a reset of the timeout period
 	void (*callback)(void);

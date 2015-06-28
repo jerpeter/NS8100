@@ -17,9 +17,9 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define SOFT_VERSION  		"1.11"
-#define SOFT_DATE     		"6-22-2004"
-#define SOFT_TIME     		"08:35pm"
+#define SOFT_VERSION	"1.11"
+#define SOFT_DATE		"6-22-2004"
+#define SOFT_TIME		"08:35pm"
 
 // Define core clock rate
 #if 1 // Normal
@@ -123,7 +123,7 @@ enum {
 	INPUT_BUFFER_NOT_EMPTY
 };
 
-#define INPUT_BUFFER_SIZE  		3
+#define INPUT_BUFFER_SIZE	3
 
 enum {
 	DATA_NORMALIZED = 0,
@@ -172,8 +172,8 @@ enum {
 	BATTERY_VOLTAGE
 };
 
-#define VIN_CHANNEL     2
-#define VBAT_CHANNEL    3
+#define VIN_CHANNEL		2
+#define VBAT_CHANNEL	3
 
 #define LOW_VOLTAGE_THRESHOLD		5.4
 #define EXTERNAL_VOLTAGE_PRESENT	5.0
@@ -206,14 +206,14 @@ enum {
 #define BATT_MIN_VOLTS 			4.0
 
 #if NS8100_ORIGINAL_PROTOTYPE
-#define REFERENCE_VOLTAGE       (float)3.3
+#define REFERENCE_VOLTAGE		(float)3.3
 #else // (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
-#define REFERENCE_VOLTAGE       (float)2.5
+#define REFERENCE_VOLTAGE		(float)2.5
 #endif
-#define BATT_RESOLUTION         (float)1024  // 10-bit resolution
+#define BATT_RESOLUTION			(float)1024 // 10-bit resolution
 
 #define VOLTAGE_RATIO_BATT			(float)3
-#define VOLTAGE_RATIO_EXT_CHARGE    (float)16.05
+#define VOLTAGE_RATIO_EXT_CHARGE	(float)16.05
 
 enum {
 	KEYPAD_LED_STATE_UNKNOWN = 0,

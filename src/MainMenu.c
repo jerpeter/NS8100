@@ -25,9 +25,9 @@
 #define MAIN_WND_STARTING_COL	6
 #define MAIN_WND_END_COL		127 
 #define MAIN_WND_STARTING_ROW	8
-#define MAIN_WND_END_ROW		55             
+#define MAIN_WND_END_ROW		55
 #define MAIN_MN_TBL_START_LINE	0
-                                                                                                                                                
+
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
@@ -61,16 +61,16 @@ void MainMenuScroll(char, char, MN_LAYOUT_STRUCT*);
 ///----------------------------------------------------------------------------
 void MainMenu(INPUT_MSG_STRUCT msg)
 { 
-    static WND_LAYOUT_STRUCT wnd_layout;
-    static MN_LAYOUT_STRUCT mn_layout;
-  
-    MainMenuProc(msg, &wnd_layout, &mn_layout);
+	static WND_LAYOUT_STRUCT wnd_layout;
+	static MN_LAYOUT_STRUCT mn_layout;
 
-    if (g_activeMenu == MAIN_MENU)
-    {
-        DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
-        WriteMapToLcd(g_mmap);
-    }
+	MainMenuProc(msg, &wnd_layout, &mn_layout);
+
+	if (g_activeMenu == MAIN_MENU)
+	{
+		DisplaySelectMenu(&wnd_layout, &mn_layout, TITLE_CENTERED);
+		WriteMapToLcd(g_mmap);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -87,9 +87,9 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 	{
 		case (ACTIVATE_MENU_CMD):
 			wnd_layout_ptr->start_col = MAIN_WND_STARTING_COL;
-			wnd_layout_ptr->end_col =   MAIN_WND_END_COL;
+			wnd_layout_ptr->end_col = MAIN_WND_END_COL;
 			wnd_layout_ptr->start_row = MAIN_WND_STARTING_ROW;
-			wnd_layout_ptr->end_row =   MAIN_WND_END_ROW;
+			wnd_layout_ptr->end_row = MAIN_WND_END_ROW;
 
 			mn_layout_ptr->top_ln = 1;
 			mn_layout_ptr->sub_ln = 0;
@@ -177,7 +177,7 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 						default:
 							break;
 					}
-					break;      
+					break;
 
 				case (DOWN_ARROW_KEY):
 					MainMenuScroll(DOWN, SELECT_MN_WND_LNS, mn_layout_ptr);
@@ -212,53 +212,51 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 
 			// Since time was added, start the menu update timer
 			AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
-			break;    
+			break;
 	}
-
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
 void MainMenuScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT * mn_layout_ptr)
-{   
-   uint8 buff[50];
-   
-   strcpy((char*)buff, (char*)(g_menuPtr + mn_layout_ptr->curr_ln + 1)->data);
+{
+	uint8 buff[50];
 
-   switch (direction)
-   {
-      case (DOWN):
-           if (strcmp((char*)buff, ".end."))
-           {
-              mn_layout_ptr->curr_ln++;
+	strcpy((char*)buff, (char*)(g_menuPtr + mn_layout_ptr->curr_ln + 1)->data);
 
-              if ((mn_layout_ptr->curr_ln - mn_layout_ptr->top_ln) >= wnd_size) 
-              {
-                 mn_layout_ptr->top_ln++;
-              }
-           }
-           break;
-           
-      case (UP):
-           if (mn_layout_ptr->curr_ln > 3)
-           {
-              if (mn_layout_ptr->curr_ln == (mn_layout_ptr->top_ln + 2))
-              {
-                if (mn_layout_ptr->top_ln > 1)
-                {
-                    mn_layout_ptr->top_ln--;
-                }
-              }
+	switch (direction)
+	{
+		case (DOWN):
+			if (strcmp((char*)buff, ".end."))
+			{
+				mn_layout_ptr->curr_ln++;
 
-              mn_layout_ptr->curr_ln--;
-           }
-           break;
+				if ((mn_layout_ptr->curr_ln - mn_layout_ptr->top_ln) >= wnd_size)
+				{
+					mn_layout_ptr->top_ln++;
+				}
+			}
+			break;
 
-      default:
-           break; 
-   }
-   
+		case (UP):
+			if (mn_layout_ptr->curr_ln > 3)
+			{
+				if (mn_layout_ptr->curr_ln == (mn_layout_ptr->top_ln + 2))
+				{
+				if (mn_layout_ptr->top_ln > 1)
+				{
+					mn_layout_ptr->top_ln--;
+				}
+				}
+
+				mn_layout_ptr->curr_ln--;
+			}
+			break;
+
+		default:
+			break;
+	}
 }
 
 ///----------------------------------------------------------------------------

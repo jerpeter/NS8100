@@ -59,15 +59,9 @@ extern USER_MENU_STRUCT configMenu[];
 ///	Prototypes
 ///----------------------------------------------------------------------------
 void DateTimeMn(INPUT_MSG_STRUCT);
-void DateTimeMnProc(INPUT_MSG_STRUCT,
-                    REC_MN_STRUCT *,
-                    WND_LAYOUT_STRUCT *,
-                    MN_LAYOUT_STRUCT *);
-void DisplayDateTimeMn(REC_MN_STRUCT *,
-                     WND_LAYOUT_STRUCT *,
-                     MN_LAYOUT_STRUCT *);
-void LoadDateTimeMnDefRec(REC_MN_STRUCT *,
-                          DATE_TIME_STRUCT *);
+void DateTimeMnProc(INPUT_MSG_STRUCT, REC_MN_STRUCT *, WND_LAYOUT_STRUCT *, MN_LAYOUT_STRUCT *);
+void DisplayDateTimeMn(REC_MN_STRUCT *, WND_LAYOUT_STRUCT *, MN_LAYOUT_STRUCT *);
+void LoadDateTimeMnDefRec(REC_MN_STRUCT *, DATE_TIME_STRUCT *);
 void DateTimeDvScroll(char, REC_MN_STRUCT *);
 void DateTimeScroll(char, MN_LAYOUT_STRUCT *);
 
@@ -92,8 +86,7 @@ void DateTimeMn (INPUT_MSG_STRUCT msg)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
-                    WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
+void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	static DATE_TIME_STRUCT time;
@@ -103,13 +96,13 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 	{
 		case (ACTIVATE_MENU_CMD):
 			wnd_layout_ptr->start_col = DATE_TIME_WND_STARTING_COL;
-			wnd_layout_ptr->end_col =   DATE_TIME_WND_END_COL;
+			wnd_layout_ptr->end_col = DATE_TIME_WND_END_COL;
 			wnd_layout_ptr->start_row = DATE_TIME_WND_STARTING_ROW;
-			wnd_layout_ptr->end_row =   DATE_TIME_WND_END_ROW;
+			wnd_layout_ptr->end_row = DATE_TIME_WND_END_ROW;
 
-			mn_layout_ptr->curr_ln =    0;
-			mn_layout_ptr->top_ln =     0;
-			mn_layout_ptr->sub_ln =     0;
+			mn_layout_ptr->curr_ln = 0;
+			mn_layout_ptr->top_ln = 0;
+			mn_layout_ptr->sub_ln = 0;
 
 			time = GetExternalRtcTime();
 
@@ -229,7 +222,6 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr,
 		default:
 			break;
 	}
-
 }
 
 ///----------------------------------------------------------------------------
@@ -310,10 +302,10 @@ void DisplayDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr
 
 	memset(&sbuff[0], 0, sizeof(sbuff));
 
-	wnd_layout_ptr->curr_row =   wnd_layout_ptr->start_row;
-	wnd_layout_ptr->curr_col =   wnd_layout_ptr->start_col;
-	wnd_layout_ptr->next_row =   wnd_layout_ptr->start_row;
-	wnd_layout_ptr->next_col =   wnd_layout_ptr->start_col;
+	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
+	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
 	// Get the days per month, pass in the month num and the year for leap year
 	rec_ptr[DTM_DAY].numrec.nmax = GetDaysPerMonth((uint8)rec_ptr[DTM_MONTH].numrec.tindex,

@@ -67,21 +67,21 @@ void RemoveExtraSpaces(void);
 ///----------------------------------------------------------------------------
 void UserMenu(INPUT_MSG_STRUCT msg)
 { 
-    static WND_LAYOUT_STRUCT wnd_layout;
-    static MN_LAYOUT_STRUCT mn_layout;
-     
+	static WND_LAYOUT_STRUCT wnd_layout;
+	static MN_LAYOUT_STRUCT mn_layout;
+
 	// Handle all the preprocessing to setup the menu before it is displayed
-    UserMenuProc(msg, &wnd_layout,&mn_layout);
-    
+	UserMenuProc(msg, &wnd_layout,&mn_layout);
+
 	// Verify that the active menu is still the User Menu
-    if (g_activeMenu == USER_MENU)
-    {
+	if (g_activeMenu == USER_MENU)
+	{
 		// Setup the LCD map with the title position set inside the menu structure
-        DisplayUserMenu(&wnd_layout, &mn_layout, USER_MENU_TITLE_POSITION(g_userMenuCachePtr));
+		DisplayUserMenu(&wnd_layout, &mn_layout, USER_MENU_TITLE_POSITION(g_userMenuCachePtr));
 
 		// Write the LCD map to the screen
-        WriteMapToLcd(g_mmap);
-    }
+		WriteMapToLcd(g_mmap);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -100,11 +100,11 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 		// New menu display command
 		case (ACTIVATE_MENU_WITH_DATA_CMD):
 			wnd_layout_ptr->start_col = DEFAULT_COL_SIX;
-			wnd_layout_ptr->end_col =   DEFAULT_END_COL;
+			wnd_layout_ptr->end_col = DEFAULT_END_COL;
 			wnd_layout_ptr->start_row = DEFAULT_MENU_ROW_ONE;
-			wnd_layout_ptr->end_row =   DEFAULT_MENU_ROW_SEVEN;
-			mn_layout_ptr->top_ln =     1;
-			mn_layout_ptr->sub_ln =     0;
+			wnd_layout_ptr->end_row = DEFAULT_MENU_ROW_SEVEN;
+			mn_layout_ptr->top_ln = 1;
+			mn_layout_ptr->sub_ln = 0;
 
 			// Copy the static menu data into the user menu display and set the user menu handler
 			CopyMenuToCache((USER_MENU_STRUCT*)msg.data[CURRENT_USER_MENU]);
@@ -206,7 +206,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 							(*g_userMenuHandler)(ENTER_KEY, &g_userMenuCacheData.floatData);
 						}
 					}
-				break;      
+				break;
 
 				case (ESC_KEY):
 					if (g_userMenuHandler != NULL)

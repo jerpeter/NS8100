@@ -20,7 +20,7 @@
 #define BAUD_TEST_57600		0x55	/* 57600 autobaud test character */
 #define BAUD_TEST_38400		0x92	/* 38400 autobaud test character */
 #define BAUD_TEST_19200		0x1C	/* 19200 autobaud test character */
-#define BAUD_TEST_9600		0xE0	/*  9600 autobaud test character */
+#define BAUD_TEST_9600		0xE0	/* 9600 autobaud test character */
 #define UART_BLOCK			0
 #define UART_TIMEOUT		1
 #define UART_TIMEOUT_COUNT	50000	// Approx 250ms to process the code to wait
@@ -38,12 +38,12 @@ enum {
 	NO_CONVERSION
 };
 
-#define EOT   0x04
-#define ACK   0x06
-#define XON   0x11
-#define XOFF  0x13
-#define NACK  0x15
-#define CAN   0x18
+#define EOT		0x04
+#define ACK		0x06
+#define XON		0x11
+#define XOFF	0x13
+#define NACK	0x15
+#define CAN		0x18
 
 #define CLEAR_DTR	(AVR32_USART1.cr = (1 << AVR32_USART_DTRDIS))
 #define SET_DTR		(AVR32_USART1.cr = (1 << AVR32_USART_DTREN))
@@ -53,7 +53,7 @@ enum {
 
 #define READ_DSR 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_DSR)) ? (uint8)1 : (uint8)0)
 #define READ_DCD 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_DCD)) ? (uint8)1 : (uint8)0)
-#define READ_RI 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_RI))  ? (uint8)1 : (uint8)0)
+#define READ_RI 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_RI)) ? (uint8)1 : (uint8)0)
 #define READ_CTS 	((AVR32_USART1.csr & (1 << AVR32_USART_CSR_CTS)) ? (uint8)1 : (uint8)0)
 
 enum {

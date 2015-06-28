@@ -128,7 +128,7 @@ enum {
 #define USER_MENU_ACTIVE_ITEMS(menu)	(menu[MENU_INFO].byteData[TOTAL_MENU_ITEMS] - 2)
 
 // Max number of menu entries for any single menu. The config menu currently has the most. 
-#define MAX_MENU_ENTRIES   40
+#define MAX_MENU_ENTRIES	40
 
 // User Menu types
 enum {
@@ -192,7 +192,7 @@ enum {
 	BARGRAPH_MODE, 			// 11 
 	COMBO_MODE, 			// 12
 	MANUAL_CAL_MODE, 		// 13
-	MANUAL_TRIGGER_MODE		// 14    
+	MANUAL_TRIGGER_MODE		// 14
 } UNIT_OP_MODES;
 
 // Air Trigger stuff
@@ -238,7 +238,7 @@ enum {
 // Alarm Times
 #define ALARM_OUTPUT_TIME_DEFAULT	5 		// secs
 #define ALARM_OUTPUT_TIME_MIN		0.5		// secs
-#define ALARM_OUTPUT_TIME_MAX		60  	// secs
+#define ALARM_OUTPUT_TIME_MAX		60		// secs
 #define ALARM_OUTPUT_TIME_INCREMENT	0.5 	// secs
 
 // Auto Monitor stuff
@@ -634,15 +634,15 @@ typedef struct
 // Menu Data structure
 typedef struct
 {
-   uint8 data[MAX_CHAR_PER_LN];
+	uint8 data[MAX_CHAR_PER_LN];
 } MN_MEM_DATA_STRUCT;
 
 // Temp Menu Data structure
 typedef struct
 {
-   uint16 preTag;
-   uint16 textEntry;
-   uint16 postTag;
+	uint16 preTag;
+	uint16 textEntry;
+	uint16 postTag;
 } TEMP_MENU_DATA_STRUCT;
 
 // User Menu Macros for combining bytes into a long
@@ -758,7 +758,7 @@ typedef enum {
 	g_activeMenu = m; \
 	mn_msg.cmd = ACTIVATE_MENU_WITH_DATA_CMD;\
 	mn_msg.length = 1;\
-	mn_msg.data[0] = x;            
+	mn_msg.data[0] = x;
 
 #define SETUP_USER_MENU_MSG(a, b) \
 	g_activeMenu = USER_MENU;\

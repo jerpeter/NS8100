@@ -17,7 +17,7 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define FLASH_FULL_FLAG  			0x0000
+#define FLASH_FULL_FLAG				0x0000
 #define EVENT_RECORD_START_FLAG		0xA55A
 #define EVENT_RECORD_VERSION		0x0101
 #define EVENT_MAJOR_VERSION_MASK	0xFF00
@@ -29,16 +29,16 @@
 #define TOTAL_RAM_SUMMARIES 			(LAST_RAM_SUMMARY_INDEX + 1) // 800 total, was 925 total
 
 // Defines
-#define FLASH_EVENT_START (FLASH_BASE_ADDR + FLASH_BOOT_SIZE_x8 + (FIRST_FLASH_EVENT_DATA_SECTOR * FLASH_SECTOR_SIZE_x8))
-#define FLASH_EVENT_END   (FLASH_EVENT_START + (TOTAL_FLASH_EVENT_DATA_SECTORS * FLASH_SECTOR_SIZE_x8))
+#define FLASH_EVENT_START	(FLASH_BASE_ADDR + FLASH_BOOT_SIZE_x8 + (FIRST_FLASH_EVENT_DATA_SECTOR * FLASH_SECTOR_SIZE_x8))
+#define FLASH_EVENT_END		(FLASH_EVENT_START + (TOTAL_FLASH_EVENT_DATA_SECTORS * FLASH_SECTOR_SIZE_x8))
 
 #define FLASH_EVENT_START_BOUNDRY_UPDATE(flashPtr)		\
-	if (flashPtr <  (uint16*)FLASH_EVENT_START)			\
+	if (flashPtr < (uint16*)FLASH_EVENT_START)			\
 		flashPtr = (uint16*)((uint32)FLASH_EVENT_END - 	\
 			(uint32)FLASH_EVENT_START - (uint32)flashPtr)
 
 #define FLASH_EVENT_END_BOUNDRY_UPDATE(flashPtr) 							\
-	if (flashPtr >=  (uint16*)FLASH_EVENT_END)								\
+	if (flashPtr >= (uint16*)FLASH_EVENT_END)								\
 	{	flashPtr = (uint16*)((uint32)flashPtr - (uint32)FLASH_EVENT_END); 	\
 		flashPtr = (uint16*)((uint32)FLASH_EVENT_START + (uint32)flashPtr); }
 

@@ -17,8 +17,6 @@
 #include "print_funcs.h"
 #include "lcd.h"
 #include <stdio.h>
-
-// Added in NS7100 includes
 #include <stdlib.h>
 #include <string.h>
 #include "Typedefs.h"
@@ -475,7 +473,6 @@ void TestSnippetsExecLoop(void)
 		s_tempReading = g_currentTempReading;
 	}
 	#endif
-
 }
 
 ///----------------------------------------------------------------------------

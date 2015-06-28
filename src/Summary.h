@@ -77,13 +77,9 @@ typedef struct
 } SEISMIC_CHANNEL_INFO_STRUCT;
 
 // Parameter Information, Initial condition information and system level settings. 
-#if 0 // Prior to added fields (ns7100)
-#define UNUSED_PARAMETERS_SIZE	40
-#else // 8100
 //#define UNUSED_PARAMETERS_SIZE	28
 // Added Smart sensor information (12 bytes each for seismic and acoustic) and Cal date source
 #define UNUSED_PARAMETERS_SIZE	3
-#endif
 
 #pragma pack(1)
 typedef struct
@@ -94,7 +90,7 @@ typedef struct
 	uint16	seismicSensorType;
 	uint16	airSensorType;
 	uint8	bitAccuracy;
-	uint8  	aWeighting;
+	uint8	aWeighting;
 	uint8	numOfChannels;
 	uint8	activeChannels;
 	uint8	appMajorVersion;	// Used for modem config
@@ -104,7 +100,7 @@ typedef struct
 	// Waveform specific - Initial conditions.
 	uint32	seismicTriggerLevel;
 	uint32	airTriggerLevel;
-	uint32  recordTime;
+	uint32	recordTime;
 	uint16	numOfSamples;
 	uint16	preBuffNumOfSamples;
 	uint16	calDataNumOfSamples;
@@ -162,7 +158,7 @@ typedef struct
 #pragma pack()
 
 // Channel Calculated Data - Data captured or calculated during
-//  an event. Can be for waveform or bargraph events.
+//	an event. Can be for waveform or bargraph events.
 typedef struct
 {
 	uint16 peak;							// Max peak, kept in raw values, not in units of measurements.
@@ -276,7 +272,7 @@ typedef struct
 typedef struct
 { 
 	uint32 fileEventNum;
-	uint8  mode;
+	uint8 mode;
 	SUMMARY_WAVESHAPE waveShapeData;
 } SUMMARY_DATA;
 
