@@ -215,8 +215,7 @@ void handleEEM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	else
 	{
-		// fix_ns8100 - update to handle SD MMC Card
-
+		DeleteEventFileRecords();
 		InitRamSummaryTbl();
 		InitFlashBuffs();
 	}
