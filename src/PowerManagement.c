@@ -427,8 +427,15 @@ void PowerUnitOff(uint8 powerOffMode)
 	{
 		debug("Powering unit off (reboot)...\r\n");
 
+#if 0 // Original method doesn't work (especially with debug enabled)
 		Disable_global_interrupt();
 		AVR32_WDT.ctrl |= 0x00000001;
+#else // Updated method
+		SetTimeOfDayAlarmNearFuture(2);
+
+		// Shutdown application
+		PowerControl(POWER_OFF, ON);
+#endif
 	}
 
 	while (1) { /* do nothing */ };

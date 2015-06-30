@@ -500,3 +500,57 @@ void ResetTimeOfDayAlarm(void)
 		EnableExternalRtcAlarm(startDay, g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, 0);
 	}
 }
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void SetTimeOfDayAlarmNearFuture(uint8 secondsInFuture)
+{
+	DATE_TIME_STRUCT currTime = GetExternalRtcTime();
+
+	uint8 startDay = currTime.day;
+	uint8 startHour = currTime.hour;
+	uint8 startMin = currTime.min;
+	uint8 startSec = currTime.sec;
+
+	// Can't set alarm any further than 195 seconds into future
+	if (secondsInFuture > 195) { secondsInFuture = 195; }
+
+	// Add in seconds in future for alarm to kick
+	startSec += secondsInFuture;
+
+	// Check if seconds rolled
+	if (startSec > 59)
+	{
+		// Set to start seconds and increment minute
+		startSec = startSec - 60;
+		startMin += 1;
+
+		// Check if minutes rolled
+		if (startMin > 59)
+		{
+			// Set to start minute and increment hour
+			startMin = 0;
+			startHour += 1;
+
+			// Check if hours rolled
+			if (startHour > 23)
+			{
+				// Set to start hour and increment day
+				startHour = 0;
+				startDay += 1;
+
+				// Check if start day rolled into next month
+				if (startDay > g_monthTable[currTime.month].days)
+				{
+					// Set to the first of the month
+					startDay = 1;
+				}
+			}
+		}
+	}
+
+	debug("Timer mode: Set TOD Alarm Near Future with (hour) %d, (min) %d, (sec) %d, (start day) %d\r\n", startHour, startMin, startSec, startDay);
+
+	EnableExternalRtcAlarm(startDay, startHour, startMin, startSec);
+}

@@ -72,6 +72,7 @@ void HandleMidnightEvent(void);
 BOOLEAN TimerModeActiveCheck(void);
 uint8 IsSoftTimerActive(uint16);
 void ResetTimeOfDayAlarm(void);
+void SetTimeOfDayAlarmNearFuture(uint8 secondsInFuture);
 void HandleUserPowerOffDuringTimerMode(void);
 void DisplayTimerCallBack(void);
 void LcdPwTimerCallBack(void);
