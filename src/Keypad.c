@@ -28,7 +28,7 @@
 #define CHECK_FOR_COMBO_KEY_DELAY 	20		// 20 * 1 msec ticks = 20 mssec
 #define WAIT_AFTER_COMBO_KEY_DELAY 	250		// 250 * 1 msec ticks = 250 mssec
 #define REPEAT_DELAY 				100		// 100 * 1 msec ticks = 100 msecs
-#define DEBOUNCE_READS 				15		// 100 * 1 msec ticks = 100 msecs
+#define DEBOUNCE_READS 				5		// 100 * 1 msec ticks = 100 msecs
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -46,29 +46,13 @@ static uint8 s_keyMap[8];
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void CycleSleepMode(void)
-{
-	if (g_sleepModeState == AVR32_PM_SMODE_STOP) { g_sleepModeState = AVR32_PM_SMODE_IDLE; debug("Sleep mode level is now: Idle\r\n"); }
-	else if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { g_sleepModeState = AVR32_PM_SMODE_FROZEN; debug("Sleep mode level is now: Frozen\r\n"); }
-	else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { g_sleepModeState = AVR32_PM_SMODE_STANDBY; debug("Sleep mode level is now: Standby\r\n"); }
-	else if (g_sleepModeState == AVR32_PM_SMODE_STANDBY) { g_sleepModeState = AVR32_PM_SMODE_STOP; debug("Sleep mode level is now: Stop\r\n"); }
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
 BOOLEAN KeypadProcessing(uint8 keySource)
 {
 	INPUT_MSG_STRUCT msg;
-	INPUT_MSG_STRUCT* p_msg = &msg;
 	uint8 rowMask = 0;
 	uint8 keyPressed = KEY_NONE;
 	uint8 numKeysPressed = 0;
 	uint8 i = 0;
-	uint8 ctrlKeyPressed = NO;
-	uint8 shiftKeyPressed = NO;
-
-	static uint32 lookForComboKeyRepeatTickCount = 0;
 
 	// Prevents the interrupt routine from setting the system keypress flag.
 	g_kpadProcessingFlag = ACTIVATED;
@@ -96,15 +80,17 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 			for (i = 0; i < DEBOUNCE_READS; i++)
 			{
 				s_keyMap[0] &= ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
-				SoftUsecWait(i * 50);
+				SoftUsecWait(5 * SOFT_MSECS);
 			}
 		}
 #endif
 	}
 	else // Keypad interrupt and key timer hasn't been started, or key processing source was the timer
 	{
-		// Key is being pressed, and only one read should be sufficient for detecting the key
+		// Read the key that is being pressed (couple reads to make sure)
 		s_keyMap[0] = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
+		s_keyMap[0] &= ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
+		s_keyMap[0] &= ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 	}
 
 	if (s_keyMap[0]) { debugRaw(" (Key Pressed: %x)", s_keyMap[0]); }
@@ -136,8 +122,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		g_kpadProcessingFlag = DEACTIVATED;
 		g_kpadCheckForKeyFlag = DEACTIVATED;
 
-		// Clear last key pressed
-		g_kpadLastKeyPressed = KEY_NONE;
+		SoftUsecWait(25 * SOFT_MSECS);
 
 		while (g_kpadInterruptWhileProcessing == YES)
 		{
@@ -147,6 +132,9 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 
 		// Disable the key timer
 		Stop_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
+
+		// Clear last key pressed
+		g_kpadLastKeyPressed = KEY_NONE;
 
 		// No keys detected, done processing
 		return(PASSED);
@@ -158,24 +146,6 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 	{
 		// Start the key timer
 		Start_Data_Clock(TC_TYPEMATIC_TIMER_CHANNEL);
-	}
-
-	// Check specific condition after a combo sequence where the special key was released before the regular key
-	if ((numKeysPressed == 1) && (g_kpadLastKeyPressed == keyPressed) &&
-		(shiftKeyPressed == NO) && (ctrlKeyPressed == NO))
-	{
-		// Check if a combination sequence was completed less than one second from start before this
-		if (lookForComboKeyRepeatTickCount > g_keypadTimerTicks)
-		{
-			// Prevent condition from occurring twice
-			lookForComboKeyRepeatTickCount = g_keypadTimerTicks;
-
-			// Reset delay to 250 msecs before looking again
-			g_kpadLookForKeyTickCount = WAIT_AFTER_COMBO_KEY_DELAY + g_keypadTimerTicks;
-
-			// Finished processing
-			return (PASSED);
-		}
 	}
 
 	//---------------------------------------------------------------------------------
@@ -203,9 +173,9 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 			s_fixedSpecialSpeed = 10000;
 		}
 
-		p_msg->length = 1;
-		p_msg->cmd = KEYPRESS_MENU_CMD;
-		p_msg->data[0] = keyPressed;
+		msg.length = 1;
+		msg.cmd = KEYPRESS_MENU_CMD;
+		msg.data[0] = keyPressed;
 
 		if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 		{
@@ -214,7 +184,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		}
 
 		// Enqueue the message
-		SendInputMsg(p_msg);
+		SendInputMsg(&msg);
 
 		// Done processing repeating key
 	}
@@ -231,7 +201,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		g_kpadKeyRepeatCount = 0;
 		s_fixedSpecialSpeed = 0;
 
-		// Set delay for 1 sec before considering key repeating
+		// Set delay for some time before considering key repeating
 		g_kpadLookForKeyTickCount = CHECK_FOR_REPEAT_KEY_DELAY + g_keypadTimerTicks;
 
 		//---------------------------------------------------------------------------------
@@ -265,18 +235,18 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					//debug("New sample rate: %d\r\n", g_triggerRecord.trec.sample_rate);
 				}
 				
-				p_msg->cmd = 0;
-				p_msg->length = 0;
+				msg.cmd = 0;
+				msg.length = 0;
 #else
-				p_msg->cmd = BACK_LIGHT_CMD;
-				p_msg->length = 0;
+				msg.cmd = BACK_LIGHT_CMD;
+				msg.length = 0;
 #endif
 			}
 			else // all other keys
 			{
-				p_msg->length = 1;
-				p_msg->data[0] = keyPressed;
-				p_msg->cmd = KEYPRESS_MENU_CMD;
+				msg.length = 1;
+				msg.data[0] = keyPressed;
+				msg.cmd = KEYPRESS_MENU_CMD;
 			}
 
 			//---------------------------------------------------------------------------------
@@ -312,8 +282,8 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					if (keyPressed == ENTER_KEY)
 					{
 						// Issue a Ctrl-C for Manual Calibration
-						p_msg->cmd = CTRL_CMD;
-						p_msg->data[0] = 'C';
+						msg.cmd = CTRL_CMD;
+						msg.data[0] = 'C';
 					}
 					else if (keyPressed == ESC_KEY)
 					{
@@ -355,7 +325,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 				}
 
 				// Enqueue the message
-				SendInputMsg(p_msg);
+				SendInputMsg(&msg);
 			}
 		}
 	}

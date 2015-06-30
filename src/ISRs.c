@@ -138,9 +138,6 @@ void Eic_keypad_irq(void)
 	if (g_kpadProcessingFlag == DEACTIVATED)
 	{
 		raiseSystemEventFlag(KEYPAD_EVENT);
-
-		// Found a new key, reset last stored key
-		g_kpadLastKeyPressed = KEY_NONE;
 	}
 	else
 	{
