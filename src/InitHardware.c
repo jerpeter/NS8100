@@ -1053,13 +1053,13 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Smart Sensor data/control init (Hardware pull up on signal)
 	//-------------------------------------------------------------------------
-	OneWireInit();
+	OneWireInit(); debug("One Wire init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Init the SPI interfaces
 	//-------------------------------------------------------------------------
-	SPI_0_Init();
-	SPI_1_Init();
+	SPI_0_Init(); debug("SPI0 init complete\r\n");
+	SPI_1_Init(); debug("SPI1 init complete\r\n");
 	
 	// Make sure SPI 0 and 1 inputs aren't floating
 	gpio_enable_pin_pull_up(AVR32_SPI0_MISO_0_0_PIN);
@@ -1073,7 +1073,7 @@ void InitSystemHardware_NS8100(void)
 	PowerControl(SERIAL_485_RECEIVER_ENABLE, ON);
 #endif
 
-	InitSerial485();
+	InitSerial485(); debug("RS485 init complete\r\n");
 
 	PowerControl(SERIAL_485_DRIVER_ENABLE, OFF);
 #if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
@@ -1087,17 +1087,17 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Initialize the external RTC
 	//-------------------------------------------------------------------------
-	InitExternalRtc();
+	InitExternalRtc(); debug("External RTC init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Set LAN to Sleep
 	//-------------------------------------------------------------------------
-	InitLANToSleep();
+	InitLANToSleep(); debug("LAN init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Initialize the AD Control
 	//-------------------------------------------------------------------------
-	InitAnalogControl();
+	InitAnalogControl(); debug("Analog Control init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Init the LCD display
@@ -1108,7 +1108,7 @@ void InitSystemHardware_NS8100(void)
 	Backlight_On();
 	Backlight_High();
 	Set_Contrast(DEFUALT_CONTRAST);
-	InitDisplay();
+	InitDisplay(); debug("LCD Display init complete\r\n");
 
 #if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	memcpy(g_mmap, sign_on_logo, (8*128));
@@ -1118,17 +1118,17 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init the Internal RTC for half second tick used for state processing
 	//-------------------------------------------------------------------------
-	InitInternalRTC();
+	InitInternalRTC(); debug("Internal RTC init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Enable Processor A/D
 	//-------------------------------------------------------------------------
-	InitInternalAD();
+	InitInternalAD(); debug("Internal A/D init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Power on the SD Card and init the file system
 	//-------------------------------------------------------------------------
-	InitSDAndFileSystem();
+	InitSDAndFileSystem(); debug("SD Card and filesystem init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Initialize USB clock.
@@ -1150,7 +1150,7 @@ void InitSystemHardware_NS8100(void)
 	// Init Keypad
 	//-------------------------------------------------------------------------
 #if 1 // Tried to remove but getting double key presses (Prior: moved to software init because the MCP23018 doesn't like to be initialized here)
-	InitExternalKeypad();
+	InitExternalKeypad(); debug("Keyboard init complete\r\n");
 #endif
 
 	//-------------------------------------------------------------------------
@@ -1197,23 +1197,23 @@ void InitSystemHardware_NS8100(void)
 
 	//-------------------------------------------------------------------------
 	// Init and configure the A/D to prevent the unit from burning current charging internal reference (default config)
-	InitExternalAD();
+	InitExternalAD(); debug("External A/D init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Turn on rs232 driver and receiver (Active low control)
 	//-------------------------------------------------------------------------
-	InitSerial232();
+	InitSerial232(); debug("Craft RS232 init complete\r\n");
 	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
 	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
 
 	//-------------------------------------------------------------------------
 	// Set the power savings mode based on the saved setting
-	AdjustPowerSavings();
+	AdjustPowerSavings(); debug("Power Savings init complete\r\n");
 
 #if 1 // Test
 	//-------------------------------------------------------------------------
 	// Test the External RAM Event buffer to make sure it's valid
-	TestExternalRAM();
+	TestExternalRAM(); debug("External RAM Test init complete\r\n");
 #endif
 
 #if 1 // Remove for testing
