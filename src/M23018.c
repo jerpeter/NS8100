@@ -138,9 +138,11 @@ void InitMcp23018(void)
 	WriteMcp23018(IO_ADDRESS_KPD, INTCONA, 0x00);
 	WriteMcp23018(IO_ADDRESS_KPD, INTCONB, 0x00);
 
+#if 0 // Prevent enabling interrupt on init (done at the end of Software Init now)
 	// Interrupt Enable on Change
 	WriteMcp23018(IO_ADDRESS_KPD, GPINTENA, 0x0F);
 	WriteMcp23018(IO_ADDRESS_KPD, GPINTENB, 0xFF);
+#endif
 
 	// Clear any interrupt generation
 	ReadMcp23018(IO_ADDRESS_KPD, INTFA);
@@ -152,6 +154,23 @@ void InitMcp23018(void)
 	// clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int4 = 1;
 	AVR32_EIC.ICR.int5 = 1;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void EnableMcp23018Interrupts(void)
+{
+	// Disable Interrupt Enable on Change
+	WriteMcp23018(IO_ADDRESS_KPD, GPINTENA, 0x0F);
+	WriteMcp23018(IO_ADDRESS_KPD, GPINTENB, 0xFF);
+
+	// Clear any interrupt generation
+	ReadMcp23018(IO_ADDRESS_KPD, INTFA);
+	ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
+
+	ReadMcp23018(IO_ADDRESS_KPD, INTFB);
+	ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 }
 
 ///----------------------------------------------------------------------------

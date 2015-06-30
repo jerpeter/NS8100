@@ -444,5 +444,10 @@ void InitSoftwareSettings_NS8100(void)
 	debug("Jump to Main Menu\r\n");
 	SETUP_MENU_MSG(MAIN_MENU);
 	JUMP_TO_ACTIVE_MENU();
+
+	//-------------------------------------------------------------------------
+	// Enable keypad key input (delayed to prevent key input from locking unit)
+	//-------------------------------------------------------------------------
+	EnableMcp23018Interrupts();
 }
 
