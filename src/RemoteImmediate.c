@@ -215,7 +215,8 @@ void handleEEM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	else
 	{
-		DeleteEventFileRecords();
+		// Delete events, recalculate space and reinitialize tables		DeleteEventFileRecords();
+		GetSDCardUsageStats();
 		InitRamSummaryTbl();
 		InitFlashBuffs();
 	}

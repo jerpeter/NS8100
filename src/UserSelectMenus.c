@@ -1573,9 +1573,9 @@ void EraseEventsMenuHandlerz(uint8 keyPressed, void* data)
 				sprintf(stringBuff, "%s %s", getLangText(ERASE_OPERATION_IN_PROGRESS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT));
 				OverlayMessage(getLangText(STATUS_TEXT), stringBuff, 0);
 
+				// Delete events, recalculate space and reinitialize tables
 				DeleteEventFileRecords();
-
-				// Re-Init the ram summary table and the flash buffers
+				GetSDCardUsageStats();
 				InitRamSummaryTbl();
 				InitFlashBuffs();
 
