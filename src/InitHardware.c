@@ -763,7 +763,7 @@ extern void Sleep8900_LedOn(void);
 void InitExternalKeypad(void)
 {
 	InitTWI();
-	InitMcp23018(IO_ADDRESS_KPD);
+	InitMcp23018();
 
 	// Primer read
 	uint8 keyScan = ReadMcp23018(IO_ADDRESS_KPD, GPIOB);

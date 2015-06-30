@@ -1114,6 +1114,7 @@ void BootLoadManager(void)
 
 		// Enable half second tick
 extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
+		DisableMcp23018Interrupts();
 		rtc_disable_interrupt(&AVR32_RTC);
 		tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 		tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);

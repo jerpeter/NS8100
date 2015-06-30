@@ -108,39 +108,39 @@ unsigned char ReadMcp23018(unsigned char chip, unsigned char address)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void InitMcp23018(unsigned char chip)
+void InitMcp23018(void)
 {
 	// I/O Config
-	WriteMcp23018(chip, IOCONA, 0x20);
-	WriteMcp23018(chip, IOCONB, 0x20);
+	WriteMcp23018(IO_ADDRESS_KPD, IOCONA, 0x20);
+	WriteMcp23018(IO_ADDRESS_KPD, IOCONB, 0x20);
 
 	// Port Value
-	WriteMcp23018(chip, GPIOA, 0x00);
-	WriteMcp23018(chip, GPIOB, 0x00);
+	WriteMcp23018(IO_ADDRESS_KPD, GPIOA, 0x00);
+	WriteMcp23018(IO_ADDRESS_KPD, GPIOB, 0x00);
 
 	// Port Direction
-	WriteMcp23018(chip, IODIRA, 0x0F);
-	WriteMcp23018(chip, IODIRB, 0xFF);
+	WriteMcp23018(IO_ADDRESS_KPD, IODIRA, 0x0F);
+	WriteMcp23018(IO_ADDRESS_KPD, IODIRB, 0xFF);
 
 	// Pullup (Open drain outputs only, without pullups you can't drive)
-	WriteMcp23018(chip, GPPUA, 0xFF);
-	WriteMcp23018(chip, GPPUB, 0xFF);
+	WriteMcp23018(IO_ADDRESS_KPD, GPPUA, 0xFF);
+	WriteMcp23018(IO_ADDRESS_KPD, GPPUB, 0xFF);
 
 	// Polarity
-	WriteMcp23018(chip, IOPOLA, 0x0E);
-	WriteMcp23018(chip, IOPOLB, 0xFF);
+	WriteMcp23018(IO_ADDRESS_KPD, IOPOLA, 0x0E);
+	WriteMcp23018(IO_ADDRESS_KPD, IOPOLB, 0xFF);
 
 	// Default Value
-	WriteMcp23018(chip, DEFVALA, 0x00);
-	WriteMcp23018(chip, DEFVALB, 0x00);
+	WriteMcp23018(IO_ADDRESS_KPD, DEFVALA, 0x00);
+	WriteMcp23018(IO_ADDRESS_KPD, DEFVALB, 0x00);
 
 	// Interrupt on Change Compare
-	WriteMcp23018(chip, INTCONA, 0x00);
-	WriteMcp23018(chip, INTCONB, 0x00);
+	WriteMcp23018(IO_ADDRESS_KPD, INTCONA, 0x00);
+	WriteMcp23018(IO_ADDRESS_KPD, INTCONB, 0x00);
 
 	// Interrupt Enable on Change
-	WriteMcp23018(chip, GPINTENA, 0x0F);
-	WriteMcp23018(chip, GPINTENB, 0xFF);
+	WriteMcp23018(IO_ADDRESS_KPD, GPINTENA, 0x0F);
+	WriteMcp23018(IO_ADDRESS_KPD, GPINTENB, 0xFF);
 
 	// Clear any interrupt generation
 	ReadMcp23018(IO_ADDRESS_KPD, INTFA);
@@ -152,4 +152,21 @@ void InitMcp23018(unsigned char chip)
 	// clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int4 = 1;
 	AVR32_EIC.ICR.int5 = 1;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void DisableMcp23018Interrupts(void)
+{
+	// Disable Interrupt Enable on Change
+	WriteMcp23018(IO_ADDRESS_KPD, GPINTENA, 0x00);
+	WriteMcp23018(IO_ADDRESS_KPD, GPINTENB, 0x00);
+
+	// Clear any interrupt generation
+	ReadMcp23018(IO_ADDRESS_KPD, INTFA);
+	ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
+
+	ReadMcp23018(IO_ADDRESS_KPD, INTFB);
+	ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
 }
