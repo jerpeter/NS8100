@@ -1025,7 +1025,7 @@ void InitSystemHardware_NS8100(void)
 	InitDebug232();
 
 	usart_write_line((&AVR32_USART0), "\r\n=========================================================\r\n");
-	usart_write_line((&AVR32_USART0), "=== NS8100 Alpha Debug Port\r\n");
+	usart_write_line((&AVR32_USART0), "=== NS8100 Debug Port\r\n");
 	usart_write_line((&AVR32_USART0), "=========================================================\r\n");
 #endif
 
@@ -1064,6 +1064,13 @@ void InitSystemHardware_NS8100(void)
 	// Make sure SPI 0 and 1 inputs aren't floating
 	gpio_enable_pin_pull_up(AVR32_SPI0_MISO_0_0_PIN);
 	gpio_enable_pin_pull_up(AVR32_SPI1_MISO_0_0_PIN);
+
+	//-------------------------------------------------------------------------
+	// Turn on rs232 driver and receiver (Active low control)
+	//-------------------------------------------------------------------------
+	InitSerial232(); debug("Craft RS232 init complete\r\n");
+	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
 
 	//-------------------------------------------------------------------------
 	// Turn on rs485 driver and receiver
@@ -1198,13 +1205,6 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init and configure the A/D to prevent the unit from burning current charging internal reference (default config)
 	InitExternalAD(); debug("External A/D init complete\r\n");
-
-	//-------------------------------------------------------------------------
-	// Turn on rs232 driver and receiver (Active low control)
-	//-------------------------------------------------------------------------
-	InitSerial232(); debug("Craft RS232 init complete\r\n");
-	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
-	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
 
 	//-------------------------------------------------------------------------
 	// Set the power savings mode based on the saved setting

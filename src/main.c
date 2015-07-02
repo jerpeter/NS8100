@@ -1004,26 +1004,18 @@ void UsbDeviceManager(void)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #define APPLICATION		(((void *)AVR32_EBI_CS1_ADDRESS) + 0x00700000)
-const char default_boot_name[] = {
-	"Boot.s\0"
-};
+const char default_boot_name[] = { "Boot.s" };
 
 void BootLoadManager(void)
 {
-	int16 usart_status;
-	int craft_char;
 	char textBuffer[50];
 	static void (*func)(void);
 	func = (void(*)())APPLICATION;
-	uint32 i;
 	int file = -1;
+	uint32 baudRate;
 
-	usart_status = USART_RX_EMPTY;
-	i = 0;
-
-	usart_status = usart_read_char(DBG_USART, &craft_char);
-
-	if ((craft_char == CTRL_B) || (g_quickBootEntryJump == YES))
+	// Check if a Ctrl-B was found in the USART receive holding register or if requested to jump to boot
+	if ((AVR32_USART1.rhr == CTRL_B) || (g_quickBootEntryJump == YES))
 	{
 #if 1
 		if (g_quickBootEntryJump == YES)
@@ -1141,6 +1133,18 @@ extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
 		PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 
 		Disable_global_interrupt();
+
+		switch (g_unitConfig.baudRate)
+		{
+			case BAUD_RATE_115200: baudRate = 115200; break;
+			case BAUD_RATE_57600: baudRate = 57600; break;
+			case BAUD_RATE_38400: baudRate = 38400; break;
+			case BAUD_RATE_19200: baudRate = 19200; break;
+			case BAUD_RATE_9600: baudRate = 9600; break;
+			default: baudRate = 0;
+		}
+
+		AVR32_PM.gplp[0] = baudRate;
 
 		//Jump to boot application code
 		func();
