@@ -676,9 +676,7 @@ void CheckBootloaderAppPresent(void)
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
-		strcpy((char*)g_spareBuffer, "A:\\System\\%s");
-
-		strcat((char*)g_spareBuffer, default_boot_name);
+		sprintf((char*)g_spareBuffer, "A:\\System\\%s", default_boot_name);
 
 		file = open((char*)g_spareBuffer, O_RDONLY);
 
@@ -688,6 +686,10 @@ void CheckBootloaderAppPresent(void)
 
 			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(file);
+		}
+		else
+		{
+			debugWarn("Bootloader not found\r\n");
 		}
 
 		//g_fileAccessLock = AVAILABLE;
