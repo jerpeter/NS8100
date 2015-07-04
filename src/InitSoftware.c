@@ -69,41 +69,61 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void setupMnDef(void)
+extern void BootLoadManager(void);
+void BootloaderEntryCheck(void)
 {
-	char buff[50];
-	DATE_TIME_STRUCT tempTime;
+	// Check if a Ctrl-B was found in the USART receive holding register or if requested to jump to boot
+	if (AVR32_USART1.rhr == CTRL_B)
+	{
+		g_quickBootEntryJump = YES;
+		BootLoadManager();
+	}
+}
 
-	//-------------------------------------------------------------------------
-	// Turn the LCD on
-	debug("Init Power on LCD...\r\n");
-	PowerControl(LCD_POWER_ENABLE, ON);
-	SoftUsecWait(LCD_ACCESS_DELAY);
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void DisplayVersionToDebug(void)
+{
+	int majorVer, minorVer;
+	char buildVer;
+	sscanf(&g_buildVersion[0], "%d.%d.%c", &majorVer, &minorVer, &buildVer);
 
-	//-------------------------------------------------------------------------
-	// Load Trig Record 0 to get the last settings
-	debug("Loading Monitor & Trigger record\r\n");
+	debug("--- System Init complete (Version %d.%d.%c) ---\r\n", majorVer, minorVer, buildVer);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void LoadDefaultTriggerRecord(void)
+{
 	GetRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 	// Check if the Default Trig Record is uninitialized
 	if ((g_triggerRecord.op_mode != WAVEFORM_MODE) && (g_triggerRecord.op_mode != BARGRAPH_MODE) &&
-		(g_triggerRecord.op_mode != COMBO_MODE))
+	(g_triggerRecord.op_mode != COMBO_MODE))
 	{
 		debugWarn("Monitor & Trigger Record: Operation Mode not set\r\n");
+#if EXTENDED_DEBUG
 		debug("Monitor & Trigger Record: Loading defaults and setting mode to Waveform\r\n");
+#endif
 		LoadTrigRecordDefaults((REC_EVENT_MN_STRUCT*)&g_triggerRecord, WAVEFORM_MODE);
 	}
 	else
 	{
+#if EXTENDED_DEBUG
 		debug("Loading Monitor & Trigger record is valid\r\n");
-
+#endif
 		// Make sure record is marked valid
 		g_triggerRecord.validRecord = YES;
 	}
+}
 
-	//-------------------------------------------------------------------------
-	// Load the Unit Config
-	debug("Loading Unit Config record\r\n");
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void LoadUnitConfig(void)
+{
 	GetRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
 	// Check if the Unit Config is uninitialized
@@ -111,14 +131,19 @@ void setupMnDef(void)
 	{
 		// Set defaults in Unit Config
 		debugWarn("Unit Config: Not found.\r\n");
+#if EXTENDED_DEBUG
 		debug("Loading Unit Config Defaults\r\n");
+#endif
+
 		LoadUnitConfigDefaults((UNIT_CONFIG_STRUCT*)&g_unitConfig);
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 	}
 	else
 	{
 		// Unit Config is valid
+#if EXTENDED_DEBUG
 		debug("Unit Config record is valid\r\n");
+#endif
 
 		if ((g_unitConfig.pretrigBufferDivider != PRETRIGGER_BUFFER_QUARTER_SEC_DIV) && (g_unitConfig.pretrigBufferDivider != PRETRIGGER_BUFFER_HALF_SEC_DIV) &&
 		(g_unitConfig.pretrigBufferDivider != PRETRIGGER_BUFFER_FULL_SEC_DIV))
@@ -127,7 +152,7 @@ void setupMnDef(void)
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 		}
 
-#if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
+		#if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
 		// Set the baud rate to the user stored baud rate setting (initialized to 115200)
 		switch (g_unitConfig.baudRate)
 		{
@@ -142,43 +167,46 @@ void setupMnDef(void)
 			// Re-Initialize the RS232 with the stored baud rate
 			usart_init_rs232(&AVR32_USART1, &rs232Options, FOSC0);
 		}
-#endif
+		#endif
 	}
+}
 
-	//-------------------------------------------------------------------------
-	// Build the language table based on the user's last language choice
-	debug("Init Build Language Table...\r\n");
-	BuildLanguageLinkTable(g_unitConfig.languageMode);
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void LoadModemSetupRecord(void)
+{
+	GetRecordData(&g_modemSetupRecord, 0, REC_MODEM_SETUP_TYPE);
 
-	//-------------------------------------------------------------------------
-	// Initialize Unit Config items such as contrast, timers
-	debug("Init Activate Unit Config Options...\r\n");
-	ActivateUnitConfigOptions();
+	// Check if the Modem Setup Record is invalid
+	if (g_modemSetupRecord.invalid)
+	{
+		// Warn the user
+		debugWarn("Modem setup record not found.\r\n");
 
-	//-------------------------------------------------------------------------
-	// Wait 1/2 second for the LCD power to settle
-	SoftUsecWait(500 * SOFT_MSECS);
+		// Initialize the Modem Setup Record
+		LoadModemSetupRecordDefaults();
 
-	//-------------------------------------------------------------------------
-	// Display the Splash screen
-	debug("Display Splash screen\r\n");
-	DisplaySplashScreen();
+		// Save the Modem Setup Record
+		SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
+	}
+	else
+	{
+#if EXTENDED_DEBUG
+		debug("Modem Setup record is valid\r\n");
+#endif
+		ValidateModemSetupParameters();
+	}
+}
 
-	//-------------------------------------------------------------------------
-	// Wait at least 3 seconds for the main screen to be displayed
-	SoftUsecWait(3 * SOFT_SECS);
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void LoadFactorySetupRecord(void)
+{
+	DATE_TIME_STRUCT tempTime;
+	char buff[50];
 
-	//-------------------------------------------------------------------------
-	// Disable auto print since there is no printer option
-	g_unitConfig.autoPrint = NO;
-
-	//-------------------------------------------------------------------------
-	// Display Smart Sensor information if found
-	DisplaySmartSensorInfo(INFO_ON_INIT);
-
-	//-------------------------------------------------------------------------
-	// Load the Factory Setup Record
-	debug("Loading Factory setup record\r\n");
 	GetRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 
 	// Check if the Factory Setup Record is valid
@@ -218,66 +246,6 @@ void setupMnDef(void)
 		debugWarn("Factory setup record not found.\r\n");
 		OverlayMessage(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), (2 * SOFT_SECS));
 	}
-
-	//-------------------------------------------------------------------------
-	// Load the Modem Setup Record
-	debug("Load Modem Setup record\r\n");
-	GetRecordData(&g_modemSetupRecord, 0, REC_MODEM_SETUP_TYPE);
-
-	// Check if the Modem Setup Record is invalid
-	if (g_modemSetupRecord.invalid)
-	{
-		// Warn the user
-		debugWarn("Modem setup record not found.\r\n");
-
-		// Initialize the Modem Setup Record
-		LoadModemSetupRecordDefaults();
-
-		// Save the Modem Setup Record
-		SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
-	}
-	else
-	{
-		debug("Modem Setup record is valid\r\n");
-
-		ValidateModemSetupParameters();
-	}
-
-	//-------------------------------------------------------------------------
-	// Add OnOff Log Timestamp
-	debug("Adding On/Off Log timestamp\r\n");
-	AddOnOffLogTimestamp(ON);
-	
-#if 0 // Removed debug log file due to inducing system problems
-	//-------------------------------------------------------------------------
-	// Switch Debug Log file
-	SwitchDebugLogFile();
-#endif
-	
-	//-------------------------------------------------------------------------
-	// Init Global Unique Event Number
-	debug("Init Current Event Number...\r\n");
-	InitCurrentEventNumber();
-
-	//-------------------------------------------------------------------------
-	// Init AutoDialout
-	debug("Init Auto Dialout...\r\n");
-	InitAutoDialout();
-
-	//-------------------------------------------------------------------------
-	// Init Monitor Log
-	debug("Init Monitor Log...\r\n");
-	InitMonitorLog();
-
-	//-------------------------------------------------------------------------
-	// Init Flash Buffers
-	debug("Init Flash Buffers...\r\n");
-	InitFlashBuffs();
-
-	//-------------------------------------------------------------------------
-	// Init the sensor parameters
-	debug("Init Sensor Parameters...\r\n");
-	InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
 }
 
 ///----------------------------------------------------------------------------
@@ -325,9 +293,7 @@ void InitSoftwareSettings_NS8100(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 
-	//debug("Address of local variable: 0x%x\r\n", &mn_msg);
-
-	debug("Init Software Settings\r\n");
+	debug("Init Software Settings...\r\n");
 
 	//-------------------------------------------------------------------------
 	// Init version msg
@@ -343,36 +309,105 @@ void InitSoftwareSettings_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Get the function address passed by the bootloader
 	//-------------------------------------------------------------------------
-	CheckBootloaderAppPresent();
+	CheckBootloaderAppPresent(); debug("Bootloader check complete\r\n");
 
-#if 0 // Moved to hardware init
-#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	//-------------------------------------------------------------------------
-	// Init the NAV and select the SD MMC Card
+	// Load Trig Record 0 to get the last settings
 	//-------------------------------------------------------------------------
-	nav_reset();
-	nav_select(FS_NAV_ID_DEFAULT);
-	nav_drive_set(0);
-	nav_partition_mount();
+	LoadDefaultTriggerRecord(); debug("Default Trigger record loaded\r\n");
+
+	//-------------------------------------------------------------------------
+	// Load the Unit Config
+	//-------------------------------------------------------------------------
+	LoadUnitConfig(); debug("Loading Unit Config record\r\n");
+
+	//-------------------------------------------------------------------------
+	// Build the language table based on the user's last language choice
+	//-------------------------------------------------------------------------
+	BuildLanguageLinkTable(g_unitConfig.languageMode); debug("Language Tables built\r\n");
+
+	//-------------------------------------------------------------------------
+	// Initialize Unit Config items such as contrast, timers
+	//-------------------------------------------------------------------------
+	ActivateUnitConfigOptions(); debug("Activated Unit Config Options\r\n");
+
+	//-------------------------------------------------------------------------
+	// Display the Splash screen
+	//-------------------------------------------------------------------------
+	DisplaySplashScreen(); debug("Display Splash screen complete\r\n");
+
+	//-------------------------------------------------------------------------
+	// Wait at least 3 seconds for the main screen to be displayed
+	//-------------------------------------------------------------------------
+	debug("Three second delay for Splash screen\r\n");
+	SoftUsecWait(3 * SOFT_SECS);
+
+	//-------------------------------------------------------------------------
+	// Display Smart Sensor information if found
+	//-------------------------------------------------------------------------
+	DisplaySmartSensorInfo(INFO_ON_INIT);
+
+	//-------------------------------------------------------------------------
+	// Bootloader entry check
+	//-------------------------------------------------------------------------
+	BootloaderEntryCheck();
+
+	//-------------------------------------------------------------------------
+	// Load the Factory Setup Record
+	//-------------------------------------------------------------------------
+	LoadFactorySetupRecord(); debug("Factory setup record loaded\r\n");
+
+	//-------------------------------------------------------------------------
+	// Load the Modem Setup Record
+	//-------------------------------------------------------------------------
+	LoadModemSetupRecord();	debug("Modem Setup record loaded\r\n");
+
+	//-------------------------------------------------------------------------
+	// Add OnOff Log Timestamp
+	//-------------------------------------------------------------------------
+	AddOnOffLogTimestamp(ON); debug("On/Off Log timestamp appended\r\n");
+
+#if 0 // Removed debug log file due to inducing system problems
+	//-------------------------------------------------------------------------
+	// Switch Debug Log file
+	SwitchDebugLogFile();
 #endif
-#endif
+
 	//-------------------------------------------------------------------------
-	// Setup defaults, load records, init the language table
+	// Init Global Unique Event Number
 	//-------------------------------------------------------------------------
-	debug("Setup Menu Defaults...\r\n");
-	setupMnDef();
+	InitCurrentEventNumber(); debug("Current Event Number initialized\r\n");
+
+	//-------------------------------------------------------------------------
+	// Init AutoDialout
+	//-------------------------------------------------------------------------
+	InitAutoDialout(); debug("Auto Dialout initialized\r\n");
+
+	//-------------------------------------------------------------------------
+	// Init Monitor Log
+	//-------------------------------------------------------------------------
+	InitMonitorLog(); debug("Monitor Log initialized\r\n");
+
+	//-------------------------------------------------------------------------
+	// Init Flash Buffers
+	//-------------------------------------------------------------------------
+	InitFlashBuffs(); debug("Flash Buffers initalized\r\n");
+
+	//-------------------------------------------------------------------------
+	// Init the sensor parameters
+	//-------------------------------------------------------------------------
+	InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity); debug("Sensor Parameters initialized\r\n");
 
 	//-------------------------------------------------------------------------
 	// Init the Summary List file
 	//-------------------------------------------------------------------------
-	InitSummaryListFile();
+	InitSummaryListFile(); debug("Summary List initialized\r\n");
 
 	//-------------------------------------------------------------------------
 	// Update Flash Usage Stats
 	//-------------------------------------------------------------------------
-	debug("Updating Flash Usage Stats...\r\n");
 	OverlayMessage(getLangText(STATUS_TEXT), "CALCULATING EVENT STORAGE SPACE FREE", 0);
-	GetSDCardUsageStats();
+	GetSDCardUsageStats(); debug("Flash Usage Stats updated\r\n");
 
 	//-------------------------------------------------------------------------
 	// Check for Timer mode activation
@@ -398,28 +433,17 @@ void InitSoftwareSettings_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init the cmd message handling buffers before initialization of the ports.
 	//-------------------------------------------------------------------------
-	debug("Init Cmd Msg Handler...\r\n");
-	RemoteCmdMessageHandlerInit();
+	RemoteCmdMessageHandlerInit(); debug("Craft Message Handler initialized\r\n");
 
 	//-------------------------------------------------------------------------
 	// Init the input buffers and status flags for input craft data.
 	//-------------------------------------------------------------------------
-	debug("Init Craft Init Status Flags...\r\n");
-	CraftInitStatusFlags();
-
-#if 0 // Add ability to check sensor if one is available
-	//-------------------------------------------------------------------------
-	// Overlay a message to alert the user that the system is checking the sensors
-	//-------------------------------------------------------------------------
-	debug("Init LCD Message...\r\n");
-	sprintf((char*)g_spareBuffer, "%s %s", getLangText(SENSOR_CHECK_TEXT), getLangText(ZEROING_SENSORS_TEXT));
-	OverlayMessage(getLangText(STATUS_TEXT), g_spareBuffer, 0);
-#endif
+	CraftInitStatusFlags(); debug("Craft Status flags initilaized\r\n");
 
 	//-------------------------------------------------------------------------
 	// Signal remote end that RS232 Comm is available
 	//-------------------------------------------------------------------------
-	SET_RTS; SET_DTR; // Init signals for ready to send and terminal ready
+	SET_RTS; SET_DTR; debug("Craft RTS and DTR enabled\r\n");
 
 	//-------------------------------------------------------------------------
 	// Reset LCD timers
@@ -436,18 +460,23 @@ void InitSoftwareSettings_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Assign a one second keypad led update timer
 	//-------------------------------------------------------------------------
-	AssignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, KeypadLedUpdateTimerCallBack);
+	AssignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, KeypadLedUpdateTimerCallBack); debug("Keypad LED Timer initialized\r\n");
 
 	//-------------------------------------------------------------------------
 	// Jump to the true main menu
 	//-------------------------------------------------------------------------
-	debug("Jump to Main Menu\r\n");
+	debug("Jumping to Main Menu\r\n");
 	SETUP_MENU_MSG(MAIN_MENU);
 	JUMP_TO_ACTIVE_MENU();
 
 	//-------------------------------------------------------------------------
 	// Enable keypad key input (delayed to prevent key input from locking unit)
 	//-------------------------------------------------------------------------
-	EnableMcp23018Interrupts();
+	EnableMcp23018Interrupts(); debug("Mcp23018 interrupts enabled\r\n");
+
+	//-------------------------------------------------------------------------
+	// Display last line of system init
+	//-------------------------------------------------------------------------
+	DisplayVersionToDebug();
 }
 
