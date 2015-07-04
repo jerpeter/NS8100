@@ -702,7 +702,7 @@ typedef struct
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-BOOLEAN InitExternalRtc(void);
+BOOLEAN ExternalRtcInit(void);
 uint8 SetExternalRtcTime(DATE_TIME_STRUCT* time);
 uint8 SetExternalRtcDate(DATE_TIME_STRUCT* time);
 DATE_TIME_STRUCT GetExternalRtcTime(void);

@@ -35,24 +35,14 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-BOOLEAN InitExternalRtc(void)
+BOOLEAN ExternalRtcInit(void)
 {
 	// REDO & Update to new RTC
 	DATE_TIME_STRUCT time;
 	RTC_MEM_MAP_STRUCT rtcMap;
 
-	//debug("Init Soft timer\r\n");
-
 	// Initialize the soft timer array
 	memset(&g_rtcTimerBank[0], 0, sizeof(g_rtcTimerBank));
-
-	debugRaw("\r\n\n");
-	debugRaw("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\r\n");
-	debugRaw("---------------------------------------------------------------------------------------\r\n");
-	debugRaw("-----     NS8100 Fresh boot, App version: %s (Date: %s)     -----\r\n", (char*)g_buildVersion, (char*)g_buildDate);
-	debugRaw("---------------------------------------------------------------------------------------\r\n");
-	debugRaw("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n");
-	debug("External RTC Init...\r\n");
 
 	// Get the base of the external RTC memory map
 	ExternalRtcRead(RTC_CONTROL_1_ADDR, 10, (uint8*)&rtcMap);
