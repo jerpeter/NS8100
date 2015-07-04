@@ -50,6 +50,7 @@
 #include "Sensor.h"
 #include "NomisLogo.h"
 #include "navigation.h"
+#include "Analog.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -316,6 +317,9 @@ void SPI_0_Init(void)
 	// Initialize AD driver with SPI clock (PBA).
 	// Setup SPI registers according to spiOptions.
 	spi_setupChipReg(&AVR32_SPI0, &spiOptions, FOSC0);
+
+	// Make sure SPI0 input isn't floating
+	gpio_enable_pin_pull_up(AVR32_SPI0_MISO_0_0_PIN);
 }
 
 ///----------------------------------------------------------------------------
@@ -373,6 +377,9 @@ void SPI_1_Init(void)
 	spiOptions.reg = SDMMC_SPI_CS_NUM; // 2
 	spiOptions.baudrate = SDMMC_SPI_MAX_SPEED; // 12 MHz
 	spi_setupChipReg(&AVR32_SPI1, &spiOptions, FOSC0);
+
+	// Make sure SPI1 input isn't floating
+	gpio_enable_pin_pull_up(AVR32_SPI1_MISO_0_0_PIN);
 }
 
 ///----------------------------------------------------------------------------
@@ -655,6 +662,11 @@ void InitPullupsOnFloatingDataLines(void)
 ///----------------------------------------------------------------------------
 void InitSerial485(void)
 {
+	PowerControl(SERIAL_485_DRIVER_ENABLE, ON);
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
+	PowerControl(SERIAL_485_RECEIVER_ENABLE, ON);
+#endif
+
 	// Options for debug USART.
 	usart_options_t usart_3_rs485_usart_options =
 	{
@@ -667,6 +679,15 @@ void InitSerial485(void)
 
 	// Initialize it in RS485 mode.
 	usart_init_rs485(&AVR32_USART3, &usart_3_rs485_usart_options, FOSC0);
+
+	PowerControl(SERIAL_485_DRIVER_ENABLE, OFF);
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
+	PowerControl(SERIAL_485_RECEIVER_ENABLE, OFF);
+#endif
+
+	// Make sure 485 lines aren't floating
+	gpio_enable_pin_pull_up(AVR32_USART3_RXD_0_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART3_TXD_0_0_PIN);
 }
 
 ///----------------------------------------------------------------------------
@@ -703,14 +724,33 @@ void InitSerial232(void)
 
 	// Initialize it in RS232 mode.
 	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
+
+	// Enable external driver and receiver
+	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
+	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
+
+	// Enable internal pullups on input lines since external pullups aren't present
+	gpio_enable_pin_pull_up(AVR32_USART1_RXD_0_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART1_DCD_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART1_DSR_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART1_CTS_0_0_PIN);
+	gpio_enable_pin_pull_up(AVR32_USART1_RI_0_PIN);
+
+	sprintf((char*)g_spareBuffer, "-----     NS8100 Fresh boot, App version: %s (Date: %s)     -----\r\n", (char*)g_buildVersion, (char*)g_buildDate);
+	usart_write_line((&AVR32_USART1), "\r\n\n");
+	usart_write_line((&AVR32_USART1), "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\r\n");
+	usart_write_line((&AVR32_USART1), "---------------------------------------------------------------------------------------\r\n");
+	usart_write_line((&AVR32_USART1), (char*)g_spareBuffer);
+	usart_write_line((&AVR32_USART1), "---------------------------------------------------------------------------------------\r\n");
+	usart_write_line((&AVR32_USART1), "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n");
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 void InitDebug232(void)
 {
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	// Setup debug serial port
 	usart_options_t usart_0_rs232_options =
 	{
@@ -723,8 +763,16 @@ void InitDebug232(void)
 
 	// Initialize it in RS232 mode.
 	usart_init_rs232(&AVR32_USART0, &usart_0_rs232_options, FOSC0);
-}
+
+	sprintf((char*)g_spareBuffer, "-----     NS8100 Fresh boot, App version: %s (Date: %s)     -----\r\n", (char*)g_buildVersion, (char*)g_buildDate);
+	usart_write_line((&AVR32_USART0), "\r\n\n");
+	usart_write_line((&AVR32_USART0), "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\r\n");
+	usart_write_line((&AVR32_USART0), "---------------------------------------------------------------------------------------\r\n");
+	usart_write_line((&AVR32_USART0), (char*)g_spareBuffer);
+	usart_write_line((&AVR32_USART0), "---------------------------------------------------------------------------------------\r\n");
+	usart_write_line((&AVR32_USART0), "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n\r\n");
 #endif
+}
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -880,24 +928,30 @@ void InitSDAndFileSystem(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-extern void SetupADChannelConfig(uint32 sampleRate);
 void InitExternalAD(void)
 {
 	// Enable the A/D
+#if EXTENDED_DEBUG
 	debug("Enable the A/D\r\n");
+#endif
+
 	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
 
 	// Delay to allow AD to power up/stabilize
 	SoftUsecWait(50 * SOFT_MSECS);
 
 	// Setup the A/D Channel configuration
+#if EXTENDED_DEBUG
 	debug("Setup A/D config and channels (External Ref, Temp On)\r\n");
+#endif
 	SetupADChannelConfig(SAMPLE_RATE_DEFAULT);
 
 	// Read a few test samples
 	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
 
+#if EXTENDED_DEBUG
 	debug("Disable the A/D\r\n");
+#endif
 	PowerControl(ANALOG_SLEEP_ENABLE, ON);
 }
 
@@ -919,7 +973,7 @@ void TestPowerDownAndStop(void)
 	// Disable rs232 driver and receiver (Active low control)
 	PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
 	PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
-	
+
 	//DisplayTimerCallBack();
 	SetLcdBacklightState(BACKLIGHT_OFF);
 
@@ -960,20 +1014,102 @@ void KillClocksToModules(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void InitGplpRegisters(void)
+{
+	AVR32_PM.gplp[0] = 0x12345678;
+	AVR32_PM.gplp[1] = 0x90ABCDEF;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void InitUSBClockAndIOLines(void)
+{
+	pm_configure_usb_clock();
+
+#if 0 // Moved to USB device manager
+	// Init USB and Mass Storage drivers
+	usb_task_init();
+	device_mass_storage_task_init();
+#endif
+
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
+	// Disable USB LED
+	PowerControl(USB_LED, OFF);
+#endif
+
+#if NS8100_ORIGINAL_PROTOTYPE
+	// Enable internal pullup for USB ID since external pullup isn't present
+	gpio_enable_pin_pull_up(AVR32_PIN_PA21);
+#elif (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
+	// Enable internal pullup for USB ID since external pullup isn't present
+	gpio_enable_pin_pull_up(AVR32_USBB_USB_ID_0_1_PIN);
+	// Enable internal pullup for USB OC (Active low) since external pullup isn't present
+	gpio_enable_pin_pull_up(AVR32_PIN_PB12);
+#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void InitLCD(void)
+{
+	PowerControl(LCD_CONTRAST_ENABLE, ON);
+	PowerControl(LCD_POWER_ENABLE, ON);
+	SoftUsecWait(LCD_ACCESS_DELAY);
+	Backlight_On();
+	Backlight_High();
+	Set_Contrast(DEFUALT_CONTRAST);
+	InitDisplay();
+
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
+	memcpy(g_mmap, sign_on_logo, (8*128));
+	WriteMapToLcd(g_mmap);
+#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void InitExternalRTC(void)
+{
+	ExternalRtcInit();
+
+	// Set RTC Timestamp pin high (Active low control)
+	PowerControl(RTC_TIMESTAMP, OFF);
+
+#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
+	// Enable internal pullup on RTC PFO (Active low) since external pullups aren't present
+	gpio_enable_pin_pull_up(AVR32_PIN_PA21);
+#endif
+
+#if (EXTERNAL_SAMPLING_SOURCE || NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
+	// The internal pull up for this pin needs to be enables to bring the line high, otherwise the clock out will only reach half level
+	gpio_enable_pin_pull_up(AVR32_EIC_EXTINT_1_PIN);
+#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void TestExternalRAM(void)
 {
 	uint32 i, j;
 	uint32 index;
 	uint32 printErrors = 0;
+	uint32 testSize = 512000; // Was (EVENT_BUFF_SIZE_IN_WORDS) - 614400
 
+#if EXTENDED_DEBUG
 	debug("External RAM Test: Incrementing index with rolling increment...\r\n");
-	for (i = 0, j = 0, index = 0; index < ((EVENT_BUFF_SIZE_IN_WORDS) - 614400); index++)
+#endif
+
+	for (i = 0, j = 0, index = 0; index < testSize; index++)
 	{
 		g_eventDataBuffer[index] = (uint16)(i + j); i++;
 		if ((i & 0xFFFF) == 0) { j++; }
 	}
 
-	for (i = 0, j = 0, index = 0; index < ((EVENT_BUFF_SIZE_IN_WORDS) - 614400); index++)
+	for (i = 0, j = 0, index = 0; index < testSize; index++)
 	{
 		if (g_eventDataBuffer[index] != (uint16)(i + j))
 		{
@@ -986,7 +1122,55 @@ void TestExternalRAM(void)
 	}
 
 	if (printErrors) { debug("External RAM: Total errors: %d\r\n", printErrors); }
+#if EXTENDED_DEBUG
 	else { debug("Test of External RAM: passed\r\n"); }
+#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void PowerDownAndHalt(void)
+{
+	// Enable the A/D
+	debug("Enable the A/D\r\n");
+	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
+
+	// Delay to allow AD to power up/stabilize
+	SoftUsecWait(50 * SOFT_MSECS);
+
+	debug("Setup A/D config and channels\r\n");
+	// Setup the A/D Channel configuration
+	SetupADChannelConfig(1024);
+
+	debug("Disable the A/D\r\n");
+	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
+
+	spi_reset(&AVR32_SPI1);
+
+	gpio_clr_gpio_pin(AVR32_SPI1_MISO_0_0_PIN);
+	gpio_clr_gpio_pin(AVR32_SPI1_MOSI_0_0_PIN);
+	gpio_clr_gpio_pin(AVR32_SPI1_NPCS_3_PIN);
+
+	debug("\nClosing up shop.\n\r\n");
+
+	// Disable rs232 driver and receiver (Active low control)
+	PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
+	PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
+
+	//DisplayTimerCallBack();
+	SetLcdBacklightState(BACKLIGHT_OFF);
+
+	//LcdPwTimerCallBack();
+	PowerControl(LCD_CONTRAST_ENABLE, OFF);
+	ClearLcdDisplay();
+	ClearControlLinesLcdDisplay();
+	LcdClearPortReg();
+	PowerControl(LCD_POWER_ENABLE, OFF);
+
+	SLEEP(AVR32_PM_SMODE_STOP);
+
+	while (1) {}
 }
 
 ///----------------------------------------------------------------------------
@@ -997,8 +1181,7 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Set General Purpose Low-Power registers
 	//-------------------------------------------------------------------------
-	AVR32_PM.gplp[0] = 0x12345678;
-	AVR32_PM.gplp[1] = 0x90ABCDEF;
+	InitGplpRegisters();
 
 	//-------------------------------------------------------------------------
 	// Disable all interrupts and clear all interrupt vectors 
@@ -1009,31 +1192,13 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Enable internal pull ups on the floating data lines
 	//-------------------------------------------------------------------------
-#if 1 // Normal
 	InitPullupsOnFloatingDataLines();
-#endif
 
 	//-------------------------------------------------------------------------
 	// Init unused pins to low outputs
 	//-------------------------------------------------------------------------
 	InitProcessorNoConnectPins();
 	
-	//-------------------------------------------------------------------------
-	// Configure Debug rs232
-	//-------------------------------------------------------------------------
-#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
-	InitDebug232();
-
-	usart_write_line((&AVR32_USART0), "\r\n=========================================================\r\n");
-	usart_write_line((&AVR32_USART0), "=== NS8100 Debug Port\r\n");
-	usart_write_line((&AVR32_USART0), "=========================================================\r\n");
-#endif
-
-	//-------------------------------------------------------------------------
-	// Set RTC Timestamp pin high (Active low control)
-	//-------------------------------------------------------------------------
-	PowerControl(RTC_TIMESTAMP, OFF);
-
 	//-------------------------------------------------------------------------
 	// Set Alarm 1 and Alarm 2 low (Active high control)
 	//-------------------------------------------------------------------------
@@ -1051,6 +1216,11 @@ void InitSystemHardware_NS8100(void)
 	PowerControl(USB_LED, OFF);
 
 	//-------------------------------------------------------------------------
+	// Configure Debug rs232
+	//-------------------------------------------------------------------------
+	InitDebug232();	debug("Debug Port enabled\r\n");
+
+	//-------------------------------------------------------------------------
 	// Smart Sensor data/control init (Hardware pull up on signal)
 	//-------------------------------------------------------------------------
 	OneWireInit(); debug("One Wire init complete\r\n");
@@ -1061,40 +1231,20 @@ void InitSystemHardware_NS8100(void)
 	SPI_0_Init(); debug("SPI0 init complete\r\n");
 	SPI_1_Init(); debug("SPI1 init complete\r\n");
 	
-	// Make sure SPI 0 and 1 inputs aren't floating
-	gpio_enable_pin_pull_up(AVR32_SPI0_MISO_0_0_PIN);
-	gpio_enable_pin_pull_up(AVR32_SPI1_MISO_0_0_PIN);
-
 	//-------------------------------------------------------------------------
 	// Turn on rs232 driver and receiver (Active low control)
 	//-------------------------------------------------------------------------
 	InitSerial232(); debug("Craft RS232 init complete\r\n");
-	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
-	PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
 
 	//-------------------------------------------------------------------------
 	// Turn on rs485 driver and receiver
 	//-------------------------------------------------------------------------
-	PowerControl(SERIAL_485_DRIVER_ENABLE, ON);
-#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
-	PowerControl(SERIAL_485_RECEIVER_ENABLE, ON);
-#endif
-
 	InitSerial485(); debug("RS485 init complete\r\n");
-
-	PowerControl(SERIAL_485_DRIVER_ENABLE, OFF);
-#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
-	PowerControl(SERIAL_485_RECEIVER_ENABLE, OFF);
-#endif
-	
-	// Make sure 485 lines aren't floating
-	gpio_enable_pin_pull_up(AVR32_USART3_RXD_0_0_PIN);
-	gpio_enable_pin_pull_up(AVR32_USART3_TXD_0_0_PIN);
 
 	//-------------------------------------------------------------------------
 	// Initialize the external RTC
 	//-------------------------------------------------------------------------
-	InitExternalRtc(); debug("External RTC init complete\r\n");
+	InitExternalRTC(); debug("External RTC init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Set LAN to Sleep
@@ -1109,18 +1259,7 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init the LCD display
 	//-------------------------------------------------------------------------
-	PowerControl(LCD_CONTRAST_ENABLE, ON);
-	PowerControl(LCD_POWER_ENABLE, ON);
-	SoftUsecWait(LCD_ACCESS_DELAY);
-	Backlight_On();
-	Backlight_High();
-	Set_Contrast(DEFUALT_CONTRAST);
-	InitDisplay(); debug("LCD Display init complete\r\n");
-
-#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
-	memcpy(g_mmap, sign_on_logo, (8*128));
-	WriteMapToLcd(g_mmap);
-#endif
+	InitLCD(); debug("LCD Display init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Init the Internal RTC for half second tick used for state processing
@@ -1140,152 +1279,41 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Initialize USB clock.
 	//-------------------------------------------------------------------------
-	pm_configure_usb_clock();
-
-#if 0 // Moved to USB device manager
-	// Init USB and Mass Storage drivers
-	usb_task_init();
-	device_mass_storage_task_init();
-#endif
-
-#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
-	// Disable USB LED
-	PowerControl(USB_LED, OFF);
-#endif
+	InitUSBClockAndIOLines(); debug("USB Clock and I/O lines init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Init Keypad
 	//-------------------------------------------------------------------------
-#if 1 // Tried to remove but getting double key presses (Prior: moved to software init because the MCP23018 doesn't like to be initialized here)
 	InitExternalKeypad(); debug("Keyboard init complete\r\n");
-#endif
-
-	//-------------------------------------------------------------------------
-	// Init External RTC Interrupt for interrupt source
-	//-------------------------------------------------------------------------
-#if (EXTERNAL_SAMPLING_SOURCE || NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
-	// The internal pull up for this pin needs to be enables to bring the line high, otherwise the clock out will only reach half level
-	gpio_enable_pin_pull_up(AVR32_EIC_EXTINT_1_PIN);
-#endif
-
-	//-------------------------------------------------------------------------
-	// Enable pullups on input pins that may be floating
-	//-------------------------------------------------------------------------
-#if NS8100_ORIGINAL_PROTOTYPE
-	// USB ID
-	gpio_enable_pin_pull_up(AVR32_PIN_PA21);
-#endif
-
-#if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
-	// USB ID
-	gpio_enable_pin_pull_up(AVR32_USBB_USB_ID_0_1_PIN);
-	// RTC PFO (Active low)
-	gpio_enable_pin_pull_up(AVR32_PIN_PA21);
-	// USB OC (Active low)
-	gpio_enable_pin_pull_up(AVR32_PIN_PB12);
-#endif
-
-	// RS232
-	gpio_enable_pin_pull_up(AVR32_USART1_RXD_0_0_PIN);
-	gpio_enable_pin_pull_up(AVR32_USART1_DCD_0_PIN);
-	gpio_enable_pin_pull_up(AVR32_USART1_DSR_0_PIN);
-	gpio_enable_pin_pull_up(AVR32_USART1_CTS_0_0_PIN);
-	gpio_enable_pin_pull_up(AVR32_USART1_RI_0_PIN);
-
-#if 0 // Current went up with this change
-	// Crystal inputs
-	gpio_enable_pin_pull_up(AVR32_PIN_PC00);
-	gpio_enable_pin_pull_up(AVR32_PIN_PC01);
-	gpio_enable_pin_pull_up(AVR32_PIN_PC02);
-	gpio_enable_pin_pull_up(AVR32_PIN_PC03);
-	gpio_enable_pin_pull_up(AVR32_PIN_PC04);
-	gpio_enable_pin_pull_up(AVR32_PIN_PC05);
-#endif
 
 	//-------------------------------------------------------------------------
 	// Init and configure the A/D to prevent the unit from burning current charging internal reference (default config)
+	//-------------------------------------------------------------------------
 	InitExternalAD(); debug("External A/D init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Set the power savings mode based on the saved setting
+	//-------------------------------------------------------------------------
 	AdjustPowerSavings(); debug("Power Savings init complete\r\n");
 
-#if 1 // Test
 	//-------------------------------------------------------------------------
 	// Test the External RAM Event buffer to make sure it's valid
-	TestExternalRAM(); debug("External RAM Test init complete\r\n");
-#endif
-
-#if 1 // Remove for testing
 	//-------------------------------------------------------------------------
-	// Enable Power off protection
-	debug("Enabling Power Off protection\r\n");
-	PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
-#else
-	debugWarn("Not Enabling Power Off protection\r\n");
-#endif
+	TestExternalRAM(); debug("External RAM Test init complete\r\n");
 
 	//-------------------------------------------------------------------------
 	// Read and cache Smart Sensor data
-	SmartSensorReadRomAndMemory(SEISMIC_SENSOR);
-	SmartSensorReadRomAndMemory(ACOUSTIC_SENSOR);
-
-#if 0 // Test (Now done with AdjustPowerSavings)
 	//-------------------------------------------------------------------------
-	// Kill clocks to Internal Processor modules that aren't absolutely necessary
-	KillClocksToModules();
-#endif
+	SmartSensorReadRomAndMemory(SEISMIC_SENSOR); debug("Smart Sensor check for Seismic sensor\r\n");
+	SmartSensorReadRomAndMemory(ACOUSTIC_SENSOR); debug("Smart Sensor check for Acoustic sensor\r\n");
 
-#if 0 // Test
 	//-------------------------------------------------------------------------
-	// Test full power down and stop
-	TestPowerDownAndStop();
-#endif
-}
+	// Enable Power off protection
+	//-------------------------------------------------------------------------
+	PowerControl(POWER_OFF_PROTECTION_ENABLE, ON); debug("Enabling Power Off protection\r\n");
 
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void PowerDownAndHalt(void)
-{
-	// Enable the A/D
-	debug("Enable the A/D\r\n");
-	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
-
-	// Delay to allow AD to power up/stabilize
-	SoftUsecWait(50 * SOFT_MSECS);
-
-	debug("Setup A/D config and channels\r\n");
-	// Setup the A/D Channel configuration
-	extern void SetupADChannelConfig(uint32 sampleRate);
-	SetupADChannelConfig(1024);
-
-	debug("Disable the A/D\r\n");
-	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
-
-	spi_reset(&AVR32_SPI1);
-
-	gpio_clr_gpio_pin(AVR32_SPI1_MISO_0_0_PIN);
-	gpio_clr_gpio_pin(AVR32_SPI1_MOSI_0_0_PIN);
-	gpio_clr_gpio_pin(AVR32_SPI1_NPCS_3_PIN);
-
-	debug("\nClosing up shop.\n\r\n");
-
-	// Disable rs232 driver and receiver (Active low control)
-	PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
-	PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
-	
-	//DisplayTimerCallBack();
-	SetLcdBacklightState(BACKLIGHT_OFF);
-
-	//LcdPwTimerCallBack();
-	PowerControl(LCD_CONTRAST_ENABLE, OFF);
-	ClearLcdDisplay();
-	ClearControlLinesLcdDisplay();
-	LcdClearPortReg();
-	PowerControl(LCD_POWER_ENABLE, OFF);
-
-	SLEEP(AVR32_PM_SMODE_STOP);
-	
-	while (1) {}
+	//-------------------------------------------------------------------------
+	// Hardware initialization complete
+	//-------------------------------------------------------------------------
+	debug("Hardware Init complete\r\n");
 }
