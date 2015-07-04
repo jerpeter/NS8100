@@ -57,6 +57,7 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
+extern void Setup_8100_Usart_RS232_ISR(void);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -468,6 +469,12 @@ void InitSoftwareSettings_NS8100(void)
 	debug("Jumping to Main Menu\r\n");
 	SETUP_MENU_MSG(MAIN_MENU);
 	JUMP_TO_ACTIVE_MENU();
+
+	//-------------------------------------------------------------------------
+	// Enable Craft input (delayed to prevent serial input from locking unit)
+	//-------------------------------------------------------------------------
+	InitCraftInterruptBuffers();
+	Setup_8100_Usart_RS232_ISR();
 
 	//-------------------------------------------------------------------------
 	// Enable keypad key input (delayed to prevent key input from locking unit)

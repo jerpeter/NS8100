@@ -66,7 +66,6 @@ extern void InitSystemHardware_NS8100(void);
 extern void InitInterrupts_NS8100(void);
 extern void InitSoftwareSettings_NS8100(void);
 extern void TestSnippetsAfterInit(void);
-extern void Setup_8100_Usart_RS232_ISR(void);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -1149,9 +1148,6 @@ extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
 		//Jump to boot application code
 		func();
 	}
-	
-	InitCraftInterruptBuffers();
-	Setup_8100_Usart_RS232_ISR();
 }
 
 ///----------------------------------------------------------------------------
