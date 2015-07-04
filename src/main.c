@@ -1014,10 +1014,9 @@ void BootLoadManager(void)
 	int file = -1;
 	uint32 baudRate;
 
-	// Check if a Ctrl-B was found in the USART receive holding register or if requested to jump to boot
-	if ((AVR32_USART1.rhr == CTRL_B) || (g_quickBootEntryJump == YES))
+	// Check if requested to jump to boot
+	if (g_quickBootEntryJump == YES)
 	{
-#if 1
 		if (g_quickBootEntryJump == YES)
 		{
 			if (g_sampleProcessing == ACTIVE_STATE)
@@ -1044,8 +1043,9 @@ void BootLoadManager(void)
 			OverlayMessage("BOOTLOADER", "HIDDEN ENTRY...", 2 * SOFT_SECS);
 		}
 		else
-#endif
+		{
 			OverlayMessage("BOOTLOADER", "FOUND CTRL_B...", 2 * SOFT_SECS);
+		}
 
 		if (g_fileAccessLock != AVAILABLE)
 		{
@@ -1335,18 +1335,6 @@ void PowerManager(void)
 	{
 		g_sleepModeEngaged = NO;
 	}
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void DisplayVersionToCraft(void)
-{
-	int majorVer, minorVer;
-	char buildVer;
-	sscanf(&g_buildVersion[0], "%d.%d.%c", &majorVer, &minorVer, &buildVer);
-
-	debug("--- System Init complete (Version %d.%d.%c) ---\r\n", majorVer, minorVer, buildVer);
 }
 
 ///----------------------------------------------------------------------------
@@ -1794,9 +1782,6 @@ int main(void)
 	InitSystemHardware_NS8100();
 	InitInterrupts_NS8100();
 	InitSoftwareSettings_NS8100();
-
-	BootLoadManager();
-	DisplayVersionToCraft();
 	EnableGlobalException();
 
  	// ==============
