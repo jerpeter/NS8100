@@ -498,6 +498,9 @@ void ActivateUnitConfigOptions(void)
 	{
 		g_autoCalDaysToWait = 1;
 	}
+
+	// Disable auto print since there is no printer option
+	g_unitConfig.autoPrint = NO;
 }
 
 ///----------------------------------------------------------------------------
