@@ -120,5 +120,6 @@ void UpdateChannelOffsetsForTempChange(void);
 void AdSetCalSignalLow(void);
 void AdSetCalSignalHigh(void);
 void AdSetCalSignalOff(void);
+void SetupADChannelConfig(uint32 sampleRate);
 
 #endif //_ANALOG_H_

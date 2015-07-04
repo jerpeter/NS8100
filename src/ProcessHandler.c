@@ -237,7 +237,6 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 #if 1
 extern void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel);
 extern void Start_Data_Clock(TC_CHANNEL_NUM channel);
-extern void SetupADChannelConfig(uint32 sampleRate);
 extern void Setup_8100_EIC_External_RTC_ISR(void);
 #endif
 ///----------------------------------------------------------------------------
