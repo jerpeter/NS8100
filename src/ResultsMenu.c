@@ -225,23 +225,25 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					}
 				break;
 
+				case (PLUS_KEY):
+					switch (g_displayAlternateResultState)
+					{
+						case DEFAULT_RESULTS: g_displayAlternateResultState = DEFAULT_ALTERNATE_RESULTS; break;
+						case DEFAULT_ALTERNATE_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
+						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
+						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
+						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
+					}
+				break;
+
 				case (MINUS_KEY):
 					switch (g_displayAlternateResultState)
 					{
 						case DEFAULT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
-						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
+						case DEFAULT_ALTERNATE_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
+						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = DEFAULT_ALTERNATE_RESULTS; break;
 						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
 						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
-					}
-				break;
-
-				case (PLUS_KEY):
-					switch (g_displayAlternateResultState)
-					{
-						case DEFAULT_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
-						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
-						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
-						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
 					}
 				break;
 
@@ -786,11 +788,25 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		// Display based on what the units current setting
 		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
-			sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+			if (g_displayAlternateResultState != DEFAULT_ALTERNATE_RESULTS)
+			{
+				sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+			}
+			else
+			{
+				sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+			}
 		}
 		else // Report Air in DB
 		{
-			sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+			if (g_displayAlternateResultState != DEFAULT_ALTERNATE_RESULTS)
+			{
+				sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+			}
+			else
+			{
+				sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+			}
 		}
 
 		adjust = (uint8)strlen(buff);
