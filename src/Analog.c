@@ -148,7 +148,10 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 	{
 		// Chan 0
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
+		if (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->r)); }
+		else // (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SWAPPED)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->v)); }
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		//if(channelConfigReadback != 0xe0d0) { configError = YES; debug("Chan 0 Config: 0x%x\r\n", channelConfigReadback);}
@@ -164,7 +167,10 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 
 		// Chan 2
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
+		if (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->v)); }
+		else // (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SWAPPED)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->r)); }
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		//if(channelConfigReadback != 0xe4d0) { configError = YES; debug("Chan 2 Config: 0x%x\r\n", channelConfigReadback);}
@@ -195,7 +201,10 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 	{
 		// Chan 0
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
+		if (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->r)); }
+		else // (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SWAPPED)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->v)); }
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Chan 1
@@ -205,7 +214,10 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 
 		// Chan 2
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
+		if (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->v)); }
+		else // (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SWAPPED)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->r)); }
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Chan 3
@@ -222,7 +234,10 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 	{
 		// Chan 0
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->r));
+		if (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->r)); }
+		else // (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SWAPPED)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->v)); }
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Chan 1
@@ -232,7 +247,10 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 
 		// Chan 2
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->v));
+		if (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->v)); }
+		else // (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SWAPPED)
+			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->r)); }
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 
 		// Chan 3
