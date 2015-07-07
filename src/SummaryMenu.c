@@ -52,7 +52,6 @@ extern USER_MENU_STRUCT configMenu[];
 static SUMMARY_DATA *s_flashReadSummaryTablePtr = &__ramFlashSummaryTbl[0];
 static uint16 s_topMenuSummaryIndex = 0;
 static uint16 s_currentSummaryIndex = 0;
-static uint32 cacheEntries = 0;
 static uint16 s_totalRamSummaries = 0;
 
 ///----------------------------------------------------------------------------
@@ -185,9 +184,6 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, SU
 				{
 					g_summaryListMenuActive = NO;
 					
-					// Reset the cached entries since the temp space used can be overwritten
-					cacheEntries = 0;
-
 					SETUP_USER_MENU_MSG(&configMenu, EVENT_SUMMARIES);
 					JUMP_TO_ACTIVE_MENU();
 				}
