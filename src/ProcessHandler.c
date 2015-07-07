@@ -202,16 +202,14 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	// Set the cutoff frequency based on sample rate
 	switch (trig_mn.sample_rate)
 	{
-		case SAMPLE_RATE_512: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW); break;
-		case SAMPLE_RATE_1K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1); break;
-		case SAMPLE_RATE_2K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_2); break;
-		case SAMPLE_RATE_4K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_3); break;
-
-		// Handle 8K, 16K and 32K the same
-		case SAMPLE_RATE_8K: case SAMPLE_RATE_16K: case 32768: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_4); break;
+		case SAMPLE_RATE_1K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW); break;
+		case SAMPLE_RATE_2K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1); break;
+		case SAMPLE_RATE_4K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_2); break;
+		case SAMPLE_RATE_8K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_3); break;
+		case SAMPLE_RATE_16K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_4); break;
 			
 		// Default just in case it's a custom frequency
-		default: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1); break;
+		default: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW); break;
 	}
 	
 	// Set the sensitivity based on the current settings
