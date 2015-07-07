@@ -940,19 +940,15 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
 			{
 				tempPeakAcc /= (float)ONE_GRAVITY_IN_INCHES;
-
-				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
-					strcpy(displayFormat, "mg/s2");
-				else
-					strcpy(displayFormat, "in/s2");
 			}
 			else // Metric
 			{
 				tempPeakAcc *= (float)METRIC;
 				tempPeakAcc /= (float)ONE_GRAVITY_IN_MM;
-
-				strcpy(displayFormat, "mm/s2");
 			}
+
+			if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy(displayFormat, "mg/s2"); }
+			else { strcpy(displayFormat, "g"); }
 
 			sprintf(buff,"PEAK ACC %5.4f %s", tempPeakAcc, displayFormat);
 		}
