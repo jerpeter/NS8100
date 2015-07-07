@@ -149,12 +149,12 @@ extern void UsbDeviceManager(void);
 					// Set the default display mode to be the summary interval results
 					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
 					
-					if(g_unitConfig.vectorSum == DISABLED)
+					if (g_unitConfig.vectorSum == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 					
-					if(g_unitConfig.reportDisplacement == DISABLED)
+					if (g_unitConfig.reportDisplacement == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
@@ -305,7 +305,7 @@ extern void UsbDeviceManager(void);
 							g_displayBargraphResultsMode = IMPULSE_RESULTS;
 							
 							// Check if results mode is Peak Displacement
-							if((g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS) || (g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS))
+							if ((g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS) || (g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS))
 							{
 								// Change it since Peak Displacement and Peak Acceleration are not valid for Impulse results
 								g_displayAlternateResultState = DEFAULT_RESULTS;
@@ -314,57 +314,48 @@ extern void UsbDeviceManager(void);
 					}
 				break;
 					
+				case (PLUS_KEY):
+					switch (g_displayAlternateResultState)
+					{
+						case DEFAULT_RESULTS:
+							g_displayAlternateResultState = VECTOR_SUM_RESULTS;
+						break;
+
+						case VECTOR_SUM_RESULTS:
+							if (g_displayBargraphResultsMode != IMPULSE_RESULTS) { g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; }
+							else { g_displayAlternateResultState = DEFAULT_RESULTS; }
+						break;
+
+						case PEAK_DISPLACEMENT_RESULTS:
+							if (g_displayBargraphResultsMode != IMPULSE_RESULTS) { g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; }
+							else { g_displayAlternateResultState = DEFAULT_RESULTS; }
+						break;
+
+						case PEAK_ACCELERATION_RESULTS:
+							g_displayAlternateResultState = DEFAULT_RESULTS;
+						break;
+					}
+				break;
+
 				case (MINUS_KEY):
 					switch (g_displayAlternateResultState)
 					{
 						case DEFAULT_RESULTS:
-							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
-								g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS;
-							else
-								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
+							if (g_displayBargraphResultsMode != IMPULSE_RESULTS) { g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; }
+							else { g_displayAlternateResultState = VECTOR_SUM_RESULTS; }
 						break;
-						
+
 						case VECTOR_SUM_RESULTS:
 							g_displayAlternateResultState = DEFAULT_RESULTS;
 						break;
-						
+
 						case PEAK_DISPLACEMENT_RESULTS:
 							g_displayAlternateResultState = VECTOR_SUM_RESULTS;
 						break;
 
 						case PEAK_ACCELERATION_RESULTS:
-							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
-								g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
-							else
-								g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-						break;
-
-					}
-				break;
-
-				case (PLUS_KEY):
-					switch (g_displayAlternateResultState)
-					{
-						case DEFAULT_RESULTS: 
-							g_displayAlternateResultState = VECTOR_SUM_RESULTS;
-						break;
-							
-						case VECTOR_SUM_RESULTS:
-							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
-								g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS;
-							else
-								g_displayAlternateResultState = DEFAULT_RESULTS;
-						break;
-						
-						case PEAK_DISPLACEMENT_RESULTS:
-							if(g_displayBargraphResultsMode != IMPULSE_RESULTS)
-								g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS;
-							else
-								g_displayAlternateResultState = DEFAULT_RESULTS;
-						break;
-
-						case PEAK_ACCELERATION_RESULTS:
-							g_displayAlternateResultState = DEFAULT_RESULTS;
+							if (g_displayBargraphResultsMode != IMPULSE_RESULTS) { g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; }
+							else { g_displayAlternateResultState = VECTOR_SUM_RESULTS; }
 						break;
 					}
 				break;
@@ -470,11 +461,11 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	// Write string to screen
 	WndMpWrtString((uint8*)&buff[0], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
-	if((g_monitorOperationMode == BARGRAPH_MODE) || (g_monitorOperationMode == COMBO_MODE))
+	if ((g_monitorOperationMode == BARGRAPH_MODE) || (g_monitorOperationMode == COMBO_MODE))
 	{
-		if(g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
+		if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			arrowChar = BOTH_ARROWS_CHAR;
-		else if(g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
+		else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 			arrowChar = UP_ARROW_CHAR;
 		else // g_displayBargraphResultsMode == IMPULSE_RESULTS
 			arrowChar = DOWN_ARROW_CHAR;
@@ -878,9 +869,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			sprintf(buff, "PEAK DISP %5.4f %s", tempPeakDisp, displayFormat);
 		}
-		else if((g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS) && (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL))
+		else if ((g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS) && (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL))
 		{
-			if(g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
+			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
 				tempR = g_bargraphSummaryIntervalPtr->r.peak;
 				tempV = g_bargraphSummaryIntervalPtr->v.peak;
@@ -893,7 +884,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate /
 				((float)((g_bargraphSummaryIntervalPtr->t.frequency * 2) - 1)));
 			}
-			else if(g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
+			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 			{
 				tempR = g_rJobPeak;
 				tempV = g_vJobPeak;
@@ -904,9 +895,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tFreq = (float)((float)g_pendingBargraphRecord.summary.parameters.sampleRate / ((float)((g_tJobFreq * 2) - 1)));
 			}
 
-			if((tempR * rFreq) > (tempV * vFreq))
+			if ((tempR * rFreq) > (tempV * vFreq))
 			{
-				if((tempR * rFreq) > (tempT * tFreq))
+				if ((tempR * rFreq) > (tempT * tFreq))
 				{
 					// R Acc is max
 					normalize_max_peak = (float)tempR / (float)div;
@@ -921,7 +912,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			}
 			else
 			{
-				if((tempV * vFreq) > (tempT * tFreq))
+				if ((tempV * vFreq) > (tempT * tFreq))
 				{
 					// V Acc is max
 					normalize_max_peak = (float)tempV / (float)div;
