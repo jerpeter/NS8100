@@ -133,7 +133,7 @@ void handleRST(CMD_BUFFER_STRUCT* inCmd)
 		StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
 	}
 
-	if(g_unitConfig.timerMode == ENABLED)
+	if (g_unitConfig.timerMode == ENABLED)
 	{
 		// Disable Timer mode since restarting would force a prompt for user action
 		g_unitConfig.timerMode = DISABLED;
@@ -397,7 +397,7 @@ void HandleUDE(CMD_BUFFER_STRUCT* inCmd)
 	// Set the data pointer to start after the UDE character data bytes
 	uint16* dataPtr = (uint16*)(inCmd->msg + MESSAGE_HEADER_SIMPLE_LENGTH);
 
-	if(*dataPtr < g_nextEventNumberToUse)
+	if (*dataPtr < g_nextEventNumberToUse)
 		__autoDialoutTbl.lastDownloadedEvent = *dataPtr;
 
 	// Done with the command, reset all global transfer and status fields
@@ -955,7 +955,7 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 	}
 
 	// Check if the CRC32 flag is set (2nd byte of Compress/CRC flags 2 byte field, stored as an ascii number)
-	if((g_inCmdHeaderPtr->compressCrcFlags[1] - 0x30) == CRC_32BIT)
+	if ((g_inCmdHeaderPtr->compressCrcFlags[1] - 0x30) == CRC_32BIT)
 	{
 		//Move the string data into the configuration structure. String is (2 * cfgSize)
 		i = MESSAGE_HEADER_LENGTH;
@@ -986,7 +986,7 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 		msgCRC = CalcCCITT32((uint8*)&(rawData[0]), sizeof(rawData), msgCRC);
 
 		// The CRC's don't match
-		if(inCRC != msgCRC)
+		if (inCRC != msgCRC)
 		{
 			// Signal a bad CRC value
 			sprintf((char*)msgTypeStr, "%02d", CFG_ERR_BAD_CRC);
@@ -1011,7 +1011,7 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 
 #if EXTENDED_DEBUG // Test code (Display command components)
 	debugRaw("Recieved DEM command: \r\n");
-	for(i=0;i<inCmd->size;i++)
+	for (i = 0; i < inCmd->size; i++)
 	{
 		debugRaw("(%d)%x ", i+1, inCmd->msg[i]);
 	}
@@ -1248,11 +1248,11 @@ void prepareDEMDataToSend(COMMAND_MESSAGE_HEADER* inCmdHeaderPtr)
 		eventDataXferLength = lzo1x_1_compress((void*)(g_demXferStructPtr->startDataPtr), g_demXferStructPtr->dloadEventRec.eventRecord.header.dataLength, OUT_SERIAL);
 		debug("Compressed Data length (serial): %d\r\n", eventDataXferLength);
 
-		if( g_demXferStructPtr->xmitSize > 0 )
+		if (g_demXferStructPtr->xmitSize > 0)
 		{
 			g_transmitCRC = CalcCCITT32((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, g_transmitCRC);
 
-			if(ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
+			if (ModemPuts((uint8*)g_demXferStructPtr->xmitBuffer, g_demXferStructPtr->xmitSize, NO_CONVERSION) == MODEM_SEND_FAILED)
 			{
 				g_demXferStructPtr->errorStatus = MODEM_SEND_FAILED;
 			}

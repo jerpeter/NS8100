@@ -303,7 +303,7 @@ void SummaryMenuScroll(char direction)
 	
 	g_summaryListArrowChar = BOTH_ARROWS_CHAR;
 	
-	for(i=0;i<g_keypadNumberSpeed;i++)
+	for (i = 0; i < g_keypadNumberSpeed; i++)
 	{	
 		if (direction == DOWN)
 		{
@@ -328,7 +328,7 @@ void SummaryMenuScroll(char direction)
 			
 			compareCurrentSummaryIndex = GetNextValidRamSummaryIndex(s_currentSummaryIndex);
 
-			if(compareCurrentSummaryIndex == s_totalRamSummaries)
+			if (compareCurrentSummaryIndex == s_totalRamSummaries)
 			{
 				g_summaryListArrowChar = UP_ARROW_CHAR;
 			}
@@ -352,7 +352,7 @@ void SummaryMenuScroll(char direction)
 
 			compareCurrentSummaryIndex = GetPreviousValidRamSummaryIndex(s_currentSummaryIndex);
 
-			if(compareCurrentSummaryIndex == s_totalRamSummaries)
+			if (compareCurrentSummaryIndex == s_totalRamSummaries)
 			{
 				g_summaryListArrowChar = DOWN_ARROW_CHAR;
 			}

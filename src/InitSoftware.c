@@ -268,7 +268,7 @@ void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
 
 	g_sensorInfo.sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
 
-	if((IMPERIAL_TYPE == g_unitConfig.unitsOfMeasure) || (sensor_type == SENSOR_ACC))
+	if ((IMPERIAL_TYPE == g_unitConfig.unitsOfMeasure) || (sensor_type == SENSOR_ACC))
 	{
 		g_sensorInfo.measurementRatio = (float)IMPERIAL; 				// 1 = SAE; 25.4 = Metric
 	}
@@ -281,7 +281,7 @@ void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
 	g_sensorInfo.sensorTypeNormalized = (float)(g_sensorInfo.sensorTypeNormalized) * (float)(g_sensorInfo.measurementRatio);
 
 	// the conversion is length(in or mm) = hexValue * (sensor scale/ADC Max Value)
-	g_sensorInfo.hexToLengthConversion = (float)( (float)ADC_RESOLUTION / (float)g_sensorInfo.sensorTypeNormalized );
+	g_sensorInfo.hexToLengthConversion = (float)((float)ADC_RESOLUTION / (float)g_sensorInfo.sensorTypeNormalized);
 
 	g_sensorInfo.sensorValue = (uint16)(g_factorySetupRecord.sensor_type / gainFactor); // sensor value X 100.
 }

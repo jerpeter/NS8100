@@ -61,25 +61,25 @@ typedef enum
 /***************************************************************/
 /* srecord routines                                            */
 /***************************************************************/
-int            Get_and_save_srec( int file );
-int            Unpack_srec(  int file  );
+int            Get_and_save_srec(int file);
+int            Unpack_srec(int file);
 
-void           Srec_get_line( ASCII_SREC_DATA *);
-void           Srec_file_get_line( ASCII_SREC_DATA *);
-RECORD_DATA    Srec_convert_line( ASCII_SREC_DATA linedata );
-BOOL           Srec_checksum( RECORD_DATA linedata );
-void           Srec_get_data( RECORD_DATA linedata, uint8 *data );
+void           Srec_get_line(ASCII_SREC_DATA *);
+void           Srec_file_get_line(ASCII_SREC_DATA *);
+RECORD_DATA    Srec_convert_line(ASCII_SREC_DATA linedata);
+BOOL           Srec_checksum(RECORD_DATA linedata);
+void           Srec_get_data(RECORD_DATA linedata, uint8 *data);
 
-void           Srec_ack( void );
-void           Srec_nack( void );
+void           Srec_ack(void);
+void           Srec_nack(void);
 
-uint8  Atoc( uint8 ch );
-uint8  Atonum( uint8 ch );
-uint32 Atoh_4( uint8 * ch );
-uint8  Atoh_2( uint8 * ch );
-uint8  Atoh_1( uint8 * ch );
+uint8  Atoc(uint8 ch);
+uint8  Atonum(uint8 ch);
+uint32 Atoh_4(uint8 * ch);
+uint8  Atoh_2(uint8 * ch);
+uint8  Atoh_1(uint8 * ch);
 
-void  Srec_xOff( void );
-void  Srec_xOn( void );
+void  Srec_xOff(void);
+void  Srec_xOn(void);
 
 #endif /* SREC_H_ */

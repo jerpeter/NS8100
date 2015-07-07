@@ -1057,7 +1057,7 @@ void BootLoadManager(void)
 
 		while (file == -1)
 		{
-			//WriteLCD_smText( 0, 64, (unsigned char *)"Connect USB..", NORMAL_LCD);
+			//WriteLCD_smText(0, 64, (unsigned char *)"Connect USB..", NORMAL_LCD);
 			OverlayMessage("BOOTLOADER", "BOOT FILE NOT FOUND. CONNECT THE USB CABLE", 0);
 
 			usb_task_init();

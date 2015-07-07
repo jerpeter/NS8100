@@ -136,8 +136,8 @@
 //-------------------------------------------------------------
 // Little Endian
 #if TARGET_ENDIAN == DEF_LITTLE
-	#define GET_32BIT_WORD(buffer, location)	( ((UINT32)buffer[location+3]<<24) + ((UINT32)buffer[location+2]<<16) + ((UINT32)buffer[location+1]<<8) + (UINT32)buffer[location+0] )
-	#define GET_16BIT_WORD(buffer, location)	( ((UINT16)buffer[location+1]<<8) + (UINT16)buffer[location+0] )
+	#define GET_32BIT_WORD(buffer, location)	(((UINT32)buffer[location+3]<<24) + ((UINT32)buffer[location+2]<<16) + ((UINT32)buffer[location+1]<<8) + (UINT32)buffer[location+0])
+	#define GET_16BIT_WORD(buffer, location)	(((UINT16)buffer[location+1]<<8) + (UINT16)buffer[location+0])
 
 	#define SET_32BIT_WORD(buffer, location, value)	{ buffer[location+0] = (BYTE)((value)&0xFF); \
 														buffer[location+1] = (BYTE)((value>>8)&0xFF); \
@@ -148,8 +148,8 @@
 														buffer[location+1] = (BYTE)((value>>8)&0xFF); }
 // Big Endian
 #else
-	#define GET_32BIT_WORD(buffer, location)	( ((UINT32)buffer[location+0]<<24) + ((UINT32)buffer[location+1]<<16) + ((UINT32)buffer[location+2]<<8) + (UINT32)buffer[location+3] )
-	#define GET_16BIT_WORD(buffer, location)	( ((UINT16)buffer[location+0]<<8) + (UINT16)buffer[location+1] )
+	#define GET_32BIT_WORD(buffer, location)	(((UINT32)buffer[location+0]<<24) + ((UINT32)buffer[location+1]<<16) + ((UINT32)buffer[location+2]<<8) + (UINT32)buffer[location+3])
+	#define GET_16BIT_WORD(buffer, location)	(((UINT16)buffer[location+0]<<8) + (UINT16)buffer[location+1])
 
 	#define SET_32BIT_WORD(buffer, location, value)	{ buffer[location+3] = (BYTE)((value)&0xFF); \
 														buffer[location+2] = (BYTE)((value>>8)&0xFF); \

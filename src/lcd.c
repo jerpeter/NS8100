@@ -372,7 +372,7 @@ void WriteLCD_Vline(uint8 x_pos, uint8 y_pos1, uint8 y_pos2, uint8 bLineType)
 	uint8 iMask;
 	uint8 display_half;
 
-	if(x_pos < 64)
+	if (x_pos < 64)
 	{
 		ColAddr = x_pos;
 		display_half = FIRST_HALF_DISPLAY;
@@ -445,7 +445,7 @@ void WriteLCD_Vline(uint8 x_pos, uint8 y_pos1, uint8 y_pos2, uint8 bLineType)
 
 		else if ((y_pos1 - y_pos2) >= 8)
 		{ // not the first time & we have a whole line
-			if(bLineType == LINECOLOR_DOTTED)
+			if (bLineType == LINECOLOR_DOTTED)
 			{
 			lcd_data |= (even) ? 0xAA : 0x55;
 			}
@@ -500,7 +500,7 @@ void WriteLCD_Hline(uint8 y_pos, uint8 start, uint8 end, uint8 bLineType)
 	volatile uint8 bCurrValue;
 	uint8 display_half;
 
-	if(start < 64)
+	if (start < 64)
 	{
 		display_half = FIRST_HALF_DISPLAY;
 		horizontal = start;
@@ -528,7 +528,7 @@ void WriteLCD_Hline(uint8 y_pos, uint8 start, uint8 end, uint8 bLineType)
 
 		for (bTemp = start; bTemp <= end; bTemp++)
 		{
-			if(bTemp > 63)
+			if (bTemp > 63)
 			{
 			display_half = SECOND_HALF_DISPLAY;
 			bTemp = 0;
@@ -550,7 +550,7 @@ void WriteLCD_Hline(uint8 y_pos, uint8 start, uint8 end, uint8 bLineType)
 
 		for (bTemp = start; bTemp <= end; bTemp++)
 		{
-			if(bTemp > 63)
+			if (bTemp > 63)
 			{
 			display_half = SECOND_HALF_DISPLAY;
 			bTemp = 0;
@@ -587,7 +587,7 @@ void Display_small_char(uint8 number, uint8 h_position, uint8 v_position, uint8 
 	uint16 iLpCnt = 0;
 
 	horizontal = h_position;
-	if(horizontal < 64)
+	if (horizontal < 64)
 	{
 		display_half = FIRST_HALF_DISPLAY;
 	}
@@ -645,13 +645,13 @@ void Display_small_char(uint8 number, uint8 h_position, uint8 v_position, uint8 
 				temp = SMALL_CHARACTERS[iCharacterIndex];
 				temp = Bit_Swap(temp);
 			}
-			//if(polarity == REVERSE_LCD)
+			//if (polarity == REVERSE_LCD)
 			//{
 			//	temp = ~temp;
 			//}
-			if(bBlankingError == TRUE)
+			if (bBlankingError == TRUE)
 			{
-				if((uint8)(horizontal + iLpCnt) > 62)
+				if ((uint8)(horizontal + iLpCnt) > 62)
 				{
 					display_half = SECOND_HALF_DISPLAY;
 					Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low, display_half); // set the vertical postion
@@ -662,7 +662,7 @@ void Display_small_char(uint8 number, uint8 h_position, uint8 v_position, uint8 
 			}
 			else
 			{
-				if((uint8)(horizontal + iLpCnt) > 63)
+				if ((uint8)(horizontal + iLpCnt) > 63)
 				{
 					display_half = SECOND_HALF_DISPLAY;
 					Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low, display_half); // set the vertical postion
@@ -729,9 +729,9 @@ void Display_small_char(uint8 number, uint8 h_position, uint8 v_position, uint8 
 			{//if reversing the character, reverse the current column
 				temp = ~temp;
 				}
-				if(bBlankingError == TRUE)
+				if (bBlankingError == TRUE)
 				{
-				if((uint8)(horizontal + iLpCnt) > 62)
+				if ((uint8)(horizontal + iLpCnt) > 62)
 					{
 						display_half = SECOND_HALF_DISPLAY;
 					Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low + 1, display_half); // set the vertical postion
@@ -743,7 +743,7 @@ void Display_small_char(uint8 number, uint8 h_position, uint8 v_position, uint8 
 				}
 				else
 				{
-					if((uint8)(horizontal + iLpCnt) > 63)
+					if ((uint8)(horizontal + iLpCnt) > 63)
 					{
 						display_half = SECOND_HALF_DISPLAY;
 					Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low + 1, display_half); // set the vertical postion
@@ -814,9 +814,9 @@ void Display_small_char(uint8 number, uint8 h_position, uint8 v_position, uint8 
 				temp = ~temp;
 			}
 
-				if(bBlankingError == TRUE)
+				if (bBlankingError == TRUE)
 				{
-				if((uint8)(horizontal + iLpCnt) > 62)
+				if ((uint8)(horizontal + iLpCnt) > 62)
 					{
 						display_half = SECOND_HALF_DISPLAY;
 					Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low, display_half); // set the vertical postion
@@ -828,7 +828,7 @@ void Display_small_char(uint8 number, uint8 h_position, uint8 v_position, uint8 
 				}
 				else
 				{
-					if((uint8)(horizontal + iLpCnt) > 63)
+					if ((uint8)(horizontal + iLpCnt) > 63)
 					{
 						display_half = SECOND_HALF_DISPLAY;
 					Write_display(COMMAND_REGISTER, PAGE_ADDRESS_SET + v_low, display_half); // set the vertical postion
@@ -882,7 +882,7 @@ void Display_large_char(uint8 number, uint8 position, uint8 line, uint8 polarity
 	uint16 character;
 	uint16 y;
 
-	if(position < 64)
+	if (position < 64)
 	{
 		display_half = FIRST_HALF_DISPLAY;
 	}
@@ -1288,7 +1288,7 @@ void Set_Contrast(uint8 level)
 
 	Reset_Contrast();
 
-	if(level < 32)
+	if (level < 32)
 	{
 		counts = level + 32;
 	}
@@ -1297,7 +1297,7 @@ void Set_Contrast(uint8 level)
 		counts = level - 32;
 	}
 
-	for(i=0;i < counts;i++)
+	for (i = 0; i < counts; i++)
 	{
 		// Toggle to adjust
 		PowerControl(LCD_CONTRAST_ENABLE, OFF);
@@ -1312,35 +1312,35 @@ uint8 Bit_Swap(uint8 data)
 {
 	uint8 tempData = 0;
 
-	if(data & 0x01)
+	if (data & 0x01)
 	{
 		tempData += 0x80;
 	}
-	if(data & 0x02)
+	if (data & 0x02)
 	{
 		tempData += 0x40;
 	}
-	if(data & 0x04)
+	if (data & 0x04)
 	{
 		tempData += 0x20;
 	}
-	if(data & 0x08)
+	if (data & 0x08)
 	{
 		tempData += 0x10;
 	}
-	if(data & 0x10)
+	if (data & 0x10)
 	{
 		tempData += 0x08;
 	}
-	if(data & 0x20)
+	if (data & 0x20)
 	{
 		tempData += 0x04;
 	}
-	if(data & 0x40)
+	if (data & 0x40)
 	{
 		tempData += 0x02;
 	}
-	if(data & 0x80)
+	if (data & 0x80)
 	{
 		tempData += 0x01;
 	}

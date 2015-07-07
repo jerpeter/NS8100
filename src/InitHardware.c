@@ -113,9 +113,9 @@
 	\
 	/* Some coherence checks... */ \
 	/* Ensures CS is active during Rd or Wr */ \
-	if( ncs_rd_setup + ncs_rd_pulse < nrd_setup + nrd_pulse ) \
+	if (ncs_rd_setup + ncs_rd_pulse < nrd_setup + nrd_pulse) \
 	ncs_rd_pulse = nrd_setup + nrd_pulse - ncs_rd_setup; \
-	if( ncs_wr_setup + ncs_wr_pulse < nwe_setup + nwe_pulse ) \
+	if (ncs_wr_setup + ncs_wr_pulse < nwe_setup + nwe_pulse) \
 	ncs_wr_pulse = nwe_setup + nwe_pulse - ncs_wr_setup; \
 	\
 	/* ncs_hold = n_cycle - ncs_setup - ncs_pulse */ \
@@ -123,19 +123,19 @@
 	/* */ \
 	/* All holds parameters must be positive or null, so: */ \
 	/* nwe_cycle shall be >= ncs_wr_setup + ncs_wr_pulse */ \
-	if( nwe_cycle < ncs_wr_setup + ncs_wr_pulse ) \
+	if (nwe_cycle < ncs_wr_setup + ncs_wr_pulse) \
 	nwe_cycle = ncs_wr_setup + ncs_wr_pulse; \
 	\
 	/* nwe_cycle shall be >= nwe_setup + nwe_pulse */ \
-	if( nwe_cycle < nwe_setup + nwe_pulse ) \
+	if (nwe_cycle < nwe_setup + nwe_pulse) \
 	nwe_cycle = nwe_setup + nwe_pulse; \
 	\
 	/* nrd_cycle shall be >= ncs_rd_setup + ncs_rd_pulse */ \
-	if( nrd_cycle < ncs_rd_setup + ncs_rd_pulse ) \
+	if (nrd_cycle < ncs_rd_setup + ncs_rd_pulse) \
 	nrd_cycle = ncs_rd_setup + ncs_rd_pulse; \
 	\
 	/* nrd_cycle shall be >= nrd_setup + nrd_pulse */ \
-	if( nrd_cycle < nrd_setup + nrd_pulse ) \
+	if (nrd_cycle < nrd_setup + nrd_pulse) \
 	nrd_cycle = nrd_setup + nrd_pulse; \
 	\
 	AVR32_SMC.cs[ncs].setup = (nwe_setup << AVR32_SMC_SETUP0_NWE_SETUP_OFFSET) | \
@@ -155,7 +155,7 @@
 	(NWAIT_MODE << AVR32_SMC_MODE0_EXNW_MODE_OFFSET) | \
 	(((SMC_8_BIT_CHIPS) ? AVR32_SMC_MODE0_BAT_BYTE_WRITE : \
 	AVR32_SMC_MODE0_BAT_BYTE_SELECT) << AVR32_SMC_MODE0_BAT_OFFSET) | \
-	(((SMC_DBW <= 8 ) ? AVR32_SMC_MODE0_DBW_8_BITS : \
+	(((SMC_DBW <= 8) ? AVR32_SMC_MODE0_DBW_8_BITS : \
 	(SMC_DBW <= 16) ? AVR32_SMC_MODE0_DBW_16_BITS : \
 	AVR32_SMC_MODE0_DBW_32_BITS) << AVR32_SMC_MODE0_DBW_OFFSET) | \
 	(TDF_CYCLES << AVR32_SMC_MODE0_TDF_CYCLES_OFFSET) | \
@@ -193,9 +193,9 @@
 	\
 	/* Some coherence checks... */ \
 	/* Ensures CS is active during Rd or Wr */ \
-	if( ncs_rd_setup + ncs_rd_pulse < nrd_setup + nrd_pulse ) \
+	if (ncs_rd_setup + ncs_rd_pulse < nrd_setup + nrd_pulse) \
 	ncs_rd_pulse = nrd_setup + nrd_pulse - ncs_rd_setup; \
-	if( ncs_wr_setup + ncs_wr_pulse < nwe_setup + nwe_pulse ) \
+	if (ncs_wr_setup + ncs_wr_pulse < nwe_setup + nwe_pulse) \
 	ncs_wr_pulse = nwe_setup + nwe_pulse - ncs_wr_setup; \
 	\
 	/* ncs_hold = n_cycle - ncs_setup - ncs_pulse */ \
@@ -203,19 +203,19 @@
 	/* */ \
 	/* All holds parameters must be positive or null, so: */ \
 	/* nwe_cycle shall be >= ncs_wr_setup + ncs_wr_pulse */ \
-	if( nwe_cycle < ncs_wr_setup + ncs_wr_pulse ) \
+	if (nwe_cycle < ncs_wr_setup + ncs_wr_pulse) \
 	nwe_cycle = ncs_wr_setup + ncs_wr_pulse; \
 	\
 	/* nwe_cycle shall be >= nwe_setup + nwe_pulse */ \
-	if( nwe_cycle < nwe_setup + nwe_pulse ) \
+	if (nwe_cycle < nwe_setup + nwe_pulse) \
 	nwe_cycle = nwe_setup + nwe_pulse; \
 	\
 	/* nrd_cycle shall be >= ncs_rd_setup + ncs_rd_pulse */ \
-	if( nrd_cycle < ncs_rd_setup + ncs_rd_pulse ) \
+	if (nrd_cycle < ncs_rd_setup + ncs_rd_pulse) \
 	nrd_cycle = ncs_rd_setup + ncs_rd_pulse; \
 	\
 	/* nrd_cycle shall be >= nrd_setup + nrd_pulse */ \
-	if( nrd_cycle < nrd_setup + nrd_pulse ) \
+	if (nrd_cycle < nrd_setup + nrd_pulse) \
 	nrd_cycle = nrd_setup + nrd_pulse; \
 	\
 	AVR32_SMC.cs[ncs].setup = (nwe_setup << AVR32_SMC_SETUP0_NWE_SETUP_OFFSET) | \
@@ -235,7 +235,7 @@
 	(NWAIT_MODE << AVR32_SMC_MODE0_EXNW_MODE_OFFSET) | \
 	(((SMC_8_BIT_CHIPS) ? AVR32_SMC_MODE0_BAT_BYTE_WRITE : \
 	AVR32_SMC_MODE0_BAT_BYTE_SELECT) << AVR32_SMC_MODE0_BAT_OFFSET) | \
-	(((SMC_DBW <= 8 ) ? AVR32_SMC_MODE0_DBW_8_BITS : \
+	(((SMC_DBW <= 8) ? AVR32_SMC_MODE0_DBW_8_BITS : \
 	(SMC_DBW <= 16) ? AVR32_SMC_MODE0_DBW_16_BITS : \
 	AVR32_SMC_MODE0_DBW_32_BITS) << AVR32_SMC_MODE0_DBW_OFFSET) | \
 	(TDF_CYCLES << AVR32_SMC_MODE0_TDF_CYCLES_OFFSET) | \

@@ -1107,7 +1107,7 @@ void RecordTimeMenuHandler(uint8 keyPressed, void* data)
 		{
 			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
-			if(g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{
 				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
 				AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
@@ -1313,7 +1313,7 @@ void SeismicTriggerMenuHandler(uint8 keyPressed, void* data)
 
 		g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
-		if(g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
 											AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);

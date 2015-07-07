@@ -62,7 +62,7 @@ float GetExternalVoltageLevelAveraged(uint8 type)
 	uint32 i = 0;
 
 	// Need to average some amount of reads
-	for(i = 0; i < AD_VOLTAGE_READ_LOOP_COUNT; i++)
+	for (i = 0; i < AD_VOLTAGE_READ_LOOP_COUNT; i++)
 	{
 		switch (type)
 		{
@@ -321,7 +321,7 @@ void SoftUsecWait(uint32 usecs)
 {
 	unsigned long int countdown = (usecs << 2) + usecs;
 	
-	for(; countdown > 0;)
+	for (; countdown > 0; )
 	{
 		countdown--;
 	}

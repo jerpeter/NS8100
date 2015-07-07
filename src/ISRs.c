@@ -893,7 +893,7 @@ static inline void moveWaveformData_ISR_Inline(void)
 	 += NUMBER_OF_CHANNELS_DEFAULT;
 	
 	// Check if write pointer is beyond the end of the circular bounds
-	if ( >= ) = ;
+	// add code
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
 	raiseSystemEventFlag();
@@ -1048,40 +1048,40 @@ static inline void getChannelDataWithReadbackWithTemp_ISR_Inline(void)
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
-		if(s_channelConfigReadBack != 0xe150) { s_channelSyncError = YES; }
+		//if (s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
+		if (s_channelConfigReadBack != 0xe150) { s_channelSyncError = YES; }
 
 		// Chan 1 - T
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
-		if(s_channelConfigReadBack != 0xe350) { s_channelSyncError = YES; }
+		//if (s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
+		if (s_channelConfigReadBack != 0xe350) { s_channelSyncError = YES; }
 
 		// Chan 2 - V
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
-		if(s_channelConfigReadBack != 0xe550) { s_channelSyncError = YES; }
+		//if (s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
+		if (s_channelConfigReadBack != 0xe550) { s_channelSyncError = YES; }
 
 		// Chan 3 - A
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
-		if(s_channelConfigReadBack != 0xe750) { s_channelSyncError = YES; }
+		//if (s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
+		if (s_channelConfigReadBack != 0xe750) { s_channelSyncError = YES; }
 
 		// Temperature
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
-		if(s_channelConfigReadBack != 0xb750) { s_channelSyncError = YES; }
+		//if (s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
+		if (s_channelConfigReadBack != 0xb750) { s_channelSyncError = YES; }
 	}
 	else // (s_channelConfig == CHANNELS_R_AND_V_SWAPPED)
 	{
@@ -1090,40 +1090,40 @@ static inline void getChannelDataWithReadbackWithTemp_ISR_Inline(void)
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_V_channelReading);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
-		if(s_channelConfigReadBack != 0xe150) { s_channelSyncError = YES; }
+		//if (s_channelConfigReadBack != 0xe0d0) { s_channelSyncError = YES; }
+		if (s_channelConfigReadBack != 0xe150) { s_channelSyncError = YES; }
 
 		// Chan 1 - T
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_T_channelReading);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
-		if(s_channelConfigReadBack != 0xe350) { s_channelSyncError = YES; }
+		//if (s_channelConfigReadBack != 0xe2d0) { s_channelSyncError = YES; }
+		if (s_channelConfigReadBack != 0xe350) { s_channelSyncError = YES; }
 
 		// Chan 2 - R
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_R_channelReading);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
-		if(s_channelConfigReadBack != 0xe550) { s_channelSyncError = YES; }
+		//if (s_channelConfigReadBack != 0xe4d0) { s_channelSyncError = YES; }
+		if (s_channelConfigReadBack != 0xe550) { s_channelSyncError = YES; }
 
 		// Chan 3 - A
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_A_channelReading);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
-		if(s_channelConfigReadBack != 0xe750) { s_channelSyncError = YES; }
+		//if (s_channelConfigReadBack != 0xe6d0) { s_channelSyncError = YES; }
+		if (s_channelConfigReadBack != 0xe750) { s_channelSyncError = YES; }
 
 		// Temperature
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
-		if(s_channelConfigReadBack != 0xb750) { s_channelSyncError = YES; }
+		//if (s_channelConfigReadBack != 0xb6d0) { s_channelSyncError = YES; }
+		if (s_channelConfigReadBack != 0xb750) { s_channelSyncError = YES; }
 	}
 }
 

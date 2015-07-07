@@ -139,7 +139,7 @@ void AirScaleMenuHandler(uint8 keyPressed, void* data)
 		{
 			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
-			if(g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{
 				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
 				AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
@@ -2088,22 +2088,22 @@ void MonitorLogMenuHandler(uint8 keyPressed, void* data)
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
 
-	if(keyPressed == ENTER_KEY)
+	if (keyPressed == ENTER_KEY)
 	{
-		if(newItemIndex == VIEW_LOG)
+		if (newItemIndex == VIEW_LOG)
 		{
 			SETUP_MENU_MSG(VIEW_MONITOR_LOG_MENU);
 		}
-		else if(newItemIndex == PRINT_LOG)
+		else if (newItemIndex == PRINT_LOG)
 		{
 			MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 		}
-		else if(newItemIndex == LOG_RESULTS)
+		else if (newItemIndex == LOG_RESULTS)
 		{
 			MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 		}
 	}
-	else if(keyPressed == ESC_KEY)
+	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&configMenu, MONITOR_LOG);
 	}
@@ -2133,7 +2133,7 @@ void PeakAccMenuHandler(uint8 keyPressed, void* data)
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
 
-	if(keyPressed == ENTER_KEY)
+	if (keyPressed == ENTER_KEY)
 	{
 		g_unitConfig.reportPeakAcceleration = (uint8)peakAccMenu[newItemIndex].data;
 
@@ -2141,7 +2141,7 @@ void PeakAccMenuHandler(uint8 keyPressed, void* data)
 
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
-	else if(keyPressed == ESC_KEY)
+	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&configMenu, REPORT_PEAK_ACC);
 	}
@@ -3041,7 +3041,7 @@ void WaveformAutoCalMenuHandler(uint8 keyPressed, void* data)
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
 
-	if(keyPressed == ENTER_KEY)
+	if (keyPressed == ENTER_KEY)
 	{
 		g_unitConfig.autoCalForWaveform = (uint8)waveformAutoCalMenu[newItemIndex].data;
 
@@ -3049,7 +3049,7 @@ void WaveformAutoCalMenuHandler(uint8 keyPressed, void* data)
 
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
-	else if(keyPressed == ESC_KEY)
+	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&configMenu, WAVEFORM_AUTO_CAL);
 	}

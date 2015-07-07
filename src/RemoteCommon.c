@@ -385,7 +385,7 @@ void AutoDialoutStateMachine(void)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_INIT:
 			// Issue dial command and dial string
-			if((g_modemSetupRecord.dial[0] >= '0') && (g_modemSetupRecord.dial[0] <= '9'))
+			if ((g_modemSetupRecord.dial[0] >= '0') && (g_modemSetupRecord.dial[0] <= '9'))
 			{
 				UartPuts((char *)"ATDT", CRAFT_COM_PORT);
 			}

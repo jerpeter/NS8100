@@ -148,17 +148,17 @@ void CompleteSummaryInterval(void)
 	float rFreq = (float)0, vFreq = (float)0, tFreq = (float)0;
 
 	// Note: This should be raw unadjusted freq
-	if(g_bargraphSummaryIntervalPtr->r.frequency > 0)
+	if (g_bargraphSummaryIntervalPtr->r.frequency > 0)
 	{
 		rFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryIntervalPtr->r.frequency * 2) - 1));
 	}
 
-	if(g_bargraphSummaryIntervalPtr->v.frequency > 0)
+	if (g_bargraphSummaryIntervalPtr->v.frequency > 0)
 	{
 		vFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryIntervalPtr->v.frequency * 2) - 1));
 	}
 
-	if(g_bargraphSummaryIntervalPtr->t.frequency > 0)
+	if (g_bargraphSummaryIntervalPtr->t.frequency > 0)
 	{
 		tFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryIntervalPtr->t.frequency * 2) - 1));
 	}
@@ -529,7 +529,7 @@ uint8 CalculateBargraphData(void)
 		// All Channels
 		// ------------
 		// Check if the freq count is zero, meaning initial sample or the start of a new summary interval (doesn't matter which channel is checked)
-		if(g_bargraphFreqCalcBuffer.a.freq_count == 0)
+		if (g_bargraphFreqCalcBuffer.a.freq_count == 0)
 		{
 			g_bargraphFreqCalcBuffer.a.sign = (uint16)(currentDataSample.a & g_bitAccuracyMidpoint);
 			g_bargraphFreqCalcBuffer.r.sign = (uint16)(currentDataSample.r & g_bitAccuracyMidpoint);

@@ -194,7 +194,7 @@ void ConvertTimeStampToString(char* buff, DATE_TIME_STRUCT* timeReference, uint8
 		case REC_DATE_TYPE:
 			tempTime = timeReference;
 
-			if((tempTime->month >= 1) && (tempTime->month <= 12))
+			if ((tempTime->month >= 1) && (tempTime->month <= 12))
 			{	
 				strcpy((char*)tbuff, (char*)(g_monthTable[tempTime->month].name));
 			}
@@ -611,14 +611,14 @@ void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 		spi_write(&AVR32_SPI1, startAddr & 0xFF);
 
 		// Adjust for page boundaries
-		if(checkForPartialFirstPage == YES)
+		if (checkForPartialFirstPage == YES)
 		{
 			checkForPartialFirstPage = NO;
 			
 			lengthToPageBoundary = (EEPROM_PAGE_SIZE - (startAddr % 32));
 			
 			// Check data length against remaining length of 32 page boundary
-			if(dataLength <= lengthToPageBoundary)
+			if (dataLength <= lengthToPageBoundary)
 			{
 				// Complete data storage within first/partial page
 				writeLength = dataLength;
@@ -631,7 +631,7 @@ void SaveParameterMemory(uint8* dataSrc, uint16 startAddr, uint16 dataLength)
 				startAddr += lengthToPageBoundary;
 			}
 		}
-		else if(dataLength <= EEPROM_PAGE_SIZE) // Check if the rest of the data fits into the next page
+		else if (dataLength <= EEPROM_PAGE_SIZE) // Check if the rest of the data fits into the next page
 		{
 			writeLength = dataLength;
 			dataLength = 0;
@@ -682,7 +682,7 @@ void EraseParameterMemory(uint16 startAddr, uint16 dataLength)
 		spi_write(&AVR32_SPI1, startAddr & 0xFF);
 
 		// Check if current data length is less than 32 and can be finished in a page
-		if(dataLength <= 32)
+		if (dataLength <= 32)
 		{
 			pageSize = dataLength;
 			dataLength = 0;

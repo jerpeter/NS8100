@@ -97,7 +97,7 @@ void Setup_8100_EIC_Low_Battery_ISR(void)
 
 #if 0
 	// Test for int enable
-	if(AVR32_EIC.IMR.int0 == 0x01) debug("\nLow Battery Interrupt Enabled\r\n");
+	if (AVR32_EIC.IMR.int0 == 0x01) debug("\nLow Battery Interrupt Enabled\r\n");
 	else debug("\nLow Battery Interrupt Not Enabled\r\n");
 #endif
 }
@@ -126,7 +126,7 @@ void Setup_8100_EIC_Keypad_ISR(void)
 
 #if 0
 	// Test for int enable
-	if(AVR32_EIC.IMR.int5 == 0x01) debug("\nKeypad Interrupt Enabled\r\n");
+	if (AVR32_EIC.IMR.int5 == 0x01) debug("\nKeypad Interrupt Enabled\r\n");
 	else debug("\nKeypad Interrupt Not Enabled\r\n");
 #endif
 }
@@ -155,7 +155,7 @@ void Setup_8100_EIC_System_ISR(void)
 
 #if 0
 	// Test for int enable
-	if(AVR32_EIC.IMR.int4 == 0x01) debug("\nSystem Interrupt Enabled\r\n");
+	if (AVR32_EIC.IMR.int4 == 0x01) debug("\nSystem Interrupt Enabled\r\n");
 	else debug("\nSystem Interrupt Not Enabled\r\n");
 #endif
 }
@@ -183,7 +183,7 @@ void Setup_8100_EIC_External_RTC_ISR(void)
 
 	#if 0
 	// Test for int enable
-	if(AVR32_EIC.IMR.int1 == 0x01) { debug("External RTC Interrupt Enabled\r\n"); }
+	if (AVR32_EIC.IMR.int1 == 0x01) { debug("External RTC Interrupt Enabled\r\n"); }
 	else { debug("External RTC Interrupt Not Enabled\r\n"); }
 	#endif
 }

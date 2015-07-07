@@ -712,7 +712,7 @@ void AdvanceInputNumber(uint32 direction)
 						{
 							if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == MILLIBAR_TYPE))
 							{
-								if((g_userMenuCacheData.numLongData - (g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE)) > g_userMenuCacheData.intMaxValue)
+								if ((g_userMenuCacheData.numLongData - (g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE)) > g_userMenuCacheData.intMaxValue)
 								{
 									// Set the min value
 									g_userMenuCacheData.numLongData = g_userMenuCacheData.intMinValue;
@@ -1148,7 +1148,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				g_userMenuCacheData.floatMaxValue = (float)g_userMenuCacheData.intMaxValue / 10000;
 				g_userMenuCacheData.floatData = (float)g_userMenuCacheData.numLongData / 10000;
 
-				if(g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+				if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 				{
 					// Set the specifications line for the integer type
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%lu-%lu%s, N)", g_userMenuCacheData.intMinValue, g_userMenuCacheData.intMaxValue, "Db");
@@ -1166,7 +1166,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				}
 				else
 				{
-					if(g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+					if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 					{
 						// Print the data value
 						sprintf(g_userMenuCachePtr[tempRow].text, "%lu", g_userMenuCacheData.numLongData);

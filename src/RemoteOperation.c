@@ -1463,7 +1463,7 @@ void ModemResetProcess(void)
 
 	g_modemStatus.systemIsLockedFlag = YES;
 
-	if(g_autoRetries == 0)
+	if (g_autoRetries == 0)
 	{
 		CLEAR_DTR;
 	}	

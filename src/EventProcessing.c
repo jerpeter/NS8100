@@ -720,7 +720,7 @@ void InitFlashBuffs(void)
 			if (__ramFlashSummaryTbl[i].fileEventNum != 0xFFFFFFFF)
 			{
 				// Check to make sure ram values arent garbage
-				if((uint32)(__ramFlashSummaryTbl[i].fileEventNum) >= g_nextEventNumberToUse)
+				if ((uint32)(__ramFlashSummaryTbl[i].fileEventNum) >= g_nextEventNumberToUse)
 				{
 					// This signals a big warning
 					//debugRaw("Data in Ram Summary Table is garbage.\r\n");
@@ -729,7 +729,7 @@ void InitFlashBuffs(void)
 					dataInRamGarbage = TRUE;
 					break;
 				}
-				else if(CheckValidEventFile((uint16)((uint32)(__ramFlashSummaryTbl[i].fileEventNum))) == NO)
+				else if (CheckValidEventFile((uint16)((uint32)(__ramFlashSummaryTbl[i].fileEventNum))) == NO)
 				{
 					//debugRaw("Ram summary (%d) points to an invalid event.\r\n", i+1);
 					__ramFlashSummaryTbl[i].fileEventNum = 0xFFFFFFFF;
@@ -740,7 +740,7 @@ void InitFlashBuffs(void)
 					s_numOfFlashSummarys++;
 
 					// Check if any empty entries were found before or while counting events
-					if(foundEmptyRamSummaryEntry == YES)
+					if (foundEmptyRamSummaryEntry == YES)
 						condenseTable = YES;
 				}
 			}
@@ -1348,7 +1348,7 @@ void DeleteEventFileRecords(void)
 				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
 
 				// Delete file or directory
-				if(nav_file_del(FALSE) == FALSE)
+				if (nav_file_del(FALSE) == FALSE)
 				{
 					nav_file_getname(&fileName[0], 50);
 					OverlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
@@ -1376,7 +1376,7 @@ void DeleteEventFileRecords(void)
 				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
 
 				// Delete file or directory
-				if(nav_file_del(FALSE) == FALSE)
+				if (nav_file_del(FALSE) == FALSE)
 				{
 					nav_file_getname(&fileName[0], 50);
 					OverlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
@@ -1408,7 +1408,7 @@ void DeleteEventFileRecords(void)
 
 		if (nav_setcwd(s_summaryListFileName, TRUE, FALSE) == TRUE)
 		{
-			if(nav_file_del(FALSE) == FALSE)
+			if (nav_file_del(FALSE) == FALSE)
 			{
 				nav_file_getname(&fileName[0], 50);
 				OverlayMessage(fileName, "UNABLE TO DELETE SUMMARY LIST", 3 * SOFT_SECS);
@@ -2213,7 +2213,7 @@ void GetSDCardUsageStats(void)
 	nav_select(FS_NAV_ID_DEFAULT);
 	nav_drive_set(0);
 
-	if(!nav_partition_mount()) // Mount drive
+	if (!nav_partition_mount()) // Mount drive
 	{
 		debugErr("SD MMC Card: Unable to mount volume\r\n");
 	}

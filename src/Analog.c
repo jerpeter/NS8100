@@ -154,16 +154,16 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->v)); }
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(channelConfigReadback != 0xe0d0) { configError = YES; debug("Chan 0 Config: 0x%x\r\n", channelConfigReadback);}
-		if(channelConfigReadback != 0xe150) { configError = YES; }
+		//if (channelConfigReadback != 0xe0d0) { configError = YES; debug("Chan 0 Config: 0x%x\r\n", channelConfigReadback);}
+		if (channelConfigReadback != 0xe150) { configError = YES; }
 
 		// Chan 1
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->t));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(channelConfigReadback != 0xe2d0) { configError = YES; debug("Chan 1 Config: 0x%x\r\n", channelConfigReadback);}
-		if(channelConfigReadback != 0xe350) { configError = YES; }
+		//if (channelConfigReadback != 0xe2d0) { configError = YES; debug("Chan 1 Config: 0x%x\r\n", channelConfigReadback);}
+		if (channelConfigReadback != 0xe350) { configError = YES; }
 
 		// Chan 2
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
@@ -173,24 +173,24 @@ void ReadAnalogData(SAMPLE_DATA_STRUCT* dataPtr)
 			{ spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &(dataPtr->r)); }
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(channelConfigReadback != 0xe4d0) { configError = YES; debug("Chan 2 Config: 0x%x\r\n", channelConfigReadback);}
-		if(channelConfigReadback != 0xe550) { configError = YES; }
+		//if (channelConfigReadback != 0xe4d0) { configError = YES; debug("Chan 2 Config: 0x%x\r\n", channelConfigReadback);}
+		if (channelConfigReadback != 0xe550) { configError = YES; }
 
 		// Chan 3
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &(dataPtr->a));
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(channelConfigReadback != 0xe6d0) { configError = YES; debug("Chan 3 Config: 0x%x\r\n", channelConfigReadback);}
-		if(channelConfigReadback != 0xe750) { configError = YES; }
+		//if (channelConfigReadback != 0xe6d0) { configError = YES; debug("Chan 3 Config: 0x%x\r\n", channelConfigReadback);}
+		if (channelConfigReadback != 0xe750) { configError = YES; }
 
 		// Temp
 		spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, (uint16*)&g_currentTempReading);
 		spi_write(&AVR32_SPI0, 0x0000);	spi_read(&AVR32_SPI0, &channelConfigReadback);
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
-		//if(channelConfigReadback != 0xb6d0) { configError = YES; debug("Temp Config: 0x%x\r\n", channelConfigReadback);}
-		if(channelConfigReadback != 0xb750) { configError = YES; }
+		//if (channelConfigReadback != 0xb6d0) { configError = YES; debug("Temp Config: 0x%x\r\n", channelConfigReadback);}
+		if (channelConfigReadback != 0xb750) { configError = YES; }
 			
 		if (configError == YES)
 		{
@@ -433,7 +433,7 @@ void SetAnalogCutoffFrequency(uint8 freq)
 ///----------------------------------------------------------------------------
 void SetSeismicGainSelect(uint8 seismicGain)
 {
-	if(seismicGain == SEISMIC_GAIN_LOW)
+	if (seismicGain == SEISMIC_GAIN_LOW)
 	{
 		// Control is swapped (Low is 1)
 		g_analogControl.bit.seismicGainSelect = 1;
@@ -452,7 +452,7 @@ void SetSeismicGainSelect(uint8 seismicGain)
 ///----------------------------------------------------------------------------
 void SetAcousticGainSelect(uint8 acousticGain)
 {
-	if(acousticGain == ACOUSTIC_GAIN_NORMAL)
+	if (acousticGain == ACOUSTIC_GAIN_NORMAL)
 	{
 		g_analogControl.bit.acousticGainSelect = 0;
 	}
@@ -469,7 +469,7 @@ void SetAcousticGainSelect(uint8 acousticGain)
 ///----------------------------------------------------------------------------
 void SetCalSignalEnable(uint8 enable)
 {
-	if(enable == ON)
+	if (enable == ON)
 	{
 		g_analogControl.bit.calSignalEnable = 1;
 	}
@@ -486,7 +486,7 @@ void SetCalSignalEnable(uint8 enable)
 ///----------------------------------------------------------------------------
 void SetCalSignal(uint8 data)
 {
-	if(data)
+	if (data)
 	{
 		g_analogControl.bit.calSignal = 1;
 	}

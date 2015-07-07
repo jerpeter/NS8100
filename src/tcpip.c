@@ -302,7 +302,7 @@ void ProcessEthBroadcastFrame(void)
             CopyFromFrame8900(&RecdFrameIP, 4);  // read sender's protocol address
             DummyReadFrame8900(6);               // ignore target's hardware address
             CopyFromFrame8900(&TargetIP, 4);     // read target's protocol address
-            if(!memcmp(&MyIP, &TargetIP, 4))    // is it for us?
+            if (!memcmp(&MyIP, &TargetIP, 4))    // is it for us?
             {
             	PrepareARP_ANSWER();               // yes->create ARP_ANSWER frame
             }
@@ -343,7 +343,7 @@ void ProcessEthIAFrame(void)
     }
     case FRAME_IP :                                        // check for IP-type
     {
-      if ((ReadFrameBE8900() & 0xFF00 ) == IP_VER_IHL)     // IPv4, IHL=5 (20 Bytes Header)
+      if ((ReadFrameBE8900() & 0xFF00) == IP_VER_IHL)     // IPv4, IHL=5 (20 Bytes Header)
       {                                                    // ignore Type Of Service
         RecdIPFrameLength = ReadFrameBE8900();             // get IP frame's length
         ReadFrameBE8900();                                 // ignore identification
@@ -832,7 +832,7 @@ void PrepareTCP_DATA_FRAME(void)
   *(unsigned short *)&TxFrame1[TCP_WINDOW_OFS] = SWAPB(MAX_TCP_RX_DATA_SIZE);       // data bytes to accept
   *(unsigned short *)&TxFrame1[TCP_CHKSUM_OFS] = 0;
   *(unsigned short *)&TxFrame1[TCP_URGENT_OFS] = 0;
-  if(TCPTxDataCount >= 255)
+  if (TCPTxDataCount >= 255)
   {
 	  *(unsigned short *)&TxFrame1[TCP_CHKSUM_OFS] = CalcChecksum(&TxFrame1[TCP_SRCPORT_OFS], TCP_HEADER_SIZE + TCPTxDataCount, 1) + 1;
   }

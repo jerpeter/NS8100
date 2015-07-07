@@ -584,7 +584,7 @@ void ProcessTimerModeSettings(uint8 mode)
 		if (status == IN_PROGRESS)
 		{
 			// Check if the stop time is greater than the start time
-			if((g_unitConfig.timerStopTime.hour > g_unitConfig.timerStartTime.hour) ||
+			if ((g_unitConfig.timerStopTime.hour > g_unitConfig.timerStartTime.hour) ||
 				((g_unitConfig.timerStopTime.hour == g_unitConfig.timerStartTime.hour) &&
 				(g_unitConfig.timerStopTime.min > g_unitConfig.timerStartTime.min)))
 			{
@@ -716,7 +716,7 @@ void ProcessTimerModeSettings(uint8 mode)
 					minutesLeft = 58;
 			}
 			// Check if the current time is greater than the stop time, indicating that midnight boundary was crossed
-			else if(((currentTime.hour * 60) + currentTime.min) > ((g_unitConfig.timerStopTime.hour * 60) + g_unitConfig.timerStopTime.min))
+			else if (((currentTime.hour * 60) + currentTime.min) > ((g_unitConfig.timerStopTime.hour * 60) + g_unitConfig.timerStopTime.min))
 			{
 				// Calculate the time left before powering off to be 24 + the stop time minus the current time
 				minutesLeft = (uint16)(((24 * 60) + (g_unitConfig.timerStopTime.hour * 60) + g_unitConfig.timerStopTime.min) -

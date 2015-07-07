@@ -320,7 +320,7 @@ uint16 NumOfNewMonitorLogEntries(uint16 uid)
 	
 	for (i = 0; i < TOTAL_MONITOR_LOG_ENTRIES; i++)
 	{
-		if(((__monitorLogTbl[i].status == COMPLETED_LOG_ENTRY) ||
+		if (((__monitorLogTbl[i].status == COMPLETED_LOG_ENTRY) ||
 			(__monitorLogTbl[i].status == INCOMPLETE_LOG_ENTRY)) && 
 			(__monitorLogTbl[i].uniqueEntryId > uid))
 		{
@@ -707,9 +707,9 @@ void SwitchDebugLogFile(void)
 		nav_select(FS_NAV_ID_DEFAULT);
 
 		// Remove old run debug file (if it exists)
-		if(nav_setcwd("A:\\Logs\\DebugLogLastRun.txt", TRUE, FALSE))
+		if (nav_setcwd("A:\\Logs\\DebugLogLastRun.txt", TRUE, FALSE))
 		{
-			if(!nav_file_del(TRUE))
+			if (!nav_file_del(TRUE))
 			{
 				debugErr("Unable to delete old run debug file\r\n");
 				status = FAILED;
@@ -719,10 +719,10 @@ void SwitchDebugLogFile(void)
 		if (status == PASSED)
 		{
 			// Select source file
-			if(nav_setcwd("A:\\Logs\\DebugLogReadable.txt", TRUE, FALSE))
+			if (nav_setcwd("A:\\Logs\\DebugLogReadable.txt", TRUE, FALSE))
 			{
 				// Rename file or directory
-				if(!nav_file_rename("DebugLogLastRun.txt"))
+				if (!nav_file_rename("DebugLogLastRun.txt"))
 				{
 					debugErr("Unable to move debug log file to last run filename\r\n");
 					status = FAILED;

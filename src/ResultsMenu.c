@@ -676,15 +676,15 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
-	else if(g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
+	else if (g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS)
 	{
 		memset(&buff[0], 0, sizeof(buff));
 		memset(&displayFormat[0], 0, sizeof(displayFormat));
 
-		if(g_summaryList.cachedEntry.channelSummary.r.displacement > g_summaryList.cachedEntry.channelSummary.v.displacement)
+		if (g_summaryList.cachedEntry.channelSummary.r.displacement > g_summaryList.cachedEntry.channelSummary.v.displacement)
 		{
 			// R is max
-			if(g_summaryList.cachedEntry.channelSummary.r.displacement > g_summaryList.cachedEntry.channelSummary.t.displacement)
+			if (g_summaryList.cachedEntry.channelSummary.r.displacement > g_summaryList.cachedEntry.channelSummary.t.displacement)
 			{
 				tempPeakDisp = (float)g_summaryList.cachedEntry.channelSummary.r.displacement;
 			}
@@ -696,7 +696,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		else
 		{
 			// V is max
-			if(g_summaryList.cachedEntry.channelSummary.v.displacement > g_summaryList.cachedEntry.channelSummary.t.displacement)
+			if (g_summaryList.cachedEntry.channelSummary.v.displacement > g_summaryList.cachedEntry.channelSummary.t.displacement)
 			{
 				tempPeakDisp = (float)g_summaryList.cachedEntry.channelSummary.r.displacement;
 			}
@@ -708,9 +708,9 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		tempPeakDisp = (float)tempPeakDisp / (float)1000000 / (float)div;
 
-		if((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
+		if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
 		{
-			if(g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC)
+			if (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC)
 				strcpy(displayFormat, "mg");
 			else
 				strcpy(displayFormat, "in");
@@ -726,12 +726,12 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString((uint8*)buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
-	else if(g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS)
+	else if (g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS)
 	{
-		if(g_summaryList.cachedEntry.channelSummary.r.acceleration > g_summaryList.cachedEntry.channelSummary.v.acceleration)
+		if (g_summaryList.cachedEntry.channelSummary.r.acceleration > g_summaryList.cachedEntry.channelSummary.v.acceleration)
 		{
 			// R is max
-			if(g_summaryList.cachedEntry.channelSummary.r.acceleration > g_summaryList.cachedEntry.channelSummary.t.acceleration)
+			if (g_summaryList.cachedEntry.channelSummary.r.acceleration > g_summaryList.cachedEntry.channelSummary.t.acceleration)
 			{
 				tempPeakAcc = (float)g_summaryList.cachedEntry.channelSummary.r.acceleration;
 			}
@@ -743,7 +743,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		else
 		{
 			// V is max
-			if(g_summaryList.cachedEntry.channelSummary.v.acceleration > g_summaryList.cachedEntry.channelSummary.t.acceleration)
+			if (g_summaryList.cachedEntry.channelSummary.v.acceleration > g_summaryList.cachedEntry.channelSummary.t.acceleration)
 			{
 				tempPeakAcc = (float)g_summaryList.cachedEntry.channelSummary.v.acceleration;
 			}
@@ -755,7 +755,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		tempPeakAcc = (float)tempPeakAcc / (float)1000 / (float)div;
 
-		if((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
+		if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_summaryList.cachedEntry.seismicSensorType == SENSOR_ACC))
 		{
 			tempPeakAcc /= (float)ONE_GRAVITY_IN_INCHES;
 		}
