@@ -10,6 +10,7 @@
 ///----------------------------------------------------------------------------
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "Typedefs.h"
 #include "Common.h"
 #include "Menu.h"
@@ -1008,22 +1009,32 @@ void DisplayCalDate(void)
 ///----------------------------------------------------------------------------
 void DisplaySensorType(void)
 {
-	uint16 sensorType = NULL_TEXT;
+	uint16 sensorType;
+	uint16 sensorTypeTextElement = NULL_TEXT;
 	char message[75];
 
 	if (!g_factorySetupRecord.invalid)
 	{
-		memset(&message[0], 0, sizeof(message));
-		switch (g_factorySetupRecord.sensor_type)
+		// Check if optioned to use Seismic Smart Sensor and Seismic smart sensor was successfully read
+		if ((g_factorySetupRecord.calibrationDateSource == SEISMIC_SMART_SENSOR_CAL_DATE) && (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
 		{
-			case SENSOR_20_IN	: sensorType = X1_20_IPS_TEXT; break;
-			case SENSOR_10_IN	: sensorType = X2_10_IPS_TEXT; break;
-			case SENSOR_5_IN	: sensorType = X4_5_IPS_TEXT; break;
-			case SENSOR_2_5_IN	: sensorType = X8_2_5_IPS_TEXT; break;
-			case SENSOR_ACC		: sensorType = ACC_793L_TEXT; break;
+			sensorType = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+		}
+		else // Default to factory setup record sensor type
+		{
+			sensorType = g_factorySetupRecord.sensor_type;
 		}
 
-		sprintf((char*)message, "%s: %s", getLangText(SENSOR_GAIN_TYPE_TEXT), getLangText(sensorType));
+		switch (g_factorySetupRecord.sensor_type)
+		{
+			case SENSOR_20_IN	: sensorTypeTextElement = X1_20_IPS_TEXT; break;
+			case SENSOR_10_IN	: sensorTypeTextElement = X2_10_IPS_TEXT; break;
+			case SENSOR_5_IN	: sensorTypeTextElement = X4_5_IPS_TEXT; break;
+			case SENSOR_2_5_IN	: sensorTypeTextElement = X8_2_5_IPS_TEXT; break;
+			case SENSOR_ACC		: sensorTypeTextElement = ACC_793L_TEXT; break;
+		}
+
+		sprintf((char*)message, "%s: %s", getLangText(SENSOR_GAIN_TYPE_TEXT), getLangText(sensorTypeTextElement));
 		MessageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
 	}
 	else
