@@ -10,6 +10,7 @@
 ///----------------------------------------------------------------------------
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "Menu.h"
 #include "Uart.h"
 #include "Display.h"
@@ -377,14 +378,29 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	uint16 sampleDataMidpoint = 0x8000;
 	DATE_TIME_STRUCT time;
 	float div;
-	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
+	uint16 sensorType;
 
 	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
 	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
 	wnd_layout_ptr->next_col = wnd_layout_ptr->start_col;
 
+#if 0 // Old
+	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
 	div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.sensor_type);
+#else
+	// Check if optioned to use Seismic Smart Sensor and Seismic smart sensor was successfully read
+	if ((g_factorySetupRecord.calibrationDateSource == SEISMIC_SMART_SENSOR_CAL_DATE) && (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
+	{
+		sensorType = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+	}
+	else // Default to factory setup record sensor type
+	{
+		sensorType = g_factorySetupRecord.sensor_type;
+	}
+
+	div = (float)(ACCURACY_16_BIT_MIDPOINT * g_sensorInfo.sensorAccuracy * 2) / (float)(sensorType);
+#endif
 
 	if (s_pauseDisplay == NO)
 	{
@@ -542,9 +558,9 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 				memset(&buff[0], 0, sizeof(buff));
-				sprintf((char*)buff, "A|%01.3f|%01.3f|%01.3f|", HexToMB(sensorCalPeaks[1].a, DATA_NORMALIZED, g_bitAccuracyMidpoint),
-				HexToMB(sensorCalPeaks[2].a, DATA_NORMALIZED, g_bitAccuracyMidpoint),
-				HexToMB(sensorCalPeaks[3].a, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+				sprintf((char*)buff, "A|%01.3f|%01.3f|%01.3f|", HexToMB(sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
+				HexToMB(sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
+				HexToMB(sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 			}
