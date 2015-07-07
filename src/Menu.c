@@ -1025,7 +1025,7 @@ void DisplaySensorType(void)
 			sensorType = g_factorySetupRecord.sensor_type;
 		}
 
-		switch (g_factorySetupRecord.sensor_type)
+		switch (sensorType)
 		{
 			case SENSOR_20_IN	: sensorTypeTextElement = X1_20_IPS_TEXT; break;
 			case SENSOR_10_IN	: sensorTypeTextElement = X2_10_IPS_TEXT; break;
