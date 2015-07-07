@@ -129,7 +129,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 
 				key = GetKeypadKey(CHECK_ONCE_FOR_KEY);
 
-				SoftUsecWait(5 * SOFT_MSECS);
+				SoftUsecWait(1 * SOFT_MSECS);
 
 				switch (key)
 				{
@@ -138,6 +138,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 						if (s_calDisplayScreen == CAL_MENU_CALIBRATE_SENSOR)
 						{
 							//debug("Cal Menu Screen NP selected\r\n");
+							s_pauseDisplay = NO;
 							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY SUCCESSIVE SAMPLES", (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_DISPLAY_SAMPLES;
 						}
@@ -222,6 +223,18 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 						key = 0;
 						break;
 
+					case (PLUS_KEY):
+						SoftUsecWait(150 * SOFT_MSECS);
+						if (g_displayAlternateResultState == DEFAULT_RESULTS) { g_displayAlternateResultState = DEFAULT_ALTERNATE_RESULTS; }
+						else { g_displayAlternateResultState = DEFAULT_RESULTS; }
+					break;
+
+					case (MINUS_KEY):
+						SoftUsecWait(150 * SOFT_MSECS);
+						if (g_displayAlternateResultState == DEFAULT_ALTERNATE_RESULTS) { g_displayAlternateResultState = DEFAULT_RESULTS; }
+						else { g_displayAlternateResultState = DEFAULT_ALTERNATE_RESULTS; }
+					break;
+
 					case HELP_KEY:
 						SoftUsecWait(150 * SOFT_MSECS);
 						if (s_pauseDisplay == NO) { s_pauseDisplay = YES; }
@@ -257,12 +270,12 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 			else if (CheckIfNoSmartSensorsPresent() == YES)
 			{
 				if (MessageBox(getLangText(CONFIRM_TEXT), "ERASE FACTORY SETUP?", MB_YESNO) == MB_FIRST_CHOICE)
-			{
-				memset(&g_factorySetupRecord, 0xFF, sizeof(g_factorySetupRecord));
-				SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_CLEAR_TYPE);
-				clearedFSRecord = YES;
+				{
+					memset(&g_factorySetupRecord, 0xFF, sizeof(g_factorySetupRecord));
+					SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_CLEAR_TYPE);
+					clearedFSRecord = YES;
+				}
 			}
-		}
 		}
 
 		// Check that the Factory setup wasn't cleared
@@ -279,6 +292,9 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 
 		// Restore the previous mode
 		g_triggerRecord.op_mode = previousMode;
+
+		// Reset display state
+		g_displayAlternateResultState = DEFAULT_RESULTS;
 
 		// Reset default screen to non calibrated
 		//debug("Cal Menu Screen 1 selected\r\n");
@@ -330,6 +346,9 @@ void CalSetupMnProc(INPUT_MSG_STRUCT msg,
 			
 			// Allow Pretrigger buffer to fill up
 			SoftUsecWait(250 * SOFT_MSECS);
+
+			// Set display for Air to represent MB by default
+			g_displayAlternateResultState = DEFAULT_RESULTS;
 		break;
 
 		case (KEYPRESS_MENU_CMD):
@@ -402,14 +421,16 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	div = (float)(ACCURACY_16_BIT_MIDPOINT * g_sensorInfo.sensorAccuracy * 2) / (float)(sensorType);
 #endif
 
-	if (s_pauseDisplay == NO)
-	{
-		memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
-	}
-	else
+	// Allow the display to be maintained on the screen if in calibrate sensor menu and pause display selected
+	if ((s_calDisplayScreen == CAL_MENU_CALIBRATE_SENSOR) && (s_pauseDisplay == YES))
 	{
 		memset(&(g_mmap[1][0]), 0, (sizeof(g_mmap) / 8));
 		memset(&(g_mmap[2][0]), 0, (sizeof(g_mmap) / 8));
+		memset(&(g_mmap[7][0]), 0, (sizeof(g_mmap) / 8));
+	}
+	else // Clear the whole map
+	{
+		memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 	}
 
 	s_calibrationData = (CALIBRATION_DATA*)&g_eventDataBuffer[0];
@@ -522,7 +543,8 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				// PRINT Table separator
 				memset(&buff[0], 0, sizeof(buff));
 				//sprintf((char*)buff, "--------------------");
-				sprintf((char*)buff, "-----CAL SENSOR-----");
+				if (g_displayAlternateResultState == DEFAULT_RESULTS) { sprintf((char*)buff, "-CAL SENSOR--Air:MB-"); }
+				else { sprintf((char*)buff, "-CAL SENSOR--Air:DB-"); }
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 			}
@@ -558,11 +580,29 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 				memset(&buff[0], 0, sizeof(buff));
-				sprintf((char*)buff, "A|%01.3f|%01.3f|%01.3f|", HexToMB(sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
-				HexToMB(sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
-				HexToMB(sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
+				if (g_displayAlternateResultState == DEFAULT_RESULTS)
+				{
+					sprintf((char*)buff, "A|%05.3f|%05.3f|%05.3f|", HexToMB(sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
+							HexToMB(sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
+							HexToMB(sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
+					strcpy((char*)&g_spareBuffer[0], (char*)buff);
+				}
+				else
+				{
+					sprintf((char*)buff, "A|%5.1f|%5.1f|%5.1f|", HexToDB(sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
+							HexToDB(sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
+							HexToDB(sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
+					strcpy((char*)&g_spareBuffer[50], (char*)buff);
+				}
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			}
+			else // (s_pauseDisplay == YES)
+			{
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
+
+				if (g_displayAlternateResultState == DEFAULT_RESULTS) { WndMpWrtString(&g_spareBuffer[0], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN); }
+				else { WndMpWrtString(&g_spareBuffer[50], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN); }
 			}
 		}
 		else if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
