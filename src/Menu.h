@@ -458,7 +458,8 @@ enum {
 
 // Alternate Results
 enum {
-	DEFAULT_RESULTS = 0, // Show Air channel results
+	DEFAULT_RESULTS = 1, // Show Air channel results
+	DEFAULT_ALTERNATE_RESULTS,
 	VECTOR_SUM_RESULTS,
 	PEAK_DISPLACEMENT_RESULTS,
 	PEAK_ACCELERATION_RESULTS
