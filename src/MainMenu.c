@@ -284,7 +284,7 @@ void PromptUserWaitingForSensorWarmup(void)
 {
 	debugWarn("Monitoring temporarily unavailable due to sensors warming up\r\n");
 
-	sprintf((char*)g_spareBuffer, "%s", getLangText(ZEROING_SENSORS_TEXT));
+	sprintf((char*)g_spareBuffer, "%s ", getLangText(ZEROING_SENSORS_TEXT));
 	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
 
 	while ((volatile uint32)g_rtcSoftTimerTickCount < 120)
