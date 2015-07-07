@@ -679,7 +679,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 void MnStartCal(void)
 {
 	// Setup Analog controls
-	SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1);
+	SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW);
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
 
