@@ -559,6 +559,9 @@ void HandleManualCalibration(void)
 		}
 		else
 		{
+			// If the user was in the Summary list menu, reset the global
+			g_summaryListMenuActive = NO;
+
 			// Perform Cal while in monitor mode
 			OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
 
