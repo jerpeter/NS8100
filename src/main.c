@@ -1110,6 +1110,7 @@ extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
 		tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 		tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
 		tc_stop(&AVR32_TC, TC_TYPEMATIC_TIMER_CHANNEL);
+		nav_exit();
 		AVR32_EIC.IER.int0 = 0;
 		AVR32_EIC.IER.int1 = 0;
 		AVR32_EIC.IER.int2 = 0;
