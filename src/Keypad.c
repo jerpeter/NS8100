@@ -428,13 +428,11 @@ uint8 HandleCtrlKeyCombination(uint8 inputChar)
 	switch (inputChar)
 	{
 		case ESC_KEY:
-		break;
+			break;
 
 		case 'C':
-			{
-				HandleManualCalibration();
-			}
-		break;
+			HandleManualCalibration();
+			break;
 
 		default:
 			break;
