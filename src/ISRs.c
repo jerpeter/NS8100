@@ -67,7 +67,7 @@ static uint16 s_sensorCalSampleCount = CALIBRATION_FIXED_SAMPLE_RATE;
 
 static uint8 s_pretriggerFull = NO;
 static uint8 s_checkForTempDrift = NO;
-static uint8 s_channelConfig = CHANNELS_R_AND_V_SCHEMATIC;
+static uint8 s_channelConfig = CHANNELS_R_AND_V_SWAPPED;
 static uint8 s_seismicTriggerSample = NO;
 static uint8 s_airTriggerSample = NO;
 static uint8 s_recordingEvent = NO;

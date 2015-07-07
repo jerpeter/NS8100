@@ -232,7 +232,7 @@ void LoadFactorySetupRecord(void)
 		if ((g_factorySetupRecord.analogChannelConfig != CHANNELS_R_AND_V_SCHEMATIC) && (g_factorySetupRecord.analogChannelConfig != CHANNELS_R_AND_V_SWAPPED))
 		{
 			// Set the default
-			g_factorySetupRecord.analogChannelConfig = CHANNELS_R_AND_V_SCHEMATIC;
+			g_factorySetupRecord.analogChannelConfig = CHANNELS_R_AND_V_SWAPPED;
 		}
 
 		debug("Factory Setup: Serial #: %s\r\n", g_factorySetupRecord.serial_num);

@@ -256,7 +256,7 @@ uint8 CalculateBargraphData(void)
 	static uint8 g_aJobFreqFlag = NO, g_rJobFreqFlag = NO, g_vJobFreqFlag = NO, g_tJobFreqFlag = NO;
 	static uint8 g_aJobPeakMatch = NO, g_rJobPeakMatch = NO, g_vJobPeakMatch = NO, g_tJobPeakMatch = NO;
 
-	int32 falloutCounter = SAMPLE_RATE_512;
+	int32 falloutCounter = SAMPLE_RATE_1K;
 	SAMPLE_DATA_STRUCT currentDataSample;
 
 	// While the bargraph data read pointer has not caught up with the write pointer and the fallout counter hasn't reached zero

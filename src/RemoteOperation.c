@@ -415,8 +415,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//--------------------------------
 		// Sample Rate check
 		//--------------------------------
-		if ((SAMPLE_RATE_512 == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_1K == cfg.eventCfg.sampleRate) || 
-			(SAMPLE_RATE_2K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_4K == cfg.eventCfg.sampleRate) || 
+		if ((SAMPLE_RATE_1K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_2K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_4K == cfg.eventCfg.sampleRate) ||
 			(SAMPLE_RATE_8K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_16K == cfg.eventCfg.sampleRate))
 		{
 			if (((BARGRAPH_MODE == g_triggerRecord.op_mode) || (COMBO_MODE == g_triggerRecord.op_mode)) && 
