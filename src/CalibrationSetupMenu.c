@@ -749,8 +749,8 @@ void MnStartCal(void)
 	// Setup AD Channel config
 	SetupADChannelConfig(CALIBRATION_FIXED_SAMPLE_RATE);
 
-extern void DataIsrInit(void);
-	DataIsrInit();
+extern void DataIsrInit(uint16 sampleRate);
+	DataIsrInit(CALIBRATION_FIXED_SAMPLE_RATE);
 
 #if 1 // Now skipped since the default menu display (CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) does not use channel offsets
 	// Get channel offsets

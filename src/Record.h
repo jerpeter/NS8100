@@ -341,7 +341,7 @@ void ConvertTimeStampToString(char*, DATE_TIME_STRUCT*, uint8);
 void CopyFlashBlock(uint16* src, uint16* dst, uint32 len);
 void CopyRecordIntoFlashBk(uint16*, uint16*, uint32, uint32);
 uint8 CheckForAvailableTriggerRecordEntry(char* name, uint8* match);
-void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode);
+void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 opMode);
 void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr);
 void ActivateUnitConfigOptions(void);
 void LoadModemSetupRecordDefaults(void);

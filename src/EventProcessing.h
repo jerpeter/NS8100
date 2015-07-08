@@ -87,7 +87,7 @@ void CopyValidFlashEventSummariesToRam(void);
 void CondenseRamSummaryTable(void);
 uint8 InitFlashEvtBuff(void);
 void InitFlashBuffs(void);
-void InitEventRecord(uint8 op_mode);
+void InitEventRecord(uint8 opMode);
 void InitCurrentEventNumber(void);
 uint16 GetLastStoredEventNumber(void);
 void StoreCurrentEventNumber(void);

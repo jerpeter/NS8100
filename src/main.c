@@ -250,10 +250,10 @@ void SystemEventManager(void)
 		{
 			PowerControl(ALARM_1_ENABLE, ON);
 			debug("Warning Event 1 Alarm started\r\n");
-		}
 
-		// Assign (or Re-assign) soft timer to turn the Alarm 1 signal off
-		AssignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmOneTime * TICKS_PER_SEC), AlarmOneOutputTimerCallback);
+			// Assign soft timer to turn the Alarm 1 signal off
+			AssignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmOneTime * TICKS_PER_SEC), AlarmOneOutputTimerCallback);
+		}
 	}
 
 	//___________________________________________________________________________________________
@@ -265,10 +265,10 @@ void SystemEventManager(void)
 		{
 			PowerControl(ALARM_2_ENABLE, ON);
 			debug("Warning Event 2 Alarm started\r\n");
-		}
 
-		// Assign (or Re-assign) soft timer to turn the Alarm 2 signal off
-		AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmTwoTime * TICKS_PER_SEC), AlarmTwoOutputTimerCallback);
+			// Assign soft timer to turn the Alarm 2 signal off
+			AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmTwoTime * TICKS_PER_SEC), AlarmTwoOutputTimerCallback);
+		}
 	}
 
 	//___________________________________________________________________________________________

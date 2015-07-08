@@ -43,12 +43,12 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void InitDataBuffs(uint8 op_mode)
+void InitDataBuffs(uint8 opMode)
 { 
 	uint32 pretriggerBufferSize;
 	uint32 sampleRate;
 	
-	if (op_mode == MANUAL_CAL_MODE)
+	if (opMode == MANUAL_CAL_MODE)
 	{
 		// Per requirement fix sample rate for Calibration
 		sampleRate = MANUAL_CAL_DEFAULT_SAMPLE_RATE;
@@ -70,7 +70,7 @@ void InitDataBuffs(uint8 op_mode)
 	g_endOfPretriggerBuff = &(g_pretriggerBuff[pretriggerBufferSize]);
 
 	// Setup Bit Accuracy globals
-	if (op_mode == MANUAL_CAL_MODE)
+	if (opMode == MANUAL_CAL_MODE)
 		{ g_bitAccuracyMidpoint = ACCURACY_16_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_16_BIT; }
 	else if (g_triggerRecord.trec.bitAccuracy == ACCURACY_10_BIT)
 		{ g_bitAccuracyMidpoint = ACCURACY_10_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_10_BIT; }
@@ -82,10 +82,10 @@ void InitDataBuffs(uint8 op_mode)
 		{ g_bitAccuracyMidpoint = ACCURACY_16_BIT_MIDPOINT; g_bitShiftForAccuracy = AD_BIT_ACCURACY - ACCURACY_16_BIT; } 
 
 	// Setup the pending event record information that is available at this time
-	InitEventRecord(op_mode);
+	InitEventRecord(opMode);
 
 	// Setup buffers based on mode
-	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))
+	if ((opMode == WAVEFORM_MODE) || (opMode == MANUAL_CAL_MODE) || (opMode == COMBO_MODE))
 	{
 		// Calculate samples for each section and total event
 		g_samplesInPretrig = (uint32)(sampleRate / g_unitConfig.pretrigBufferDivider);
@@ -99,7 +99,7 @@ void InitDataBuffs(uint8 op_mode)
 		g_wordSizeInCal = g_samplesInCal * g_sensorInfo.numOfChannels;
 		g_wordSizeInEvent = g_wordSizeInPretrig + g_wordSizeInBody + g_wordSizeInCal;
 
-		if (op_mode == COMBO_MODE)
+		if (opMode == COMBO_MODE)
 		{
 			// Calculate total event buffers available (partial event buffer size)
 			g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS) / (g_wordSizeInEvent + (sizeof(DATE_TIME_STRUCT) / 2)));
@@ -110,7 +110,7 @@ void InitDataBuffs(uint8 op_mode)
 			// Init starting event buffer pointer beyond the event date and timestamp buffer
 			g_startOfEventBufferPtr = &(g_eventDataBuffer[(COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS + (g_maxEventBuffers * (sizeof(DATE_TIME_STRUCT) / 2)))]);
 		}
-		else // ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE))
+		else // ((opMode == WAVEFORM_MODE) || (opMode == MANUAL_CAL_MODE))
 		{
 			// Calculate total event buffers available (full event buffer size plus date and time structure)
 			g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / (g_wordSizeInEvent + (sizeof(DATE_TIME_STRUCT) / 2)));
@@ -138,17 +138,17 @@ void InitDataBuffs(uint8 op_mode)
 		g_doneTakingEvents = NO;
 		
 		// Update the data length to be used based on the size calculations
-		if (op_mode == WAVEFORM_MODE)
+		if (opMode == WAVEFORM_MODE)
 		{
 			// Update the waveform data length to be used based on the size calculations
 			g_pendingEventRecord.header.dataLength = (g_wordSizeInEvent * 2);
 		}
-		else if (op_mode == MANUAL_CAL_MODE)
+		else if (opMode == MANUAL_CAL_MODE)
 		{
 			// Update the manual cal data length to be used based on the size calculations
 			g_pendingEventRecord.header.dataLength = (g_wordSizeInCal * 2);
 		}
-		else if (op_mode == COMBO_MODE)
+		else if (opMode == COMBO_MODE)
 		{		
 			// Update the combo-waveform data length to be used based on the size calculations
 			g_pendingEventRecord.header.dataLength = (g_wordSizeInEvent * 2);
@@ -165,7 +165,7 @@ void InitDataBuffs(uint8 op_mode)
 			StartNewBargraph();
 		}
 	}
-	else if (op_mode == BARGRAPH_MODE)
+	else if (opMode == BARGRAPH_MODE)
 	{		
 		g_bargraphDataStartPtr = &(g_eventDataBuffer[0]);
 		g_bargraphDataWritePtr = &(g_eventDataBuffer[0]);

@@ -895,20 +895,20 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void InitEventRecord(uint8 op_mode)
+void InitEventRecord(uint8 opMode)
 {
 	EVT_RECORD* eventRec;
 	uint8 idex;
 	float tempSesmicTriggerInUnits;
 	float unitsDiv;
 
-	if ((op_mode == WAVEFORM_MODE) || (op_mode == MANUAL_CAL_MODE) || (op_mode == COMBO_MODE))
+	if ((opMode == WAVEFORM_MODE) || (opMode == MANUAL_CAL_MODE) || (opMode == COMBO_MODE))
 	{
 		eventRec = &g_pendingEventRecord;		
 		ClearAndFillInCommonRecordInfo(eventRec);
 
-		eventRec->summary.mode = op_mode;
-		if (op_mode == COMBO_MODE) { eventRec->summary.subMode = WAVEFORM_MODE; }
+		eventRec->summary.mode = opMode;
+		if (opMode == COMBO_MODE) { eventRec->summary.subMode = WAVEFORM_MODE; }
 		eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
 
 		eventRec->summary.parameters.numOfSamples = (uint16)(g_triggerRecord.trec.sample_rate * g_triggerRecord.trec.record_time);
@@ -916,7 +916,7 @@ void InitEventRecord(uint8 op_mode)
 		eventRec->summary.parameters.calDataNumOfSamples = (uint16)(CALIBRATION_NUMBER_OF_SAMPLES);
 
 		// Reset parameters for the special calibration mode
-		if (op_mode == MANUAL_CAL_MODE)
+		if (opMode == MANUAL_CAL_MODE)
 		{
 			eventRec->summary.parameters.sampleRate = MANUAL_CAL_DEFAULT_SAMPLE_RATE;
 			eventRec->summary.parameters.bitAccuracy = ACCURACY_16_BIT;
@@ -927,7 +927,7 @@ void InitEventRecord(uint8 op_mode)
 			eventRec->summary.parameters.recordTime = 0;
 			for (idex = 0; idex < 8; idex++) { eventRec->summary.parameters.channel[idex].options = GAIN_SELECT_x2; }
 		}
-		else // ((op_mode == WAVEFORM_MODE) || (op_mode == COMBO_MODE))
+		else // ((opMode == WAVEFORM_MODE) || (opMode == COMBO_MODE))
 		{
 			eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
 
@@ -982,13 +982,13 @@ void InitEventRecord(uint8 op_mode)
 		}	
 	}
 
-	if ((op_mode == BARGRAPH_MODE) || (op_mode == COMBO_MODE))
+	if ((opMode == BARGRAPH_MODE) || (opMode == COMBO_MODE))
 	{
 		eventRec = &g_pendingBargraphRecord;		
 		ClearAndFillInCommonRecordInfo(eventRec);
 
-		eventRec->summary.mode = op_mode;
-		if (op_mode == COMBO_MODE) { eventRec->summary.subMode = BARGRAPH_MODE; }
+		eventRec->summary.mode = opMode;
+		if (opMode == COMBO_MODE) { eventRec->summary.subMode = BARGRAPH_MODE; }
 		eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
 
 		eventRec->summary.captured.eventTime = GetCurrentTime();

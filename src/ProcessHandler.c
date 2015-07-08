@@ -48,7 +48,7 @@ extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void DataIsrInit(void);
+void DataIsrInit(uint16 sampleRate);
 void StartDataCollection(uint32 sampleRate);
 
 ///----------------------------------------------------------------------------
@@ -272,7 +272,7 @@ void StartDataCollection(uint32 sampleRate)
 #endif
 
 	// Init a few key values for data collection
-	DataIsrInit();
+	DataIsrInit(sampleRate);
 
 	// Start the timer for collecting data
 	debug("Start sampling...\r\n");
@@ -290,6 +290,7 @@ void StartDataCollection(uint32 sampleRate)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+extern void HandleActiveAlarmExtension(void);
 void StopMonitoring(uint8 mode, uint8 operation)
 {
 	OverlayMessage(getLangText(STATUS_TEXT), "CLOSING MONITOR SESSION...", 0);
@@ -316,6 +317,9 @@ void StopMonitoring(uint8 mode, uint8 operation)
 			// Wait for any triggered events to finish sending
 			WaitForEventProcessingToFinish();
 		}
+
+		// Check for any active alarms and setup timers to end them
+		HandleActiveAlarmExtension();
 
 		// Stop the data transfers
 		StopDataCollection();

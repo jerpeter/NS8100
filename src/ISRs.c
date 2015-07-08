@@ -61,6 +61,10 @@ static uint32 s_sampleCount = 0;
 static uint32 s_calSampleCount = 0;
 static uint32 s_pendingCalCount = 0;
 static uint32 s_pretriggerCount = 0;
+static uint32 s_alarmOneCount = 0;
+static uint32 s_alarmTwoCount = 0;
+
+static uint16 s_sampleRate = 1024;
 static uint16 s_consecSeismicTriggerCount = 0;
 static uint16 s_consecAirTriggerCount = 0;
 static uint16 s_sensorCalSampleCount = CALIBRATION_FIXED_SAMPLE_RATE;
@@ -473,47 +477,90 @@ static inline void normalizeSampleData_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline void checkAlarms_ISR_Inline(void)
 {
-	// Check if Alarm 1 mode is active
-	if (g_unitConfig.alarmOneMode != ALARM_MODE_OFF)
+	// Check if Alarm 1 mode is enabled
+	if (g_unitConfig.alarmOneMode)
 	{
-		// Check if seismic is enabled for Alarm 1 (bitwise operation)
-		if (g_unitConfig.alarmOneMode & ALARM_MODE_SEISMIC)
+		// Check if Alarm 1 is active
+		if (s_alarmOneCount)
 		{
-			if ((s_R_channelReading > g_unitConfig.alarmOneSeismicLevel) || (s_V_channelReading > g_unitConfig.alarmOneSeismicLevel) ||
-				(s_T_channelReading > g_unitConfig.alarmOneSeismicLevel))
+			// Decrement and check if Alarm 1 active time period is complete
+			if (--s_alarmOneCount == 0)
 			{
-				raiseSystemEventFlag(WARNING1_EVENT);
+				// Clear Alarm 1
+				gpio_clr_gpio_pin(ALARM_1_GPIO_PIN);
 			}
 		}
-
-		// Check if air is enabled for Alarm 1 (bitwise operation)
-		if (g_unitConfig.alarmOneMode & ALARM_MODE_AIR)
+		else // Alarm 1 is not active
 		{
-			if (s_A_channelReading > g_unitConfig.alarmOneAirLevel)
+			// Check if seismic is enabled for Alarm 1 (bitwise operation)
+			if (g_unitConfig.alarmOneMode & ALARM_MODE_SEISMIC)
 			{
-				raiseSystemEventFlag(WARNING1_EVENT);
+				if ((s_R_channelReading > g_unitConfig.alarmOneSeismicLevel) || (s_V_channelReading > g_unitConfig.alarmOneSeismicLevel) ||
+					(s_T_channelReading > g_unitConfig.alarmOneSeismicLevel))
+				{
+					// Start Alarm 1
+					gpio_set_gpio_pin(ALARM_1_GPIO_PIN);
+
+					// Set Alarm 1 count to time in seconds multiplied by sample rate
+					s_alarmOneCount = (uint32)(g_unitConfig.alarmOneTime * s_sampleRate);
+				}
+			}
+
+			// Check if air is enabled for Alarm 1 (bitwise operation)
+			if (g_unitConfig.alarmOneMode & ALARM_MODE_AIR)
+			{
+				if (s_A_channelReading > g_unitConfig.alarmOneAirLevel)
+				{
+					// Start Alarm 1
+					gpio_set_gpio_pin(ALARM_1_GPIO_PIN);
+
+					// Set Alarm 1 count to time in seconds multiplied by sample rate
+					s_alarmOneCount = (uint32)(g_unitConfig.alarmOneTime * s_sampleRate);
+				}
 			}
 		}
 	}
 						
-	if (g_unitConfig.alarmTwoMode != ALARM_MODE_OFF)
+	// Check if Alarm 2 mode is enabled
+	if (g_unitConfig.alarmTwoMode)
 	{
-		// Check if seismic is enabled for Alarm 2 (bitwise operation)
-		if (g_unitConfig.alarmTwoMode & ALARM_MODE_SEISMIC)
+		// Check if Alarm 2 is active
+		if (s_alarmTwoCount)
 		{
-			if ((s_R_channelReading > g_unitConfig.alarmTwoSeismicLevel) || (s_V_channelReading > g_unitConfig.alarmTwoSeismicLevel) ||
-				(s_T_channelReading > g_unitConfig.alarmTwoSeismicLevel))
+			// Decrement and check if Alarm 1 active time period is complete
+			if (--s_alarmTwoCount == 0)
 			{
-				raiseSystemEventFlag(WARNING2_EVENT);
+				// Clear Alarm 2
+				gpio_clr_gpio_pin(ALARM_2_GPIO_PIN);
 			}
 		}
-
-		// Check if air is enabled for Alarm 2 (bitwise operation)
-		if (g_unitConfig.alarmTwoMode & ALARM_MODE_AIR)
+		else // Alarm 2 is not active
 		{
-			if (s_A_channelReading > g_unitConfig.alarmTwoAirLevel)
+			// Check if seismic is enabled for Alarm 2 (bitwise operation)
+			if (g_unitConfig.alarmTwoMode & ALARM_MODE_SEISMIC)
 			{
-				raiseSystemEventFlag(WARNING2_EVENT);
+				if ((s_R_channelReading > g_unitConfig.alarmTwoSeismicLevel) || (s_V_channelReading > g_unitConfig.alarmTwoSeismicLevel) ||
+					(s_T_channelReading > g_unitConfig.alarmTwoSeismicLevel))
+				{
+					// Start Alarm 2
+					gpio_set_gpio_pin(ALARM_2_GPIO_PIN);
+
+					// Set Alarm 2 count to time in seconds multiplied by sample rate
+					s_alarmTwoCount = (uint32)(g_unitConfig.alarmTwoTime * s_sampleRate);
+				}
+			}
+
+			// Check if air is enabled for Alarm 2 (bitwise operation)
+			if (g_unitConfig.alarmTwoMode & ALARM_MODE_AIR)
+			{
+				if (s_A_channelReading > g_unitConfig.alarmTwoAirLevel)
+				{
+					// Start Alarm 2
+					gpio_set_gpio_pin(ALARM_2_GPIO_PIN);
+
+					// Set Alarm 2 count to time in seconds multiplied by sample rate
+					s_alarmTwoCount = (uint32)(g_unitConfig.alarmTwoTime * s_sampleRate);
+				}
 			}
 		}
 	}				
@@ -1306,10 +1353,13 @@ static inline void HandleChannelSyncError_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void DataIsrInit(void)
+void DataIsrInit(uint16 sampleRate)
 {
+	s_sampleRate = sampleRate;
 	s_pretriggerFull = NO;
 	s_checkForTempDrift = NO;
+	s_alarmOneCount = 0;
+	s_alarmTwoCount = 0;
 
 	if ((g_maxEventBuffers - 1) < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)
 	{
@@ -1319,6 +1369,34 @@ void DataIsrInit(void)
 
 	if (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SWAPPED) { s_channelConfig = CHANNELS_R_AND_V_SWAPPED; }
 	else { s_channelConfig = CHANNELS_R_AND_V_SCHEMATIC; }
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleActiveAlarmExtension(void)
+{
+	float secondsRemaining = 0;
+
+	// Check if Alarm 1 is still active
+	if (s_alarmOneCount)
+	{
+		// Calculate remaining time as count + round up (half second) divided by sample rate to get seconds
+		secondsRemaining = (((float)s_alarmOneCount + (float)((float)s_sampleRate / 2)) / (float)s_sampleRate);
+
+		// Assign soft timer to turn the Alarm 1 signal off
+		AssignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(secondsRemaining * TICKS_PER_SEC), AlarmOneOutputTimerCallback);
+	}
+
+	// Check if Alarm 2 is still active
+	if (s_alarmTwoCount)
+	{
+		// Calculate remaining time as count + round up (half second) divided by sample rate to get seconds
+		secondsRemaining = (((float)s_alarmTwoCount + (float)((float)s_sampleRate / 2)) / (float)s_sampleRate);
+
+		// Assign soft timer to turn the Alarm 2 signal off
+		AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(secondsRemaining * TICKS_PER_SEC), AlarmOneOutputTimerCallback);
+	}
 }
 
 ///----------------------------------------------------------------------------

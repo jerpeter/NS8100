@@ -126,7 +126,7 @@ enum
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void InitDataBuffs(uint8 op_mode);
+void InitDataBuffs(uint8 opMode);
 uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uint16* endAddrPtr);
 uint16 FixDataToZero(uint16 data_);
 
