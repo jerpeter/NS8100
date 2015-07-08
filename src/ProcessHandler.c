@@ -54,7 +54,7 @@ void StartDataCollection(uint32 sampleRate);
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
+void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParamsPtr)
 { 
 	// Check if any events are still stored in buffers and need to be stored into flash
 	if (getSystemEventState(TRIGGER_EVENT))
@@ -71,38 +71,42 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	// Assign a one second menu update timer
 	AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
 
-	// Only filter alarms for Waveform to make sure they are above the trigger level
-	if (op_mode == WAVEFORM_MODE)
+	// Requirements check only for Waveform mode to enforce that alarm levels can't be lower than the trigger level
+	if (operationMode == WAVEFORM_MODE)
 	{
 		if ((g_unitConfig.alarmOneMode == ALARM_MODE_SEISMIC) || (g_unitConfig.alarmOneMode == ALARM_MODE_BOTH))
 		{
-			if (g_unitConfig.alarmOneSeismicLevel < trig_mn.seismicTriggerLevel)
+			// No need to check for No Trigger setting since value is above trigger level threshold
+			if (g_unitConfig.alarmOneSeismicLevel < opModeParamsPtr->seismicTriggerLevel)
 			{
-				g_unitConfig.alarmOneSeismicLevel = trig_mn.seismicTriggerLevel;
-			}
-		}
-
-		if ((g_unitConfig.alarmTwoMode == ALARM_MODE_SEISMIC) || (g_unitConfig.alarmTwoMode == ALARM_MODE_BOTH))
-		{
-			if (g_unitConfig.alarmTwoSeismicLevel < trig_mn.seismicTriggerLevel)
-			{
-				g_unitConfig.alarmTwoSeismicLevel = trig_mn.seismicTriggerLevel;
+				g_unitConfig.alarmOneSeismicLevel = opModeParamsPtr->seismicTriggerLevel;
 			}
 		}
 
 		if ((g_unitConfig.alarmOneMode == ALARM_MODE_AIR) || (g_unitConfig.alarmOneMode == ALARM_MODE_BOTH))
 		{
-			if (g_unitConfig.alarmOneAirLevel < (uint32)trig_mn.airTriggerLevel)
+			// No need to check for No Trigger setting since value is above trigger level threshold
+			if (g_unitConfig.alarmOneAirLevel < opModeParamsPtr->airTriggerLevel)
 			{
-				g_unitConfig.alarmOneAirLevel = (uint32)trig_mn.airTriggerLevel;
+				g_unitConfig.alarmOneAirLevel = opModeParamsPtr->airTriggerLevel;
+			}
+		}
+
+		if ((g_unitConfig.alarmTwoMode == ALARM_MODE_SEISMIC) || (g_unitConfig.alarmTwoMode == ALARM_MODE_BOTH))
+		{
+			// No need to check for No Trigger setting since value is above trigger level threshold
+			if (g_unitConfig.alarmTwoSeismicLevel < opModeParamsPtr->seismicTriggerLevel)
+			{
+				g_unitConfig.alarmTwoSeismicLevel = opModeParamsPtr->seismicTriggerLevel;
 			}
 		}
 
 		if ((g_unitConfig.alarmTwoMode == ALARM_MODE_AIR) || (g_unitConfig.alarmTwoMode == ALARM_MODE_BOTH))
 		{
-			if (g_unitConfig.alarmTwoAirLevel < (uint32)trig_mn.airTriggerLevel)
+			// No need to check for No Trigger setting since value is above trigger level threshold
+			if (g_unitConfig.alarmTwoAirLevel < opModeParamsPtr->airTriggerLevel)
 			{
-				g_unitConfig.alarmTwoAirLevel = (uint32)trig_mn.airTriggerLevel;
+				g_unitConfig.alarmTwoAirLevel = opModeParamsPtr->airTriggerLevel;
 			}
 		}
 	}
@@ -111,58 +115,58 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	// Debug Information
 	//-------------------------
 
-	if (op_mode == WAVEFORM_MODE)
+	if (operationMode == WAVEFORM_MODE)
 	{
 		debug("--- Waveform Mode Settings ---\r\n");
-		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\r\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfo.numOfChannels);
+		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\r\n", g_triggerRecord.trec.record_time, opModeParamsPtr->sample_rate, g_sensorInfo.numOfChannels);
 
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\r\n", trig_mn.seismicTriggerLevel, AirTriggerConvertToUnits(trig_mn.airTriggerLevel), trig_mn.airTriggerLevel);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\r\n", opModeParamsPtr->seismicTriggerLevel, AirTriggerConvertToUnits(opModeParamsPtr->airTriggerLevel), opModeParamsPtr->airTriggerLevel);
 		}
 		else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\r\n", trig_mn.seismicTriggerLevel,
-					((float)AirTriggerConvertToUnits(trig_mn.airTriggerLevel) / (float)10000), trig_mn.airTriggerLevel);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\r\n", opModeParamsPtr->seismicTriggerLevel,
+					((float)AirTriggerConvertToUnits(opModeParamsPtr->airTriggerLevel) / (float)10000), opModeParamsPtr->airTriggerLevel);
 		}
 	}
-	else if (op_mode == BARGRAPH_MODE)
+	else if (operationMode == BARGRAPH_MODE)
 	{
 		debug("--- Bargraph Mode Settings ---\r\n");
-		debug("\tSample Rate: %d, Bar Interval: %d secs, Summary Interval: %d mins\r\n", trig_mn.sample_rate, g_triggerRecord.bgrec.barInterval,
+		debug("\tSample Rate: %d, Bar Interval: %d secs, Summary Interval: %d mins\r\n", opModeParamsPtr->sample_rate, g_triggerRecord.bgrec.barInterval,
 				(g_triggerRecord.bgrec.summaryInterval / 60));
 	}
-	else if (op_mode == COMBO_MODE)
+	else if (operationMode == COMBO_MODE)
 	{
 		debug("--- Combo Mode Settings ---\r\n");
-		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\r\n", g_triggerRecord.trec.record_time, trig_mn.sample_rate, g_sensorInfo.numOfChannels);
+		debug("\tRecord Time: %d, Sample Rate: %d, Channels: %d\r\n", g_triggerRecord.trec.record_time, opModeParamsPtr->sample_rate, g_sensorInfo.numOfChannels);
 
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\r\n", trig_mn.seismicTriggerLevel, AirTriggerConvertToUnits(trig_mn.airTriggerLevel), trig_mn.airTriggerLevel);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\r\n", opModeParamsPtr->seismicTriggerLevel, AirTriggerConvertToUnits(opModeParamsPtr->airTriggerLevel), opModeParamsPtr->airTriggerLevel);
 		}
 		else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\r\n", trig_mn.seismicTriggerLevel,
-					((float)AirTriggerConvertToUnits(trig_mn.airTriggerLevel) / (float)10000), trig_mn.airTriggerLevel);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\r\n", opModeParamsPtr->seismicTriggerLevel,
+					((float)AirTriggerConvertToUnits(opModeParamsPtr->airTriggerLevel) / (float)10000), opModeParamsPtr->airTriggerLevel);
 		}
 
 		debug("\tBar Interval: %d secs, Summary Interval: %d mins\r\n", g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));
 	}
-	else if (op_mode == MANUAL_TRIGGER_MODE)
+	else if (operationMode == MANUAL_TRIGGER_MODE)
 	{
 		debug("--- Manual Trigger Mode Settings ---\r\n");
 	}
-	else if (op_mode == MANUAL_CAL_MODE)
+	else if (operationMode == MANUAL_CAL_MODE)
 	{
 		debug("--- Manual Cal Mode Settings ---\r\n");
-		debug("\tSample Rate: %d, Channels: %d\r\n", trig_mn.sample_rate, g_sensorInfo.numOfChannels);
+		debug("\tSample Rate: %d, Channels: %d\r\n", opModeParamsPtr->sample_rate, g_sensorInfo.numOfChannels);
 	}
 
 	debug("---------------------------\r\n");
 
 	// Check if mode is Manual Cal
-	if (op_mode == MANUAL_CAL_MODE)
+	if (operationMode == MANUAL_CAL_MODE)
 	{
 		// Raise flag
 		g_manualCalFlag = TRUE;
@@ -175,10 +179,10 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 		g_manualCalSampleCount = 0;
 
 		// Create a new monitor log entry
-		NewMonitorLogEntry(op_mode);
+		NewMonitorLogEntry(operationMode);
 	}
 
-	if ((op_mode == BARGRAPH_MODE) || (op_mode == COMBO_MODE) || ((op_mode == WAVEFORM_MODE) && (g_unitConfig.autoCalForWaveform == ENABLED)))
+	if ((operationMode == BARGRAPH_MODE) || (operationMode == COMBO_MODE) || ((operationMode == WAVEFORM_MODE) && (g_unitConfig.autoCalForWaveform == ENABLED)))
 	{
 		if (g_skipAutoCalInWaveformAfterMidnightCal == YES)
 		{
@@ -193,14 +197,14 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 	}
 
 	// Initialize buffers and settings and gp_ramEventRecord
-	debug("Init data buffers (mode: %d)\r\n", op_mode);
-	InitDataBuffs(op_mode);
+	debug("Init data buffers (mode: %d)\r\n", operationMode);
+	InitDataBuffs(operationMode);
 
 	// Setup Analog controls
 	debug("Setup Analog controls\r\n");
 
 	// Set the cutoff frequency based on sample rate
-	switch (trig_mn.sample_rate)
+	switch (opModeParamsPtr->sample_rate)
 	{
 		case SAMPLE_RATE_1K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW); break;
 		case SAMPLE_RATE_2K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1); break;
@@ -229,7 +233,7 @@ void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode)
 #endif
 
 	// Monitor some data.. oh yeah
-	StartDataCollection(trig_mn.sample_rate);
+	StartDataCollection(opModeParamsPtr->sample_rate);
 }
 
 #if 1
@@ -257,24 +261,21 @@ void StartDataCollection(uint32 sampleRate)
 	//OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), 0);
 	GetChannelOffsets(sampleRate);
 
+	// Setup ISR to clock the data sampling
 #if INTERNAL_SAMPLING_SOURCE
 	debug("Setup TC clocks...\r\n");
-	// Setup ISR to clock the data sampling
-
 	Setup_8100_TC_Clock_ISR(sampleRate, TC_SAMPLE_TIMER_CHANNEL);
 	Setup_8100_TC_Clock_ISR(CAL_PULSE_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
 	debug("Setup External RTC Sample clock...\r\n");
-	// Setup ISR to clock the data sampling
-
 	Setup_8100_EIC_External_RTC_ISR();
 #endif
 
 	// Init a few key values for data collection
 	DataIsrInit();
 
-	debug("Start sampling...\r\n");
 	// Start the timer for collecting data
+	debug("Start sampling...\r\n");
 #if INTERNAL_SAMPLING_SOURCE
 	Start_Data_Clock(TC_SAMPLE_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
@@ -284,9 +285,6 @@ void StartDataCollection(uint32 sampleRate)
 	// Change state to start processing the samples
 	debug("Raise signal to start sampling\r\n");
 	g_sampleProcessing = ACTIVE_STATE;
-
-	// Test - Throw away at some point
-	//debugRaw("\nA1M (%d)\r\n", g_unitConfig.alarmOneMode);
 }
 
 ///----------------------------------------------------------------------------
@@ -513,8 +511,7 @@ void HandleManualCalibration(void)
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
 		// Check if Waveform or Combo mode and not handling a cached event
-		if (((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)) && 
-			(getSystemEventState(TRIGGER_EVENT) == NO))
+		if (((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE)) && (getSystemEventState(TRIGGER_EVENT) == NO))
 		{
 			// Check if still waiting for an event and not processing a cal and not waiting for a cal
 			if (g_busyProcessingEvent == NO)
@@ -534,7 +531,7 @@ void HandleManualCalibration(void)
 
 					GetManualCalibration();
 
-					InitDataBuffs(g_triggerRecord.op_mode);
+					InitDataBuffs(g_triggerRecord.opMode);
 
 					// Set and cleared by the ISR
 					//g_manualCalFlag = FALSE;
@@ -576,7 +573,7 @@ void HandleManualCalibration(void)
 void ForcedCalibration(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	uint8 pendingMode = g_triggerRecord.op_mode;
+	uint8 pendingMode = g_triggerRecord.opMode;
 	
 	g_forcedCalibration = YES;
 
@@ -597,7 +594,7 @@ void ForcedCalibration(void)
 	g_forcedCalibration = NO;
 
 	// Reset the mode back to the previous mode
-	g_triggerRecord.op_mode = pendingMode;
+	g_triggerRecord.opMode = pendingMode;
 
 	UpdateMonitorLogEntry();
 
@@ -620,7 +617,7 @@ void ForcedCalibration(void)
 		else // Safe to enter monitor mode
 		{
 			// Enter monitor mode with the current mode
-			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
 			JUMP_TO_ACTIVE_MENU();
 		}
 	}
@@ -637,7 +634,7 @@ void StopMonitoringForLowPowerState(void)
 	ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 
 	// Handle and finish monitoring
-	StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+	StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
 
 	// Jump to the main menu
 	SETUP_MENU_MSG(MAIN_MENU);

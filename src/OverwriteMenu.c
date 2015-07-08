@@ -95,7 +95,7 @@ void OverwriteMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 			{
 				GetRecordData(&temp_rec, i, REC_TRIGGER_USER_MENU_TYPE);
 
-				switch (temp_rec.op_mode)
+				switch (temp_rec.opMode)
 				{
 					case (WAVEFORM_MODE):
 						sprintf((char*)buff,"%s (%s)", (char*)temp_rec.name, getLangText(SELF_TRG_TEXT));
@@ -129,7 +129,7 @@ void OverwriteMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 				case (ENTER_KEY):
 					SaveRecordData(&g_triggerRecord, mn_layout_ptr->curr_ln, REC_TRIGGER_USER_MENU_TYPE);
 
-					UpdateModeMenuTitle(g_triggerRecord.op_mode);
+					UpdateModeMenuTitle(g_triggerRecord.opMode);
 					SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 					JUMP_TO_ACTIVE_MENU();
 					break;

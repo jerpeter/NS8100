@@ -141,7 +141,7 @@ extern void UsbDeviceManager(void);
 			switch(g_monitorOperationMode)
 			{
 				case WAVEFORM_MODE:
-					StartMonitoring(g_triggerRecord.trec, g_triggerRecord.op_mode);
+					StartMonitoring(g_triggerRecord.opMode, &g_triggerRecord.trec);
 				break;
 
 				case BARGRAPH_MODE:
@@ -178,7 +178,7 @@ extern void UsbDeviceManager(void);
 						g_triggerRecord.berec.impulseMenuUpdateSecs = LCD_IMPULSE_TIME_DEFAULT_VALUE;
 					}
 
-					StartMonitoring(g_triggerRecord.trec, g_triggerRecord.op_mode);
+					StartMonitoring(g_triggerRecord.opMode, &g_triggerRecord.trec);
 				break;
 
 				case MANUAL_TRIGGER_MODE:
@@ -186,7 +186,7 @@ extern void UsbDeviceManager(void);
 					temp_g_triggerRecord.trec.seismicTriggerLevel = MANUAL_TRIGGER_CHAR;
 					temp_g_triggerRecord.trec.airTriggerLevel = MANUAL_TRIGGER_CHAR;
 
-					StartMonitoring(temp_g_triggerRecord.trec, g_triggerRecord.op_mode);
+					StartMonitoring(g_triggerRecord.opMode, &temp_g_triggerRecord.trec);
 				break;
 
 				default:

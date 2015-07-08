@@ -164,7 +164,7 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					{
 						if (g_monitorModeActiveChoice == MB_FIRST_CHOICE)
 						{
-							StopMonitoring(g_triggerRecord.op_mode, EVENT_PROCESSING);
+							StopMonitoring(g_triggerRecord.opMode, EVENT_PROCESSING);
 
 							SETUP_MENU_MSG(MAIN_MENU);
 							JUMP_TO_ACTIVE_MENU();

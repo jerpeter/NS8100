@@ -91,9 +91,9 @@ void SystemEventManager(void)
 	//___________________________________________________________________________________________
 	if (getSystemEventState(TRIGGER_EVENT))
 	{
-		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
+		if ((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
-			debug("Trigger Event (%s)\r\n", (g_triggerRecord.op_mode == WAVEFORM_MODE) ? "Wave" : "Combo");
+			debug("Trigger Event (%s)\r\n", (g_triggerRecord.opMode == WAVEFORM_MODE) ? "Wave" : "Combo");
 			MoveWaveformEventToFile();
 		}
 	}
@@ -103,7 +103,7 @@ void SystemEventManager(void)
 	{
 		clearSystemEventFlag(BARGRAPH_EVENT);
 
-		if ((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
+		if ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
 			CalculateBargraphData();
 		}
@@ -253,7 +253,7 @@ void SystemEventManager(void)
 		}
 
 		// Assign (or Re-assign) soft timer to turn the Alarm 1 signal off
-		AssignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmOneTime * 2), AlarmOneOutputTimerCallback);
+		AssignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmOneTime * TICKS_PER_SEC), AlarmOneOutputTimerCallback);
 	}
 
 	//___________________________________________________________________________________________
@@ -268,7 +268,7 @@ void SystemEventManager(void)
 		}
 
 		// Assign (or Re-assign) soft timer to turn the Alarm 2 signal off
-		AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmTwoTime * 2), AlarmTwoOutputTimerCallback);
+		AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmTwoTime * TICKS_PER_SEC), AlarmTwoOutputTimerCallback);
 	}
 
 	//___________________________________________________________________________________________
@@ -327,7 +327,7 @@ void MenuEventManager(void)
 	{
 		clearMenuEventFlag(RESULTS_MENU_EVENT);
 
-		if (g_triggerRecord.op_mode == MANUAL_CAL_MODE)
+		if (g_triggerRecord.opMode == MANUAL_CAL_MODE)
 		{
 			SETUP_RESULTS_MENU_MANUAL_CAL_MSG(RESULTS_MENU);
 		}
@@ -353,7 +353,7 @@ void MenuEventManager(void)
 		clearTimerEventFlag(TIMER_MODE_TIMER_EVENT);
 
 		debug("Timer mode: Start monitoring...\r\n");
-		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
 		JUMP_TO_ACTIVE_MENU();
 	}
 }
@@ -1263,7 +1263,7 @@ void PowerManager(void)
 		{
 			// Check if a higher sample rate that can't use Stop sleep mode (Wave 16K and Bar 8K)
 			if ((g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K) ||
-				((g_triggerRecord.op_mode == BARGRAPH_MODE) && (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_8K)))
+				((g_triggerRecord.opMode == BARGRAPH_MODE) && (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_8K)))
 			{
 				sleepStateNeeded = AVR32_PM_SMODE_IDLE;
 			}

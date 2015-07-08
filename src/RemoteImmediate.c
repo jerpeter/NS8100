@@ -130,7 +130,7 @@ void handleRST(CMD_BUFFER_STRUCT* inCmd)
 		// Turn printing off
 		g_unitConfig.autoPrint = NO;
 
-		StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+		StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
 	}
 
 	if (g_unitConfig.timerMode == ENABLED)
@@ -1536,8 +1536,8 @@ void handleGMN(CMD_BUFFER_STRUCT* inCmd)
 			case BARGRAPH_MODE:
 			case COMBO_MODE:
 				// Good data
-				g_triggerRecord.op_mode = tempBuff[0];
-				SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, (uint32)g_triggerRecord.op_mode);
+				g_triggerRecord.opMode = tempBuff[0];
+				SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, (uint32)g_triggerRecord.opMode);
 				JUMP_TO_ACTIVE_MENU();
 				returnCode = CFG_ERR_NONE;
 				break;
@@ -1578,7 +1578,7 @@ void handleHLT(CMD_BUFFER_STRUCT* inCmd)
 	if (ACTIVE_STATE == g_sampleProcessing)
 	{
 		// Stop 430 data transfers for the current mode and let the event processing handle the rest
-		StopMonitoring(g_triggerRecord.op_mode, EVENT_PROCESSING);
+		StopMonitoring(g_triggerRecord.opMode, EVENT_PROCESSING);
 
 		// Jump to the main menu
 		SETUP_MENU_MSG(MAIN_MENU);

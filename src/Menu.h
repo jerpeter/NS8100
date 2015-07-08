@@ -210,12 +210,10 @@ enum {
 #define AIR_TRIGGER_MAX_COUNT			0x8000
 
 // Alarm modes
-enum {
-	ALARM_MODE_OFF = 0,
-	ALARM_MODE_SEISMIC = 1,
-	ALARM_MODE_AIR = 2,
-	ALARM_MODE_BOTH = 3
-};
+#define ALARM_MODE_OFF		0x00
+#define ALARM_MODE_SEISMIC	0x01
+#define ALARM_MODE_AIR		0x02
+#define ALARM_MODE_BOTH		(ALARM_MODE_SEISMIC + ALARM_MODE_AIR)
 
 // Alarm 1 & 2 defaults
 #define ALARM_ONE_SEIS_DEFAULT_TRIG_LVL	16384	//1024 // (2048 * 2 / 4) 50%
@@ -933,7 +931,7 @@ void DisplayUserMenu(WND_LAYOUT_STRUCT* wnd_layout_ptr, MN_LAYOUT_STRUCT* mn_lay
 void DisplaySelectMenu(WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*, uint8 titlePosition);
 void StopDataCollection(void);
 void StopDataClock(void);
-void StartMonitoring(TRIGGER_EVENT_DATA_STRUCT trig_mn, uint8 op_mode);
+void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParamsPtr);
 void StopMonitoring(uint8 mode, uint8 operation);
 void HandleManualCalibration(void);
 void ForcedCalibration(void);

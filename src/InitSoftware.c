@@ -101,8 +101,8 @@ void LoadDefaultTriggerRecord(void)
 	GetRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 	// Check if the Default Trig Record is uninitialized
-	if ((g_triggerRecord.op_mode != WAVEFORM_MODE) && (g_triggerRecord.op_mode != BARGRAPH_MODE) &&
-	(g_triggerRecord.op_mode != COMBO_MODE))
+	if ((g_triggerRecord.opMode != WAVEFORM_MODE) && (g_triggerRecord.opMode != BARGRAPH_MODE) &&
+	(g_triggerRecord.opMode != COMBO_MODE))
 	{
 		debugWarn("Monitor & Trigger Record: Operation Mode not set\r\n");
 #if EXTENDED_DEBUG

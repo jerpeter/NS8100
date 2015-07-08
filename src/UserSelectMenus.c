@@ -123,19 +123,19 @@ void AirScaleMenuHandler(uint8 keyPressed, void* data)
 	
 	if (keyPressed == ENTER_KEY)
 	{
-		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
+		if ((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 				RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 		}
-		else // (g_triggerRecord.op_mode == BARGRAPH_MODE)
+		else // (g_triggerRecord.opMode == BARGRAPH_MODE)
 		{
 			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
+		if ((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
 			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
@@ -150,7 +150,7 @@ void AirScaleMenuHandler(uint8 keyPressed, void* data)
 				AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
 			}
 		}
-		else // (g_triggerRecord.op_mode == BARGRAPH_MODE)
+		else // (g_triggerRecord.opMode == BARGRAPH_MODE)
 		{
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
 				LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
@@ -244,7 +244,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (ALARM_MODE_SEISMIC):
-				if ((g_triggerRecord.op_mode == WAVEFORM_MODE) && (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR))
+				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR))
 				{
 					MessageBox(getLangText(WARNING_TEXT), "SEISMIC TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
@@ -260,7 +260,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 						g_unitConfig.alarmOneSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
 					}
 
-					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+					if (g_triggerRecord.opMode == WAVEFORM_MODE)
 					{
 						g_unitConfig.alarmOneSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
 
@@ -269,27 +269,26 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmOneSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
-					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
+					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
 						g_unitConfig.alarmOneSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
 
-					// Call Alarm One Seismic Level
-#if 1 // ns8100 - Down convert to current bit accuracy setting
+					// Down convert to current bit accuracy setting
 					if (g_unitConfig.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 					{
 						g_tempTriggerLevelForMenuAdjsutment = g_unitConfig.alarmOneSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
-#endif
+
+					// Call Alarm One Seismic Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
 						(g_unitConfig.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_unitConfig.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						g_bitAccuracyMidpoint);
+						(g_unitConfig.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 				}
 			break;
 
 			case (ALARM_MODE_AIR):
-				if ((g_triggerRecord.op_mode == WAVEFORM_MODE) && (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR))
+				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR))
 				{
 					MessageBox(getLangText(WARNING_TEXT), "AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
@@ -305,7 +304,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 						g_unitConfig.alarmOneAirLevel = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
 					}
 
-					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+					if (g_triggerRecord.opMode == WAVEFORM_MODE)
 					{
 						g_unitConfig.alarmOneAirMinLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 
@@ -314,7 +313,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmOneAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
-					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
+					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
 						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 						{
@@ -328,23 +327,15 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 
 					g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_unitConfig.alarmOneAirLevel);
 
-					if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-					{
-						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, g_unitConfig.alarmOneAirMinLevel,
-														g_unitConfig.alarmOneAirMinLevel, ALARM_AIR_MAX_VALUE);
-					}
-					else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-					{
-						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, g_unitConfig.alarmOneAirMinLevel,
-														g_unitConfig.alarmOneAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
-					}
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
+														AirTriggerConvertToUnits(g_unitConfig.alarmOneAirMinLevel),
+														AirTriggerConvertToUnits(g_unitConfig.alarmOneAirMinLevel),
+														(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
 				}
 			break;
 
 			case (ALARM_MODE_BOTH):
-				if ((g_triggerRecord.op_mode == WAVEFORM_MODE) && ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) ||
+				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) ||
 					(g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR)))
 				{
 					MessageBox(getLangText(WARNING_TEXT), "SEISMIC OR AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
@@ -359,7 +350,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 						g_unitConfig.alarmOneSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
 					}
 
-					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+					if (g_triggerRecord.opMode == WAVEFORM_MODE)
 					{
 						g_unitConfig.alarmOneSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
 
@@ -368,7 +359,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmOneSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
-					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
+					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
 						g_unitConfig.alarmOneSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
@@ -379,7 +370,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 						g_unitConfig.alarmOneAirLevel = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
 					}
 
-					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+					if (g_triggerRecord.opMode == WAVEFORM_MODE)
 					{
 						g_unitConfig.alarmOneAirMinLevel = (uint16)g_triggerRecord.trec.airTriggerLevel;
 
@@ -388,7 +379,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmOneAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
-					else // g_triggerRecord.op_mode == BARGRAPH_MODE
+					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
 						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 						{
@@ -400,29 +391,28 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 						}
 					}
 
-					// Call Alarm One Seismic Level
-#if 1 // ns8100 - Down convert to current bit accuracy setting
+					// Down convert to current bit accuracy setting
 					if (g_unitConfig.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 					{
 						g_tempTriggerLevelForMenuAdjsutment = g_unitConfig.alarmOneSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
-#endif
+
+					// Call Alarm One Seismic Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
 						(g_unitConfig.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_unitConfig.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						g_bitAccuracyMidpoint);
+						(g_unitConfig.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 				}
 			break;
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
+		if ((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 				RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 		}
-		else if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+		else if (g_triggerRecord.opMode == BARGRAPH_MODE)
 		{
 			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
 		}
@@ -471,7 +461,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (ALARM_MODE_SEISMIC):
-				if ((g_triggerRecord.op_mode == WAVEFORM_MODE) && (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR))
+				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR))
 				{
 					MessageBox(getLangText(WARNING_TEXT), "SEISMIC TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
@@ -487,7 +477,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 						g_unitConfig.alarmTwoSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
 					}
 
-					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+					if (g_triggerRecord.opMode == WAVEFORM_MODE)
 					{
 						g_unitConfig.alarmTwoSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
 
@@ -496,27 +486,26 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmTwoSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
-					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
+					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
 						g_unitConfig.alarmTwoSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
 
-					// Call Alarm Two Seismic Level
-#if 1 // ns8100 - Down convert to current bit accuracy setting
+					// Down convert to current bit accuracy setting
 					if (g_unitConfig.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 					{
 						g_tempTriggerLevelForMenuAdjsutment = g_unitConfig.alarmTwoSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
-#endif
+
+					// Call Alarm Two Seismic Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
 						(g_unitConfig.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_unitConfig.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						g_bitAccuracyMidpoint);
+						(g_unitConfig.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 				}
 			break;
 
 			case (ALARM_MODE_AIR):
-				if ((g_triggerRecord.op_mode == WAVEFORM_MODE) && (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR))
+				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR))
 				{
 					MessageBox(getLangText(WARNING_TEXT), "AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
 
@@ -532,7 +521,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 						g_unitConfig.alarmTwoAirLevel = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
 					}
 
-					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+					if (g_triggerRecord.opMode == WAVEFORM_MODE)
 					{
 						g_unitConfig.alarmTwoAirMinLevel = (uint16)g_triggerRecord.trec.airTriggerLevel;
 
@@ -541,7 +530,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmTwoAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
-					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
+					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
 						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 						{
@@ -555,23 +544,16 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 
 					g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirLevel);
 
-					if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-					{
-						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, g_unitConfig.alarmTwoAirMinLevel,
-														g_unitConfig.alarmTwoAirMinLevel, ALARM_AIR_MAX_VALUE);
-					}
-					else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-					{
-						// Call Alarm One Air Level
-						SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment, g_unitConfig.alarmTwoAirMinLevel,
-														g_unitConfig.alarmTwoAirMinLevel, ALARM_AIR_MB_MAX_VALUE);
-					}
+					// Call Alarm One Air Level
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
+														AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirMinLevel),
+														AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirMinLevel),
+														(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
 				}
 			break;
 
 			case (ALARM_MODE_BOTH):
-				if ((g_triggerRecord.op_mode == WAVEFORM_MODE) && ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) ||
+				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) ||
 					(g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR)))
 				{
 					MessageBox(getLangText(WARNING_TEXT), "SEISMIC OR AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
@@ -586,7 +568,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 						g_unitConfig.alarmTwoSeismicLevel = ALARM_TWO_SEIS_DEFAULT_TRIG_LVL;
 					}
 
-					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+					if (g_triggerRecord.opMode == WAVEFORM_MODE)
 					{
 						g_unitConfig.alarmTwoSeismicMinLevel = g_triggerRecord.trec.seismicTriggerLevel;
 
@@ -595,7 +577,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmTwoSeismicLevel = g_triggerRecord.trec.seismicTriggerLevel;
 						}
 					}
-					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
+					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
 						g_unitConfig.alarmTwoSeismicMinLevel = ALARM_SEIS_MIN_VALUE;
 					}
@@ -606,7 +588,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 						g_unitConfig.alarmTwoAirLevel = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
 					}
 
-					if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+					if (g_triggerRecord.opMode == WAVEFORM_MODE)
 					{
 						g_unitConfig.alarmTwoAirMinLevel = (uint16)g_triggerRecord.trec.airTriggerLevel;
 
@@ -615,7 +597,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 							g_unitConfig.alarmTwoAirLevel = (uint32)g_triggerRecord.trec.airTriggerLevel;
 						}
 					}
-					else // (g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)
+					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
 						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 						{
@@ -627,17 +609,16 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 						}
 					}
 
-					// Call Alarm Two Seismic Level
-#if 1 // ns8100 - Down convert to current bit accuracy setting
+					// Down convert to current bit accuracy setting
 					if (g_unitConfig.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 					{
 						g_tempTriggerLevelForMenuAdjsutment = g_unitConfig.alarmTwoSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 					}		
-#endif
+
+					// Call Alarm Two Seismic Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
 						(g_unitConfig.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_unitConfig.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						g_bitAccuracyMidpoint);
+						(g_unitConfig.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 				}
 			break;
 		}
@@ -1050,7 +1031,7 @@ void BarResultMenuHandler(uint8 keyPressed, void* data)
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
 		// If Combo mode, jump back over to waveform specific settings
-		if (g_triggerRecord.op_mode == COMBO_MODE)
+		if (g_triggerRecord.opMode == COMBO_MODE)
 		{
 			if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
 			{
@@ -1063,12 +1044,12 @@ void BarResultMenuHandler(uint8 keyPressed, void* data)
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
 			}
 
-#if 1 // ns8100 - Down convert to current bit accuracy setting
+			// Down convert to current bit accuracy setting
 			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 			{
 				g_tempTriggerLevelForMenuAdjsutment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
-#endif
+
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment,
 				(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
@@ -1085,7 +1066,7 @@ void BarResultMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if ((g_triggerRecord.op_mode == BARGRAPH_MODE) && (!g_factorySetupRecord.invalid) &&
+		if ((g_triggerRecord.opMode == BARGRAPH_MODE) && (!g_factorySetupRecord.invalid) &&
 			(g_factorySetupRecord.aweight_option == ENABLED))
 		{
 			SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
@@ -1247,11 +1228,11 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+		if (g_triggerRecord.opMode == BARGRAPH_MODE)
 		{
 			SETUP_USER_MENU_MSG(&sampleRateBargraphMenu, g_triggerRecord.trec.sample_rate);
 		}		
-		else if (g_triggerRecord.op_mode == COMBO_MODE)
+		else if (g_triggerRecord.opMode == COMBO_MODE)
 		{
 			SETUP_USER_MENU_MSG(&sampleRateComboMenu, g_triggerRecord.trec.sample_rate);
 		}			
@@ -1984,15 +1965,15 @@ void ModeMenuHandler(uint8 keyPressed, void* data)
 		if (modeMenu[newItemIndex].data == MONITOR)
 		{
 			// Call the Monitor menu and start monitoring
-			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, (uint32)g_triggerRecord.op_mode);
+			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, (uint32)g_triggerRecord.opMode);
 		}
 		else // Mode is EDIT
 		{
-			if (g_triggerRecord.op_mode == BARGRAPH_MODE)
+			if (g_triggerRecord.opMode == BARGRAPH_MODE)
 			{
 				SETUP_USER_MENU_MSG(&sampleRateBargraphMenu, g_triggerRecord.trec.sample_rate);
 			}		
-			else if (g_triggerRecord.op_mode == COMBO_MODE)
+			else if (g_triggerRecord.opMode == COMBO_MODE)
 			{
 				SETUP_USER_MENU_MSG(&sampleRateComboMenu, g_triggerRecord.trec.sample_rate);
 			}			
@@ -2448,8 +2429,8 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((sampleRateMenu[newItemIndex].data < sampleRateMenu[ITEM_1].data) || 
 			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_6].data) ||
-			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_5].data) && (g_triggerRecord.op_mode == BARGRAPH_MODE)) ||
-			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && (g_triggerRecord.op_mode == COMBO_MODE)))
+			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_5].data) && (g_triggerRecord.opMode == BARGRAPH_MODE)) ||
+			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && (g_triggerRecord.opMode == COMBO_MODE)))
 		{
 			memset(&message[0], 0, sizeof(message));
 			sprintf((char*)message, "%lu %s", sampleRateMenu[newItemIndex].data,
@@ -2477,7 +2458,7 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		UpdateModeMenuTitle(g_triggerRecord.op_mode);
+		UpdateModeMenuTitle(g_triggerRecord.opMode);
 		SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 	}
 
@@ -2555,18 +2536,17 @@ void SaveSetupMenuHandler(uint8 keyPressed, void* data)
 			// Save the current trig record into the default location
 			SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
-			UpdateModeMenuTitle(g_triggerRecord.op_mode);
+			UpdateModeMenuTitle(g_triggerRecord.opMode);
 			SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		switch (g_triggerRecord.op_mode)
+		switch (g_triggerRecord.opMode)
 		{
 			case WAVEFORM_MODE:
 			case COMBO_MODE:
-				if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) &&
-					(g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
+				if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) && (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
 				{
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
 						RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
@@ -2587,8 +2567,7 @@ void SaveSetupMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case BARGRAPH_MODE:
-				if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) &&
-					(g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
+				if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) && (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
 				{
 					SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
 				}
@@ -2600,9 +2579,8 @@ void SaveSetupMenuHandler(uint8 keyPressed, void* data)
 					}
 					else
 					{
-						SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_unitConfig.alarmTwoTime,
-							ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT,
-							ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
+						SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_unitConfig.alarmTwoTime, ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT,
+														ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
 					}
 				}
 			break;
@@ -2638,7 +2616,7 @@ void SensitivityMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_triggerRecord.srec.sensitivity = (uint8)sensitivityMenu[newItemIndex].data;
 
-		if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+		if (g_triggerRecord.opMode == WAVEFORM_MODE)
 		{
 			if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
 			{
@@ -2651,18 +2629,18 @@ void SensitivityMenuHandler(uint8 keyPressed, void* data)
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
 			}
 
-#if 1 // ns8100 - Down convert to current bit accuracy setting
+			// Down convert to current bit accuracy setting
 			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 			{
 				g_tempTriggerLevelForMenuAdjsutment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
-#endif
+
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment,
 				(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
 		}
-		else if ((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
+		else if ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
 			SETUP_USER_MENU_MSG(&barChannelMenu, g_triggerRecord.berec.barChannel);
 		}

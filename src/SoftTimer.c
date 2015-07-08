@@ -361,7 +361,7 @@ void PowerOffTimerCallback(void)
 	debug("Power Off Timer callback: activated.\r\n");
 
 	// Handle and finish any processing
-	StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+	StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
 
 	if (g_timerModeLastRun == YES)
 	{
@@ -475,7 +475,7 @@ void AutoMonitorTimerCallBack(void)
 			else // Safe to enter monitor mode
 			{
 				// Enter monitor mode with the current mode
-				SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+				SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
 				JUMP_TO_ACTIVE_MENU();
 			}
 		}
@@ -521,7 +521,7 @@ void CheckForMidnight(void)
 			ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 
 			// Handle and finish monitoring
-			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+			StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
 
 			// Clear and setup the message buffer
 			memset(&(msgBuffer[0]), 0, sizeof(msgBuffer));
@@ -546,7 +546,7 @@ void HandleMidnightEvent(void)
 	INPUT_MSG_STRUCT mn_msg;
 	char message[50];
 
-	if (((g_triggerRecord.op_mode == BARGRAPH_MODE) || (g_triggerRecord.op_mode == COMBO_MODE)) && (g_sampleProcessing == ACTIVE_STATE))
+	if (((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)) && (g_sampleProcessing == ACTIVE_STATE))
 	{
 		// Do not handle midnight calibration since a manual cal is forced at the beginning of Bargraph
 
@@ -556,10 +556,10 @@ void HandleMidnightEvent(void)
 		OverlayMessage(getLangText(STATUS_TEXT), message, 0);
 
 		// Handle stopping the current bargraph
-		StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+		StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
 
 		// Start up a new Bargraph
-		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.op_mode);
+		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
 		JUMP_TO_ACTIVE_MENU();
 	}
 	// Check if Auto Cal is active
@@ -586,7 +586,7 @@ void HandleMidnightEvent(void)
 				g_enterMonitorModeAfterMidnightCal = YES;
 
 			// Handle and finish any processing
-			StopMonitoring(g_triggerRecord.op_mode, FINISH_PROCESSING);
+			StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
 
 			if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 			{

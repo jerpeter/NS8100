@@ -244,12 +244,12 @@ void MoveWaveformEventToFile(void)
 
 					if (waveformFileHandle == -1)
 					{
-						debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.op_mode == WAVEFORM_MODE) ? "Waveform" : "Combo - Waveform");
+						debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.opMode == WAVEFORM_MODE) ? "Waveform" : "Combo - Waveform");
 					}					
 					else // Write the file event to the SD card
 					{
 						sprintf((char*)&g_spareBuffer[0], "%s EVENT #%d BEING SAVED... (MAY TAKE TIME)",
-								(g_triggerRecord.op_mode == WAVEFORM_MODE) ? "WAVEFORM" : "COMBO - WAVEFORM", g_pendingEventRecord.summary.eventNumber);
+								(g_triggerRecord.opMode == WAVEFORM_MODE) ? "WAVEFORM" : "COMBO - WAVEFORM", g_pendingEventRecord.summary.eventNumber);
 						OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
 
 						// Write the event record header and summary
@@ -381,11 +381,11 @@ void MoveWaveformEventToFile(void)
 
 				g_lastCompletedRamSummaryIndex = ramSummaryEntryPtr;
 
-				if (g_triggerRecord.op_mode == WAVEFORM_MODE)
+				if (g_triggerRecord.opMode == WAVEFORM_MODE)
 				{
 					raiseMenuEventFlag(RESULTS_MENU_EVENT);
 				}
-				// else (g_triggerRecord.op_mode == COMBO_MODE)
+				// else (g_triggerRecord.opMode == COMBO_MODE)
 				// Leave in monitor mode menu display processing for bargraph
 
 				//debug("DataBuffs: Changing flash move state: %s\r\n", "WAVE_INIT");

@@ -2351,7 +2351,7 @@ void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber)
 
 	if (fileHandle == -1)
 	{
-		debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.op_mode == WAVEFORM_MODE) ? "Waveform" : "Combo - Waveform");
+		debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.opMode == WAVEFORM_MODE) ? "Waveform" : "Combo - Waveform");
 	}
 	else // Write the file event to the SD card
 	{

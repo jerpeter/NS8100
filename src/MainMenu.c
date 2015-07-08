@@ -137,9 +137,9 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 							if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
 							else
 							{
-								g_triggerRecord.op_mode = WAVEFORM_MODE;
+								g_triggerRecord.opMode = WAVEFORM_MODE;
 								ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
-								UpdateModeMenuTitle(g_triggerRecord.op_mode);
+								UpdateModeMenuTitle(g_triggerRecord.opMode);
 								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 								JUMP_TO_ACTIVE_MENU();
 							}
@@ -149,9 +149,9 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 							if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
 							else
 							{
-								g_triggerRecord.op_mode = BARGRAPH_MODE;
+								g_triggerRecord.opMode = BARGRAPH_MODE;
 								ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
-								UpdateModeMenuTitle(g_triggerRecord.op_mode);
+								UpdateModeMenuTitle(g_triggerRecord.opMode);
 								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 								JUMP_TO_ACTIVE_MENU();
 							}
@@ -161,9 +161,9 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 							if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
 							else
 							{
-								g_triggerRecord.op_mode = COMBO_MODE;
+								g_triggerRecord.opMode = COMBO_MODE;
 								ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
-								UpdateModeMenuTitle(g_triggerRecord.op_mode);
+								UpdateModeMenuTitle(g_triggerRecord.opMode);
 								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 								JUMP_TO_ACTIVE_MENU();
 							}
@@ -304,7 +304,7 @@ void PromptUserWaitingForSensorZeroing(void)
 	debug("Monitor pending sensor zeroing\r\n");
 
 	// Personally I hate a forced useless delay
-	sprintf((char*)g_spareBuffer, "%s", getLangText(ZEROING_SENSORS_TEXT));
+	sprintf((char*)g_spareBuffer, "%s ", getLangText(ZEROING_SENSORS_TEXT));
 	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
 
 	while (i--)

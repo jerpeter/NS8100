@@ -97,7 +97,7 @@ void LoadRecordMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr,
 
 				if (temp_rec.validRecord == YES)
 				{
-					switch (temp_rec.op_mode)
+					switch (temp_rec.opMode)
 					{
 						case (WAVEFORM_MODE):
 							sprintf((char*)buff, "%s (%s)", (char*)temp_rec.name, getLangText(SELF_TRG_TEXT));
@@ -162,7 +162,7 @@ void LoadRecordMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr,
 							break;
 					}
 
-					UpdateModeMenuTitle(g_triggerRecord.op_mode);
+					UpdateModeMenuTitle(g_triggerRecord.opMode);
 					SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
 					JUMP_TO_ACTIVE_MENU();
 					break;

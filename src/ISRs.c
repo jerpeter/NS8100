@@ -219,7 +219,7 @@ void Eic_system_irq(void)
 		//debugRaw("-ET-");
 		
 		// Check if monitoring and not bargraph and not processing an event
-		if (((g_sampleProcessing == ACTIVE_STATE)) && (g_triggerRecord.op_mode != BARGRAPH_MODE) && (g_busyProcessingEvent == NO))
+		if (((g_sampleProcessing == ACTIVE_STATE)) && (g_triggerRecord.opMode != BARGRAPH_MODE) && (g_busyProcessingEvent == NO))
 		{
 			// Signal the start of an event
 			g_externalTrigger = YES;
@@ -473,34 +473,49 @@ static inline void normalizeSampleData_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline void checkAlarms_ISR_Inline(void)
 {
+	// Check if Alarm 1 mode is active
 	if (g_unitConfig.alarmOneMode != ALARM_MODE_OFF)
 	{
-		// Check if seismic is enabled for Alarm 1
+		// Check if seismic is enabled for Alarm 1 (bitwise operation)
 		if (g_unitConfig.alarmOneMode & ALARM_MODE_SEISMIC)
 		{
-			if (s_R_channelReading > (g_unitConfig.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
-			else if (s_V_channelReading > (g_unitConfig.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
-			else if (s_T_channelReading > (g_unitConfig.alarmOneSeismicLevel)) { raiseSystemEventFlag(WARNING1_EVENT); }
+			if ((s_R_channelReading > g_unitConfig.alarmOneSeismicLevel) || (s_V_channelReading > g_unitConfig.alarmOneSeismicLevel) ||
+				(s_T_channelReading > g_unitConfig.alarmOneSeismicLevel))
+			{
+				raiseSystemEventFlag(WARNING1_EVENT);
+			}
 		}
 
-		// Check if air is enabled for Alarm 1
+		// Check if air is enabled for Alarm 1 (bitwise operation)
 		if (g_unitConfig.alarmOneMode & ALARM_MODE_AIR)
-			if (s_A_channelReading > g_unitConfig.alarmOneAirLevel) { raiseSystemEventFlag(WARNING1_EVENT); }
+		{
+			if (s_A_channelReading > g_unitConfig.alarmOneAirLevel)
+			{
+				raiseSystemEventFlag(WARNING1_EVENT);
+			}
+		}
 	}
 						
 	if (g_unitConfig.alarmTwoMode != ALARM_MODE_OFF)
 	{
-		// Check if seismic is enabled for Alarm 2
+		// Check if seismic is enabled for Alarm 2 (bitwise operation)
 		if (g_unitConfig.alarmTwoMode & ALARM_MODE_SEISMIC)
 		{
-			if (s_R_channelReading > (g_unitConfig.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
-			else if (s_V_channelReading > (g_unitConfig.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
-			else if (s_T_channelReading > (g_unitConfig.alarmTwoSeismicLevel)) { raiseSystemEventFlag(WARNING2_EVENT); }
+			if ((s_R_channelReading > g_unitConfig.alarmTwoSeismicLevel) || (s_V_channelReading > g_unitConfig.alarmTwoSeismicLevel) ||
+				(s_T_channelReading > g_unitConfig.alarmTwoSeismicLevel))
+			{
+				raiseSystemEventFlag(WARNING2_EVENT);
+			}
 		}
 
-		// Check if air is enabled for Alarm 2
+		// Check if air is enabled for Alarm 2 (bitwise operation)
 		if (g_unitConfig.alarmTwoMode & ALARM_MODE_AIR)
-			if (s_A_channelReading > g_unitConfig.alarmTwoAirLevel) { raiseSystemEventFlag(WARNING2_EVENT); }
+		{
+			if (s_A_channelReading > g_unitConfig.alarmTwoAirLevel)
+			{
+				raiseSystemEventFlag(WARNING2_EVENT);
+			}
+		}
 	}				
 }
 
@@ -1446,14 +1461,14 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 
 		//___________________________________________________________________________________________
 		//___Process and move the sample data for triggers in waveform or combo mode
-		if ((g_triggerRecord.op_mode == WAVEFORM_MODE) || (g_triggerRecord.op_mode == COMBO_MODE))
+		if ((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
 			processAndMoveWaveformData_ISR_Inline();
 		}
 
 		//___________________________________________________________________________________________
 		//___Move the sample data for bar calculations in bargraph or combo mode (when combo mode isn't handling a cal pulse)
-		if ((g_triggerRecord.op_mode == BARGRAPH_MODE) || ((g_triggerRecord.op_mode == COMBO_MODE) && (s_calPulse != YES)))
+		if ((g_triggerRecord.opMode == BARGRAPH_MODE) || ((g_triggerRecord.opMode == COMBO_MODE) && (s_calPulse != YES)))
 		{
 			moveBargraphData_ISR_Inline();
 		}

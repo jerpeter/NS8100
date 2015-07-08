@@ -215,7 +215,7 @@ typedef struct
 {
 	uint8 name[10];
 	uint8 validRecord;
-	uint8 op_mode;
+	uint8 opMode;
 	DATE_TIME_STRUCT time_stamp;
 	TRIGGER_EVENT_DATA_STRUCT trec;
 	BAR_GRAPH_EVENT_DATA_STRUCT bgrec;

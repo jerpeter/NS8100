@@ -253,7 +253,7 @@ void MoveManualCalToFile(void)
 			g_lastCompletedRamSummaryIndex = ramSummaryEntryPtr;
 
 			// Set flag to display calibration results if not monitoring or monitoring in waveform
-			if ((g_sampleProcessing == IDLE_STATE) || ((g_sampleProcessing == ACTIVE_STATE) && (g_triggerRecord.op_mode == WAVEFORM_MODE)))
+			if ((g_sampleProcessing == IDLE_STATE) || ((g_sampleProcessing == ACTIVE_STATE) && (g_triggerRecord.opMode == WAVEFORM_MODE)))
 			{
 				// Set printout mode to allow the results menu processing to know this is a manual cal pulse
 				raiseMenuEventFlag(RESULTS_MENU_EVENT);

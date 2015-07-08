@@ -374,11 +374,11 @@ uint8 CheckForAvailableTriggerRecordEntry(char* name, uint8* match)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
+void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 opMode)
 {
 	// General components
 	rec_ptr->validRecord = YES;
-	rec_ptr->op_mode = op_mode;
+	rec_ptr->opMode = opMode;
 	rec_ptr->trec.sample_rate = SAMPLE_RATE_1K;
 	rec_ptr->srec.sensitivity = LOW;
 	rec_ptr->trec.dist_to_source = 0;
@@ -401,7 +401,7 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 op_mode)
 	memset((char*)rec_ptr->trec.oper, 0, sizeof(rec_ptr->trec.oper));
 
 	// Mode specific 
-	switch (op_mode)
+	switch (opMode)
 	{
 		case(WAVEFORM_MODE):
 			rec_ptr->trec.seismicTriggerLevel = 25; // A/D Counts

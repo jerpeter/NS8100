@@ -91,7 +91,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 	uint8 mbChoice = 0;
 	INPUT_MSG_STRUCT mn_msg;
 	DATE_TIME_STRUCT tempTime;
-	uint8 previousMode = g_triggerRecord.op_mode;
+	uint8 previousMode = g_triggerRecord.opMode;
 	uint8 clearedFSRecord = NO;
 	uint8 choice = MessageBox(getLangText(VERIFY_TEXT), "START CAL DIAGNOSTICS?", MB_YESNO);
 
@@ -291,7 +291,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 		MessageBox(getLangText(STATUS_TEXT), getLangText(FACTORY_SETUP_COMPLETE_TEXT), MB_OK);
 
 		// Restore the previous mode
-		g_triggerRecord.op_mode = previousMode;
+		g_triggerRecord.opMode = previousMode;
 
 		// Reset display state
 		g_displayAlternateResultState = DEFAULT_RESULTS;

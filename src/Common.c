@@ -395,9 +395,8 @@ float HexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 
 	millibars = (float)((float)(data * 25)/(float)10000.0);
 	
-#if 1 // ns8100 - Scale appropriate to bit accuracy based on the original calc for 12-bit
+	// Scale appropriate to bit accuracy based on the original calc for 12-bit
 	millibars /= (float)((float)bitAccuracyMidpoint / (float)ACCURACY_12_BIT_MIDPOINT);
-#endif
 
 	return (millibars);
 }

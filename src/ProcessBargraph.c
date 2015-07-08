@@ -44,7 +44,7 @@ void StartNewBargraph(void)
 	// Get the address of an empty Ram summary
 	if (GetRamSummaryEntry(&g_bargraphSummaryPtr) == FALSE)
 	{
-		debug("%s: Out of Ram Summary Entrys\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo");
+		debug("%s: Out of Ram Summary Entrys\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo");
 		return;
 	}
 
@@ -103,7 +103,7 @@ void MoveBarIntervalDataToFile(void)
 	{
 		if (g_fileAccessLock != AVAILABLE)
 		{
-			if (g_triggerRecord.op_mode == BARGRAPH_MODE) { ReportFileSystemAccessProblem("Save Bar Interval"); }
+			if (g_triggerRecord.opMode == BARGRAPH_MODE) { ReportFileSystemAccessProblem("Save Bar Interval"); }
 			else { ReportFileSystemAccessProblem("Save Combo Bar Interval"); }
 		}
 		else // (g_fileAccessLock == AVAILABLE)
@@ -132,7 +132,7 @@ void MoveBarIntervalDataToFile(void)
 			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 			close(bargraphFileHandle);
 
-			debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
+			debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 			//g_fileAccessLock = AVAILABLE;
 			ReleaseSpi1MutexLock();
@@ -194,7 +194,7 @@ void MoveSummaryIntervalDataToFile(void)
 
 	if (g_fileAccessLock != AVAILABLE)
 	{
-		if (g_triggerRecord.op_mode == BARGRAPH_MODE) { ReportFileSystemAccessProblem("Save Sum Interval"); }
+		if (g_triggerRecord.opMode == BARGRAPH_MODE) { ReportFileSystemAccessProblem("Save Sum Interval"); }
 		else { ReportFileSystemAccessProblem("Save Combo Sum Interval"); }
 	}
 	else // (g_fileAccessLock == AVAILABLE)
@@ -228,7 +228,7 @@ void MoveSummaryIntervalDataToFile(void)
 		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(bargraphFileHandle);
 
-		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
+		debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
@@ -829,7 +829,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 
 	if (g_fileAccessLock != AVAILABLE)
 	{
-		if (g_triggerRecord.op_mode == BARGRAPH_MODE) { ReportFileSystemAccessProblem("Save Bar Start"); }
+		if (g_triggerRecord.opMode == BARGRAPH_MODE) { ReportFileSystemAccessProblem("Save Bar Start"); }
 		else { ReportFileSystemAccessProblem("Save Combo Bar Start"); }
 	}
 	else // (g_fileAccessLock == AVAILABLE)
@@ -843,7 +843,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 		bargraphFileHandle = GetEventFileHandle(g_pendingBargraphRecord.summary.eventNumber, CREATE_EVENT_FILE);
 
 		if (bargraphFileHandle == -1)
-		{ debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph"); }
+		{ debugErr("Failed to get a new file handle for the current %s event\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph"); }
 
 		// Write in the current but unfinished event record to provide an offset to start writing in the data
 		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
@@ -851,7 +851,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(bargraphFileHandle);
 
-		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
+		debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
@@ -859,7 +859,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 		// Consume event number (also allow other events to be recorded during a Combo - Bargraph session)
 		StoreCurrentEventNumber();
 
-		if (g_triggerRecord.op_mode == COMBO_MODE)
+		if (g_triggerRecord.opMode == COMBO_MODE)
 		{
 			// Update the Waveform pending record with the new event number to use
 			g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
@@ -878,7 +878,7 @@ void MoveEndOfBargraphEventRecordToFile(void)
 
 	if (g_fileAccessLock != AVAILABLE)
 	{
-		if (g_triggerRecord.op_mode == BARGRAPH_MODE) { ReportFileSystemAccessProblem("Save Bar End"); }
+		if (g_triggerRecord.opMode == BARGRAPH_MODE) { ReportFileSystemAccessProblem("Save Bar End"); }
 		else { ReportFileSystemAccessProblem("Save Combo Bar End"); }
 	}
 	else // (g_fileAccessLock == AVAILABLE)
@@ -895,7 +895,7 @@ void MoveEndOfBargraphEventRecordToFile(void)
 
 		g_pendingBargraphRecord.summary.captured.endTime = GetCurrentTime();
 
-		if (g_triggerRecord.op_mode == COMBO_MODE)
+		if (g_triggerRecord.opMode == COMBO_MODE)
 		{
 			// Mark Combo - Waveform event numbers captured
 			if ((g_pendingBargraphRecord.summary.eventNumber + 1) == g_nextEventNumberToUse)
@@ -939,7 +939,7 @@ void MoveEndOfBargraphEventRecordToFile(void)
 		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
 		close(bargraphFileHandle);
 
-		debug("%s event file closed\r\n", (g_triggerRecord.op_mode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
+		debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
 #if 1 // New method to save compressed data file
 		if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
