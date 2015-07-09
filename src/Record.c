@@ -432,7 +432,7 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr)
 	rec_ptr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
 	rec_ptr->saveCompressedData = SAVE_EXTRA_FILE_COMPRESSED_DATA;
 	rec_ptr->airScale = AIR_SCALE_LINEAR;
-	rec_ptr->flashWrapping = YES;
+	rec_ptr->flashWrapping = NO;
 	rec_ptr->autoMonitorMode = AUTO_NO_TIMEOUT;
 	rec_ptr->autoCalMode = AUTO_NO_CAL_TIMEOUT;
 	rec_ptr->alarmOneMode = ALARM_MODE_OFF;
