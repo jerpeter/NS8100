@@ -490,7 +490,8 @@ static inline void checkAlarms_ISR_Inline(void)
 				gpio_clr_gpio_pin(ALARM_1_GPIO_PIN);
 			}
 		}
-		else // Alarm 1 is not active
+		// Check for Alarm 1 condition only if not processing a calibration pulse
+		else if (s_calPulse != YES)
 		{
 			// Check if seismic is enabled for Alarm 1 (bitwise operation)
 			if (g_unitConfig.alarmOneMode & ALARM_MODE_SEISMIC)
@@ -534,7 +535,8 @@ static inline void checkAlarms_ISR_Inline(void)
 				gpio_clr_gpio_pin(ALARM_2_GPIO_PIN);
 			}
 		}
-		else // Alarm 2 is not active
+		// Check for Alarm 2 condition only if not processing a calibration pulse
+		else if (s_calPulse != YES)
 		{
 			// Check if seismic is enabled for Alarm 2 (bitwise operation)
 			if (g_unitConfig.alarmTwoMode & ALARM_MODE_SEISMIC)
@@ -563,7 +565,7 @@ static inline void checkAlarms_ISR_Inline(void)
 				}
 			}
 		}
-	}				
+	}
 }
 
 ///----------------------------------------------------------------------------
