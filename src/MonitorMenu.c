@@ -101,7 +101,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 			if (g_unitConfig.flashWrapping == NO)
 			{
 				if (((g_monitorOperationMode == WAVEFORM_MODE) && (g_sdCardUsageStats.waveEventsLeft == 0)) ||
-					((g_monitorOperationMode == BARGRAPH_MODE) && (g_sdCardUsageStats.roomForBargraph == NO)) ||
+					((g_monitorOperationMode == BARGRAPH_MODE) && (g_sdCardUsageStats.barHoursLeft == 0)) ||
 					((g_monitorOperationMode == MANUAL_CAL_MODE) && (g_sdCardUsageStats.manualCalsLeft == 0)))
 				{
 					// Unable to store any more data in the selected mode
