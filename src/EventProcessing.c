@@ -1357,7 +1357,7 @@ void DeleteEventFileRecords(void)
 				else
 				{
 					eventsDeleted++;
-#if 1 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
+#if 0 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
 					g_execCycles++;
 #endif
 				}
@@ -1385,9 +1385,9 @@ void DeleteEventFileRecords(void)
 				else
 				{
 					eventsDeleted++;
-					#if 1 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
+#if 0 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
 					g_execCycles++;
-					#endif
+#endif
 				}
 			}
 		}

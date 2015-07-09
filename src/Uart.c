@@ -125,7 +125,7 @@ uint8 ModemPuts(uint8* byteData, uint32 dataLength, uint8 convertAsciiFlag)
 
 	for (dataDex = 0; dataDex < dataLength; dataDex++)
 	{
-#if 1 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
+#if 0 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
 		g_execCycles++;
 #endif
 		if (MODEM_SEND_FAILED == ModemPutc(*theData, convertAsciiFlag))

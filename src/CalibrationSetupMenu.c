@@ -120,7 +120,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 
 					WriteMapToLcd(g_mmap);
 
-#if 1 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
+#if 0 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
 					g_execCycles++;
 #endif
 					// Set to current half second

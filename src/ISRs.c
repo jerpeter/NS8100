@@ -295,7 +295,7 @@ void Usart_1_rs232_irq(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#if 1 // ET test
+#if 0 // ET test
 static uint32 s_testForForeverLoop = 0;
 static uint32 s_lastExecCycles = 0;
 #endif
@@ -332,7 +332,7 @@ void Soft_timer_tick_irq(void)
 		raiseSystemEventFlag(UPDATE_TIME_EVENT);
 	}
 
-#if 1 // ET test
+#if 0 // ET test
 	// Check if the exec cycles if the same meaning that the main loop isn't running
 	if (g_execCycles == s_lastExecCycles)
 	{
