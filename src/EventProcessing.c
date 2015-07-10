@@ -2364,7 +2364,7 @@ int writeWithSizeFix(int file, void* bufferPtr, uint32 length)
 
 			if (writeCount != ATMEL_FILESYSTEM_ACCESS_LIMIT)
 			{
-				if (writeCount != -1) { debugErr("Atmel Read Data size incorrect (%d)\r\n", readCount); }
+				if (writeCount != -1) { debugErr("Atmel Read Data size incorrect (%d)\r\n", writeCount); }
 				return (-1);
 			}
 
@@ -2377,7 +2377,7 @@ int writeWithSizeFix(int file, void* bufferPtr, uint32 length)
 
 			if (writeCount != (int)remainingByteLengthToWrite)
 			{
-				if (writeCount != -1) { debugErr("Atmel Read Data size incorrect (%d)\r\n", readCount); }
+				if (writeCount != -1) { debugErr("Atmel Read Data size incorrect (%d)\r\n", writeCount); }
 				return (-1);
 			}
 
