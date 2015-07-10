@@ -182,57 +182,119 @@ void InitDataBuffs(uint8 opMode)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 CalcSumFreq(uint16* dataPtr, uint32 sampleRate, uint16* startAddrPtr, uint16* endAddrPtr)
+uint16 CalcSumFreq(uint16* peakPtr, uint32 sampleRate, uint16* startAddrPtr, uint16* endAddrPtr)
 {
 	uint16* samplePtr;
-	uint32 dataCount = 0;
+	uint32 sampleCount = 0;
 	uint16 freq = 0;
 
-	samplePtr = dataPtr;
+	//------------------------------------------------------------------------------------
+	// Note: A/D data is RAW and has only been adjusted for Bit Accuracy
+	//------------------------------------------------------------------------------------
+	// g_bitAccuracyMidpoint reference tracks the current midpoint level for the current bit accuracy setting
+	// 16-bit results in g_bitAccuracyMidpoint being equal to 0x8000
+	// 14-bit results in g_bitAccuracyMidpoint being equal to 0x2000
+	// 12-bit results in g_bitAccuracyMidpoint being equal to 0x800
+	// 10-bit results in g_bitAccuracyMidpoint being equal to 0x200
 
-	if (*samplePtr >= (g_bitAccuracyMidpoint + FREQ_VALID_PEAK))
+	//------------------------------------------------------------------------------------
+	// Set working pointer to the peak
+	//------------------------------------------------------------------------------------
+	samplePtr = peakPtr;
+
+	//------------------------------------------------------------------------------------
+	// Check if peak is above the midpoint adjusted by valid peak count
+	//------------------------------------------------------------------------------------
+	if (*samplePtr >= (g_bitAccuracyMidpoint + FREQ_VALID_PEAK)) // FREQ_VALID_PEAK = 4
 	{
-		while ((*samplePtr >= (g_bitAccuracyMidpoint + FREQ_CROSSOVER_BACKWARD)) && (samplePtr > (startAddrPtr + 4)))
+		//------------------------------------------------------------------------------------
+		// Continue while the A/D data is above the midpoint plus backwards crossover count
+		//------------------------------------------------------------------------------------
+		while ((*samplePtr >= (g_bitAccuracyMidpoint + FREQ_CROSSOVER_BACKWARD)) && (samplePtr > (startAddrPtr + 4))) // FREQ_CROSSOVER_BACKWARD = 2
 		{
+			// Decrement pointer by to get previous channel A/D reading
 			samplePtr -= 4;
-			dataCount++;
+
+			// Increment the sample count
+			sampleCount++;
 		}
 
-		samplePtr = dataPtr;
-		while ((*samplePtr >= (g_bitAccuracyMidpoint + FREQ_CROSSOVER_FORWARD)) && (samplePtr < (endAddrPtr - 4)))
+		//------------------------------------------------------------------------------------
+		// Reset working pointer to peak (also means the peak will be counted twice)
+		//------------------------------------------------------------------------------------
+		samplePtr = peakPtr;
+
+		//------------------------------------------------------------------------------------
+		// Continue while the A/D data is above the midpoint adjusted by forwards crossover count
+		//------------------------------------------------------------------------------------
+		while ((*samplePtr >= (g_bitAccuracyMidpoint + FREQ_CROSSOVER_FORWARD)) && (samplePtr < (endAddrPtr - 4))) // FREQ_CROSSOVER_FORWARD = 1
 		{
+			// Increment pointer by to get next channel A/D reading
 			samplePtr += 4;
-			dataCount++;
+
+			// Increment the sample count
+			sampleCount++;
 		}
 	}
-	else if (*samplePtr <= (g_bitAccuracyMidpoint - FREQ_VALID_PEAK))
+	//------------------------------------------------------------------------------------
+	// Check if peak is below the midpoint adjusted by valid peak count
+	//------------------------------------------------------------------------------------
+	else if (*samplePtr <= (g_bitAccuracyMidpoint - FREQ_VALID_PEAK)) // FREQ_VALID_PEAK = 4
 	{
-		while ((*samplePtr <= (g_bitAccuracyMidpoint - FREQ_CROSSOVER_BACKWARD)) && (samplePtr > (startAddrPtr + 4)))
+		//------------------------------------------------------------------------------------
+		// Continue while the A/D data is below the midpoint adjusted by backwards crossover count
+		//------------------------------------------------------------------------------------
+		while ((*samplePtr <= (g_bitAccuracyMidpoint - FREQ_CROSSOVER_BACKWARD)) && (samplePtr > (startAddrPtr + 4))) // FREQ_CROSSOVER_BACKWARD = 2
 		{
+			// Decrement pointer by to get previous channel A/D reading
 			samplePtr -= 4;
-			dataCount++;
+
+			// Increment the sample count
+			sampleCount++;
 		}
 
-		samplePtr = dataPtr;
-		while ((*samplePtr <= (g_bitAccuracyMidpoint - FREQ_CROSSOVER_FORWARD)) && (samplePtr < (endAddrPtr - 4)))
+		//------------------------------------------------------------------------------------
+		// Reset working pointer to peak (also means the peak will be counted twice)
+		//------------------------------------------------------------------------------------
+		samplePtr = peakPtr;
+
+		//------------------------------------------------------------------------------------
+		// Continue while the A/D data is below the midpoint adjusted by forwards crossover count
+		//------------------------------------------------------------------------------------
+		while ((*samplePtr <= (g_bitAccuracyMidpoint - FREQ_CROSSOVER_FORWARD)) && (samplePtr < (endAddrPtr - 4))) // FREQ_CROSSOVER_FORWARD = 1
 		{
+			// Increment pointer by to get next channel A/D reading
 			samplePtr += 4;
-			dataCount++;
+
+			// Increment the sample count
+			sampleCount++;
 		}
 	}
+	//------------------------------------------------------------------------------------
+	// Peak is too low for finding frequency
+	//------------------------------------------------------------------------------------
 	else
 	{
+		//------------------------------------------------------------------------------------
 		// Peak was less than 4 counts, assume to be noise
-		return ((uint16)0);
+		//------------------------------------------------------------------------------------
+		return (0);
 	}
 
-	// total counts between 0 crossings
-	dataCount = (uint32)((dataCount - 1) * 2);
+	//------------------------------------------------------------------------------------
+	// Total counts between 0 crossings (subtract 1 for duplicate peak being counted)
+	//------------------------------------------------------------------------------------
+	sampleCount = (uint32)((sampleCount - 1) * 2);
 
-	// Whole part of freq shifted to make one decimal place.
-	if (dataCount > 0)
+	//------------------------------------------------------------------------------------
+	// Verify a divide by zero can't occur
+	//------------------------------------------------------------------------------------
+	if (sampleCount > 0)
 	{
-		freq = (uint16)(((float)(sampleRate * 10) / (float)dataCount));
+		//------------------------------------------------------------------------------------
+		// Calculate frequency with given sample rate and multiply by 10 to provide one decimal place but save as an integer
+		//------------------------------------------------------------------------------------
+		freq = (uint16)(((float)(sampleRate * 10) / (float)sampleCount));
 	}
 
 	return (freq);
