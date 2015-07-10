@@ -750,8 +750,8 @@ void ushell_cmd_free_space( void )
       if( g_s_arg[0][0]=='l' )        // Choose command option
       {
          // Long and exact function
-         //printf_special("Free space: %llu Bytes / %llu Bytes\n\r", (uint64_t)(nav_partition_freespace() << FS_SHIFT_B_TO_SECTOR), (uint64_t)(nav_partition_space() << FS_SHIFT_B_TO_SECTOR));
-	      sprintf((char*)&pBuffer[0], "Free space: %llu Bytes / %llu Bytes\n\r", (uint64_t)(nav_partition_freespace() << FS_SHIFT_B_TO_SECTOR), (uint64_t)(nav_partition_space() << FS_SHIFT_B_TO_SECTOR)); usart_write_line((&AVR32_USART0), (char*)&pBuffer[0]);
+         //printf_special("Free space: %llu Bytes / %llu Bytes\n\r", (uint64_t)(nav_partition_freespace() * SECTOR_SIZE_IN_BYTES), (uint64_t)(nav_partition_space() * SECTOR_SIZE_IN_BYTES));
+	      sprintf((char*)&pBuffer[0], "Free space: %llu Bytes / %llu Bytes\n\r", (uint64_t)(nav_partition_freespace() * SECTOR_SIZE_IN_BYTES), (uint64_t)(nav_partition_space() * SECTOR_SIZE_IN_BYTES)); usart_write_line((&AVR32_USART0), (char*)&pBuffer[0]);
       }
       else
       {

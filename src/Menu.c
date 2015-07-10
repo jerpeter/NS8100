@@ -1128,7 +1128,7 @@ void DisplayFlashUsageStats(void)
 	else
 		sprintf(&sizeFreeStr[0], "%s: %4.0fMB %d%%", getLangText(FREE_TEXT),((float)g_sdCardUsageStats.sizeFree / (float)1000000), g_sdCardUsageStats.percentFree);
 
-	sprintf(&message[0], "%s       %s %s %s: %s", getLangText(EVENT_DATA_TEXT),sizeUsedStr, sizeFreeStr, getLangText(WRAPPED_TEXT),(g_sdCardUsageStats.wrapped == YES) ? "YES" : "NO");
+	sprintf(&message[0], "%s       %s %s %s: %s", getLangText(EVENT_DATA_TEXT),sizeUsedStr, sizeFreeStr, getLangText(WRAPPED_TEXT),(g_unitConfig.flashWrapping == YES) ? "YES" : "NO");
 
 	MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
 

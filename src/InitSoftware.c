@@ -408,7 +408,7 @@ void InitSoftwareSettings_NS8100(void)
 	// Update Flash Usage Stats
 	//-------------------------------------------------------------------------
 	OverlayMessage(getLangText(STATUS_TEXT), "CALCULATING EVENT STORAGE SPACE FREE", 0);
-	GetSDCardUsageStats(); debug("Flash Usage Stats updated\r\n");
+	GetSDCardUsageStats(); debug("Flash Usage Stats updated (Cluster size: %d bytes)\r\n", g_sdCardUsageStats.clusterSizeInBytes);
 
 	//-------------------------------------------------------------------------
 	// Check for Timer mode activation

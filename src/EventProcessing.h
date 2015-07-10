@@ -42,6 +42,10 @@
 	{	flashPtr = (uint16*)((uint32)flashPtr - (uint32)FLASH_EVENT_END); 	\
 		flashPtr = (uint16*)((uint32)FLASH_EVENT_START + (uint32)flashPtr); }
 
+#define RESERVED_FILESYSTEM_SIZE_IN_BYTES	16777216 // 2^24 aka 16 MB, can be evenly divisible by any fat sector size
+#define ONE_MEGABYTE_SIZE		1048576
+#define SECTOR_SIZE_IN_BYTES	FS_SIZE_OF_SECTOR
+
 enum {
 	EVENT_CACHE_FAILURE = 0,
 	EVENT_CACHE_SUCCESS,
@@ -56,8 +60,7 @@ typedef struct
 	uint16 manualCalsLeft;
 	uint8 percentUsed;
 	uint8 percentFree;
-	BOOLEAN wrapped;
-	BOOLEAN roomForBargraph;
+	uint16 clusterSizeInBytes;
 } FLASH_USAGE_STRUCT;
 
 typedef enum {
