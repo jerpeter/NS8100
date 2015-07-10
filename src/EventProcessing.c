@@ -2350,6 +2350,47 @@ int readWithSizeFix(int file, void* bufferPtr, uint32 length)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+int writeWithSizeFix(int file, void* bufferPtr, uint32 length)
+{
+	uint32 remainingByteLengthToWrite = length;
+	uint8* writeLocationPtr = (uint8*)bufferPtr;
+	int writeCount = 0;
+
+	while (remainingByteLengthToWrite)
+	{
+		if (remainingByteLengthToWrite > ATMEL_FILESYSTEM_ACCESS_LIMIT)
+		{
+			writeCount = write(file, writeLocationPtr, ATMEL_FILESYSTEM_ACCESS_LIMIT);
+
+			if (writeCount != ATMEL_FILESYSTEM_ACCESS_LIMIT)
+			{
+				if (writeCount != -1) { debugErr("Atmel Read Data size incorrect (%d)\r\n", readCount); }
+				return (-1);
+			}
+
+			remainingByteLengthToWrite -= ATMEL_FILESYSTEM_ACCESS_LIMIT;
+			writeLocationPtr += ATMEL_FILESYSTEM_ACCESS_LIMIT;
+		}
+		else // Remaining data size is less than the access limit
+		{
+			writeCount = write(file, writeLocationPtr, remainingByteLengthToWrite);
+
+			if (writeCount != (int)remainingByteLengthToWrite)
+			{
+				if (writeCount != -1) { debugErr("Atmel Read Data size incorrect (%d)\r\n", readCount); }
+				return (-1);
+			}
+
+			remainingByteLengthToWrite = 0;
+		}
+	}
+
+	return (length);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber)
 {
 #if 1
