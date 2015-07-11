@@ -138,11 +138,9 @@ void InitMcp23018(void)
 	WriteMcp23018(IO_ADDRESS_KPD, INTCONA, 0x00);
 	WriteMcp23018(IO_ADDRESS_KPD, INTCONB, 0x00);
 
-#if 0 // Prevent enabling interrupt on init (done at the end of Software Init now)
-	// Interrupt Enable on Change
-	WriteMcp23018(IO_ADDRESS_KPD, GPINTENA, 0x0F);
-	WriteMcp23018(IO_ADDRESS_KPD, GPINTENB, 0xFF);
-#endif
+	// Disable Interrupt Enable on Change for now (enabled at the end of Software Init now)
+	WriteMcp23018(IO_ADDRESS_KPD, GPINTENA, 0x00);
+	WriteMcp23018(IO_ADDRESS_KPD, GPINTENB, 0x00);
 
 	// Clear any interrupt generation
 	ReadMcp23018(IO_ADDRESS_KPD, INTFA);
