@@ -198,7 +198,11 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	
 	// Add in the flash wrapping option
+#if 0 // Normal
 	cfg.flashWrapping = g_unitConfig.flashWrapping;
+#else // Forcing flash wrapping to be disabled
+	cfg.flashWrapping = NO;
+#endif
 
 	// Spare fields, just use as a data marker
 	cfg.unused[0] = 0x0A;
@@ -1045,7 +1049,11 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			if ((cfg.flashWrapping == NO) || (cfg.flashWrapping == YES))
 			{			
+#if 0 // Normal
 				g_unitConfig.flashWrapping = cfg.flashWrapping;
+#else // Forcing flash wrapping to be disabled
+				g_unitConfig.flashWrapping = NO;
+#endif
 			}
 			else
 			{
