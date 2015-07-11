@@ -582,7 +582,7 @@ void HandleMidnightEvent(void)
 				{
 					OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
 				}
-				else
+				else // Handle midnight cal while in Waveform mode
 				{
 					// Stop data transfer
 					StopDataClock();
@@ -627,21 +627,6 @@ void HandleMidnightEvent(void)
 			// If the user was in the Summary list menu, reset the global
 			g_summaryListMenuActive = NO;
 
-			// Perform Cal while in monitor mode
-			OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
-
-#if 1 // New
-			GetManualCalibration();
-#else // Crap
-			// Set flag to alert the Results menu which action to take after a cal pulse result is received
-			if (g_sampleProcessing == ACTIVE_STATE)
-			{
-				g_enterMonitorModeAfterMidnightCal = YES;
-
-				// Handle and finish any processing
-				StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
-			}
-
 			if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 			{
 				g_enterMonitorModeAfterMidnightCal = NO;
@@ -654,13 +639,15 @@ void HandleMidnightEvent(void)
 			}
 			else
 			{
-				ForcedCalibration();
+				// Perform Midnight calibration (outside of active monitoring)
+				OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
+
+				GetManualCalibration();
 			}
-#endif
 		}
 	}
 
-	// Check if Aut Dialout processing is not active
+	// Check if Auto Dialout processing is not active
 	if (g_autoDialoutState == AUTO_DIAL_IDLE)
 	{
 		// At midnight reset the modem (to better handle problems with USR modems)
