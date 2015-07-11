@@ -309,7 +309,7 @@ void MoveWaveformEventToFile(void)
 						SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 						// Done writing the event file, close the file handle
-						g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+						g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 						close(waveformFileHandle);
 
 #if 1 // New method to save compressed data file
@@ -331,7 +331,7 @@ void MoveWaveformEventToFile(void)
 							SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 							// Done writing the event file, close the file handle
-							g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+							g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 							close(g_globalFileHandle);
 						}
 #endif

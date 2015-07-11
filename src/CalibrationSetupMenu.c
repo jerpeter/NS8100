@@ -107,7 +107,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 			while ((key != ENTER_KEY) && (key != ESC_KEY))
 			{
 				// Check if a half second has gone by
-				if (tempTicks != g_rtcSoftTimerTickCount)
+				if (tempTicks != g_lifetimeHalfSecondTickCount)
 				{
 					// Update the current time since we never leave the loop
 					UpdateCurrentTime();
@@ -124,7 +124,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 					g_execCycles++;
 #endif
 					// Set to current half second
-					tempTicks = g_rtcSoftTimerTickCount;
+					tempTicks = g_lifetimeHalfSecondTickCount;
 				}
 
 				key = GetKeypadKey(CHECK_ONCE_FOR_KEY);

@@ -309,7 +309,7 @@ void Soft_timer_tick_irq(void)
 	//debugRaw("`");
 
 	// Increment the lifetime soft timer tick count
-	g_rtcSoftTimerTickCount++;
+	g_lifetimeHalfSecondTickCount++;
 
 	// Every tick raise the flag to check soft timers
 	raiseTimerEventFlag(SOFT_TIMER_CHECK_EVENT);
@@ -327,7 +327,7 @@ void Soft_timer_tick_irq(void)
 	}
 
 	// Every so often flag for updating to the External RTC time.
-	if (++g_rtcCurrentTickCount >= UPDATE_TIME_EVENT_THRESHOLD)
+	if (++g_rtcTickCountSinceLastExternalUpdate >= UPDATE_TIME_EVENT_THRESHOLD)
 	{
 		raiseSystemEventFlag(UPDATE_TIME_EVENT);
 	}
@@ -648,7 +648,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		{
 			//debug("--> Trigger Found! %x %x %x %x\r\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
 			//usart_write_char(&AVR32_USART1, '$');
-			g_testTimeSinceLastTrigger = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastTrigger = g_lifetimeHalfSecondTickCount;
 			
 			// Check if this event was triggered by an external trigger signal
 			if (g_externalTrigger == YES)
@@ -839,7 +839,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				// Check if on high sensitivity and if so set to low sensitivity for Cal pulse
 				if (g_triggerRecord.srec.sensitivity == HIGH) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
 
-				g_testTimeSinceLastCalPulse = g_rtcSoftTimerTickCount;
+				g_testTimeSinceLastCalPulse = g_lifetimeHalfSecondTickCount;
 
 				// Swap to alternate timer/counter for default 1024 sample rate for Cal
 #if INTERNAL_SAMPLING_SOURCE

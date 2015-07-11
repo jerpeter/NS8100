@@ -393,7 +393,7 @@ void AutoDialoutStateMachine(void)
 			UartPuts((char *)&g_CRLF, CRAFT_COM_PORT);
 
 			// Update timer to current tick count
-			timer = g_rtcSoftTimerTickCount;
+			timer = g_lifetimeHalfSecondTickCount;
 
 			// Advance to Connecting state
 			g_autoDialoutState = AUTO_DIAL_CONNECTING;
@@ -407,18 +407,18 @@ void AutoDialoutStateMachine(void)
 			if (READ_DCD == CONNECTION_ESTABLISHED)
 			{
 				// Update timer to current tick count
-				timer = g_rtcSoftTimerTickCount;
+				timer = g_lifetimeHalfSecondTickCount;
 
 				// Advance to Connected state
 				g_autoDialoutState = AUTO_DIAL_CONNECTED;
 			}
 			// Check if the timer has surpassed 1 minute
-			else if ((g_rtcSoftTimerTickCount - timer) > (1 * TICKS_PER_MIN))
+			else if ((g_lifetimeHalfSecondTickCount - timer) > (1 * TICKS_PER_MIN))
 			{
 				// Couldn't establish a connection, give up and retry later
 
 				// Update timer to current tick count
-				timer = g_rtcSoftTimerTickCount;
+				timer = g_lifetimeHalfSecondTickCount;
 
 				// Advance to Retry state
 				g_autoDialoutState = AUTO_DIAL_RETRY;
@@ -430,7 +430,7 @@ void AutoDialoutStateMachine(void)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_CONNECTED:
 			// Check if the current connection has been established for 5 seconds
-			if ((g_rtcSoftTimerTickCount - timer) > (5 * TICKS_PER_SEC))
+			if ((g_lifetimeHalfSecondTickCount - timer) > (5 * TICKS_PER_SEC))
 			{
 				// Make sure transfer flag is set to ascii
 				g_binaryXferFlag = NO_CONVERSION;
@@ -439,7 +439,7 @@ void AutoDialoutStateMachine(void)
 				handleGAD(&msg);
 
 				// Update timer to current tick count
-				timer = g_rtcSoftTimerTickCount;
+				timer = g_lifetimeHalfSecondTickCount;
 
 				// Advance to Response state
 				g_autoDialoutState = AUTO_DIAL_RESPONSE;
@@ -460,19 +460,19 @@ void AutoDialoutStateMachine(void)
 			if (g_modemStatus.systemIsLockedFlag == NO)
 			{
 				// Update timer to current tick count
-				timer = g_rtcSoftTimerTickCount;
+				timer = g_lifetimeHalfSecondTickCount;
 
 				// Advance to Active state
 				g_autoDialoutState = AUTO_DIAL_ACTIVE;
 			}
 			// Check if more than 30 seconds have elapsed without a successful unlock command
-			else if ((g_rtcSoftTimerTickCount - timer) > (30 * TICKS_PER_SEC))
+			else if ((g_lifetimeHalfSecondTickCount - timer) > (30 * TICKS_PER_SEC))
 			{
 				// Send out GAD command again
 				handleGAD(&msg);
 
 				// Update timer to current tick count
-				timer = g_rtcSoftTimerTickCount;
+				timer = g_lifetimeHalfSecondTickCount;
 
 				// Advance to Wait state
 				g_autoDialoutState = AUTO_DIAL_WAIT;
@@ -493,16 +493,16 @@ void AutoDialoutStateMachine(void)
 			if (g_modemStatus.systemIsLockedFlag == NO)
 			{
 				// Update timer to current tick count
-				timer = g_rtcSoftTimerTickCount;
+				timer = g_lifetimeHalfSecondTickCount;
 
 				// Advance to Active state
 				g_autoDialoutState = AUTO_DIAL_ACTIVE;
 			}
 			// Check if more than 30 seconds have elapsed without a successful unlock command (again, 2nd attempt)
-			else if ((g_rtcSoftTimerTickCount - timer) > (30 * TICKS_PER_SEC))
+			else if ((g_lifetimeHalfSecondTickCount - timer) > (30 * TICKS_PER_SEC))
 			{
 				// Update timer to current tick count
-				timer = g_rtcSoftTimerTickCount;
+				timer = g_lifetimeHalfSecondTickCount;
 
 				// Advance to Retry state
 				g_autoDialoutState = AUTO_DIAL_RETRY;
@@ -534,7 +534,7 @@ void AutoDialoutStateMachine(void)
 				ModemResetProcess();
 
 				// Update timer to current tick count
-				timer = g_rtcSoftTimerTickCount;
+				timer = g_lifetimeHalfSecondTickCount;
 
 				// Advance to Sleep state
 				g_autoDialoutState = AUTO_DIAL_SLEEP;
@@ -546,10 +546,10 @@ void AutoDialoutStateMachine(void)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_SLEEP:
 			// Check if the retry time has expired
-			if ((g_rtcSoftTimerTickCount - timer) > (g_modemSetupRecord.retryTime * TICKS_PER_MIN))
+			if ((g_lifetimeHalfSecondTickCount - timer) > (g_modemSetupRecord.retryTime * TICKS_PER_MIN))
 			{
 				// Update timer to current tick count
-				timer = g_rtcSoftTimerTickCount;
+				timer = g_lifetimeHalfSecondTickCount;
 
 				// Start back at Init state
 				g_autoDialoutState = AUTO_DIAL_INIT;
@@ -567,10 +567,10 @@ void AutoDialoutStateMachine(void)
 				g_modemDataTransfered = NO;
 
 				// Update timer to current tick count
-				timer = g_rtcSoftTimerTickCount;
+				timer = g_lifetimeHalfSecondTickCount;
 			}
 			// Check if data has not been transmitted in the last 5 minutes
-			else if ((g_rtcSoftTimerTickCount - timer) > (5 * TICKS_PER_MIN))
+			else if ((g_lifetimeHalfSecondTickCount - timer) > (5 * TICKS_PER_MIN))
 			{
 				// No data has been transfered in 5 minutes, tear down connection
 

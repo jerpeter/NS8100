@@ -614,7 +614,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 				readWithSizeFix(languageFile, (uint8*)&g_languageTable[0], fsaccess_file_get_size(languageFile));
 			}
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(languageFile);
 		}
 
@@ -683,7 +683,7 @@ void CheckBootloaderAppPresent(void)
 		{
 			debug("Bootloader found and available\r\n");
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(file);
 		}
 		else

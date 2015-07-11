@@ -163,7 +163,7 @@ void CopyValidFlashEventSummariesToRam(void)
 						debugWarn("Event File: %s is not valid for this unit.\r\n", fileName);
 					}
 
-					g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+					g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 					close(eventFile);
 #endif
 			}
@@ -195,7 +195,7 @@ void DumpSummaryListFileToEventBuffer(void)
 			debug("Dumping Summary list with file size: %d\r\n", nav_file_lgt());
 
 			readWithSizeFix(g_summaryList.file, summaryListCache, nav_file_lgt());
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(g_summaryList.file);
 		}
 		else
@@ -236,7 +236,7 @@ void AddEventToSummaryList(EVT_RECORD* event)
 		g_summaryList.file = open(s_summaryListFileName, O_APPEND);
 		//file_seek(0, FS_SEEK_END);
 		write(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(g_summaryList.file);
 	}
 	else
@@ -308,7 +308,7 @@ void CacheNextSummaryListEntry(void)
 				}
 			}
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(g_summaryList.file);
 		}
 		else
@@ -392,7 +392,7 @@ void CachePreviousSummaryListEntry(void)
 				debug("Start of Summary list entries\r\n");
 			}
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(g_summaryList.file);
 		}
 		else
@@ -484,7 +484,7 @@ void CacheSummaryEntryByIndex(uint16 index)
 				//debug("Caching Summary File event: %d\r\n", g_summaryList.cachedEntry.eventNumber);
 			}
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(g_summaryList.file);
 		}
 		else
@@ -541,7 +541,7 @@ SUMMARY_LIST_ENTRY_STRUCT* GetSummaryFromSummaryList(uint16 eventNumber)
 				debugErr("No Summary List entry found for Event Number: %d\r\n", eventNumber);
 			}
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(g_summaryList.file);
 		}
 		else
@@ -613,7 +613,7 @@ void InitSummaryListFile(void)
 		ReportFileAccessProblem(s_summaryListFileName);
 	}
 
-	g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+	g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 	close(g_summaryList.file);
 	//nav_select(FS_NAV_ID_DEFAULT);
 }
@@ -1140,7 +1140,7 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 				}
 			}
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(eventFile);
 		}
 
@@ -1195,7 +1195,7 @@ int OpenEventFile(uint16 eventNumber)
 ///----------------------------------------------------------------------------
 void CloseEventFile(int eventFile)
 {
-	g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+	g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 	close(eventFile);
 
 	//g_fileAccessLock = AVAILABLE;
@@ -1274,7 +1274,7 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 				debug("Found Valid Event File: %s\r\n", fileName);
 			}
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(eventFile);
 		}
 
@@ -1453,7 +1453,7 @@ void CacheEventDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOf
 		file_seek(dataOffset, FS_SEEK_SET);
 		readWithSizeFix(eventFile, dataBuffer, dataSize);
 
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(eventFile);
 	}
 
@@ -1488,7 +1488,7 @@ uint32 GetERDataSize(uint16 eventNumber)
 	{
 		size = nav_file_lgt();
 
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(eventFile);
 	}
 
@@ -1525,7 +1525,7 @@ void CacheERDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffse
 		file_seek(dataOffset, FS_SEEK_SET);
 		readWithSizeFix(eventFile, dataBuffer, dataSize);
 
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(eventFile);
 	}
 
@@ -1572,7 +1572,7 @@ void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 			file_seek(sizeof(EVT_RECORD), FS_SEEK_SET);
 			readWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], dataSize);
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(eventFile);
 		}
 
@@ -1715,7 +1715,7 @@ uint8 CacheEventToRam(uint16 eventNumber, EVT_RECORD* eventRecordPtr)
 		{
 			readWithSizeFix(eventFile, (uint8*)eventRecordPtr, sizeof(EVT_RECORD));
 			readWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], (fsaccess_file_get_size(eventFile) - sizeof(EVT_RECORD)));
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(eventFile);
 		}
 
@@ -1776,7 +1776,7 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 				validFile = YES;
 			}
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(eventFile);
 		}
 
@@ -2449,7 +2449,7 @@ void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber)
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 		// Done writing the event file, close the file handle
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(fileHandle);
 		fat_cache_flush();
 	}

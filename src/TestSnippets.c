@@ -195,9 +195,9 @@ void TestSnippetsAfterInit(void)
 		sd_mmc_spi_internal_init();
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 
-		timedAccess = g_rtcSoftTimerTickCount;
+		timedAccess = g_lifetimeHalfSecondTickCount;
 		
-		while (g_rtcSoftTimerTickCount < (timedAccess + 10))
+		while (g_lifetimeHalfSecondTickCount < (timedAccess + 10))
 		{
 			FAT32_InitDrive();
 			if (FAT32_InitFAT() == FALSE)
@@ -235,9 +235,9 @@ void TestSnippetsAfterInit(void)
 			debugErr("FAT32 Initialization failed!\n\r");
 		}
 
-		timedAccess = g_rtcSoftTimerTickCount;
+		timedAccess = g_lifetimeHalfSecondTickCount;
 		
-		while (g_rtcSoftTimerTickCount < (timedAccess + 10))
+		while (g_lifetimeHalfSecondTickCount < (timedAccess + 10))
 		{
 			monitorLogFile = fl_fopen("C:\\Logs\\TestLogRead.ns8", "r");
 			if (monitorLogFile == NULL) { debugErr("Test Read file not found\n"); }
@@ -275,9 +275,9 @@ void TestSnippetsAfterInit(void)
 			debugErr("FAT32 Initialization failed!\n\r");
 		}
 
-		timedAccess = g_rtcSoftTimerTickCount;
+		timedAccess = g_lifetimeHalfSecondTickCount;
 		
-		while (g_rtcSoftTimerTickCount < (timedAccess + 10))
+		while (g_lifetimeHalfSecondTickCount < (timedAccess + 10))
 		{
 			monitorLogFile = fl_fopen("C:\\Logs\\TestLogWrite.ns8", "a+");
 			if (monitorLogFile == NULL) { debugErr("Test Write file not opened\n"); }

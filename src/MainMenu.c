@@ -287,7 +287,7 @@ void PromptUserWaitingForSensorWarmup(void)
 	sprintf((char*)g_spareBuffer, "%s ", getLangText(ZEROING_SENSORS_TEXT));
 	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
 
-	while ((volatile uint32)g_rtcSoftTimerTickCount < 120)
+	while ((volatile uint32)g_lifetimeHalfSecondTickCount < 120)
 	{
 		strcat((char*)g_spareBuffer, ".");
 		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
@@ -313,11 +313,11 @@ void PromptUserWaitingForSensorZeroing(void)
 		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
 	}
 
-	if (g_rtcSoftTimerTickCount < 120)
+	if (g_lifetimeHalfSecondTickCount < 120)
 	{
 		debugWarn("Sensors still warming up\r\n");
 
-		while ((volatile uint32)g_rtcSoftTimerTickCount < 120)
+		while ((volatile uint32)g_lifetimeHalfSecondTickCount < 120)
 		{
 			strcat((char*)g_spareBuffer, ".");
 			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));

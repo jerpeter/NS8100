@@ -129,7 +129,7 @@ void MoveBarIntervalDataToFile(void)
 
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(bargraphFileHandle);
 
 			debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
@@ -225,7 +225,7 @@ void MoveSummaryIntervalDataToFile(void)
 
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(bargraphFileHandle);
 
 		debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
@@ -848,7 +848,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 		// Write in the current but unfinished event record to provide an offset to start writing in the data
 		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(bargraphFileHandle);
 
 		debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
@@ -936,7 +936,7 @@ void MoveEndOfBargraphEventRecordToFile(void)
 
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(bargraphFileHandle);
 
 		debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
@@ -960,7 +960,7 @@ void MoveEndOfBargraphEventRecordToFile(void)
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 			// Done writing the event file, close the file handle
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(g_globalFileHandle);
 		}
 #endif

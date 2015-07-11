@@ -232,7 +232,7 @@ uint8 UpdateCurrentTime(void)
 	// Check if SPI1 access is available (actual lock is inside Get External RTC time)
 	if (g_spi1AccessLock == AVAILABLE)
 	{
-		g_rtcCurrentTickCount = 0;
+		g_rtcTickCountSinceLastExternalUpdate = 0;
 		g_lastReadExternalRtcTime = GetExternalRtcTime();
 		status = PASSED;
 	}
@@ -246,7 +246,7 @@ uint8 UpdateCurrentTime(void)
 DATE_TIME_STRUCT GetCurrentTime(void)
 {
 	DATE_TIME_STRUCT currentTime = g_lastReadExternalRtcTime;
-	uint32 accumulatedSeconds = (g_rtcCurrentTickCount / 2);
+	uint32 accumulatedSeconds = (g_rtcTickCountSinceLastExternalUpdate / 2);
 	struct tm convertTime;
 	time_t epochTime;
 

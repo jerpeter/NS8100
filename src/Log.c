@@ -392,7 +392,7 @@ void AppendMonitorLogEntryFile(void)
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 			// Done writing, close the monitor log file
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(monitorLogFile);
 
 			debug("Monitor log entry appended to log file\r\n");
@@ -465,7 +465,7 @@ void AppendMonitorLogEntryFile(void)
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 			// Done writing, close the monitor log file
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(monitorLogHumanReadableFile);
 
 			debug("Monitor log readable entry appended to log file\r\n");
@@ -552,7 +552,7 @@ void InitMonitorLogTableFromLogFile(void)
 			}
 
 			// Done reading, close the monitor log file
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(monitorLogFile);
 
 			debug("Found Valid Monitor Log Entries, ID's: %d --> %d\r\n", lowestId, highestId);
@@ -622,7 +622,7 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 			// Done writing, close the on/off log file
-			g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(onOffLogHumanReadableFile);
 		}
 
@@ -672,7 +672,7 @@ void WriteDebugBufferToFile(void)
 				SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
 				// Done writing, close the debug log file
-				g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+				g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 				close(debugLogFile);
 			}
 

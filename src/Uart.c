@@ -63,13 +63,13 @@ uint8 ModemPutc(uint8 byteData, uint8 convertAsciiFlag)
 	uint8 status = MODEM_SEND_FAILED;
 	uint8 hexData;
 	uint8 asciiData;
-	volatile uint32 timeout = g_rtcSoftTimerTickCount + (25 * 2); //Set timeout to 25 secs
+	volatile uint32 timeout = g_lifetimeHalfSecondTickCount + (25 * 2); //Set timeout to 25 secs
 
 	// Make sure a modem is connected
 	if (READ_DSR == MODEM_CONNECTED)
 	{
 		// Check clear to send and check if the timeout has been exceeded
-		while ((NOT_READY_TO_SEND == READ_CTS) && (timeout > g_rtcSoftTimerTickCount))
+		while ((NOT_READY_TO_SEND == READ_CTS) && (timeout > g_lifetimeHalfSecondTickCount))
 		{
 			// Check if the connection has been lost
 			if (READ_DCD == NO_CONNECTION)
@@ -80,7 +80,7 @@ uint8 ModemPutc(uint8 byteData, uint8 convertAsciiFlag)
 		}
 
 		// Check if the timeout condition hasn't been exceeded yet
-		if (timeout > g_rtcSoftTimerTickCount)
+		if (timeout > g_lifetimeHalfSecondTickCount)
 		{
 			if (convertAsciiFlag == CONVERT_DATA_TO_ASCII)
 			{
@@ -513,7 +513,7 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 		// Copy the new string into the global buffer
 		strncpy(s_uartBuffer, buf, length);
 
-		tempTime = g_rtcSoftTimerTickCount >> 1;
+		tempTime = g_lifetimeHalfSecondTickCount >> 1;
 
 		// Put timestamp into a formatted string
 		if (tempTime < 60)
