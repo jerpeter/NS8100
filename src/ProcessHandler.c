@@ -537,10 +537,6 @@ void HandleManualCalibration(void)
 
 					InitDataBuffs(g_triggerRecord.opMode);
 
-					// Set and cleared by the ISR
-					//g_manualCalFlag = FALSE;
-					//g_manualCalSampleCount = 0;
-
 					// Make sure to reset the gain after the Cal pulse (which is generated at low sensitivity)
 					if (g_triggerRecord.srec.sensitivity == HIGH)
 					{

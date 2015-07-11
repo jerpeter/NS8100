@@ -545,26 +545,65 @@ void CheckForMidnight(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+extern void StartDataCollection(uint32 sampleRate);
+extern void GetManualCalibration(void);
 void HandleMidnightEvent(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	char message[50];
 
-	if (((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)) && (g_sampleProcessing == ACTIVE_STATE))
+	// Check if actively monitoring
+	if (g_sampleProcessing == ACTIVE_STATE)
 	{
-		// Do not handle midnight calibration since a manual cal is forced at the beginning of Bargraph
+		// Check if Bargraph or Combo and actively monitoring
+		if ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
+		{
+			// Do not handle midnight calibration since a manual cal is forced at the beginning of Bargraph and Combo
 
-		// Overlay a message that the current bargraph has ended
-		memset(&message[0], 0, sizeof(message));
-		sprintf(message, "%s %s", getLangText(MONITOR_BARGRAPH_TEXT), getLangText(END_TEXT));
-		OverlayMessage(getLangText(STATUS_TEXT), message, 0);
+			// Overlay a message that the current Bargraph or Combo has ended
+			memset(&message[0], 0, sizeof(message));
+			sprintf(message, "%s %s", (g_triggerRecord.opMode == BARGRAPH_MODE) ? (getLangText(BARGRAPH_MODE_TEXT)) : (getLangText(COMBO_MODE_TEXT)), getLangText(END_TEXT));
+			OverlayMessage(getLangText(STATUS_TEXT), message, 0);
 
-		// Handle stopping the current bargraph
-		StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
+			// Handle stopping the current Bargraph or Combo
+			StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
 
-		// Start up a new Bargraph
-		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
-		JUMP_TO_ACTIVE_MENU();
+			// Start up a new Bargraph or Combo
+			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
+			JUMP_TO_ACTIVE_MENU();
+		}
+		else if (g_triggerRecord.opMode == WAVEFORM_MODE)
+		{
+			// Check if not busy processing an event, otherwise handling a manual cal or event which would be accompanied by a cal pulse so skip midnight cal
+			if (g_busyProcessingEvent == NO)
+			{
+				// fix_ns8100
+				if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
+				{
+					OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
+				}
+				else
+				{
+					// Stop data transfer
+					StopDataClock();
+
+					// Perform Cal while in monitor mode
+					OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
+
+					GetManualCalibration();
+
+					InitDataBuffs(g_triggerRecord.opMode);
+
+					// Make sure to reset the gain after the Cal pulse (which is generated at low sensitivity)
+					if (g_triggerRecord.srec.sensitivity == HIGH)
+					{
+						SetSeismicGainSelect(SEISMIC_GAIN_HIGH);
+					}
+
+					StartDataCollection(g_triggerRecord.trec.sample_rate);
+				}
+			}
+		}
 	}
 	// Check if Auto Calibration at midnight is active (any value but zero)
 	else if (g_unitConfig.autoCalMode) // != AUTO_NO_CAL_TIMEOUT
@@ -585,6 +624,15 @@ void HandleMidnightEvent(void)
 				case AUTO_72_HOUR_TIMEOUT: g_autoCalDaysToWait = 3; break;
 			}
 
+			// If the user was in the Summary list menu, reset the global
+			g_summaryListMenuActive = NO;
+
+			// Perform Cal while in monitor mode
+			OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
+
+#if 1 // New
+			GetManualCalibration();
+#else // Crap
 			// Set flag to alert the Results menu which action to take after a cal pulse result is received
 			if (g_sampleProcessing == ACTIVE_STATE)
 			{
@@ -608,6 +656,7 @@ void HandleMidnightEvent(void)
 			{
 				ForcedCalibration();
 			}
+#endif
 		}
 	}
 
