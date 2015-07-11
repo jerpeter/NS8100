@@ -416,17 +416,9 @@ void InitSoftwareSettings_NS8100(void)
 	if (TimerModeActiveCheck() == TRUE)
 	{
 		debug("--- Timer Mode Startup ---\r\n");
-
 		ProcessTimerMode();
-
-		// If here, the unit is in Timer mode, but did not power itself off yet
-		// Enabling power off protection
-#if 0 // Test with power off protection always enabled
-		debug("Timer Mode: Enabling Power Off Protection\r\n");
-		PowerControl(POWER_OFF_PROTECTION_ENABLE, ON);
-#endif
 	}
-	else
+	else // Normal startup
 	{
 		debug("--- Normal Startup ---\r\n");
 	}

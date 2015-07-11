@@ -494,7 +494,8 @@ void ActivateUnitConfigOptions(void)
 	debug("Auto Monitor Mode: %s\r\n", (g_unitConfig.autoMonitorMode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
 	AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 
-	if (g_unitConfig.autoCalMode != AUTO_NO_CAL_TIMEOUT)
+	// Check if Auto Calibration at midnight is active (any value but zero)
+	if (g_unitConfig.autoCalMode) // != AUTO_NO_CAL_TIMEOUT
 	{
 		g_autoCalDaysToWait = 1;
 	}

@@ -717,4 +717,8 @@ void ExternalRtcRead(uint8 register_address, int length, uint8* data);
 void StartExternalRtcClock(uint16 sampleRate);
 void StopExternalRtcClock(void);
 
+// Timer mode related
+void TimerModeActiveMinutes(void);
+uint8 ValidateTimerModeSettings(void);
+
 #endif // _RTC_H_

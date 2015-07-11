@@ -68,8 +68,8 @@ void AssignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 	if (timeout > 0)
 	{
 		g_rtcTimerBank[timerNum].state = TIMER_ASSIGNED;
-		g_rtcTimerBank[timerNum].tickStart = g_rtcSoftTimerTickCount;
-		g_rtcTimerBank[timerNum].timePeriod = g_rtcSoftTimerTickCount + timeout;
+		g_rtcTimerBank[timerNum].tickStart = g_lifetimeHalfSecondTickCount;
+		g_rtcTimerBank[timerNum].timePeriod = g_lifetimeHalfSecondTickCount + timeout;
 		g_rtcTimerBank[timerNum].timeoutValue = timeout;
 		g_rtcTimerBank[timerNum].callback = callback;
 	}
@@ -94,8 +94,8 @@ void ResetSoftTimer(uint16 timerNum)
 
 	if (g_rtcTimerBank[timerNum].state == TIMER_ASSIGNED)
 	{
-		g_rtcTimerBank[timerNum].tickStart = g_rtcSoftTimerTickCount;
-		g_rtcTimerBank[timerNum].timePeriod = g_rtcSoftTimerTickCount + g_rtcTimerBank[timerNum].timeoutValue;
+		g_rtcTimerBank[timerNum].tickStart = g_lifetimeHalfSecondTickCount;
+		g_rtcTimerBank[timerNum].timePeriod = g_lifetimeHalfSecondTickCount + g_rtcTimerBank[timerNum].timeoutValue;
 	}
 
 	return;
@@ -136,10 +136,10 @@ void CheckSoftTimers(void)
 			if (g_rtcTimerBank[softTimerIndex].tickStart > g_rtcTimerBank[softTimerIndex].timePeriod)
 			{
 				// We looped but did the tick count loop around the MAX?
-				if (g_rtcSoftTimerTickCount < g_rtcTimerBank[softTimerIndex].tickStart)
+				if (g_lifetimeHalfSecondTickCount < g_rtcTimerBank[softTimerIndex].tickStart)
 				{
 					// The counter looped so check the condition of the time period.
-					if (g_rtcSoftTimerTickCount >= g_rtcTimerBank[softTimerIndex].timePeriod)
+					if (g_lifetimeHalfSecondTickCount >= g_rtcTimerBank[softTimerIndex].timePeriod)
 					{
 						// Once the timer has activated, clear the timer state and other values
 						g_rtcTimerBank[softTimerIndex].state = TIMER_UNASSIGNED;
@@ -162,8 +162,8 @@ void CheckSoftTimers(void)
 			else
 			{
 				// Did the tick count loop around the MAX? Or did we go past the time?
-				if ((g_rtcSoftTimerTickCount < g_rtcTimerBank[softTimerIndex].tickStart) ||
-					(g_rtcSoftTimerTickCount >= g_rtcTimerBank[softTimerIndex].timePeriod))
+				if ((g_lifetimeHalfSecondTickCount < g_rtcTimerBank[softTimerIndex].tickStart) ||
+					(g_lifetimeHalfSecondTickCount >= g_rtcTimerBank[softTimerIndex].timePeriod))
 				{
 					// Once the timer has activated, clear the timer state and other values
 					g_rtcTimerBank[softTimerIndex].state = TIMER_UNASSIGNED;
@@ -493,8 +493,12 @@ void CheckForMidnight(void)
 	// Check for Midnight and make sure that the current Midnight isn't already been processed
 	if ((currentTime.hour == 0) && (currentTime.min == 0) && (processingMidnight == NO))
 	{
-		processingMidnight = YES;
-		raiseSystemEventFlag(MIDNIGHT_EVENT);
+		// Check that the unit has been on for 1 minute before processing a midnight event (especially in the case of powering up at midnight)
+		if (g_lifetimeHalfSecondTickCount > (1 * TICKS_PER_MIN))
+		{
+			processingMidnight = YES;
+			raiseSystemEventFlag(MIDNIGHT_EVENT);
+		}
 	}
 	else if (processingMidnight == YES)
 	{
@@ -562,8 +566,8 @@ void HandleMidnightEvent(void)
 		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
 		JUMP_TO_ACTIVE_MENU();
 	}
-	// Check if Auto Cal is active
-	else if (g_unitConfig.autoCalMode != AUTO_NO_CAL_TIMEOUT)
+	// Check if Auto Calibration at midnight is active (any value but zero)
+	else if (g_unitConfig.autoCalMode) // != AUTO_NO_CAL_TIMEOUT
 	{
 		// Decrement days to wait
 		if (g_autoCalDaysToWait > 0) g_autoCalDaysToWait--;
@@ -583,10 +587,12 @@ void HandleMidnightEvent(void)
 
 			// Set flag to alert the Results menu which action to take after a cal pulse result is received
 			if (g_sampleProcessing == ACTIVE_STATE)
+			{
 				g_enterMonitorModeAfterMidnightCal = YES;
 
-			// Handle and finish any processing
-			StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
+				// Handle and finish any processing
+				StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
+			}
 
 			if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 			{

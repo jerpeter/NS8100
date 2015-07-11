@@ -218,7 +218,9 @@ void SystemEventManager(void)
 
 		CheckForMidnight();
 
+#if 0 // Removed from Exception test
 		CheckInternalMemoryForCorruption();
+#endif
 	}
 
 	//___________________________________________________________________________________________
@@ -227,7 +229,7 @@ void SystemEventManager(void)
 		debug("Midnight Event\r\n");
 		clearSystemEventFlag(MIDNIGHT_EVENT);
 
-		g_testTimeSinceLastMidnight = g_rtcSoftTimerTickCount;
+		g_testTimeSinceLastMidnight = g_lifetimeHalfSecondTickCount;
 
 		HandleMidnightEvent();
 	}
@@ -292,7 +294,7 @@ void SystemEventManager(void)
 		if (g_sampleProcessing == IDLE_STATE)
 		{
 			// Check if not in Timer mode
-			if (g_unitConfig.timerMode == DISABLED)
+			if ((g_unitConfig.timerMode == DISABLED) || ((g_unitConfig.timerMode == ENABLED) && (g_allowQuickPowerOffForTimerModeSetup == YES)))
 			{
 				if (!(getSystemEventState(TRIGGER_EVENT)) && !(getSystemEventState(BARGRAPH_EVENT)))
 				{
@@ -304,12 +306,16 @@ void SystemEventManager(void)
 				// Reset the flag
 				g_powerOffActivated = NO;
 
-				// Prompt the user that power off is unavailable
-				OverlayMessage(getLangText(STATUS_TEXT), getLangText(UNIT_IS_IN_TIMER_MODE_TEXT), (2 * SOFT_SECS));
+				// Check if the user wants to leave timer mode
+				HandleUserPowerOffDuringTimerMode();
 			}
 		}
 		// Else Monitoring
-		else { g_powerOffActivated = NO; }
+		else
+		{
+			// Disable power off attempt
+			g_powerOffActivated = NO;
+		}
 	}
 }
 
@@ -1024,6 +1030,14 @@ void BootLoadManager(void)
 				g_quickBootEntryJump = NO;
 				return;
 			}
+			else if (g_unitConfig.timerMode == ENABLED)
+			{
+				// Disable Timer mode since restarting would force a prompt for user action
+				g_unitConfig.timerMode = DISABLED;
+				SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+				OverlayMessage(getLangText(WARNING_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), (2 * SOFT_SECS));
+			}
 			// else (g_sampleProcessing == IDLE_STATE)
 
 			if (g_lcdPowerFlag == DISABLED)
@@ -1093,7 +1107,7 @@ void BootLoadManager(void)
 			debugErr("SREC unpack unsuccessful\r\n");
 		}
 
-		g_testTimeSinceLastFSWrite = g_rtcSoftTimerTickCount;
+		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(file);
 
 #if 0 // Removed debug log file due to inducing system problems
@@ -1105,7 +1119,9 @@ void BootLoadManager(void)
 
 		// Enable half second tick
 extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
+#if 0 // This prevents bootloader from processing keys
 		DisableMcp23018Interrupts();
+#endif
 		rtc_disable_interrupt(&AVR32_RTC);
 		tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
 		tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
@@ -1464,10 +1480,10 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 	}
 
 #if 1
-	if (g_rtcSoftTimerTickCount >= g_testTimeSinceLastFSWrite) { LFST = (g_rtcSoftTimerTickCount - g_testTimeSinceLastFSWrite); }
-	if (g_rtcSoftTimerTickCount >= g_testTimeSinceLastTrigger) { LTT = (g_rtcSoftTimerTickCount - g_testTimeSinceLastTrigger); }
-	if (g_rtcSoftTimerTickCount >= g_testTimeSinceLastMidnight) { LMT = (g_rtcSoftTimerTickCount - g_testTimeSinceLastMidnight); }
-	if (g_rtcSoftTimerTickCount >= g_testTimeSinceLastCalPulse) { LCPT = (g_rtcSoftTimerTickCount - g_testTimeSinceLastCalPulse); }
+	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastFSWrite) { LFST = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastFSWrite); }
+	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastTrigger) { LTT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastTrigger); }
+	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastMidnight) { LMT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastMidnight); }
+	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastCalPulse) { LCPT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastCalPulse); }
 #endif
 
 #if 1
@@ -1613,7 +1629,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		sprintf((char*)&exceptionMessage, "R9:0x%lx R10:0x%lx R11:0x%lx R12:0x%lx", r9, r10, r11, r12);
 		OverlayMessage("EXC SCREEN 6", (char*)&exceptionMessage, (8 * SOFT_SECS));
 
-		sprintf((char*)&exceptionMessage, "SR:%lu FS:%d T:%d CP:%d M:%d", g_rtcSoftTimerTickCount, LFST, LTT, LCPT, LMT);
+		sprintf((char*)&exceptionMessage, "SR:%lu FS:%d T:%d CP:%d M:%d", g_lifetimeHalfSecondTickCount, LFST, LTT, LCPT, LMT);
 		OverlayMessage("EXC SCREEN 7", (char*)&exceptionMessage, (8 * SOFT_SECS));
 
 		sprintf((char*)&exceptionMessage, "GEV:%lu RMCP:%lu WMCP:%lu", testKPGetExtVoltage, testKPReadMCP23018, testKPWriteMCP23018);

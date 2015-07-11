@@ -26,6 +26,7 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
+#define IN_PROGRESS	2
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -553,4 +554,337 @@ void SetTimeOfDayAlarmNearFuture(uint8 secondsInFuture)
 	debug("Timer mode: Set TOD Alarm Near Future with (hour) %d, (min) %d, (sec) %d, (start day) %d\r\n", startHour, startMin, startSec, startDay);
 
 	EnableExternalRtcAlarm(startDay, startHour, startMin, startSec);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 ValidateTimerModeSettings(void)
+{
+	DATE_TIME_STRUCT time = GetCurrentTime();
+
+	char start_min = g_unitConfig.timerStartTime.min;
+	char start_hour = g_unitConfig.timerStartTime.hour;
+	char stop_min = g_unitConfig.timerStopTime.min;
+	char stop_hour = g_unitConfig.timerStopTime.hour;
+	char start_day = g_unitConfig.timerStartDate.day;
+	char start_month = g_unitConfig.timerStartDate.month;
+	char start_year = g_unitConfig.timerStartDate.year;
+	char stop_day = g_unitConfig.timerStopDate.day;
+	char stop_month = g_unitConfig.timerStopDate.month;
+	char stop_year = g_unitConfig.timerStopDate.year;
+
+	debug("Timer Date: (Start) %d/%d/%d -> (End) %d/%d/%d\r\n", start_month, start_day, start_year, stop_month, stop_day, stop_year);
+
+	// Check if user picked a start date that is before the current day
+	if ((start_year < time.year) ||
+	((start_year == time.year) && (start_month < time.month)) ||
+	((start_year == time.year) && (start_month == time.month) && (start_day < time.day)))
+	{
+		return (FAILED);
+	}
+
+	// Check if user picked a stop date that is before a start date
+	if ((stop_year < start_year) ||
+	((stop_year == start_year) && (stop_month < start_month)) ||
+	((stop_year == start_year) && (stop_month == start_month) && (stop_day < start_day)))
+	{
+		return (FAILED);
+	}
+
+	// Check if start date and end date are the same (one-time freq)
+	if ((stop_year == start_year) && (stop_month == start_month) && (stop_day == start_day))
+	{
+		// Check if the user specified the unit to run past midnight resulting in a second day
+		if ((stop_hour < start_hour) || ((stop_hour == start_hour) && (stop_min < start_min)))
+		{
+			return (FAILED);
+		}
+	}
+
+	// Check if start time and end time are the same
+	if ((start_hour == stop_hour) && (start_min == stop_min))
+	{
+		return (FAILED);
+	}
+
+	// Check if start date is the current day
+	if ((start_year == time.year) && (start_month == time.month) && (start_day == time.day))
+	{
+		// Check if the user specified the unit to run before the current time
+		if ((start_hour < time.hour) || ((start_hour == time.hour) && (start_min <= time.min)))
+		{
+			// Check if the current time is less than the end time, signaling that timer mode is in progress
+			if ((time.hour < stop_hour) || ((time.hour == stop_hour) && (time.min < stop_min)))
+			{
+				return (IN_PROGRESS);
+			}
+			else // Timer mode setting would have already completed, thus the current day is an invalid start day
+			{
+				return (FAILED);
+			}
+		}
+	}
+
+	return (PASSED);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ProcessTimerModeSettings(uint8 mode)
+{
+	//uint8 dayOfWeek = 0;
+	uint8 startDay = 0;
+	uint8 startHour = 0;
+	char stringBuff[75];
+	uint16 minutesLeft = 0;
+	DATE_TIME_STRUCT currentTime = GetCurrentTime();
+	uint8 status = ValidateTimerModeSettings();
+
+	// Check if the timer mode settings check failed or if the timer mode setting has been disabled
+	if ((status == FAILED) || (g_unitConfig.timerMode == DISABLED))
+	{
+		g_unitConfig.timerMode = DISABLED;
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+		// Disable the Power Off timer in case it's set
+		ClearSoftTimer(POWER_OFF_TIMER_NUM);
+
+		if (mode == PROMPT)
+		{
+			memset(&stringBuff[0], 0, sizeof(stringBuff));
+			sprintf(stringBuff, "%s %s", getLangText(TIMER_SETTINGS_INVALID_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT));
+			MessageBox(getLangText(ERROR_TEXT), stringBuff, MB_OK);
+		}
+	}
+	else // status == PASSED || status == IN_PROGRESS
+	{
+		// Calculate timer mode active run time in minutes
+		TimerModeActiveMinutes();
+
+		// Init start day based on the start date provided by the user
+		startDay = g_unitConfig.timerStartDate.day;
+
+		// Check if in progress, requiring extra logic to determine alarm settings
+		if (status == IN_PROGRESS)
+		{
+			// Check if the stop time is greater than the start time
+			if ((g_unitConfig.timerStopTime.hour > g_unitConfig.timerStartTime.hour) ||
+			((g_unitConfig.timerStopTime.hour == g_unitConfig.timerStartTime.hour) &&
+			(g_unitConfig.timerStopTime.min > g_unitConfig.timerStartTime.min)))
+			{
+				// Advance the start day
+				startDay++;
+
+				// Check if the start day is beyond the total days in the current month
+				if (startDay > g_monthTable[(uint8)(g_unitConfig.timerStartDate.month)].days)
+				{
+					// Set the start day to the first day of next month
+					startDay = 1;
+				}
+			}
+		}
+
+		// Check for specialty case hourly mode and in progress, requiring extra logic to determine alarm settings
+		if ((g_unitConfig.timerModeFrequency == TIMER_MODE_HOURLY) && (status == IN_PROGRESS))
+		{
+			// Check if another hour time slot to run again today
+			if (currentTime.hour != g_unitConfig.timerStopTime.hour)
+			{
+				// Start day remains the same
+				startDay = g_unitConfig.timerStartDate.day;
+
+				// Check if current hour time slot has not started
+				if (currentTime.min < g_unitConfig.timerStartTime.min)
+				{
+					// Set alarm for the same hour
+					startHour = currentTime.hour;
+				}
+				else
+				{
+					// Set alarm for the next hour
+					startHour = currentTime.hour + 1;
+					
+					// Account for end of day boundary
+					if (startHour > 23)
+					{
+						startHour = 0;
+
+						// Advance the start day
+						startDay++;
+
+						// Check if the start day is beyond the total days in the current month
+						if (startDay > g_monthTable[(uint8)(g_unitConfig.timerStartDate.month)].days)
+						{
+							// Set the start day to the first day of next month
+							startDay = 1;
+						}
+					}
+				}
+				
+				EnableExternalRtcAlarm(startDay, startHour, g_unitConfig.timerStartTime.min, 0);
+			}
+			else // This is the last hour time slot to run today, set alarm for next day
+			{
+				// startDay calculated correctly in above previous status == IN_PROGRESS logic
+				EnableExternalRtcAlarm(startDay, g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, 0);
+			}
+		}
+		else // All other timer modes
+		{
+			EnableExternalRtcAlarm(startDay, g_unitConfig.timerStartTime.hour, g_unitConfig.timerStartTime.min, 0);
+		}
+
+		if (status == PASSED)
+		{
+			if (mode == PROMPT)
+			{
+				memset(&stringBuff[0], 0, sizeof(stringBuff));
+				sprintf(stringBuff, "%s %s", getLangText(TIMER_MODE_NOW_ACTIVE_TEXT), getLangText(PLEASE_POWER_OFF_UNIT_TEXT));
+				MessageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
+			}
+
+			// Check if start time is greater than the current time
+			if (((g_unitConfig.timerStartTime.hour * 60) + g_unitConfig.timerStartTime.min) >
+			((currentTime.hour * 60) + currentTime.min))
+			{
+				// Take the difference between start time and current time
+				minutesLeft = (uint16)(((g_unitConfig.timerStartTime.hour * 60) + g_unitConfig.timerStartTime.min) -
+				((currentTime.hour * 60) + currentTime.min));
+			}
+			else // Current time is after the start time, meaning the start time is the next day
+			{
+				// Take the difference between 24 hours and the current time plus the start time
+				minutesLeft = (uint16)((24 * 60) - ((currentTime.hour * 60) + currentTime.min) +
+				((g_unitConfig.timerStartTime.hour * 60) + g_unitConfig.timerStartTime.min));
+			}
+
+			// Check if the start time is within the next minute
+			if (minutesLeft <= 1)
+			{
+				OverlayMessage(getLangText(WARNING_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 2 * SOFT_SECS);
+
+				// Need to shutdown the unit now, otherwise the start time window will be missed
+				PowerUnitOff(SHUTDOWN_UNIT); // Return unnecessary
+			}
+			else // More than 1 minute left before the start time
+			{
+				// Make sure the unit turns off one minute before the start time if the user forgets to turn the unit off
+				minutesLeft -= 1;
+
+				// Need to handle state where timer mode is going active but unit hasn't power cycled into timer mode yet
+				g_allowQuickPowerOffForTimerModeSetup = YES;
+
+				// Set the Power off soft timer to prevent the unit from staying on past the Timer mode start time
+				AssignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)(minutesLeft * 60 * 2), PowerOffTimerCallback);
+			}
+		}
+		else // status == IN_PROGRESS
+		{
+			if (mode == PROMPT)
+			{
+				memset(&stringBuff[0], 0, sizeof(stringBuff));
+				sprintf(stringBuff, "%s", getLangText(TIMER_MODE_NOW_ACTIVE_TEXT));
+				MessageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
+			}
+
+			// Check if specialty mode hourly
+			if (g_unitConfig.timerModeFrequency == TIMER_MODE_HOURLY)
+			{
+				if (currentTime.min	< g_unitConfig.timerStopTime.min)
+				{
+					minutesLeft = (g_unitConfig.timerStopTime.min - currentTime.min);
+				}
+				else
+				{
+					minutesLeft = (60 + g_unitConfig.timerStopTime.min - currentTime.min);
+				}
+				
+				if (minutesLeft > 58)
+				minutesLeft = 58;
+			}
+			// Check if the current time is greater than the stop time, indicating that midnight boundary was crossed
+			else if (((currentTime.hour * 60) + currentTime.min) > ((g_unitConfig.timerStopTime.hour * 60) + g_unitConfig.timerStopTime.min))
+			{
+				// Calculate the time left before powering off to be 24 + the stop time minus the current time
+				minutesLeft = (uint16)(((24 * 60) + (g_unitConfig.timerStopTime.hour * 60) + g_unitConfig.timerStopTime.min) -
+				((currentTime.hour * 60) + currentTime.min));
+			}
+			else // Current time is less than start time, operating within the same day
+			{
+				// Calculate the time left before powering off to be the stop time minus the current time
+				minutesLeft = (uint16)(((g_unitConfig.timerStopTime.hour * 60) + g_unitConfig.timerStopTime.min) -
+				((currentTime.hour * 60) + currentTime.min));
+			}
+
+			// Make sure timeout value is not zero
+			if (minutesLeft == 0) minutesLeft = 1;
+
+			debug("Timer Mode: In progress, minutes left before power off: %d (Expired secs this min: %d)\r\n", minutesLeft, currentTime.sec);
+
+			// Setup soft timer to turn system off when timer mode is finished for the day
+			AssignSoftTimer(POWER_OFF_TIMER_NUM, (uint32)((minutesLeft * 60 * 2) - (currentTime.sec	* 2)), PowerOffTimerCallback);
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void TimerModeActiveMinutes(void)
+{
+	// Find the Time mode active time period in minutes
+
+	// Check for specialty case hourly
+	if (g_unitConfig.timerModeFrequency == TIMER_MODE_HOURLY)
+	{
+		// Check if the stop min is greater than the start min
+		if (g_unitConfig.timerStopTime.min > g_unitConfig.timerStartTime.min)
+		{
+			g_unitConfig.TimerModeActiveMinutes = (g_unitConfig.timerStopTime.min - g_unitConfig.timerStartTime.min);
+		}
+		else // The timer mode hourly active period will cross the hour boundary
+		{
+			g_unitConfig.TimerModeActiveMinutes = (60 + g_unitConfig.timerStopTime.min - g_unitConfig.timerStartTime.min);
+		}
+		
+		// In order to restart up every hour, the active minutes needs to be less than 60, 1 min for shutdown + 1 min for being off
+		if (g_unitConfig.TimerModeActiveMinutes > 58)
+		g_unitConfig.TimerModeActiveMinutes = 58;
+	}
+	// Check if the stop time (in minutes resolution) is greater than the start time, thus running the same day
+	else if (((g_unitConfig.timerStopTime.hour * 60) + g_unitConfig.timerStopTime.min) >
+	((g_unitConfig.timerStartTime.hour * 60) + g_unitConfig.timerStartTime.min))
+	{
+		// Set active minutes as the difference in the stop and start times
+		g_unitConfig.TimerModeActiveMinutes = (uint16)(((g_unitConfig.timerStopTime.hour * 60) + g_unitConfig.timerStopTime.min) -
+		((g_unitConfig.timerStartTime.hour * 60) + g_unitConfig.timerStartTime.min));
+
+		// Check for specialty case one time
+		if (g_unitConfig.timerModeFrequency == TIMER_MODE_ONE_TIME)
+		{
+			// Calculate the number of days to run consecutively (Days * Hours in a day * Minutes in an hour) and add to the active minutes
+			g_unitConfig.TimerModeActiveMinutes += (24 * 60 * (GetTotalDaysFromReference(g_unitConfig.timerStopDate) -
+			GetTotalDaysFromReference(g_unitConfig.timerStartDate)));
+		}
+	}
+	else // The timer mode active period will see midnight, thus running 2 consecutive days
+	{
+		// Set active minutes as the difference from midnight and the start time, plus the stop time the next day
+		g_unitConfig.TimerModeActiveMinutes = (uint16)((24 * 60) - ((g_unitConfig.timerStartTime.hour * 60) + g_unitConfig.timerStartTime.min) +
+		((g_unitConfig.timerStopTime.hour * 60) + g_unitConfig.timerStopTime.min));
+
+		// Check for specialty case one time
+		if (g_unitConfig.timerModeFrequency == TIMER_MODE_ONE_TIME)
+		{
+			// Calculate the number of days to run consecutively (Days * Hours in a day * Minutes in an hour) minus crossover day and add to the active minutes
+			g_unitConfig.TimerModeActiveMinutes += (24 * 60 * (GetTotalDaysFromReference(g_unitConfig.timerStopDate) -
+			GetTotalDaysFromReference(g_unitConfig.timerStartDate) - 1));
+		}
+	}
+
+	debug("Timer Active Minutes: %d\r\n", g_unitConfig.TimerModeActiveMinutes);
+
+	SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 }
