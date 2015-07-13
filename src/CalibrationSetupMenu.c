@@ -93,7 +93,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 	DATE_TIME_STRUCT tempTime;
 	uint8 previousMode = g_triggerRecord.opMode;
 	uint8 clearedFSRecord = NO;
-	uint8 choice = MessageBox(getLangText(VERIFY_TEXT), "START CAL DIAGNOSTICS?", MB_YESNO);
+	uint8 choice = MessageBox(getLangText(VERIFY_TEXT), getLangText(START_CALIBRATION_DIAGNOSTICS_Q_TEXT), MB_YESNO);
 
 	if (choice == MB_FIRST_CHOICE)
 	{
@@ -139,19 +139,20 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 						{
 							//debug("Cal Menu Screen NP selected\r\n");
 							s_pauseDisplay = NO;
-							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY SUCCESSIVE SAMPLES", (1 * SOFT_SECS));
+							OverlayMessage(getLangText(STATUS_TEXT), getLangText(DISPLAY_SUCCESSIVE_SAMPLES_TEXT), (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_DISPLAY_SAMPLES;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
 						{
 							//debug("Cal Menu Screen NP selected\r\n");
-							OverlayMessage(getLangText(STATUS_TEXT), "CHANNEL NOISE PERCENTAGES", (1 * SOFT_SECS));
+							OverlayMessage(getLangText(STATUS_TEXT), getLangText(CHANNEL_NOISE_PERCENTAGES_TEXT), (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
 						{
 							//debug("Cal Menu Screen CD selected\r\n");
-							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY CALIBRATED (ZERO) MIN MAX AVG", (1 * SOFT_SECS));
+							sprintf((char*)g_spareBuffer, "%s (%s) %s", getLangText(DISPLAY_CALIBRATED_TEXT), getLangText(ZERO_TEXT), getLangText(MIN_MAX_AVG_TEXT));
+							OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
@@ -163,7 +164,8 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 							// Clear the Pretrigger buffer
 							SoftUsecWait(250 * SOFT_MSECS);
 							
-							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY NON CALIBRATED (ZERO) MIN MAX AVG", (1 * SOFT_SECS));
+							sprintf((char*)g_spareBuffer, "%s (%s) %s", getLangText(DISPLAY_NOT_CALIBRATED_TEXT), getLangText(ZERO_TEXT), getLangText(MIN_MAX_AVG_TEXT));
+							OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY;
 						}
 
@@ -204,19 +206,19 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
 						{
 							//debug("Cal Menu Screen NP selected\r\n");
-							OverlayMessage(getLangText(STATUS_TEXT), "CHANNEL NOISE PERCENTAGES", (1 * SOFT_SECS));
+							OverlayMessage(getLangText(STATUS_TEXT), getLangText(CHANNEL_NOISE_PERCENTAGES_TEXT), (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
 						{
 							//debug("Cal Menu Screen DS selected\r\n");
-							OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY SUCCESSIVE SAMPLES", (1 * SOFT_SECS));
+							OverlayMessage(getLangText(STATUS_TEXT), getLangText(DISPLAY_SUCCESSIVE_SAMPLES_TEXT), (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_DISPLAY_SAMPLES;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
 						{
 							//debug("Cal Menu Screen DS selected\r\n");
-							OverlayMessage(getLangText(STATUS_TEXT), "SENSOR CALIBRATION", (1 * SOFT_SECS));
+							OverlayMessage(getLangText(STATUS_TEXT), getLangText(SENSOR_CALIBRATION_TEXT), (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATE_SENSOR;
 						}
 
@@ -269,7 +271,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 			// Check if no Smart sensor is connected
 			else if (CheckIfNoSmartSensorsPresent() == YES)
 			{
-				if (MessageBox(getLangText(CONFIRM_TEXT), "ERASE FACTORY SETUP?", MB_YESNO) == MB_FIRST_CHOICE)
+				if (MessageBox(getLangText(CONFIRM_TEXT), getLangText(ERASE_FACTORY_SETUP_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 				{
 					memset(&g_factorySetupRecord, 0xFF, sizeof(g_factorySetupRecord));
 					SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_CLEAR_TYPE);
@@ -325,7 +327,7 @@ void CalSetupMnProc(INPUT_MSG_STRUCT msg,
 			mn_layout_ptr->curr_ln = CAL_SETUP_MN_TBL_START_LINE;
 			mn_layout_ptr->top_ln = CAL_SETUP_MN_TBL_START_LINE;
 
-			OverlayMessage("STATUS", "PLEASE WAIT...", 0);
+			OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
 
 			// Save the currently stored sample rate to later be reverted
 			s_calSavedSampleRate = g_triggerRecord.trec.sample_rate;

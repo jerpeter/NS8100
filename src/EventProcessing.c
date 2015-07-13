@@ -67,7 +67,7 @@ void CopyValidFlashEventSummariesToRam(void)
 {
 	uint16 ramSummaryIndex = 0;
 
-	OverlayMessage("SUMMARY LIST", "INITIALIZING SUMMARY LIST WITH STORED EVENT INFO", 1 * SOFT_SECS);
+	OverlayMessage(getLangText(SUMMARY_LIST_TEXT), getLangText(INITIALIZING_SUMMARY_LIST_WITH_STORED_EVENT_INFO_TEXT), 1 * SOFT_SECS);
 	debug("Copying valid SD event summaries to ram...\r\n");
 
 	if (g_fileAccessLock != AVAILABLE)
@@ -124,13 +124,11 @@ void CopyValidFlashEventSummariesToRam(void)
 
 				if (eventFile == -1)
 				{
-					debugErr("Event File %s not found\r\n", fileName);
-					OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+					DisplayFileNotFound(fileName);
 				}
 				else if (fsaccess_file_get_size(eventFile) < sizeof(EVENT_HEADER_STRUCT))
 				{
-					debugErr("Event File %s is corrupt\r\n", fileName);
-					OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+					DisplayFileCorrupt(fileName);
 				}
 				else
 				{
@@ -1112,14 +1110,12 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 		// Verify file ID
 		if (eventFile == -1)
 		{
-			debugErr("Event File %s not found\r\n", fileName);
-			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+			DisplayFileNotFound(fileName);
 		}
 		// Verify file is big enough
 		else if (fsaccess_file_get_size(eventFile) < sizeof(EVENT_HEADER_STRUCT))
 		{
-			debugErr("Event File %s is corrupt\r\n", fileName);
-			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+			DisplayFileCorrupt(fileName);
 		}
 		else
 		{
@@ -1253,14 +1249,12 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 		// Verify file ID
 		if (eventFile == -1)
 		{
-			debugErr("Event File %s not found\r\n", fileName);
-			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+			DisplayFileNotFound(fileName);
 		}
 		// Verify file is big enough
 		else if (fsaccess_file_get_size(eventFile) < sizeof(EVENT_HEADER_STRUCT))
 		{
-			debugErr("Event File %s is corrupt\r\n", fileName);
-			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+			DisplayFileCorrupt(fileName);
 		}
 		else
 		{
@@ -1306,7 +1300,8 @@ void DeleteEventFileRecord(uint16 eventNumber)
 		{
 			if (nav_file_del(TRUE) == FALSE)
 			{
-				OverlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+				OverlayMessage(fileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
 			}
 		}
 
@@ -1345,14 +1340,15 @@ void DeleteEventFileRecords(void)
 			while (nav_filelist_set(0 , FS_FIND_NEXT))
 			{
 				nav_file_getname(&fileName[0], 50);
-				sprintf(popupText, "REMOVING %s", fileName);
+				sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
 				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
 
 				// Delete file or directory
 				if (nav_file_del(FALSE) == FALSE)
 				{
 					nav_file_getname(&fileName[0], 50);
-					OverlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
+					sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+					OverlayMessage(fileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
 					//break;
 				}
 				else
@@ -1373,14 +1369,15 @@ void DeleteEventFileRecords(void)
 			while (nav_filelist_set(0 , FS_FIND_NEXT))
 			{
 				nav_file_getname(&fileName[0], 50);
-				sprintf(popupText, "REMOVING %s", fileName);
+				sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
 				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
 
 				// Delete file or directory
 				if (nav_file_del(FALSE) == FALSE)
 				{
 					nav_file_getname(&fileName[0], 50);
-					OverlayMessage(fileName, "UNABLE TO DELETE EVENT", 3 * SOFT_SECS);
+					sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+					OverlayMessage(fileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
 					//break;
 				}
 				else
@@ -1397,14 +1394,16 @@ void DeleteEventFileRecords(void)
 		if (nav_setcwd("A:\\ERData\\", TRUE, FALSE) == FALSE)
 		{
 			debugErr("Unable to access or create the Events directory\r\n");
-			OverlayMessage(getLangText(ERROR_TEXT), "UNABLE TO ACCESS EVENTS DIR", 3 * SOFT_SECS);
+			sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(UNABLE_TO_ACCESS_TEXT), "ERDATA", getLangText(DIR_TEXT));
+			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, 3 * SOFT_SECS);
 		}
 
 		// Re-create directory
 		if (nav_setcwd("A:\\Events\\", TRUE, FALSE) == FALSE)
 		{
 			debugErr("Unable to access or create the Events directory\r\n");
-			OverlayMessage(getLangText(ERROR_TEXT), "UNABLE TO ACCESS EVENTS DIR", 3 * SOFT_SECS);
+			sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(UNABLE_TO_ACCESS_TEXT), "EVENTS", getLangText(DIR_TEXT));
+			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, 3 * SOFT_SECS);
 		}
 
 		if (nav_setcwd(s_summaryListFileName, TRUE, FALSE) == TRUE)
@@ -1412,14 +1411,15 @@ void DeleteEventFileRecords(void)
 			if (nav_file_del(FALSE) == FALSE)
 			{
 				nav_file_getname(&fileName[0], 50);
-				OverlayMessage(fileName, "UNABLE TO DELETE SUMMARY LIST", 3 * SOFT_SECS);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(SUMMARY_LIST_TEXT));
+				OverlayMessage(fileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
 			}
 		}
 
 		InitSummaryListFile();
 
-		sprintf(popupText, "REMOVED %d EVENTS", eventsDeleted);
-		OverlayMessage("DELETE EVENTS", popupText, 3 * SOFT_SECS);
+		sprintf(popupText, "%s %d %s", getLangText(REMOVED_TEXT), eventsDeleted, getLangText(EVENTS_TEXT));
+		OverlayMessage(getLangText(DELETE_EVENTS_TEXT), popupText, 3 * SOFT_SECS);
 
 		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
@@ -1445,8 +1445,7 @@ void CacheEventDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOf
 	// Verify file ID
 	if (eventFile == -1)
 	{
-		debugErr("Event File %s not found\r\n", fileName);
-		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+		DisplayFileNotFound(fileName);
 	}
 	else
 	{
@@ -1481,8 +1480,7 @@ uint32 GetERDataSize(uint16 eventNumber)
 	// Verify file ID
 	if (eventFile == -1)
 	{
-		debugErr("ER Data File %s not found\r\n", fileName);
-		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+		DisplayFileNotFound(fileName);
 	}
 	else
 	{
@@ -1517,8 +1515,7 @@ void CacheERDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffse
 	// Verify file ID
 	if (eventFile == -1)
 	{
-		debugErr("ER Data File %s not found\r\n", fileName);
-		OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+		DisplayFileNotFound(fileName);
 	}
 	else
 	{
@@ -1558,14 +1555,12 @@ void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 		// Verify file ID
 		if (eventFile == -1)
 		{
-			debugErr("Event File %s not found\r\n", fileName);
-			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+			DisplayFileNotFound(fileName);
 		}
 		// Verify file is big enough
 		else if (fsaccess_file_get_size(eventFile) < sizeof(EVENT_HEADER_STRUCT))
 		{
-			debugErr("Event File %s is corrupt\r\n", fileName);
-			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+			DisplayFileCorrupt(fileName);
 		}
 		else
 		{
@@ -1584,6 +1579,7 @@ void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 0
 #define VERIFY_CHUNK_SIZE	1024
 void VerifyCacheEventToRam(uint16 eventNumber, char* subMessage)
 {
@@ -1671,6 +1667,7 @@ void VerifyCacheEventToRam(uint16 eventNumber, char* subMessage)
 
 	close (eventFile);
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -1698,16 +1695,16 @@ uint8 CacheEventToRam(uint16 eventNumber, EVT_RECORD* eventRecordPtr)
 		// Verify file ID
 		if (eventFile == -1)
 		{
-			debugErr("Event File %s not found\r\n", fileName);
-			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+			DisplayFileNotFound(fileName);
+
 			ReleaseSpi1MutexLock();
 			return EVENT_CACHE_FAILURE;
 		}
 		// Verify file is big enough
 		else if (fsaccess_file_get_size(eventFile) < sizeof(EVT_RECORD))
 		{
-			debugErr("Event File %s is corrupt\r\n", fileName);
-			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+			DisplayFileCorrupt(fileName);
+
 			ReleaseSpi1MutexLock();
 			return EVENT_CACHE_FAILURE;
 		}
@@ -1753,14 +1750,12 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 		// Verify file ID
 		if (eventFile == -1)
 		{
-			debugErr("Event File %s not found\r\n", fileName);
-			OverlayMessage("FILE NOT FOUND", fileName, 3 * SOFT_SECS);
+			DisplayFileNotFound(fileName);
 		}
 		// Verify file is big enough
 		else if (fsaccess_file_get_size(eventFile) < sizeof(EVENT_HEADER_STRUCT))
 		{
-			debugErr("Event File %s is corrupt\r\n", fileName);
-			OverlayMessage("FILE CORRUPT", fileName, 3 * SOFT_SECS);
+			DisplayFileCorrupt(fileName);
 		}
 		else
 		{
@@ -1826,13 +1821,13 @@ void ReInitSdCardAndFat32(void)
 			{
 				// Error case
 				debugErr("FAT32 SD Card mount failed\r\n");
-				OverlayMessage("ERROR", "FAILED TO MOUNT SD CARD!", 0);
+				OverlayMessage(getLangText(ERROR_TEXT), getLangText(FAILED_TO_MOUNT_SD_CARD_TEXT), 0);
 			}
 		}
 		else // Error case
 		{
 			debugErr("FAT32 SD Card drive select failed\r\n");
-			OverlayMessage("ERROR", "FAILED TO SELECT SD CARD DRIVE!", 0);
+			OverlayMessage(getLangText(ERROR_TEXT), getLangText(FAILED_TO_SELECT_SD_CARD_DRIVE_TEXT), 0);
 		}
 
 		ReleaseSpi1MutexLock();
@@ -1893,13 +1888,13 @@ void PowerUpSDCardAndInitFat32(void)
 			{
 				// Error case
 				debugErr("FAT32 SD Card mount failed\r\n");
-				OverlayMessage("ERROR", "FAILED TO MOUNT SD CARD!", 0);
+				OverlayMessage(getLangText(ERROR_TEXT), getLangText(FAILED_TO_MOUNT_SD_CARD_TEXT), 0);
 			}
 		}
 		else // Error case
 		{
 			debugErr("FAT32 SD Card drive select failed\r\n");
-			OverlayMessage("ERROR", "FAILED TO SELECT SD CARD DRIVE!", 0);
+			OverlayMessage(getLangText(ERROR_TEXT), getLangText(FAILED_TO_SELECT_SD_CARD_DRIVE_TEXT), 0);
 		}
 
 		ReleaseSpi1MutexLock();
@@ -2391,6 +2386,25 @@ int writeWithSizeFix(int file, void* bufferPtr, uint32 length)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void DisplayFileNotFound(char* filename)
+{
+	debugErr("File not found: %s\r\n", filename);
+	OverlayMessage(getLangText(FILE_NOT_FOUND_TEXT), filename, 3 * SOFT_SECS);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void DisplayFileCorrupt(char* filename)
+{
+	debugErr("File corrupt: %s\r\n", filename);
+	OverlayMessage(getLangText(FILE_CORRUPT_TEXT), filename, 3 * SOFT_SECS);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+#if 0
 void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber)
 {
 #if 1
@@ -2412,9 +2426,6 @@ void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber)
 	}
 	else // Write the file event to the SD card
 	{
-		sprintf((char*)&g_spareBuffer[0], "EVENT #%d MODEM DL SHADOW COPY BEING SAVED...", eventNumber);
-		OverlayMessage("SHADOW COPY", (char*)&g_spareBuffer[0], 0);
-
 		remainingDataLength = g_spareIndex;
 
 		while (remainingDataLength)
@@ -2455,3 +2466,4 @@ void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber)
 	}
 #endif
 }
+#endif
