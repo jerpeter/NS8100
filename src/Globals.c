@@ -283,12 +283,5 @@ uint32 g_testTimeSinceLastFSWrite = 0xffffffff;
 uint32 g_testTimeSinceLastTrigger = 0xffffffff;
 uint32 g_testTimeSinceLastMidnight = 0xffffffff;
 uint32 g_testTimeSinceLastCalPulse = 0xffffffff;
-uint32 g_testKPGetExtVoltage = 0;
-uint32 g_testKPReadMCP23018 = 0;
-uint32 g_testKPWriteMCP23018 = 0;
-uint32 g_testAfterSleepISR = 0;
-uint32 g_testAfterSleep = 0;
-uint32 g_testApplyPS = 0;
-uint32 g_testRevertPS = 0;
 
 // End of the list

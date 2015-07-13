@@ -258,12 +258,5 @@ extern uint32 g_testTimeSinceLastFSWrite;
 extern uint32 g_testTimeSinceLastTrigger;
 extern uint32 g_testTimeSinceLastMidnight;
 extern uint32 g_testTimeSinceLastCalPulse;
-extern uint32 g_testKPGetExtVoltage;
-extern uint32 g_testKPReadMCP23018;
-extern uint32 g_testKPWriteMCP23018;
-extern uint32 g_testAfterSleepISR;
-extern uint32 g_testAfterSleep;
-extern uint32 g_testApplyPS;
-extern uint32 g_testRevertPS;
 
 #endif /* GLOBALS_H_ */
