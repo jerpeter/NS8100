@@ -303,8 +303,6 @@ static uint32 s_lastExecCycles = 0;
 __attribute__((__interrupt__))
 void Soft_timer_tick_irq(void)
 {
-	g_testAfterSleepISR = Get_system_register(AVR32_COUNT);
-
 	// Test print to verify the interrupt is running
 	//debugRaw("`");
 
@@ -341,7 +339,6 @@ void Soft_timer_tick_irq(void)
 		if (s_testForForeverLoop > (10 * TICKS_PER_MIN))
 		{
 			// Signal error condition
-			//OverlayMessage(getLangText(ERROR_TEXT), "UNIT STUCK IN NON ISR LOOP", (3 * SOFT_SECS));
 			if (g_debugBufferCount == 1) { g_breakpointCause = BP_MB_LOOP; }
 			else { g_breakpointCause = BP_SOFT_LOOP; }
 
@@ -1407,8 +1404,6 @@ void HandleActiveAlarmExtension(void)
 __attribute__((__interrupt__))
 void Tc_sample_irq(void)
 {
-	g_testAfterSleepISR = Get_system_register(AVR32_COUNT);
-
 #if 0 // Test
 	static uint32 isrCounter = 0;
 

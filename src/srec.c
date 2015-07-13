@@ -203,7 +203,7 @@ int Unpack_srec(int file)
     {
         if (bytes_loaded > progress)
         {
-            sprintf(textBuffer,"Loading Boot..%d%c",(unsigned int)(progress/(filelength / 100)),0x25);
+            sprintf(textBuffer,"Loading Image..%d%c",(unsigned int)(progress/(filelength / 100)),0x25);
             //WriteLCD_smText(0, 64, (uint8*)textBuffer, NORMAL_LCD);
 			WriteLCD_smText(0, 0, (uint8*)textBuffer, NORMAL_LCD);
             progress += filelength / 100;

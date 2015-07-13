@@ -375,8 +375,7 @@ void AppendMonitorLogEntryFile(void)
 		// Verify file ID
 		if (monitorLogFile == -1)
 		{
-			debugErr("Monitor Log File not found\r\n");
-			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
+			DisplayFileNotFound(s_monitorLogFilename);
 		}
 		else // Monitor log file contains entries
 		{
@@ -408,8 +407,7 @@ void AppendMonitorLogEntryFile(void)
 		// Verify file ID
 		if (monitorLogHumanReadableFile == -1)
 		{
-			debugErr("Monitor Log Readable File not found\r\n");
-			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLogReadable.txt", 3 * SOFT_SECS);
+			DisplayFileNotFound(s_monitorLogHumanReadableFilename);
 		}
 		else // File successfully created or opened
 		{
@@ -509,12 +507,11 @@ void InitMonitorLogTableFromLogFile(void)
 		// Verify file is big enough
 		else if (fsaccess_file_get_size(monitorLogFile) < sizeof(MONITOR_LOG_ENTRY_STRUCT))
 		{
-			debugErr("Monitor Log File is corrupt\r\n");
-			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\MonitorLog.ns8", 3 * SOFT_SECS);
+			DisplayFileCorrupt(s_monitorLogFilename);
 		}
 		else // Monitor log file contains entries
 		{
-			OverlayMessage("MONITOR LOG", "INITIALIZING MONITOR LOG WITH SAVED ENTRIES", 1 * SOFT_SECS);
+			OverlayMessage(getLangText(MONITOR_LOG_TEXT), getLangText(INITIALIZING_MONITOR_LOG_WITH_SAVED_ENTRIES_TEXT), 1 * SOFT_SECS);
 
 			bytesRead = readWithSizeFix(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 
@@ -598,8 +595,7 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 		// Verify file ID
 		if (onOffLogHumanReadableFile == -1)
 		{
-			debugErr("On/Off Log File not found\r\n");
-			OverlayMessage("FILE NOT FOUND", "C:\\Logs\\OnOffLogReadable.txt", 3 * SOFT_SECS);
+			DisplayFileNotFound(s_onOffLogHumanReadableFilename);
 		}
 		else // File successfully created or opened
 		{
@@ -662,8 +658,7 @@ void WriteDebugBufferToFile(void)
 			// Verify file ID
 			if (debugLogFile == -1)
 			{
-				debugErr("Debug Log File not found\r\n");
-				OverlayMessage("FILE NOT FOUND", "C:\\Logs\\DebugLogReadable.txt", 3 * SOFT_SECS);
+				DisplayFileNotFound(s_debugLogFilename);
 			}
 			else // File successfully created or opened
 			{

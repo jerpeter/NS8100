@@ -81,7 +81,6 @@ void MenuEventManager(void);
 void CraftManager(void);
 void MessageManager(void);
 void FactorySetupManager(void);
-void CheckInternalMemoryForCorruption(void);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -157,7 +156,8 @@ void SystemEventManager(void)
 			StopMonitoringForLowPowerState();
 		}
 
-		sprintf((char*)g_spareBuffer, "%s %s (%3.2f). PLEASE CHARGE BATTERY.", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT), (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE)));
+		sprintf((char*)g_spareBuffer, "%s %s (%3.2f) %s", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT),
+				(GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE)), getLangText(PLEASE_CHARGE_BATTERY_TEXT));
 		OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (1 * SOFT_SECS));
 
 		g_lowBatteryState = YES;
@@ -196,7 +196,8 @@ void SystemEventManager(void)
 #if 0 // Don't annoy the user for now
 			else
 			{
-				sprintf((char*)g_spareBuffer, "%s %s (%3.2f). PLEASE CHARGE BATTERY.", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT), (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE)));
+				sprintf((char*)g_spareBuffer, "%s %s (%3.2f) %s", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT),
+						(GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE)), getLangText(PLEASE_CHARGE_BATTERY_TEXT));
 				OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (1 * SOFT_SECS));
 			}
 #endif
@@ -217,10 +218,6 @@ void SystemEventManager(void)
 #endif
 
 		CheckForMidnight();
-
-#if 0 // Removed from Exception test
-		CheckInternalMemoryForCorruption();
-#endif
 	}
 
 	//___________________________________________________________________________________________
@@ -657,13 +654,15 @@ void UsbDeviceManager(void)
 					{
 						usbThumbDriveWasConnected = FALSE;
 						ms_process_first_connect_disconnect = FALSE;
-						OverlayMessage(getLangText(STATUS_TEXT), "USB THUMB DRIVE DISCONNECTED", (2 * SOFT_SECS));
+
+						sprintf((char*)g_spareBuffer, "%s %s", getLangText(USB_THUMB_DRIVE_TEXT), getLangText(DISCONNECTED_TEXT));
+						OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 					}
 #if 0 // Not working properly
 					else // Device mode was connected and processing
 					{
 						debug("USB Device cable was removed\r\n");
-						OverlayMessage(getLangText(STATUS_TEXT), "USB DEVICE CABLE WAS REMOVED", (2 * SOFT_SECS));
+						OverlayMessage(getLangText(STATUS_TEXT), getLangText(USB_DEVICE_CABLE_WAS_REMOVED_TEXT), (2 * SOFT_SECS));
 					}
 #endif
 					usbMassStorageState = USB_READY;
@@ -676,7 +675,7 @@ void UsbDeviceManager(void)
 					promptForUsbOtgHostCableRemoval = NO;
 
 					debug("USB OTG Host cable was removed\r\n");
-					OverlayMessage(getLangText(STATUS_TEXT), "USB HOST OTG CABLE WAS REMOVED", (2 * SOFT_SECS));
+					OverlayMessage(getLangText(STATUS_TEXT), getLangText(USB_HOST_OTG_CABLE_WAS_REMOVED_TEXT), (2 * SOFT_SECS));
 				}
 #endif
 			}
@@ -690,7 +689,8 @@ void UsbDeviceManager(void)
 					Usb_disable();
 					debug("USB disabled due to unsupported device\r\n");
 
-					MessageBox(getLangText(ERROR_TEXT), "UNSUPPORTED DEVICE. PLEASE REMOVE IMMEDIATELY BEFORE SELECTING OK", MB_OK);
+					sprintf((char*)g_spareBuffer, "%s. %s", getLangText(UNSUPPORTED_DEVICE_TEXT), getLangText(PLEASE_REMOVE_IMMEDIATELY_BEFORE_SELECTING_OK_TEXT));
+					MessageBox(getLangText(ERROR_TEXT), (char*)g_spareBuffer, MB_OK);
 
 					wrong_class_connected = FALSE;
 					//ms_device_not_supported = FALSE;
@@ -737,21 +737,23 @@ void UsbDeviceManager(void)
 						AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 					}
 
-					OverlayMessage(getLangText(STATUS_TEXT), "USB THUMB DRIVE DISCOVERED", (2 * SOFT_SECS));
+					sprintf((char*)g_spareBuffer, "%s %s", getLangText(USB_THUMB_DRIVE_TEXT), getLangText(DISCOVERED_TEXT));
+					OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 
 					// Check if the user wants to sync the unit events to the USB Thumb drive
-					if (MessageBox("USB DOWNLOAD", "SYNC EVENTS TO USB THUMB DRIVE?", MB_YESNO) == MB_FIRST_CHOICE)
+					if (MessageBox(getLangText(USB_DOWNLOAD_TEXT), getLangText(SYNC_EVENTS_TO_USB_THUMB_DRIVE_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 					{
-						OverlayMessage(getLangText(STATUS_TEXT), "SYNC IN PROGRESS", 0);
+						OverlayMessage(getLangText(STATUS_TEXT), getLangText(SYNC_IN_PROGRESS_TEXT), 0);
 
 						if (ushell_cmd_syncevents(&totalEventsCopied, &totalEventsSkipped) == TRUE)
 						{
-							sprintf((char*)g_spareBuffer, "SYNC SUCCESSFUL. TOTAL EVENTS: %d NEW: %d (EXISTING: %d)", (totalEventsCopied + totalEventsSkipped), totalEventsCopied, totalEventsSkipped);
-							MessageBox("USB DOWNLOAD", (char*)g_spareBuffer, MB_OK);
+							sprintf((char*)g_spareBuffer, "%s. %s: %d %s: %d (%s: %d)", getLangText(SYNC_SUCCESSFUL_TEXT), getLangText(TOTAL_EVENTS_TEXT),
+									(totalEventsCopied + totalEventsSkipped), getLangText(NEW_TEXT), totalEventsCopied, getLangText(EXISTING_TEXT), totalEventsSkipped);
+							MessageBox(getLangText(USB_DOWNLOAD_TEXT), (char*)g_spareBuffer, MB_OK);
 						}
 						else // Error
 						{
-							MessageBox("USB DOWNLOAD", "SYNC ENCOUNTERED AN ERROR", MB_OK);
+							MessageBox(getLangText(USB_DOWNLOAD_TEXT), getLangText(SYNC_ENCOUNTERED_AN_ERROR_TEXT), MB_OK);
 						}
 					}
 					else // User does not want to sync events
@@ -761,7 +763,7 @@ void UsbDeviceManager(void)
 
 					if (GetExternalVoltageLevelAveraged(EXT_CHARGE_VOLTAGE) < EXTERNAL_VOLTAGE_PRESENT)
 					{
-						OverlayMessage(getLangText(STATUS_TEXT), "PLEASE REMOVE THUMB DRIVE TO CONSERVE POWER", (2 * SOFT_SECS));
+						OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_REMOVE_THUMB_DRIVE_TO_CONSERVE_POWER_TEXT), (2 * SOFT_SECS));
 					}
 				}
 				//___________________________________________________________________________________________
@@ -771,7 +773,9 @@ void UsbDeviceManager(void)
 					if (usbThumbDriveWasConnected == YES)
 					{
 						usbThumbDriveWasConnected = NO;
-						OverlayMessage(getLangText(STATUS_TEXT), "USB THUMB DRIVE DISCONNECTED", (2 * SOFT_SECS));
+
+						sprintf((char*)g_spareBuffer, "%s %s", getLangText(USB_THUMB_DRIVE_TEXT), getLangText(DISCONNECTED_TEXT));
+						OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 					}
 
 					// Don't process this disconnection again until it's connected
@@ -871,7 +875,7 @@ void UsbDeviceManager(void)
 			// Check if USB ID is set for Device and VBUS is High (plugged into PC)
 			if ((Is_usb_id_device()) && (Is_usb_vbus_high()))
 			{
-				OverlayMessage("USB DEVICE STATUS", "USB TO PC CABLE WAS CONNECTED", 1 * SOFT_SECS);
+				OverlayMessage(getLangText(USB_DEVICE_STATUS_TEXT), getLangText(USB_TO_PC_CABLE_WAS_CONNECTED_TEXT), 1 * SOFT_SECS);
 				debug("USB Device mode: USB to PC connection established\r\n");
 
 				// Recall the current active menu to repaint the display
@@ -891,7 +895,7 @@ void UsbDeviceManager(void)
 			{
 				if ((Is_host_device_connection()) || (device_state == DEVICE_POWERED))
 				{
-					OverlayMessage("USB HOST STATUS", "USB DEVICE WAS CONNECTED", 1 * SOFT_SECS);
+					OverlayMessage(getLangText(USB_HOST_STATUS_TEXT), getLangText(USB_DEVICE_WAS_CONNECTED_TEXT), 1 * SOFT_SECS);
 					debug("USB OTG Host mode: OTG Host cable was connected\r\n");
 
 					// Recall the current active menu to repaint the display
@@ -909,7 +913,7 @@ void UsbDeviceManager(void)
 				}
 				else if (usbMassStorageState == USB_NOT_CONNECTED)
 				{
-					OverlayMessage("USB HOST STATUS", "USB OTG HOST CABLE WAS CONNECTED", 1 * SOFT_SECS);
+					OverlayMessage(getLangText(USB_HOST_STATUS_TEXT), getLangText(USB_OTG_HOST_CABLE_WAS_CONNECTED_TEXT), 1 * SOFT_SECS);
 					debug("USB OTG Host mode: OTG Host cable was connected\r\n");
 
 					// Recall the current active menu to repaint the display
@@ -933,7 +937,7 @@ void UsbDeviceManager(void)
 	{
 		if ((Is_host_device_connection()) || (device_state == DEVICE_POWERED))
 		{
-			OverlayMessage("USB HOST STATUS", "USB DEVICE WAS CONNECTED", 1 * SOFT_SECS);
+			OverlayMessage(getLangText(USB_HOST_STATUS_TEXT), getLangText(USB_DEVICE_WAS_CONNECTED_TEXT), 1 * SOFT_SECS);
 			debug("USB OTG Host mode: OTG Host cable was connected\r\n");
 
 			// Set state to host mode looking for a device
@@ -956,14 +960,14 @@ void UsbDeviceManager(void)
 		{
 			if (g_sampleProcessing == ACTIVE_STATE) // A Trigger event is an extension of Active state so don't need to check for that specifically
 			{
-				OverlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR MONITORING", 1000 * SOFT_MSECS);
+				OverlayMessage(getLangText(USB_STATUS_TEXT), getLangText(USB_CONNECTION_DISABLED_FOR_MONITORING_TEXT), (1 * SOFT_SECS));
 				debug("USB disabled for monitoring\r\n");
 				Usb_disable();
 				usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
 			}
 			else if (g_fileProcessActiveUsbLockout == ON)
 			{
-				OverlayMessage("USB STATUS", "USB CONNECTION DISABLED FOR FILE OPERATION", 1000 * SOFT_MSECS);
+				OverlayMessage(getLangText(USB_STATUS_TEXT), getLangText(USB_CONNECTION_DISABLED_FOR_FILE_OPERATION_TEXT), (1 * SOFT_SECS));
 				debug("USB disabled for file operation\r\n");
 				Usb_disable();
 				usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
@@ -973,12 +977,12 @@ void UsbDeviceManager(void)
 				// Check if USB ID is set for Device mode (PC connection)
 				if (Is_usb_id_device())
 				{
-					OverlayMessage("USB DEVICE STATUS", "USB TO PC CABLE WAS DISCONNECTED", 1 * SOFT_SECS);
+					OverlayMessage(getLangText(USB_DEVICE_STATUS_TEXT), getLangText(USB_TO_PC_CABLE_WAS_DISCONNECTED_TEXT), (1 * SOFT_SECS));
 					debug("USB Device mode: USB to PC connection removed\r\n");
 				}
 				else
 				{
-					OverlayMessage("USB HOST STATUS", "USB DEVICE WAS REMOVED", 1 * SOFT_SECS);
+					OverlayMessage(getLangText(USB_HOST_STATUS_TEXT), getLangText(USB_DEVICE_WAS_REMOVED_TEXT), (1 * SOFT_SECS));
 					debug("USB OTG Host mode: Device disconnected\r\n");
 				}
 
@@ -1053,11 +1057,13 @@ void BootLoadManager(void)
 				SetLcdBacklightState(BACKLIGHT_BRIGHT);
 			}
 
-			OverlayMessage("BOOTLOADER", "HIDDEN ENTRY...", 2 * SOFT_SECS);
+			sprintf((char*)g_spareBuffer, "%s. %s...", getLangText(MENU_ACTIVATION_TEXT), getLangText(INITIALIZING_TEXT));
+			OverlayMessage(getLangText(APP_LOADER_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 		}
 		else
 		{
-			OverlayMessage("BOOTLOADER", "FOUND CTRL_B...", 2 * SOFT_SECS);
+			sprintf((char*)g_spareBuffer, "%s. %s...", getLangText(SERIAL_ACTIVATION_TEXT), getLangText(INITIALIZING_TEXT));
+			OverlayMessage(getLangText(APP_LOADER_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 		}
 
 		if (g_fileAccessLock != AVAILABLE)
@@ -1072,14 +1078,16 @@ void BootLoadManager(void)
 		while (file == -1)
 		{
 			//WriteLCD_smText(0, 64, (unsigned char *)"Connect USB..", NORMAL_LCD);
-			OverlayMessage("BOOTLOADER", "BOOT FILE NOT FOUND. CONNECT THE USB CABLE", 0);
+			sprintf((char*)g_spareBuffer, "%s %s. %s", getLangText(APP_LOADER_TEXT), getLangText(FILE_NOT_FOUND_TEXT), getLangText(CONNECT_USB_CABLE_TEXT));
+			OverlayMessage(getLangText(APP_LOADER_TEXT), (char*)g_spareBuffer, 0);
 
 			usb_task_init();
 			device_mass_storage_task_init();
 
 			while(!Is_usb_vbus_high()) {}
 
-			OverlayMessage("BOOTLOADER", "WRITE BOOT.S TO SYSTEM DIR (REMOVE CABLE WHEN DONE)", 0);
+			sprintf((char*)"%s:%s (%s)", getLangText(COPY_TO_SYSTEM_DIR_TEXT), default_boot_name, getLangText(REMOVE_CABLE_WHEN_DONE_TEXT));
+			OverlayMessage(getLangText(APP_LOADER_TEXT), (char*)g_spareBuffer, 0);
 
 			usb_task_init();
 			device_mass_storage_task_init();
@@ -1098,7 +1106,8 @@ void BootLoadManager(void)
 		// Display initializing message
 		debug("Starting Boot..\r\n");
 
-		OverlayMessage("BOOTLOADER", "STARTING BOOTLOADER...", 2 * SOFT_SECS);
+		sprintf((char*)g_spareBuffer, "%s...", getLangText(STARTING_APP_LOADER_TEXT));
+		OverlayMessage(getLangText(APP_LOADER_TEXT), (char*)g_spareBuffer, 2 * SOFT_SECS);
 
 		ClearLcdDisplay();
 
@@ -1173,8 +1182,6 @@ extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
 static uint8 rs232PutToSleepState = NO;
 inline void SetupPowerSavingsBeforeSleeping(void)
 {
-	g_testApplyPS = Get_system_register(AVR32_COUNT);
-
 	// Only disable for Min and Most since None and Max are either permanently on or off
 	if ((g_unitConfig.powerSavingsLevel >= POWER_SAVINGS_MINIMUM) || (g_unitConfig.powerSavingsLevel <= POWER_SAVINGS_MOST))
 	{
@@ -1200,8 +1207,6 @@ inline void SetupPowerSavingsBeforeSleeping(void)
 ///----------------------------------------------------------------------------
 inline void RevertPowerSavingsAfterSleeping(void)
 {
-	g_testRevertPS = Get_system_register(AVR32_COUNT);
-
 #if 1 // Normal
 	// Disable pull ups on the data lines
 	AVR32_GPIO.port[2].puerc = 0xFC00; // 1111 1100 0000 0000
@@ -1335,8 +1340,6 @@ void PowerManager(void)
 		if (g_sleepModeState == AVR32_PM_SMODE_IDLE) { SLEEP(AVR32_PM_SMODE_IDLE); }
 		else if (g_sleepModeState == AVR32_PM_SMODE_FROZEN) { SLEEP(AVR32_PM_SMODE_FROZEN); }
 		else { SLEEP(AVR32_PM_SMODE_STANDBY); }
-
-		g_testAfterSleep = Get_system_register(AVR32_COUNT);
 #endif
 		// Check if needing to revert the power savings (if monitoring then the ISR will handle this operation)
 		if (g_powerSavingsForSleepEnabled == YES)
@@ -1393,14 +1396,6 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 	int LCPT = -1;
 	uint16 testCounter = 0;
 	uint16* intMem = (uint16*)0x3000;
-	uint32 testKPGetExtVoltage;
-	uint32 testKPReadMCP23018;
-	uint32 testKPWriteMCP23018;
-	uint32 testAfterSleepISR;
-	uint32 testAfterSleep;
-	uint32 testRevertPS;
-	uint32 testApplyPS;
-	uint32 testCycleCount;
 
 	//uint8 state = 0;
 	//uint8 key = KEY_NONE;
@@ -1409,8 +1404,6 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		* PC and SR are 4 bytes each.
 		*/
 	sp += 8;
-
-	testCycleCount = Get_system_register(AVR32_COUNT);
 
 	UNUSED(r12);
 	UNUSED(r11);
@@ -1486,42 +1479,6 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastCalPulse) { LCPT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastCalPulse); }
 #endif
 
-#if 1
-	while (intMem < (uint16*)0x4000)
-	{
-		// Check internal memory locations below the stack
-		if (*intMem == 0xD673)
-		{
-			testCounter += 2;
-			intMem++;
-		}
-		else break;
-	}
-#endif
-
-#if 1
-	if (testCycleCount > g_testKPGetExtVoltage) { testKPGetExtVoltage = testCycleCount - g_testKPGetExtVoltage; }
-	else { testKPGetExtVoltage = 0xFFFFFFFF - g_testKPGetExtVoltage + testCycleCount; }
-
-	if (testCycleCount > g_testKPReadMCP23018) { testKPReadMCP23018 = testCycleCount - g_testKPReadMCP23018; }
-	else { testKPReadMCP23018 = 0xFFFFFFFF - g_testKPReadMCP23018 + testCycleCount; }
-
-	if (testCycleCount > g_testKPWriteMCP23018) { testKPWriteMCP23018 = testCycleCount - g_testKPWriteMCP23018; }
-	else { testKPWriteMCP23018 = 0xFFFFFFFF - g_testKPWriteMCP23018 + testCycleCount; }
-
-	if (testCycleCount > g_testAfterSleepISR) { testAfterSleepISR = testCycleCount - g_testAfterSleepISR; }
-	else { testAfterSleepISR = 0xFFFFFFFF - g_testAfterSleepISR + testCycleCount; }
-
-	if (testCycleCount > g_testAfterSleep) { testAfterSleep = testCycleCount - g_testAfterSleep; }
-	else { testAfterSleep = 0xFFFFFFFF - g_testAfterSleep + testCycleCount; }
-
-	if (testCycleCount > g_testRevertPS) { testRevertPS = testCycleCount - g_testRevertPS; }
-	else { testRevertPS = 0xFFFFFFFF - g_testRevertPS + testCycleCount; }
-
-	if (testCycleCount > g_testApplyPS) { testApplyPS = testCycleCount - g_testApplyPS; }
-	else { testApplyPS = 0xFFFFFFFF - g_testApplyPS + testCycleCount; }
-#endif
-
 	while (1)
 	{
 		if (((exception_number * 4) - 4) == EVBA_BREAKPOINT)
@@ -1540,60 +1497,6 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 			if (g_breakpointCause == BP_MB_LOOP)
 			{
 				sprintf((char*)&exceptionMessage, "MSG TEXT: %s", (char*)g_debugBuffer);
-				//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
-				OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
-			}
-			else if (g_breakpointCause == BP_INT_MEM_CORRUPTED)
-			{
-				testCounter = 0;
-				intMem = (uint16*)0x0004;
-				while (intMem < (uint16*)0x3000)
-				{
-					if (*intMem != 0xD673)
-					{
-						testCounter++;
-					}
-
-					intMem++;
-				}
-
-				intMem = (uint16*)0x4000;
-				while (intMem < (uint16*)0x10000)
-				{
-					if (*intMem != 0xD673)
-					{
-						testCounter++;
-					}
-
-					intMem++;
-				}
-
-				intMem = (uint16*)0x0004;
-				while (intMem < (uint16*)0x3000)
-				{
-					if (*intMem != 0xD673)
-					{
-						break;
-					}
-
-					intMem++;
-				}
-
-				if (intMem >= (uint16*)0x3000)
-				{
-					intMem = (uint16*)0x4000;
-					while (intMem < (uint16*)0x10000)
-					{
-						if (*intMem != 0xD673)
-						{
-							break;
-						}
-
-						intMem++;
-					}
-				}
-
-				sprintf((char*)&exceptionMessage, "FIRST ADDR:%p COUNT:%d", intMem, testCounter);
 				//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
 				OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
 			}
@@ -1631,143 +1534,6 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 
 		sprintf((char*)&exceptionMessage, "SR:%lu FS:%d T:%d CP:%d M:%d", g_lifetimeHalfSecondTickCount, LFST, LTT, LCPT, LMT);
 		OverlayMessage("EXC SCREEN 7", (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-		sprintf((char*)&exceptionMessage, "GEV:%lu RMCP:%lu WMCP:%lu", testKPGetExtVoltage, testKPReadMCP23018, testKPWriteMCP23018);
-		OverlayMessage("EXC SCREEN 8", (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-		sprintf((char*)&exceptionMessage, "ASI: %lu AS:%lu APS:%lu RPS:%lu", testAfterSleepISR, testAfterSleep, testApplyPS, testRevertPS);
-		OverlayMessage("EXC SCREEN 9", (char*)&exceptionMessage, (8 * SOFT_SECS));
-	}
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-uint8 intMemProblem = NO;
-uint8 spareBufferTitle[100];
-uint8 spareBufferText[100];
-uint32 intMemCount = 0;
-void TestIntMem(char* titleString)
-{
-#if 1 // ET Test
-	uint16* intMem = (uint16*)0x0004;
-	while (intMem < (uint16*)0x3000)
-	{
-		// Check internal memory locations below the stack
-		if (*intMem != 0xD673)
-		{
-			intMemCount = 0;
-			sprintf((char*)spareBufferText, "UNUSED INT MEM CHANGED: ADDR %p = 0x%x", intMem, *intMem);
-			//OverlayMessage(titleString, (char*)g_spareBuffer, (3 * SOFT_SECS));
-			intMemProblem = YES;
-			strcpy((char*)spareBufferTitle, titleString);
-
-			while (intMem < (uint16*)0x3000)
-			{
-				if (*intMem != 0xD673) { intMemCount++; }
-				*intMem++ = 0xD673;
-			}
-			break;
-		}
-
-		intMem++;
-	}
-
-	intMem = (uint16*)0x4000;
-	while (intMem < (uint16*)0x10000)
-	{
-		// Check internal memory locations below the stack
-		if (*intMem != 0xD673)
-		{
-			intMemCount = 0;
-			sprintf((char*)spareBufferText, "UNUSED INT MEM CHANGED: ADDR %p = 0x%x", intMem, *intMem);
-			//OverlayMessage(titleString, (char*)g_spareBuffer, (3 * SOFT_SECS));
-			intMemProblem = YES;
-			strcpy((char*)spareBufferTitle, titleString);
-
-			while (intMem < (uint16*)0x10000)
-			{
-				if (*intMem != 0xD673) { intMemCount++; }
-				*intMem++ = 0xD673;
-			}
-			break;
-		}
-
-		intMem++;
-	}
-#endif
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void CheckInternalMemoryForCorruption(void)
-{
-#if 1 // ET Test
-	uint16* intMem = (uint16*)0x0004;
-
-	while (intMem < (uint16*)0x3000)
-	{
-		// Check internal memory locations below the stack
-		if (*intMem != 0xD673)
-		{
-#if 1
-			g_breakpointCause = BP_INT_MEM_CORRUPTED;
-			__asm__ __volatile__ ("breakpoint");
-#endif
-			sprintf((char*)g_spareBuffer, "UNUSED INT MEM CHANGED: ADDR %p = 0x%x", intMem, *intMem);
-			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
-
-			while (intMem < (uint16*)0x3000)
-			{
-				*intMem++ = 0xD673;
-			}
-			break;
-		}
-
-		intMem++;
-	}
-
-	intMem = (uint16*)0x4000;
-	while (intMem < (uint16*)0x10000)
-	{
-		// Check internal memory locations below the stack
-		if (*intMem != 0xD673)
-		{
-#if 1
-			g_breakpointCause = BP_INT_MEM_CORRUPTED;
-			__asm__ __volatile__ ("breakpoint");
-#endif
-			sprintf((char*)g_spareBuffer, "UNUSED INT MEM CHANGED: ADDR %p = 0x%x", intMem, *intMem);
-			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
-
-			while (intMem < (uint16*)0x10000)
-			{
-				*intMem++ = 0xD673;
-			}
-			break;
-		}
-
-		intMem++;
-	}
-#endif
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void InternalMemoryFill(void)
-{
-	uint16* intMem = (uint16*)0x0004;
-	while (intMem < (uint16*)0x10000)
-	{
-		// Ignore the top of the stack
-		if ((uint32)intMem < 0x3F00 || (uint32)intMem >= 0x4000)
-		{
-			*intMem = 0xD673;
-		}
-
-		intMem++;
 	}
 }
 
@@ -1791,7 +1557,6 @@ void EnableGlobalException(void)
 int main(void)
 {
 	// Initialize the system
-	InternalMemoryFill();
 	InitSystemHardware_NS8100();
 	InitInterrupts_NS8100();
 	InitSoftwareSettings_NS8100();

@@ -121,6 +121,9 @@ uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert);
 
 int OpenEventFile(uint16 eventNumber);
 void CloseEventFile(int);
+void DisplayFileNotFound(char* filename);
+void DisplayFileCorrupt(char* filename);
+
 uint8 CheckCompressedEventDataFileExists(uint16 eventNumber);
 
 void SetFileDateTimestamp(uint8 option);

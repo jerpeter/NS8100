@@ -114,7 +114,7 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 		// Allow both Seismic and Air trigger levels to be No Trigger (only allowing External trigger)
 		if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) && g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR)
 		{
-			MessageBox(getLangText(WARNING_TEXT), "UNIT SET FOR EXTERNAL TRIGGER.", MB_OK);
+			MessageBox(getLangText(WARNING_TEXT), getLangText(UNIT_SET_FOR_EXTERNAL_TRIGGER_TEXT), MB_OK);
 		}
 
 		// Check if the A-weighting option is enabled
@@ -1116,7 +1116,6 @@ void SaveRecordMenuHandler(uint8 keyPressed, void* data)
 	uint8 availableLocation = 0;
 	uint8 choice;
 	uint8 match = NO;
-	char message[50];
 	
 	if (keyPressed == ENTER_KEY)
 	{	
@@ -1161,9 +1160,8 @@ void SaveRecordMenuHandler(uint8 keyPressed, void* data)
 			else if (availableLocation == 0)
 			{
 				// Prompt to alert the user that the saved settings are full
-				memset(&message[0], 0, sizeof(message));
-				sprintf(message, "%s %s", getLangText(SAVED_SETTINGS_TEXT), getLangText(FULL_TEXT));
-				OverlayMessage(getLangText(WARNING_TEXT), message, 2 * SOFT_SECS);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(SAVED_SETTINGS_TEXT), getLangText(FULL_TEXT));
+				OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, 2 * SOFT_SECS);
 
 				// Copy over the record name
 				strcpy((char*)g_triggerRecord.name, (char*)data);

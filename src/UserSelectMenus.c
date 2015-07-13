@@ -246,7 +246,8 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 			case (ALARM_MODE_SEISMIC):
 				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR))
 				{
-					MessageBox(getLangText(WARNING_TEXT), "SEISMIC TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
+					sprintf((char*)g_spareBuffer, "%s %s. %s", getLangText(SEISMIC_TRIGGER_TEXT), getLangText(SET_TO_NO_TRIGGER_TEXT), getLangText(PLEASE_CHANGE_TEXT));
+					MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
 
 					SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
 				}
@@ -290,7 +291,8 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 			case (ALARM_MODE_AIR):
 				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR))
 				{
-					MessageBox(getLangText(WARNING_TEXT), "AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
+					sprintf((char*)g_spareBuffer, "%s %s. %s", getLangText(AIR_TRIGGER_TEXT), getLangText(SET_TO_NO_TRIGGER_TEXT), getLangText(PLEASE_CHANGE_TEXT));
+					MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
 
 					SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
 				}
@@ -338,7 +340,8 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) ||
 					(g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR)))
 				{
-					MessageBox(getLangText(WARNING_TEXT), "SEISMIC OR AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
+					sprintf((char*)g_spareBuffer, "%s %s. %s", getLangText(SEISMIC_OR_AIR_TRIGGER_TEXT), getLangText(SET_TO_NO_TRIGGER_TEXT), getLangText(PLEASE_CHANGE_TEXT));
+					MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
 
 					SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
 				}
@@ -463,7 +466,8 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 			case (ALARM_MODE_SEISMIC):
 				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR))
 				{
-					MessageBox(getLangText(WARNING_TEXT), "SEISMIC TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
+					sprintf((char*)g_spareBuffer, "%s %s. %s", getLangText(SEISMIC_TRIGGER_TEXT), getLangText(SET_TO_NO_TRIGGER_TEXT), getLangText(PLEASE_CHANGE_TEXT));
+					MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
 
 					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_unitConfig.alarmTwoMode);
 				}
@@ -507,7 +511,8 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 			case (ALARM_MODE_AIR):
 				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR))
 				{
-					MessageBox(getLangText(WARNING_TEXT), "AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
+					sprintf((char*)g_spareBuffer, "%s %s. %s", getLangText(AIR_TRIGGER_TEXT), getLangText(SET_TO_NO_TRIGGER_TEXT), getLangText(PLEASE_CHANGE_TEXT));
+					MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
 
 					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_unitConfig.alarmTwoMode);
 				}
@@ -556,7 +561,8 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 				if ((g_triggerRecord.opMode == WAVEFORM_MODE) && ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) ||
 					(g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR)))
 				{
-					MessageBox(getLangText(WARNING_TEXT), "SEISMIC OR AIR TRIGGER SET TO NO TRIGGER. PLEASE CHANGE", MB_OK);
+					sprintf((char*)g_spareBuffer, "%s %s. %s", getLangText(SEISMIC_OR_AIR_TRIGGER_TEXT), getLangText(SET_TO_NO_TRIGGER_TEXT), getLangText(PLEASE_CHANGE_TEXT));
+					MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
 
 					SETUP_USER_MENU_MSG(&alarmTwoMenu, g_unitConfig.alarmTwoMode);
 				}
@@ -1533,7 +1539,6 @@ void EraseEventsMenuHandlerz(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
-	char stringBuff[75];
 	uint8 choice = MB_SECOND_CHOICE;
 
 	if (keyPressed == ENTER_KEY)
@@ -1550,9 +1555,8 @@ void EraseEventsMenuHandlerz(uint8 keyPressed, void* data)
 				MessageBox(getLangText(WARNING_TEXT), getLangText(DO_NOT_TURN_THE_UNIT_OFF_UNTIL_THE_OPERATION_IS_COMPLETE_TEXT), MB_OK);
 
 				// Display a message alerting the user that the erase operation is in progress
-				memset(&stringBuff[0], 0, sizeof(stringBuff));
-				sprintf(stringBuff, "%s %s", getLangText(ERASE_OPERATION_IN_PROGRESS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT));
-				OverlayMessage(getLangText(STATUS_TEXT), stringBuff, 0);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(ERASE_OPERATION_IN_PROGRESS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT));
+				OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
 				// Delete events, recalculate space and reinitialize tables
 				DeleteEventFileRecords();
@@ -2844,8 +2848,8 @@ void TimerModeFreqMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_unitConfig.timerModeFrequency == TIMER_MODE_HOURLY)
 		{
-			MessageBox("TIMER MODE", "FOR HOURLY MODE THE HOURS AND MINUTES FIELDS ARE INDEPENDENT", MB_OK);
-			MessageBox("TIMER MODE HOURLY", "HOURS = ACTIVE HOURS, MINS = ACTIVE MIN RANGE EACH HOUR", MB_OK);
+			MessageBox(getLangText(TIMER_MODE_TEXT), getLangText(FOR_HOURLY_MODE_THE_HOURS_AND_MINUTES_FIELDS_ARE_INDEPENDENT_TEXT), MB_OK);
+			MessageBox(getLangText(TIMER_MODE_HOURLY_TEXT), getLangText(HOURS_ARE_ACTIVE_HOURS_MINS_ARE_ACTIVE_MIN_RANGE_EACH_HOUR_TEXT), MB_OK);
 		}
 		
 		SETUP_MENU_MSG(TIMER_MODE_TIME_MENU);

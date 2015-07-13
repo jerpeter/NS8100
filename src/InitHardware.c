@@ -891,7 +891,7 @@ void InitSDAndFileSystem(void)
 		if (sd_mmc_spi_internal_init() != OK)
 		{
 			debugErr("SD MMC Internal Init failed\r\n");
-			OverlayMessage("ERROR", "FAILED TO INIT SD CARD!", 0);
+			OverlayMessage(getLangText(ERROR_TEXT), getLangText(FAILED_TO_INIT_SD_CARD_TEXT), (3 * SOFT_SECS));
 		}
 		spi_unselectChip(&AVR32_SPI1, SD_MMC_SPI_NPCS);
 
@@ -907,13 +907,13 @@ void InitSDAndFileSystem(void)
 			{
 				// Error case
 				debugErr("FAT32 SD Card mount failed\r\n");
-				OverlayMessage("ERROR", "FAILED TO MOUNT SD CARD!", 0);
+				OverlayMessage(getLangText(ERROR_TEXT), getLangText(FAILED_TO_MOUNT_SD_CARD_TEXT), (3 * SOFT_SECS));
 			}
 		}
 		else // Error case
 		{
 			debugErr("FAT32 SD Card drive select failed\r\n");
-			OverlayMessage("ERROR", "FAILED TO SELECT SD CARD DRIVE!", 0);
+			OverlayMessage(getLangText(ERROR_TEXT), getLangText(FAILED_TO_SELECT_SD_CARD_DRIVE_TEXT), (3 * SOFT_SECS));
 		}
 
 		ReleaseSpi1MutexLock();
@@ -921,7 +921,7 @@ void InitSDAndFileSystem(void)
 	else
 	{
 		debugErr("SD Card not detected\r\n");
-		OverlayMessage("ERROR", "SD CARD IS NOT PRESENT!", 0);
+		OverlayMessage(getLangText(ERROR_TEXT), getLangText(SD_CARD_IS_NOT_PRESENT_TEXT), (10 * SOFT_SECS));
 	}
 }
 
