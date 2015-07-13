@@ -109,7 +109,7 @@ typedef struct
 
 #define JUMP_TO_BOOT	2
 
-#define LANGUAGE_TABLE_MAX_SIZE		8192
+#define LANGUAGE_TABLE_MAX_SIZE		16384
 
 // To eliminate C warning when the variable is not used.
 #define UNUSED(p) ((void)p)
@@ -197,7 +197,7 @@ enum {
 #define GLOBAL_DEBUG_PRINT_PORT	DEBUG_COM_PORT
 #endif
 
-#define GLOBAL_DEBUG_BUFFER_SIZE		(65536 - 1) // 1 less than max uint16 index
+#define GLOBAL_DEBUG_BUFFER_SIZE		(65536)
 #define GLOBAL_DEBUG_BUFFER_THRESHOLD	(32768)
 
 #define SPARE_BUFFER_SIZE				8192
