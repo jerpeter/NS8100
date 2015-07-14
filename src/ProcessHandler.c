@@ -191,7 +191,6 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 		}
 		else
 		{
-			g_fileProcessActiveUsbLockout = ON;
 			ForcedCalibration();
 		}
 	}
@@ -293,7 +292,8 @@ void StartDataCollection(uint32 sampleRate)
 extern void HandleActiveAlarmExtension(void);
 void StopMonitoring(uint8 mode, uint8 operation)
 {
-	OverlayMessage(getLangText(STATUS_TEXT), "CLOSING MONITOR SESSION...", 0);
+	sprintf((char*)g_spareBuffer, "%s...", getLangText(CLOSING_MONITOR_SESSION_TEXT));
+	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
 	// Check if the system was trying to recalibrate the offset due to temperature change
 	if (getSystemEventState(UPDATE_OFFSET_EVENT))
@@ -523,7 +523,9 @@ void HandleManualCalibration(void)
 				// fix_ns8100
 				if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 				{
-					OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
+					sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
+							getLangText(CALIBRATION_TEXT), getLangText(UNAVAILABLE_TEXT));
+					OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
 				}
 				else
 				{
@@ -531,7 +533,7 @@ void HandleManualCalibration(void)
 					StopDataClock();
 
 					// Perform Cal while in monitor mode
-					OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
+					OverlayMessage(getLangText(STATUS_TEXT), getLangText(PERFORMING_CALIBRATION_TEXT), 0);
 
 					GetManualCalibration();
 
@@ -552,7 +554,9 @@ void HandleManualCalibration(void)
 	{
 		if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 		{
-			OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
+			sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
+					getLangText(CALIBRATION_TEXT), getLangText(UNAVAILABLE_TEXT));
+			OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
 		}
 		else
 		{
@@ -560,7 +564,7 @@ void HandleManualCalibration(void)
 			g_summaryListMenuActive = NO;
 
 			// Perform Cal while in monitor mode
-			OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
+			OverlayMessage(getLangText(STATUS_TEXT), getLangText(PERFORMING_CALIBRATION_TEXT), 0);
 
 			GetManualCalibration();
 		}
@@ -577,7 +581,7 @@ void ForcedCalibration(void)
 	
 	g_forcedCalibration = YES;
 
-	OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING CALIBRATION", 0);
+	OverlayMessage(getLangText(STATUS_TEXT), getLangText(PERFORMING_CALIBRATION_TEXT), 0);
 
 	GetManualCalibration();
 

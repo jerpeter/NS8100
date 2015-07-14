@@ -411,7 +411,7 @@ void InitSoftwareSettings_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Update Flash Usage Stats
 	//-------------------------------------------------------------------------
-	OverlayMessage(getLangText(STATUS_TEXT), "CALCULATING EVENT STORAGE SPACE FREE", 0);
+	OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALCULATING_EVENT_STORAGE_SPACE_FREE_TEXT), 0);
 	GetSDCardUsageStats(); debug("Flash Usage Stats updated (Cluster size: %d bytes)\r\n", g_sdCardUsageStats.clusterSizeInBytes);
 
 	//-------------------------------------------------------------------------

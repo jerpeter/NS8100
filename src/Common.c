@@ -543,7 +543,6 @@ void InitVersionMsg(void)
 void BuildLanguageLinkTable(uint8 languageSelection)
 {
 	uint16 i, currIndex;
-	char* languageTablePtr;
 	int languageFile = -1;
 	char languageFilename[50];
 
@@ -553,36 +552,21 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 
 	switch (languageSelection)
 	{
-		case ENGLISH_LANG: languageTablePtr = englishLanguageTable;
-			strcat((char*)&languageFilename[0], "English.tbl");
-			break;
-
-		case FRENCH_LANG: languageTablePtr = frenchLanguageTable;
-			strcat((char*)&languageFilename[0], "French.tbl");
-			break;
-
-		case ITALIAN_LANG: languageTablePtr = italianLanguageTable;
-			strcat((char*)&languageFilename[0], "Italian.tbl");
-			break;
-
-		case GERMAN_LANG: languageTablePtr = germanLanguageTable;
-			strcat((char*)&languageFilename[0], "German.tbl");
-			break;
-
-		case SPANISH_LANG: languageTablePtr = spanishLanguageTable;
-			strcat((char*)&languageFilename[0], "Spanish.tbl");
-			break;
+		case ENGLISH_LANG: strcat((char*)&languageFilename[0], "English.tbl"); break;
+		case FRENCH_LANG: strcat((char*)&languageFilename[0], "French.tbl"); break;
+		case ITALIAN_LANG: strcat((char*)&languageFilename[0], "Italian.tbl"); break;
+		case GERMAN_LANG: strcat((char*)&languageFilename[0], "German.tbl"); break;
+		case SPANISH_LANG: strcat((char*)&languageFilename[0], "Spanish.tbl"); break;
 
 		default:
-			languageTablePtr = englishLanguageTable;
 			strcat((char*)&languageFilename[0], "English.tbl");
 			g_unitConfig.languageMode = ENGLISH_LANG;
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 			break;
 	}
 
-	// Default to internal language tables as a backup (overwritten if a language file is found)
-	g_languageLinkTable[0] = languageTablePtr;
+	// Default to internal English language table as a backup (overwritten if a language file is found)
+	memcpy(&g_languageTable[0], &englishLanguageTable[0], sizeof(g_languageTable));
 
 	if (g_fileAccessLock != AVAILABLE)
 	{
@@ -602,7 +586,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 		{
 			debug("Loading language table from file: %s, Length: %d\r\n", (char*)&languageFilename[0], fsaccess_file_get_size(languageFile));
 
-			memset(&g_languageTable, '\0', sizeof(g_languageTable));
+			memset(&g_languageTable[0], '\0', sizeof(g_languageTable));
 
 			if (fsaccess_file_get_size(languageFile) > LANGUAGE_TABLE_MAX_SIZE)
 			{
@@ -611,6 +595,11 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			}
 			else
 			{
+				if (fsaccess_file_get_size(languageFile) < 6660) // Slightly smaller than smallest updated language file
+				{
+					OverlayMessage("WARNING", "LANGUAGE FILE IS NOT CURRENT. PLEASE UPDATE", (5 * SOFT_SECS));
+				}
+
 				readWithSizeFix(languageFile, (uint8*)&g_languageTable[0], fsaccess_file_get_size(languageFile));
 			}
 
@@ -640,17 +629,15 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 		}
 	}
 
-	languageTablePtr = &g_languageTable[0];
-
 	// Set the first element of the link table to the start of the language table
-	g_languageLinkTable[0] = languageTablePtr;
+	g_languageLinkTable[0] = &g_languageTable[0];
 	
 	// Build the language link table by pointing to the start of every string following a Null
 	for (i = 1, currIndex = 0; i < TOTAL_TEXT_STRINGS; i++)
 	{
-		while (languageTablePtr[currIndex++] != '\0') { /* spin */ };
+		while (g_languageTable[currIndex++] != '\0') { /* spin */ };
 
-		g_languageLinkTable[i] = languageTablePtr + currIndex;
+		g_languageLinkTable[i] = g_languageTable + currIndex;
 	}
 
 	debug("Language Link Table built.\r\n");
@@ -1042,7 +1029,7 @@ void ReportFileSystemAccessProblem(char* attemptedProcess)
 
 	debugErr("Unable to access file system during: %s\r\n", attemptedProcess);
 	for (; i < strlen(attemptedProcess); i++) { attemptedProcess[i] = toupper(attemptedProcess[i]); }
-	sprintf((char*)g_spareBuffer, "FILE SYSTEM BUSY DURING: %s", attemptedProcess);
+	sprintf((char*)g_spareBuffer, "%s: %s", getLangText(FILE_SYSTEM_BUSY_DURING_TEXT), attemptedProcess);
 	OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 }
 
@@ -1055,7 +1042,7 @@ void ReportFileAccessProblem(char* attemptedFile)
 
 	debugErr("Unable to access file: %s\r\n", attemptedFile);
 	for (; i < strlen(attemptedFile); i++) { attemptedFile[i] = toupper(attemptedFile[i]); }
-	sprintf((char*)g_spareBuffer, "ERROR TRYING TO ACCESS: %s", attemptedFile);
+	sprintf((char*)g_spareBuffer, "%s: %s", getLangText(ERROR_TRYING_TO_ACCESS_TEXT), attemptedFile);
 	OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 }
 

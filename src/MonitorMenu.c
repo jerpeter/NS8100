@@ -113,7 +113,9 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 					SETUP_MENU_MSG(MAIN_MENU);
 					JUMP_TO_ACTIVE_MENU();
 					
-					OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT MONITOR.", (5 * SOFT_SECS));
+					sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
+							getLangText(MONITORING_TEXT), getLangText(UNAVAILABLE_TEXT));
+					OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
 					return;
 				}
 			}
@@ -371,7 +373,9 @@ extern void UsbDeviceManager(void);
 			SETUP_MENU_MSG(MAIN_MENU);
 			JUMP_TO_ACTIVE_MENU();
 			
-			OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) MONITOR STOPPED.", (5 * SOFT_SECS));
+			sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
+					getLangText(MONITORING_TEXT), getLangText(STOPPED_TEXT));
+			OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
 		break;
 
 		default:

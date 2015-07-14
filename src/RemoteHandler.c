@@ -184,7 +184,7 @@ void RemoteCmdMessageProcessing()
 	if (0xBADD != g_msgPool[s_msgReadIndex].overRunCheck)
 	{
 		g_msgPool[s_msgReadIndex].overRunCheck = 0xBADD;
-		OverlayMessage(getLangText(STATUS_TEXT), "CRAFT MESSAGE OVERRUN", 0);
+		OverlayMessage(getLangText(STATUS_TEXT), getLangText(CRAFT_SERIAL_ERROR_TEXT), 0);
 	}
 
 	// NOTE: Need a different message if the command comming across contains
@@ -230,7 +230,7 @@ void ProcessCraftData()
 	if (CMD_MSG_OVERFLOW_ERR == g_isrMessageBufferPtr->status)
 	{
 		g_isrMessageBufferPtr->status = CMD_MSG_NO_ERR;
-		OverlayMessage(getLangText(STATUS_TEXT), "MODEM SYNC FAILED", 0);
+		OverlayMessage(getLangText(STATUS_TEXT), getLangText(MODEM_SYNC_FAILED_TEXT), 0);
 #if 1 // New
 		return;
 #endif
@@ -240,7 +240,7 @@ void ProcessCraftData()
 	if (0xBADD != g_isrMessageBufferPtr->overRunCheck)
 	{
 		g_isrMessageBufferPtr->overRunCheck = 0xBADD;
-		OverlayMessage(getLangText(STATUS_TEXT), "CRAFT OVERRUN ERROR", 0);
+		OverlayMessage(getLangText(STATUS_TEXT), getLangText(CRAFT_SERIAL_ERROR_TEXT), 0);
 #if 1 // New
 		return;
 #endif

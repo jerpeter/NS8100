@@ -248,9 +248,10 @@ void MoveWaveformEventToFile(void)
 					}					
 					else // Write the file event to the SD card
 					{
-						sprintf((char*)&g_spareBuffer[0], "%s EVENT #%d BEING SAVED... (MAY TAKE TIME)",
-								(g_triggerRecord.opMode == WAVEFORM_MODE) ? "WAVEFORM" : "COMBO - WAVEFORM", g_pendingEventRecord.summary.eventNumber);
-						OverlayMessage("EVENT COMPLETE", (char*)&g_spareBuffer[0], 0);
+						sprintf((char*)&g_spareBuffer[0], "%s %s #%d %s... (%s)",
+								(g_triggerRecord.opMode == WAVEFORM_MODE) ? getLangText(WAVEFORM_TEXT) : getLangText(COMBO_WAVEFORM_TEXT), getLangText(EVENT_TEXT),
+								g_pendingEventRecord.summary.eventNumber, getLangText(BEING_SAVED_TEXT), getLangText(MAY_TAKE_TIME_TEXT));
+						OverlayMessage(getLangText(EVENT_COMPLETE_TEXT), (char*)&g_spareBuffer[0], 0);
 
 						// Write the event record header and summary
 						bytesWritten = write(waveformFileHandle, &g_pendingEventRecord, sizeof(EVT_RECORD));

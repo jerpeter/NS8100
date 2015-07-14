@@ -268,8 +268,6 @@ void KeypadLedUpdateTimerCallBack(void)
 	uint8 config; // = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
 	BOOLEAN externalChargePresent = CheckExternalChargeVoltagePresent();
 
-	g_testKPGetExtVoltage = Get_system_register(AVR32_COUNT);
-
 	// States
 	// 1) Init complete, not monitoring, not charging --> Static Green
 	// 2) Init complete, not monitoring, charging --> Static Red
@@ -322,7 +320,6 @@ void KeypadLedUpdateTimerCallBack(void)
 	if (ledState != lastLedState)
 	{
 		config = ReadMcp23018(IO_ADDRESS_KPD, GPIOA);
-		g_testKPReadMCP23018 = Get_system_register(AVR32_COUNT);
 		
 		switch (ledState)
 		{
@@ -347,7 +344,6 @@ void KeypadLedUpdateTimerCallBack(void)
 		}
 
 		WriteMcp23018(IO_ADDRESS_KPD, GPIOA, config);
-		g_testKPWriteMCP23018 = Get_system_register(AVR32_COUNT);
 	}
 
 	AssignSoftTimer(KEYPAD_LED_TIMER_NUM, ONE_SECOND_TIMEOUT, KeypadLedUpdateTimerCallBack);
@@ -507,39 +503,6 @@ void CheckForMidnight(void)
 			processingMidnight = NO;
 		}
 	}
-
-#if 0 // Moved to checking in main system event handling of low battery event
-	// Check if the battery voltage has dropped below a certain voltage
-	if (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE) < LOW_VOLTAGE_THRESHOLD)
-	{
-		// Change state to signal a low battery
-		raiseSystemEventFlag(LOW_BATTERY_WARNING_EVENT);
-
-		INPUT_MSG_STRUCT mn_msg;
-		char msgBuffer[25];
-
-		// Check if the unit is in monitor mode
-		if (g_sampleProcessing == ACTIVE_STATE)
-		{
-			// Disable the monitor menu update timer
-			ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
-
-			// Handle and finish monitoring
-			StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
-
-			// Clear and setup the message buffer
-			memset(&(msgBuffer[0]), 0, sizeof(msgBuffer));
-			sprintf(msgBuffer, "%s %s", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT));
-
-			// Overlay a "Battery Voltage Low" message
-			OverlayMessage(getLangText(WARNING_TEXT), msgBuffer, (2 * SOFT_SECS));
-
-			// Jump to the main menu
-			SETUP_MENU_MSG(MAIN_MENU);
-			JUMP_TO_ACTIVE_MENU();
-		}
-	}
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -580,7 +543,9 @@ void HandleMidnightEvent(void)
 				// fix_ns8100
 				if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 				{
-					OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
+					sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
+							getLangText(CALIBRATION_TEXT), getLangText(UNAVAILABLE_TEXT));
+					OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
 				}
 				else // Handle midnight cal while in Waveform mode
 				{
@@ -588,7 +553,7 @@ void HandleMidnightEvent(void)
 					StopDataClock();
 
 					// Perform Cal while in monitor mode
-					OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
+					OverlayMessage(getLangText(STATUS_TEXT), getLangText(PERFORMING_CALIBRATION_TEXT), 0);
 
 					GetManualCalibration();
 
@@ -635,12 +600,14 @@ void HandleMidnightEvent(void)
 				SETUP_MENU_MSG(MAIN_MENU);
 				JUMP_TO_ACTIVE_MENU();
 
-				OverlayMessage(getLangText(WARNING_TEXT), "FLASH MEMORY IS FULL. (WRAPPING IS DISABLED) CAN NOT CALIBRATE.", (5 * SOFT_SECS));
+				sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
+						getLangText(CALIBRATION_TEXT), getLangText(UNAVAILABLE_TEXT));
+				OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
 			}
 			else
 			{
 				// Perform Midnight calibration (outside of active monitoring)
-				OverlayMessage(getLangText(STATUS_TEXT), "PERFORMING MANUAL CAL", 0);
+				OverlayMessage(getLangText(STATUS_TEXT), getLangText(PERFORMING_CALIBRATION_TEXT), 0);
 
 				GetManualCalibration();
 			}
