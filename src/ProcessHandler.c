@@ -191,7 +191,6 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 		}
 		else
 		{
-			g_fileProcessActiveUsbLockout = ON;
 			ForcedCalibration();
 		}
 	}

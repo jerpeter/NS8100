@@ -611,8 +611,8 @@ void UsbDeviceManager(void)
 	{
 		//___________________________________________________________________________________________
 		// Check if processing is needed elsewhere
-		if ((g_sampleProcessing == ACTIVE_STATE) || (getSystemEventState(TRIGGER_EVENT)) || (g_fileProcessActiveUsbLockout == ON) ||
-			(g_activeMenu == CAL_SETUP_MENU) || (g_unitConfig.powerSavingsLevel > POWER_SAVINGS_NORMAL) || (g_activeMenu == MONITOR_MENU))
+		if ((g_sampleProcessing == ACTIVE_STATE) || (getSystemEventState(TRIGGER_EVENT)) || (g_activeMenu == CAL_SETUP_MENU) ||
+			(g_unitConfig.powerSavingsLevel > POWER_SAVINGS_NORMAL) || (g_activeMenu == MONITOR_MENU))
 		{
 			// Need to disable USB for other processing
 			debug("USB disabled for other processing\r\n");
@@ -793,8 +793,8 @@ void UsbDeviceManager(void)
 	//___________________________________________________________________________________________
 	else if (usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
 	{
-		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_fileProcessActiveUsbLockout == OFF) &&
-			(g_activeMenu != CAL_SETUP_MENU) && (g_unitConfig.powerSavingsLevel < POWER_SAVINGS_MOST))
+		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_activeMenu != CAL_SETUP_MENU) &&
+			(g_unitConfig.powerSavingsLevel < POWER_SAVINGS_MOST))
 		{
 			debug("USB enabled for processing again\r\n");
 			Usb_enable();
@@ -870,7 +870,7 @@ void UsbDeviceManager(void)
 	else if ((usbMassStorageState == USB_NOT_CONNECTED) || (usbMassStorageState == USB_HOST_MODE_WAITING_FOR_DEVICE))
 	{
 		// Check if ready for USB (not monitoring and not handling a trigger and not processing an SD card file)
-		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_fileProcessActiveUsbLockout == OFF))
+		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)))
 		{
 			// Check if USB ID is set for Device and VBUS is High (plugged into PC)
 			if ((Is_usb_id_device()) && (Is_usb_vbus_high()))
@@ -948,7 +948,7 @@ void UsbDeviceManager(void)
 	else if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
 	{
 		if (((Is_usb_id_device() && Is_usb_vbus_high()) || ((!Is_usb_id_device()) && (!Is_host_device_disconnection())))
-			&& (g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && g_fileProcessActiveUsbLockout == OFF)
+			&& (g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)))
 		{
 			// Call Usb and Device Storage drivers if connected to check and handle incoming actions
 			usb_task();
@@ -962,13 +962,6 @@ void UsbDeviceManager(void)
 			{
 				OverlayMessage(getLangText(USB_STATUS_TEXT), getLangText(USB_CONNECTION_DISABLED_FOR_MONITORING_TEXT), (1 * SOFT_SECS));
 				debug("USB disabled for monitoring\r\n");
-				Usb_disable();
-				usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
-			}
-			else if (g_fileProcessActiveUsbLockout == ON)
-			{
-				OverlayMessage(getLangText(USB_STATUS_TEXT), getLangText(USB_CONNECTION_DISABLED_FOR_FILE_OPERATION_TEXT), (1 * SOFT_SECS));
-				debug("USB disabled for file operation\r\n");
 				Usb_disable();
 				usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
 			}
@@ -998,7 +991,7 @@ void UsbDeviceManager(void)
 	else if (usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
 	{
 		// Check if system is ready for USB processing again
-		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_fileProcessActiveUsbLockout == OFF))
+		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)))
 		{
 			// Reenable the USB
 			debug("USB re-enabled\r\n");

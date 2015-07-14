@@ -50,7 +50,6 @@ MONTH_TABLE_STRUCT g_monthTable[] = { {0, "\0\0\0\0", 0}, {JAN, "JAN\0", 31}, {F
 uint8 g_mmap[LCD_NUM_OF_ROWS][LCD_NUM_OF_BIT_COLUMNS];
 uint8 g_contrast_value;
 uint8 g_LcdPowerState = ENABLED;
-uint8 g_fileProcessActiveUsbLockout = OFF;
 uint8 g_powerSavingsForSleepEnabled = NO;
 uint16 g_nextEventNumberToUse = 1;
 uint32 __monitorLogTblKey;

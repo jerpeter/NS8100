@@ -87,7 +87,6 @@ void EndBargraph(void)
 	}
 
 	MoveEndOfBargraphEventRecordToFile();
-	g_fileProcessActiveUsbLockout = OFF;
 }
 
 ///----------------------------------------------------------------------------
