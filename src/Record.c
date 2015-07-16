@@ -383,10 +383,10 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 opMode)
 	rec_ptr->srec.sensitivity = LOW;
 	rec_ptr->trec.dist_to_source = 0;
 	rec_ptr->trec.weight_per_delay = 0;
-	rec_ptr->trec.record_time = 0;
-	rec_ptr->trec.seismicTriggerLevel = NO_TRIGGER_CHAR;
+	rec_ptr->trec.record_time = 3;
+	rec_ptr->trec.seismicTriggerLevel = (uint16)((DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * ACCURACY_16_BIT_MIDPOINT) / g_factorySetupRecord.sensor_type);
 	rec_ptr->trec.airTriggerLevel = NO_TRIGGER_CHAR;
-	rec_ptr->trec.adjustForTempDrift = NO;
+	rec_ptr->trec.adjustForTempDrift = YES;
 	rec_ptr->trec.bitAccuracy = ACCURACY_16_BIT;
 	rec_ptr->bgrec.barInterval = SIXTY_SEC_PRD;
 	rec_ptr->bgrec.summaryInterval = ONE_HOUR_INTVL;
@@ -399,24 +399,6 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 opMode)
 	memset((char*)rec_ptr->trec.loc, 0, sizeof(rec_ptr->trec.loc));
 	memset((char*)rec_ptr->trec.comments, 0, sizeof(rec_ptr->trec.comments));
 	memset((char*)rec_ptr->trec.oper, 0, sizeof(rec_ptr->trec.oper));
-
-	// Mode specific 
-	switch (opMode)
-	{
-		case(WAVEFORM_MODE):
-			rec_ptr->trec.seismicTriggerLevel = 25; // A/D Counts
-			rec_ptr->trec.record_time = 3;
-			break;
-
-		case(BARGRAPH_MODE):
-			break;
-
-		case(COMBO_MODE):
-			break;
-
-		case(MANUAL_TRIGGER_MODE):
-			break;
-	} 
 }
 
 ///----------------------------------------------------------------------------
