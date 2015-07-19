@@ -784,11 +784,20 @@ Bool sd_mmc_spi_read_multiple_sector(U16 nb_sector)
   while (nb_sector--)
   {
     // Read the next sector
-    sd_mmc_spi_read_sector_to_ram(sector_buf);
-    sd_mmc_spi_read_multiple_sector_callback(sector_buf);
+    if (sd_mmc_spi_read_sector_to_ram(sector_buf) == OK)
+	{
+		if (sd_mmc_spi_read_multiple_sector_callback(sector_buf) == KO)
+		{
+			return (KO);
+		}
+	}
+	else
+	{
+		return (KO);
+	}
   }
 
-  return OK;
+  return (OK);
 }
 
 //!
@@ -802,8 +811,17 @@ Bool sd_mmc_spi_write_multiple_sector(U16 nb_sector)
   while (nb_sector--)
   {
     // Write the next sector
-    sd_mmc_spi_write_multiple_sector_callback(sector_buf);
-    sd_mmc_spi_write_sector_from_ram(sector_buf);
+    if (sd_mmc_spi_write_multiple_sector_callback(sector_buf) == OK)
+	{
+		if (sd_mmc_spi_write_sector_from_ram(sector_buf) == KO)
+		{
+			return (KO);
+		}
+	}
+	else
+	{
+		return (KO);
+	}
   }
 
   return OK;

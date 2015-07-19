@@ -168,8 +168,9 @@ extern Bool sd_mmc_spi_write_sector (U16);      // write a 512b sector from USB 
 extern Bool sd_mmc_spi_read_sector (U16);       // reads a 512b sector to an USB buffer
 extern Bool sd_mmc_spi_read_multiple_sector(U16 nb_sector);
 extern Bool sd_mmc_spi_write_multiple_sector(U16 nb_sector);
-extern void sd_mmc_spi_read_multiple_sector_callback(const void *psector);
-extern void sd_mmc_spi_write_multiple_sector_callback(void *psector);
+
+extern Bool sd_mmc_spi_read_multiple_sector_callback(const void *psector);
+extern Bool sd_mmc_spi_write_multiple_sector_callback(void *psector);
 
 
 /*

@@ -254,16 +254,35 @@ static void usb_mass_storage_cbw(void)
 //!
 //! This function sends the status in relation with the last CBW.
 //!
+extern volatile U32 g_lifetimeHalfSecondTickCount;
 static void usb_mass_storage_csw(void)
 {
+	volatile U32 timeoutTickCount = g_lifetimeHalfSecondTickCount + 6;
+
   while (Is_usb_endpoint_stall_requested(EP_MS_IN))
   {
-    if (Is_usb_setup_received()) usb_process_request();
+	if (!Is_usb_endpoint_enabled(g_scsi_ep_ms_in)) { return; } // USB Reset
+	if ((volatile U32)timeoutTickCount == (volatile U32)g_lifetimeHalfSecondTickCount) { return; }
+
+    if (Is_usb_setup_received())
+	{
+		usb_process_request();
+		  timeoutTickCount = (volatile U32)g_lifetimeHalfSecondTickCount + 6;
+	}
   }
+
+  timeoutTickCount = (volatile U32)g_lifetimeHalfSecondTickCount + 6;
 
   while (Is_usb_endpoint_stall_requested(EP_MS_OUT))
   {
-    if (Is_usb_setup_received()) usb_process_request();
+	if (!Is_usb_endpoint_enabled(g_scsi_ep_ms_in)) { return; } // USB Reset
+	if ((volatile U32)timeoutTickCount == (volatile U32)g_lifetimeHalfSecondTickCount) { return; }
+
+    if (Is_usb_setup_received())
+	{
+		usb_process_request();
+		  timeoutTickCount = (volatile U32)g_lifetimeHalfSecondTickCount + 6;
+	}
   }
 
   // MSC Compliance - Free BAD out receive during SCSI command
@@ -271,7 +290,13 @@ static void usb_mass_storage_csw(void)
     Usb_ack_out_received_free(EP_MS_OUT);
   }
 
-  while (!Is_usb_in_ready(EP_MS_IN));
+  timeoutTickCount = (volatile U32)g_lifetimeHalfSecondTickCount + 6;
+
+  while (!Is_usb_in_ready(EP_MS_IN))
+  {
+	if (!Is_usb_endpoint_enabled(g_scsi_ep_ms_in)) { return; } // USB Reset
+	if ((volatile U32)timeoutTickCount == (volatile U32)g_lifetimeHalfSecondTickCount) { return; }
+  }
 
   Usb_reset_endpoint_fifo_access(EP_MS_IN);
 

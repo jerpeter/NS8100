@@ -234,23 +234,30 @@ Bool status;
      return CTRL_NO_PRESENT;
 }
 
-
-void sd_mmc_spi_read_multiple_sector_callback(const void *psector)
+extern volatile U32 g_lifetimeHalfSecondTickCount;
+Bool sd_mmc_spi_read_multiple_sector_callback(const void *psector)
 {
-  U16 data_to_transfer = MMC_SECTOR_SIZE;
+	U16 data_to_transfer = MMC_SECTOR_SIZE;
+	volatile U32 timeoutTickCount;
 
-  while (data_to_transfer)
-  {
-    while (!Is_usb_in_ready(g_scsi_ep_ms_in));
+	while (data_to_transfer)
+	{
+		timeoutTickCount = (volatile U32)g_lifetimeHalfSecondTickCount + 6;
 
-    Usb_reset_endpoint_fifo_access(g_scsi_ep_ms_in);
-    data_to_transfer = usb_write_ep_txpacket(g_scsi_ep_ms_in, psector,
-                                             data_to_transfer, &psector);
-    Usb_ack_in_ready_send(g_scsi_ep_ms_in);
-  }
+		while (!Is_usb_in_ready(g_scsi_ep_ms_in))
+		{
+			if (!Is_usb_endpoint_enabled(g_scsi_ep_ms_in)) { return (KO); } // USB Reset
+			if ((volatile U32)timeoutTickCount == (volatile U32)g_lifetimeHalfSecondTickCount) { return (KO); }
+		}
+
+		Usb_reset_endpoint_fifo_access(g_scsi_ep_ms_in);
+		data_to_transfer = usb_write_ep_txpacket(g_scsi_ep_ms_in, psector,
+		data_to_transfer, &psector);
+		Usb_ack_in_ready_send(g_scsi_ep_ms_in);
+	}
+
+	return (OK);
 }
-
-
 
 Ctrl_status sd_mmc_spi_usb_write_10(U32 addr, U16 nb_sector)
 {
@@ -277,20 +284,28 @@ Ctrl_status sd_mmc_spi_usb_write_10(U32 addr, U16 nb_sector)
      return CTRL_NO_PRESENT;
 }
 
-
-void sd_mmc_spi_write_multiple_sector_callback(void *psector)
+Bool sd_mmc_spi_write_multiple_sector_callback(void *psector)
 {
-  U16 data_to_transfer = MMC_SECTOR_SIZE;
+	U16 data_to_transfer = MMC_SECTOR_SIZE;
+	U32 timeoutTickCount;
 
-  while (data_to_transfer)
-  {
-    while (!Is_usb_out_received(g_scsi_ep_ms_out));
+	while (data_to_transfer)
+	{
+		timeoutTickCount = (volatile U32)g_lifetimeHalfSecondTickCount + 6;
 
-    Usb_reset_endpoint_fifo_access(g_scsi_ep_ms_out);
-    data_to_transfer = usb_read_ep_rxpacket(g_scsi_ep_ms_out, psector,
-                                            data_to_transfer, &psector);
-    Usb_ack_out_received_free(g_scsi_ep_ms_out);
-  }
+		while (!Is_usb_out_received(g_scsi_ep_ms_out))
+		{
+			if (!Is_usb_endpoint_enabled(g_scsi_ep_ms_in)) { return (KO); } // USB Reset
+			if ((volatile U32)timeoutTickCount == (volatile U32)g_lifetimeHalfSecondTickCount) { return (KO); }
+		}
+
+		Usb_reset_endpoint_fifo_access(g_scsi_ep_ms_out);
+		data_to_transfer = usb_read_ep_rxpacket(g_scsi_ep_ms_out, psector,
+												data_to_transfer, &psector);
+		Usb_ack_out_received_free(g_scsi_ep_ms_out);
+	}
+
+	return (OK);
 }
 
 #endif // ACCESS_USB == ENABLED
