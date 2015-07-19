@@ -290,7 +290,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 #if 0 // Test
 						if (g_sampleProcessing == IDLE_STATE)
 						{
-							g_quickBootEntryJump = YES;
+							g_quickBootEntryJump = QUICK_BOOT_ENTRY_FROM_MENU;
 							BootLoadManager();
 						}
 #endif

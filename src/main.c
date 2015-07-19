@@ -736,6 +736,10 @@ void UsbDeviceManager(void)
 						SetLcdBacklightState(BACKLIGHT_BRIGHT);
 						AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 					}
+					else
+					{
+						SetLcdBacklightState(BACKLIGHT_BRIGHT);
+					}
 
 					sprintf((char*)g_spareBuffer, "%s %s", getLangText(USB_THUMB_DRIVE_TEXT), getLangText(DISCOVERED_TEXT));
 					OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
@@ -1017,43 +1021,43 @@ void BootLoadManager(void)
 	uint32 baudRate;
 
 	// Check if requested to jump to boot
-	if (g_quickBootEntryJump == YES)
+	if (g_quickBootEntryJump)
 	{
-		if (g_quickBootEntryJump == YES)
+		if (g_sampleProcessing == ACTIVE_STATE)
 		{
-			if (g_sampleProcessing == ACTIVE_STATE)
-			{
-				// Don't allow hidden jumping to boot during Monitoring
-				g_quickBootEntryJump = NO;
-				return;
-			}
-			else if (g_unitConfig.timerMode == ENABLED)
-			{
-				// Disable Timer mode since restarting would force a prompt for user action
-				g_unitConfig.timerMode = DISABLED;
-				SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+			// Don't allow hidden jumping to boot during Monitoring
+			g_quickBootEntryJump = NO;
+			return;
+		}
+		else if (g_unitConfig.timerMode == ENABLED)
+		{
+			// Disable Timer mode since restarting would force a prompt for user action
+			g_unitConfig.timerMode = DISABLED;
+			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
-				OverlayMessage(getLangText(WARNING_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), (2 * SOFT_SECS));
-			}
-			// else (g_sampleProcessing == IDLE_STATE)
+			OverlayMessage(getLangText(WARNING_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT), (2 * SOFT_SECS));
+		}
+		// else (g_sampleProcessing == IDLE_STATE)
 
-			if (g_lcdPowerFlag == DISABLED)
-			{
-				SetLcdContrast(g_contrast_value);
-				PowerControl(LCD_POWER_ENABLE, ON);
-				SoftUsecWait(LCD_ACCESS_DELAY);
-				InitLcdDisplay();
-				SetLcdBacklightState(BACKLIGHT_BRIGHT);
-			}
-			else
-			{
-				SetLcdBacklightState(BACKLIGHT_BRIGHT);
-			}
+		if (g_lcdPowerFlag == DISABLED)
+		{
+			SetLcdContrast(g_contrast_value);
+			PowerControl(LCD_POWER_ENABLE, ON);
+			SoftUsecWait(LCD_ACCESS_DELAY);
+			InitLcdDisplay();
+			SetLcdBacklightState(BACKLIGHT_BRIGHT);
+		}
+		else
+		{
+			SetLcdBacklightState(BACKLIGHT_BRIGHT);
+		}
 
+		if (g_quickBootEntryJump == QUICK_BOOT_ENTRY_FROM_MENU)
+		{
 			sprintf((char*)g_spareBuffer, "%s. %s...", getLangText(MENU_ACTIVATION_TEXT), getLangText(INITIALIZING_TEXT));
 			OverlayMessage(getLangText(APP_LOADER_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 		}
-		else
+		else if (g_quickBootEntryJump == QUICK_BOOT_ENTRY_FROM_SERIAL)
 		{
 			sprintf((char*)g_spareBuffer, "%s. %s...", getLangText(SERIAL_ACTIVATION_TEXT), getLangText(INITIALIZING_TEXT));
 			OverlayMessage(getLangText(APP_LOADER_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));

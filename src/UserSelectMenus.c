@@ -1811,7 +1811,7 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 			sprintf(buildString, "%s %s %s", getLangText(SOFTWARE_VER_TEXT), (char*)g_buildVersion, (char*)g_buildDate);
 			if (MessageBox(getLangText(STATUS_TEXT), buildString, MB_OK) == MB_SPECIAL_ACTION)
 			{
-				g_quickBootEntryJump = YES;
+				g_quickBootEntryJump = QUICK_BOOT_ENTRY_FROM_MENU;
 				BootLoadManager();
 			}
 		}

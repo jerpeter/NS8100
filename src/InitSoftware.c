@@ -76,7 +76,7 @@ void BootloaderEntryCheck(void)
 	// Check if a Ctrl-B was found in the USART receive holding register or if requested to jump to boot
 	if (AVR32_USART1.rhr == CTRL_B)
 	{
-		g_quickBootEntryJump = YES;
+		g_quickBootEntryJump = QUICK_BOOT_ENTRY_FROM_SERIAL;
 		BootLoadManager();
 	}
 }

@@ -176,7 +176,7 @@ void HandleDAI(CMD_BUFFER_STRUCT* inCmd)
 	debug("HandleDAI:Here\r\n");
 
 	// If we jump to boot this call will never return, otherwise proceed as if we can't jump
-	g_quickBootEntryJump = YES;
+	g_quickBootEntryJump = QUICK_BOOT_ENTRY_FROM_SERIAL;
 	BootLoadManager();
 
 	// Issue something to the user to alert them that the DAI command is not functional with this unit
