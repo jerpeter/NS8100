@@ -364,7 +364,12 @@ void PowerOffTimerCallback(void)
 		debug("Timer Mode: Ending last session, now disabling...\r\n");
 		g_unitConfig.timerMode = DISABLED;
 
-		// Save Unit Config
+		// Save Unit Config (also covers LCD contrast change case)
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+	}
+	else if (g_lcdContrastChanged == YES)
+	{
+		// Save Unit Config here to prevent constant saving on LCD contrast adjustment
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 	}
 		

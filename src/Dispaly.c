@@ -601,7 +601,7 @@ void AdjustLcdContrast(CONTRAST_ADJUSTMENT adjust)
 			break;
 		
 		case DARKER:
-			// Check if an deincrement in contrast will exceed the min
+			// Check if a decrement in contrast will exceed the min
 			if ((g_contrast_value - CONTRAST_STEPPING) >= MIN_CONTRAST)
 			{
 				g_contrast_value -= CONTRAST_STEPPING;
@@ -612,7 +612,9 @@ void AdjustLcdContrast(CONTRAST_ADJUSTMENT adjust)
 	}
 	
 	g_unitConfig.lcdContrast = g_contrast_value;
-	SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+	// Set flag to save LCD contrast change before powering off (or next unit config save) to prevent constant eeprom programming if a key is stuck
+	g_lcdContrastChanged = YES;
 }
 
 ///----------------------------------------------------------------------------

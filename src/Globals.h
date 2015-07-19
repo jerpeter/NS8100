@@ -220,6 +220,7 @@ extern uint8 g_sleepModeEngaged;
 extern volatile uint8 g_spi1AccessLock;
 extern volatile uint8 g_fileAccessLock;
 extern volatile uint8 g_externalTrigger;
+extern uint8 g_lcdContrastChanged;
 extern EVT_RECORD g_resultsEventCache[50];
 extern uint16 g_resultsCacheIndex;
 extern uint32 g_cyclicEventDelay;

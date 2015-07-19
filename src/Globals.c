@@ -235,6 +235,7 @@ uint8 g_summaryListArrowChar = BOTH_ARROWS_CHAR;
 volatile uint8 g_spi1AccessLock = AVAILABLE;
 volatile uint8 g_fileAccessLock = AVAILABLE;
 volatile uint8 g_externalTrigger = NO;
+uint8 g_lcdContrastChanged = NO;
 uint32 g_cyclicEventDelay = 0;
 uint32 g_updateOffsetCount = 0;
 USER_MENU_CACHE_STRUCT g_userMenuCache[MAX_MENU_ENTRIES];

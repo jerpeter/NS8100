@@ -55,6 +55,8 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 		case REC_UNIT_CONFIG_TYPE:
 			debug("Programming Unit Config...\r\n");
 
+			if (g_lcdContrastChanged == YES) { g_lcdContrastChanged = NO; } // Reset flag since LCD Contrast change will be saved
+
 			((UNIT_CONFIG_STRUCT *)src_ptr)->validationKey = 0xA5A5;
 
 			rec_size = sizeof(UNIT_CONFIG_STRUCT);
