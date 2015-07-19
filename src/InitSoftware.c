@@ -147,13 +147,17 @@ void LoadUnitConfig(void)
 #endif
 
 		if ((g_unitConfig.pretrigBufferDivider != PRETRIGGER_BUFFER_QUARTER_SEC_DIV) && (g_unitConfig.pretrigBufferDivider != PRETRIGGER_BUFFER_HALF_SEC_DIV) &&
-		(g_unitConfig.pretrigBufferDivider != PRETRIGGER_BUFFER_FULL_SEC_DIV))
+			(g_unitConfig.pretrigBufferDivider != PRETRIGGER_BUFFER_FULL_SEC_DIV))
 		{
 			g_unitConfig.pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 		}
 
-		#if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
+#if 1 // Forcing flash wrapping to be disabled
+		g_unitConfig.flashWrapping = NO;
+#endif
+
+#if 0 // Moved this init to the hardware section to allow for the saved Baud rate to be established from the start
 		// Set the baud rate to the user stored baud rate setting (initialized to 115200)
 		switch (g_unitConfig.baudRate)
 		{
@@ -168,7 +172,7 @@ void LoadUnitConfig(void)
 			// Re-Initialize the RS232 with the stored baud rate
 			usart_init_rs232(&AVR32_USART1, &rs232Options, FOSC0);
 		}
-		#endif
+#endif
 	}
 }
 

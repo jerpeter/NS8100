@@ -1658,7 +1658,7 @@ void EraseSettingsMenuHandler(uint8 keyPressed, void* data)
 #define FLASH_WRAPPING_MENU_ENTRIES 4
 USER_MENU_STRUCT flashWrappingMenu[FLASH_WRAPPING_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, FLASH_WRAPPING_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, FLASH_WRAPPING_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, FLASH_WRAPPING_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
 {ITEM_1, 0, YES_TEXT,	NO_TAG, {YES}},
 {ITEM_2, 0, NO_TEXT,	NO_TAG, {NO}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&FlashWrappingMenuHandler}}
@@ -1674,8 +1674,16 @@ void FlashWrappingMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
+#if 0 // Normal
 		g_unitConfig.flashWrapping = (uint8)(flashWrappingMenu[newItemIndex].data);
+#else // Forcing flash wrapping to be disabled
+		if ((uint8)flashWrappingMenu[newItemIndex].data == YES)
+		{
+			MessageBox(getLangText(STATUS_TEXT), getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT), MB_OK);
+		}
 
+		g_unitConfig.flashWrapping = NO;
+#endif
 		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
