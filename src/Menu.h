@@ -841,7 +841,7 @@ void BaudRateMenuHandler(uint8 key, void* data);
 void BitAccuracyMenuHandler(uint8 key, void* data);
 void ConfigMenuHandler(uint8 key, void* data);
 void DisplacementMenuHandler(uint8 key, void* data);
-void EraseEventsMenuHandlerz(uint8 key, void* data);
+void EraseEventsMenuHandler(uint8 key, void* data);
 void EraseSettingsMenuHandler(uint8 key, void* data);
 void FlashWrappingMenuHandler(uint8 key, void* data);
 void FreqPlotMenuHandler(uint8 key, void* data);

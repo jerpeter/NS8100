@@ -1358,7 +1358,7 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (FLASH_STATS):
-				OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
+				OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALCULATING_EVENT_STORAGE_SPACE_FREE_TEXT), 0);
 				GetSDCardUsageStats();
 				DisplayFlashUsageStats();
 			break;
@@ -1530,13 +1530,13 @@ USER_MENU_STRUCT eraseEventsMenu[ERASE_EVENTS_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, ERASE_EVENTS_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, YES_TEXT,	NO_TAG, {YES}},
 {ITEM_2, 0, NO_TEXT,	NO_TAG, {NO}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&EraseEventsMenuHandlerz}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&EraseEventsMenuHandler}}
 };
 
 //--------------------------
 // Erase Events Menu Handler
 //--------------------------
-void EraseEventsMenuHandlerz(uint8 keyPressed, void* data)
+void EraseEventsMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
@@ -1561,6 +1561,9 @@ void EraseEventsMenuHandlerz(uint8 keyPressed, void* data)
 
 				// Delete events, recalculate space and reinitialize tables
 				DeleteEventFileRecords();
+
+				// Recalculate free space and init buffers
+				OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALCULATING_EVENT_STORAGE_SPACE_FREE_TEXT), 0);
 				GetSDCardUsageStats();
 				InitRamSummaryTbl();
 				InitFlashBuffs();

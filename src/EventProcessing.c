@@ -46,6 +46,7 @@ static uint16* s_endFlashSectorPtr;
 static uint16 s_numOfFlashSummarys;
 static uint16 s_currFlashSummary;
 static char s_summaryListFileName[] = "A:\\Logs\\SummaryList.bin";
+static uint32 s_addedSizeToSDCard = 0;
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -2212,14 +2213,26 @@ void GetSDCardUsageStats(void)
 	}
 
 	g_sdCardUsageStats.clusterSizeInBytes = (fs_g_nav.u8_BPB_SecPerClus * SECTOR_SIZE_IN_BYTES);
-	g_sdCardUsageStats.sizeFree = ((nav_partition_freespace() * SECTOR_SIZE_IN_BYTES) - RESERVED_FILESYSTEM_SIZE_IN_BYTES);
+	g_sdCardUsageStats.sizeFree = (nav_partition_freespace() * SECTOR_SIZE_IN_BYTES);
 	g_sdCardUsageStats.sizeUsed = (nav_partition_space() * SECTOR_SIZE_IN_BYTES) - g_sdCardUsageStats.sizeFree;
 	g_sdCardUsageStats.percentFree = (uint8)(nav_partition_freespace_percent());
 	g_sdCardUsageStats.percentUsed = (uint8)(100 - g_sdCardUsageStats.percentFree);
 #endif
-	g_sdCardUsageStats.waveEventsLeft = (uint16)(g_sdCardUsageStats.sizeFree / waveSize);
-	g_sdCardUsageStats.barHoursLeft = (uint16)(g_sdCardUsageStats.sizeFree / barSize);
-	g_sdCardUsageStats.manualCalsLeft = (uint16)(g_sdCardUsageStats.sizeFree / manualCalSize);
+	if (g_sdCardUsageStats.sizeFree > RESERVED_FILESYSTEM_SIZE_IN_BYTES)
+	{
+		g_sdCardUsageStats.waveEventsLeft = (uint16)((g_sdCardUsageStats.sizeFree - RESERVED_FILESYSTEM_SIZE_IN_BYTES) / waveSize);
+		g_sdCardUsageStats.barHoursLeft = (uint16)((g_sdCardUsageStats.sizeFree - RESERVED_FILESYSTEM_SIZE_IN_BYTES) / barSize);
+		g_sdCardUsageStats.manualCalsLeft = (uint16)((g_sdCardUsageStats.sizeFree - RESERVED_FILESYSTEM_SIZE_IN_BYTES) / manualCalSize);
+	}
+	else
+	{
+		g_sdCardUsageStats.waveEventsLeft = (uint16)(0);
+		g_sdCardUsageStats.barHoursLeft = (uint16)(0);
+		g_sdCardUsageStats.manualCalsLeft = (uint16)(0);
+	}
+
+	// Reset tracking size count
+	s_addedSizeToSDCard = 0;
 
 #if DISABLED_BUT_FIX_FOR_NS8100 // Fill in at some point
 	if (g_unitConfig.flashWrapping == YES)
@@ -2245,7 +2258,6 @@ void UpdateSDCardUsageStats(uint32 removeSize)
 	uint32 waveSize;
 	uint32 barSize;
 	uint32 manualCalSize;
-	uint32 s_addedSize = 0;
 
 	// Adjust size down to a allocation unit (cluster) boundary
 	removeSizeByAllocationUnit = ((removeSize / g_sdCardUsageStats.clusterSizeInBytes) * g_sdCardUsageStats.clusterSizeInBytes);
@@ -2257,13 +2269,14 @@ void UpdateSDCardUsageStats(uint32 removeSize)
 		removeSizeByAllocationUnit += g_sdCardUsageStats.clusterSizeInBytes;
 	}
 
-	s_addedSize += removeSizeByAllocationUnit;
+	s_addedSizeToSDCard += removeSizeByAllocationUnit;
 
-	// Check if the current running added size is above 100 MB or if the remaining size is less than 50 MB
-	if ((s_addedSize > (100 * ONE_MEGABYTE_SIZE)) || (g_sdCardUsageStats.sizeFree < (50 * ONE_MEGABYTE_SIZE)))
+	// Check if the current running added size is above 100 MB or if the remaining size is less than 50 MB (accounting for system reserved space)
+	if ((s_addedSizeToSDCard > (100 * ONE_MEGABYTE_SIZE)) || (g_sdCardUsageStats.sizeFree < RESERVED_FILESYSTEM_SIZE_IN_BYTES) ||
+		((g_sdCardUsageStats.sizeFree - RESERVED_FILESYSTEM_SIZE_IN_BYTES) < (50 * ONE_MEGABYTE_SIZE)))
 	{
 		// Reset added size in either case
-		s_addedSize = 0;
+		s_addedSizeToSDCard = 0;
 
 		// Do official recalculation
 		GetSDCardUsageStats();
@@ -2281,9 +2294,18 @@ void UpdateSDCardUsageStats(uint32 removeSize)
 		g_sdCardUsageStats.percentFree = (uint8)((float)((float)g_sdCardUsageStats.sizeFree / (float)(g_sdCardUsageStats.sizeFree + g_sdCardUsageStats.sizeUsed)) * 100);
 		g_sdCardUsageStats.percentUsed = (uint8)(100 - g_sdCardUsageStats.percentFree);
 
-		g_sdCardUsageStats.waveEventsLeft = (uint16)(g_sdCardUsageStats.sizeFree / waveSize);
-		g_sdCardUsageStats.barHoursLeft = (uint16)(g_sdCardUsageStats.sizeFree / barSize);
-		g_sdCardUsageStats.manualCalsLeft = (uint16)(g_sdCardUsageStats.sizeFree / manualCalSize);
+		if (g_sdCardUsageStats.sizeFree > RESERVED_FILESYSTEM_SIZE_IN_BYTES)
+		{
+			g_sdCardUsageStats.waveEventsLeft = (uint16)((g_sdCardUsageStats.sizeFree - RESERVED_FILESYSTEM_SIZE_IN_BYTES) / waveSize);
+			g_sdCardUsageStats.barHoursLeft = (uint16)((g_sdCardUsageStats.sizeFree - RESERVED_FILESYSTEM_SIZE_IN_BYTES) / barSize);
+			g_sdCardUsageStats.manualCalsLeft = (uint16)((g_sdCardUsageStats.sizeFree - RESERVED_FILESYSTEM_SIZE_IN_BYTES) / manualCalSize);
+		}
+		else
+		{
+			g_sdCardUsageStats.waveEventsLeft = 0;
+			g_sdCardUsageStats.barHoursLeft = 0;
+			g_sdCardUsageStats.manualCalsLeft = 0;
+		}
 	}
 
 #if DISABLED_BUT_FIX_FOR_NS8100 // Fill in at some point
