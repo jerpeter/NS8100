@@ -1358,7 +1358,8 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (FLASH_STATS):
-				UpdateSDCardUsageStats(0);
+				OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT), 0);
+				GetSDCardUsageStats();
 				DisplayFlashUsageStats();
 			break;
 
