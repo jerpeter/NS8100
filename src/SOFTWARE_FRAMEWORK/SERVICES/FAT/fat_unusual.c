@@ -2129,7 +2129,11 @@ U32   fat_getfreespace( void )
       if( Is_fat32 )
       {
          u32_nb_free_cluster = fat_read_fat32_FSInfo();
+#if 0 // Original (Doesn't correctly increase free cluster count on file delete)
          if( 0xFFFFFFFF != u32_nb_free_cluster )
+#else // Recalculate every time
+         if(0)
+#endif
             goto endof_fat_getfreespace;
          u32_nb_free_cluster = 0;
       }
