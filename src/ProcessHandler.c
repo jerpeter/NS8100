@@ -514,8 +514,13 @@ void HandleManualCalibration(void)
 	// Check if currently monitoring
 	if (g_sampleProcessing == ACTIVE_STATE)
 	{
+#if 0 // Fix at some point to allow for Combo mode but currently the re-processing of InitDataBuffs will screw up the Bargraph process
 		// Check if Waveform or Combo mode and not handling a cached event
 		if (((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE)) && (getSystemEventState(TRIGGER_EVENT) == NO))
+#else // Only Waveform
+		// Check if Waveform or Combo mode and not handling a cached event
+		if ((g_triggerRecord.opMode == WAVEFORM_MODE) && (getSystemEventState(TRIGGER_EVENT) == NO))
+#endif
 		{
 			// Check if still waiting for an event and not processing a cal and not waiting for a cal
 			if (g_busyProcessingEvent == NO)
