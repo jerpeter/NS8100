@@ -444,6 +444,7 @@ uint8 HandleCtrlKeyCombination(uint8 inputChar)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+extern void UsbDeviceManager(void);
 uint8 GetKeypadKey(uint8 mode)
 {
 	//uint8 columnSelection = 0;
@@ -461,7 +462,11 @@ uint8 GetKeypadKey(uint8 mode)
 		// If there is a key, wait until it's depressed
 		while (keyPressed != KEY_NONE)
 		{
+#if 0 // Original (just a delay)
 			SoftUsecWait(1000);
+#else // Process USB as a delay
+			UsbDeviceManager();
+#endif
 			keyPressed = ScanKeypad();
 		}
 
@@ -469,7 +474,11 @@ uint8 GetKeypadKey(uint8 mode)
 		keyPressed = ScanKeypad();
 		while (keyPressed == KEY_NONE)
 		{
+#if 0 // Original (just a delay)
 			SoftUsecWait(1000);
+#else // Process USB as a delay
+			UsbDeviceManager();
+#endif
 			keyPressed = ScanKeypad();
 		}
 
@@ -484,10 +493,14 @@ uint8 GetKeypadKey(uint8 mode)
 		}
 #endif
 
-		// Wait for a key to be pressed
+		// Wait for a key to be released
 		while (ScanKeypad() != KEY_NONE)
 		{
+#if 0 // Original (just a delay)
 			SoftUsecWait(1000);
+#else // Process USB as a delay
+			UsbDeviceManager();
+#endif
 		}
 	}
 	else // mode = CHECK_ONCE_FOR_KEY
