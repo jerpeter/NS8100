@@ -545,7 +545,7 @@ void HandleMidnightEvent(void)
 			// Check if not busy processing an event, otherwise handling a manual cal or event which would be accompanied by a cal pulse so skip midnight cal
 			if (g_busyProcessingEvent == NO)
 			{
-				// fix_ns8100
+				// Make sure there is room to store a Manual calibration event
 				if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 				{
 					sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),

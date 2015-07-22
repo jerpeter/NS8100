@@ -525,7 +525,7 @@ void HandleManualCalibration(void)
 			// Check if still waiting for an event and not processing a cal and not waiting for a cal
 			if (g_busyProcessingEvent == NO)
 			{
-				// fix_ns8100
+				// Check if there is room to store a Manual calibration event
 				if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 				{
 					sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
