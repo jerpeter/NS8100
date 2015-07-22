@@ -1631,6 +1631,7 @@ void EraseSettingsMenuHandler(uint8 keyPressed, void* data)
 
 			// Load Defaults for Waveform
 			LoadTrigRecordDefaults((REC_EVENT_MN_STRUCT*)&g_triggerRecord, WAVEFORM_MODE);
+			SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 			// Load Unit Config defaults
 			LoadUnitConfigDefaults((UNIT_CONFIG_STRUCT*)&g_unitConfig);
@@ -2453,7 +2454,7 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 					getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT));
 			MessageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
 
-			debug("Sample Rate: %d is not supported for this mode.\r\n", g_triggerRecord.trec.record_time_max);
+			debug("Sample Rate: %d is not supported for this mode.\r\n", g_triggerRecord.trec.sample_rate);
 
 			SETUP_USER_MENU_MSG(&sampleRateMenu, sampleRateMenu[DEFAULT_ITEM_2].data);
 		}
@@ -2461,11 +2462,20 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 		{
 			g_triggerRecord.trec.sample_rate = sampleRateMenu[newItemIndex].data;
 
-			// fix_ns8100 - Add in Combo mode calc that accounts for Bargraph buffers
-			g_triggerRecord.trec.record_time_max = (uint16)(((uint32)((EVENT_BUFF_SIZE_IN_WORDS -
-				((g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider) * g_sensorInfo.numOfChannels) -
-				((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * g_sensorInfo.numOfChannels)) /
-				(g_triggerRecord.trec.sample_rate * g_sensorInfo.numOfChannels))));
+			if (g_triggerRecord.opMode == COMBO_MODE)
+			{
+				g_triggerRecord.trec.record_time_max = (uint16)(((uint32)(((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS) -
+					((g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider) * g_sensorInfo.numOfChannels) -
+					((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * g_sensorInfo.numOfChannels)) /
+					(g_triggerRecord.trec.sample_rate * g_sensorInfo.numOfChannels))));
+			}
+			else // all other modes
+			{
+				g_triggerRecord.trec.record_time_max = (uint16)(((uint32)(((EVENT_BUFF_SIZE_IN_WORDS) -
+					((g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider) * g_sensorInfo.numOfChannels) -
+					((g_triggerRecord.trec.sample_rate / MIN_SAMPLE_RATE) * MAX_CAL_SAMPLES * g_sensorInfo.numOfChannels)) /
+					(g_triggerRecord.trec.sample_rate * g_sensorInfo.numOfChannels))));
+			}
 
 			debug("New Max Record Time: %d\r\n", g_triggerRecord.trec.record_time_max);
 
