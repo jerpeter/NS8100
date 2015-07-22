@@ -681,7 +681,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			{
 				//___________________________________________________________________________________________
 				//__Save date and timestamp of new trigger
-				g_startOfEventDateTimestampBufferPtr[g_eventBufferWriteIndex] = GetCurrentTime();
+				g_startOfEventDateTimestampBuffer[g_eventBufferWriteIndex] = GetCurrentTime();
 
 				//___________________________________________________________________________________________
 				//__Setup new event buffer pointers, counts, and flags

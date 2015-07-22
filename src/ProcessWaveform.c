@@ -77,9 +77,8 @@ void MoveWaveformEventToFile(void)
 					debugErr("Out of Ram Summary Entrys\r\n");
 				}
 
-				// Added temporarily to prevent SPI access issues
-				// fix_ns8100
-				g_pendingEventRecord.summary.captured.eventTime = g_startOfEventDateTimestampBufferPtr[g_eventBufferReadIndex]; //GetCurrentTime();
+				// Save event start time with buffered timestamp
+				g_pendingEventRecord.summary.captured.eventTime = g_startOfEventDateTimestampBuffer[g_eventBufferReadIndex];
 
 				if (getSystemEventState(EXT_TRIGGER_EVENT))
 				{
@@ -374,7 +373,7 @@ void MoveWaveformEventToFile(void)
 					g_currentEventStartPtr = g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
 				}
 
-				// fix_ns8100 - Currently does nothing since freeing of buffer happens below and a check is at the start
+				// Remove at some point - Currently does nothing since freeing of buffer happens below and a check is at the start
 				if (g_freeEventBuffers == g_maxEventBuffers)
 				{
 					clearSystemEventFlag(TRIGGER_EVENT);
