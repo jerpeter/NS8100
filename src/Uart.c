@@ -174,7 +174,7 @@ void UartPutc(uint8 c, int32 channel)
 	}
 	else if (channel == RS485_COM_PORT)
 	{
-		// fix_ns8100
+		// Add 485 logic
 	}
 #if (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE)
 	else if (channel == GLOBAL_DEBUG_PRINT_PORT)
@@ -183,7 +183,11 @@ void UartPutc(uint8 c, int32 channel)
 		// Debug USART
 		//----------------------------------------------------------------------------------
 		// Check if the debug USART processor module is powered (USART0)
+#if (GLOBAL_DEBUG_PRINT_ENABLED)
+		if (g_unitConfig.powerSavingsLevel <= POWER_SAVINGS_NORMAL)
+#else
 		if (g_unitConfig.powerSavingsLevel < POWER_SAVINGS_NORMAL)
+#endif
 		{
 			// Dump the character to the serial port
 			status = usart_write_char(&AVR32_USART0, c);
