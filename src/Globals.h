@@ -74,7 +74,6 @@ extern uint32 g_wordSizeInPretrig;
 extern uint32 g_wordSizeInBody;
 extern uint32 g_wordSizeInCal;
 extern uint32 g_wordSizeInEvent;
-extern DATE_TIME_STRUCT* g_startOfEventDateTimestampBufferPtr;
 extern uint16* g_startOfEventBufferPtr;
 extern uint16* g_eventBufferPretrigPtr;
 extern uint16* g_eventBufferBodyPtr;
@@ -231,6 +230,7 @@ extern SUMMARY_LIST_FILE_DETAILS g_summaryList;
 extern volatile uint16 g_storedTempReading;
 extern volatile uint16 g_currentTempReading;
 extern volatile uint16 g_previousTempReading;
+extern DATE_TIME_STRUCT g_startOfEventDateTimestampBuffer[MAX_EVENT_TIMESTAMP_BUFFERS];
 extern uint16 g_eventDataBuffer[EVENT_BUFF_SIZE_IN_WORDS_PLUS_EVT_RECORD_PLUS_SUMMARY_LIST];
 
 // Version
