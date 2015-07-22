@@ -229,11 +229,11 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			//debug("Usb Host Sleep Enable: %s.\r\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				// fix_ns8100
+				// Fill in at some point
 			}
 			else // (mode == OFF)
 			{
-				// fix_ns8100
+				// Fill in at some point
 			}
 			break;
 
@@ -243,11 +243,11 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			//debug("Usb Device Sleep Enable: %s.\r\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				// fix_ns8100
+				// Fill in at some point
 			}
 			else // (mode == OFF)
 			{
-				// fix_ns8100
+				// Fill in at some point
 			}
 			break;
 
@@ -271,11 +271,11 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			//debug("Analog Sleep Enable: %s.\r\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				// fix_ns8100
+				// Fill in at some point
 			}
 			else // (mode == OFF)
 			{
-				// fix_ns8100
+				// Fill in at some point
 			}
 			break;
 
