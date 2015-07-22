@@ -102,24 +102,18 @@ void InitDataBuffs(uint8 opMode)
 		if (opMode == COMBO_MODE)
 		{
 			// Calculate total event buffers available (partial event buffer size)
-			g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS) / (g_wordSizeInEvent + (sizeof(DATE_TIME_STRUCT) / 2)));
+			g_maxEventBuffers = (uint16)((EVENT_BUFF_SIZE_IN_WORDS - COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS) / (g_wordSizeInEvent));
 
-			// Init the starting event date and timestamp buffer to the beginning of the event buffer past the bargraph portion
-			g_startOfEventDateTimestampBufferPtr = (DATE_TIME_STRUCT*)&(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS]);
-
-			// Init starting event buffer pointer beyond the event date and timestamp buffer
-			g_startOfEventBufferPtr = &(g_eventDataBuffer[(COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS + (g_maxEventBuffers * (sizeof(DATE_TIME_STRUCT) / 2)))]);
+			// Init starting event buffer pointer beyond the reserved area for Combo - Bargraph
+			g_startOfEventBufferPtr = &(g_eventDataBuffer[COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS]);
 		}
 		else // ((opMode == WAVEFORM_MODE) || (opMode == MANUAL_CAL_MODE))
 		{
-			// Calculate total event buffers available (full event buffer size plus date and time structure)
-			g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / (g_wordSizeInEvent + (sizeof(DATE_TIME_STRUCT) / 2)));
+			// Calculate total event buffers available (full event buffer size)
+			g_maxEventBuffers = (uint16)(EVENT_BUFF_SIZE_IN_WORDS / (g_wordSizeInEvent));
 
-			// Init the starting event date and timestamp buffer to the beginning of the event buffer
-			g_startOfEventDateTimestampBufferPtr = (DATE_TIME_STRUCT*)&(g_eventDataBuffer[0]);
-
-			// Init starting event buffer pointer beyond the event date and timestamp buffer
-			g_startOfEventBufferPtr = &(g_eventDataBuffer[(g_maxEventBuffers * (sizeof(DATE_TIME_STRUCT) / 2))]);
+			// Init starting event buffer pointer
+			g_startOfEventBufferPtr = &(g_eventDataBuffer[0]);
 		}
 
 		g_freeEventBuffers = g_maxEventBuffers;
