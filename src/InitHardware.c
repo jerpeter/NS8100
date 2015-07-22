@@ -764,7 +764,7 @@ void InitDebug232(void)
 	// Initialize it in RS232 mode.
 	usart_init_rs232(&AVR32_USART0, &usart_0_rs232_options, FOSC0);
 
-	sprintf((char*)g_spareBuffer, "-----     NS8100 Fresh boot, App version: %s (Date: %s)     -----\r\n", (char*)g_buildVersion, (char*)g_buildDate);
+	sprintf((char*)g_spareBuffer, "-----     NS8100 Debug port, App version: %s (Date: %s)     -----\r\n", (char*)g_buildVersion, (char*)g_buildDate);
 	usart_write_line((&AVR32_USART0), "\r\n\n");
 	usart_write_line((&AVR32_USART0), "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\r\n");
 	usart_write_line((&AVR32_USART0), "---------------------------------------------------------------------------------------\r\n");
