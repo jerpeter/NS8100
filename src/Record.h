@@ -209,7 +209,7 @@ typedef struct
 
 typedef struct
 {
-	uint32 sensor_type;
+	uint32 unused;
 	uint32 sensitivity;
 } SENSOR_INFO_STRUCT;
 
@@ -218,7 +218,7 @@ typedef struct
 	uint8 name[10];
 	uint8 validRecord;
 	uint8 opMode;
-	DATE_TIME_STRUCT time_stamp;
+	DATE_TIME_STRUCT timeStamp;
 	TRIGGER_EVENT_DATA_STRUCT trec;
 	BAR_GRAPH_EVENT_DATA_STRUCT bgrec;
 	BAR_GRAPH_EXTRA_DATA_STRUCT berec; 

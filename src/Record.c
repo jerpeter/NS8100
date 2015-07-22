@@ -45,7 +45,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 	{
 		case REC_TRIGGER_USER_MENU_TYPE:
 			debug("Programming Trigger Record...\r\n");
-			((REC_EVENT_MN_STRUCT *)src_ptr)->time_stamp = GetCurrentTime();
+			((REC_EVENT_MN_STRUCT *)src_ptr)->timeStamp = GetCurrentTime();
 
 			rec_size = sizeof(REC_EVENT_MN_STRUCT);
 			loc = (uint16)(sizeof(REC_EVENT_MN_STRUCT) * num);
