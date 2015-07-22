@@ -29,11 +29,12 @@ typedef unsigned		bitfield;		/* variable # of bits */
 // ========================================================================
 
 // Project Debug Modes
+#define NO_DEBUG			0
 #define ALL_DEBUG			1
 #define WARNINGS_AND_ERRORS	2
 #define ERRORS				3
-#define NO_DEBUG			4
 
+// Extended Debug output enable
 #define EXTENDED_DEBUG		0
 
 // Debug levels

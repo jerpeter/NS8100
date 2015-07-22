@@ -692,7 +692,7 @@ void AdjustPowerSavings(void)
 	uint32 usartRetries = USART_DEFAULT_TIMEOUT;
 	uint8 powerSavingsLevel = POWER_SAVINGS_NORMAL;
 
-#if (GLOBAL_DEBUG_PRINT_ENABLED != NO_DEBUG)
+#if (GLOBAL_DEBUG_PRINT_ENABLED)
 	// With Debug enabled use Minimum setting to enable USART0 for serial output
 	powerSavingsLevel = POWER_SAVINGS_MINIMUM;
 #endif
