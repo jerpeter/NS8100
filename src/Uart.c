@@ -184,7 +184,7 @@ void UartPutc(uint8 c, int32 channel)
 		//----------------------------------------------------------------------------------
 		// Check if the debug USART processor module is powered (USART0)
 #if (GLOBAL_DEBUG_PRINT_ENABLED)
-		if (g_unitConfig.powerSavingsLevel <= POWER_SAVINGS_NORMAL)
+		if (YES)
 #else
 		if (g_unitConfig.powerSavingsLevel < POWER_SAVINGS_NORMAL)
 #endif
