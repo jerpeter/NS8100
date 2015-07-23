@@ -1394,7 +1394,7 @@ void HandleActiveAlarmExtension(void)
 		secondsRemaining = (((float)s_alarmTwoCount + (float)((float)s_sampleRate / 2)) / (float)s_sampleRate);
 
 		// Assign soft timer to turn the Alarm 2 signal off
-		AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(secondsRemaining * TICKS_PER_SEC), AlarmOneOutputTimerCallback);
+		AssignSoftTimer(ALARM_TWO_OUTPUT_TIMER_NUM, (uint32)(secondsRemaining * TICKS_PER_SEC), AlarmTwoOutputTimerCallback);
 	}
 }
 
