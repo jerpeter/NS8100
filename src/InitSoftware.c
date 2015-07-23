@@ -101,22 +101,15 @@ void LoadDefaultTriggerRecord(void)
 	GetRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 	// Check if the Default Trig Record is uninitialized
-	if ((g_triggerRecord.opMode != WAVEFORM_MODE) && (g_triggerRecord.opMode != BARGRAPH_MODE) &&
-	(g_triggerRecord.opMode != COMBO_MODE))
+	if (g_triggerRecord.validRecord != YES)
 	{
-		debugWarn("Monitor & Trigger Record: Operation Mode not set\r\n");
-#if EXTENDED_DEBUG
-		debug("Monitor & Trigger Record: Loading defaults and setting mode to Waveform\r\n");
-#endif
-		LoadTrigRecordDefaults((REC_EVENT_MN_STRUCT*)&g_triggerRecord, WAVEFORM_MODE);
+		debugWarn("Default Trigger Record: Invalid, loading defaults\r\n");
+		LoadTrigRecordDefaults(&g_triggerRecord, WAVEFORM_MODE);
+		SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 	}
 	else
 	{
-#if EXTENDED_DEBUG
-		debug("Loading Monitor & Trigger record is valid\r\n");
-#endif
-		// Make sure record is marked valid
-		g_triggerRecord.validRecord = YES;
+		debug("Default Trigger record is valid\r\n");
 	}
 }
 
@@ -317,11 +310,6 @@ void InitSoftwareSettings_NS8100(void)
 	CheckBootloaderAppPresent(); debug("Bootloader check complete\r\n");
 
 	//-------------------------------------------------------------------------
-	// Load Trig Record 0 to get the last settings
-	//-------------------------------------------------------------------------
-	LoadDefaultTriggerRecord(); debug("Default Trigger record loaded\r\n");
-
-	//-------------------------------------------------------------------------
 	// Load the Unit Config
 	//-------------------------------------------------------------------------
 	LoadUnitConfig(); debug("Loading Unit Config record\r\n");
@@ -361,6 +349,11 @@ void InitSoftwareSettings_NS8100(void)
 	// Load the Factory Setup Record
 	//-------------------------------------------------------------------------
 	LoadFactorySetupRecord(); debug("Factory setup record loaded\r\n");
+
+	//-------------------------------------------------------------------------
+	// Load Default Trigger Record
+	//-------------------------------------------------------------------------
+	LoadDefaultTriggerRecord(); debug("Default Trigger record loaded\r\n");
 
 	//-------------------------------------------------------------------------
 	// Load the Modem Setup Record
