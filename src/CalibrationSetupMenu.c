@@ -284,6 +284,14 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 		if (clearedFSRecord == NO)
 		{
 			SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+
+			if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+			{
+				g_factorySetupRecord.sensor_type = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+			}
+
+			LoadTrigRecordDefaults(&g_triggerRecord, WAVEFORM_MODE);
+			SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 		}
 
 		g_factorySetupSequence = SEQ_NOT_STARTED;
