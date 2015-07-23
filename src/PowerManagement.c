@@ -398,16 +398,16 @@ BOOLEAN GetPowerControlState(POWER_MGMT_OPTIONS option)
 void PowerUnitOff(uint8 powerOffMode)
 {
 	OverlayMessage(getLangText(STATUS_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 0);
-#if 0 // Removed debug log file due to inducing system problems
-	debug("Dumping debug output to debug log file\r\n");
-#endif
+
+	// Check if the user adjusted the contrast
+	if (g_lcdContrastChanged == YES)
+	{
+		// Save Unit Config here to prevent constant saving on LCD contrast adjustment
+		debug("Saving LCD contrast adjustment\r\n");
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+	}
 
 	debug("Adding On/Off Log timestamp\r\n");
-
-#if 0 // Removed debug log file due to inducing system problems
-	WriteDebugBufferToFile();
-#endif
-
 	AddOnOffLogTimestamp(OFF);
 
 	// Make sure all open files are closed and data is flushed
