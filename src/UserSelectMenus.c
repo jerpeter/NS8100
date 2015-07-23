@@ -1452,7 +1452,15 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				}
 				else // Timer mode is disabled
 				{
-					SETUP_USER_MENU_MSG(&timerModeMenu, g_unitConfig.timerMode);
+					// Check if the Factory Setup Record is valid
+					if (!g_factorySetupRecord.invalid)
+					{
+						SETUP_USER_MENU_MSG(&timerModeMenu, g_unitConfig.timerMode);
+					}
+					else
+					{
+						OverlayMessage(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), (2 * SOFT_SECS));
+					}
 				}
 			break;
 
@@ -1630,7 +1638,7 @@ void EraseSettingsMenuHandler(uint8 keyPressed, void* data)
 			InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
 
 			// Load Defaults for Waveform
-			LoadTrigRecordDefaults((REC_EVENT_MN_STRUCT*)&g_triggerRecord, WAVEFORM_MODE);
+			LoadTrigRecordDefaults(&g_triggerRecord, WAVEFORM_MODE);
 			SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 			// Load Unit Config defaults
