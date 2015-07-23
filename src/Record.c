@@ -386,7 +386,6 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 opMode)
 	rec_ptr->trec.dist_to_source = 0;
 	rec_ptr->trec.weight_per_delay = 0;
 	rec_ptr->trec.record_time = 3;
-	rec_ptr->trec.seismicTriggerLevel = (uint16)((DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * ACCURACY_16_BIT_MIDPOINT) / g_factorySetupRecord.sensor_type);
 	rec_ptr->trec.airTriggerLevel = NO_TRIGGER_CHAR;
 	rec_ptr->trec.adjustForTempDrift = YES;
 	rec_ptr->trec.bitAccuracy = ACCURACY_16_BIT;
@@ -395,6 +394,16 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 opMode)
 	rec_ptr->berec.barScale = BAR_SCALE_FULL;
 	rec_ptr->berec.barChannel = BAR_BOTH_CHANNELS;
 	rec_ptr->berec.impulseMenuUpdateSecs = 1;
+
+	// Check if sensor type is valid
+	if (!g_factorySetupRecord.invalid)
+	{
+		rec_ptr->trec.seismicTriggerLevel = ((DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * ACCURACY_16_BIT_MIDPOINT) / g_factorySetupRecord.sensor_type);
+	}
+	else // Don't know sensor type, use a 10 inch sensor as default
+	{
+		rec_ptr->trec.seismicTriggerLevel = ((DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * ACCURACY_16_BIT_MIDPOINT) / SENSOR_10_IN);
+	}
 
 	// Clear strings
 	memset((char*)rec_ptr->trec.client, 0, sizeof(rec_ptr->trec.client));
