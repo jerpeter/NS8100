@@ -127,8 +127,8 @@ void DisplayFileCorrupt(char* filename);
 uint8 CheckCompressedEventDataFileExists(uint16 eventNumber);
 
 void SetFileDateTimestamp(uint8 option);
-int readWithSizeFix(int file, void* bufferPtr, uint32 length);
-int writeWithSizeFix(int file, void* bufferPtr, uint32 length);
+int ReadWithSizeFix(int file, void* bufferPtr, uint32 length);
+int WriteWithSizeFix(int file, void* bufferPtr, uint32 length);
 
 int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option);
 int GetERDataFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option);

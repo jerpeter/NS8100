@@ -513,7 +513,7 @@ void InitMonitorLogTableFromLogFile(void)
 		{
 			OverlayMessage(getLangText(MONITOR_LOG_TEXT), getLangText(INITIALIZING_MONITOR_LOG_WITH_SAVED_ENTRIES_TEXT), 1 * SOFT_SECS);
 
-			bytesRead = readWithSizeFix(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+			bytesRead = ReadWithSizeFix(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 
 			// Loop while data continues to be read from MONITOR log file
 			while (bytesRead > 0)
@@ -544,7 +544,7 @@ void InitMonitorLogTableFromLogFile(void)
 			
 					AdvanceMonitorLogIndex();
 
-					bytesRead = readWithSizeFix(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
+					bytesRead = ReadWithSizeFix(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 				}
 			}
 

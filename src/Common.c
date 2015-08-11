@@ -591,7 +591,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			if (fsaccess_file_get_size(languageFile) > LANGUAGE_TABLE_MAX_SIZE)
 			{
 				// Error case - Just read the maximum buffer size and pray
-				readWithSizeFix(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
+				ReadWithSizeFix(languageFile, (uint8*)&g_languageTable[0], LANGUAGE_TABLE_MAX_SIZE);
 			}
 			else
 			{
@@ -600,7 +600,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 					OverlayMessage("WARNING", "LANGUAGE FILE IS NOT CURRENT. PLEASE UPDATE", (5 * SOFT_SECS));
 				}
 
-				readWithSizeFix(languageFile, (uint8*)&g_languageTable[0], fsaccess_file_get_size(languageFile));
+				ReadWithSizeFix(languageFile, (uint8*)&g_languageTable[0], fsaccess_file_get_size(languageFile));
 			}
 
 			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;

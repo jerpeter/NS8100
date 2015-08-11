@@ -929,7 +929,7 @@ void MoveEndOfBargraphEventRecordToFile(void)
 			dataLength = (nav_file_lgt() - sizeof(EVT_RECORD));
 
 			// Cache the Bargraph data for compression event file creation below
-			read(bargraphFileHandle, (uint8*)&g_eventDataBuffer[0], dataLength);
+			ReadWithSizeFix(bargraphFileHandle, (uint8*)&g_eventDataBuffer[0], dataLength);
 		}
 #endif
 

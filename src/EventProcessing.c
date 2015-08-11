@@ -134,7 +134,7 @@ void CopyValidFlashEventSummariesToRam(void)
 				else
 				{
 					//fl_fread(eventFile, (uint8*)&tempEventRecord.header, sizeof(EVENT_HEADER_STRUCT));
-					readWithSizeFix(eventFile, (uint8*)&tempEventRecord.header, sizeof(EVT_RECORD));
+					ReadWithSizeFix(eventFile, (uint8*)&tempEventRecord.header, sizeof(EVT_RECORD));
 
 					// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
 					if ((tempEventRecord.header.startFlag == EVENT_RECORD_START_FLAG) &&
@@ -193,7 +193,7 @@ void DumpSummaryListFileToEventBuffer(void)
 
 			debug("Dumping Summary list with file size: %d\r\n", nav_file_lgt());
 
-			readWithSizeFix(g_summaryList.file, summaryListCache, nav_file_lgt());
+			ReadWithSizeFix(g_summaryList.file, summaryListCache, nav_file_lgt());
 			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(g_summaryList.file);
 		}
@@ -293,7 +293,7 @@ void CacheNextSummaryListEntry(void)
 
 			while (file_seek(++g_summaryList.currentEntryIndex * sizeof(SUMMARY_LIST_ENTRY_STRUCT), FS_SEEK_SET) == TRUE)
 			{
-				readWithSizeFix(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+				ReadWithSizeFix(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
 
 				if (g_summaryList.cachedEntry.eventNumber)
 				{
@@ -370,7 +370,7 @@ void CachePreviousSummaryListEntry(void)
 			{
 				while (file_seek(--g_summaryList.currentEntryIndex * sizeof(SUMMARY_LIST_ENTRY_STRUCT), FS_SEEK_SET) == TRUE)
 				{
-					readWithSizeFix(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+					ReadWithSizeFix(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
 
 					if (g_summaryList.cachedEntry.eventNumber)
 					{
@@ -387,7 +387,7 @@ void CachePreviousSummaryListEntry(void)
 			else
 			{
 				file_seek(0, FS_SEEK_SET);
-				readWithSizeFix(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+				ReadWithSizeFix(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
 				debug("Start of Summary list entries\r\n");
 			}
 
@@ -457,7 +457,7 @@ void CacheSummaryEntryByIndex(uint16 index)
 			{
 				while (file_seek((index * sizeof(SUMMARY_LIST_ENTRY_STRUCT)), FS_SEEK_SET) == TRUE)
 				{
-					readWithSizeFix(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+					ReadWithSizeFix(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
 
 					// Check if no entry was found
 					if (g_summaryList.cachedEntry.eventNumber == 0)
@@ -519,12 +519,12 @@ SUMMARY_LIST_ENTRY_STRUCT* GetSummaryFromSummaryList(uint16 eventNumber)
 
 			while (file_seek(summaryListIndex * sizeof(SUMMARY_LIST_ENTRY_STRUCT), FS_SEEK_SET) == TRUE)
 			{
-				readWithSizeFix(g_summaryList.file, &summaryListIndexEventNumber, 2);
+				ReadWithSizeFix(g_summaryList.file, &summaryListIndexEventNumber, 2);
 
 				if (summaryListIndexEventNumber == eventNumber)
 				{
 					file_seek(summaryListIndex * sizeof(SUMMARY_LIST_ENTRY_STRUCT), FS_SEEK_SET);
-					readWithSizeFix(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+					ReadWithSizeFix(g_summaryList.file, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
 
 					break;
 				}
@@ -560,7 +560,7 @@ SUMMARY_LIST_ENTRY_STRUCT* GetSummaryFromSummaryList(uint16 eventNumber)
 void ParseAndCountSummaryListEntries(void)
 {
 	file_seek(0, FS_SEEK_SET);
-	while (readWithSizeFix(g_summaryList.file, (uint8*)&g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT)) != -1)
+	while (ReadWithSizeFix(g_summaryList.file, (uint8*)&g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT)) != -1)
 	{
 		if (g_summaryList.cachedEntry.eventNumber)
 		{
@@ -1120,7 +1120,7 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 		}
 		else
 		{
-			readWithSizeFix(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
+			ReadWithSizeFix(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
 
 			// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
 			if ((fileEventHeader.startFlag == EVENT_RECORD_START_FLAG) &&
@@ -1129,11 +1129,11 @@ void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, E
 			{
 				debug("Found Valid Event File: %s\r\n", fileName);
 
-				readWithSizeFix(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
+				ReadWithSizeFix(eventFile, (uint8*)&fileSummary, sizeof(EVENT_SUMMARY_STRUCT));
 			
 				if (cacheDataToRamBuffer == YES)
 				{
-					readWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], (fsaccess_file_get_size(eventFile) - (sizeof(EVENT_HEADER_STRUCT) - sizeof(EVENT_SUMMARY_STRUCT))));
+					ReadWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], (fsaccess_file_get_size(eventFile) - (sizeof(EVENT_HEADER_STRUCT) - sizeof(EVENT_SUMMARY_STRUCT))));
 				}
 			}
 
@@ -1259,7 +1259,7 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 		}
 		else
 		{
-			readWithSizeFix(eventFile, (uint8*)eventRecord, sizeof(EVT_RECORD));
+			ReadWithSizeFix(eventFile, (uint8*)eventRecord, sizeof(EVT_RECORD));
 
 			// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
 			if ((eventRecord->header.startFlag == EVENT_RECORD_START_FLAG) &&
@@ -1451,7 +1451,7 @@ void CacheEventDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOf
 	else
 	{
 		file_seek(dataOffset, FS_SEEK_SET);
-		readWithSizeFix(eventFile, dataBuffer, dataSize);
+		ReadWithSizeFix(eventFile, dataBuffer, dataSize);
 
 		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(eventFile);
@@ -1521,7 +1521,7 @@ void CacheERDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffse
 	else
 	{
 		file_seek(dataOffset, FS_SEEK_SET);
-		readWithSizeFix(eventFile, dataBuffer, dataSize);
+		ReadWithSizeFix(eventFile, dataBuffer, dataSize);
 
 		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 		close(eventFile);
@@ -1566,7 +1566,7 @@ void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize)
 		else
 		{
 			file_seek(sizeof(EVT_RECORD), FS_SEEK_SET);
-			readWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], dataSize);
+			ReadWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], dataSize);
 
 			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(eventFile);
@@ -1711,8 +1711,8 @@ uint8 CacheEventToRam(uint16 eventNumber, EVT_RECORD* eventRecordPtr)
 		}
 		else
 		{
-			readWithSizeFix(eventFile, (uint8*)eventRecordPtr, sizeof(EVT_RECORD));
-			readWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], (fsaccess_file_get_size(eventFile) - sizeof(EVT_RECORD)));
+			ReadWithSizeFix(eventFile, (uint8*)eventRecordPtr, sizeof(EVT_RECORD));
+			ReadWithSizeFix(eventFile, (uint8*)&g_eventDataBuffer[0], (fsaccess_file_get_size(eventFile) - sizeof(EVT_RECORD)));
 			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(eventFile);
 		}
@@ -1760,7 +1760,7 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber)
 		}
 		else
 		{
-			readWithSizeFix(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
+			ReadWithSizeFix(eventFile, (uint8*)&fileEventHeader, sizeof(EVENT_HEADER_STRUCT));
 
 			// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
 			if ((fileEventHeader.startFlag == EVENT_RECORD_START_FLAG) &&
@@ -2326,7 +2326,7 @@ void UpdateSDCardUsageStats(uint32 removeSize)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-int readWithSizeFix(int file, void* bufferPtr, uint32 length)
+int ReadWithSizeFix(int file, void* bufferPtr, uint32 length)
 {
 	uint32 remainingByteLengthToRead = length;
 	uint8* readLocationPtr = (uint8*)bufferPtr;
@@ -2367,7 +2367,7 @@ int readWithSizeFix(int file, void* bufferPtr, uint32 length)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-int writeWithSizeFix(int file, void* bufferPtr, uint32 length)
+int WriteWithSizeFix(int file, void* bufferPtr, uint32 length)
 {
 	uint32 remainingByteLengthToWrite = length;
 	uint8* writeLocationPtr = (uint8*)bufferPtr;
