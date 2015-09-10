@@ -172,7 +172,9 @@ enum {
 	CFG_ERR_BIT_ACCURACY,			// 46
 	CFG_ERR_A_WEIGHTING,			// 47
 	CFG_ERR_TEMP_ADJUST,			// 48
-	CFG_ERR_END						// 49
+	CFG_ERR_EXTERNAL_TRIGGER,		// 49
+	CFG_ERR_RS232_POWER_SAVINGS,	// 50
+	CFG_ERR_END						// END
 };
 
 enum {
@@ -373,7 +375,8 @@ typedef struct
 {
 	uint8	autoMonitorMode;
 	uint8	autoCalMode;
-	uint8	unused[2];
+	uint8	externalTrigger;
+	uint8	rs232PowerSavings;
 } AUTO_CAL_MON_CFG;
 #pragma pack()
 

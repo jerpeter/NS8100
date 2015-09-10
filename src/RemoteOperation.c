@@ -147,6 +147,8 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	
 	cfg.autoCfg.autoMonitorMode = g_unitConfig.autoMonitorMode;
 	cfg.autoCfg.autoCalMode = g_unitConfig.autoCalMode;
+	cfg.autoCfg.externalTrigger = g_unitConfig.externalTrigger;
+	cfg.autoCfg.rs232PowerSavings = g_unitConfig.rs232PowerSavings;
 
 	cfg.extraUnitCfg.autoPrint = g_unitConfig.autoPrint;
 	cfg.extraUnitCfg.languageMode = g_unitConfig.languageMode;
@@ -680,6 +682,46 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				returnCode = CFG_ERR_AUTO_CAL_MODE;
 				goto SEND_UCM_ERROR_CODE;
 				break;
+		}
+
+		//---------------------------------------------------------------------------
+		// External Trigger check
+		//---------------------------------------------------------------------------
+		switch (cfg.autoCfg.externalTrigger)
+		{
+			case ENABLED:
+			case DISABLED:
+				g_unitConfig.externalTrigger = cfg.autoCfg.externalTrigger;
+				break;
+
+			default:
+#if 0 // Normal
+				returnCode = CFG_ERR_EXTERNAL_TRIGGER;
+				goto SEND_UCM_ERROR_CODE;
+#else // Don't force error until remote side has added ability
+				// Don't change current unit config
+#endif
+				break;
+		}
+
+		//---------------------------------------------------------------------------
+		// External Trigger check
+		//---------------------------------------------------------------------------
+		switch (cfg.autoCfg.rs232PowerSavings)
+		{
+			case ENABLED:
+			case DISABLED:
+				g_unitConfig.rs232PowerSavings = cfg.autoCfg.rs232PowerSavings;
+			break;
+
+			default:
+#if 0 // Normal
+				returnCode = CFG_ERR_RS232_POWER_SAVINGS;
+				goto SEND_UCM_ERROR_CODE;
+#else // Don't force error until remote side has added ability
+				// Don't change current unit config
+#endif
+			break;
 		}
 
 		//---------------------------------------------------------------------------
