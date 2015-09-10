@@ -159,16 +159,12 @@ void UartPutc(uint8 c, int32 channel)
 		//----------------------------------------------------------------------------------
 		// Craft USART
 		//----------------------------------------------------------------------------------
-		// Check if the craft USART processor module is powered (USART1)
-		if (g_unitConfig.powerSavingsLevel < POWER_SAVINGS_MAX)
-		{
-			status = usart_write_char(&AVR32_USART1, c);
+		status = usart_write_char(&AVR32_USART1, c);
 
-			while ((status == USART_TX_BUSY) && (retries))
-			{
-				retries--;
-				status = usart_write_char(&AVR32_USART1, c);
-			}
+		while ((status == USART_TX_BUSY) && (retries))
+		{
+			retries--;
+			status = usart_write_char(&AVR32_USART1, c);
 		}
 #endif
 	}
@@ -184,20 +180,15 @@ void UartPutc(uint8 c, int32 channel)
 		//----------------------------------------------------------------------------------
 		// Check if the debug USART processor module is powered (USART0)
 #if (GLOBAL_DEBUG_PRINT_ENABLED)
-		if (YES)
-#else
-		if (g_unitConfig.powerSavingsLevel < POWER_SAVINGS_NORMAL)
-#endif
-		{
-			// Dump the character to the serial port
-			status = usart_write_char(&AVR32_USART0, c);
+		// Dump the character to the serial port
+		status = usart_write_char(&AVR32_USART0, c);
 
-			while ((status == USART_TX_BUSY) && (retries))
-			{
-				retries--;
-				status = usart_write_char(&AVR32_USART0, c);
-			}
+		while ((status == USART_TX_BUSY) && (retries))
+		{
+			retries--;
+			status = usart_write_char(&AVR32_USART0, c);
 		}
+#endif
 
 #if 0 // Removed debug log file due to inducing system problems
 		//----------------------------------------------------------------------------------
