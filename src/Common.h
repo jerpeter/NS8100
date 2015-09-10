@@ -108,6 +108,7 @@ typedef struct
 #define PI	3.14159
 
 #define JUMP_TO_BOOT	2
+#define OFF_EXCEPTION	3
 
 #define LANGUAGE_TABLE_MAX_SIZE		16384
 
