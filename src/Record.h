@@ -229,9 +229,9 @@ typedef struct
 {
 	uint16 validationKey;
 	uint8 baudRate;
-	uint8 powerSavingsLevel;
+	uint8 rs232PowerSavings;
 	uint8 unused1;
-	uint8 unused2;
+	uint8 externalTrigger;
 	uint8 saveCompressedData;
 	uint8 airScale;
 	uint8 vectorSum;
@@ -366,6 +366,7 @@ uint16 NumOfNewMonitorLogEntries(uint16 uid);
 void AppendMonitorLogEntryFile(void);
 void InitMonitorLogTableFromLogFile(void);
 void AddOnOffLogTimestamp(uint8 onOffState);
+void FillInAdditionalExceptionReportInfo(int exceptionReportFile);
 void WriteDebugBufferToFile(void);
 void SwitchDebugLogFile(void);
 

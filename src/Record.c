@@ -376,86 +376,83 @@ uint8 CheckForAvailableTriggerRecordEntry(char* name, uint8* match)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 opMode)
+void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT* triggerRecordPtr, uint8 opMode)
 {
 	// General components
-	rec_ptr->validRecord = YES;
-	rec_ptr->opMode = opMode;
-	rec_ptr->trec.sample_rate = SAMPLE_RATE_1K;
-	rec_ptr->srec.sensitivity = LOW;
-	rec_ptr->trec.dist_to_source = 0;
-	rec_ptr->trec.weight_per_delay = 0;
-	rec_ptr->trec.record_time = 3;
-	rec_ptr->trec.airTriggerLevel = NO_TRIGGER_CHAR;
-	rec_ptr->trec.adjustForTempDrift = YES;
-	rec_ptr->trec.bitAccuracy = ACCURACY_16_BIT;
-	rec_ptr->bgrec.barInterval = SIXTY_SEC_PRD;
-	rec_ptr->bgrec.summaryInterval = ONE_HOUR_INTVL;
-	rec_ptr->berec.barScale = BAR_SCALE_FULL;
-	rec_ptr->berec.barChannel = BAR_BOTH_CHANNELS;
-	rec_ptr->berec.impulseMenuUpdateSecs = 1;
+	triggerRecordPtr->validRecord = YES;
+	triggerRecordPtr->opMode = opMode;
+	triggerRecordPtr->trec.sample_rate = SAMPLE_RATE_1K;
+	triggerRecordPtr->srec.sensitivity = LOW;
+	triggerRecordPtr->trec.dist_to_source = 0;
+	triggerRecordPtr->trec.weight_per_delay = 0;
+	triggerRecordPtr->trec.record_time = 3;
+	triggerRecordPtr->trec.airTriggerLevel = NO_TRIGGER_CHAR;
+	triggerRecordPtr->trec.adjustForTempDrift = YES;
+	triggerRecordPtr->trec.bitAccuracy = ACCURACY_16_BIT;
+	triggerRecordPtr->bgrec.barInterval = SIXTY_SEC_PRD;
+	triggerRecordPtr->bgrec.summaryInterval = ONE_HOUR_INTVL;
+	triggerRecordPtr->berec.barScale = BAR_SCALE_FULL;
+	triggerRecordPtr->berec.barChannel = BAR_BOTH_CHANNELS;
+	triggerRecordPtr->berec.impulseMenuUpdateSecs = 1;
 
 	// Check if sensor type is valid
 	if (!g_factorySetupRecord.invalid)
 	{
-		rec_ptr->trec.seismicTriggerLevel = ((DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * ACCURACY_16_BIT_MIDPOINT) / g_factorySetupRecord.sensor_type);
+		triggerRecordPtr->trec.seismicTriggerLevel = ((DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * ACCURACY_16_BIT_MIDPOINT) / g_factorySetupRecord.sensor_type);
 	}
 	else // Don't know sensor type, use a 10 inch sensor as default
 	{
-		rec_ptr->trec.seismicTriggerLevel = ((DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * ACCURACY_16_BIT_MIDPOINT) / SENSOR_10_IN);
+		triggerRecordPtr->trec.seismicTriggerLevel = ((DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * ACCURACY_16_BIT_MIDPOINT) / SENSOR_10_IN);
 	}
 
 	// Clear strings
-	memset((char*)rec_ptr->trec.client, 0, sizeof(rec_ptr->trec.client));
-	memset((char*)rec_ptr->trec.loc, 0, sizeof(rec_ptr->trec.loc));
-	memset((char*)rec_ptr->trec.comments, 0, sizeof(rec_ptr->trec.comments));
-	memset((char*)rec_ptr->trec.oper, 0, sizeof(rec_ptr->trec.oper));
+	memset((char*)triggerRecordPtr->trec.client, 0, sizeof(triggerRecordPtr->trec.client));
+	memset((char*)triggerRecordPtr->trec.loc, 0, sizeof(triggerRecordPtr->trec.loc));
+	memset((char*)triggerRecordPtr->trec.comments, 0, sizeof(triggerRecordPtr->trec.comments));
+	memset((char*)triggerRecordPtr->trec.oper, 0, sizeof(triggerRecordPtr->trec.oper));
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT *rec_ptr)
+void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT* unitConfigPtr)
 {
 	// Initialize the Unit Config
-	memset(rec_ptr, 0, sizeof(UNIT_CONFIG_STRUCT));
+	memset(unitConfigPtr, 0, sizeof(UNIT_CONFIG_STRUCT));
 
 	// Set default conditions
-	rec_ptr->powerSavingsLevel = POWER_SAVINGS_NORMAL;
-	rec_ptr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
-	rec_ptr->saveCompressedData = SAVE_EXTRA_FILE_COMPRESSED_DATA;
-	rec_ptr->airScale = AIR_SCALE_LINEAR;
-	rec_ptr->flashWrapping = NO;
-	rec_ptr->autoMonitorMode = AUTO_NO_TIMEOUT;
-	rec_ptr->autoCalMode = AUTO_NO_CAL_TIMEOUT;
-	rec_ptr->alarmOneMode = ALARM_MODE_OFF;
-	rec_ptr->alarmTwoMode = ALARM_MODE_OFF;
-	rec_ptr->alarmOneSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
-	rec_ptr->alarmOneAirLevel = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
-	rec_ptr->alarmTwoSeismicLevel = ALARM_TWO_SEIS_DEFAULT_TRIG_LVL;
-	rec_ptr->alarmTwoAirLevel = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
-	rec_ptr->alarmOneTime = ALARM_OUTPUT_TIME_DEFAULT;
-	rec_ptr->alarmTwoTime = ALARM_OUTPUT_TIME_DEFAULT;
-	rec_ptr->baudRate = BAUD_RATE_115200;
-	rec_ptr->copies = 1;
-	rec_ptr->freqPlotType = 1;
-	rec_ptr->languageMode = ENGLISH_LANG;
-	rec_ptr->lcdContrast = DEFUALT_CONTRAST;
-	rec_ptr->lcdTimeout = 2;
-	rec_ptr->timerMode = DISABLED;
-	rec_ptr->unitsOfMeasure = IMPERIAL_TYPE;
-	rec_ptr->unitsOfAir = DECIBEL_TYPE;
-	rec_ptr->vectorSum = DISABLED;
-	rec_ptr->reportDisplacement = DISABLED;
-	rec_ptr->reportPeakAcceleration = DISABLED;
-	rec_ptr->autoCalForWaveform = NO;
-	rec_ptr->autoPrint = OFF;
-	rec_ptr->freqPlotMode = OFF;
-	rec_ptr->printMonitorLog = NO;
-
-	// Set unused fields to zero
-	rec_ptr->unused1 = 0;
-	rec_ptr->unused2 = 0;
+	unitConfigPtr->rs232PowerSavings = ENABLED;
+	unitConfigPtr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
+	unitConfigPtr->externalTrigger = ENABLED;
+	unitConfigPtr->saveCompressedData = SAVE_EXTRA_FILE_COMPRESSED_DATA;
+	unitConfigPtr->airScale = AIR_SCALE_LINEAR;
+	unitConfigPtr->flashWrapping = NO;
+	unitConfigPtr->autoMonitorMode = AUTO_NO_TIMEOUT;
+	unitConfigPtr->autoCalMode = AUTO_NO_CAL_TIMEOUT;
+	unitConfigPtr->alarmOneMode = ALARM_MODE_OFF;
+	unitConfigPtr->alarmTwoMode = ALARM_MODE_OFF;
+	unitConfigPtr->alarmOneSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
+	unitConfigPtr->alarmOneAirLevel = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
+	unitConfigPtr->alarmTwoSeismicLevel = ALARM_TWO_SEIS_DEFAULT_TRIG_LVL;
+	unitConfigPtr->alarmTwoAirLevel = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
+	unitConfigPtr->alarmOneTime = ALARM_OUTPUT_TIME_DEFAULT;
+	unitConfigPtr->alarmTwoTime = ALARM_OUTPUT_TIME_DEFAULT;
+	unitConfigPtr->baudRate = BAUD_RATE_115200;
+	unitConfigPtr->copies = 1;
+	unitConfigPtr->freqPlotType = 1;
+	unitConfigPtr->languageMode = ENGLISH_LANG;
+	unitConfigPtr->lcdContrast = DEFUALT_CONTRAST;
+	unitConfigPtr->lcdTimeout = 2;
+	unitConfigPtr->timerMode = DISABLED;
+	unitConfigPtr->unitsOfMeasure = IMPERIAL_TYPE;
+	unitConfigPtr->unitsOfAir = DECIBEL_TYPE;
+	unitConfigPtr->vectorSum = DISABLED;
+	unitConfigPtr->reportDisplacement = DISABLED;
+	unitConfigPtr->reportPeakAcceleration = DISABLED;
+	unitConfigPtr->autoCalForWaveform = NO;
+	unitConfigPtr->autoPrint = OFF;
+	unitConfigPtr->freqPlotMode = OFF;
+	unitConfigPtr->printMonitorLog = NO;
 }
 
 ///----------------------------------------------------------------------------
