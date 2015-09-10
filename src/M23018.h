@@ -40,6 +40,7 @@
 
 void InitMcp23018(void);
 void WriteMcp23018(unsigned char chip, unsigned char address, unsigned char data);
+void WriteMcp23018NoInterrupts(unsigned char chip, unsigned char address, unsigned char data);
 void WriteMcp23018Bytes(unsigned char chip, unsigned char address, unsigned char *data, unsigned char length);
 unsigned char ReadMcp23018(unsigned char chip, unsigned char address);
 void EnableMcp23018Interrupts(void);

@@ -25,6 +25,82 @@ static twi_package_t s_twiPacket;
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void TwiMasterWriteNoInterrupts(volatile avr32_twi_t *twi, const twi_package_t *package)
+{
+	uint8* twiTxData;
+	uint8 twiTxBytes;
+
+	// No data to send
+	if (package->length == 0)
+	{
+		return;
+	}
+
+	// Enable master transfer, disable slave
+#ifndef AVR32_TWI_180_H_INCLUDED
+	twi->cr = AVR32_TWI_CR_MSEN_MASK | AVR32_TWI_CR_SVDIS_MASK;
+#else
+	twi->cr = AVR32_TWI_CR_MSEN_MASK;
+#endif
+
+	// set write mode, slave address and 3 internal address byte length
+	twi->mmr = (0 << AVR32_TWI_MMR_MREAD_OFFSET) | (package->chip << AVR32_TWI_MMR_DADR_OFFSET) | ((package->addr_length << AVR32_TWI_MMR_IADRSZ_OFFSET) & AVR32_TWI_MMR_IADRSZ_MASK);
+
+	// set internal address for remote chip
+	twi->iadr = package->addr;
+
+	// get a pointer to applicative data
+	twiTxData = package->buffer;
+
+	// get a copy of nb bytes to write
+	twiTxBytes = package->length;
+
+	// put the first byte in the Transmit Holding Register
+	twi->thr = *twiTxData++;
+
+	// Send data
+	while((twi->sr & AVR32_TWI_SR_TXCOMP_MASK) == 0)
+	{
+		// Check if more data to send and Tx ready
+		if ((twiTxBytes) && (twi->sr & AVR32_TWI_SR_TXRDY_MASK))
+		{
+			// Put the byte in the Transmit Holding Register
+			twi->thr = *twiTxData++;
+
+			// Decrement transmit count remaining
+			twiTxBytes--;
+		}
+	}
+
+	// Disable master transfer
+	twi->cr = AVR32_TWI_CR_MSDIS_MASK;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void WriteMcp23018NoInterrupts(unsigned char chip, unsigned char address, unsigned char data)
+{
+	//Set output latch a with 00
+	s_twiData[0] = data;
+	// TWI chip address to communicate with
+	s_twiPacket.chip = chip;
+	// TWI address/commands to issue to the other chip (node)
+	s_twiPacket.addr = address;
+	// Length of the TWI data address segment (1-3 bytes)
+	s_twiPacket.addr_length = IO_ADDR_LGT;
+	// Where to find the data to be written
+	s_twiPacket.buffer = (void*) s_twiData;
+	// How many bytes do we want to write
+	s_twiPacket.length = 1;
+	// perform a write access
+
+	TwiMasterWriteNoInterrupts(&AVR32_TWI, &s_twiPacket);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void WriteMcp23018(unsigned char chip, unsigned char address, unsigned char data)
 {
 	//Set output latch a with 00
