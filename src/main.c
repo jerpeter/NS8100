@@ -51,6 +51,7 @@
 #include "rtc.h"
 #include "tc.h"
 #include "fsaccess.h"
+#include "M23018.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -611,8 +612,7 @@ void UsbDeviceManager(void)
 	{
 		//___________________________________________________________________________________________
 		// Check if processing is needed elsewhere
-		if ((g_sampleProcessing == ACTIVE_STATE) || (getSystemEventState(TRIGGER_EVENT)) || (g_activeMenu == CAL_SETUP_MENU) ||
-			(g_unitConfig.powerSavingsLevel > POWER_SAVINGS_NORMAL) || (g_activeMenu == MONITOR_MENU))
+		if ((g_sampleProcessing == ACTIVE_STATE) || (getSystemEventState(TRIGGER_EVENT)) || (g_activeMenu == CAL_SETUP_MENU) || (g_activeMenu == MONITOR_MENU))
 		{
 			// Need to disable USB for other processing
 			debug("USB disabled for other processing\r\n");
@@ -797,8 +797,7 @@ void UsbDeviceManager(void)
 	//___________________________________________________________________________________________
 	else if (usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
 	{
-		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_activeMenu != CAL_SETUP_MENU) &&
-			(g_unitConfig.powerSavingsLevel < POWER_SAVINGS_MOST))
+		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_activeMenu != CAL_SETUP_MENU))
 		{
 			debug("USB enabled for processing again\r\n");
 			Usb_enable();
@@ -1179,8 +1178,8 @@ extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
 static uint8 rs232PutToSleepState = NO;
 inline void SetupPowerSavingsBeforeSleeping(void)
 {
-	// Only disable for Min and Most since None and Max are either permanently on or off
-	if ((g_unitConfig.powerSavingsLevel >= POWER_SAVINGS_MINIMUM) || (g_unitConfig.powerSavingsLevel <= POWER_SAVINGS_MOST))
+	// Check if Rs232 power savings is enabled
+	if (g_unitConfig.rs232PowerSavings)
 	{
 		if (READ_DCD == NO_CONNECTION)
 		{
@@ -1204,31 +1203,22 @@ inline void SetupPowerSavingsBeforeSleeping(void)
 ///----------------------------------------------------------------------------
 inline void RevertPowerSavingsAfterSleeping(void)
 {
-#if 1 // Normal
 	// Disable pull ups on the data lines
 	AVR32_GPIO.port[2].puerc = 0xFC00; // 1111 1100 0000 0000
 	AVR32_GPIO.port[3].puerc = 0x03FF; // 0000 0011 1111 1111
-#endif
 
-#if 1
-	// Only enable for Min and Most since None and Max are either permanently on or off
-	if ((g_unitConfig.powerSavingsLevel >= POWER_SAVINGS_MINIMUM) || (g_unitConfig.powerSavingsLevel <= POWER_SAVINGS_MOST))
+	// Check if Rs232 power savings is enabled
+	if (g_unitConfig.rs232PowerSavings)
 	{
 		if (rs232PutToSleepState == YES)
 		{
 			rs232PutToSleepState = NO;
 
-#if 1 // Normal
 			// Enable rs232 driver and receiver (Active low control)
 			PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
 			PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
-#else
-			SoftUsecWait(5);
-			SoftUsecWait(5);
-#endif
 		}
 	}
-#endif
 
 	g_powerSavingsForSleepEnabled = NO;
 }
@@ -1239,34 +1229,6 @@ inline void RevertPowerSavingsAfterSleeping(void)
 void PowerManager(void)
 {
 	uint8 sleepStateNeeded;
-
-#if 0 // No current signal to show a serial connection has been re-established
-	/*
-	static uint8 rs232State = ON;
-
-	// Check if not set to the Max power savings
-	if (g_unitConfig.powerSavingsLevel != POWER_SAVINGS_MAX)
-	{
-		// Check if rs232 is already on and DSR shows no connection
-		if ((rs232State == ON) && (gpio_get_pin_value(AVR32_PIN_PB24) == 1))
-		{
-			// Disable the serial rs232 drivers
-			PowerControl(SERIAL_232_DRIVER_ENABLE, OFF);
-			PowerControl(SERIAL_232_RECEIVER_ENABLE, OFF);
-			rs232State = OFF;
-		}
-		// Check if rs232 is off and DSR shows a new connection
-		else if ((rs232State == OFF) && (gpio_get_pin_value(AVR32_PIN_PB24) == 0))
-		{
-			// Enable the serial rs232 drivers
-			PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
-			PowerControl(SERIAL_232_RECEIVER_ENABLE, ON);
-			rs232State = ON;
-			debug("USART1 RS232 Rx/Tx Drivers enabled\r\n");
-		}
-	}
-	*/
-#endif
 
 	// Check if no System Events (or just update offset) and LCD is off and Modem is not transferring and USB is not connected
 	if (((g_systemEventFlags.wrd == NO_SYSTEM_EVENT_ACTIVE) || (g_systemEventFlags.wrd == UPDATE_OFFSET_EVENT)) && (GetPowerControlState(LCD_POWER_ENABLE) == OFF) &&
@@ -1306,8 +1268,7 @@ void PowerManager(void)
 		}
 
 		// Check if not already set for Idle sleep and not max power savings and a remote/craft is connected (DSR and DCD)
-		if ((sleepStateNeeded != AVR32_PM_SMODE_IDLE) && (g_unitConfig.powerSavingsLevel != POWER_SAVINGS_MAX) &&
-			((READ_DSR == MODEM_CONNECTED) && (READ_DCD == CONNECTION_ESTABLISHED)))
+		if ((sleepStateNeeded != AVR32_PM_SMODE_IDLE) && ((READ_DSR == MODEM_CONNECTED) && (READ_DCD == CONNECTION_ESTABLISHED)))
 		{
 			sleepStateNeeded = AVR32_PM_SMODE_FROZEN;
 		}
@@ -1378,9 +1339,20 @@ extern void StartExternalRtcClock(uint16 sampleRate);
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#include "fsaccess.h"
+static char s_errorReportFilename[] = "A:\\Logs\\ExceptionReport.txt";
+void CheckExceptionReportLogExists(void)
+{
+		if (nav_setcwd("A:\\Logs\\ExceptionReport.txt", TRUE, FALSE))
+		{
+			MessageBox(getLangText(WARNING_TEXT), "EXCEPTION REPORT EXISTS DUE TO ERROR. PLEASE CONTACT SUPPORT.", MB_OK);
+		}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #include "nlao_exceptions.h"
-#define MAX_STATES	2
-#define LAST_STATE	(MAX_STATES - 1)
 __attribute__((__interrupt__))
 void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t exception_number, uint32_t lr, uint32_t r7, uint32_t r6, uint32_t r5, uint32_t r4,
 				uint32_t r3, uint32_t r2, uint32_t r1, uint32_t r0, uint32_t sp, uint32_t sr, uint32_t pc, uint32_t stack0, uint32_t stack1, uint32_t stack2)
@@ -1476,7 +1448,101 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastCalPulse) { LCPT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastCalPulse); }
 #endif
 
-	while (1)
+#if 0
+	char modeString[10];
+	char statusString[10];
+	char startTimeString[20];
+	char stopTimeString[20];
+	char seisString[15];
+	char airString[15];
+	char sensorString[10];
+	MONITOR_LOG_ENTRY_STRUCT *mle;
+	float tempSesmicTriggerInUnits;
+	float unitsDiv;
+	uint32 airInUnits;
+#endif
+	int exceptionReportFile;
+	uint8 fsAvail = NO;
+	uint8 errReportFiled = NO;
+
+	nav_select(FS_NAV_ID_DEFAULT);
+
+	exceptionReportFile = open(s_errorReportFilename, O_APPEND);
+	if (exceptionReportFile == -1)
+	{
+		nav_setcwd(s_errorReportFilename, TRUE, TRUE);
+		exceptionReportFile = open(s_errorReportFilename, O_APPEND);
+	}
+
+	// Verify file ID
+	if (exceptionReportFile == -1)
+	{
+		//nav_exit();
+	}
+	else
+	{
+		fsAvail = YES;
+#if 0
+		mle = &__monitorLogTbl[__monitorLogTblIndex];
+
+		if (mle->mode == WAVEFORM_MODE) { strcpy((char*)&modeString, "Waveform"); }
+		else if (mle->mode == BARGRAPH_MODE) { strcpy((char*)&modeString, "Bargraph"); }
+		else if (mle->mode == COMBO_MODE) { strcpy((char*)&modeString, "Combo"); }
+
+		if (mle->status == COMPLETED_LOG_ENTRY) { strcpy((char*)&statusString, "Completed"); }
+		else if (mle->status == PARTIAL_LOG_ENTRY) { strcpy((char*)&statusString, "Partial"); }
+		else if (mle->status == INCOMPLETE_LOG_ENTRY) { strcpy((char*)&statusString, "Incomplete"); }
+
+		sprintf((char*)&startTimeString, "%02d-%02d-%02d %02d:%02d:%02d", mle->startTime.day, mle->startTime.month, mle->startTime.year,
+		mle->startTime.hour, mle->startTime.min, mle->startTime.sec);
+		sprintf((char*)&stopTimeString, "%02d-%02d-%02d %02d:%02d:%02d", mle->stopTime.day, mle->stopTime.month, mle->stopTime.year,
+		mle->stopTime.hour, mle->stopTime.min, mle->stopTime.sec);
+
+		if (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) {strcpy((char*)seisString, "None"); }
+		else
+		{
+			// Calculate the divider used for converting stored A/D peak counts to units of measure
+			unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) /
+			(float)(g_factorySetupRecord.sensor_type);
+
+			tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
+			if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE)) { tempSesmicTriggerInUnits *= (float)METRIC; }
+
+			sprintf((char*)seisString, "%05.2f %s", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
+		}
+
+		if (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) {strcpy((char*)airString, "None"); }
+		else
+		{
+			airInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+			if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { sprintf((char*)airString, "%05.3f mB", ((float)airInUnits / 10000)); }
+			else { sprintf((char*)airString, "%d dB", (uint16)airInUnits); }
+		}
+
+		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&sensorString, "Acc"); }
+		else { sprintf((char*)&sensorString, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
+
+		sprintf((char*)&g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
+		"Seismic Trig: %10s, Air Trig: %11s\r\n\tBit Acc: %d, Temp Adjust: %3s, Sensor: %8s, Sensitivity: %4s\r\n\n",
+		mle->uniqueEntryId, (char*)statusString, (char*)modeString, (char*)startTimeString, (char*)stopTimeString, mle->eventsRecorded, mle->startEventNumber,
+		(char*)seisString, (char*)airString, mle->bitAccuracy, ((mle->adjustForTempDrift == YES) ? "YES" : "NO"),
+		(char*)sensorString, ((mle->sensitivity == LOW) ? "LOW" : "HIGH"));
+
+		write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+
+		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
+		// Done writing, close the exception report file
+		close(exceptionReportFile);
+#endif
+	}
+
+	sprintf((char*)g_spareBuffer, "===== Exception Report =====\r\n");
+	write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+
+	uint16 loops = 5;
+
+	while (loops--)
 	{
 		if (((exception_number * 4) - 4) == EVBA_BREAKPOINT)
 		{
@@ -1491,17 +1557,35 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 			}
 			OverlayMessage("EXC SCREEN 1", (char*)&exceptionMessage, (8 * SOFT_SECS));
 
+			if ((fsAvail == YES) && (errReportFiled == NO))
+			{
+				sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 1", (char*)&exceptionMessage);
+				write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			}
+
 			if (g_breakpointCause == BP_MB_LOOP)
 			{
 				sprintf((char*)&exceptionMessage, "MSG TEXT: %s", (char*)g_debugBuffer);
 				//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
 				OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+				if ((fsAvail == YES) && (errReportFiled == NO))
+				{
+					sprintf((char*)g_spareBuffer, "%s: %s\r\n", (char*)&g_buildVersion, (char*)&exceptionMessage);
+					write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+				}
 			}
 			else
 			{
 				sprintf((char*)&exceptionMessage, "MAX SD:%d bytes (TOP ADDR:%p)", (int)(0x1000 - testCounter), intMem);
 				//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
 				OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+				if ((fsAvail == YES) && (errReportFiled == NO))
+				{
+					sprintf((char*)g_spareBuffer, "%s: %s\r\n", (char*)&g_buildVersion, (char*)&exceptionMessage);
+					write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+				}
 			}
 		}
 		else
@@ -1509,29 +1593,104 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 			sprintf((char*)&exceptionMessage, "EXC: %s at PC:0x%lx", (char*)exceptionText, pc);
 			OverlayMessage("EXC SCREEN 1", (char*)&exceptionMessage, (8 * SOFT_SECS));
 
+			if ((fsAvail == YES) && (errReportFiled == NO))
+			{
+				sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 1", (char*)&exceptionMessage);
+				write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			}
+
 			sprintf((char*)&exceptionMessage, "MAX SD:%d bytes (TOP ADDR:%p)", (int)(0x1000 - testCounter), intMem);
 			//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
 			OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+			if ((fsAvail == YES) && (errReportFiled == NO))
+			{
+				sprintf((char*)g_spareBuffer, "%s: %s\r\n", (char*)&g_buildVersion, (char*)&exceptionMessage);
+				write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			}
 		}
 
 		sprintf((char*)&exceptionMessage, "SP:0x%lx S0:0x%lx S1:0x%lx S2:0x%lx", sp, stack0, stack1, stack2);
 		OverlayMessage("EXC SCREEN 2", (char*)&exceptionMessage, (8 * SOFT_SECS));
 
+		if ((fsAvail == YES) && (errReportFiled == NO))
+		{
+			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 2", (char*)&exceptionMessage);
+			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+		}
+
 		sprintf((char*)&exceptionMessage, "SR:0x%lx LR:0x%lx EXC:0x%lx", sr, lr, exception_number);
 		OverlayMessage("EXC SCREEN 3", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+		if ((fsAvail == YES) && (errReportFiled == NO))
+		{
+			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 3", (char*)&exceptionMessage);
+			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+		}
 
 		sprintf((char*)&exceptionMessage, "R0:0x%lx R1:0x%lx R2:0x%lx R3:0x%lx", r0, r1, r2, r3);
 		OverlayMessage("EXC SCREEN 4", (char*)&exceptionMessage, (8 * SOFT_SECS));
 
+		if ((fsAvail == YES) && (errReportFiled == NO))
+		{
+			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 4", (char*)&exceptionMessage);
+			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+		}
+
 		sprintf((char*)&exceptionMessage, "R4:0x%lx R5:0x%lx R6:0x%lx R7:0x%lx", r4, r5, r6, r7);
 		OverlayMessage("EXC SCREEN 5", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+		if ((fsAvail == YES) && (errReportFiled == NO))
+		{
+			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 5", (char*)&exceptionMessage);
+			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+		}
 
 		sprintf((char*)&exceptionMessage, "R9:0x%lx R10:0x%lx R11:0x%lx R12:0x%lx", r9, r10, r11, r12);
 		OverlayMessage("EXC SCREEN 6", (char*)&exceptionMessage, (8 * SOFT_SECS));
 
+		if ((fsAvail == YES) && (errReportFiled == NO))
+		{
+			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 6", (char*)&exceptionMessage);
+			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+		}
+
 		sprintf((char*)&exceptionMessage, "SR:%lu FS:%d T:%d CP:%d M:%d", g_lifetimeHalfSecondTickCount, LFST, LTT, LCPT, LMT);
 		OverlayMessage("EXC SCREEN 7", (char*)&exceptionMessage, (8 * SOFT_SECS));
+
+		if ((fsAvail == YES) && (errReportFiled == NO))
+		{
+			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 7", (char*)&exceptionMessage);
+			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+		}
+
+		if ((fsAvail == YES) && (errReportFiled == NO))
+		{
+			FillInAdditionalExceptionReportInfo(exceptionReportFile);
+			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+			close(exceptionReportFile);
+
+			errReportFiled = YES;
+
+			AddOnOffLogTimestamp(OFF_EXCEPTION);
+
+			// Make sure all open files are closed and data is flushed
+			nav_exit();
+
+			// Disable power off protection
+			WriteMcp23018NoInterrupts(IO_ADDRESS_KPD, OLATA, 0x00);
+		}
 	}
+
+	OverlayMessage(getLangText(STATUS_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 0);
+
+	if (g_unitConfig.timerMode != ENABLED)
+	{
+		SetTimeOfDayAlarmNearFuture(2);
+	}
+
+	// Shutdown application
+	WriteMcp23018NoInterrupts(IO_ADDRESS_KPD, OLATA, 0x40);
 }
 
 ///----------------------------------------------------------------------------
