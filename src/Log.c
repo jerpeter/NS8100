@@ -18,6 +18,7 @@
 #include "TextTypes.h"
 #include "FAT32_FileLib.h"
 #include "string.h"
+#include "Common.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -601,7 +602,8 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 		{
 			if (onOffState == ON) { strcpy((char*)onOffStateString, "On"); }
 			else if (onOffState == OFF) { strcpy((char*)onOffStateString, "Off"); }
-			else { strcpy((char*)onOffStateString, "J2B"); }
+			else if (onOffState == JUMP_TO_BOOT) { strcpy((char*)onOffStateString, "J2B"); }
+			else { strcpy((char*)onOffStateString, "OfE"); }
 
 			if (extCharge > EXTERNAL_VOLTAGE_PRESENT) { sprintf((char*)&extChargeString, "%4.2fv", extCharge); }
 			else { sprintf((char*)&extChargeString, "<none>"); }
@@ -735,4 +737,25 @@ void SwitchDebugLogFile(void)
 		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
 	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void FillInAdditionalExceptionReportInfo(int exceptionReportFile)
+{
+	DATE_TIME_STRUCT exceptionTime = GetCurrentTime();
+	char modeString[10];
+
+	if (g_triggerRecord.opMode == WAVEFORM_MODE) { strcpy((char*)&modeString, "Waveform"); }
+	else if (g_triggerRecord.opMode == BARGRAPH_MODE) { strcpy((char*)&modeString, "Bargraph"); }
+	else if (g_triggerRecord.opMode == COMBO_MODE) { strcpy((char*)&modeString, "Combo"); }
+
+	sprintf((char*)&g_spareBuffer, "Mode: %s, Monitoring: %s, Sample Rate: %lu, Record Time: %lu\r\n", (char*)&modeString, (g_sampleProcessing == ACTIVE_STATE) ? "Yes" : "No",
+			g_triggerRecord.trec.sample_rate, g_triggerRecord.trec.record_time);
+	write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+
+	sprintf((char*)&g_spareBuffer, "Error time: %02d-%02d-%02d %02d:%02d:%02d\r\n", exceptionTime.day, exceptionTime.month, exceptionTime.year,
+			exceptionTime.hour, exceptionTime.min, exceptionTime.sec);
+	write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
 }
