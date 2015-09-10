@@ -55,6 +55,7 @@ extern USER_MENU_STRUCT configMenu[];
 extern USER_MENU_STRUCT displacementMenu[];
 extern USER_MENU_STRUCT eraseEventsMenu[];
 extern USER_MENU_STRUCT eraseSettingsMenu[];
+extern USER_MENU_STRUCT externalTriggerMenu[];
 extern USER_MENU_STRUCT flashWrappingMenu[];
 extern USER_MENU_STRUCT freqPlotMenu[];
 extern USER_MENU_STRUCT freqPlotStandardMenu[];
@@ -71,7 +72,7 @@ extern USER_MENU_STRUCT peakAccMenu[];
 extern USER_MENU_STRUCT pretriggerSizeMenu[];
 extern USER_MENU_STRUCT printerEnableMenu[];
 extern USER_MENU_STRUCT printMonitorLogMenu[];
-extern USER_MENU_STRUCT powerSavingsMenu[];
+extern USER_MENU_STRUCT rs232PowerSavingsMenu[];
 extern USER_MENU_STRUCT recalibrateMenu[];
 extern USER_MENU_STRUCT recordTimeMenu[];
 extern USER_MENU_STRUCT saveCompressedDataMenu[];
@@ -1256,7 +1257,7 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
-#define CONFIG_MENU_ENTRIES 28
+#define CONFIG_MENU_ENTRIES 30
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1270,6 +1271,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, DATE_TIME_TEXT,				NO_TAG, {DATE_TIME}},
 {NO_TAG, 0, ERASE_MEMORY_TEXT,			NO_TAG, {ERASE_FLASH}},
 {NO_TAG, 0, EVENT_SUMMARIES_TEXT,		NO_TAG, {EVENT_SUMMARIES}},
+{NO_TAG, 0, EXTERNAL_TRIGGER_TEXT,		NO_TAG, {EXTERNAL_TRIGGER}},
 {NO_TAG, 0, FLASH_WRAPPING_TEXT,		NO_TAG, {FLASH_WRAPPING}},
 {NO_TAG, 0, FLASH_STATS_TEXT,			NO_TAG, {FLASH_STATS}},
 {NO_TAG, 0, LANGUAGE_TEXT,				NO_TAG, {LANGUAGE}},
@@ -1278,8 +1280,8 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, MODEM_SETUP_TEXT,			NO_TAG, {MODEM_SETUP}},
 {NO_TAG, 0, MONITOR_LOG_TEXT,			NO_TAG, {MONITOR_LOG}},
 {NO_TAG, 0, PRETRIGGER_SIZE_TEXT,		NO_TAG, {PRETRIGGER_SIZE}},
+{NO_TAG, 0, RS232_POWER_SAVINGS_TEXT,	NO_TAG, {RS232_POWER_SAVINGS}},
 #if 0 // No longer a unit configurable setting
-{NO_TAG, 0, POWER_SAVINGS_TEXT,			NO_TAG, {POWER_SAVINGS}},
 {NO_TAG, 0, REPORT_DISPLACEMENT_TEXT,	NO_TAG, {REPORT_DISPLACEMENT}},
 {NO_TAG, 0, REPORT_PEAK_ACC_TEXT,		NO_TAG, {REPORT_PEAK_ACC}},
 #endif
@@ -1353,6 +1355,10 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				SETUP_MENU_MSG(SUMMARY_MENU); mn_msg.data[0] = START_FROM_TOP;
 			break;
 
+			case (EXTERNAL_TRIGGER):
+				SETUP_USER_MENU_MSG(&externalTriggerMenu, g_unitConfig.externalTrigger);
+			break;
+
 			case (FLASH_WRAPPING):
 				SETUP_USER_MENU_MSG(&flashWrappingMenu, g_unitConfig.flashWrapping);
 			break;
@@ -1400,11 +1406,9 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
 			break;
 
-#if 0 // No longer a unit configurable setting
-			case (POWER_SAVINGS):
-				SETUP_USER_MENU_MSG(&powerSavingsMenu, g_unitConfig.powerSavingsLevel);
+			case (RS232_POWER_SAVINGS):
+				SETUP_USER_MENU_MSG(&rs232PowerSavingsMenu, g_unitConfig.rs232PowerSavings);
 			break;
-#endif
 #if 0 // No longer a unit configurable setting
 			case (REPORT_DISPLACEMENT):
 				SETUP_USER_MENU_MSG(&displacementMenu, g_unitConfig.reportDisplacement);
@@ -1665,6 +1669,44 @@ void EraseSettingsMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
+// External Trigger Menu
+//=============================================================================
+//*****************************************************************************
+#define EXTERNAL_TRIGGER_MENU_ENTRIES 4
+USER_MENU_STRUCT externalTriggerMenu[EXTERNAL_TRIGGER_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, EXTERNAL_TRIGGER_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, EXTERNAL_TRIGGER_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, ENABLED_TEXT,	NO_TAG, {ENABLED}},
+{ITEM_2, 0, DISABLED_TEXT,	NO_TAG, {DISABLED}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&ExternalTriggerMenuHandler}}
+};
+
+//------------------------------
+// External Trigger Menu Handler
+//------------------------------
+void ExternalTriggerMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_unitConfig.externalTrigger = (uint8)(externalTriggerMenu[newItemIndex].data);
+
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu, EXTERNAL_TRIGGER);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
 // Flash Wrapping Menu
 //=============================================================================
 //*****************************************************************************
@@ -1835,6 +1877,9 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 				g_quickBootEntryJump = QUICK_BOOT_ENTRY_FROM_MENU;
 				BootLoadManager();
 			}
+
+extern void CheckExceptionReportLogExists(void);
+			CheckExceptionReportLogExists();
 		}
 		else if (helpMenu[newItemIndex].data == SENSOR_CHECK)
 		{
@@ -2052,9 +2097,9 @@ void ModemSetupMenuHandler(uint8 keyPressed, void* data)
 			g_modemStatus.connectionState = NOP_CMD;
 			g_modemStatus.modemAvailable = NO;
 
-			g_modemStatus.craftPortRcvFlag = NO;		// Flag to indicate that incomming data has been received.
-			g_modemStatus.xferState = NOP_CMD;		// Flag for xmitting data to the craft.
-			g_modemStatus.xferMutex = NO;				// Flag to stop other message command from executing.
+			g_modemStatus.craftPortRcvFlag = NO;		// Flag to indicate that incoming data has been received
+			g_modemStatus.xferState = NOP_CMD;			// Flag for transmitting data to the craft
+			g_modemStatus.xferMutex = NO;				// Flag to stop other message command from executing
 			g_modemStatus.systemIsLockedFlag = YES;
 
 			g_modemStatus.ringIndicator = 0;
@@ -2319,46 +2364,36 @@ void PrintMonitorLogMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
-// Power Savings Menu
+// RS232 Power Savings Menu
 //=============================================================================
 //*****************************************************************************
-#define POWER_SAVINGS_MENU_ENTRIES 7
-USER_MENU_STRUCT powerSavingsMenu[POWER_SAVINGS_MENU_ENTRIES] = {
+#define RS232_POWER_SAVINGS_MENU_ENTRIES 4
+USER_MENU_STRUCT rs232PowerSavingsMenu[RS232_POWER_SAVINGS_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, POWER_SAVINGS_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, POWER_SAVINGS_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
-{NO_TAG, 0, NONE_TEXT,					NO_TAG, {POWER_SAVINGS_NONE}},
-{NO_TAG, 0, MINIMUM_TEXT,				NO_TAG, {POWER_SAVINGS_MINIMUM}},
-{NO_TAG, 0, NORMAL_DEFAULT_TEXT,		NO_TAG, {POWER_SAVINGS_NORMAL}},
-{NO_TAG, 0, NORM_AND_NO_USB_TEXT,		NO_TAG, {POWER_SAVINGS_MOST}},
-{NO_TAG, 0, NORM_AND_NO_USB_CRAFT_TEXT,	NO_TAG, {POWER_SAVINGS_MAX}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&PowerSavingsMenuHandler}}
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, RS232_POWER_SAVINGS_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{NO_TAG, 0, ENABLED_TEXT,				NO_TAG, {ENABLED}},
+{NO_TAG, 0, DISABLED_TEXT,				NO_TAG, {DISABLED}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&Rs232PowerSavingsMenuHandler}}
 };
 
 //---------------------------------------
 // Power Savings Menu Handler
 //---------------------------------------
-void PowerSavingsMenuHandler(uint8 keyPressed, void* data)
+void Rs232PowerSavingsMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
 	{
-		// Check if the power savings level changed
-		if (g_unitConfig.powerSavingsLevel != (uint8)powerSavingsMenu[newItemIndex].data)
-		{
-			g_unitConfig.powerSavingsLevel = (uint8)powerSavingsMenu[newItemIndex].data;
-
-			// Adjust and save record
-			AdjustPowerSavings();
-			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
-		}
+		g_unitConfig.rs232PowerSavings = (uint8)rs232PowerSavingsMenu[newItemIndex].data;
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&configMenu, POWER_SAVINGS);
+		SETUP_USER_MENU_MSG(&configMenu, RS232_POWER_SAVINGS);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
