@@ -1046,19 +1046,53 @@ void DisplaySensorType(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+uint32 SerialNumberConverter(uint8* snPtr)
+{
+	return ((uint32)(snPtr[0] * 1048576) + (uint32)(snPtr[1] * 65536) + (uint32)(snPtr[2] * 4096) + (uint32)(snPtr[3] * 256) + (uint32)(snPtr[4] * 16) + (uint32)(snPtr[5]));
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void DisplaySerialNumber(void)
 {
-	char message[75];
+	char serialNumberString[20];
+	uint32 serialNumberConversion;
 
 	if (!g_factorySetupRecord.invalid)
 	{
-		memset(&message[0], 0, sizeof(message));
-		sprintf((char*)message, "%s: %s", getLangText(SERIAL_NUMBER_TEXT), (char*)g_factorySetupRecord.serial_num);
-		MessageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
+		memset(&serialNumberString[0], 0, sizeof(serialNumberString));
+		memcpy(&serialNumberString[0], &g_factorySetupRecord.serial_num[0], sizeof(g_factorySetupRecord.serial_num));
+		sprintf((char*)g_spareBuffer, "%s: %s", getLangText(SERIAL_NUMBER_TEXT), (char*)serialNumberString);
+		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 	else
 	{
 		MessageBox(getLangText(STATUS_TEXT), getLangText(SERIAL_NUMBER_NOT_SET_TEXT), MB_OK);
+	}
+
+	if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+	{
+		serialNumberConversion = SerialNumberConverter(&g_seismicSmartSensorMemory.serialNumber[0]);
+		sprintf((char*)g_spareBuffer, "%s %s: %06lu", getLangText(SEISMIC_TEXT), getLangText(SERIAL_NUMBER_TEXT), serialNumberConversion);
+		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
+	}
+	else
+	{
+		sprintf((char*)&g_spareBuffer, "%s %s %s %s", getLangText(SEISMIC_TEXT), getLangText(SMART_SENSOR_TEXT), getLangText(SERIAL_NUMBER_TEXT), getLangText(NOT_FOUND_TEXT));
+		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
+	}
+
+	if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+	{
+		serialNumberConversion = SerialNumberConverter(&g_acousticSmartSensorMemory.serialNumber[0]);
+		sprintf((char*)g_spareBuffer, "%s %s: %06lu", getLangText(ACOUSTIC_TEXT), getLangText(SERIAL_NUMBER_TEXT), serialNumberConversion);
+		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
+	}
+	else
+	{
+		sprintf((char*)&g_spareBuffer, "%s %s %s %s", getLangText(ACOUSTIC_TEXT), getLangText(SMART_SENSOR_TEXT), getLangText(SERIAL_NUMBER_TEXT), getLangText(NOT_FOUND_TEXT));
+		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 }
 

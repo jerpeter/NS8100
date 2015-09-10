@@ -400,6 +400,7 @@ enum {
 	DATE_TIME,
 	ERASE_FLASH,
 	EVENT_SUMMARIES,
+	EXTERNAL_TRIGGER,
 	FLASH_WRAPPING,
 	FLASH_STATS,
 	FREQUENCY_PLOT,
@@ -413,7 +414,7 @@ enum {
 	PRINT_MONITOR_LOG,
 	REPORT_DISPLACEMENT,
 	REPORT_PEAK_ACC,
-	POWER_SAVINGS,
+	RS232_POWER_SAVINGS,
 	SAVE_COMPRESSED_DATA,
 	SENSOR_GAIN_TYPE,
 	SERIAL_NUMBER,
@@ -843,6 +844,7 @@ void ConfigMenuHandler(uint8 key, void* data);
 void DisplacementMenuHandler(uint8 key, void* data);
 void EraseEventsMenuHandler(uint8 key, void* data);
 void EraseSettingsMenuHandler(uint8 key, void* data);
+void ExternalTriggerMenuHandler(uint8 key, void* data);
 void FlashWrappingMenuHandler(uint8 key, void* data);
 void FreqPlotMenuHandler(uint8 key, void* data);
 void FreqPlotStandardMenuHandler(uint8 key, void* data);
@@ -857,7 +859,7 @@ void PretriggerSizeMenuHandler(uint8 key, void* data);
 void PrinterEnableMenuHandler(uint8 key, void* data);
 void PrintOutMenuHandler(uint8 key, void* data);
 void PrintMonitorLogMenuHandler(uint8 key, void* data);
-void PowerSavingsMenuHandler(uint8 key, void* data);
+void Rs232PowerSavingsMenuHandler(uint8 key, void* data);
 void RecalibrateMenuHandler(uint8 key, void* data);
 void SaveCompressedDataMenuHandler(uint8 key, void* data);
 void SampleRateMenuHandler(uint8 key, void* data);
