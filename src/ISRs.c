@@ -68,6 +68,7 @@ static uint16 s_sampleRate = 1024;
 static uint16 s_consecSeismicTriggerCount = 0;
 static uint16 s_consecAirTriggerCount = 0;
 static uint16 s_sensorCalSampleCount = CALIBRATION_FIXED_SAMPLE_RATE;
+static int16 s_temperatureDelta = 0;
 
 static uint8 s_pretriggerFull = NO;
 static uint8 s_checkForTempDrift = NO;
@@ -78,9 +79,11 @@ static uint8 s_recordingEvent = NO;
 static uint8 s_calPulse = NO;
 static uint8 s_consecEventsWithoutCal = 0;
 static uint8 s_channelSyncError = NO;
-static uint8 s_channelReadsToSync = 0;
-static int16 s_temperatureDelta = 0;
+static uint8 s_channelSyncErrorCount = 0;
 static uint8 s_consecutiveEventsWithoutCalThreshold = CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD;
+#if 0 // Old
+static uint8 s_channelReadsToSync = 0;
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -225,8 +228,11 @@ void Eic_system_irq(void)
 		// Check if monitoring and not bargraph and not processing an event
 		if (((g_sampleProcessing == ACTIVE_STATE)) && (g_triggerRecord.opMode != BARGRAPH_MODE) && (g_busyProcessingEvent == NO))
 		{
-			// Signal the start of an event
-			g_externalTrigger = YES;
+			if (g_unitConfig.externalTrigger == ENABLED)
+			{
+				// Signal the start of an event
+				g_externalTrigger = YES;
+			}
 		}
 	}
 #else
@@ -656,7 +662,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				// Reset the external trigger flag
 				g_externalTrigger = NO;
 			}
-			// Check if the source was not an external trigger
+			// The trigger source was local (not an external trigger)
 			else // (g_externalTrigger == NO)
 			{
 				//debugRaw("+ET+");
@@ -1311,6 +1317,7 @@ static inline void HandleChannelSyncError_ISR_Inline(void)
 {
 	debugErr("AD Channel Sync Error\r\n");
 
+#if 0 // Old method
 	// Attempt channel recovery (with a channel read to get the config read back value)
 	spi_selectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack); // Data insignificant
@@ -1347,6 +1354,22 @@ static inline void HandleChannelSyncError_ISR_Inline(void)
 		spi_write(&AVR32_SPI0, 0x0000); spi_read(&AVR32_SPI0, &s_channelConfigReadBack); // Config read back
 		spi_unselectChip(&AVR32_SPI0, AD_SPI_NPCS);
 	}
+#else // New method
+	// Disable A/D due to error
+	PowerControl(ANALOG_SLEEP_ENABLE, ON);
+
+	// Delay to allow AD to power up/stabilize
+	SoftUsecWait(50 * SOFT_MSECS);
+
+	// Re-Enable the A/D
+	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
+
+	// Delay to allow AD to power up/stabilize
+	SoftUsecWait(50 * SOFT_MSECS);
+
+	// Setup the A/D Channel configuration
+	SetupADChannelConfig(s_sampleRate);
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -1359,6 +1382,7 @@ void DataIsrInit(uint16 sampleRate)
 	s_checkForTempDrift = NO;
 	s_alarmOneCount = 0;
 	s_alarmTwoCount = 0;
+	s_channelSyncErrorCount = 0;
 
 	if ((g_maxEventBuffers - 1) < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)
 	{
@@ -1472,10 +1496,17 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 		//___Check for channel sync error
 		if (s_channelSyncError == YES)
 		{
-			g_breakpointCause = BP_AD_CHAN_SYNC_ERR;
-			__asm__ __volatile__ ("breakpoint");
+			if (s_channelSyncErrorCount)
+			{
+				g_breakpointCause = BP_AD_CHAN_SYNC_ERR;
+				__asm__ __volatile__ ("breakpoint");
+			}
+			else
+			{
+				s_channelSyncErrorCount++;
 
-			HandleChannelSyncError_ISR_Inline();
+				HandleChannelSyncError_ISR_Inline();
+			}
 
 			// clear the interrupt flags and bail
 #if INTERNAL_SAMPLING_SOURCE
