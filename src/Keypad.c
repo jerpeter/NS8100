@@ -212,35 +212,8 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
-#if 0 // Test (Keypad override of the backlight key for testing)
-				if (g_sampleProcessing == ACTIVE_STATE)
-				{
-					// Check if not processing an event
-					if (g_busyProcessingEvent == NO)
-					{
-						// Signal the start of an event
-						g_externalTrigger = YES;
-					}
-				}
-				else
-				{
-					//RTC_MEM_MAP_STRUCT rtcMap;
-					//ExternalRtcRead(RTC_CONTROL_1_ADDR, 2, &rtcMap.control_1);
-					//debug("RTC Control 1: 0x%x, Control 2: 0x%x\r\n", rtcMap.control_1, rtcMap.control_2);
-
-					//__monitorLogTblKey = 0;
-					//InitMonitorLog();
-					
-					//g_triggerRecord.trec.sample_rate += 1024;
-					//debug("New sample rate: %d\r\n", g_triggerRecord.trec.sample_rate);
-				}
-				
-				msg.cmd = 0;
-				msg.length = 0;
-#else
 				msg.cmd = BACK_LIGHT_CMD;
 				msg.length = 0;
-#endif
 			}
 			else // all other keys
 			{
@@ -297,7 +270,10 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					}
 					else if (keyPressed == HELP_KEY)
 					{
-#if 0 // Test
+#if 1 // Test
+						g_breakpointCause = BP_END;
+
+						__asm__ __volatile__ ("breakpoint");
 #endif
 					}
 					else if (keyPressed == KEY_BACKLIGHT)
