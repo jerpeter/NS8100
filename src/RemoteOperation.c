@@ -695,17 +695,13 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				break;
 
 			default:
-#if 0 // Normal
 				returnCode = CFG_ERR_EXTERNAL_TRIGGER;
 				goto SEND_UCM_ERROR_CODE;
-#else // Don't force error until remote side has added ability
-				// Don't change current unit config
-#endif
 				break;
 		}
 
 		//---------------------------------------------------------------------------
-		// External Trigger check
+		// RS232 Power Savings check
 		//---------------------------------------------------------------------------
 		switch (cfg.autoCfg.rs232PowerSavings)
 		{
@@ -715,12 +711,8 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			break;
 
 			default:
-#if 0 // Normal
 				returnCode = CFG_ERR_RS232_POWER_SAVINGS;
 				goto SEND_UCM_ERROR_CODE;
-#else // Don't force error until remote side has added ability
-				// Don't change current unit config
-#endif
 			break;
 		}
 
@@ -1085,8 +1077,21 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				goto SEND_UCM_ERROR_CODE;
 			}
 		}
-	
+
+		//---------------------------------------------------------------------------
+		// Check to make sure a valid trigger source is selected
+		//---------------------------------------------------------------------------
+		if ((g_unitConfig.externalTrigger == DISABLED) && (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) &&
+			(g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR))
+		{
+			// No trigger source was selected which is a config error
+			returnCode = CFG_ERR_NO_TRIGGER_SOURCE;
+			goto SEND_UCM_ERROR_CODE;
+		}
+
+		//---------------------------------------------------------------------------
 		// Check if the Supergraphics
+		//---------------------------------------------------------------------------
 		if (cfg.sgVersion)
 		{
 			if ((cfg.flashWrapping == NO) || (cfg.flashWrapping == YES))
