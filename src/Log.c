@@ -241,7 +241,9 @@ void InitMonitorLogUniqueEntryId(void)
 		__monitorLogUniqueEntryId = 1;
 		monitorLogRec.currentMonitorLogID = __monitorLogUniqueEntryId;
 		
+#if 0 // Don't save initial ID beacsue a power cycle will start the Id at 2 instead of 1
 		SaveRecordData(&monitorLogRec, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_TYPE);
+#endif
 	}
 
 	debug("Total Monitor Log entries to date: %d, Current Monitor Log entry number: %d\r\n",
