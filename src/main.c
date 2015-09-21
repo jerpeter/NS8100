@@ -356,9 +356,13 @@ void MenuEventManager(void)
 	{
 		clearTimerEventFlag(TIMER_MODE_TIMER_EVENT);
 
-		debug("Timer mode: Start monitoring...\r\n");
-		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
-		JUMP_TO_ACTIVE_MENU();
+		if (CheckAndDisplayErrorThatPreventsMonitoring(OVERLAY) == NO)
+		{
+			// Safe to start monitoring
+			debug("Timer mode: Start monitoring...\r\n");
+			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
+			JUMP_TO_ACTIVE_MENU();
+		}
 	}
 }
 
