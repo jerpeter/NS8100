@@ -359,6 +359,9 @@ void MoveWaveformEventToFile(void)
 #endif
 				UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_wordSizeInEvent);
 
+				// Reset External Trigger event record flag
+				g_pendingEventRecord.summary.captured.externalTrigger = NO;
+
 				// Now store the updated event number in the universal ram storage.
 				g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
 
