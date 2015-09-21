@@ -1048,7 +1048,8 @@ void DisplaySensorType(void)
 ///----------------------------------------------------------------------------
 uint32 SerialNumberConverter(uint8* snPtr)
 {
-	return ((uint32)(snPtr[0] * 1048576) + (uint32)(snPtr[1] * 65536) + (uint32)(snPtr[2] * 4096) + (uint32)(snPtr[3] * 256) + (uint32)(snPtr[4] * 16) + (uint32)(snPtr[5]));
+	// Due to Smart sensor serial number nibble storage the first two bytes can be ignored
+	return ((uint32)((snPtr[2] << 24) | (snPtr[3] << 16) | (snPtr[4] << 8) | (snPtr[5])));
 }
 
 ///----------------------------------------------------------------------------
