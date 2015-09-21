@@ -472,7 +472,10 @@ void AutoMonitorTimerCallBack(void)
 		// Check if the unit is not already monitoring
 		if (g_sampleProcessing != ACTIVE_STATE)
 		{
-			if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
+			if (CheckAndDisplayErrorThatPreventsMonitoring(OVERLAY))
+			{
+				AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
+			}
 			else // Safe to enter monitor mode
 			{
 				// Enter monitor mode with the current mode

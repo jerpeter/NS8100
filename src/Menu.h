@@ -183,7 +183,8 @@ enum {
 // Message display stuff
 enum {
 	NO_PROMPT,
-	PROMPT
+	PROMPT,
+	OVERLAY
 };
 
 // Unit operational Modes
@@ -949,7 +950,7 @@ void DisplayFlashUsageStats(void);
 void DisplayAutoDialInfo(void);
 void InitSensorParameters(uint16 sensor_type, uint8 sensitivity);
 void StopMonitoringForLowPowerState(void);
-void PromptUserUnableToEnterMonitoring(void);
+uint8 CheckAndDisplayErrorThatPreventsMonitoring(uint8 messageType);
 void PromptUserWaitingForSensorWarmup(void);
 void PromptUserWaitingForSensorZeroing(void);
 

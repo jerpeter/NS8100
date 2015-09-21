@@ -622,8 +622,7 @@ void ForcedCalibration(void)
 		// Assign a timer to re-enter monitor mode
 		//AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (3 * SOFT_SECS), AutoMonitorTimerCallBack);
 
-		if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
-		else // Safe to enter monitor mode
+		if (CheckAndDisplayErrorThatPreventsMonitoring(OVERLAY) == NO)
 		{
 			// Enter monitor mode with the current mode
 			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
