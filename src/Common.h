@@ -353,4 +353,7 @@ void ConvertCalDatetoDateTime(DATE_TIME_STRUCT* dateTime, CALIBRATION_DATE_STRUC
 void GetSpi1MutexLock(SPI1_LOCK_TYPE spi1LockType);
 void ReleaseSpi1MutexLock(void);
 
+// Validate trigger source
+uint8 CheckTriggerSourceExists(void);
+
 #endif // _COMMON_H_

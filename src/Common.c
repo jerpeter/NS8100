@@ -1084,3 +1084,19 @@ void ReleaseSpi1MutexLock(void)
 {
 	g_spi1AccessLock = AVAILABLE;
 }
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 CheckTriggerSourceExists(void)
+{
+	if ((g_unitConfig.externalTrigger == DISABLED) && (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) &&
+		(g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR))
+	{
+		return (NO);
+	}
+	else
+	{
+		return (YES);
+	}
+}
