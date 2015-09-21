@@ -270,7 +270,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					}
 					else if (keyPressed == HELP_KEY)
 					{
-#if 1 // Test
+#if 0 // Test
 						g_breakpointCause = BP_END;
 
 						__asm__ __volatile__ ("breakpoint");
