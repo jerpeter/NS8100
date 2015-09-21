@@ -46,6 +46,7 @@ extern USER_MENU_STRUCT barResultMenu[];
 extern USER_MENU_STRUCT bitAccuracyMenu[];
 extern USER_MENU_STRUCT configMenu[];
 extern USER_MENU_STRUCT distanceToSourceMenu[];
+extern USER_MENU_STRUCT externalTriggerMenu[];
 extern USER_MENU_STRUCT modemSetupMenu[];
 extern USER_MENU_STRUCT modemDialMenu[];
 extern USER_MENU_STRUCT modemInitMenu[];
@@ -111,14 +112,16 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 			}
 		}
 
-		// Allow both Seismic and Air trigger levels to be No Trigger (only allowing External trigger)
-		if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) && g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR)
+		// Check if seismic and air triggers are set to No trigger
+		if (((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) && (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR)) ||
+			(g_externalTriggerMenuActiveForSetup == YES))
 		{
-			MessageBox(getLangText(WARNING_TEXT), getLangText(UNIT_SET_FOR_EXTERNAL_TRIGGER_TEXT), MB_OK);
+			// Jump to the External Trigger menu (flagged active) to allow the user to change if desired
+			g_externalTriggerMenuActiveForSetup = YES;
+			SETUP_USER_MENU_MSG(&externalTriggerMenu, g_unitConfig.externalTrigger);
 		}
-
 		// Check if the A-weighting option is enabled
-		if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
+		else if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
 		{
 			SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
 		}
@@ -130,6 +133,17 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+		if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+		{
+			USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
+			USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
+		}
+		else
+		{
+			USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = IN_TYPE;
+			USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
+		}
+
 		// Down convert to current bit accuracy setting
 		if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 		{

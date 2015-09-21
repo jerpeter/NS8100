@@ -138,17 +138,25 @@ void AirScaleMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
-			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-
-			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+			if (g_externalTriggerMenuActiveForSetup == YES)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
-				AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+				// Jump to the External Trigger menu to allow the user to change if desired
+				SETUP_USER_MENU_MSG(&externalTriggerMenu, g_unitConfig.externalTrigger);
 			}
 			else
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
-				AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
+				g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+
+				if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+				{
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
+					AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+				}
+				else
+				{
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
+					AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
+				}
 			}
 		}
 		else // (g_triggerRecord.opMode == BARGRAPH_MODE)
@@ -1356,6 +1364,7 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (EXTERNAL_TRIGGER):
+				g_externalTriggerMenuActiveForSetup = NO;
 				SETUP_USER_MENU_MSG(&externalTriggerMenu, g_unitConfig.externalTrigger);
 			break;
 
@@ -1456,14 +1465,9 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				}
 				else // Timer mode is disabled
 				{
-					// Check if the Factory Setup Record is valid
-					if (!g_factorySetupRecord.invalid)
+					if (CheckAndDisplayErrorThatPreventsMonitoring(PROMPT) == NO)
 					{
 						SETUP_USER_MENU_MSG(&timerModeMenu, g_unitConfig.timerMode);
-					}
-					else
-					{
-						OverlayMessage(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), (2 * SOFT_SECS));
 					}
 				}
 			break;
@@ -1691,15 +1695,81 @@ void ExternalTriggerMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_unitConfig.externalTrigger = (uint8)(externalTriggerMenu[newItemIndex].data);
+		if ((g_externalTriggerMenuActiveForSetup == YES) && ((uint8)(externalTriggerMenu[newItemIndex].data) == DISABLED) &&
+			(g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) && (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR))
+		{
+			MessageBox(getLangText(WARNING_TEXT), getLangText(BOTH_TRIGGERS_SET_TO_NO_AND_EXTERNAL_TRIGGER_DISABLED_TEXT), MB_OK);
+			sprintf((char*)g_spareBuffer, "%s. %s", getLangText(NO_TRIGGER_SOURCE_SELECTED_TEXT), getLangText(PLEASE_CHANGE_TEXT));
+			MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
 
-		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+			if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+			{
+				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
+				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
+			}
+			else
+			{
+				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = IN_TYPE;
+				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
+			}
 
-		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+			// Down convert to current bit accuracy setting
+			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
+			{
+				g_tempTriggerLevelForMenuAdjsutment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
+			}
+
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment,
+			(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
+			(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
+			g_bitAccuracyMidpoint);
+		}
+		else
+		{
+			g_unitConfig.externalTrigger = (uint8)(externalTriggerMenu[newItemIndex].data);
+
+			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+			if (g_externalTriggerMenuActiveForSetup == NO)
+			{
+				SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+			}
+			else // (g_externalTriggerMenuActiveForSetup == YES)
+			{
+				// Check if the A-weighting option is enabled
+				if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
+				{
+					SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
+				}
+				else // A-weighting is not enabled
+				{
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
+					RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
+				}
+			}
+		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&configMenu, EXTERNAL_TRIGGER);
+		if (g_externalTriggerMenuActiveForSetup == NO)
+		{
+			SETUP_USER_MENU_MSG(&configMenu, EXTERNAL_TRIGGER);
+		}
+		else // (g_externalTriggerMenuActiveForSetup == YES)
+		{
+			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+
+			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
+				AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+			}
+			else
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
+				AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
+			}
+		}
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -2034,8 +2104,11 @@ void ModeMenuHandler(uint8 keyPressed, void* data)
 	{
 		if (modeMenu[newItemIndex].data == MONITOR)
 		{
-			// Call the Monitor menu and start monitoring
-			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, (uint32)g_triggerRecord.opMode);
+			if (CheckAndDisplayErrorThatPreventsMonitoring(PROMPT) == NO)
+			{
+				// Safe to enter monitor mode
+				SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, (uint32)g_triggerRecord.opMode);
+			}
 		}
 		else // Mode is EDIT
 		{
@@ -2050,7 +2123,10 @@ void ModeMenuHandler(uint8 keyPressed, void* data)
 			else
 			{
 				SETUP_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
-			}			
+			}
+
+			// Reset flag to display External Trigger menu
+			g_externalTriggerMenuActiveForSetup = NO;
 		}
 	}
 	else if (keyPressed == ESC_KEY)
