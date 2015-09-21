@@ -134,39 +134,27 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 					switch (mn_layout_ptr->curr_ln)
 					{
 						case (DEFAULT_ROW_3): // Waveform
-							if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
-							else
-							{
-								g_triggerRecord.opMode = WAVEFORM_MODE;
-								ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
-								UpdateModeMenuTitle(g_triggerRecord.opMode);
-								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
-								JUMP_TO_ACTIVE_MENU();
-							}
+							g_triggerRecord.opMode = WAVEFORM_MODE;
+							ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
+							UpdateModeMenuTitle(g_triggerRecord.opMode);
+							SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
+							JUMP_TO_ACTIVE_MENU();
 							break; 
 
 						case (DEFAULT_ROW_4): // Bargraph
-							if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
-							else
-							{
-								g_triggerRecord.opMode = BARGRAPH_MODE;
-								ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
-								UpdateModeMenuTitle(g_triggerRecord.opMode);
-								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
-								JUMP_TO_ACTIVE_MENU();
-							}
+							g_triggerRecord.opMode = BARGRAPH_MODE;
+							ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
+							UpdateModeMenuTitle(g_triggerRecord.opMode);
+							SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
+							JUMP_TO_ACTIVE_MENU();
 							break;
 
 						case (DEFAULT_ROW_5): // Combo
-							if ((g_factorySetupRecord.invalid) || (g_lowBatteryState == YES)) { PromptUserUnableToEnterMonitoring(); }
-							else
-							{
-								g_triggerRecord.opMode = COMBO_MODE;
-								ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
-								UpdateModeMenuTitle(g_triggerRecord.opMode);
-								SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
-								JUMP_TO_ACTIVE_MENU();
-							}
+							g_triggerRecord.opMode = COMBO_MODE;
+							ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
+							UpdateModeMenuTitle(g_triggerRecord.opMode);
+							SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
+							JUMP_TO_ACTIVE_MENU();
 							break;
 
 						case (DEFAULT_ROW_6): // Load Saved Record
@@ -262,19 +250,57 @@ void MainMenuScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT * mn_layout_
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void PromptUserUnableToEnterMonitoring(void)
+uint8 CheckAndDisplayErrorThatPreventsMonitoring(uint8 messageType)
 {
+	uint8 errorCondition = NO;
+
 	if (g_factorySetupRecord.invalid)
 	{
+		errorCondition = YES;
 		debugWarn("Factory setup record not found.\r\n");
-		MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK);
+		
+		if (g_lcdPowerFlag == ENABLED)
+		{
+			if (messageType == PROMPT) { MessageBox(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), MB_OK); }
+			else { OverlayMessage(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), (3 * SOFT_SECS)); }
+		}
 	}
 	else if (g_lowBatteryState == YES)
 	{
+		errorCondition = YES;
 		debugWarn("Monitoring unavailable due to low battery voltage\r\n");
+
 		sprintf((char*)g_spareBuffer, "%s %s (%3.2f)", getLangText(BATTERY_VOLTAGE_TEXT), getLangText(LOW_TEXT), (GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE)));
-		OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+
+		if (g_lcdPowerFlag == ENABLED)
+		{
+			if (messageType == PROMPT) { MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK); }
+			else { OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS)); }
+		}
 	}
+	else if ((g_triggerRecord.opMode != BARGRAPH_MODE) && (CheckTriggerSourceExists() == NO))
+	{
+		errorCondition = YES;
+		debugWarn("Monitoring unavailable due to no valid trigger source\r\n");
+
+		sprintf((char*)g_spareBuffer, "%s. %s", getLangText(NO_TRIGGER_SOURCE_SELECTED_TEXT), getLangText(PLEASE_CHANGE_TEXT));
+
+		if (g_lcdPowerFlag == ENABLED)
+		{
+			if (messageType == PROMPT)
+			{
+				MessageBox(getLangText(WARNING_TEXT), getLangText(BOTH_TRIGGERS_SET_TO_NO_AND_EXTERNAL_TRIGGER_DISABLED_TEXT), MB_OK);
+				MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
+			}
+			else
+			{
+				OverlayMessage(getLangText(WARNING_TEXT), getLangText(BOTH_TRIGGERS_SET_TO_NO_AND_EXTERNAL_TRIGGER_DISABLED_TEXT), (3 * SOFT_SECS));
+				OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+			}
+		}
+	}
+	
+	return (errorCondition);
 }
 
 ///----------------------------------------------------------------------------
