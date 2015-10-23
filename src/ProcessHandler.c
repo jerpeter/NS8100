@@ -439,13 +439,13 @@ uint16 AirTriggerConvert(uint32 airTriggerToConvert)
 	{
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
-			// Convert dB to an offset from 0 to 2048 and upscale to 16-bit
-			airTriggerToConvert = (uint32)(DbToHex(airTriggerToConvert) * 16);
+			// Convert dB to an A/D count
+			airTriggerToConvert = (uint32)(DbToHex(airTriggerToConvert));
 		}
 		else
 		{
-			// Convert mb to an offset from 0 to 2048 and upscale to 16-bit
-			airTriggerToConvert = (uint32)(MbToHex(airTriggerToConvert) * 16);
+			// Convert mb to an A/D count
+			airTriggerToConvert = (uint32)(MbToHex(airTriggerToConvert));
 		}
 	}
 
