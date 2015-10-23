@@ -420,14 +420,19 @@ float HexToPsi(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint
 ///----------------------------------------------------------------------------
 uint16 DbToHex(uint16 db)
 {
+	// Convert dB to an offset from 0 to 2048 and upscale to 16-bit
+
 	// This is the inverse log of base 10.
-	double dbValue = (double)pow((double)10, ((double)db/(double)20.0));
+	float dbValue = (float)pow((float)10, ((float)db/(float)20.0));
 
 	// Do the conversion. 1/.0000002 = 5000000
-	dbValue = (double)dbValue / (double)DB_CONVERSION_VALUE;
+	dbValue = (float)dbValue / (float)DB_CONVERSION_VALUE;
 
 	// Do the conversion. millibar conversion 400 = 10000/25
-	dbValue = (double)dbValue * (double)MB_CONVERSION_VALUE;
+	dbValue = (float)dbValue * (float)MB_CONVERSION_VALUE;
+
+	// Upscale from 12-bit to 16-bit
+	dbValue *= 16;
 
 	return (ceil(dbValue));
 }
@@ -437,10 +442,15 @@ uint16 DbToHex(uint16 db)
 ///----------------------------------------------------------------------------
 uint16 MbToHex(float mb)
 {
-	// Range is from 0 to 2048. Incoming mb is adjusted up by 10,000. Divide by 25 to bring to the correct range.
-	uint16 mbValue = ceil(mb / ADJUSTED_MB_TO_HEX_VALUE);
+	// Convert mb to an offset from 0 to 2048 and upscale to 16-bit
 
-	return (mbValue);
+	// Range is from 0 to 2048. Incoming mb is adjusted up by 10,000. Divide by 25 to bring to the correct range.
+	float mbValue = (mb / ADJUSTED_MB_TO_HEX_VALUE);
+
+	// Upscale from 12-bit to 16-bit
+	mbValue *= 16;
+
+	return (ceil(mbValue));
 }
 
 ///----------------------------------------------------------------------------
