@@ -483,14 +483,14 @@ void Avr32_enable_muxed_pins(void)
 
 		//=====================================================
 		// Usart 1 - RS232
-		{AVR32_USART1_RXD_0_0_PIN, AVR32_USART1_RXD_0_0_FUNCTION},
-		{AVR32_USART1_TXD_0_0_PIN, AVR32_USART1_TXD_0_0_FUNCTION},
-		{AVR32_USART1_RI_0_PIN, AVR32_USART1_RI_0_FUNCTION},
-		{AVR32_USART1_DTR_0_PIN, AVR32_USART1_DTR_0_FUNCTION},
-		{AVR32_USART1_DSR_0_PIN, AVR32_USART1_DSR_0_FUNCTION},
-		{AVR32_USART1_DCD_0_PIN, AVR32_USART1_DCD_0_FUNCTION},
-		{AVR32_USART1_RTS_0_0_PIN, AVR32_USART1_RTS_0_0_FUNCTION},
-		{AVR32_USART1_CTS_0_0_PIN, AVR32_USART1_CTS_0_0_FUNCTION},
+		{AVR32_USART1_RXD_0_0_PIN, AVR32_USART1_RXD_0_0_FUNCTION}, // PA05
+		{AVR32_USART1_TXD_0_0_PIN, AVR32_USART1_TXD_0_0_FUNCTION}, // PA06
+		{AVR32_USART1_RI_0_PIN, AVR32_USART1_RI_0_FUNCTION}, // PB26
+		{AVR32_USART1_DTR_0_PIN, AVR32_USART1_DTR_0_FUNCTION}, // PB25
+		{AVR32_USART1_DSR_0_PIN, AVR32_USART1_DSR_0_FUNCTION}, // PB24
+		{AVR32_USART1_DCD_0_PIN, AVR32_USART1_DCD_0_FUNCTION}, // PB23
+		{AVR32_USART1_RTS_0_0_PIN, AVR32_USART1_RTS_0_0_FUNCTION}, // PA08
+		{AVR32_USART1_CTS_0_0_PIN, AVR32_USART1_CTS_0_0_FUNCTION}, // PA09
 
 		//=====================================================
 		// Usart 3 - RS485
@@ -723,7 +723,7 @@ void InitSerial232(void)
 	}
 
 	// Initialize it in RS232 mode.
-	usart_init_rs232(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
+	usart_init_modem(&AVR32_USART1, &usart_1_rs232_options, FOSC0);
 
 	// Enable external driver and receiver
 	PowerControl(SERIAL_232_DRIVER_ENABLE, ON);
@@ -735,6 +735,11 @@ void InitSerial232(void)
 	gpio_enable_pin_pull_up(AVR32_USART1_DSR_0_PIN);
 	gpio_enable_pin_pull_up(AVR32_USART1_CTS_0_0_PIN);
 	gpio_enable_pin_pull_up(AVR32_USART1_RI_0_PIN);
+
+	/* To prevent the TXD line from falling when the USART is disabled, the use of an internal pull up
+	is mandatory. If the hardware handshaking feature or Modem mode is used, the internal pull up
+	on TXD must also be enabled. */
+	gpio_enable_pin_pull_up(AVR32_USART1_TXD_0_0_PIN);
 
 	sprintf((char*)g_spareBuffer, "-----     NS8100 Fresh boot, App version: %s (Date: %s)     -----\r\n", (char*)g_buildVersion, (char*)g_buildDate);
 	usart_write_line((&AVR32_USART1), "\r\n\n");
