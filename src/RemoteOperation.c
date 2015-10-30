@@ -102,6 +102,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 		cfg.eventCfg.airTriggerLevel = (g_triggerRecord.trec.airTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint));
 	}
 #endif
+
 	cfg.eventCfg.recordTime = g_triggerRecord.trec.record_time;
 
 	// static non changing.
@@ -481,10 +482,10 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		//---------------------------------------------------------------------------
-		// Air Trigger Level check
+		// Air Trigger Level check (Changed Air trigger min check to allow 92 and 93 dB settings which are below normal minimum)
 		//---------------------------------------------------------------------------
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) || (NO_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) ||
-			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_COUNT) && (cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MAX_COUNT)))
+			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_COUNT_92DB) && (cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MAX_COUNT)))
 		{
 			g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
 		}
