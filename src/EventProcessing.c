@@ -809,7 +809,7 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	//--------------------------------
 	eventRec->summary.captured.endTime = GetCurrentTime();
 	eventRec->summary.captured.batteryLevel = (uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
-	eventRec->summary.captured.printerStatus = g_unitConfig.autoPrint;
+	eventRec->summary.captured.bargraphSessionComplete = NO;
 	eventRec->summary.captured.externalTrigger = NO;
 	eventRec->summary.captured.comboEventsRecordedDuringSession = 0;
 	eventRec->summary.captured.comboEventsRecordedStartNumber = 0;

@@ -265,7 +265,7 @@ typedef struct
 {
 	DATE_TIME_STRUCT	calDateTime; // 0x194 (from 0xA55A)	// Calibration date
 	uint32				batteryLevel; // 0x1A0 (from 0xA55A) // Battery Level
-	uint8				printerStatus; // 0x1A4 (from 0xA55A) // Printer status information.
+	uint8				bargraphSessionComplete; // 0x1A4 (from 0xA55A) // Session status
 	uint8				externalTrigger; // 0x1A5 (from 0xA55A) // Mark if triggered with an External signal
 	uint16				comboEventsRecordedDuringSession; // 0x1A6 (from 0xA55A) // C-Wave events during C-Bar session
 	DATE_TIME_STRUCT	eventTime; // 0x1A8 (from 0xA55A) // Waveform and bargraph start information. 
