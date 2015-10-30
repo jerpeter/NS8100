@@ -66,10 +66,10 @@ void StartNewBargraph(void)
 	g_bargraphBarIntervalReadPtr = &g_bargraphBarInterval[0];
 	g_bargraphSummaryIntervalPtr = &g_bargraphSummaryInterval;
 
-	MoveStartOfBargraphEventRecordToFile();
-
 	// Update the current monitor log entry
 	UpdateMonitorLogEntry();
+
+	MoveStartOfBargraphEventRecordToFile();
 }
 
 ///----------------------------------------------------------------------------
@@ -86,7 +86,7 @@ void EndBargraph(void)
 		MoveSummaryIntervalDataToFile();
 	}
 
-	MoveEndOfBargraphEventRecordToFile();
+	MoveUpdatedBargraphEventRecordToFile(BARPGRAPH_SESSION_COMPLETE);
 }
 
 ///----------------------------------------------------------------------------
@@ -791,19 +791,24 @@ uint8 CalculateBargraphData(void)
 			// Advance the Bar Interval global buffer pointer
 			AdvanceBarIntervalBufPtr(WRITE_PTR);
 
+#if 0 // Changed design to cache all bar intervals until the Summary Interval is complete
 			// Check if enough bar intervals have been cached
 			if (g_bargraphBarIntervalsCached >= NUM_OF_BAR_INTERVALS_TO_HOLD)
 			{
 				MoveBarIntervalDataToFile();
 			}
+#endif
 
 			//=================================================
 			// End of Summary Interval
 			//=================================================
 			if (++g_bargraphSummaryIntervalPtr->barIntervalsCaptured == (uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
 			{
-				// Move Summary Interval data to the event file
+				// Move Summary Interval data to the event file (and cached Bar Intervals will be saved prior to Summary)
 				MoveSummaryIntervalDataToFile();
+
+				// Changed design to update the Bargraph event record to the event file in case of unit error (which allows event to be processed)
+				MoveUpdatedBargraphEventRecordToFile(BARGRAPH_SESSION_IN_PROGRESS);
 			}
 		}
 
@@ -869,7 +874,7 @@ void MoveStartOfBargraphEventRecordToFile(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void MoveEndOfBargraphEventRecordToFile(void)
+void MoveUpdatedBargraphEventRecordToFile(uint8 status)
 {
 	uint32 compressSize;
 	uint32 dataLength;
@@ -893,6 +898,11 @@ void MoveEndOfBargraphEventRecordToFile(void)
 		g_pendingBargraphRecord.header.dataCompression = 0;
 
 		g_pendingBargraphRecord.summary.captured.endTime = GetCurrentTime();
+
+		if (status == BARPGRAPH_SESSION_COMPLETE)
+		{
+			g_pendingBargraphRecord.summary.captured.bargraphSessionComplete = YES;
+		}
 
 		if (g_triggerRecord.opMode == COMBO_MODE)
 		{
@@ -920,18 +930,20 @@ void MoveEndOfBargraphEventRecordToFile(void)
 		// Rewrite the event record
 		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
 
-#if 1 // New method to save compressed data file
-		if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
+		// New method to save data compressed (if Bargraph session is complete)
+		if (status == BARPGRAPH_SESSION_COMPLETE)
 		{
-			// Make sure at the beginning of the data
-			file_seek(sizeof(EVT_RECORD), FS_SEEK_SET);
+			if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
+			{
+				// Make sure at the beginning of the data
+				file_seek(sizeof(EVT_RECORD), FS_SEEK_SET);
 
-			dataLength = (nav_file_lgt() - sizeof(EVT_RECORD));
+				dataLength = (nav_file_lgt() - sizeof(EVT_RECORD));
 
-			// Cache the Bargraph data for compression event file creation below
-			ReadWithSizeFix(bargraphFileHandle, (uint8*)&g_eventDataBuffer[0], dataLength);
+				// Cache the Bargraph data for compression event file creation below
+				ReadWithSizeFix(bargraphFileHandle, (uint8*)&g_eventDataBuffer[0], dataLength);
+			}
 		}
-#endif
 
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
@@ -940,36 +952,43 @@ void MoveEndOfBargraphEventRecordToFile(void)
 
 		debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
-#if 1 // New method to save compressed data file
-		if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
+		// New method to save compressed data file (if Bargraph session is complete)
+		if (status == BARPGRAPH_SESSION_COMPLETE)
 		{
-			// Get new event file handle
-			g_globalFileHandle = GetERDataFileHandle(g_pendingBargraphRecord.summary.eventNumber, CREATE_EVENT_FILE);
-
-			g_spareBufferIndex = 0;
-			compressSize = lzo1x_1_compress((void*)&g_eventDataBuffer[0], dataLength, OUT_FILE);
-
-			if (g_spareBufferIndex)
+			if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
 			{
-				write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
+				// Get new event file handle
+				g_globalFileHandle = GetERDataFileHandle(g_pendingBargraphRecord.summary.eventNumber, CREATE_EVENT_FILE);
+
 				g_spareBufferIndex = 0;
+				compressSize = lzo1x_1_compress((void*)&g_eventDataBuffer[0], dataLength, OUT_FILE);
+
+				if (g_spareBufferIndex)
+				{
+					write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
+					g_spareBufferIndex = 0;
+				}
+				debug("Bargraph Compressed Data length: %d (Matches file: %s)\r\n", compressSize, (compressSize == nav_file_lgt()) ? "Yes" : "No");
+
+				SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
+				// Done writing the event file, close the file handle
+				g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
+				close(g_globalFileHandle);
 			}
-			debug("Bargraph Compressed Data length: %d (Matches file: %s)\r\n", compressSize, (compressSize == nav_file_lgt()) ? "Yes" : "No");
 
-			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+			AddEventToSummaryList(&g_pendingBargraphRecord);
 
-			// Done writing the event file, close the file handle
-			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
-			close(g_globalFileHandle);
+			//g_fileAccessLock = AVAILABLE;
+			ReleaseSpi1MutexLock();
+
+			UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_pendingBargraphRecord.header.dataLength);
 		}
-#endif
-
-		AddEventToSummaryList(&g_pendingBargraphRecord);
-
-		//g_fileAccessLock = AVAILABLE;
-		ReleaseSpi1MutexLock();
-
-		UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_pendingBargraphRecord.header.dataLength);
+		else // (status == BARGRAPH_SESSION_IN_PROGRESS)
+		{
+			//g_fileAccessLock = AVAILABLE;
+			ReleaseSpi1MutexLock();
+		}
 	}
 }
 

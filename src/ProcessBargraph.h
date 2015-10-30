@@ -17,7 +17,7 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define NUM_OF_BAR_INTERVAL_BUFFERS			120
+#define NUM_OF_BAR_INTERVAL_BUFFERS			(3600 + 1) // Max Bars = 1 sec bars for 1 hour (3600 seconds) + 1 spare
 #define NUM_OF_SUM_INTERVAL_BUFFERS			1
 #define NUM_OF_BAR_INTERVALS_TO_HOLD		60
 #define NUM_OF_SUMMARY_INTERVALS_TO_HOLD	0
@@ -45,6 +45,11 @@ enum // Set unique values to the following types (actual value doesn't matter)
 	BG_BUFFER_NOT_EMPTY
 };
 
+enum{
+	BARPGRAPH_SESSION_COMPLETE = 1,
+	BARGRAPH_SESSION_IN_PROGRESS
+};
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
@@ -55,7 +60,7 @@ void MoveBarIntervalDataToFile(void);
 void MoveSummaryIntervalDataToFile(void);
 void CompleteSummaryInterval(void);
 void MoveStartOfBargraphEventRecordToFile(void);
-void MoveEndOfBargraphEventRecordToFile(void);
+void MoveUpdatedBargraphEventRecordToFile(uint8 status);
 void AdvanceBarIntervalBufPtr(uint8);
 uint8 CalculateBargraphData(void);
 
