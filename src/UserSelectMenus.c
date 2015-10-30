@@ -1627,6 +1627,7 @@ void EraseSettingsMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
+	MONITOR_LOG_ID_STRUCT monitorLogRecord;
 
 	if (keyPressed == ENTER_KEY)
 	{
@@ -1657,6 +1658,11 @@ void EraseSettingsMenuHandler(uint8 keyPressed, void* data)
 			memset(&g_modemSetupRecord, 0, sizeof(g_modemSetupRecord));
 			g_modemSetupRecord.modemStatus = NO;
 			SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
+
+			// Clear out Monitor Log unique ID
+			memset(&monitorLogRecord, 0, sizeof(monitorLogRecord));
+			SaveRecordData(&monitorLogRecord, DEFAULT_RECORD, REC_UNIQUE_MONITOR_LOG_ID_CLEAR_TYPE);
+			InitMonitorLogUniqueEntryId();
 
 			OverlayMessage(getLangText(SUCCESS_TEXT), getLangText(ERASE_COMPLETE_TEXT), (2 * SOFT_SECS));
 		}

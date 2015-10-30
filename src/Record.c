@@ -87,7 +87,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			break;
 
 		case REC_FACTORY_SETUP_CLEAR_TYPE:
-			debug("Programming Factory Setup Record...\r\n");
+			debug("Programming Factory Setup Record (Clear)...\r\n");
 
 			((FACTORY_SETUP_STRUCT *)src_ptr)->invalid = 0xFFFF;
 
@@ -118,6 +118,18 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
 					sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
 					sizeof(FACTORY_SETUP_STRUCT) + sizeof(CURRENT_EVENT_NUMBER_STRUCT));
+			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
+			break;
+
+		case REC_UNIQUE_MONITOR_LOG_ID_CLEAR_TYPE:
+			debug("Programming Monitor Log ID Record (Clear)...\r\n");
+
+			((MONITOR_LOG_ID_STRUCT*)src_ptr)->invalid = 0xFFFF;
+
+			rec_size = sizeof(MONITOR_LOG_ID_STRUCT);
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) +
+			sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+			sizeof(FACTORY_SETUP_STRUCT) + sizeof(CURRENT_EVENT_NUMBER_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
