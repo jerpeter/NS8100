@@ -311,6 +311,7 @@ typedef struct
 	uint8 xferStateFlag;
 	uint8 msgHdr[MESSAGE_HEADER_LENGTH+1];
 	uint8 numOfRecStr[DATA_FIELD_LEN+1];
+	uint8 dummyToMakeEvenBoundary;
 	EVENT_RECORD_DOWNLOAD_STRUCT	dloadEventRec;
 
 	uint32	tableIndex;
