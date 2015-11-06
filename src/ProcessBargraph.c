@@ -48,8 +48,8 @@ void StartNewBargraph(void)
 		return;
 	}
 
-	// Clear the Bar and Summary Interval buffers
-	memset(&g_bargraphBarInterval[0], 0, sizeof(g_bargraphBarInterval));
+	// Clear the initial Bar Interval plus the Summary Interval and Freq Calc buffers
+	memset(g_bargraphBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 	memset(&g_bargraphSummaryInterval, 0, sizeof(g_bargraphSummaryInterval));
 	memset(&g_bargraphFreqCalcBuffer, 0, sizeof(g_bargraphFreqCalcBuffer));
 
@@ -60,11 +60,6 @@ void StartNewBargraph(void)
 	g_barSampleCount = 0;
 	g_totalBarIntervalCnt = 0;
 	g_bargraphBarIntervalsCached = 0;
-
-	// Init buffer pointers
-	g_bargraphBarIntervalWritePtr = &g_bargraphBarInterval[0];
-	g_bargraphBarIntervalReadPtr = &g_bargraphBarInterval[0];
-	g_bargraphSummaryIntervalPtr = &g_bargraphSummaryInterval;
 
 	// Update the current monitor log entry
 	UpdateMonitorLogEntry();
@@ -147,39 +142,39 @@ void CompleteSummaryInterval(void)
 	float rFreq = (float)0, vFreq = (float)0, tFreq = (float)0;
 
 	// Note: This should be raw unadjusted freq
-	if (g_bargraphSummaryIntervalPtr->r.frequency > 0)
+	if (g_bargraphSummaryInterval.r.frequency > 0)
 	{
-		rFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryIntervalPtr->r.frequency * 2) - 1));
+		rFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryInterval.r.frequency * 2) - 1));
 	}
 
-	if (g_bargraphSummaryIntervalPtr->v.frequency > 0)
+	if (g_bargraphSummaryInterval.v.frequency > 0)
 	{
-		vFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryIntervalPtr->v.frequency * 2) - 1));
+		vFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryInterval.v.frequency * 2) - 1));
 	}
 
-	if (g_bargraphSummaryIntervalPtr->t.frequency > 0)
+	if (g_bargraphSummaryInterval.t.frequency > 0)
 	{
-		tFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryIntervalPtr->t.frequency * 2) - 1));
+		tFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryInterval.t.frequency * 2) - 1));
 	}
 
 	// Calculate the Peak Displacement
-	g_bargraphSummaryIntervalPtr->a.displacement = 0;
-	g_bargraphSummaryIntervalPtr->r.displacement = (uint32)(g_bargraphSummaryIntervalPtr->r.peak * 1000000 / 2 / PI / rFreq);
-	g_bargraphSummaryIntervalPtr->v.displacement = (uint32)(g_bargraphSummaryIntervalPtr->v.peak * 1000000 / 2 / PI / vFreq);
-	g_bargraphSummaryIntervalPtr->t.displacement = (uint32)(g_bargraphSummaryIntervalPtr->t.peak * 1000000 / 2 / PI / tFreq);
+	g_bargraphSummaryInterval.a.displacement = 0;
+	g_bargraphSummaryInterval.r.displacement = (uint32)(g_bargraphSummaryInterval.r.peak * 1000000 / 2 / PI / rFreq);
+	g_bargraphSummaryInterval.v.displacement = (uint32)(g_bargraphSummaryInterval.v.peak * 1000000 / 2 / PI / vFreq);
+	g_bargraphSummaryInterval.t.displacement = (uint32)(g_bargraphSummaryInterval.t.peak * 1000000 / 2 / PI / tFreq);
 
 	// Calculate the Peak Acceleration
-	g_bargraphSummaryIntervalPtr->a.acceleration = 0;
-	g_bargraphSummaryIntervalPtr->r.acceleration = (uint32)(g_bargraphSummaryIntervalPtr->r.peak * 1000 * 2 * PI * rFreq);
-	g_bargraphSummaryIntervalPtr->v.acceleration = (uint32)(g_bargraphSummaryIntervalPtr->v.peak * 1000 * 2 * PI * vFreq);
-	g_bargraphSummaryIntervalPtr->t.acceleration = (uint32)(g_bargraphSummaryIntervalPtr->t.peak * 1000 * 2 * PI * tFreq);
+	g_bargraphSummaryInterval.a.acceleration = 0;
+	g_bargraphSummaryInterval.r.acceleration = (uint32)(g_bargraphSummaryInterval.r.peak * 1000 * 2 * PI * rFreq);
+	g_bargraphSummaryInterval.v.acceleration = (uint32)(g_bargraphSummaryInterval.v.peak * 1000 * 2 * PI * vFreq);
+	g_bargraphSummaryInterval.t.acceleration = (uint32)(g_bargraphSummaryInterval.t.peak * 1000 * 2 * PI * tFreq);
 
 	// Store timestamp for the end of the summary interval
 	g_summaryCount++;
-	g_bargraphSummaryIntervalPtr->summariesCaptured = g_summaryCount;
-	g_bargraphSummaryIntervalPtr->intervalEnd_Time = GetCurrentTime();
-	g_bargraphSummaryIntervalPtr->batteryLevel = (uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
-	g_bargraphSummaryIntervalPtr->calcStructEndFlag = 0xEECCCCEE;	// End structure flag
+	g_bargraphSummaryInterval.summariesCaptured = g_summaryCount;
+	g_bargraphSummaryInterval.intervalEnd_Time = GetCurrentTime();
+	g_bargraphSummaryInterval.batteryLevel = (uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
+	g_bargraphSummaryInterval.calcStructEndFlag = 0xEECCCCEE;	// End structure flag
 }
 
 ///----------------------------------------------------------------------------
@@ -218,7 +213,7 @@ void MoveSummaryIntervalDataToFile(void)
 			g_bargraphBarIntervalsCached--;
 		}
 
-		write(bargraphFileHandle, g_bargraphSummaryIntervalPtr, sizeof(CALCULATED_DATA_STRUCT));
+		write(bargraphFileHandle, &g_bargraphSummaryInterval, sizeof(CALCULATED_DATA_STRUCT));
 
 		g_pendingBargraphRecord.header.dataLength += sizeof(CALCULATED_DATA_STRUCT);
 
@@ -237,7 +232,7 @@ void MoveSummaryIntervalDataToFile(void)
 	UpdateBargraphJobTotals();
 
 	// Clear the Summary Interval structure for use again
-	memset(g_bargraphSummaryIntervalPtr, 0, sizeof(g_bargraphSummaryInterval));
+	memset(&g_bargraphSummaryInterval, 0, sizeof(g_bargraphSummaryInterval));
 
 	// Clear out the Freq Calc structure for use again
 	memset(&g_bargraphFreqCalcBuffer, 0, sizeof(g_bargraphFreqCalcBuffer));
@@ -344,10 +339,10 @@ uint8 CalculateBargraphData(void)
 		// A channel
 		// ---------
 		// Check if the current sample is equal or greater than the stored max
-		if (aTempNorm >= g_bargraphSummaryIntervalPtr->a.peak)
+		if (aTempNorm >= g_bargraphSummaryInterval.a.peak)
 		{
 			// Check if the current max matches exactly to the stored max
-			if (aTempNorm == g_bargraphSummaryIntervalPtr->a.peak)
+			if (aTempNorm == g_bargraphSummaryInterval.a.peak)
 			{
 				// Sample matches current max, set match flag
 				g_bargraphFreqCalcBuffer.a.matchFlag = TRUE;
@@ -357,9 +352,9 @@ uint8 CalculateBargraphData(void)
 			else
 			{
 				// Copy over new max
-				g_bargraphSummaryIntervalPtr->a.peak = aTempNorm;
+				g_bargraphSummaryInterval.a.peak = aTempNorm;
 				// Update timestamp
-				g_bargraphSummaryIntervalPtr->a_Time = GetCurrentTime();
+				g_bargraphSummaryInterval.a_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_bargraphFreqCalcBuffer.a.matchFlag = FALSE;
 			}
@@ -385,10 +380,10 @@ uint8 CalculateBargraphData(void)
 		// R channel
 		// ---------
 		// Check if the current sample is equal or greater than the stored max
-		if (rTempNorm >= g_bargraphSummaryIntervalPtr->r.peak)
+		if (rTempNorm >= g_bargraphSummaryInterval.r.peak)
 		{
 			// Check if the current max matches exactly to the stored max
-			if (rTempNorm == g_bargraphSummaryIntervalPtr->r.peak)
+			if (rTempNorm == g_bargraphSummaryInterval.r.peak)
 			{
 				// Sample matches current max, set match flag
 				g_bargraphFreqCalcBuffer.r.matchFlag = TRUE;
@@ -398,9 +393,9 @@ uint8 CalculateBargraphData(void)
 			else
 			{
 				// Copy over new max
-				g_bargraphSummaryIntervalPtr->r.peak = rTempNorm;
+				g_bargraphSummaryInterval.r.peak = rTempNorm;
 				// Update timestamp
-				g_bargraphSummaryIntervalPtr->r_Time = GetCurrentTime();
+				g_bargraphSummaryInterval.r_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_bargraphFreqCalcBuffer.r.matchFlag = FALSE;
 			}
@@ -426,10 +421,10 @@ uint8 CalculateBargraphData(void)
 		// V channel
 		// ---------
 		// Check if the current sample is equal or greater than the stored max
-		if (vTempNorm >= g_bargraphSummaryIntervalPtr->v.peak)
+		if (vTempNorm >= g_bargraphSummaryInterval.v.peak)
 		{
 			// Check if the current max matches exactly to the stored max
-			if (vTempNorm == g_bargraphSummaryIntervalPtr->v.peak)
+			if (vTempNorm == g_bargraphSummaryInterval.v.peak)
 			{
 				// Sample matches current max, set match flag
 				g_bargraphFreqCalcBuffer.v.matchFlag = TRUE;
@@ -439,9 +434,9 @@ uint8 CalculateBargraphData(void)
 			else
 			{
 				// Copy over new max
-				g_bargraphSummaryIntervalPtr->v.peak = vTempNorm;
+				g_bargraphSummaryInterval.v.peak = vTempNorm;
 				// Update timestamp
-				g_bargraphSummaryIntervalPtr->v_Time = GetCurrentTime();
+				g_bargraphSummaryInterval.v_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_bargraphFreqCalcBuffer.v.matchFlag = FALSE;
 			}
@@ -467,10 +462,10 @@ uint8 CalculateBargraphData(void)
 		// T channel
 		// ---------
 		// Check if the current sample is equal or greater than the stored max
-		if (tTempNorm >= g_bargraphSummaryIntervalPtr->t.peak)
+		if (tTempNorm >= g_bargraphSummaryInterval.t.peak)
 		{
 			// Check if the current max matches exactly to the stored max
-			if (tTempNorm == g_bargraphSummaryIntervalPtr->t.peak)
+			if (tTempNorm == g_bargraphSummaryInterval.t.peak)
 			{
 				// Sample matches current max, set match flag
 				g_bargraphFreqCalcBuffer.t.matchFlag = TRUE;
@@ -480,9 +475,9 @@ uint8 CalculateBargraphData(void)
 			else
 			{
 				// Copy over new max
-				g_bargraphSummaryIntervalPtr->t.peak = tTempNorm;
+				g_bargraphSummaryInterval.t.peak = tTempNorm;
 				// Update timestamp
-				g_bargraphSummaryIntervalPtr->t_Time = GetCurrentTime();
+				g_bargraphSummaryInterval.t_Time = GetCurrentTime();
 				// Reset match flag since a new peak was found
 				g_bargraphFreqCalcBuffer.t.matchFlag = FALSE;
 			}
@@ -508,12 +503,12 @@ uint8 CalculateBargraphData(void)
 		// Vector Sum
 		// ----------
 		// Store the max Vector Sum if a new max was found
-		if (vsTemp > g_bargraphSummaryIntervalPtr->vectorSumPeak)
+		if (vsTemp > g_bargraphSummaryInterval.vectorSumPeak)
 		{
 			// Store max vector sum
-			g_bargraphSummaryIntervalPtr->vectorSumPeak = vsTemp;
+			g_bargraphSummaryInterval.vectorSumPeak = vsTemp;
 			// Store timestamp
-			g_bargraphSummaryIntervalPtr->vs_Time = GetCurrentTime();
+			g_bargraphSummaryInterval.vs_Time = GetCurrentTime();
 
 			if (vsTemp > g_vsJobPeak)
 			{
@@ -552,18 +547,18 @@ uint8 CalculateBargraphData(void)
 				if (g_bargraphFreqCalcBuffer.a.matchFlag == TRUE)
 				{
 					// Check if current count is greater (lower freq) than stored count
-					if (g_bargraphFreqCalcBuffer.a.freq_count > g_bargraphSummaryIntervalPtr->a.frequency)
+					if (g_bargraphFreqCalcBuffer.a.freq_count > g_bargraphSummaryInterval.a.frequency)
 					{
 						// Save the new count (lower freq)
-						g_bargraphSummaryIntervalPtr->a.frequency = g_bargraphFreqCalcBuffer.a.freq_count;
+						g_bargraphSummaryInterval.a.frequency = g_bargraphFreqCalcBuffer.a.freq_count;
 						// Save the timestamp corresponding to the lower freq
-						g_bargraphSummaryIntervalPtr->a_Time = aTempTime;
+						g_bargraphSummaryInterval.a_Time = aTempTime;
 					}
 				}
 				else // We had a new max, store count for freq calculation
 				{
 					// Move data to summary interval struct
-					g_bargraphSummaryIntervalPtr->a.frequency = g_bargraphFreqCalcBuffer.a.freq_count;
+					g_bargraphSummaryInterval.a.frequency = g_bargraphFreqCalcBuffer.a.freq_count;
 				}
 
 				// Reset flags
@@ -613,18 +608,18 @@ uint8 CalculateBargraphData(void)
 				if (g_bargraphFreqCalcBuffer.r.matchFlag == TRUE)
 				{
 					// Check if current count is greater (lower freq) than stored count
-					if (g_bargraphFreqCalcBuffer.r.freq_count > g_bargraphSummaryIntervalPtr->r.frequency)
+					if (g_bargraphFreqCalcBuffer.r.freq_count > g_bargraphSummaryInterval.r.frequency)
 					{
 						// Save the new count (lower freq)
-						g_bargraphSummaryIntervalPtr->r.frequency = g_bargraphFreqCalcBuffer.r.freq_count;
+						g_bargraphSummaryInterval.r.frequency = g_bargraphFreqCalcBuffer.r.freq_count;
 						// Save the timestamp corresponding to the lower freq
-						g_bargraphSummaryIntervalPtr->r_Time = rTempTime;
+						g_bargraphSummaryInterval.r_Time = rTempTime;
 					}
 				}
 				else // We had a new max, store count for freq calculation
 				{
 					// Move data to summary interval struct
-					g_bargraphSummaryIntervalPtr->r.frequency = g_bargraphFreqCalcBuffer.r.freq_count;
+					g_bargraphSummaryInterval.r.frequency = g_bargraphFreqCalcBuffer.r.freq_count;
 				}
 
 				// Reset flags
@@ -674,18 +669,18 @@ uint8 CalculateBargraphData(void)
 				if (g_bargraphFreqCalcBuffer.v.matchFlag == TRUE)
 				{
 					// Check if current count is greater (lower freq) than stored count
-					if (g_bargraphFreqCalcBuffer.v.freq_count > g_bargraphSummaryIntervalPtr->v.frequency)
+					if (g_bargraphFreqCalcBuffer.v.freq_count > g_bargraphSummaryInterval.v.frequency)
 					{
 						// Save the new count (lower freq)
-						g_bargraphSummaryIntervalPtr->v.frequency = g_bargraphFreqCalcBuffer.v.freq_count;
+						g_bargraphSummaryInterval.v.frequency = g_bargraphFreqCalcBuffer.v.freq_count;
 						// Save the timestamp corresponding to the lower freq
-						g_bargraphSummaryIntervalPtr->v_Time = vTempTime;
+						g_bargraphSummaryInterval.v_Time = vTempTime;
 					}
 				}
 				else // We had a new max, store count for freq calculation
 				{
 					// Move data to summary interval struct
-					g_bargraphSummaryIntervalPtr->v.frequency = g_bargraphFreqCalcBuffer.v.freq_count;
+					g_bargraphSummaryInterval.v.frequency = g_bargraphFreqCalcBuffer.v.freq_count;
 				}
 
 				// Reset flags
@@ -735,18 +730,18 @@ uint8 CalculateBargraphData(void)
 				if (g_bargraphFreqCalcBuffer.t.matchFlag == TRUE)
 				{
 					// Check if current count is greater (lower freq) than stored count
-					if (g_bargraphFreqCalcBuffer.t.freq_count > g_bargraphSummaryIntervalPtr->t.frequency)
+					if (g_bargraphFreqCalcBuffer.t.freq_count > g_bargraphSummaryInterval.t.frequency)
 					{
 						// Save the new count (lower freq)
-						g_bargraphSummaryIntervalPtr->t.frequency = g_bargraphFreqCalcBuffer.t.freq_count;
+						g_bargraphSummaryInterval.t.frequency = g_bargraphFreqCalcBuffer.t.freq_count;
 						// Save the timestamp corresponding to the lower freq
-						g_bargraphSummaryIntervalPtr->t_Time = tTempTime;
+						g_bargraphSummaryInterval.t_Time = tTempTime;
 					}
 				}
 				else // We had a new max, store count for freq calculation
 				{
 					// Move data to summary interval struct
-					g_bargraphSummaryIntervalPtr->t.frequency = g_bargraphFreqCalcBuffer.t.freq_count;
+					g_bargraphSummaryInterval.t.frequency = g_bargraphFreqCalcBuffer.t.freq_count;
 				}
 
 				// Reset flags
@@ -791,18 +786,10 @@ uint8 CalculateBargraphData(void)
 			// Advance the Bar Interval global buffer pointer
 			AdvanceBarIntervalBufPtr(WRITE_PTR);
 
-#if 0 // Changed design to cache all bar intervals until the Summary Interval is complete
-			// Check if enough bar intervals have been cached
-			if (g_bargraphBarIntervalsCached >= NUM_OF_BAR_INTERVALS_TO_HOLD)
-			{
-				MoveBarIntervalDataToFile();
-			}
-#endif
-
 			//=================================================
 			// End of Summary Interval
 			//=================================================
-			if (++g_bargraphSummaryIntervalPtr->barIntervalsCaptured == (uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
+			if (++g_bargraphSummaryInterval.barIntervalsCaptured == (uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
 			{
 				// Move Summary Interval data to the event file (and cached Bar Intervals will be saved prior to Summary)
 				MoveSummaryIntervalDataToFile();
@@ -1000,14 +987,18 @@ void AdvanceBarIntervalBufPtr(uint8 bufferType)
 	if (bufferType == READ_PTR)
 	{
 		g_bargraphBarIntervalReadPtr++;
-		if (g_bargraphBarIntervalReadPtr > g_bargraphBarIntervalEndPtr)
-			g_bargraphBarIntervalReadPtr = &(g_bargraphBarInterval[0]);
+		if (g_bargraphBarIntervalReadPtr >= g_bargraphBarIntervalEndPtr)
+		{
+			g_bargraphBarIntervalReadPtr = (BARGRAPH_BAR_INTERVAL_DATA*)&g_eventDataBuffer[0];
+		}
 	}
 	else // (bufferType == WRITE_PTR)
 	{
 		g_bargraphBarIntervalWritePtr++;
-		if (g_bargraphBarIntervalWritePtr > g_bargraphBarIntervalEndPtr)
-			g_bargraphBarIntervalWritePtr = &(g_bargraphBarInterval[0]);
+		if (g_bargraphBarIntervalWritePtr >= g_bargraphBarIntervalEndPtr)
+		{
+			g_bargraphBarIntervalWritePtr = (BARGRAPH_BAR_INTERVAL_DATA*)&g_eventDataBuffer[0];
+		}
 
 		memset(g_bargraphBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 	}
@@ -1022,87 +1013,87 @@ void UpdateBargraphJobTotals(void)
 	// ---------
 	// A channel
 	// ---------
-	if (g_bargraphSummaryIntervalPtr->a.peak > g_pendingBargraphRecord.summary.calculated.a.peak)
+	if (g_bargraphSummaryInterval.a.peak > g_pendingBargraphRecord.summary.calculated.a.peak)
 	{
-		g_pendingBargraphRecord.summary.calculated.a = g_bargraphSummaryIntervalPtr->a;
-		g_pendingBargraphRecord.summary.calculated.a_Time = g_bargraphSummaryIntervalPtr->a_Time;
+		g_pendingBargraphRecord.summary.calculated.a = g_bargraphSummaryInterval.a;
+		g_pendingBargraphRecord.summary.calculated.a_Time = g_bargraphSummaryInterval.a_Time;
 	}
-	else if (g_bargraphSummaryIntervalPtr->a.peak == g_pendingBargraphRecord.summary.calculated.a.peak)
+	else if (g_bargraphSummaryInterval.a.peak == g_pendingBargraphRecord.summary.calculated.a.peak)
 	{
 		// Summary Interval frequency is stored as a count, the higher the count being a lower frequency which is more desired to save
-		if (g_bargraphSummaryIntervalPtr->a.frequency > g_pendingBargraphRecord.summary.calculated.a.frequency)
+		if (g_bargraphSummaryInterval.a.frequency > g_pendingBargraphRecord.summary.calculated.a.frequency)
 		{
-			g_pendingBargraphRecord.summary.calculated.a = g_bargraphSummaryIntervalPtr->a;
-			g_pendingBargraphRecord.summary.calculated.a_Time = g_bargraphSummaryIntervalPtr->a_Time;
+			g_pendingBargraphRecord.summary.calculated.a = g_bargraphSummaryInterval.a;
+			g_pendingBargraphRecord.summary.calculated.a_Time = g_bargraphSummaryInterval.a_Time;
 		}
 	}
 
 	// ---------
 	// R channel
 	// ---------
-	if (g_bargraphSummaryIntervalPtr->r.peak > g_pendingBargraphRecord.summary.calculated.r.peak)
+	if (g_bargraphSummaryInterval.r.peak > g_pendingBargraphRecord.summary.calculated.r.peak)
 	{
-		g_pendingBargraphRecord.summary.calculated.r = g_bargraphSummaryIntervalPtr->r;
-		g_pendingBargraphRecord.summary.calculated.r_Time = g_bargraphSummaryIntervalPtr->r_Time;
+		g_pendingBargraphRecord.summary.calculated.r = g_bargraphSummaryInterval.r;
+		g_pendingBargraphRecord.summary.calculated.r_Time = g_bargraphSummaryInterval.r_Time;
 	}
-	else if (g_bargraphSummaryIntervalPtr->r.peak == g_pendingBargraphRecord.summary.calculated.r.peak)
+	else if (g_bargraphSummaryInterval.r.peak == g_pendingBargraphRecord.summary.calculated.r.peak)
 	{
 		// Summary Interval frequency is stored as a count, the higher the count being a lower frequency which is more desired to save
-		if (g_bargraphSummaryIntervalPtr->r.frequency > g_pendingBargraphRecord.summary.calculated.r.frequency)
+		if (g_bargraphSummaryInterval.r.frequency > g_pendingBargraphRecord.summary.calculated.r.frequency)
 		{
-			g_pendingBargraphRecord.summary.calculated.r = g_bargraphSummaryIntervalPtr->r;
-			g_pendingBargraphRecord.summary.calculated.r_Time = g_bargraphSummaryIntervalPtr->r_Time;
+			g_pendingBargraphRecord.summary.calculated.r = g_bargraphSummaryInterval.r;
+			g_pendingBargraphRecord.summary.calculated.r_Time = g_bargraphSummaryInterval.r_Time;
 		}
 	}
 
 	// ---------
 	// V channel
 	// ---------
-	if (g_bargraphSummaryIntervalPtr->v.peak > g_pendingBargraphRecord.summary.calculated.v.peak)
+	if (g_bargraphSummaryInterval.v.peak > g_pendingBargraphRecord.summary.calculated.v.peak)
 	{
-		g_pendingBargraphRecord.summary.calculated.v = g_bargraphSummaryIntervalPtr->v;
-		g_pendingBargraphRecord.summary.calculated.v_Time = g_bargraphSummaryIntervalPtr->v_Time;
+		g_pendingBargraphRecord.summary.calculated.v = g_bargraphSummaryInterval.v;
+		g_pendingBargraphRecord.summary.calculated.v_Time = g_bargraphSummaryInterval.v_Time;
 	}
-	else if (g_bargraphSummaryIntervalPtr->v.peak == g_pendingBargraphRecord.summary.calculated.v.peak)
+	else if (g_bargraphSummaryInterval.v.peak == g_pendingBargraphRecord.summary.calculated.v.peak)
 	{
 		// Summary Interval frequency is stored as a count, the higher the count being a lower frequency which is more desired to save
-		if (g_bargraphSummaryIntervalPtr->v.frequency > g_pendingBargraphRecord.summary.calculated.v.frequency)
+		if (g_bargraphSummaryInterval.v.frequency > g_pendingBargraphRecord.summary.calculated.v.frequency)
 		{
-			g_pendingBargraphRecord.summary.calculated.v = g_bargraphSummaryIntervalPtr->v;
-			g_pendingBargraphRecord.summary.calculated.v_Time = g_bargraphSummaryIntervalPtr->v_Time;
+			g_pendingBargraphRecord.summary.calculated.v = g_bargraphSummaryInterval.v;
+			g_pendingBargraphRecord.summary.calculated.v_Time = g_bargraphSummaryInterval.v_Time;
 		}
 	}
 
 	// ---------
 	// T channel
 	// ---------
-	if (g_bargraphSummaryIntervalPtr->t.peak > g_pendingBargraphRecord.summary.calculated.t.peak)
+	if (g_bargraphSummaryInterval.t.peak > g_pendingBargraphRecord.summary.calculated.t.peak)
 	{
-		g_pendingBargraphRecord.summary.calculated.t = g_bargraphSummaryIntervalPtr->t;
-		g_pendingBargraphRecord.summary.calculated.t_Time = g_bargraphSummaryIntervalPtr->t_Time;
+		g_pendingBargraphRecord.summary.calculated.t = g_bargraphSummaryInterval.t;
+		g_pendingBargraphRecord.summary.calculated.t_Time = g_bargraphSummaryInterval.t_Time;
 	}
-	else if (g_bargraphSummaryIntervalPtr->t.peak == g_pendingBargraphRecord.summary.calculated.t.peak)
+	else if (g_bargraphSummaryInterval.t.peak == g_pendingBargraphRecord.summary.calculated.t.peak)
 	{
 		// Summary Interval frequency is stored as a count, the higher the count being a lower frequency which is more desired to save
-		if (g_bargraphSummaryIntervalPtr->t.frequency > g_pendingBargraphRecord.summary.calculated.t.frequency)
+		if (g_bargraphSummaryInterval.t.frequency > g_pendingBargraphRecord.summary.calculated.t.frequency)
 		{
-			g_pendingBargraphRecord.summary.calculated.t = g_bargraphSummaryIntervalPtr->t;
-			g_pendingBargraphRecord.summary.calculated.t_Time = g_bargraphSummaryIntervalPtr->t_Time;
+			g_pendingBargraphRecord.summary.calculated.t = g_bargraphSummaryInterval.t;
+			g_pendingBargraphRecord.summary.calculated.t_Time = g_bargraphSummaryInterval.t_Time;
 		}
 	}
 
 	// ----------
 	// Vector Sum
 	// ----------
-	if (g_bargraphSummaryIntervalPtr->vectorSumPeak > g_pendingBargraphRecord.summary.calculated.vectorSumPeak)
+	if (g_bargraphSummaryInterval.vectorSumPeak > g_pendingBargraphRecord.summary.calculated.vectorSumPeak)
 	{
-		g_pendingBargraphRecord.summary.calculated.vectorSumPeak = g_bargraphSummaryIntervalPtr->vectorSumPeak;
-		g_pendingBargraphRecord.summary.calculated.vs_Time = g_bargraphSummaryIntervalPtr->vs_Time;
+		g_pendingBargraphRecord.summary.calculated.vectorSumPeak = g_bargraphSummaryInterval.vectorSumPeak;
+		g_pendingBargraphRecord.summary.calculated.vs_Time = g_bargraphSummaryInterval.vs_Time;
 	}
 
-	g_pendingBargraphRecord.summary.calculated.summariesCaptured = g_bargraphSummaryIntervalPtr->summariesCaptured;
-	g_pendingBargraphRecord.summary.calculated.barIntervalsCaptured += g_bargraphSummaryIntervalPtr->barIntervalsCaptured;
-	g_pendingBargraphRecord.summary.calculated.intervalEnd_Time = g_bargraphSummaryIntervalPtr->intervalEnd_Time;
-	g_pendingBargraphRecord.summary.calculated.batteryLevel = g_bargraphSummaryIntervalPtr->batteryLevel;
+	g_pendingBargraphRecord.summary.calculated.summariesCaptured = g_bargraphSummaryInterval.summariesCaptured;
+	g_pendingBargraphRecord.summary.calculated.barIntervalsCaptured += g_bargraphSummaryInterval.barIntervalsCaptured;
+	g_pendingBargraphRecord.summary.calculated.intervalEnd_Time = g_bargraphSummaryInterval.intervalEnd_Time;
+	g_pendingBargraphRecord.summary.calculated.batteryLevel = g_bargraphSummaryInterval.batteryLevel;
 	g_pendingBargraphRecord.summary.calculated.calcStructEndFlag = 0xEECCCCEE;
 }

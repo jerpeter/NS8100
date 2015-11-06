@@ -17,26 +17,32 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define NUM_OF_BAR_INTERVAL_BUFFERS			(3600 + 1) // Max Bars = 1 sec bars for 1 hour (3600 seconds) + 1 spare
-#define NUM_OF_SUM_INTERVAL_BUFFERS			1
-#define NUM_OF_BAR_INTERVALS_TO_HOLD		60
-#define NUM_OF_SUMMARY_INTERVALS_TO_HOLD	0
+// Bargraph Bar Interval ranges
+#define ONE_SEC_PRD 	 1
+#define TEN_SEC_PRD 	10
+#define TWENTY_SEC_PRD 	20
+#define THIRTY_SEC_PRD 	30
+#define FOURTY_SEC_PRD 	40
+#define FIFTY_SEC_PRD 	50
+#define SIXTY_SEC_PRD 	60
 
-#define SUMMARY_INTERVAL_SIZE_IN_BYTES 	sizeof(CALCULATED_DATA_STRUCT)
-#define SUMMARY_INTERVAL_SIZE_IN_WORDS 	((SUMMARY_INTERVAL_SIZE_IN_BYTES + 1) / 2)
+// Bargraph Summary Interval ranges
+#define FIVE_MINUTE_INTVL	 		300
+#define FIFTEEN_MINUTE_INTVL		900
+#define THIRTY_MINUTE_INTVL			1800
+#define ONE_HOUR_INTVL				3600
+#define TWO_HOUR_INTVL				7200
+#define FOUR_HOUR_INTVL				14400
+#define EIGHT_HOUR_INTVL			28800
+#define TWELVE_HOUR_INTVL			43200
 
-#define BG_DATA_BUFFER_SIZE 			SAMPLE_RATE_8K * 4 * 60
+#define MAX_NUM_OF_BAR_INTERVAL_BUFFERS			((TWELVE_HOUR_INTVL / ONE_SEC_PRD) + 1) // Max Bars possible per Summary + 1 spare
 
-#define COMBO_MODE_BAR_INTERVAL_SIZE		(NUM_OF_BAR_INTERVAL_BUFFERS * sizeof(BARGRAPH_BAR_INTERVAL_DATA))
-#define COMBO_MODE_SUMMARY_INTERVAL_SIZE	(NUM_OF_SUM_INTERVAL_BUFFERS * sizeof(CALCULATED_DATA_STRUCT))
-#define COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET	(COMBO_MODE_BAR_INTERVAL_SIZE + COMBO_MODE_SUMMARY_INTERVAL_SIZE + BG_DATA_BUFFER_SIZE)
+#define COMBO_BG_DATA_BUFFER_SIZE 				(SAMPLE_RATE_4K * (sizeof(SAMPLE_DATA_STRUCT)) * 60) // Cache up to 1 minute of data at max rate
+#define COMBO_MODE_BAR_INTERVAL_SIZE			(MAX_NUM_OF_BAR_INTERVAL_BUFFERS * sizeof(BARGRAPH_BAR_INTERVAL_DATA))
+#define COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET	(COMBO_MODE_BAR_INTERVAL_SIZE + COMBO_BG_DATA_BUFFER_SIZE)
 #define COMBO_MODE_BARGRAPH_BUFFER_SIZE_WORDS	(((COMBO_MODE_BARGRAPH_BUFFER_SIZE_OFFSET / sizeof(SAMPLE_DATA_STRUCT)) * sizeof(SAMPLE_DATA_STRUCT)) / 2)
 
-// Check if the current ptr goes past the end of the event(ram) buffer.
-// If it does go past, start at the top of the ram buffer.
-#define END_OF_EVENT_BUFFER_CHECK(CURRENT, START, END)	\
-	if (CURRENT >= END) CURRENT = START
-	
 enum // Set unique values to the following types (actual value doesn't matter)
 {
 	READ_PTR,
