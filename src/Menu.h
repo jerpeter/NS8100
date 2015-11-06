@@ -438,25 +438,6 @@ enum {
 	BAUD_RATE_9600
 };
 
-// Bargraph Bar Interval ranges
-#define ONE_SEC_PRD 	 1
-#define TEN_SEC_PRD 	10
-#define TWENTY_SEC_PRD 	20
-#define THIRTY_SEC_PRD 	30
-#define FOURTY_SEC_PRD 	40
-#define FIFTY_SEC_PRD 	50
-#define SIXTY_SEC_PRD 	60
-
-// Bargraph Summary Interval ranges
-#define FIVE_MINUTE_INTVL	 		300
-#define FIFTEEN_MINUTE_INTVL		900
-#define THIRTY_MINUTE_INTVL			1800
-#define ONE_HOUR_INTVL				3600
-#define TWO_HOUR_INTVL				7200
-#define FOUR_HOUR_INTVL				14400
-#define EIGHT_HOUR_INTVL			28800
-#define TWELVE_HOUR_INTVL			43200
-
 // Alternate Results
 enum {
 	DEFAULT_RESULTS = 1, // Show Air channel results
