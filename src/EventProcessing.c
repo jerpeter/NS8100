@@ -1260,15 +1260,6 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* eventRecord)
 		else
 		{
 			ReadWithSizeFix(eventFile, (uint8*)eventRecord, sizeof(EVT_RECORD));
-
-			// If we find the EVENT_RECORD_START_FLAG followed by the encodeFlag2, then assume this is the start of an event
-			if ((eventRecord->header.startFlag == EVENT_RECORD_START_FLAG) &&
-			((eventRecord->header.recordVersion & EVENT_MAJOR_VERSION_MASK) == (EVENT_RECORD_VERSION & EVENT_MAJOR_VERSION_MASK)) &&
-			(eventRecord->header.headerLength == sizeof(EVENT_HEADER_STRUCT)))
-			{
-				debug("Found Valid Event File: %s\r\n", fileName);
-			}
-
 			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(eventFile);
 		}
