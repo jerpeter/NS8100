@@ -58,17 +58,7 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
-
 extern void rtc_enable_interrupt(volatile avr32_rtc_t *rtc);
-extern void Eic_low_battery_irq(void);
-extern void Eic_keypad_irq(void);
-extern void Eic_system_irq(void);
-extern void Eic_external_rtc_irq(void);
-extern void Tc_sample_irq(void);
-extern void Usart_1_rs232_irq(void);
-extern void Soft_timer_tick_irq(void);
-extern void Tc_sample_irq(void);
-extern void Tc_typematic_irq(void);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -262,10 +252,17 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 		INTC_register_interrupt(&Tc_sample_irq, AVR32_TC_IRQ0, 3);
 		break;
 		
+#if INTERNAL_SAMPLING_SOURCE
 		case TC_CALIBRATION_TIMER_CHANNEL:
 		// Register the RTC interrupt handler to the interrupt controller.
 		INTC_register_interrupt(&Tc_sample_irq, AVR32_TC_IRQ1, 3);
 		break;
+#else // EXTERNAL_SAMPLING_SOURCE
+		case TC_MILLISECOND_TIMER_CHANNEL:
+		// Register the RTC interrupt handler to the interrupt controller.
+		INTC_register_interrupt(&Tc_ms_timer_irq, AVR32_TC_IRQ1, 0);
+		break;
+#endif
 		
 		case TC_TYPEMATIC_TIMER_CHANNEL:
 		// Register the RTC interrupt handler to the interrupt controller.
@@ -305,6 +302,11 @@ void InitInterrupts_NS8100(void)
 	
 	// Setup typematic timer for repeat key interrupt
 	Setup_8100_TC_Clock_ISR(ONE_MS_RESOLUTION, TC_TYPEMATIC_TIMER_CHANNEL);
+
+#if EXTERNAL_SAMPLING_SOURCE
+	// Setup millisecond timer
+	Setup_8100_TC_Clock_ISR(ONE_MS_RESOLUTION, TC_MILLISECOND_TIMER_CHANNEL);
+#endif
 
 #if 0 // Removed for now becasue interrupt doesn't provide any benefit over just reading the pin as a GPIO input
 	// Setup Low Battery interrupt from RTC when PFO triggers
