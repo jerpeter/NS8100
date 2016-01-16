@@ -74,7 +74,6 @@ void ResultsMenu(INPUT_MSG_STRUCT msg)
 void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	uint32 delay = 3 * TICKS_PER_SEC;
 
 	if (msg.cmd == ACTIVATE_MENU_CMD)
 	{
@@ -108,28 +107,6 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 		}
 
 		debug("g_lastCompletedRamSummaryIndex Event Number = %d\r\n", g_lastCompletedRamSummaryIndex->fileEventNum);
-
-		// Check if data corresponds to a Calibration Pulse
-		if (msg.data[0] == 13)
-		{
-			// If the unit was monitoring prior to the auto-cal, call soft timer to
-			// reenter monitor mode in the near future
-			if (g_enterMonitorModeAfterMidnightCal == YES)
-			{
-				// Reset flag
-				g_enterMonitorModeAfterMidnightCal = NO;
-
-				// Check if Auto Cal is enabled
-				if (g_unitConfig.autoCalForWaveform == YES)
-				{
-					// Set flag to skip auto calibration at start of waveform
-					g_skipAutoCalInWaveformAfterMidnightCal = YES;
-				}
-
-				// Assign a timer to re-enter monitor mode
-				AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, delay, AutoMonitorTimerCallBack);
-			}
-		}
 	}
 	else if (msg.cmd == KEYPRESS_MENU_CMD)
 	{
