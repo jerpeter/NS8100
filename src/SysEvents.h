@@ -12,6 +12,7 @@
 ///	Includes
 ///----------------------------------------------------------------------------
 #include "Typedefs.h"
+#include "compiler.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -61,20 +62,26 @@ typedef struct
 #define ANY_MENU_EVENT				0xFFFF
 
 // System Event Macros
-#define raiseSystemEventFlag(x)	(g_systemEventFlags.wrd |= x)
-#define clearSystemEventFlag(x)	(g_systemEventFlags.wrd &= ~x)
-#define getSystemEventState(x)	(g_systemEventFlags.wrd & x)
-#define anySystemEventExcept(x)	(g_systemEventFlags.wrd & ~x)
+#define raiseSystemEventFlag(x)		Disable_global_interrupt(); g_systemEventFlags.wrd |= x; Enable_global_interrupt();
+#define clearSystemEventFlag(x)		Disable_global_interrupt(); g_systemEventFlags.wrd &= ~x; Enable_global_interrupt();
+#define raiseSystemEventFlag_ISR(x)	(g_systemEventFlags.wrd |= x)
+#define clearSystemEventFlag_ISR(x)	(g_systemEventFlags.wrd &= ~x)
+#define getSystemEventState(x)		(g_systemEventFlags.wrd & x)
+#define anySystemEventExcept(x)		(g_systemEventFlags.wrd & ~x)
 
 // Timer Event Macros
-#define raiseTimerEventFlag(x)	(g_timerEventFlags.wrd |= x)
-#define clearTimerEventFlag(x)	(g_timerEventFlags.wrd &= ~x)
-#define getTimerEventState(x)	(g_timerEventFlags.wrd & x)
+#define raiseTimerEventFlag(x)		Disable_global_interrupt(); g_timerEventFlags.wrd |= x; Enable_global_interrupt();
+#define clearTimerEventFlag(x)		Disable_global_interrupt(); g_timerEventFlags.wrd &= ~x; Enable_global_interrupt();
+#define raiseTimerEventFlag_ISR(x)	(g_timerEventFlags.wrd |= x)
+#define clearTimerEventFlag_ISR(x)	(g_timerEventFlags.wrd &= ~x)
+#define getTimerEventState(x)		(g_timerEventFlags.wrd & x)
 
 // Menu Event Macros
-#define raiseMenuEventFlag(x)	(g_menuEventFlags.wrd |= x)
-#define clearMenuEventFlag(x)	(g_menuEventFlags.wrd &= ~x)
-#define getMenuEventState(x)	(g_menuEventFlags.wrd & x)
+#define raiseMenuEventFlag(x)		Disable_global_interrupt(); g_menuEventFlags.wrd |= x; Enable_global_interrupt();
+#define clearMenuEventFlag(x)		Disable_global_interrupt(); g_menuEventFlags.wrd &= ~x; Enable_global_interrupt();
+#define raiseMenuEventFlag_ISR(x)	(g_menuEventFlags.wrd |= x)
+#define clearMenuEventFlag_ISR(x)	(g_menuEventFlags.wrd &= ~x)
+#define getMenuEventState(x)		(g_menuEventFlags.wrd & x)
 
 // Processing states
 enum {
