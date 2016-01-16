@@ -112,6 +112,7 @@ uint8 CacheEventToRam(uint16 eventNumber, EVT_RECORD* eventRecordPtr);
 BOOLEAN CheckValidEventFile(uint16 eventNumber);
 void DeleteEventFileRecord(uint16 eventNumber);
 void DeleteEventFileRecords(void);
+void DeleteNonEssentialFiles(void);
 void ReInitSdCardAndFat32(void);
 inline void AdjustSampleForBitAccuracy(void);
 void PowerDownSDCard(void);

@@ -280,6 +280,10 @@ void CopyFromFrame8900(void *Dest, unsigned int Size);
 void DummyReadFrame8900(unsigned int Size);
 void RequestSend(unsigned int FrameSize);
 unsigned int Rdy4Tx(void);
+void Sleep8900(void);
+void Sleep8900_LedOn(void);
+void ToggleLedOn8900(void);
+void ToggleLedOff8900(void);
 
 #endif
 

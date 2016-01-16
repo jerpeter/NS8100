@@ -88,6 +88,7 @@ enum {
 ///	Prototypes
 ///----------------------------------------------------------------------------
 BOOLEAN KeypadProcessing(uint8 keySource);
+void EndKeyProcessing(void);
 void KeypressEventMgr(void);
 uint8 GetShiftChar(uint8 inputChar);
 uint8 HandleCtrlKeyCombination(uint8 inputChar);

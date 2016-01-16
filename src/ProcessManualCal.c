@@ -25,6 +25,7 @@
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
 #include "Minilzo.h"
+#include "fsaccess.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -42,7 +43,6 @@
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#include "fsaccess.h"
 void MoveManualCalToFile(void)
 {
 	//static SUMMARY_DATA* sumEntry;

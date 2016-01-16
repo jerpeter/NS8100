@@ -204,7 +204,7 @@
 
 //_____ D E C L A R A T I O N S ____________________________________________
 
-extern void ushell_task_init(uint32_t pba_hz);
-extern void ushell_task(void);
+void ushell_task_init(uint32_t pba_hz);
+void ushell_task(void);
 
 #endif  // _USHELL_TASK_H_

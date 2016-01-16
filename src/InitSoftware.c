@@ -57,7 +57,6 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
-extern void Setup_8100_Usart_RS232_ISR(void);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -70,7 +69,6 @@ extern void Setup_8100_Usart_RS232_ISR(void);
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-extern void BootLoadManager(void);
 void BootloaderEntryCheck(void)
 {
 	// Check if a Ctrl-B was found in the USART receive holding register or if requested to jump to boot
