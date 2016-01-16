@@ -1421,6 +1421,239 @@ void DeleteEventFileRecords(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void DeleteNonEssentialFiles(void)
+{
+	uint16 filesDeleted = 0;
+	char fileName[50]; // Should only be short filenames, 8.3 format + directory
+	char popupText[50];
+
+	debug("Deleting Non-Essential Files...\r\n");
+
+	if (g_fileAccessLock != AVAILABLE)
+	{
+		ReportFileSystemAccessProblem("Delete multiple non-essential files");
+	}
+	else // (g_fileAccessLock == AVAILABLE)
+	{
+		GetSpi1MutexLock(SDMMC_LOCK);
+		//g_fileAccessLock = SDMMC_LOCK;
+
+		nav_select(FS_NAV_ID_DEFAULT);
+
+		//-----------------------------------------------------------------------------
+		// Handle removing event files
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd("A:\\Events\\", TRUE, FALSE) == TRUE)
+		{
+			while (nav_filelist_set(0 , FS_FIND_NEXT))
+			{
+				nav_file_getname(&fileName[0], 50);
+				sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
+				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+
+				// Delete file or directory
+				if (nav_file_del(FALSE) == FALSE)
+				{
+					nav_file_getname(&fileName[0], 50);
+					sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+					OverlayMessage(fileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
+					//break;
+				}
+				else
+				{
+					filesDeleted++;
+				}
+			}
+		}
+
+		//-----------------------------------------------------------------------------
+		// Handle removing compressed event data files
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd("A:\\ERData\\", TRUE, FALSE) == TRUE)
+		{
+			while (nav_filelist_set(0 , FS_FIND_NEXT))
+			{
+				nav_file_getname(&fileName[0], 50);
+				sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
+				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+
+				// Delete file or directory
+				if (nav_file_del(FALSE) == FALSE)
+				{
+					nav_file_getname(&fileName[0], 50);
+					sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+					OverlayMessage(fileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
+					//break;
+				}
+				else
+				{
+					filesDeleted++;
+				}
+			}
+		}
+
+		//-----------------------------------------------------------------------------
+		// Handle removing Log files
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd("A:\\Logs\\", TRUE, FALSE) == TRUE)
+		{
+			while (nav_filelist_set(0 , FS_FIND_NEXT))
+			{
+				nav_file_getname(&fileName[0], 50);
+				sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
+				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+
+				// Delete file or directory
+				if (nav_file_del(FALSE) == FALSE)
+				{
+					nav_file_getname(&fileName[0], 50);
+					sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+					OverlayMessage(fileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
+					//break;
+				}
+				else
+				{
+					filesDeleted++;
+				}
+			}
+		}
+
+		//-----------------------------------------------------------------------------
+		// Handle removing non Language files except for .tbl extension
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd("A:\\Language\\", TRUE, FALSE) == TRUE)
+		{
+			while (nav_filelist_set(0 , FS_FIND_NEXT))
+			{
+				nav_file_getname(&fileName[0], 50);
+
+				if (nav_file_checkext("tbl") == FALSE)
+				{
+					sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
+					OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+
+					// Delete file or directory
+					if (nav_file_del(FALSE) == FALSE)
+					{
+						nav_file_getname(&fileName[0], 50);
+						sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+						OverlayMessage(fileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
+						//break;
+					}
+					else
+					{
+						filesDeleted++;
+					}
+				}
+			}
+		}
+
+		//-----------------------------------------------------------------------------
+		// Handle removing System files except for Boot/Apploader
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd("A:\\System\\", TRUE, FALSE) == TRUE)
+		{
+			while (nav_filelist_set(0 , FS_FIND_NEXT))
+			{
+				nav_file_getname(&fileName[0], 50);
+
+				if (strcasecmp((char*)&fileName, "Boot.s") != 0)
+				{
+					sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
+					OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+
+					// Delete file or directory
+					if (nav_file_del(FALSE) == FALSE)
+					{
+						nav_file_getname(&fileName[0], 50);
+						sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+						OverlayMessage(fileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
+						//break;
+					}
+					else
+					{
+						filesDeleted++;
+					}
+				}
+			}
+		}
+
+		//-----------------------------------------------------------------------------
+		// Re-create directory
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd("A:\\ERData\\", TRUE, FALSE) == FALSE)
+		{
+			debugErr("Unable to access or create the ERData directory\r\n");
+			sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(UNABLE_TO_ACCESS_TEXT), "ERDATA", getLangText(DIR_TEXT));
+			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, 3 * SOFT_SECS);
+		}
+
+		//-----------------------------------------------------------------------------
+		// Re-create directory
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd("A:\\Events\\", TRUE, FALSE) == FALSE)
+		{
+			debugErr("Unable to access or create the Events directory\r\n");
+			sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(UNABLE_TO_ACCESS_TEXT), "EVENTS", getLangText(DIR_TEXT));
+			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, 3 * SOFT_SECS);
+		}
+
+		//-----------------------------------------------------------------------------
+		// Re-create directory
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd("A:\\Language\\", TRUE, FALSE) == FALSE)
+		{
+			debugErr("Unable to access or create the Events directory\r\n");
+			sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(UNABLE_TO_ACCESS_TEXT), "LANGUAGE", getLangText(DIR_TEXT));
+			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, 3 * SOFT_SECS);
+		}
+
+		//-----------------------------------------------------------------------------
+		// Re-create directory
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd("A:\\Logs\\", TRUE, FALSE) == FALSE)
+		{
+			debugErr("Unable to access or create the Events directory\r\n");
+			sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(UNABLE_TO_ACCESS_TEXT), "LOGS", getLangText(DIR_TEXT));
+			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, 3 * SOFT_SECS);
+		}
+
+		//-----------------------------------------------------------------------------
+		// Re-create directory
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd("A:\\System\\", TRUE, FALSE) == FALSE)
+		{
+			debugErr("Unable to access or create the Events directory\r\n");
+			sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(UNABLE_TO_ACCESS_TEXT), "SYSTEM", getLangText(DIR_TEXT));
+			OverlayMessage(getLangText(ERROR_TEXT), (char*)g_spareBuffer, 3 * SOFT_SECS);
+		}
+
+		//-----------------------------------------------------------------------------
+		// Re-create Summary List
+		//-----------------------------------------------------------------------------
+		if (nav_setcwd(s_summaryListFileName, TRUE, FALSE) == TRUE)
+		{
+			if (nav_file_del(FALSE) == FALSE)
+			{
+				nav_file_getname(&fileName[0], 50);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(SUMMARY_LIST_TEXT));
+				OverlayMessage(fileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
+			}
+		}
+
+		InitSummaryListFile();
+
+		sprintf(popupText, "%s %d %s", getLangText(REMOVED_TEXT), filesDeleted, "FILES");
+		OverlayMessage(getLangText(STATUS_TEXT), popupText, 3 * SOFT_SECS);
+
+		//g_fileAccessLock = AVAILABLE;
+		ReleaseSpi1MutexLock();
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void CacheEventDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
