@@ -408,7 +408,7 @@ void MoveWaveformEventToFile(void)
 					{
 						msg.cmd = STOP_MONITORING_CMD;
 						msg.length = 1;
-						(*menufunc_ptrs[MONITOR_MENU])(msg);
+						(*g_menufunc_ptrs[MONITOR_MENU])(msg);
 					}
 				}
 
