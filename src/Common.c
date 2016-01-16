@@ -1080,6 +1080,33 @@ void ConvertCalDatetoDateTime(DATE_TIME_STRUCT* dateTime, CALIBRATION_DATE_STRUC
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void CheckForMidnight(void)
+{
+	static uint8 processingMidnight = NO;
+	DATE_TIME_STRUCT currentTime = GetCurrentTime();
+
+	// Check for Midnight and make sure that the current Midnight isn't already been processed
+	if ((currentTime.hour == 0) && (currentTime.min == 0) && (processingMidnight == NO))
+	{
+		// Check that the unit has been on for 1 minute before processing a midnight event (especially in the case of powering up at midnight)
+		if (g_lifetimeHalfSecondTickCount > (1 * TICKS_PER_MIN))
+		{
+			processingMidnight = YES;
+			raiseSystemEventFlag(MIDNIGHT_EVENT);
+		}
+	}
+	else if (processingMidnight == YES)
+	{
+		if ((currentTime.hour != 0) && (currentTime.min != 0))
+		{
+			processingMidnight = NO;
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void GetSpi1MutexLock(SPI1_LOCK_TYPE spi1LockType)
 {
 	while (g_spi1AccessLock != AVAILABLE) { /* spin and wait */ }
