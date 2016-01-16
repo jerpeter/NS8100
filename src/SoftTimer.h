@@ -34,8 +34,8 @@ enum{
 	NUM_OF_SOFT_TIMERS
 };
 
-#define DEACTIVATED 0
-#define ACTIVATED 1
+#define DEACTIVATED		0
+#define ACTIVATED		1
 
 #define TICKS_PER_SEC 	2 // Number of ticks per second
 #define TICKS_PER_MIN	(TICKS_PER_SEC * 60) // Number of ticks per minute
@@ -66,9 +66,7 @@ void AssignSoftTimer(uint16 timerNum, uint32 timeout, void* callback);
 void ResetSoftTimer(uint16 timerNum);
 void ClearSoftTimer(uint16 timerNum);
 void CheckSoftTimers(void);
-void CheckForMidnight(void);
 void ProcessTimerMode(void);
-void HandleMidnightEvent(void);
 BOOLEAN TimerModeActiveCheck(void);
 uint8 IsSoftTimerActive(uint16);
 void ResetTimeOfDayAlarm(void);
@@ -84,6 +82,5 @@ void AlarmTwoOutputTimerCallback(void);
 void PowerOffTimerCallback(void);
 void ModemDelayTimerCallback(void);
 void ModemResetTimerCallback(void);
-void AutoCalInWaveformTimerCallback(void);
 
 #endif // _SOFT_TIMER_H_

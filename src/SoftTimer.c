@@ -402,14 +402,6 @@ void ModemDelayTimerCallback(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void AutoCalInWaveformTimerCallback(void)
-{
-	HandleManualCalibration();
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
 void ModemResetTimerCallback(void)
 {
 	if (g_modemResetStage == 0)
@@ -460,7 +452,7 @@ void AutoMonitorTimerCallBack(void)
 	debug("Auto Monitor Timer callback: activated.\r\n");
 
 	// Check if the USB is currently handling an active connection
-	if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+	if (g_usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
 	{
 		AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 	}
@@ -485,149 +477,3 @@ void AutoMonitorTimerCallBack(void)
 		}
 	}
 }
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void CheckForMidnight(void)
-{
-	static uint8 processingMidnight = NO;
-	DATE_TIME_STRUCT currentTime = GetCurrentTime();
-
-	// Check for Midnight and make sure that the current Midnight isn't already been processed
-	if ((currentTime.hour == 0) && (currentTime.min == 0) && (processingMidnight == NO))
-	{
-		// Check that the unit has been on for 1 minute before processing a midnight event (especially in the case of powering up at midnight)
-		if (g_lifetimeHalfSecondTickCount > (1 * TICKS_PER_MIN))
-		{
-			processingMidnight = YES;
-			raiseSystemEventFlag(MIDNIGHT_EVENT);
-		}
-	}
-	else if (processingMidnight == YES)
-	{
-		if ((currentTime.hour != 0) && (currentTime.min != 0))
-		{
-			processingMidnight = NO;
-		}
-	}
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-extern void StartDataCollection(uint32 sampleRate);
-extern void GetManualCalibration(void);
-void HandleMidnightEvent(void)
-{
-	INPUT_MSG_STRUCT mn_msg;
-	char message[50];
-
-	// Check if actively monitoring
-	if (g_sampleProcessing == ACTIVE_STATE)
-	{
-		// Check if Bargraph or Combo and actively monitoring
-		if ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
-		{
-			// Do not handle midnight calibration since a manual cal is forced at the beginning of Bargraph and Combo
-
-			// Overlay a message that the current Bargraph or Combo has ended
-			memset(&message[0], 0, sizeof(message));
-			sprintf(message, "%s %s", (g_triggerRecord.opMode == BARGRAPH_MODE) ? (getLangText(BARGRAPH_MODE_TEXT)) : (getLangText(COMBO_MODE_TEXT)), getLangText(END_TEXT));
-			OverlayMessage(getLangText(STATUS_TEXT), message, 0);
-
-			// Handle stopping the current Bargraph or Combo
-			StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
-
-			// Start up a new Bargraph or Combo
-			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
-			JUMP_TO_ACTIVE_MENU();
-		}
-		else if (g_triggerRecord.opMode == WAVEFORM_MODE)
-		{
-			// Check if not busy processing an event, otherwise handling a manual cal or event which would be accompanied by a cal pulse so skip midnight cal
-			if (g_busyProcessingEvent == NO)
-			{
-				// Make sure there is room to store a Manual calibration event
-				if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
-				{
-					sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
-							getLangText(CALIBRATION_TEXT), getLangText(UNAVAILABLE_TEXT));
-					OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
-				}
-				else // Handle midnight cal while in Waveform mode
-				{
-					// Stop data transfer
-					StopDataClock();
-
-					// Perform Cal while in monitor mode
-					OverlayMessage(getLangText(STATUS_TEXT), getLangText(PERFORMING_CALIBRATION_TEXT), 0);
-
-					GetManualCalibration();
-
-					InitDataBuffs(g_triggerRecord.opMode);
-
-					// Make sure to reset the gain after the Cal pulse (which is generated at low sensitivity)
-					if (g_triggerRecord.srec.sensitivity == HIGH)
-					{
-						SetSeismicGainSelect(SEISMIC_GAIN_HIGH);
-					}
-
-					StartDataCollection(g_triggerRecord.trec.sample_rate);
-				}
-			}
-		}
-	}
-	// Check if Auto Calibration at midnight is active (any value but zero)
-	else if (g_unitConfig.autoCalMode) // != AUTO_NO_CAL_TIMEOUT
-	{
-		// Decrement days to wait
-		if (g_autoCalDaysToWait > 0) g_autoCalDaysToWait--;
-
-		// Check if time to do Auto Calibration
-		if (g_autoCalDaysToWait == 0)
-		{
-			// Perform Auto Cal logic
-
-			// Reset the days to wait count
-			switch (g_unitConfig.autoCalMode)
-			{
-				case AUTO_24_HOUR_TIMEOUT: g_autoCalDaysToWait = 1; break;
-				case AUTO_48_HOUR_TIMEOUT: g_autoCalDaysToWait = 2; break;
-				case AUTO_72_HOUR_TIMEOUT: g_autoCalDaysToWait = 3; break;
-			}
-
-			// If the user was in the Summary list menu, reset the global
-			g_summaryListMenuActive = NO;
-
-			if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
-			{
-				g_enterMonitorModeAfterMidnightCal = NO;
-
-				// Unable to store any more data in the selected mode
-				SETUP_MENU_MSG(MAIN_MENU);
-				JUMP_TO_ACTIVE_MENU();
-
-				sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
-						getLangText(CALIBRATION_TEXT), getLangText(UNAVAILABLE_TEXT));
-				OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
-			}
-			else
-			{
-				// Perform Midnight calibration (outside of active monitoring)
-				OverlayMessage(getLangText(STATUS_TEXT), getLangText(PERFORMING_CALIBRATION_TEXT), 0);
-
-				GetManualCalibration();
-			}
-		}
-	}
-
-	// Check if Auto Dialout processing is not active
-	if (g_autoDialoutState == AUTO_DIAL_IDLE)
-	{
-		// At midnight reset the modem (to better handle problems with USR modems)
-		g_autoRetries = 0;
-		ModemResetProcess();
-	}
-}
-
