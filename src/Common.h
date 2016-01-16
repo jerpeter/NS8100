@@ -28,6 +28,14 @@
 #define FOSC0	12000000
 #endif
 
+#define INTERNAL_SAMPLING_SOURCE	NO
+// Make sure choice is mutually exclusive
+#if (!INTERNAL_SAMPLING_SOURCE)
+#define EXTERNAL_SAMPLING_SOURCE	YES
+#else
+#define EXTERNAL_SAMPLING_SOURCE	NO
+#endif
+
 #define PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP	if ((AVR32_FLASHC.fsr + *(uint16*)0xD0000000 + AVR32_PM.gplp[0] == 0)) { UNUSED(AVR32_PM.gplp[0]); } else { UNUSED(AVR32_PM.gplp[0]); }
 
 #define DISABLED_BUT_FIX_FOR_NS8100	0
@@ -107,8 +115,11 @@ typedef struct
 
 #define PI	3.14159
 
-#define JUMP_TO_BOOT	2
-#define OFF_EXCEPTION	3
+enum {
+	JUMP_TO_BOOT = 2,
+	OFF_EXCEPTION,
+	FORCED_OFF
+};
 
 #define LANGUAGE_TABLE_MAX_SIZE		16384
 
@@ -150,11 +161,19 @@ enum {
 #define CAL_PULSE_FIXED_SAMPLE_RATE		SAMPLE_RATE_1K
 #define CALIBRATION_FIXED_SAMPLE_RATE	SAMPLE_RATE_1K
 
+#if INTERNAL_SAMPLING_SOURCE
 typedef enum {
 	TC_SAMPLE_TIMER_CHANNEL = 0,
 	TC_CALIBRATION_TIMER_CHANNEL = 1,
 	TC_TYPEMATIC_TIMER_CHANNEL = 2
 } TC_CHANNEL_NUM;
+#else // EXTERNAL_SAMPLING_SOURCE
+typedef enum {
+	TC_SAMPLE_TIMER_CHANNEL = 0,
+	TC_MILLISECOND_TIMER_CHANNEL = 1,
+	TC_TYPEMATIC_TIMER_CHANNEL = 2
+} TC_CHANNEL_NUM;
+#endif
 
 enum {
 	SEISMIC_GROUP_1 = 1,
@@ -333,6 +352,55 @@ void CheckBootloaderAppPresent(void);
 // Main menu prototype extensions
 void HandleSystemEvents(void);
 void BootLoadManager(void);
+void SystemEventManager(void);
+void MenuEventManager(void);
+void CraftManager(void);
+void MessageManager(void);
+void FactorySetupManager(void);
+void UsbDeviceManager(void);
+void UsbDisableIfActive(void);
+void CheckExceptionReportLogExists(void);
+
+// Init Hardware prototype extensions
+void InitSystemHardware_NS8100(void);
+
+// Init Interrupts prototype extensions
+void InitInterrupts_NS8100(void);
+void Setup_8100_EIC_External_RTC_ISR(void);
+void Setup_8100_EIC_Keypad_ISR(void);
+void Setup_8100_EIC_System_ISR(void);
+void Setup_8100_Soft_Timer_Tick_ISR(void);
+void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM);
+void Setup_8100_Usart_RS232_ISR(void);
+
+// Init Software prototype extensions
+void InitSoftwareSettings_NS8100(void);
+
+// ISRs prototype extensions
+void DataIsrInit(uint16 sampleRate);
+void Eic_low_battery_irq(void);
+void Eic_keypad_irq(void);
+void Eic_system_irq(void);
+void Eic_external_rtc_irq(void);
+void Tc_sample_irq(void);
+void Usart_1_rs232_irq(void);
+void Soft_timer_tick_irq(void);
+void Tc_typematic_irq(void);
+void Start_Data_Clock(TC_CHANNEL_NUM);
+void Stop_Data_Clock(TC_CHANNEL_NUM);
+void HandleActiveAlarmExtension(void);
+
+#if EXTERNAL_SAMPLING_SOURCE
+void Tc_ms_timer_irq(void);
+#endif
+
+// Process Handler prototype extensions
+void StartDataCollection(uint32 sampleRate);
+void GetManualCalibration(void);
+void HandleMidnightEvent(void);
+
+// Keypad prototype extensions
+void InitKeypad(void);
 
 // Time routines
 uint8 GetDayOfWeek(uint8 year, uint8 month, uint8 day);
@@ -340,6 +408,7 @@ uint16 GetTotalDaysFromReference(TM_DATE_STRUCT date);
 void GetDateString(char*, uint8, uint8);
 uint8 GetDaysPerMonth(uint8, uint16);
 void InitTimeMsg(void);
+void CheckForMidnight(void);
 
 // Error routines
 void ReportFileSystemAccessProblem(char*);
