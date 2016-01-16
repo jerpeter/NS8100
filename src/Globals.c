@@ -108,11 +108,13 @@ uint8 g_kpadCheckForKeyFlag = DEACTIVATED;
 uint8 g_factorySetupSequence = SEQ_NOT_STARTED;
 uint8 g_kpadLastKeyPressed = KEY_NONE;
 uint8 g_kpadInterruptWhileProcessing = 0;
+uint8 g_kpadLastKeymap = 0;
 volatile uint32 g_keypadTimerTicks = 0;
+volatile uint32 g_msTimerTicks = 0;
 uint32 g_kpadKeyRepeatCount = 0;
-uint32 g_kpadLookForKeyTickCount = 0;
+uint32 g_kpadDelayTickCount = 0;
 uint32 g_keypadNumberSpeed = 1;
-uint8 g_keypadTable[8][8] = { {KEY_BACKLIGHT, KEY_HELP, KEY_ESCAPE, KEY_UPARROW, KEY_DOWNARROW, KEY_MINUS, KEY_PLUS, KEY_ENTER} };
+uint8 g_keypadTable[8][8] = {{KEY_BACKLIGHT, KEY_HELP, KEY_ESCAPE, KEY_UPARROW, KEY_DOWNARROW, KEY_MINUS, KEY_PLUS, KEY_ENTER}};
 uint8 g_smc_tab_cs_size[4];
 SENSOR_PARAMETERS_STRUCT g_sensorInfo;
 EVT_RECORD g_pendingEventRecord;
@@ -130,8 +132,8 @@ MODEM_SETUP_STRUCT g_modemSetupRecord;
 MODEM_STATUS_STRUCT g_modemStatus;
 CMD_BUFFER_STRUCT g_isrMessageBufferStruct;
 CMD_BUFFER_STRUCT* g_isrMessageBufferPtr = &g_isrMessageBufferStruct;
-void (*menufunc_ptrs[TOTAL_NUMBER_OF_MENUS]) (INPUT_MSG_STRUCT) = { MainMenu, LoadRecordMenu, SummaryMenu, MonitorMenu, ResultsMenu, OverwriteMenu,
-	BatteryMn, DateTimeMn, LcdContrastMn, TimerModeTimeMenu, TimerModeDateMenu, CalSetupMn, UserMenu, MonitorLogMn };
+void (*g_menufunc_ptrs[TOTAL_NUMBER_OF_MENUS])(INPUT_MSG_STRUCT) = {MainMenu, LoadRecordMenu, SummaryMenu, MonitorMenu, ResultsMenu, OverwriteMenu,
+	BatteryMn, DateTimeMn, LcdContrastMn, TimerModeTimeMenu, TimerModeDateMenu, CalSetupMn, UserMenu, MonitorLogMn};
 MN_MEM_DATA_STRUCT g_menuPtr[DEFAULT_MN_SIZE];
 USER_MENU_TAGS_STRUCT g_menuTags[TOTAL_TAGS] = {
 	{"",	NO_TAG},
@@ -153,7 +155,11 @@ USER_MENU_TAGS_STRUCT g_menuTags[TOTAL_TAGS] = {
 	{"",	BAR_SCALE_FULL_TAG},
 	{"",	BAR_SCALE_HALF_TAG},
 	{"",	BAR_SCALE_QUARTER_TAG},
-	{"",	BAR_SCALE_EIGHTH_TAG}
+	{"",	BAR_SCALE_EIGHTH_TAG},
+	{" ENABLED",	ENABLED_TAG},
+	{" DISABLED",	DISABLED_TAG},
+	{"- ALARM",		ALARM_TAG},
+	{" TESTING -",	TESTING_TAG}
 };
 uint8 g_monitorOperationMode;
 uint8 g_waitForUser = FALSE;
@@ -195,7 +201,6 @@ uint32 g_vsJobPeak;
 uint16 g_manualCalSampleCount = 0;
 uint8 g_manualCalFlag = FALSE;
 uint8 g_forcedCalibration = NO;
-uint8 g_skipAutoCalInWaveformAfterMidnightCal = NO;
 uint8 g_autoRetries;
 DATE_TIME_STRUCT g_lastReadExternalRtcTime;
 SOFT_TIMER_STRUCT g_rtcTimerBank[NUM_OF_SOFT_TIMERS];
@@ -224,7 +229,6 @@ uint32 g_transmitCRC;
 uint8 g_binaryXferFlag = CONVERT_DATA_TO_ASCII;
 uint8 g_modemResetStage = 0;
 uint8 g_updateResultsEventRecord = NO;
-uint8 g_enterMonitorModeAfterMidnightCal = NO;
 SUMMARY_DATA *g_resultsRamSummaryPtr;
 uint16 g_resultsRamSummaryIndex;
 uint32 g_summaryEventNumber;
@@ -266,10 +270,10 @@ volatile uint32 g_sampleCount = 0;
 uint32 g_sampleCountHold = 0;
 uint8 g_channelSyncError = NO;
 uint8 g_powerOffActivated = NO;
-uint8 usbMassStorageState = USB_INIT_DRIVER;
-uint8 usbMode;
-uint8 usbThumbDriveWasConnected = NO;
-SAMPLE_DATA_STRUCT sensorCalPeaks[4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+uint8 g_usbMassStorageState = USB_INIT_DRIVER;
+uint8 g_usbMode;
+uint8 g_usbThumbDriveWasConnected = NO;
+SAMPLE_DATA_STRUCT g_sensorCalPeaks[4] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
 SMART_SENSOR_ROM g_seismicSmartSensorRom;
 SMART_SENSOR_ROM g_acousticSmartSensorRom;
 SMART_SENSOR_STRUCT g_seismicSmartSensorMemory;

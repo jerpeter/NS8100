@@ -29,16 +29,6 @@
 #include "Sensor.h"
 #include "TextTypes.h"
 
-// Global Defines ---------------------------------------------------------------------
-#define INTERNAL_SAMPLING_SOURCE	NO
-
-// Make sure choice is mutually exclusive
-#if (!INTERNAL_SAMPLING_SOURCE)
-#define EXTERNAL_SAMPLING_SOURCE	YES
-#else
-#define EXTERNAL_SAMPLING_SOURCE	NO
-#endif
-
 // Global Externs ---------------------------------------------------------------------
 
 extern ANALOG_CONTROL_STRUCT g_analogControl;
@@ -105,10 +95,12 @@ extern uint8 g_kpadCheckForKeyFlag;
 extern uint8 g_factorySetupSequence;
 extern uint8 g_kpadLastKeyPressed;
 extern uint8 g_kpadInterruptWhileProcessing;
+extern uint8 g_kpadLastKeymap;
 extern uint8 g_allowQuickPowerOffForTimerModeSetup;
 extern volatile uint32 g_keypadTimerTicks;
+extern volatile uint32 g_msTimerTicks;
 extern uint32 g_kpadKeyRepeatCount;
-extern uint32 g_kpadLookForKeyTickCount;
+extern uint32 g_kpadDelayTickCount;
 extern uint32 g_keypadNumberSpeed;
 extern uint8 g_keypadTable[8][8];
 extern unsigned char g_smc_tab_cs_size[4];
@@ -126,7 +118,7 @@ extern MODEM_SETUP_STRUCT g_modemSetupRecord;
 extern MODEM_STATUS_STRUCT g_modemStatus;
 extern CMD_BUFFER_STRUCT g_isrMessageBufferStruct;
 extern CMD_BUFFER_STRUCT* g_isrMessageBufferPtr;
-extern void (*menufunc_ptrs[TOTAL_NUMBER_OF_MENUS]) (INPUT_MSG_STRUCT);
+extern void (*g_menufunc_ptrs[TOTAL_NUMBER_OF_MENUS]) (INPUT_MSG_STRUCT);
 extern MN_MEM_DATA_STRUCT g_menuPtr[DEFAULT_MN_SIZE];
 extern USER_MENU_TAGS_STRUCT g_menuTags[TOTAL_TAGS];
 extern uint8 g_monitorOperationMode;
@@ -169,7 +161,6 @@ extern uint32 g_vsJobPeak;
 extern uint16 g_manualCalSampleCount;
 extern uint8 g_manualCalFlag;
 extern uint8 g_forcedCalibration;
-extern uint8 g_skipAutoCalInWaveformAfterMidnightCal;
 extern uint8 g_autoRetries;
 extern DATE_TIME_STRUCT g_lastReadExternalRtcTime;
 extern SOFT_TIMER_STRUCT g_rtcTimerBank[NUM_OF_SOFT_TIMERS];
@@ -202,7 +193,6 @@ extern uint8 g_lowBatteryState;
 extern USER_MENU_CACHE_STRUCT g_userMenuCache[36];
 extern USER_MENU_CACHE_STRUCT* g_userMenuCachePtr;
 extern USER_MENU_CACHE_DATA g_userMenuCacheData;
-extern uint8 g_enterMonitorModeAfterMidnightCal;
 extern void (*g_userMenuHandler)(uint8, void*);
 extern uint16 g_eventBufferWriteIndex;
 extern uint8 g_spareBuffer[SPARE_BUFFER_SIZE];
@@ -242,10 +232,10 @@ extern uint8 g_channelSyncError;
 extern volatile uint32 g_sampleCount;
 extern uint32 g_sampleCountHold;
 extern uint8 g_powerOffActivated;
-extern uint8 usbMassStorageState;
-extern uint8 usbMode;
-extern uint8 usbThumbDriveWasConnected;
-extern SAMPLE_DATA_STRUCT sensorCalPeaks[];
+extern uint8 g_usbMassStorageState;
+extern uint8 g_usbMode;
+extern uint8 g_usbThumbDriveWasConnected;
+extern SAMPLE_DATA_STRUCT g_sensorCalPeaks[];
 extern SMART_SENSOR_ROM g_seismicSmartSensorRom;
 extern SMART_SENSOR_ROM g_acousticSmartSensorRom;
 extern SMART_SENSOR_STRUCT g_seismicSmartSensorMemory;
