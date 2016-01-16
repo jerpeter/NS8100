@@ -5,7 +5,6 @@
 #include "twi.h"
 #include "m23018.h"
 #include "Typedefs.h"
-#include "Uart.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -15,6 +14,7 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
+#include "Globals.h"
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -25,23 +25,49 @@ static twi_package_t s_twiPacket;
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void TwiMasterWriteNoInterrupts(volatile avr32_twi_t *twi, const twi_package_t *package)
+uint8 TwiMasterReadNoInterrupts(volatile avr32_twi_t *twi, const twi_package_t *package)
 {
-	uint8* twiTxData;
-	uint8 twiTxBytes;
-
-	// No data to send
-	if (package->length == 0)
-	{
-		return;
-	}
+	uint32 rxRdyTimeoutCount = (RX_RDY_TESTED_COUNTER_INCREMENT_COUNT * TWI_TIMEOUT_DELAY_MULTIPLIER); // Max tested counter time * multiplier
+	uint32 rxCompTimeoutCount = (RX_COMP_TESTED_COUNTER_INCREMENT_COUNT * TWI_TIMEOUT_DELAY_MULTIPLIER); // Max tested counter time * multiplier
+	uint8 rxCommTimedOut = NO;
+	uint8* twiRxData = package->buffer;
 
 	// Enable master transfer, disable slave
-#ifndef AVR32_TWI_180_H_INCLUDED
 	twi->cr = AVR32_TWI_CR_MSEN_MASK | AVR32_TWI_CR_SVDIS_MASK;
-#else
-	twi->cr = AVR32_TWI_CR_MSEN_MASK;
-#endif
+
+	// set read mode, slave address and 3 internal address byte length
+	twi->mmr = (package->chip << AVR32_TWI_MMR_DADR_OFFSET) | ((package->addr_length << AVR32_TWI_MMR_IADRSZ_OFFSET) & AVR32_TWI_MMR_IADRSZ_MASK) |
+				(1 << AVR32_TWI_MMR_MREAD_OFFSET);
+
+	// set internal address for remote chip
+	twi->iadr = package->addr;
+
+	// Send start condition
+	twi->cr = (AVR32_TWI_START_MASK | AVR32_TWI_STOP_MASK);
+
+	// Wait for data to be available
+	while((twi->sr & AVR32_TWI_SR_RXRDY_MASK) == 0) { if (--rxRdyTimeoutCount == 0) { rxCommTimedOut = YES; break; } /* spin */ }
+	*twiRxData = twi->rhr;
+	while((twi->sr & AVR32_TWI_SR_TXCOMP_MASK) == 0) { if (--rxCompTimeoutCount == 0) { rxCommTimedOut = YES; break; } /* spin */ }
+
+	// Disable master transfer
+	twi->cr = AVR32_TWI_CR_MSDIS_MASK;
+
+	return (rxCommTimedOut);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 TwiMasterWriteNoInterrupts(volatile avr32_twi_t *twi, const twi_package_t *package)
+{
+	uint32 txRdyTimeoutCount = (TX_RDY_TESTED_COUNTER_INCREMENT_COUNT * TWI_TIMEOUT_DELAY_MULTIPLIER); // Max tested counter time * multiplier
+	uint32 txCompTimeoutCount = (TX_COMP_TESTED_COUNTER_INCREMENT_COUNT * TWI_TIMEOUT_DELAY_MULTIPLIER); // Max tested counter time * multiplier
+	uint8 txCommTimedOut = NO;
+	uint8* twiTxData = package->buffer;
+
+	// Enable master transfer, disable slave
+	twi->cr = AVR32_TWI_CR_MSEN_MASK | AVR32_TWI_CR_SVDIS_MASK;
 
 	// set write mode, slave address and 3 internal address byte length
 	twi->mmr = (0 << AVR32_TWI_MMR_MREAD_OFFSET) | (package->chip << AVR32_TWI_MMR_DADR_OFFSET) | ((package->addr_length << AVR32_TWI_MMR_IADRSZ_OFFSET) & AVR32_TWI_MMR_IADRSZ_MASK);
@@ -49,53 +75,16 @@ void TwiMasterWriteNoInterrupts(volatile avr32_twi_t *twi, const twi_package_t *
 	// set internal address for remote chip
 	twi->iadr = package->addr;
 
-	// get a pointer to applicative data
-	twiTxData = package->buffer;
-
-	// get a copy of nb bytes to write
-	twiTxBytes = package->length;
-
 	// put the first byte in the Transmit Holding Register
-	twi->thr = *twiTxData++;
+	twi->thr = *twiTxData;
 
-	// Send data
-	while((twi->sr & AVR32_TWI_SR_TXCOMP_MASK) == 0)
-	{
-		// Check if more data to send and Tx ready
-		if ((twiTxBytes) && (twi->sr & AVR32_TWI_SR_TXRDY_MASK))
-		{
-			// Put the byte in the Transmit Holding Register
-			twi->thr = *twiTxData++;
-
-			// Decrement transmit count remaining
-			twiTxBytes--;
-		}
-	}
+	while((twi->sr & AVR32_TWI_SR_TXRDY_MASK) == 0) { if (--txRdyTimeoutCount == 0) { txCommTimedOut = YES; break; } /* spin */ }
+	while((twi->sr & AVR32_TWI_SR_TXCOMP_MASK) == 0) { if (--txCompTimeoutCount == 0) { txCommTimedOut = YES; break; } /* spin */ }
 
 	// Disable master transfer
 	twi->cr = AVR32_TWI_CR_MSDIS_MASK;
-}
 
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void WriteMcp23018NoInterrupts(unsigned char chip, unsigned char address, unsigned char data)
-{
-	//Set output latch a with 00
-	s_twiData[0] = data;
-	// TWI chip address to communicate with
-	s_twiPacket.chip = chip;
-	// TWI address/commands to issue to the other chip (node)
-	s_twiPacket.addr = address;
-	// Length of the TWI data address segment (1-3 bytes)
-	s_twiPacket.addr_length = IO_ADDR_LGT;
-	// Where to find the data to be written
-	s_twiPacket.buffer = (void*) s_twiData;
-	// How many bytes do we want to write
-	s_twiPacket.length = 1;
-	// perform a write access
-
-	TwiMasterWriteNoInterrupts(&AVR32_TWI, &s_twiPacket);
+	return (txCommTimedOut);
 }
 
 ///----------------------------------------------------------------------------
@@ -103,54 +92,26 @@ void WriteMcp23018NoInterrupts(unsigned char chip, unsigned char address, unsign
 ///----------------------------------------------------------------------------
 void WriteMcp23018(unsigned char chip, unsigned char address, unsigned char data)
 {
-	//Set output latch a with 00
+	unsigned char globalInterruptsEnabled = Is_global_interrupt_enabled();
+	uint8 errorStatus;
+
 	s_twiData[0] = data;
-	// TWI chip address to communicate with
 	s_twiPacket.chip = chip;
-	// TWI address/commands to issue to the other chip (node)
 	s_twiPacket.addr = address;
-	// Length of the TWI data address segment (1-3 bytes)
 	s_twiPacket.addr_length = IO_ADDR_LGT;
-	// Where to find the data to be written
 	s_twiPacket.buffer = (void*) s_twiData;
-	// How many bytes do we want to write
 	s_twiPacket.length = 1;
-	// perform a write access
 
-	if (twi_master_write(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
+	if (globalInterruptsEnabled) { Disable_global_interrupt(); }
+
+	errorStatus = TwiMasterWriteNoInterrupts(&AVR32_TWI, &s_twiPacket);
+
+	if (globalInterruptsEnabled) { Enable_global_interrupt(); }
+
+	// If communication failed try to reset the TWI
+	if (errorStatus)
 	{
-		debugErr("TWI: Failure to write (single byte) to MCP23018\r\n");
-	}
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void WriteMcp23018Bytes(unsigned char chip, unsigned char address, unsigned char *data, unsigned char length)
-{
-	unsigned char count;
-
-	//Set output latch a with 00
-	for (count=0;count<=length;count++)
-	{
-		s_twiData[count] = data[count];
-	}
-
-	// TWI chip address to communicate with
-	s_twiPacket.chip = chip;
-	// TWI address/commands to issue to the other chip (node)
-	s_twiPacket.addr = address;
-	// Length of the TWI data address segment (1-3 bytes)
-	s_twiPacket.addr_length = IO_ADDR_LGT;
-	// Where to find the data to be written
-	s_twiPacket.buffer = (void*) s_twiData;
-	// How many bytes do we want to write
-	s_twiPacket.length = length;
-	// perform a write access
-
-	if (twi_master_write(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
-	{
-		debugErr("TWI: Failure to write (multiple bytes) to MCP23018\r\n");
+		ResetTWI();
 	}
 }
 
@@ -159,26 +120,118 @@ void WriteMcp23018Bytes(unsigned char chip, unsigned char address, unsigned char
 ///----------------------------------------------------------------------------
 unsigned char ReadMcp23018(unsigned char chip, unsigned char address)
 {
-	//Set output latch a with 00
-	s_twiData[0] = 0;
-	// TWI chip address to communicate with
-	s_twiPacket.chip = chip;
-	// TWI address/commands to issue to the other chip (node)
-	s_twiPacket.addr = address;
-	// Length of the TWI data address segment (1-3 bytes)
-	s_twiPacket.addr_length = IO_ADDR_LGT;
-	// Where to find the data to be written
-	s_twiPacket.buffer = (void*) s_twiData;
-	// How many bytes do we want to write
-	s_twiPacket.length = 1;
-	// perform a write access
+	unsigned char globalInterruptsEnabled = Is_global_interrupt_enabled();
+	uint8 errorStatus;
 
-	if (twi_master_read(&AVR32_TWI, &s_twiPacket) != TWI_SUCCESS)
+	s_twiData[0] = 0;
+	s_twiPacket.chip = chip;
+	s_twiPacket.addr = address;
+	s_twiPacket.addr_length = IO_ADDR_LGT;
+	s_twiPacket.buffer = (void*) s_twiData;
+	s_twiPacket.length = 1;
+
+	if (globalInterruptsEnabled) { Disable_global_interrupt(); }
+
+	errorStatus = TwiMasterReadNoInterrupts(&AVR32_TWI, &s_twiPacket);
+
+	if (globalInterruptsEnabled) { Enable_global_interrupt(); }
+
+	// If communication failed try to reset the TWI
+	if (errorStatus)
 	{
-		debugErr("TWI: Failure to write to MCP23018\r\n");
+		ResetTWI();
 	}
 
 	return(s_twiData[0]);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ResetTWI(void)
+{
+	unsigned int cldiv;
+	unsigned int ckdiv = 0;
+	volatile avr32_twi_t *twi = &AVR32_TWI;
+	int status;
+
+	// Reset TWI
+	twi->cr = AVR32_TWI_CR_SWRST_MASK;
+
+	// Dummy reads of status register
+	status = twi->sr;
+	status = twi->sr;
+	status = twi->sr;
+	status = twi->sr;
+	status = twi->sr;
+
+	// Get clock dividers
+	cldiv = (FOSC0 / TWI_SPEED) - 4;
+
+	// cldiv must fit in 8 bits, ckdiv must fit in 3 bits
+	while ((cldiv > 0xFF) && (ckdiv < 0x7))
+	{
+		// increase clock divider
+		ckdiv++;
+		// divide cldiv value
+		cldiv /= 2;
+	}
+
+	// Set clock waveform generator register
+	twi->cwgr = (cldiv | (cldiv << AVR32_TWI_CWGR_CHDIV_OFFSET) | (ckdiv << AVR32_TWI_CWGR_CKDIV_OFFSET));
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void InitTWI(void)
+{
+	// TWI options.
+	twi_package_t package;
+	unsigned int cldiv;
+	unsigned int ckdiv = 0;
+	char data[1] = {0};
+	int status;
+	volatile avr32_twi_t *twi = &AVR32_TWI;
+
+	status = twi->rhr;
+	twi->idr = ~0UL;
+	status = twi->sr;
+
+	// Reset TWI
+	twi->cr = AVR32_TWI_CR_SWRST_MASK;
+
+	// Dummy reads of status register
+	status = twi->sr;
+	status = twi->sr;
+	status = twi->sr;
+	status = twi->sr;
+	status = twi->sr;
+
+	// Get clock dividers
+	cldiv = (FOSC0 / TWI_SPEED) - 4;
+
+	// cldiv must fit in 8 bits, ckdiv must fit in 3 bits
+	while ((cldiv > 0xFF) && (ckdiv < 0x7))
+	{
+		// increase clock divider
+		ckdiv++;
+		// divide cldiv value
+		cldiv /= 2;
+	}
+
+	// Set clock waveform generator register
+	twi->cwgr = (cldiv | (cldiv << AVR32_TWI_CWGR_CHDIV_OFFSET) | (ckdiv << AVR32_TWI_CWGR_CKDIV_OFFSET));
+
+	// Setup dummy package to probe the component
+	package.buffer = data;
+	package.chip = IO_ADDRESS_KPD;
+	package.length = 1;
+	package.addr_length = 0;
+	package.addr = 0;
+
+	// Probe
+	TwiMasterWriteNoInterrupts(&AVR32_TWI, &package);
 }
 
 ///----------------------------------------------------------------------------
