@@ -1,15 +1,34 @@
 #ifndef M23018_H_
 #define M23018_H_
 
+///----------------------------------------------------------------------------
+///	Includes
+///----------------------------------------------------------------------------
+#include "Typedefs.h"
+#include "twi.h"
+
+///----------------------------------------------------------------------------
+///	Defines
+///----------------------------------------------------------------------------
 #define IO_ADDRESS_BASE		0x20 // IO's TWI address
 #define IO_ADDRESS_KPD		0x27 // IO's TWI address
 #define IO_ADDR_LGT			1 // Address length of the IO chip
-#if 1 // Normal
-#define TWI_SPEED			400000 // Speed of TWI (400 KHz)
-#else // Test
-//#define TWI_SPEED			100000		// 100 Khz - Doesn't seem to work
-#define TWI_SPEED			3400000		// 3.4 Mhz
+
+#if 1 // Original (normal) speed
+#define TWI_SPEED			400000 // 400 KHz (works)
+#define RX_RDY_TESTED_COUNTER_INCREMENT_COUNT	1396
+#define RX_COMP_TESTED_COUNTER_INCREMENT_COUNT	31
+#define TX_RDY_TESTED_COUNTER_INCREMENT_COUNT	1001
+#define TX_COMP_TESTED_COUNTER_INCREMENT_COUNT	206
+#else // New (fast) speed
+#define TWI_SPEED			3400000 // 3.4 MHz (works with strong enough TWI pull ups)
+#define RX_RDY_TESTED_COUNTER_INCREMENT_COUNT	203
+#define RX_COMP_TESTED_COUNTER_INCREMENT_COUNT	3
+#define TX_RDY_TESTED_COUNTER_INCREMENT_COUNT	134
+#define TX_COMP_TESTED_COUNTER_INCREMENT_COUNT	34
 #endif
+
+#define TWI_TIMEOUT_DELAY_MULTIPLIER	25
 
 #define IODIRA		0x00
 #define IODIRB		0x01
@@ -38,11 +57,16 @@
 #define RED_LED_PIN		0x20
 #define NO_LED_PINS		0x00
 
+///----------------------------------------------------------------------------
+///	Prototypes
+///----------------------------------------------------------------------------
+void InitTWI(void);
 void InitMcp23018(void);
-void WriteMcp23018(unsigned char chip, unsigned char address, unsigned char data);
-void WriteMcp23018NoInterrupts(unsigned char chip, unsigned char address, unsigned char data);
-void WriteMcp23018Bytes(unsigned char chip, unsigned char address, unsigned char *data, unsigned char length);
-unsigned char ReadMcp23018(unsigned char chip, unsigned char address);
+void ResetTWI(void);
+uint8 TwiMasterReadNoInterrupts(volatile avr32_twi_t *twi, const twi_package_t *package);
+uint8 TwiMasterWriteNoInterrupts(volatile avr32_twi_t *twi, const twi_package_t *package);
+void WriteMcp23018(uint8 chip, uint8 address, uint8 data);
+uint8 ReadMcp23018(uint8 chip, uint8 address);
 void EnableMcp23018Interrupts(void);
 void DisableMcp23018Interrupts(void);
 
