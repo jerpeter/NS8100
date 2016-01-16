@@ -51,6 +51,7 @@
 #include "NomisLogo.h"
 #include "navigation.h"
 #include "Analog.h"
+#include "cs8900.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -249,7 +250,6 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
-
 extern int rtc_init(volatile avr32_rtc_t *rtc, unsigned char osc_type, unsigned char psel);
 extern void rtc_set_top_value(volatile avr32_rtc_t *rtc, unsigned long top);
 extern void rtc_enable(volatile avr32_rtc_t *rtc);
@@ -261,20 +261,6 @@ extern void rtc_enable(volatile avr32_rtc_t *rtc);
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void InitSystemHardware(void);
-void InitInterrupts(void);
-void InitSoftwareSettings(void);
-void SystemEventManager(void);
-void MenuEventManager(void);
-void CraftManager(void);
-void MessageManager(void);
-void FactorySetupManager(void);
-void Setup_8100_EIC_External_RTC_ISR(void);
-void Setup_8100_EIC_Keypad_ISR(void);
-void Setup_8100_EIC_System_ISR(void);
-void Setup_8100_Soft_Timer_Tick_ISR(void);
-void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM);
-void Setup_8100_Usart_RS232_ISR(void);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -614,29 +600,6 @@ void _init_startup(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void InitTWI(void)
-{
-	// TWI options.
-	twi_options_t opt;
-
-	// options settings
-	opt.pba_hz = FOSC0;
-	opt.speed = TWI_SPEED;
-	opt.chip = IO_ADDRESS_KPD;
-
-	uint32 trash = AVR32_TWI.rhr;
-	trash++;
-
-	// initialize TWI driver with options
-	if (twi_master_init(&AVR32_TWI, &opt) != TWI_SUCCESS)
-	{
-		debugErr("Two Wire Interface failed to initialize\r\n");
-	}
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
 void InitPullupsOnFloatingDataLines(void)
 {
 	gpio_enable_pin_pull_up(AVR32_PIN_PX00);
@@ -785,15 +748,11 @@ void InitDebug232(void)
 void InitLANToSleep(void)
 {
 #if 1 // Normal
-extern void Sleep8900(void);
-extern void Sleep8900_LedOn(void);
 	// Enable the LAN Sleep
 	PowerControl(LAN_SLEEP_ENABLE, ON);
 	SoftUsecWait(10 * SOFT_MSECS);
 
 	//Sleep8900();
-	extern void ToggleLedOn8900(void);
-	extern void ToggleLedOff8900(void);
 
 	ToggleLedOn8900();
 	SoftUsecWait(250 * SOFT_MSECS);
