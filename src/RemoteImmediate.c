@@ -215,7 +215,10 @@ void handleEEM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	else
 	{
-		// Delete events, recalculate space and reinitialize tables		DeleteEventFileRecords();
+		// Disable USB if there is an active connection
+		UsbDisableIfActive();
+		// Delete events, recalculate space and reinitialize tables
+		DeleteEventFileRecords();
 		GetSDCardUsageStats();
 		InitRamSummaryTbl();
 		InitFlashBuffs();
