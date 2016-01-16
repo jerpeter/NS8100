@@ -33,6 +33,7 @@
 #include "spi.h"
 #include "usart.h"
 #include "string.h"
+#include "navigation.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -93,6 +94,11 @@ void Tc_sample_irq(void);
 __attribute__((__interrupt__))
 void Tc_typematic_irq(void);
 
+#if EXTERNAL_SAMPLING_SOURCE
+__attribute__((__interrupt__))
+void Tc_ms_timer_irq(void);
+#endif
+
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
@@ -127,7 +133,7 @@ void Eic_low_battery_irq(void)
 {
 	debugRaw("-LowBatt-");
 
-	raiseSystemEventFlag(LOW_BATTERY_WARNING_EVENT);
+	raiseSystemEventFlag_ISR(LOW_BATTERY_WARNING_EVENT);
 
 	// Clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int0 = 1;
@@ -144,7 +150,7 @@ void Eic_keypad_irq(void)
 
 	if (g_kpadProcessingFlag == DEACTIVATED)
 	{
-		raiseSystemEventFlag(KEYPAD_EVENT);
+		raiseSystemEventFlag_ISR(KEYPAD_EVENT);
 	}
 	else
 	{
@@ -206,7 +212,22 @@ void Eic_system_irq(void)
 
 		if ((powerOffAttempted == YES) && (onKeyCount == 3))
 		{
-			// Jumping off the ledge.. Buh bye! No returning from this
+			// Gracefully fall off the ledge.. No returning from this
+			//debugRaw("\n--> SAFE FALL <--");
+
+			// Handle and finish any processing
+			StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
+			OverlayMessage(getLangText(WARNING_TEXT), "FORCED POWER OFF", 0);
+			AddOnOffLogTimestamp(FORCED_OFF);
+			nav_exit();
+			SoftUsecWait(1 * SOFT_SECS);
+			PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
+			PowerControl(POWER_OFF, ON);
+		}
+
+		if ((powerOffAttempted == YES) && (onKeyCount == 5))
+		{
+			// Jumping off the ledge.. No returning from this
 			//debugRaw("\n--> BOOM <--");
 			PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 			PowerControl(POWER_OFF, ON);
@@ -322,7 +343,7 @@ void Soft_timer_tick_irq(void)
 	if (++g_cyclicEventDelay == CYCLIC_EVENT_TIME_THRESHOLD)
 	{
 		g_cyclicEventDelay = 0;
-		raiseSystemEventFlag(CYCLIC_EVENT);
+		raiseSystemEventFlag_ISR(CYCLIC_EVENT);
 
 #if 1 // Test
 		g_sampleCountHold = g_sampleCount;
@@ -333,7 +354,7 @@ void Soft_timer_tick_irq(void)
 	// Every so often flag for updating to the External RTC time.
 	if (++g_rtcTickCountSinceLastExternalUpdate >= UPDATE_TIME_EVENT_THRESHOLD)
 	{
-		raiseSystemEventFlag(UPDATE_TIME_EVENT);
+		raiseSystemEventFlag_ISR(UPDATE_TIME_EVENT);
 	}
 
 #if 0 // ET test
@@ -382,9 +403,15 @@ void Start_Data_Clock(TC_CHANNEL_NUM channel)
 			g_tcSampleTimerActive = YES;
 			break;
 			
+#if INTERNAL_SAMPLING_SOURCE
 		case TC_CALIBRATION_TIMER_CHANNEL:
 			break;
-			
+#else // EXTERNAL_SAMPLING_SOURCE
+		case TC_MILLISECOND_TIMER_CHANNEL:
+			g_msTimerTicks = 0;
+			break;
+#endif
+
 		case TC_TYPEMATIC_TIMER_CHANNEL:
 			g_tcTypematicTimerActive = YES;
 			break;
@@ -407,9 +434,15 @@ void Stop_Data_Clock(TC_CHANNEL_NUM channel)
 			g_tcSampleTimerActive = NO;
 			break;
 			
+#if INTERNAL_SAMPLING_SOURCE
 		case TC_CALIBRATION_TIMER_CHANNEL:
 			break;
-			
+#else // EXTERNAL_SAMPLING_SOURCE
+		case TC_MILLISECOND_TIMER_CHANNEL:
+			g_msTimerTicks = 0;
+			break;
+#endif
+
 		case TC_TYPEMATIC_TIMER_CHANNEL:
 			g_tcTypematicTimerActive = NO;
 			break;
@@ -432,6 +465,25 @@ void Tc_typematic_irq(void)
 	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
 #endif
 }
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+#if EXTERNAL_SAMPLING_SOURCE
+__attribute__((__interrupt__))
+void Tc_ms_timer_irq(void)
+{
+	// Increment the ms seconds counter
+	g_msTimerTicks++;
+
+	// clear the interrupt flag
+	DUMMY_READ(AVR32_TC.channel[TC_MILLISECOND_TIMER_CHANNEL].sr);
+
+#if 1 // Test reads to clear the bus
+	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
+#endif
+}
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -600,7 +652,7 @@ static inline void processAndMoveManualCalData_ISR_Inline(void)
 	if (g_manualCalSampleCount == 0)
 	{
 		// Signal the end of the Cal pulse
-		raiseSystemEventFlag(MANUAL_CAL_EVENT);
+		raiseSystemEventFlag_ISR(MANUAL_CAL_EVENT);
 
 		// Signal an event buffer has been used (gimmick to make processing work)
 		g_freeEventBuffers--;
@@ -657,7 +709,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			if (g_externalTrigger == YES)
 			{
 				// Flag as an External Trigger for handling the event
-				raiseSystemEventFlag(EXT_TRIGGER_EVENT);
+				raiseSystemEventFlag_ISR(EXT_TRIGGER_EVENT);
 
 				// Reset the external trigger flag
 				g_externalTrigger = NO;
@@ -904,7 +956,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 					s_calPtr[TWICE_DELAYED_CAL_BUFFER_INDEX] = NULL;
 
 					// Signal for an event to be processed
-					raiseSystemEventFlag(TRIGGER_EVENT);
+					raiseSystemEventFlag_ISR(TRIGGER_EVENT);
 
 					// Global flag to signal done handling an event
 					g_busyProcessingEvent = NO;
@@ -963,7 +1015,7 @@ static inline void moveWaveformData_ISR_Inline(void)
 	// add code
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
-	raiseSystemEventFlag();
+	raiseSystemEventFlag_ISR();
 }
 #endif
 
@@ -982,7 +1034,7 @@ static inline void moveBargraphData_ISR_Inline(void)
 	if (g_bargraphDataWritePtr >= g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
-	raiseSystemEventFlag(BARGRAPH_EVENT);
+	raiseSystemEventFlag_ISR(BARGRAPH_EVENT);
 }
 
 ///----------------------------------------------------------------------------
@@ -1011,7 +1063,7 @@ static inline void checkForTemperatureDrift_ISR_Inline(void)
 				// Re-init the update to get new offsets
 				g_updateOffsetCount = 0;
 
-				raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
+				raiseSystemEventFlag_ISR(UPDATE_OFFSET_EVENT);
 			}
 		}
 		// The current temp reading is equal or higher than the stored (result needs to be positive)
@@ -1023,7 +1075,7 @@ static inline void checkForTemperatureDrift_ISR_Inline(void)
 			// Re-init the update to get new offsets
 			g_updateOffsetCount = 0;
 
-			raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
+			raiseSystemEventFlag_ISR(UPDATE_OFFSET_EVENT);
 		}
 	}
 }
@@ -1035,10 +1087,10 @@ static inline void saveMaxPeaksLastThreeSecondsForSensorCal_ISR_Inline(void)
 {
 	s_sensorCalSampleCount--;
 
-	if (s_R_channelReading > sensorCalPeaks[0].r) { sensorCalPeaks[0].r = s_R_channelReading; }
-	if (s_V_channelReading > sensorCalPeaks[0].v) { sensorCalPeaks[0].v = s_V_channelReading; }
-	if (s_T_channelReading > sensorCalPeaks[0].t) { sensorCalPeaks[0].t = s_T_channelReading; }
-	if (s_A_channelReading > sensorCalPeaks[0].a) { sensorCalPeaks[0].a = s_A_channelReading; }
+	if (s_R_channelReading > g_sensorCalPeaks[0].r) { g_sensorCalPeaks[0].r = s_R_channelReading; }
+	if (s_V_channelReading > g_sensorCalPeaks[0].v) { g_sensorCalPeaks[0].v = s_V_channelReading; }
+	if (s_T_channelReading > g_sensorCalPeaks[0].t) { g_sensorCalPeaks[0].t = s_T_channelReading; }
+	if (s_A_channelReading > g_sensorCalPeaks[0].a) { g_sensorCalPeaks[0].a = s_A_channelReading; }
 
 	if (s_sensorCalSampleCount == 0)
 	{
@@ -1046,12 +1098,12 @@ static inline void saveMaxPeaksLastThreeSecondsForSensorCal_ISR_Inline(void)
 		s_sensorCalSampleCount = CALIBRATION_FIXED_SAMPLE_RATE;
 
 		// Shift the Peaks out after a second (index 1 being the current peak for the last second, index 2 for the peak the second before, etc)
-		sensorCalPeaks[3] = sensorCalPeaks[2];
-		sensorCalPeaks[2] = sensorCalPeaks[1];
-		sensorCalPeaks[1] = sensorCalPeaks[0];
+		g_sensorCalPeaks[3] = g_sensorCalPeaks[2];
+		g_sensorCalPeaks[2] = g_sensorCalPeaks[1];
+		g_sensorCalPeaks[1] = g_sensorCalPeaks[0];
 
 		// Clear out the first Peak hold values
-		memset(&sensorCalPeaks[0], 0, sizeof(SAMPLE_DATA_STRUCT));
+		memset(&g_sensorCalPeaks[0], 0, sizeof(SAMPLE_DATA_STRUCT));
 	}
 }
 
@@ -1428,13 +1480,6 @@ void HandleActiveAlarmExtension(void)
 __attribute__((__interrupt__))
 void Tc_sample_irq(void)
 {
-#if 0 // Test
-	static uint32 isrCounter = 0;
-
-	isrCounter++;
-	debugRaw("I(%d)", isrCounter);
-#endif
-
 #if EXTERNAL_SAMPLING_SOURCE
 	static uint8 skipProcessingFor512 = 0;
 	
