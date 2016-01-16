@@ -31,6 +31,7 @@
 #include "M23018.h"
 #include "Globals.h"
 #include "RealTimeClock.h"
+#include "RemoteOperation.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -39,7 +40,6 @@
 ///----------------------------------------------------------------------------
 ///	Externs
 ///----------------------------------------------------------------------------
-extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -184,15 +184,7 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 
 	if ((operationMode == BARGRAPH_MODE) || (operationMode == COMBO_MODE) || ((operationMode == WAVEFORM_MODE) && (g_unitConfig.autoCalForWaveform == ENABLED)))
 	{
-		if (g_skipAutoCalInWaveformAfterMidnightCal == YES)
-		{
-			// Don't perform auto cal to start waveform
-			g_skipAutoCalInWaveformAfterMidnightCal = NO;
-		}
-		else
-		{
-			ForcedCalibration();
-		}
+		ForcedCalibration();
 	}
 
 	// Initialize buffers and settings and gp_ramEventRecord
@@ -210,20 +202,22 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 		case SAMPLE_RATE_4K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_2); break;
 		case SAMPLE_RATE_8K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_3); break;
 		case SAMPLE_RATE_16K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_4); break;
-			
+
 		// Default just in case it's a custom frequency
 		default: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW); break;
 	}
-	
-	// Set the sensitivity based on the current settings
+
+	// Set the sensitivity (aka gain) based on the current settings
 	if (g_triggerRecord.srec.sensitivity == LOW) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
 	else { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
-	
+
+	// Check if A-weighting is enabled
 	if ((g_factorySetupRecord.aweight_option == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_A_WEIGHTING))
 	{
-		// Set for Air A-weighted
+		// Set acoustic for A-weighted gain
 		SetAcousticGainSelect(ACOUSTIC_GAIN_A_WEIGHTED);
 	}
+	// Set acoustic for normal gain
 	else { SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL); }
 
 #if 0 // Necessary? Probably need 1 sec for changes, however 1 sec worth of samples thrown away with getting channel offsets 
@@ -235,11 +229,6 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 	StartDataCollection(opModeParamsPtr->sample_rate);
 }
 
-#if 1
-extern void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel);
-extern void Start_Data_Clock(TC_CHANNEL_NUM channel);
-extern void Setup_8100_EIC_External_RTC_ISR(void);
-#endif
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
@@ -289,7 +278,6 @@ void StartDataCollection(uint32 sampleRate)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-extern void HandleActiveAlarmExtension(void);
 void StopMonitoring(uint8 mode, uint8 operation)
 {
 	sprintf((char*)g_spareBuffer, "%s...", getLangText(CLOSING_MONITOR_SESSION_TEXT));
@@ -311,11 +299,15 @@ void StopMonitoring(uint8 mode, uint8 operation)
 	{
 		if ((mode == WAVEFORM_MODE) || (mode == COMBO_MODE))
 		{
-			// Set flag to prevent any more incoming events from being processed
-			g_doneTakingEvents = PENDING;
+			// Check if not handling a force power off
+			if (g_powerOffActivated != YES)
+			{
+				// Set flag to prevent any more incoming events from being processed
+				g_doneTakingEvents = PENDING;
 
-			// Wait for any triggered events to finish sending
-			WaitForEventProcessingToFinish();
+				// Wait for any triggered events to finish sending
+				WaitForEventProcessingToFinish();
+			}
 		}
 
 		// Check for any active alarms and setup timers to end them
@@ -482,15 +474,24 @@ void GetManualCalibration(void)
 	g_manualCalFlag = TRUE;
 	g_manualCalSampleCount = MAX_CAL_SAMPLES;
 
-	// Make sure Cal pulse is generated at low sensitivity
+	// Set the analog cutoff for low (for fixed Cal 1K sample rate)
+	SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW);
+
+	// Set the seismic gain to low (part of the fixed Calibration settings)
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
+
+	// Check if A-weighting is enabled
+	if ((g_factorySetupRecord.aweight_option == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_A_WEIGHTING))
+	{
+		// Set acoustic for A-weighted gain
+		SetAcousticGainSelect(ACOUSTIC_GAIN_A_WEIGHTED);
+	}
+	// Set acoustic for normal gain
+	else { SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL); }
 
 	StartDataCollection(MANUAL_CAL_DEFAULT_SAMPLE_RATE);
 
-	// Just let while loop spin waiting - Wait for the Cal Pulse to complete, pretrigger time + 100ms
-	//SoftUsecWait(((1 * SOFT_SECS) / g_unitConfig.pretrigBufferDivider) + (100 * SOFT_MSECS));
-
-	// Just make absolutely sure we are done with the Cal pulse
+	// Make absolutely sure we are done with the Cal pulse
 	while ((volatile uint32)g_manualCalSampleCount != 0) { /* spin */ }
 
 	// Stop data transfer
@@ -508,57 +509,72 @@ void GetManualCalibration(void)
 ///----------------------------------------------------------------------------
 void HandleManualCalibration(void)
 {
-	//uint32 manualCalProgressCheck = MAX_CAL_SAMPLES;
-	//uint8 holdOpMode;
+	INPUT_MSG_STRUCT mn_msg;
 
-	// Check if currently monitoring
-	if (g_sampleProcessing == ACTIVE_STATE)
+	// Check if actively monitoring in Waveform mode (don't process for Bargraph and Combo)
+	if ((g_sampleProcessing == ACTIVE_STATE) && (g_triggerRecord.opMode == WAVEFORM_MODE))
 	{
-#if 0 // Fix at some point to allow for Combo mode but currently the re-processing of InitDataBuffs will screw up the Bargraph process
-		// Check if Waveform or Combo mode and not handling a cached event
-		if (((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE)) && (getSystemEventState(TRIGGER_EVENT) == NO))
-#else // Only Waveform
-		// Check if Waveform or Combo mode and not handling a cached event
-		if ((g_triggerRecord.opMode == WAVEFORM_MODE) && (getSystemEventState(TRIGGER_EVENT) == NO))
-#endif
+		// Check if not busy processing an event (otherwise skip midnight calibration since handling an event will be accompanied by a cal pulse)
+		if ((g_busyProcessingEvent == NO) && (!getSystemEventState(TRIGGER_EVENT)))
 		{
-			// Check if still waiting for an event and not processing a cal and not waiting for a cal
-			if (g_busyProcessingEvent == NO)
+			// Check if there is no room to store a calibration event
+			if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 			{
-				// Check if there is room to store a Manual calibration event
-				if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
-				{
-					sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
-							getLangText(CALIBRATION_TEXT), getLangText(UNAVAILABLE_TEXT));
-					OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
-				}
-				else
-				{
-					// Stop data transfer
-					StopDataClock();
-
-					// Perform Cal while in monitor mode
-					OverlayMessage(getLangText(STATUS_TEXT), getLangText(PERFORMING_CALIBRATION_TEXT), 0);
-
-					GetManualCalibration();
-
-					InitDataBuffs(g_triggerRecord.opMode);
-
-					// Make sure to reset the gain after the Cal pulse (which is generated at low sensitivity)
-					if (g_triggerRecord.srec.sensitivity == HIGH)
-					{
-						SetSeismicGainSelect(SEISMIC_GAIN_HIGH);
-					}
-
-					StartDataCollection(g_triggerRecord.trec.sample_rate);
-				}
+				sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
+				getLangText(CALIBRATION_TEXT), getLangText(UNAVAILABLE_TEXT));
+				OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
 			}
-		}					
+			else // Handle midnight calibration while in Waveform mode (without leaving monitor session)
+			{
+				// Stop data transfer
+				StopDataClock();
+
+				// Perform Cal while in monitor mode
+				OverlayMessage(getLangText(STATUS_TEXT), getLangText(PERFORMING_CALIBRATION_TEXT), 0);
+
+				GetManualCalibration();
+
+				InitDataBuffs(g_triggerRecord.opMode);
+
+				// Make sure to reset the analog parameters back to the current Waveform settings
+				switch (g_triggerRecord.trec.sample_rate)
+				{
+					// Set the cutoff frequency based on sample rate
+					case SAMPLE_RATE_1K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW); break;
+					case SAMPLE_RATE_2K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_1); break;
+					case SAMPLE_RATE_4K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_2); break;
+					case SAMPLE_RATE_8K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_3); break;
+					case SAMPLE_RATE_16K: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_4); break;
+
+					// Default just in case it's a custom frequency
+					default: SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW); break;
+				}
+
+				// Set the sensitivity (aka gain) based on the current settings
+				if (g_triggerRecord.srec.sensitivity == LOW) { SetSeismicGainSelect(SEISMIC_GAIN_LOW); }
+				else { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
+
+				// Check if A-weighting is enabled
+				if ((g_factorySetupRecord.aweight_option == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_A_WEIGHTING))
+				{
+					// Set acoustic for A-weighted gain
+					SetAcousticGainSelect(ACOUSTIC_GAIN_A_WEIGHTED);
+				}
+				// Set acoustic for normal gain
+				else { SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL); }
+
+				StartDataCollection(g_triggerRecord.trec.sample_rate);
+			}
+		}
 	}
-	else // Performing Cal outside of monitor mode
+	else if (g_sampleProcessing == IDLE_STATE) // Perform calibration (outside of active monitoring)
 	{
+		// Check if there is no room to store a calibration event
 		if ((g_unitConfig.flashWrapping == NO) && (g_sdCardUsageStats.manualCalsLeft == 0))
 		{
+			SETUP_MENU_MSG(MAIN_MENU);
+			JUMP_TO_ACTIVE_MENU();
+
 			sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
 					getLangText(CALIBRATION_TEXT), getLangText(UNAVAILABLE_TEXT));
 			OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
@@ -568,7 +584,7 @@ void HandleManualCalibration(void)
 			// If the user was in the Summary list menu, reset the global
 			g_summaryListMenuActive = NO;
 
-			// Perform Cal while in monitor mode
+			// Perform calibration (outside of active monitoring)
 			OverlayMessage(getLangText(STATUS_TEXT), getLangText(PERFORMING_CALIBRATION_TEXT), 0);
 
 			GetManualCalibration();
@@ -581,7 +597,6 @@ void HandleManualCalibration(void)
 ///----------------------------------------------------------------------------
 void ForcedCalibration(void)
 {
-	INPUT_MSG_STRUCT mn_msg;
 	uint8 pendingMode = g_triggerRecord.opMode;
 	
 	g_forcedCalibration = YES;
@@ -606,28 +621,62 @@ void ForcedCalibration(void)
 	g_triggerRecord.opMode = pendingMode;
 
 	UpdateMonitorLogEntry();
+}
 
-	if (g_enterMonitorModeAfterMidnightCal == YES)
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleMidnightEvent(void)
+{
+	INPUT_MSG_STRUCT mn_msg;
+	uint8 performMidnightCalibration = NO;
+
+	// Check if Auto Calibration at midnight is active (any value but zero)
+	if (g_unitConfig.autoCalMode) // != AUTO_NO_CAL_TIMEOUT
 	{
-		// Reset flag
-		g_enterMonitorModeAfterMidnightCal = NO;
+		// Decrement days to wait
+		if (g_autoCalDaysToWait) { g_autoCalDaysToWait--; }
 
-		// Check if Auto Cal is enabled
-		if (g_unitConfig.autoCalForWaveform == YES)
+		// Check if time to do Auto Calibration
+		if (g_autoCalDaysToWait == 0)
 		{
-			// Set flag to skip auto calibration at start of waveform
-			g_skipAutoCalInWaveformAfterMidnightCal = YES;
-		}
+			performMidnightCalibration = YES;
 
-		// Assign a timer to re-enter monitor mode
-		//AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (3 * SOFT_SECS), AutoMonitorTimerCallBack);
-
-		if (CheckAndDisplayErrorThatPreventsMonitoring(OVERLAY) == NO)
-		{
-			// Enter monitor mode with the current mode
-			SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
-			JUMP_TO_ACTIVE_MENU();
+			// Reset the days to wait count
+			switch (g_unitConfig.autoCalMode)
+			{
+				case AUTO_24_HOUR_TIMEOUT: g_autoCalDaysToWait = 1; break;
+				case AUTO_48_HOUR_TIMEOUT: g_autoCalDaysToWait = 2; break;
+				case AUTO_72_HOUR_TIMEOUT: g_autoCalDaysToWait = 3; break;
+			}
 		}
+	}
+
+	// Check if actively monitoring in either Bargraph or Combo mode (ignore Midnight calibration since the start of a new session creates a calibration)
+	if ((g_sampleProcessing == ACTIVE_STATE) && ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)))
+	{
+		// Overlay a message that the current Bargraph or Combo is ending
+		sprintf((char*)g_spareBuffer, "%s %s", (g_triggerRecord.opMode == BARGRAPH_MODE) ? (getLangText(BARGRAPH_MODE_TEXT)) : (getLangText(COMBO_MODE_TEXT)), getLangText(END_TEXT));
+		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
+
+		// Handle stopping the current Bargraph or Combo
+		StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
+
+		// Start up a new Bargraph or Combo
+		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
+		JUMP_TO_ACTIVE_MENU();
+	}
+	else if (performMidnightCalibration == YES)
+	{
+		HandleManualCalibration();
+	}
+
+	// Check if Auto Dialout processing is not active
+	if (g_autoDialoutState == AUTO_DIAL_IDLE)
+	{
+		// At midnight reset the modem (to better handle problems with USR modems)
+		g_autoRetries = 0;
+		ModemResetProcess();
 	}
 }
 
