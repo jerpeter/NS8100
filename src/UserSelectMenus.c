@@ -41,6 +41,7 @@ extern USER_MENU_STRUCT alarmOneSeismicLevelMenu[];
 extern USER_MENU_STRUCT alarmOneAirLevelMenu[];
 extern USER_MENU_STRUCT alarmTwoSeismicLevelMenu[];
 extern USER_MENU_STRUCT alarmTwoAirLevelMenu[];
+extern USER_MENU_STRUCT alarmTestingMenu[];
 extern USER_MENU_STRUCT analogChannelConfigMenu[];
 extern USER_MENU_STRUCT barChannelMenu[];
 extern USER_MENU_STRUCT barIntervalMenu[];
@@ -201,15 +202,89 @@ void AirSetupMenuHandler(uint8 keyPressed, void* data)
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 		}
 
+#if 0
 		SETUP_MENU_MSG(CAL_SETUP_MENU);
 
 		// Special call before Calibration setup to disable USB processing
-extern void UsbDeviceManager(void);
 		UsbDeviceManager();
+#else
+		SETUP_USER_MENU_MSG(&alarmTestingMenu, DEFAULT_ITEM_1);
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&calibratonDateSourceMenu, g_factorySetupRecord.calibrationDateSource);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Alarm Testing Menu
+//=============================================================================
+//*****************************************************************************
+#define ALARM_TESTING_MENU_ENTRIES 7
+USER_MENU_STRUCT alarmTestingMenu[ALARM_TESTING_MENU_ENTRIES] = {
+{ALARM_TAG, 0, NULL_TEXT, TESTING_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, ALARM_TESTING_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, END_TEXT,		NO_TAG,			{1}},
+{ITEM_2, 0, ALARM_1_TEXT,	ENABLED_TAG,	{2}},
+{ITEM_3, 0, ALARM_1_TEXT,	DISABLED_TAG,	{3}},
+{ITEM_4, 0, ALARM_2_TEXT,	ENABLED_TAG,	{4}},
+{ITEM_5, 0, ALARM_2_TEXT,	DISABLED_TAG,	{5}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AlarmTestingMenuHandler}}
+};
+
+//---------------------------
+// Alarm Testing Menu Handler
+//---------------------------
+void AlarmTestingMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		if ((uint8)alarmTestingMenu[newItemIndex].data == 1)
+		{
+			// Clear Alarm 1
+			gpio_clr_gpio_pin(ALARM_1_GPIO_PIN);
+			// Clear Alarm 2
+			gpio_clr_gpio_pin(ALARM_2_GPIO_PIN);
+
+			SETUP_MENU_MSG(CAL_SETUP_MENU);
+
+			// Special call before Calibration setup to disable USB processing
+			UsbDeviceManager();
+		}
+		else
+		{
+			if ((uint8)alarmTestingMenu[newItemIndex].data == 2)
+			{
+				// Start Alarm 1
+				gpio_set_gpio_pin(ALARM_1_GPIO_PIN);
+			}
+			else if ((uint8)alarmTestingMenu[newItemIndex].data == 3)
+			{
+				// Clear Alarm 1
+				gpio_clr_gpio_pin(ALARM_1_GPIO_PIN);
+			}
+			else if ((uint8)alarmTestingMenu[newItemIndex].data == 4)
+			{
+				// Start Alarm 2
+				gpio_set_gpio_pin(ALARM_2_GPIO_PIN);
+			}
+			else if ((uint8)alarmTestingMenu[newItemIndex].data == 5)
+			{
+				// Clear Alarm 2
+				gpio_clr_gpio_pin(ALARM_2_GPIO_PIN);
+			}
+		}
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -1171,7 +1246,6 @@ void BaudRateMenuHandler(uint8 keyPressed, void* data)
 
 			InitCraftInterruptBuffers();
 
-extern void Setup_8100_Usart_RS232_ISR(void);
 			// Re-setup the interrupt since the handler is removed on usart_reset (buried in the usart_init)
 			Setup_8100_Usart_RS232_ISR();
 
@@ -1373,6 +1447,9 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (FLASH_STATS):
+				// Disable USB if there is an active connection
+				UsbDisableIfActive();
+
 				OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALCULATING_EVENT_STORAGE_SPACE_FREE_TEXT), 0);
 				GetSDCardUsageStats();
 				DisplayFlashUsageStats();
@@ -1574,6 +1651,9 @@ void EraseEventsMenuHandler(uint8 keyPressed, void* data)
 				// Display a message alerting the user that the erase operation is in progress
 				sprintf((char*)g_spareBuffer, "%s %s", getLangText(ERASE_OPERATION_IN_PROGRESS_TEXT), getLangText(PLEASE_BE_PATIENT_TEXT));
 				OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
+
+				// Disable USB if there is an active connection
+				UsbDisableIfActive();
 
 				// Delete events, recalculate space and reinitialize tables
 				DeleteEventFileRecords();
@@ -1954,7 +2034,6 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 				BootLoadManager();
 			}
 
-extern void CheckExceptionReportLogExists(void);
 			CheckExceptionReportLogExists();
 		}
 		else if (helpMenu[newItemIndex].data == SENSOR_CHECK)
