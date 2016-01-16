@@ -61,12 +61,7 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
-
-extern void InitKeypad(void);
-extern void InitSystemHardware_NS8100(void);
-extern void InitInterrupts_NS8100(void);
-extern void InitSoftwareSettings_NS8100(void);
-extern void TestSnippetsAfterInit(void);
+extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -75,13 +70,6 @@ extern void TestSnippetsAfterInit(void);
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void InitInterrupts(void);
-void InitSoftwareSettings(void);
-void SystemEventManager(void);
-void MenuEventManager(void);
-void CraftManager(void);
-void MessageManager(void);
-void FactorySetupManager(void);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -117,7 +105,7 @@ void SystemEventManager(void)
 	}
 
 	//___________________________________________________________________________________________
-	if ((getSystemEventState(KEYPAD_EVENT)) || (g_kpadCheckForKeyFlag && (g_kpadLookForKeyTickCount < g_keypadTimerTicks)))
+	if ((getSystemEventState(KEYPAD_EVENT)) || (g_kpadCheckForKeyFlag && (g_kpadDelayTickCount < g_keypadTimerTicks)))
 	{
 		if (getSystemEventState(KEYPAD_EVENT))
 		{
@@ -130,7 +118,6 @@ void SystemEventManager(void)
 		{
 			KeypadProcessing(KEY_SOURCE_TIMER);
 		}
-
 	}
 
 	//___________________________________________________________________________________________
@@ -562,7 +549,7 @@ void UsbDeviceManager(void)
 	uint16 totalEventsSkipped;
 
 	//___________________________________________________________________________________________
-	if (usbMassStorageState == USB_INIT_DRIVER)
+	if (g_usbMassStorageState == USB_INIT_DRIVER)
 	{
 		// Check if the USB and Mass Storage Driver have never been initialized
 		debug("Init USB Mass Storage Driver...\r\n");
@@ -594,25 +581,25 @@ void UsbDeviceManager(void)
 		ushell_task_init(FOSC0);
 
 		// Set state to ready to process
-		//usbMassStorageState = USB_NOT_CONNECTED;
+		//g_usbMassStorageState = USB_NOT_CONNECTED;
 		if (Is_usb_id_device())
 		{
-			//usbMode = USB_DEVICE_MODE_SELECTED;
-			//usbMassStorageState = USB_DEVICE_MODE_SELECTED;
+			//g_usbMode = USB_DEVICE_MODE_SELECTED;
+			//g_usbMassStorageState = USB_DEVICE_MODE_SELECTED;
 			debug("USB Device Mode enabled\r\n");
 		}
 		else
 		{
-			//usbMode = USB_HOST_MODE_SELECTED;
-			//usbMassStorageState = USB_HOST_MODE_SELECTED;
+			//g_usbMode = USB_HOST_MODE_SELECTED;
+			//g_usbMassStorageState = USB_HOST_MODE_SELECTED;
 			debug("USB OTG Host Mode enabled\r\n");
 		}
 
-		usbMassStorageState = USB_READY;
+		g_usbMassStorageState = USB_READY;
 		debug("USB State changed to: Ready\r\n");
 	}
 	//___________________________________________________________________________________________
-	else if ((usbMassStorageState == USB_READY) || (usbMassStorageState == USB_CONNECTED_AND_PROCESSING))
+	else if ((g_usbMassStorageState == USB_READY) || (g_usbMassStorageState == USB_CONNECTED_AND_PROCESSING))
 	{
 		//___________________________________________________________________________________________
 		// Check if processing is needed elsewhere
@@ -623,7 +610,7 @@ void UsbDeviceManager(void)
 
 			if (Is_usb_enabled()) { Usb_disable(); }
 
-			usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
+			g_usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
 			ms_usb_prevent_sleep = NO;
 			debug("USB State changed to: Disabled for other processing\r\n");
 		}
@@ -643,20 +630,20 @@ void UsbDeviceManager(void)
 				// Check if VBUS is high meaning a remote PC is powering
 				if (Is_usb_vbus_high())
 				{
-					if (usbMassStorageState == USB_READY)
+					if (g_usbMassStorageState == USB_READY)
 					{
-						usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
+						g_usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
 						ms_usb_prevent_sleep = YES;
 						debug("USB State changed to: Connected and processing\r\n");
 					}
 				}
 				// Check if state was connected and VBUS power has been removed
-				else if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+				else if (g_usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
 				{
 					// Check if USB was in OTG Host mode and cable + USB Thumb drive were removed at the same time (now in Device mode)
-					if (usbThumbDriveWasConnected == YES)
+					if (g_usbThumbDriveWasConnected == YES)
 					{
-						usbThumbDriveWasConnected = FALSE;
+						g_usbThumbDriveWasConnected = FALSE;
 						ms_process_first_connect_disconnect = FALSE;
 
 						sprintf((char*)g_spareBuffer, "%s %s", getLangText(USB_THUMB_DRIVE_TEXT), getLangText(DISCONNECTED_TEXT));
@@ -669,7 +656,7 @@ void UsbDeviceManager(void)
 						OverlayMessage(getLangText(STATUS_TEXT), getLangText(USB_DEVICE_CABLE_WAS_REMOVED_TEXT), (2 * SOFT_SECS));
 					}
 #endif
-					usbMassStorageState = USB_READY;
+					g_usbMassStorageState = USB_READY;
 					ms_usb_prevent_sleep = NO;
 					debug("USB State changed to: Ready\r\n");
 				}
@@ -707,7 +694,7 @@ void UsbDeviceManager(void)
 					host_mass_storage_task_init();
 					ushell_task_init(FOSC0);
 
-					usbMassStorageState = USB_READY;
+					g_usbMassStorageState = USB_READY;
 					ms_usb_prevent_sleep = NO;
 					debug("USB State changed to: Ready\r\n");
 				}
@@ -716,7 +703,7 @@ void UsbDeviceManager(void)
 				else if ((ms_connected == TRUE) && (ms_process_first_connect_disconnect == TRUE))
 				{
 					// USB is active
-					usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
+					g_usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
 					ms_usb_prevent_sleep = YES;
 					debug("USB State changed to: Connected and processing\r\n");
 
@@ -724,7 +711,7 @@ void UsbDeviceManager(void)
 					ms_process_first_connect_disconnect = FALSE;
 
 					// State processing to help with differentiating between USB Thumb drive disconnect and cable disconnect
-					usbThumbDriveWasConnected = YES;
+					g_usbThumbDriveWasConnected = YES;
 
 					// Check if the LCD Power was turned off
 					if (g_lcdPowerFlag == DISABLED)
@@ -778,9 +765,9 @@ void UsbDeviceManager(void)
 				// Check if USB Thumb drive has just been removed
 				else if ((ms_connected == FALSE) && (ms_process_first_connect_disconnect == TRUE))
 				{
-					if (usbThumbDriveWasConnected == YES)
+					if (g_usbThumbDriveWasConnected == YES)
 					{
-						usbThumbDriveWasConnected = NO;
+						g_usbThumbDriveWasConnected = NO;
 
 						sprintf((char*)g_spareBuffer, "%s %s", getLangText(USB_THUMB_DRIVE_TEXT), getLangText(DISCONNECTED_TEXT));
 						OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
@@ -790,7 +777,7 @@ void UsbDeviceManager(void)
 					ms_process_first_connect_disconnect = FALSE;
 
 					// USB is ready for a device to be connected
-					usbMassStorageState = USB_READY;
+					g_usbMassStorageState = USB_READY;
 					ms_usb_prevent_sleep = NO;
 					//promptForUsbOtgHostCableRemoval = YES;
 					debug("USB State changed to: Ready\r\n");
@@ -799,7 +786,7 @@ void UsbDeviceManager(void)
 		}
 	}
 	//___________________________________________________________________________________________
-	else if (usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
+	else if (g_usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
 	{
 		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)) && (g_activeMenu != CAL_SETUP_MENU))
 		{
@@ -811,16 +798,16 @@ void UsbDeviceManager(void)
 			host_mass_storage_task_init();
 			ushell_task_init(FOSC0);
 
-			usbMassStorageState = USB_READY;
+			g_usbMassStorageState = USB_READY;
 			ms_usb_prevent_sleep = NO;
 			debug("USB State changed to: Ready\r\n");
 		}
 	}
 
 #if 0
-	if (Is_usb_id_device() && (usbMode == USB_HOST_MODE_SELECTED))
+	if (Is_usb_id_device() && (g_usbMode == USB_HOST_MODE_SELECTED))
 	{
-		usbMode = USB_DEVICE_MODE_SELECTED;
+		g_usbMode = USB_DEVICE_MODE_SELECTED;
 
 		// Disable VBUS power
 		Usb_set_vbof_active_low();
@@ -828,9 +815,9 @@ void UsbDeviceManager(void)
 		// Wait for line to settle
 		SoftUsecWait(25 * SOFT_MSECS);
 	}
-	else if ((!Is_usb_id_device()) && (usbMode == USB_DEVICE_MODE_SELECTED))
+	else if ((!Is_usb_id_device()) && (g_usbMode == USB_DEVICE_MODE_SELECTED))
 	{
-		usbMode = USB_HOST_MODE_SELECTED;
+		g_usbMode = USB_HOST_MODE_SELECTED;
 
 		// Enable VBUS power
 		Usb_set_vbof_active_high();
@@ -841,12 +828,12 @@ void UsbDeviceManager(void)
 #endif
 
 #if 0
-	if ((usbMassStorageState == USB_DEVICE_MODE_SELECTED) && (Is_usb_id_device()))
+	if ((g_usbMassStorageState == USB_DEVICE_MODE_SELECTED) && (Is_usb_id_device()))
 	{
 		usb_task();
 		device_mass_storage_task();
 	}
-	else if ((usbMassStorageState == USB_HOST_MODE_SELECTED) && (!Is_usb_id_device()))
+	else if ((g_usbMassStorageState == USB_HOST_MODE_SELECTED) && (!Is_usb_id_device()))
 	{
 		usb_task();
 		host_mass_storage_task();
@@ -857,14 +844,14 @@ void UsbDeviceManager(void)
 		if (Is_usb_id_device())
 		{
 			debug("Changing USB to Device Mode\r\n");
-			usbMassStorageState = USB_DEVICE_MODE_SELECTED;
+			g_usbMassStorageState = USB_DEVICE_MODE_SELECTED;
 			usb_task_init();
 			device_mass_storage_task_init();
 		}
 		else
 		{
 			debug("Changing USB to OTG Host Mode\r\n");
-			usbMassStorageState = USB_HOST_MODE_SELECTED;
+			g_usbMassStorageState = USB_HOST_MODE_SELECTED;
 			usb_task_init();
 			host_mass_storage_task_init();
 			ushell_task_init(FOSC0);
@@ -874,7 +861,7 @@ void UsbDeviceManager(void)
 
 #if 0 // Normal
 	//___________________________________________________________________________________________
-	else if ((usbMassStorageState == USB_NOT_CONNECTED) || (usbMassStorageState == USB_HOST_MODE_WAITING_FOR_DEVICE))
+	else if ((g_usbMassStorageState == USB_NOT_CONNECTED) || (g_usbMassStorageState == USB_HOST_MODE_WAITING_FOR_DEVICE))
 	{
 		// Check if ready for USB (not monitoring and not handling a trigger and not processing an SD card file)
 		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)))
@@ -895,7 +882,7 @@ void UsbDeviceManager(void)
 				device_mass_storage_task_init();
 
 				// Set state to ready to process
-				usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
+				g_usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
 			}
 			// Check if USB ID is set for Host
 			else if (!Is_usb_id_device())
@@ -916,9 +903,9 @@ void UsbDeviceManager(void)
 					ushell_task_init(FOSC0);
 
 					// Set state to host mode looking for a device
-					usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
+					g_usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
 				}
-				else if (usbMassStorageState == USB_NOT_CONNECTED)
+				else if (g_usbMassStorageState == USB_NOT_CONNECTED)
 				{
 					OverlayMessage(getLangText(USB_HOST_STATUS_TEXT), getLangText(USB_OTG_HOST_CABLE_WAS_CONNECTED_TEXT), 1 * SOFT_SECS);
 					debug("USB OTG Host mode: OTG Host cable was connected\r\n");
@@ -934,13 +921,13 @@ void UsbDeviceManager(void)
 					ushell_task_init(FOSC0);
 
 					// Set state to host mode looking for a device
-					usbMassStorageState = USB_HOST_MODE_WAITING_FOR_DEVICE;
+					g_usbMassStorageState = USB_HOST_MODE_WAITING_FOR_DEVICE;
 				}
 			}
 		}
 	}
 	//___________________________________________________________________________________________
-	else if (usbMassStorageState == USB_HOST_MODE_WAITING_FOR_DEVICE)
+	else if (g_usbMassStorageState == USB_HOST_MODE_WAITING_FOR_DEVICE)
 	{
 		if ((Is_host_device_connection()) || (device_state == DEVICE_POWERED))
 		{
@@ -948,11 +935,11 @@ void UsbDeviceManager(void)
 			debug("USB OTG Host mode: OTG Host cable was connected\r\n");
 
 			// Set state to host mode looking for a device
-			usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
+			g_usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
 		}
 	}
 	//___________________________________________________________________________________________
-	else if (usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+	else if (g_usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
 	{
 		if (((Is_usb_id_device() && Is_usb_vbus_high()) || ((!Is_usb_id_device()) && (!Is_host_device_disconnection())))
 			&& (g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)))
@@ -970,7 +957,7 @@ void UsbDeviceManager(void)
 				OverlayMessage(getLangText(USB_STATUS_TEXT), getLangText(USB_CONNECTION_DISABLED_FOR_MONITORING_TEXT), (1 * SOFT_SECS));
 				debug("USB disabled for monitoring\r\n");
 				Usb_disable();
-				usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
+				g_usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
 			}
 			else
 			{
@@ -990,12 +977,12 @@ void UsbDeviceManager(void)
 				mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
 				JUMP_TO_ACTIVE_MENU();
 
-				usbMassStorageState = USB_NOT_CONNECTED;
+				g_usbMassStorageState = USB_NOT_CONNECTED;
 			}
 		}
 	}
 	//___________________________________________________________________________________________
-	else if (usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
+	else if (g_usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
 	{
 		// Check if system is ready for USB processing again
 		if ((g_sampleProcessing != ACTIVE_STATE) && (!getSystemEventState(TRIGGER_EVENT)))
@@ -1003,10 +990,28 @@ void UsbDeviceManager(void)
 			// Reenable the USB
 			debug("USB re-enabled\r\n");
 			Usb_enable();
-			usbMassStorageState = USB_NOT_CONNECTED;
+			g_usbMassStorageState = USB_NOT_CONNECTED;
 		}
 	}
 #endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void UsbDisableIfActive(void)
+{
+	if ((g_usbMassStorageState == USB_READY) || (g_usbMassStorageState == USB_CONNECTED_AND_PROCESSING))
+	{
+		// Need to disable USB for other processing
+		debug("USB disabled for other processing\r\n");
+
+		if (Is_usb_enabled()) { Usb_disable(); }
+
+		g_usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
+		ms_usb_prevent_sleep = NO;
+		debug("USB State changed to: Disabled for other processing\r\n");
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -1127,13 +1132,16 @@ void BootLoadManager(void)
 		AddOnOffLogTimestamp(JUMP_TO_BOOT);
 
 		// Enable half second tick
-extern void rtc_disable_interrupt(volatile avr32_rtc_t *rtc);
 #if 0 // This prevents bootloader from processing keys
 		DisableMcp23018Interrupts();
 #endif
 		rtc_disable_interrupt(&AVR32_RTC);
 		tc_stop(&AVR32_TC, TC_SAMPLE_TIMER_CHANNEL);
+#if INTERNAL_SAMPLING_SOURCE
 		tc_stop(&AVR32_TC, TC_CALIBRATION_TIMER_CHANNEL);
+#else // EXTERNAL_SAMPLING_SOURCE
+		tc_stop(&AVR32_TC, TC_MILLISECOND_TIMER_CHANNEL);
+#endif
 		tc_stop(&AVR32_TC, TC_TYPEMATIC_TIMER_CHANNEL);
 		nav_exit();
 		AVR32_EIC.IER.int0 = 0;
@@ -1236,7 +1244,7 @@ void PowerManager(void)
 
 	// Check if no System Events (or just update offset) and LCD is off and Modem is not transferring and USB is not connected
 	if (((g_systemEventFlags.wrd == NO_SYSTEM_EVENT_ACTIVE) || (g_systemEventFlags.wrd == UPDATE_OFFSET_EVENT)) && (GetPowerControlState(LCD_POWER_ENABLE) == OFF) &&
-		(g_modemStatus.xferState == NOP_CMD) && (ms_usb_prevent_sleep == NO)) //(usbMassStorageState != USB_CONNECTED_AND_PROCESSING))
+		(g_modemStatus.xferState == NOP_CMD) && (ms_usb_prevent_sleep == NO)) //(g_usbMassStorageState != USB_CONNECTED_AND_PROCESSING))
 	{
 		SetupPowerSavingsBeforeSleeping();
 
@@ -1320,7 +1328,6 @@ void PowerManager(void)
 ///----------------------------------------------------------------------------
 void TestExternalSamplingSource(void)
 {
-extern void StartExternalRtcClock(uint16 sampleRate);
 	g_updateCounter = 1;
 	uint16 sampleRate = 1024;
 
@@ -1682,7 +1689,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 			nav_exit();
 
 			// Disable power off protection
-			WriteMcp23018NoInterrupts(IO_ADDRESS_KPD, OLATA, 0x00);
+			WriteMcp23018(IO_ADDRESS_KPD, OLATA, 0x00);
 		}
 	}
 
@@ -1694,7 +1701,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 	}
 
 	// Shutdown application
-	WriteMcp23018NoInterrupts(IO_ADDRESS_KPD, OLATA, 0x40);
+	WriteMcp23018(IO_ADDRESS_KPD, OLATA, 0x40);
 }
 
 ///----------------------------------------------------------------------------
