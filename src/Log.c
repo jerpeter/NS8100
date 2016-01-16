@@ -605,7 +605,8 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 			if (onOffState == ON) { strcpy((char*)onOffStateString, "On"); }
 			else if (onOffState == OFF) { strcpy((char*)onOffStateString, "Off"); }
 			else if (onOffState == JUMP_TO_BOOT) { strcpy((char*)onOffStateString, "J2B"); }
-			else { strcpy((char*)onOffStateString, "OfE"); }
+			else if (onOffState == OFF_EXCEPTION) { strcpy((char*)onOffStateString, "OfE"); }
+			else if (onOffState == FORCED_OFF) { strcpy((char*)onOffStateString, "FOf"); }
 
 			if (extCharge > EXTERNAL_VOLTAGE_PRESENT) { sprintf((char*)&extChargeString, "%4.2fv", extCharge); }
 			else { sprintf((char*)&extChargeString, "<none>"); }
