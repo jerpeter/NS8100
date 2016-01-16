@@ -27,7 +27,7 @@
 #define DATE_TIME_WND_STARTING_COL 3
 #define DATE_TIME_WND_END_COL 127
 #define DATE_TIME_WND_STARTING_ROW DEFAULT_MENU_ROW_TWO
-#define DATE_TIME_WND_END_ROW DEFAULT_MENU_ROW_THREE
+#define DATE_TIME_WND_END_ROW DEFAULT_MENU_ROW_SEVEN
 #define DATE_TIME_MN_TBL_START_LINE 0
 #define DTM_HOUR	0
 #define DTM_MIN		1
@@ -54,6 +54,7 @@ extern USER_MENU_STRUCT configMenu[];
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
+static uint32 s_halfSecTick = 0;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -113,6 +114,8 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STR
 			LoadDateTimeMnDefRec(rec_ptr, &time);
 			rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
 
+			s_halfSecTick = 0;
+			AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
 			break;
 
 		case (KEYPRESS_MENU_CMD):
@@ -120,6 +123,7 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STR
 			switch (msg.data[0])
 			{
 				case (ENTER_KEY):
+#if 0
 					time.hour = (char)rec_ptr[DTM_HOUR].numrec.tindex;
 					time.min = (char)rec_ptr[DTM_MIN].numrec.tindex;
 					time.sec = (char)rec_ptr[DTM_SEC].numrec.tindex;
@@ -131,7 +135,7 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STR
 					SetExternalRtcTime(&time);
 					SetExternalRtcDate(&time);
 					UpdateCurrentTime();
-
+#endif
 					debug("Date/Time Menu: New Date: %d-%d-%d  New Time: %d:%d:%d.%d\r\n",
 						time.day, time.month, time.year,
 							time.hour, time.min, time.sec, time.hundredths);
@@ -164,6 +168,7 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STR
 						SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 					}
 
+					ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
 					JUMP_TO_ACTIVE_MENU();
 					break;
 
@@ -171,12 +176,36 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STR
 					if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
 					{
 						DateTimeDvScroll(DOWN,&rec_ptr[mn_layout_ptr->curr_ln]);
+
+						time.hour = (char)rec_ptr[DTM_HOUR].numrec.tindex;
+						time.min = (char)rec_ptr[DTM_MIN].numrec.tindex;
+						time.sec = (char)rec_ptr[DTM_SEC].numrec.tindex;
+						time.day = (char)rec_ptr[DTM_DAY].numrec.tindex;
+						time.month = (char)rec_ptr[DTM_MONTH].numrec.tindex;
+						time.year = (char)rec_ptr[DTM_YEAR].numrec.tindex;
+
+						// Set the new time in the clock. ALSO get the time to reset the globals.
+						SetExternalRtcTime(&time);
+						SetExternalRtcDate(&time);
+						UpdateCurrentTime();
 					}
 					break;
 				case (UP_ARROW_KEY):
 					if (rec_ptr[mn_layout_ptr->curr_ln].enterflag == TRUE)
 					{
 						DateTimeDvScroll(UP,&rec_ptr[mn_layout_ptr->curr_ln]);
+
+						time.hour = (char)rec_ptr[DTM_HOUR].numrec.tindex;
+						time.min = (char)rec_ptr[DTM_MIN].numrec.tindex;
+						time.sec = (char)rec_ptr[DTM_SEC].numrec.tindex;
+						time.day = (char)rec_ptr[DTM_DAY].numrec.tindex;
+						time.month = (char)rec_ptr[DTM_MONTH].numrec.tindex;
+						time.year = (char)rec_ptr[DTM_YEAR].numrec.tindex;
+
+						// Set the new time in the clock. ALSO get the time to reset the globals.
+						SetExternalRtcTime(&time);
+						SetExternalRtcDate(&time);
+						UpdateCurrentTime();
 					}
 					break;
 				case (PLUS_KEY):
@@ -220,6 +249,10 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STR
 			break;
 
 		default:
+			// Refill display time parameters (for menu update timer)
+			time = GetExternalRtcTime();
+			LoadDateTimeMnDefRec(rec_ptr, &time);
+			rec_ptr[mn_layout_ptr->curr_ln].enterflag = TRUE;
 			break;
 	}
 }
@@ -285,6 +318,12 @@ void DisplayDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr
 	uint8 top;
 	uint8 menu_ln;
 	uint8 length = 0;
+	uint32 halfSecTickDiff = 0;
+
+	if (s_halfSecTick == 0)
+	{
+		s_halfSecTick = g_lifetimeHalfSecondTickCount;
+	}
 
 	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 	memset(&sbuff[0], 0, sizeof(sbuff));
@@ -373,6 +412,49 @@ void DisplayDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr
 	// Display the year
 	sprintf((char*)sbuff, "%02d", (uint16)(uint16)rec_ptr[DTM_YEAR].numrec.tindex);
 	WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == DTM_YEAR) ? CURSOR_LN : REG_LN);
+
+	// ---------------------------------------------------------------------------------
+	// Display timer source clock check in Factory Setup mode
+	// ---------------------------------------------------------------------------------
+	if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
+	{
+		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
+		wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+
+		// Display the timer source clock check text
+		sprintf((char*)sbuff, "SOFT TIMER CLK CHECK");
+		WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
+		wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+
+		// Display the timer source clock check text
+		sprintf((char*)sbuff, "(10s COUNTUP CYCLE)");
+		WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
+		wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
+
+		halfSecTickDiff = g_lifetimeHalfSecondTickCount - s_halfSecTick;
+
+		if ((halfSecTickDiff / 2) > 9)
+		{
+			s_halfSecTick = g_lifetimeHalfSecondTickCount;
+			halfSecTickDiff = 0;
+		}
+
+		// Display the timer check info
+		if (halfSecTickDiff == 0)
+		{
+			sprintf((char*)sbuff, "0/10 (START/LAP/STOP)");
+			WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, CURSOR_LN);
+		}
+		else
+		{
+			sprintf((char*)sbuff, "%lu sec", (halfSecTickDiff / 2));
+			WndMpWrtString(sbuff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		}
+	}
 }
 
 ///----------------------------------------------------------------------------
