@@ -55,8 +55,8 @@ BOOLEAN ExternalRtcInit(void)
 		ExternalRtcWrite(RTC_CONTROL_1_ADDR, 1, &rtcMap.control_1);
 
 		// Setup an initial date and time
-		time.year = 12;
-		time.month = 8;
+		time.year = 16;
+		time.month = 1;
 		time.day = 1;
 		time.weekday = GetDayOfWeek(time.year, time.month, time.day);
 		time.hour = 8;
