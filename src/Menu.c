@@ -883,12 +883,39 @@ uint8 MessageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 ///----------------------------------------------------------------------------
 void OverlayMessage(char* titleString, char* textString, uint32 displayTime)
 {
+	volatile uint32 msDisplayTime = (displayTime / SOFT_MSECS);
+
 	MessageBorder();
 	MessageTitle(titleString);
 	MessageText(textString);
 
 	WriteMapToLcd(g_mmap);
+
+#if EXTERNAL_SAMPLING_SOURCE
+	// Check if the display time is less than 5 ms
+	if (displayTime < (5 * SOFT_MSECS))
+	{
+		SoftUsecWait(displayTime);
+	}
+	else // Use the millisecond timer to handle the display time and call USB Manager to handle USB requests in the meantime
+	{
+		// Start the key timer
+		Start_Data_Clock(TC_MILLISECOND_TIMER_CHANNEL);
+
+		while (g_msTimerTicks < msDisplayTime)
+		{
+			if ((g_usbMassStorageState != USB_INIT_DRIVER) && (g_usbMassStorageState != USB_DISABLED_FOR_OTHER_PROCESSING))
+			{
+				UsbDeviceManager();
+			}
+		}
+
+		// Disable the key timer
+		Stop_Data_Clock(TC_MILLISECOND_TIMER_CHANNEL);
+	}
+#else // INTERNAL_SAMPLING_SOURCE
 	SoftUsecWait(displayTime);
+#endif
 }
 
 ///----------------------------------------------------------------------------
