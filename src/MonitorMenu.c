@@ -77,8 +77,7 @@ void MonitorMenu(INPUT_MSG_STRUCT msg)
 ///	Function Break
 ///----------------------------------------------------------------------------
 uint8 g_showRVTA = NO;
-void MonitorMenuProc(INPUT_MSG_STRUCT msg,
-	WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
+void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	REC_EVENT_MN_STRUCT temp_g_triggerRecord;
@@ -105,9 +104,6 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 					((g_monitorOperationMode == MANUAL_CAL_MODE) && (g_sdCardUsageStats.manualCalsLeft == 0)))
 				{
 					// Unable to store any more data in the selected mode
-					
-					// Clear flag
-					g_skipAutoCalInWaveformAfterMidnightCal = NO;
 
 					// Jump back to main menu
 					SETUP_MENU_MSG(MAIN_MENU);
@@ -121,7 +117,6 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg,
 			}
 			
 			// Special call before Monitoring to disable USB processing
-extern void UsbDeviceManager(void);
 			UsbDeviceManager();
 
 			// Read and cache Smart Sensor data
