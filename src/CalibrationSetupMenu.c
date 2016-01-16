@@ -51,9 +51,6 @@ enum {
 ///----------------------------------------------------------------------------
 #include "Globals.h"
 extern USER_MENU_STRUCT helpMenu[];
-extern void Setup_8100_TC_Clock_ISR(uint32, TC_CHANNEL_NUM);
-extern void Start_Data_Clock(TC_CHANNEL_NUM);
-extern void Stop_Data_Clock(TC_CHANNEL_NUM);
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -273,9 +270,25 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 			{
 				if (MessageBox(getLangText(CONFIRM_TEXT), getLangText(ERASE_FACTORY_SETUP_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 				{
-					memset(&g_factorySetupRecord, 0xFF, sizeof(g_factorySetupRecord));
-					SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_CLEAR_TYPE);
+					if (MessageBox(getLangText(CONFIRM_TEXT), "ALSO ERASE THE REST OF THE EEPROM?", MB_YESNO) == MB_FIRST_CHOICE)
+					{
+						// Erase entire EEPROM
+						memset(&g_spareBuffer, 0xFF, sizeof(g_spareBuffer));
+						SaveParameterMemory((uint8*)&g_spareBuffer, 0, EEPROM_AT25640_TOTAL_BYTES);
+					}
+					else
+					{
+						memset(&g_factorySetupRecord, 0xFF, sizeof(g_factorySetupRecord));
+						SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_CLEAR_TYPE);
+					}
+
 					clearedFSRecord = YES;
+				}
+
+				if (MessageBox(getLangText(CONFIRM_TEXT), "ERASE ALL NON ESSENTIAL SYSTEM FILES?", MB_YESNO) == MB_FIRST_CHOICE)
+				{
+					// Delete Non-Essential files
+					DeleteNonEssentialFiles();
 				}
 			}
 		}
@@ -572,36 +585,36 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 				// PRINT R,V,T,A Min, Max and Avg
 				memset(&buff[0], 0, sizeof(buff));
-				sprintf((char*)buff, "R|%01.3f|%01.3f|%01.3f|", (float)((float)sensorCalPeaks[1].r / (float)div), (float)((float)sensorCalPeaks[2].r / (float)div),
-				(float)((float)sensorCalPeaks[3].r / (float)div));
+				sprintf((char*)buff, "R|%01.3f|%01.3f|%01.3f|", (float)((float)g_sensorCalPeaks[1].r / (float)div), (float)((float)g_sensorCalPeaks[2].r / (float)div),
+				(float)((float)g_sensorCalPeaks[3].r / (float)div));
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 				memset(&buff[0], 0, sizeof(buff));
-				sprintf((char*)buff, "V|%01.3f|%01.3f|%01.3f|", (float)((float)sensorCalPeaks[1].v / (float)div), (float)((float)sensorCalPeaks[2].v / (float)div),
-				(float)((float)sensorCalPeaks[3].v / (float)div));
+				sprintf((char*)buff, "V|%01.3f|%01.3f|%01.3f|", (float)((float)g_sensorCalPeaks[1].v / (float)div), (float)((float)g_sensorCalPeaks[2].v / (float)div),
+				(float)((float)g_sensorCalPeaks[3].v / (float)div));
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 				memset(&buff[0], 0, sizeof(buff));
-				sprintf((char*)buff, "T|%01.3f|%01.3f|%01.3f|", (float)((float)sensorCalPeaks[1].t / (float)div), (float)((float)sensorCalPeaks[2].t / (float)div),
-				(float)((float)sensorCalPeaks[3].t / (float)div));
+				sprintf((char*)buff, "T|%01.3f|%01.3f|%01.3f|", (float)((float)g_sensorCalPeaks[1].t / (float)div), (float)((float)g_sensorCalPeaks[2].t / (float)div),
+				(float)((float)g_sensorCalPeaks[3].t / (float)div));
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 				memset(&buff[0], 0, sizeof(buff));
 				if (g_displayAlternateResultState == DEFAULT_RESULTS)
 				{
-					sprintf((char*)buff, "A|%05.3f|%05.3f|%05.3f|", HexToMB(sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
-							HexToMB(sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
-							HexToMB(sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
+					sprintf((char*)buff, "A|%05.3f|%05.3f|%05.3f|", HexToMB(g_sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
+							HexToMB(g_sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
+							HexToMB(g_sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
 					strcpy((char*)&g_spareBuffer[0], (char*)buff);
 				}
 				else
 				{
-					sprintf((char*)buff, "A|%5.1f|%5.1f|%5.1f|", HexToDB(sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
-							HexToDB(sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
-							HexToDB(sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
+					sprintf((char*)buff, "A|%5.1f|%5.1f|%5.1f|", HexToDB(g_sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
+							HexToDB(g_sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
+							HexToDB(g_sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
 					strcpy((char*)&g_spareBuffer[50], (char*)buff);
 				}
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
@@ -759,7 +772,6 @@ void MnStartCal(void)
 	// Setup AD Channel config
 	SetupADChannelConfig(CALIBRATION_FIXED_SAMPLE_RATE);
 
-extern void DataIsrInit(uint16 sampleRate);
 	DataIsrInit(CALIBRATION_FIXED_SAMPLE_RATE);
 
 #if 1 // Now skipped since the default menu display (CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) does not use channel offsets
@@ -779,7 +791,6 @@ extern void DataIsrInit(uint16 sampleRate);
 	// Start the timer for collecting data
 	Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
 #elif EXTERNAL_SAMPLING_SOURCE
-extern void Setup_8100_EIC_External_RTC_ISR(void);
 	Setup_8100_EIC_External_RTC_ISR();
 
 	StartExternalRtcClock(CALIBRATION_FIXED_SAMPLE_RATE);
