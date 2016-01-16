@@ -514,6 +514,7 @@ enum CMD_MESSAGE_INDEX {
 	HLT,		// Halt Monitoring waveform/bargraph/combo.
 	GAD,		// Get Auto-Dialout/Download information
 	GFS,		// Get flash stats
+	VFV,		// View firmware version
 	ZZZ,
 	TOTAL_COMMAND_MESSAGES
 };

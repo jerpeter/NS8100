@@ -88,6 +88,7 @@ static const COMMAND_MESSAGE_STRUCT s_cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] 
 	{ 'H', 'L', 'T', handleHLT },		// Halt Monitoring waveform/bargraph/combo.
 	{ 'G', 'A', 'D', handleGAD },		// Get Auto-Dialout/Download information
 	{ 'G', 'F', 'S', handleGFS },		// Get Flash Stats
+	{ 'V', 'F', 'V', HandleVFV },		// Get Flash Stats
 	{ 'Z', 'Z', 'Z', HandleAAA }		// Help on menus.
 };
 

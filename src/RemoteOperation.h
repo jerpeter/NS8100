@@ -138,6 +138,9 @@ void HandleMVI(CMD_BUFFER_STRUCT* inCmd);
 // Function: HandleMVO - Modem view last call out detail.
 void HandleMVO(CMD_BUFFER_STRUCT* inCmd);
 
+// Function: HandleVFV - Modem view firmware version.
+void HandleVFV(CMD_BUFFER_STRUCT* inCmd);
+
 uint8 ConvertAscii2Binary(uint8 firstByte, uint8 secondByte);
 
 #endif // _REMOTE_OPERATION_H_
