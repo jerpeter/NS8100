@@ -42,22 +42,22 @@
     <Name>NS8100</Name>
     <AsfFrameworkConfig>
       <framework-data>
-  <options />
-  <configurations />
-  <files>
-    <file path="src/asf/thirdparty/newlib_addons/libs/include/nlao_interrupts.h" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/include/nlao_interrupts.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/thirdparty/newlib_addons/libs/include/nlao_exceptions.h" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/include/nlao_exceptions.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/thirdparty/newlib_addons/libs/include/nlao_usart.h" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/include/nlao_usart.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/thirdparty/newlib_addons/libs/include/nlao_cpu.h" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/include/nlao_cpu.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/thirdparty/newlib_addons/libs/include/nlao_io.h" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/include/nlao_io.h" changed="False" content-id="Atmel.ASF" />
-    <file path="src/asf/thirdparty/newlib_addons/libs/at32ucr2/libnewlib_addons-at32ucr2-speed_opt.a" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/at32ucr2/libnewlib_addons-at32ucr2-speed_opt.a" changed="False" content-id="Atmel.ASF" />
-  </files>
-  <documentation help="" />
-  <offline-documentation help="" />
-  <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.18.1" />
-  </dependencies>
-</framework-data>
+        <options />
+        <configurations />
+        <files>
+          <file path="src/asf/thirdparty/newlib_addons/libs/include/nlao_interrupts.h" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/include/nlao_interrupts.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/thirdparty/newlib_addons/libs/include/nlao_exceptions.h" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/include/nlao_exceptions.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/thirdparty/newlib_addons/libs/include/nlao_usart.h" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/include/nlao_usart.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/thirdparty/newlib_addons/libs/include/nlao_cpu.h" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/include/nlao_cpu.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/thirdparty/newlib_addons/libs/include/nlao_io.h" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/include/nlao_io.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/thirdparty/newlib_addons/libs/at32ucr2/libnewlib_addons-at32ucr2-speed_opt.a" framework="com.atmel.avr32.sf.uc3a" version="2.2.2" source="thirdparty/newlib_addons/libs/at32ucr2/libnewlib_addons-at32ucr2-speed_opt.a" changed="False" content-id="Atmel.ASF" />
+        </files>
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.20.1" />
+        </dependencies>
+      </framework-data>
     </AsfFrameworkConfig>
     <AsfVersion>2.5.1</AsfVersion>
     <KeepTimersRunning>true</KeepTimersRunning>
@@ -495,60 +495,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\EventProcessing.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Access.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Access.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Base.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Base.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Definitions.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Disk.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Disk.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_FileLib.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_FileLib.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_FileString.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_FileString.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Misc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Misc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Opts.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Table.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Table.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Write.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FAT32_Write.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\Font_Eight_by_Eight_table.h">
