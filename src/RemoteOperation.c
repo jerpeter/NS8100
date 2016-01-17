@@ -49,6 +49,38 @@ void HandleAAA(CMD_BUFFER_STRUCT* inCmd)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void HandleVFV(CMD_BUFFER_STRUCT* inCmd)
+{
+	uint32 msgCRC = 0;
+	uint8 vfvHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
+	uint8 msgTypeStr[HDR_TYPE_LEN+1];
+	uint8 resultCode = MSGTYPE_RESPONSE;
+	uint8 firmwareVersion[40];
+
+	UNUSED(inCmd);
+
+	sprintf((char*)msgTypeStr, "%02d", resultCode);
+	BuildOutgoingSimpleHeaderBuffer((uint8*)vfvHdr, (uint8*)"VFVx", (uint8*)msgTypeStr, (MESSAGE_SIMPLE_TOTAL_LENGTH + sizeof(firmwareVersion)), COMPRESS_NONE, CRC_NONE);
+
+	memset(&firmwareVersion[0], 0, sizeof(firmwareVersion));
+	strcpy((char*)&firmwareVersion[0], (char*)&g_buildVersion[0]);
+
+	// Send Starting CRLF
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	// Send Simple header
+	ModemPuts((uint8*)vfvHdr, MESSAGE_HEADER_SIMPLE_LENGTH, g_binaryXferFlag);
+	// Send Firmware version
+	ModemPuts((uint8*)&firmwareVersion[0], sizeof(firmwareVersion), g_binaryXferFlag);
+	// Send Ending Footer
+	ModemPuts((uint8*)&msgCRC, 4, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+
+	return;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 {
 	SYSTEM_CFG cfg;					// 424 bytes, or 848 chars from the pc.
