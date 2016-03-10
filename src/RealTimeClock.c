@@ -175,7 +175,7 @@ uint8 SetExternalRtcDate(DATE_TIME_STRUCT* time)
 	if ((time->year <= 99) && (time->month > 0) && (time->month <= TOTAL_MONTHS))
 	{
 		// Check is the days setting is valid for the month given that month setting has been validated
-		if ((time->day > 0) && (time->day <= g_monthTable[time->month].days))
+		if ((time->day > 0) && (time->day <= GetDaysPerMonth(time->month, time->year)))
 		{
 			// Flag success since month, day and year settings are valid
 			status = PASSED;
