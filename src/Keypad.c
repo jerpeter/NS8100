@@ -21,6 +21,9 @@
 #include "TextTypes.h"
 #include "M23018.h"
 #include "stdio.h"
+#include "usb_task.h"
+#include "device_mass_storage_task.h"
+#include "host_mass_storage_task.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -450,7 +453,10 @@ uint8 GetKeypadKey(uint8 mode)
 #if 0 // Original (just a delay)
 			SoftUsecWait(1000);
 #else // Process USB as a delay
-			UsbDeviceManager();
+			// Process USB core routines (do not call UsbDeviceManager since it's not designed to be re-entrant)
+			usb_task();
+			device_mass_storage_task();
+			host_mass_storage_task();
 #endif
 			keyPressed = ScanKeypad();
 		}
@@ -462,7 +468,10 @@ uint8 GetKeypadKey(uint8 mode)
 #if 0 // Original (just a delay)
 			SoftUsecWait(1000);
 #else // Process USB as a delay
-			UsbDeviceManager();
+			// Process USB core routines (do not call UsbDeviceManager since it's not designed to be re-entrant)
+			usb_task();
+			device_mass_storage_task();
+			host_mass_storage_task();
 #endif
 			keyPressed = ScanKeypad();
 		}
@@ -484,7 +493,10 @@ uint8 GetKeypadKey(uint8 mode)
 #if 0 // Original (just a delay)
 			SoftUsecWait(1000);
 #else // Process USB as a delay
-			UsbDeviceManager();
+			// Process USB core routines (do not call UsbDeviceManager since it's not designed to be re-entrant)
+			usb_task();
+			device_mass_storage_task();
+			host_mass_storage_task();
 #endif
 		}
 	}
