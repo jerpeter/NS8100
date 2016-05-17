@@ -756,9 +756,14 @@ void UsbDeviceManager(void)
 
 					}
 
+					// Check if there is no active external charging
 					if (GetExternalVoltageLevelAveraged(EXT_CHARGE_VOLTAGE) < EXTERNAL_VOLTAGE_PRESENT)
 					{
-						OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_REMOVE_THUMB_DRIVE_TO_CONSERVE_POWER_TEXT), (2 * SOFT_SECS));
+						// Check if a device is still connected
+						if (ms_connected == TRUE)
+						{
+							OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_REMOVE_THUMB_DRIVE_TO_CONSERVE_POWER_TEXT), (2 * SOFT_SECS));
+						}
 					}
 				}
 				//___________________________________________________________________________________________
