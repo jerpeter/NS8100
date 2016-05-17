@@ -769,6 +769,10 @@ void UsbDeviceManager(void)
 							OverlayMessage(getLangText(STATUS_TEXT), getLangText(PLEASE_REMOVE_THUMB_DRIVE_TO_CONSERVE_POWER_TEXT), (2 * SOFT_SECS));
 						}
 					}
+
+					// Recall the current active menu to repaint the display
+					mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+					JUMP_TO_ACTIVE_MENU();
 				}
 				//___________________________________________________________________________________________
 				// Check if USB Thumb drive has just been removed
