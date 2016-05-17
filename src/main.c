@@ -648,6 +648,10 @@ void UsbDeviceManager(void)
 
 						sprintf((char*)g_spareBuffer, "%s %s", getLangText(USB_THUMB_DRIVE_TEXT), getLangText(DISCONNECTED_TEXT));
 						OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
+
+						// Recall the current active menu to repaint the display
+						mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+						JUMP_TO_ACTIVE_MENU();
 					}
 #if 0 // Not working properly
 					else // Device mode was connected and processing
@@ -776,6 +780,10 @@ void UsbDeviceManager(void)
 
 						sprintf((char*)g_spareBuffer, "%s %s", getLangText(USB_THUMB_DRIVE_TEXT), getLangText(DISCONNECTED_TEXT));
 						OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
+
+						// Recall the current active menu to repaint the display
+						mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+						JUMP_TO_ACTIVE_MENU();
 					}
 
 					// Don't process this disconnection again until it's connected
