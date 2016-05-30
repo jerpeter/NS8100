@@ -71,12 +71,11 @@ void OverwriteMenu(INPUT_MSG_STRUCT msg)
 ///----------------------------------------------------------------------------
 void OverwriteMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
-	char buff[20];
+	char buff[30];
 	REC_EVENT_MN_STRUCT temp_rec;
 	INPUT_MSG_STRUCT mn_msg;
 	uint32 input;
 	uint8 i;
-	char message[50];
 
 	switch (msg.cmd)
 	{
@@ -98,19 +97,19 @@ void OverwriteMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 				switch (temp_rec.opMode)
 				{
 					case (WAVEFORM_MODE):
-						sprintf((char*)buff,"%s (%s)", (char*)temp_rec.name, getLangText(SELF_TRG_TEXT));
+						sprintf((char*)buff, "%s (%s)", (char*)temp_rec.name, getLangText(SELF_TRG_TEXT));
 						break;
 
 					case (BARGRAPH_MODE):
-						sprintf((char*)buff,"%s (%s)", (char*)temp_rec.name, getLangText(BAR_TEXT));
+						sprintf((char*)buff, "%s (%s)", (char*)temp_rec.name, getLangText(BAR_TEXT));
 						break;
 
 					case (COMBO_MODE):
-						sprintf((char*)buff,"%s (%s)", (char*)temp_rec.name, getLangText(COMBO_TEXT));
+						sprintf((char*)buff, "%s (%s)", (char*)temp_rec.name, getLangText(COMBO_TEXT));
 						break;
 
 					default:
-						sprintf((char*)buff,"%s (UNK)",(char*)temp_rec.name);
+						sprintf((char*)buff, "%s (UNK)",(char*)temp_rec.name);
 						break;
 				}
 
@@ -139,10 +138,9 @@ void OverwriteMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, 
 
 					if (temp_rec.validRecord == YES)
 					{
-						memset(&message[0], 0, sizeof(message));
-						sprintf(message, "%s (%s)", getLangText(DELETE_SAVED_SETUP_Q_TEXT), temp_rec.name);
+						sprintf((char*)g_spareBuffer, "%s (%s)", getLangText(DELETE_SAVED_SETUP_Q_TEXT), temp_rec.name);
 
-						if (MessageBox(getLangText(WARNING_TEXT), message, MB_YESNO) == MB_FIRST_CHOICE)
+						if (MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_YESNO) == MB_FIRST_CHOICE)
 						{
 							memset(&temp_rec.name, 0, sizeof(temp_rec.name));
 							temp_rec.validRecord = NO;

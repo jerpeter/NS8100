@@ -24,7 +24,6 @@
 #include "SoftTimer.h"
 #include "Keypad.h"
 #include "ProcessBargraph.h"
-#include "ProcessCombo.h"
 #include "TextTypes.h"
 #include "EventProcessing.h"
 #include "Analog.h"

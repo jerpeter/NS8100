@@ -228,7 +228,6 @@ void TimerModeTimeMenuDvScroll (char dir_key,REC_MN_STRUCT *rec_ptr)
 ///----------------------------------------------------------------------------
 void TimerModeTimeMenuDisplay(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LAYOUT_STRUCT *mn_layout_ptr)
 {
-	char sbuff[50];
 	uint8 top;
 	uint8 menu_ln;
 	uint8 length = 0;
@@ -239,24 +238,18 @@ void TimerModeTimeMenuDisplay(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_lay
 	top = (uint8)mn_layout_ptr->top_ln;
 
 	// Add in a title for the menu
-	memset(&sbuff[0], 0, sizeof(sbuff));
-	sprintf((char*)sbuff, "-%s-", getLangText(ACTIVE_TIME_PERIOD_TEXT));
-	length = (uint8)strlen((char*)sbuff);
+	length = sprintf((char*)g_spareBuffer, "-%s-", getLangText(ACTIVE_TIME_PERIOD_TEXT));
 	
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	WndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// Add in unit format for the menu
-	memset(&sbuff[0], 0, sizeof(sbuff));
-	sprintf((char*)sbuff, "(24 %s:%s)", getLangText(HOUR_TEXT), getLangText(MINUTE_TEXT));
-	length = (uint8)strlen((char*)sbuff);
+	length = sprintf((char*)g_spareBuffer, "(24 %s:%s)", getLangText(HOUR_TEXT), getLangText(MINUTE_TEXT));
 	
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ONE;
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	WndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-
-	memset(&sbuff[0], 0, sizeof(sbuff));
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
@@ -270,23 +263,23 @@ void TimerModeTimeMenuDisplay(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_lay
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
 
 	// Display the start time text
-	sprintf((char*)sbuff, "%s: ", getLangText(START_TIME_TEXT));
-	WndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	sprintf((char*)g_spareBuffer, "%s: ", getLangText(START_TIME_TEXT));
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((5 * SIX_COL_SIZE)/2));
 
 	// Display the start hour
-	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[TMT_START_HOUR].numrec.tindex);
-	WndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_START_HOUR) ? CURSOR_LN : REG_LN);
+	sprintf((char*)g_spareBuffer, "%02d", (uint16)rec_ptr[TMT_START_HOUR].numrec.tindex);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_START_HOUR) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	WndMpWrtString((uint8*)(":"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the start min
-	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[TMT_START_MIN].numrec.tindex);
-	WndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_START_MIN) ? CURSOR_LN : REG_LN);
+	sprintf((char*)g_spareBuffer, "%02d", (uint16)rec_ptr[TMT_START_MIN].numrec.tindex);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_START_MIN) ? CURSOR_LN : REG_LN);
 
 	// ---------------------------------------------------------------------------------
 	// Write out the stop time line which includes the stop time text, hour and min values
@@ -295,23 +288,23 @@ void TimerModeTimeMenuDisplay(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_lay
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
 
 	// Display the stop time text
-	sprintf((char*)sbuff, "%s: ", getLangText(STOP_TIME_TEXT));
-	WndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	sprintf((char*)g_spareBuffer, "%s: ", getLangText(STOP_TIME_TEXT));
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((5 * SIX_COL_SIZE)/2));
 
 	// Display the stop hour
-	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[TMT_STOP_HOUR].numrec.tindex);
-	WndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_STOP_HOUR) ? CURSOR_LN : REG_LN);
+	sprintf((char*)g_spareBuffer, "%02d", (uint16)rec_ptr[TMT_STOP_HOUR].numrec.tindex);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_STOP_HOUR) ? CURSOR_LN : REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	WndMpWrtString((uint8*)(":"), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->next_col;
 
 	// Display the stop min
-	sprintf((char*)sbuff, "%02d", (uint16)rec_ptr[TMT_STOP_MIN].numrec.tindex);
-	WndMpWrtString((uint8*)(&sbuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_STOP_MIN) ? CURSOR_LN : REG_LN);
+	sprintf((char*)g_spareBuffer, "%02d", (uint16)rec_ptr[TMT_STOP_MIN].numrec.tindex);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, (mn_layout_ptr->curr_ln == TMT_STOP_MIN) ? CURSOR_LN : REG_LN);
 }
 
 ///----------------------------------------------------------------------------

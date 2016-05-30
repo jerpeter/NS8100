@@ -2644,7 +2644,6 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
-	char message[70];
 
 	if (keyPressed == ENTER_KEY)
 	{
@@ -2653,10 +2652,9 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_5].data) && (g_triggerRecord.opMode == BARGRAPH_MODE)) ||
 			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && (g_triggerRecord.opMode == COMBO_MODE)))
 		{
-			memset(&message[0], 0, sizeof(message));
-			sprintf((char*)message, "%lu %s", sampleRateMenu[newItemIndex].data,
+			sprintf((char*)g_spareBuffer, "%lu %s", sampleRateMenu[newItemIndex].data,
 					getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT));
-			MessageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
+			MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 
 			debug("Sample Rate: %d is not supported for this mode.\r\n", g_triggerRecord.trec.sample_rate);
 

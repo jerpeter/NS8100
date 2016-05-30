@@ -22,10 +22,8 @@
 #include "Uart.h"
 #include "RealTimeClock.h"
 #include "ProcessBargraph.h"
-#include "ProcessCombo.h"
 #include "PowerManagement.h"
 #include "RemoteCommon.h"
-#include "FAT32_FileLib.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines

@@ -17,9 +17,6 @@
 #include "Uart.h"
 #include "Menu.h"
 #include "TextTypes.h"
-#include "FAT32_Definitions.h"
-#include "FAT32_FileLib.h"
-#include "FAT32_Access.h"
 #include "sd_mmc_spi.h"
 #include "PowerManagement.h"
 #include "Sensor.h"
@@ -89,9 +86,9 @@ void CopyValidFlashEventSummariesToRam(void)
 #if 1 // New faster method to grab event number from event name
 			if (!nav_file_isdir())
 			{
-				nav_file_name((FS_STRING)&g_spareBuffer[0], 80, FS_NAME_GET, FALSE);
+				nav_file_name((FS_STRING)g_spareBuffer, 80, FS_NAME_GET, FALSE);
 
-				char* fileName = (char*)&g_spareBuffer[0];
+				char* fileName = (char*)g_spareBuffer;
 
 				uint8 j;
 				char eventNumBuffer[10];
@@ -1309,7 +1306,6 @@ void DeleteEventFileRecords(void)
 {
 	uint16 eventsDeleted = 0;
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
-	char popupText[50];
 
 	debug("Deleting Events...\r\n");
 
@@ -1332,8 +1328,8 @@ void DeleteEventFileRecords(void)
 			while (nav_filelist_set(0 , FS_FIND_NEXT))
 			{
 				nav_file_getname(&fileName[0], 50);
-				sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
-				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(REMOVING_TEXT), fileName);
+				OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
 				// Delete file or directory
 				if (nav_file_del(FALSE) == FALSE)
@@ -1361,8 +1357,8 @@ void DeleteEventFileRecords(void)
 			while (nav_filelist_set(0 , FS_FIND_NEXT))
 			{
 				nav_file_getname(&fileName[0], 50);
-				sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
-				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(REMOVING_TEXT), fileName);
+				OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
 				// Delete file or directory
 				if (nav_file_del(FALSE) == FALSE)
@@ -1410,8 +1406,8 @@ void DeleteEventFileRecords(void)
 
 		InitSummaryListFile();
 
-		sprintf(popupText, "%s %d %s", getLangText(REMOVED_TEXT), eventsDeleted, getLangText(EVENTS_TEXT));
-		OverlayMessage(getLangText(DELETE_EVENTS_TEXT), popupText, 3 * SOFT_SECS);
+		sprintf((char*)g_spareBuffer, "%s %d %s", getLangText(REMOVED_TEXT), eventsDeleted, getLangText(EVENTS_TEXT));
+		OverlayMessage(getLangText(DELETE_EVENTS_TEXT), (char*)g_spareBuffer, 3 * SOFT_SECS);
 
 		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
@@ -1425,7 +1421,6 @@ void DeleteNonEssentialFiles(void)
 {
 	uint16 filesDeleted = 0;
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
-	char popupText[50];
 
 	debug("Deleting Non-Essential Files...\r\n");
 
@@ -1448,8 +1443,8 @@ void DeleteNonEssentialFiles(void)
 			while (nav_filelist_set(0 , FS_FIND_NEXT))
 			{
 				nav_file_getname(&fileName[0], 50);
-				sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
-				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(REMOVING_TEXT), fileName);
+				OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
 				// Delete file or directory
 				if (nav_file_del(FALSE) == FALSE)
@@ -1474,8 +1469,8 @@ void DeleteNonEssentialFiles(void)
 			while (nav_filelist_set(0 , FS_FIND_NEXT))
 			{
 				nav_file_getname(&fileName[0], 50);
-				sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
-				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(REMOVING_TEXT), fileName);
+				OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
 				// Delete file or directory
 				if (nav_file_del(FALSE) == FALSE)
@@ -1500,8 +1495,8 @@ void DeleteNonEssentialFiles(void)
 			while (nav_filelist_set(0 , FS_FIND_NEXT))
 			{
 				nav_file_getname(&fileName[0], 50);
-				sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
-				OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(REMOVING_TEXT), fileName);
+				OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
 				// Delete file or directory
 				if (nav_file_del(FALSE) == FALSE)
@@ -1529,8 +1524,8 @@ void DeleteNonEssentialFiles(void)
 
 				if (nav_file_checkext("tbl") == FALSE)
 				{
-					sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
-					OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+					sprintf((char*)g_spareBuffer, "%s %s", getLangText(REMOVING_TEXT), fileName);
+					OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
 					// Delete file or directory
 					if (nav_file_del(FALSE) == FALSE)
@@ -1559,8 +1554,8 @@ void DeleteNonEssentialFiles(void)
 
 				if (strcasecmp((char*)&fileName, "Boot.s") != 0)
 				{
-					sprintf(popupText, "%s %s", getLangText(REMOVING_TEXT), fileName);
-					OverlayMessage(getLangText(STATUS_TEXT), popupText, 0);
+					sprintf((char*)g_spareBuffer, "%s %s", getLangText(REMOVING_TEXT), fileName);
+					OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
 					// Delete file or directory
 					if (nav_file_del(FALSE) == FALSE)
@@ -1643,8 +1638,8 @@ void DeleteNonEssentialFiles(void)
 
 		InitSummaryListFile();
 
-		sprintf(popupText, "%s %d %s", getLangText(REMOVED_TEXT), filesDeleted, "FILES");
-		OverlayMessage(getLangText(STATUS_TEXT), popupText, 3 * SOFT_SECS);
+		sprintf((char*)g_spareBuffer, "%s %d %s", getLangText(REMOVED_TEXT), filesDeleted, "FILES");
+		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 3 * SOFT_SECS);
 
 		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
@@ -1817,7 +1812,6 @@ void VerifyCacheEventToRam(uint16 eventNumber, char* subMessage)
 	uint8* verifyPtr = (uint8*)&g_spareBuffer[(SPARE_BUFFER_SIZE - VERIFY_CHUNK_SIZE - 1)];
 	int eventFile;
 	char fileName[50];
-	char message[50];
 
 	sprintf(fileName, "A:\\Events\\Evt%d.ns8", eventNumber);
 
@@ -1886,8 +1880,8 @@ void VerifyCacheEventToRam(uint16 eventNumber, char* subMessage)
 
 	if (errorCount)
 	{
-		sprintf(message, "EVENT %d CACHE VERIFY FAILED (%s SEND)", eventNumber, subMessage);
-		MessageBox(getLangText(ERROR_TEXT), message, MB_OK);
+		sprintf((char*)g_spareBuffer[0], "EVENT %d CACHE VERIFY FAILED (%s SEND)", eventNumber, subMessage);
+		MessageBox(getLangText(ERROR_TEXT), (char*)g_spareBuffer[0], MB_OK);
 	}
 
 	close (eventFile);
@@ -2161,7 +2155,7 @@ void SetFileDateTimestamp(uint8 option)
 ///----------------------------------------------------------------------------
 int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 {
-	char* fileName = (char*)&g_spareBuffer[0];
+	char* fileName = (char*)g_spareBuffer;
 
 	int fileHandle;
 	int fileOption;
@@ -2217,7 +2211,7 @@ int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 ///----------------------------------------------------------------------------
 int GetERDataFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 {
-	char* fileName = (char*)&g_spareBuffer[0];
+	char* fileName = (char*)g_spareBuffer;
 
 	int fileHandle;
 	int fileOption;

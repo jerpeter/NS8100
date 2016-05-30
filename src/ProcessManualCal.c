@@ -180,9 +180,9 @@ void MoveManualCalToFile(void)
 			}
 			else // Write the file event to the SD card
 			{
-				sprintf((char*)&g_spareBuffer[0], "%s %s #%d %s...", getLangText(CALIBRATION_TEXT), getLangText(EVENT_TEXT),
+				sprintf((char*)g_spareBuffer, "%s %s #%d %s...", getLangText(CALIBRATION_TEXT), getLangText(EVENT_TEXT),
 						g_pendingEventRecord.summary.eventNumber, getLangText(BEING_SAVED_TEXT));
-				OverlayMessage(getLangText(EVENT_COMPLETE_TEXT), (char*)&g_spareBuffer[0], 0);
+				OverlayMessage(getLangText(EVENT_COMPLETE_TEXT), (char*)g_spareBuffer, 0);
 
 				// Write the event record header and summary
 				write(manualCalFileHandle, &g_pendingEventRecord, sizeof(EVT_RECORD));

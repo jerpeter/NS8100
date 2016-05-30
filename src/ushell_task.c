@@ -1606,7 +1606,7 @@ Bool ushell_cmd_syncevents(uint16_t* eventsCopied, uint16_t* eventsSkipped)
 			for (; i < (4 - 1); i++) { dotBuff[i] = ' '; }
 			if (++dotState >= 4) { dotState = 0; }
 #endif
-			memset(&g_spareBuffer, 0, 80);
+			memset(g_spareBuffer, 0, 80);
 			sprintf((char*)g_spareBuffer, "%s, %s: %s %s", getLangText(SYNC_PROGRESS_TEXT), getLangText(EVENT_TEXT), (char*)g_s_arg[0], getLangText(EXISTS_TEXT));
 			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
@@ -1640,7 +1640,7 @@ Bool ushell_cmd_syncevents(uint16_t* eventsCopied, uint16_t* eventsSkipped)
 			for (; i < (4 - 1); i++) { dotBuff[i] = ' '; }
 			if (++dotState >= 4) { dotState = 0; }
 #endif
-			memset(&g_spareBuffer, 0, 80);
+			memset(g_spareBuffer, 0, 80);
 			sprintf((char*)g_spareBuffer, "%s, %s: %s %s", getLangText(SYNC_PROGRESS_TEXT), getLangText(EVENT_TEXT), (char*)g_s_arg[0], getLangText(SYNCING_TEXT));
 			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 

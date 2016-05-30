@@ -26,7 +26,6 @@
 #include "Uart.h"
 #include "spi.h"
 #include "ProcessBargraph.h"
-#include "ProcessCombo.h"
 #include "SysEvents.h"
 #include "Record.h"
 #include "InitDataBuffers.h"
@@ -1039,7 +1038,7 @@ const char default_boot_name[] = { "Boot.s" };
 
 void BootLoadManager(void)
 {
-	char textBuffer[50];
+	char fileName[50];
 	static void (*func)(void);
 	func = (void(*)())APPLICATION;
 	int file = -1;
@@ -1094,8 +1093,8 @@ void BootLoadManager(void)
 		}
 
 		nav_select(FS_NAV_ID_DEFAULT);
-		sprintf(textBuffer, "A:\\System\\%s", default_boot_name);
-		file = open(textBuffer, O_RDONLY);
+		sprintf(fileName, "A:\\System\\%s", default_boot_name);
+		file = open(fileName, O_RDONLY);
 
 		while (file == -1)
 		{
@@ -1122,7 +1121,7 @@ void BootLoadManager(void)
 			
 			SoftUsecWait(250 * SOFT_MSECS);
 			
-			file = open(textBuffer, O_RDONLY);
+			file = open(fileName, O_RDONLY);
 		}
 
 		// Display initializing message
@@ -1550,13 +1549,13 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&sensorString, "Acc"); }
 		else { sprintf((char*)&sensorString, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
 
-		sprintf((char*)&g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
+		sprintf((char*)g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
 		"Seismic Trig: %10s, Air Trig: %11s\r\n\tBit Acc: %d, Temp Adjust: %3s, Sensor: %8s, Sensitivity: %4s\r\n\n",
 		mle->uniqueEntryId, (char*)statusString, (char*)modeString, (char*)startTimeString, (char*)stopTimeString, mle->eventsRecorded, mle->startEventNumber,
 		(char*)seisString, (char*)airString, mle->bitAccuracy, ((mle->adjustForTempDrift == YES) ? "YES" : "NO"),
 		(char*)sensorString, ((mle->sensitivity == LOW) ? "LOW" : "HIGH"));
 
-		write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+		write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
@@ -1566,7 +1565,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 	}
 
 	sprintf((char*)g_spareBuffer, "===== Exception Report =====\r\n");
-	write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+	write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 
 	uint16 loops = 5;
 
@@ -1588,7 +1587,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 			if ((fsAvail == YES) && (errReportFiled == NO))
 			{
 				sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 1", (char*)&exceptionMessage);
-				write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+				write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 			}
 
 			if (g_breakpointCause == BP_MB_LOOP)
@@ -1600,7 +1599,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 				if ((fsAvail == YES) && (errReportFiled == NO))
 				{
 					sprintf((char*)g_spareBuffer, "%s: %s\r\n", (char*)&g_buildVersion, (char*)&exceptionMessage);
-					write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+					write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 				}
 			}
 			else
@@ -1612,7 +1611,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 				if ((fsAvail == YES) && (errReportFiled == NO))
 				{
 					sprintf((char*)g_spareBuffer, "%s: %s\r\n", (char*)&g_buildVersion, (char*)&exceptionMessage);
-					write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+					write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 				}
 			}
 		}
@@ -1624,7 +1623,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 			if ((fsAvail == YES) && (errReportFiled == NO))
 			{
 				sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 1", (char*)&exceptionMessage);
-				write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+				write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 			}
 
 			sprintf((char*)&exceptionMessage, "MAX SD:%d bytes (TOP ADDR:%p)", (int)(0x1000 - testCounter), intMem);
@@ -1634,7 +1633,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 			if ((fsAvail == YES) && (errReportFiled == NO))
 			{
 				sprintf((char*)g_spareBuffer, "%s: %s\r\n", (char*)&g_buildVersion, (char*)&exceptionMessage);
-				write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+				write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 			}
 		}
 
@@ -1644,7 +1643,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		if ((fsAvail == YES) && (errReportFiled == NO))
 		{
 			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 2", (char*)&exceptionMessage);
-			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 		}
 
 		sprintf((char*)&exceptionMessage, "SR:0x%lx LR:0x%lx EXC:0x%lx", sr, lr, exception_number);
@@ -1653,7 +1652,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		if ((fsAvail == YES) && (errReportFiled == NO))
 		{
 			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 3", (char*)&exceptionMessage);
-			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 		}
 
 		sprintf((char*)&exceptionMessage, "R0:0x%lx R1:0x%lx R2:0x%lx R3:0x%lx", r0, r1, r2, r3);
@@ -1662,7 +1661,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		if ((fsAvail == YES) && (errReportFiled == NO))
 		{
 			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 4", (char*)&exceptionMessage);
-			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 		}
 
 		sprintf((char*)&exceptionMessage, "R4:0x%lx R5:0x%lx R6:0x%lx R7:0x%lx", r4, r5, r6, r7);
@@ -1671,7 +1670,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		if ((fsAvail == YES) && (errReportFiled == NO))
 		{
 			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 5", (char*)&exceptionMessage);
-			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 		}
 
 		sprintf((char*)&exceptionMessage, "R9:0x%lx R10:0x%lx R11:0x%lx R12:0x%lx", r9, r10, r11, r12);
@@ -1680,7 +1679,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		if ((fsAvail == YES) && (errReportFiled == NO))
 		{
 			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 6", (char*)&exceptionMessage);
-			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 		}
 
 		sprintf((char*)&exceptionMessage, "SR:%lu FS:%d T:%d CP:%d M:%d", g_lifetimeHalfSecondTickCount, LFST, LTT, LCPT, LMT);
@@ -1689,7 +1688,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		if ((fsAvail == YES) && (errReportFiled == NO))
 		{
 			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 7", (char*)&exceptionMessage);
-			write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 		}
 
 		if ((fsAvail == YES) && (errReportFiled == NO))

@@ -22,7 +22,6 @@
 #include "SysEvents.h"
 #include "TextTypes.h"
 #include "adc.h"
-#include "FAT32_FileLib.h"
 #include "usart.h"
 #include "ctype.h"
 #include "usb_drv.h"

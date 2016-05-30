@@ -117,7 +117,6 @@ void BatteryMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_L
 ///----------------------------------------------------------------------------
 void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
-	uint8 buff[25];
 	char spaceBuff[25];
 	uint8 batt_buff[20];
 	uint32 x = 0;
@@ -128,13 +127,11 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Add in a title for the menu
-	memset(&buff[0], 0, sizeof(buff));
-	sprintf((char*)buff, "-%s-", getLangText(BATTERY_VOLTAGE_TEXT));
-	length = (uint8)strlen((char*)buff);
+	length = sprintf((char*)g_spareBuffer, "-%s-", getLangText(BATTERY_VOLTAGE_TEXT));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
 	wnd_layout_ptr->next_row = wnd_layout_ptr->start_row;
@@ -143,28 +140,25 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	curr_batt_volts = GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE);
 
 	// ********** Print Battery text **********
-	memset(&buff[0], 0, sizeof(buff));
-	sprintf((char*)buff,"%.2f %s", curr_batt_volts, getLangText(VOLTS_TEXT));
-	debug("Battery: %s\r\n", (char*)&buff[0]);
+	sprintf((char*)g_spareBuffer, "%.2f %s", curr_batt_volts, getLangText(VOLTS_TEXT));
+	debug("Battery: %s\r\n", (char*)g_spareBuffer);
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
-	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// ********** Print the Low and Full text **********
-	memset(&buff[0], 0, sizeof(buff));
 	memset(&spaceBuff[0], 0, sizeof(spaceBuff));
 	memset(&spaceBuff[0], ' ', sizeof(spaceBuff) - 1);
 
 	length = (uint8)(strlen(getLangText(LOW_TEXT)) + strlen(getLangText(FULL_TEXT)));
 	spaceBuff[(20 - length)] = '\0';
 
-	sprintf((char*)&buff[0], "%s%s%s", getLangText(LOW_TEXT), (char*)&spaceBuff[0], getLangText(FULL_TEXT));
+	sprintf((char*)g_spareBuffer, "%s%s%s", getLangText(LOW_TEXT), (char*)&spaceBuff[0], getLangText(FULL_TEXT));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
-	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// ********** E========F **********
-	memset(&buff[0], 0, sizeof(buff));
 	memset(&batt_buff[0], 0, sizeof(batt_buff));
 	memset(&batt_buff[0], ' ', (sizeof(batt_buff) - 1));
 
@@ -195,15 +189,13 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	batt_buff[10] = 0; // Assign to null
 
-	length = (uint8)sprintf((char*)buff,"[%s]", batt_buff);
+	length = (uint8)sprintf((char*)g_spareBuffer, "[%s]", batt_buff);
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
-	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	// ********** Print other battery voltages **********
-	memset(&buff[0], 0, sizeof(buff));
-
 	curr_batt_volts = GetExternalVoltageLevelAveraged(EXT_CHARGE_VOLTAGE);
 
 	// Check if the external charge voltage is above 0.5 volts indicating that it's active
@@ -212,9 +204,9 @@ void BatteryMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		curr_batt_volts = 0;
 	}
 
-	length = (uint8)sprintf((char*)buff,"(%.2f %s)", curr_batt_volts, getLangText(VOLTS_TEXT));
+	length = (uint8)sprintf((char*)g_spareBuffer, "(%.2f %s)", curr_batt_volts, getLangText(VOLTS_TEXT));
 
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
-	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 }

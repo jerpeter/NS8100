@@ -16,7 +16,6 @@
 #include "Menu.h"
 #include "SysEvents.h"
 #include "TextTypes.h"
-#include "FAT32_FileLib.h"
 #include "string.h"
 #include "Common.h"
 
@@ -116,8 +115,6 @@ void ClearMonitorLogEntry(void)
 ///----------------------------------------------------------------------------
 void NewMonitorLogEntry(uint8 mode)
 {
-	//char spareBuffer[40];
-
 	// Advance to the next log entry
 	AdvanceMonitorLogIndex();
 
@@ -169,9 +166,8 @@ void NewMonitorLogEntry(uint8 mode)
 	__monitorLogTbl[__monitorLogTblIndex].sensor_type = g_factorySetupRecord.sensor_type;
 	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
 
-	//memset(&spareBuffer[0], 0, sizeof(spareBuffer));
-	//ConvertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
-	//debug("\tStart Time: %s\r\n", (char*)&spareBuffer[0]);
+	//ConvertTimeStampToString((char*)g_spareBuffer, &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
+	//debug("\tStart Time: %s\r\n", (char*)g_spareBuffer);
 }
 
 ///----------------------------------------------------------------------------
@@ -194,8 +190,6 @@ void UpdateMonitorLogEntry()
 ///----------------------------------------------------------------------------
 void CloseMonitorLogEntry()
 {
-	//char spareBuffer[40];
-
 	//debug("Closing entry at Monitor Log table index: %d, total recorded: %d\r\n", __monitorLogTblIndex, __monitorLogTbl[__monitorLogTblIndex].eventsRecorded);
 
 	if (__monitorLogTbl[__monitorLogTblIndex].status == PARTIAL_LOG_ENTRY)
@@ -208,9 +202,8 @@ void CloseMonitorLogEntry()
 
 		AppendMonitorLogEntryFile();
 
-		//memset(&spareBuffer[0], 0, sizeof(spareBuffer));
-		//ConvertTimeStampToString(&spareBuffer[0], &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
-		//debug("\tStop Time: %s\r\n", (char*)&spareBuffer[0]);
+		//ConvertTimeStampToString((char*)g_spareBuffer, &__monitorLogTbl[__monitorLogTblIndex].stopTime, REC_DATE_TIME_TYPE);
+		//debug("\tStop Time: %s\r\n", (char*)g_spareBuffer);
 	}
 }
 
@@ -455,13 +448,13 @@ void AppendMonitorLogEntryFile(void)
 			if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&sensorString, "Acc"); }
 			else { sprintf((char*)&sensorString, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
 
-			sprintf((char*)&g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
+			sprintf((char*)g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
 					"Seismic Trig: %10s, Air Trig: %11s\r\n\tBit Acc: %d, Temp Adjust: %3s, Sensor: %8s, Sensitivity: %4s\r\n\n",
 					mle->uniqueEntryId, (char*)statusString, (char*)modeString, (char*)startTimeString, (char*)stopTimeString, mle->eventsRecorded, mle->startEventNumber,
 					(char*)seisString, (char*)airString, mle->bitAccuracy, ((mle->adjustForTempDrift == YES) ? "YES" : "NO"),
 					(char*)sensorString, ((mle->sensitivity == LOW) ? "LOW" : "HIGH"));
 
-			write(monitorLogHumanReadableFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			write(monitorLogHumanReadableFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
@@ -613,12 +606,12 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 
 			sprintf((char*)&timeString, "%02d-%02d-%02d %02d:%02d:%02d", time.day, time.month, time.year, time.hour, time.min, time.sec);
 
-			sprintf((char*)&g_spareBuffer, "Unit <%s>: %3s, Version: %s, Mode: %6s, Time: %s, Battery: %3.2fv, Ext charge: %6s\r\n",
+			sprintf((char*)g_spareBuffer, "Unit <%s>: %3s, Version: %s, Mode: %6s, Time: %s, Battery: %3.2fv, Ext charge: %6s\r\n",
 					(char*)&g_factorySetupRecord.serial_num, (char*)onOffStateString, (char*)g_buildVersion,
 					((g_unitConfig.timerMode == ENABLED) ? "Timer" : "Normal"), (char*)timeString,
 					GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE), extChargeString);
 
-			write(onOffLogHumanReadableFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+			write(onOffLogHumanReadableFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
@@ -754,11 +747,11 @@ void FillInAdditionalExceptionReportInfo(int exceptionReportFile)
 	else if (g_triggerRecord.opMode == BARGRAPH_MODE) { strcpy((char*)&modeString, "Bargraph"); }
 	else if (g_triggerRecord.opMode == COMBO_MODE) { strcpy((char*)&modeString, "Combo"); }
 
-	sprintf((char*)&g_spareBuffer, "Mode: %s, Monitoring: %s, Sample Rate: %lu, Record Time: %lu\r\n", (char*)&modeString, (g_sampleProcessing == ACTIVE_STATE) ? "Yes" : "No",
+	sprintf((char*)g_spareBuffer, "Mode: %s, Monitoring: %s, Sample Rate: %lu, Record Time: %lu\r\n", (char*)&modeString, (g_sampleProcessing == ACTIVE_STATE) ? "Yes" : "No",
 			g_triggerRecord.trec.sample_rate, g_triggerRecord.trec.record_time);
-	write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+	write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 
-	sprintf((char*)&g_spareBuffer, "Error time: %02d-%02d-%02d %02d:%02d:%02d\r\n", exceptionTime.day, exceptionTime.month, exceptionTime.year,
+	sprintf((char*)g_spareBuffer, "Error time: %02d-%02d-%02d %02d:%02d:%02d\r\n", exceptionTime.day, exceptionTime.month, exceptionTime.year,
 			exceptionTime.hour, exceptionTime.min, exceptionTime.sec);
-	write(exceptionReportFile, (uint8*)&g_spareBuffer, strlen((char*)g_spareBuffer));
+	write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 }

@@ -273,8 +273,8 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 					if (MessageBox(getLangText(CONFIRM_TEXT), "ALSO ERASE THE REST OF THE EEPROM?", MB_YESNO) == MB_FIRST_CHOICE)
 					{
 						// Erase entire EEPROM
-						memset(&g_spareBuffer, 0xFF, sizeof(g_spareBuffer));
-						SaveParameterMemory((uint8*)&g_spareBuffer, 0, EEPROM_AT25640_TOTAL_BYTES);
+						memset(g_spareBuffer, 0xFF, sizeof(g_spareBuffer));
+						SaveParameterMemory(g_spareBuffer, 0, EEPROM_AT25640_TOTAL_BYTES);
 					}
 					else
 					{
@@ -608,7 +608,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 					sprintf((char*)buff, "A|%05.3f|%05.3f|%05.3f|", HexToMB(g_sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
 							HexToMB(g_sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
 							HexToMB(g_sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
-					strcpy((char*)&g_spareBuffer[0], (char*)buff);
+					strcpy((char*)g_spareBuffer, (char*)buff);
 				}
 				else
 				{
@@ -624,7 +624,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 
-				if (g_displayAlternateResultState == DEFAULT_RESULTS) { WndMpWrtString(&g_spareBuffer[0], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN); }
+				if (g_displayAlternateResultState == DEFAULT_RESULTS) { WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN); }
 				else { WndMpWrtString(&g_spareBuffer[50], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN); }
 			}
 		}

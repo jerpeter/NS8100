@@ -637,7 +637,6 @@ void ProcessTimerModeSettings(uint8 mode)
 	//uint8 dayOfWeek = 0;
 	uint8 startDay = 0;
 	uint8 startHour = 0;
-	char stringBuff[75];
 	uint16 minutesLeft = 0;
 	DATE_TIME_STRUCT currentTime = GetCurrentTime();
 	uint8 status = ValidateTimerModeSettings();
@@ -653,9 +652,8 @@ void ProcessTimerModeSettings(uint8 mode)
 
 		if (mode == PROMPT)
 		{
-			memset(&stringBuff[0], 0, sizeof(stringBuff));
-			sprintf(stringBuff, "%s %s", getLangText(TIMER_SETTINGS_INVALID_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT));
-			MessageBox(getLangText(ERROR_TEXT), stringBuff, MB_OK);
+			sprintf((char*)g_spareBuffer, "%s %s", getLangText(TIMER_SETTINGS_INVALID_TEXT), getLangText(TIMER_MODE_DISABLED_TEXT));
+			MessageBox(getLangText(ERROR_TEXT), (char*)g_spareBuffer, MB_OK);
 		}
 	}
 	else // status == PASSED || status == IN_PROGRESS
@@ -740,9 +738,8 @@ void ProcessTimerModeSettings(uint8 mode)
 		{
 			if (mode == PROMPT)
 			{
-				memset(&stringBuff[0], 0, sizeof(stringBuff));
-				sprintf(stringBuff, "%s %s", getLangText(TIMER_MODE_NOW_ACTIVE_TEXT), getLangText(PLEASE_POWER_OFF_UNIT_TEXT));
-				MessageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(TIMER_MODE_NOW_ACTIVE_TEXT), getLangText(PLEASE_POWER_OFF_UNIT_TEXT));
+				MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 			}
 
 			// Check if start time is greater than the current time
@@ -784,9 +781,8 @@ void ProcessTimerModeSettings(uint8 mode)
 		{
 			if (mode == PROMPT)
 			{
-				memset(&stringBuff[0], 0, sizeof(stringBuff));
-				sprintf(stringBuff, "%s", getLangText(TIMER_MODE_NOW_ACTIVE_TEXT));
-				MessageBox(getLangText(STATUS_TEXT), stringBuff, MB_OK);
+				sprintf((char*)g_spareBuffer, "%s", getLangText(TIMER_MODE_NOW_ACTIVE_TEXT));
+				MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 			}
 
 			// Check if specialty mode hourly

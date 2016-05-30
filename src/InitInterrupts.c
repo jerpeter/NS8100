@@ -26,7 +26,6 @@
 #include "Uart.h"
 #include "spi.h"
 #include "ProcessBargraph.h"
-#include "ProcessCombo.h"
 #include "SysEvents.h"
 #include "Record.h"
 #include "InitDataBuffers.h"
