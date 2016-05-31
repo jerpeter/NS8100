@@ -83,14 +83,12 @@ void LoadTempMenuTable(TEMP_MENU_DATA_STRUCT* currentMenu)
 ///----------------------------------------------------------------------------
 void MenuScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
-	uint8 buff[50];
-
-	strcpy((char*)buff, (char*)(g_menuPtr + mn_layout_ptr->curr_ln + 1)->data);
+	strcpy((char*)g_spareBuffer, (char*)(g_menuPtr + mn_layout_ptr->curr_ln + 1)->data);
 
 	switch (direction)
 	{
 		case (DOWN):
-			if (strcmp((char*)buff, ".end."))
+			if (strcmp((char*)g_spareBuffer, ".end."))
 			{
 				mn_layout_ptr->curr_ln++;
 
@@ -126,14 +124,12 @@ void MenuScroll(char direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 ///----------------------------------------------------------------------------
 void UserMenuScroll(uint32 direction, char wnd_size, MN_LAYOUT_STRUCT* mn_layout_ptr)
 {
-	char buff[50];
-
-	strcpy(buff, (g_userMenuCachePtr + mn_layout_ptr->curr_ln + 1)->text);
+	strcpy((char*)g_spareBuffer, (g_userMenuCachePtr + mn_layout_ptr->curr_ln + 1)->text);
 
 	switch (direction)
 	{
 		case (DOWN_ARROW_KEY):
-			if (strcmp(buff, ".end."))
+			if (strcmp((char*)g_spareBuffer, ".end."))
 			{
 				mn_layout_ptr->curr_ln++;
 
@@ -702,8 +698,8 @@ void MessageChoice(MB_CHOICE_TYPE choiceType)
 	uint8 i = 0, j = 0;
 	uint8 text1Position = 0, text2Position = 0, startPosition = 0;
 	uint8 startRow = 0;
-	char firstChoiceText[18];
-	char secondChoiceText[18];
+	char firstChoiceText[30];
+	char secondChoiceText[30];
 
 	strcpy((char*)firstChoiceText, getLangText(s_MessageChoices[choiceType].firstTextEntry));
 	strcpy((char*)secondChoiceText, getLangText(s_MessageChoices[choiceType].secondTextEntry));
@@ -775,8 +771,8 @@ void MessageChoiceActiveSwap(MB_CHOICE_TYPE choiceType)
 {
 	uint8 i = 0;
 	uint8 text1Position = 0, text2Position = 0, startPosition = 0;
-	char firstChoiceText[18];
-	char secondChoiceText[18];
+	char firstChoiceText[30];
+	char secondChoiceText[30];
 
 	strcpy((char*)firstChoiceText, getLangText(s_MessageChoices[choiceType].firstTextEntry));
 	strcpy((char*)secondChoiceText, getLangText(s_MessageChoices[choiceType].secondTextEntry));
@@ -1017,19 +1013,17 @@ void DisplaySplashScreen(void)
 void DisplayCalDate(void)
 {
 	char dateString[35];
-	char mesage[75];
 	DATE_TIME_STRUCT tempTime;
 
 	if (!g_factorySetupRecord.invalid)
 	{
 		memset(&dateString[0], 0, sizeof(dateString));
-		memset(&mesage[0], 0, sizeof(mesage));
 
 		ConvertCalDatetoDateTime(&tempTime, &g_currentCalibration.date);
 		ConvertTimeStampToString(dateString, &tempTime, REC_DATE_TYPE);
 
-		sprintf((char*)mesage, "%s: %s", getLangText(CALIBRATION_DATE_TEXT), (char*)dateString);
-		MessageBox(getLangText(STATUS_TEXT), (char*)mesage, MB_OK);
+		sprintf((char*)g_spareBuffer, "%s: %s", getLangText(CALIBRATION_DATE_TEXT), (char*)dateString);
+		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 	else
 	{
@@ -1044,7 +1038,6 @@ void DisplaySensorType(void)
 {
 	uint16 sensorType;
 	uint16 sensorTypeTextElement = NULL_TEXT;
-	char message[75];
 
 	if (!g_factorySetupRecord.invalid)
 	{
@@ -1067,8 +1060,8 @@ void DisplaySensorType(void)
 			case SENSOR_ACC		: sensorTypeTextElement = ACC_793L_TEXT; break;
 		}
 
-		sprintf((char*)message, "%s: %s", getLangText(SENSOR_GAIN_TYPE_TEXT), getLangText(sensorTypeTextElement));
-		MessageBox(getLangText(STATUS_TEXT), (char*)message, MB_OK);
+		sprintf((char*)g_spareBuffer, "%s: %s", getLangText(SENSOR_GAIN_TYPE_TEXT), getLangText(sensorTypeTextElement));
+		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 	else
 	{
@@ -1113,7 +1106,7 @@ void DisplaySerialNumber(void)
 	}
 	else
 	{
-		sprintf((char*)&g_spareBuffer, "%s %s %s %s", getLangText(SEISMIC_TEXT), getLangText(SMART_SENSOR_TEXT), getLangText(SERIAL_NUMBER_TEXT), getLangText(NOT_FOUND_TEXT));
+		sprintf((char*)g_spareBuffer, "%s %s %s %s", getLangText(SEISMIC_TEXT), getLangText(SMART_SENSOR_TEXT), getLangText(SERIAL_NUMBER_TEXT), getLangText(NOT_FOUND_TEXT));
 		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 
@@ -1125,7 +1118,7 @@ void DisplaySerialNumber(void)
 	}
 	else
 	{
-		sprintf((char*)&g_spareBuffer, "%s %s %s %s", getLangText(ACOUSTIC_TEXT), getLangText(SMART_SENSOR_TEXT), getLangText(SERIAL_NUMBER_TEXT), getLangText(NOT_FOUND_TEXT));
+		sprintf((char*)g_spareBuffer, "%s %s %s %s", getLangText(ACOUSTIC_TEXT), getLangText(SMART_SENSOR_TEXT), getLangText(SERIAL_NUMBER_TEXT), getLangText(NOT_FOUND_TEXT));
 		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 }
@@ -1135,12 +1128,10 @@ void DisplaySerialNumber(void)
 ///----------------------------------------------------------------------------
 void DisplayTimerModeSettings(void)
 {
-	char message[75];
-	char activeTime[15];
-	char activeDates[25];
+	char activeTime[25];
+	char activeDates[30];
 	uint16 activeModeTextType;
 
-	memset(&message[0], 0, sizeof(message));
 	memset(&activeTime[0], 0, sizeof(activeTime));
 	memset(&activeDates[0], 0, sizeof(activeDates));
 
@@ -1164,13 +1155,13 @@ void DisplayTimerModeSettings(void)
 			g_unitConfig.timerStopDate.year);
 
 	// Display SAVED SETTINGS, ACTIVE TIME PERIOD HH:MM -> HH:MM
-	sprintf((char*)message, "%s, %s: %s", getLangText(SAVED_SETTINGS_TEXT),
+	sprintf((char*)g_spareBuffer, "%s, %s: %s", getLangText(SAVED_SETTINGS_TEXT),
 			getLangText(ACTIVE_TIME_PERIOD_TEXT), activeTime);
-	MessageBox(getLangText(TIMER_MODE_TEXT), (char*)message, MB_OK);
+	MessageBox(getLangText(TIMER_MODE_TEXT), (char*)g_spareBuffer, MB_OK);
 
 	// Display MODE, HH:MM -> HH:MM
-	sprintf((char*)message, "%s, %s", getLangText(activeModeTextType), activeDates);
-	MessageBox(getLangText(TIMER_MODE_TEXT), (char*)message, MB_OK);
+	sprintf((char*)g_spareBuffer, "%s, %s", getLangText(activeModeTextType), activeDates);
+	MessageBox(getLangText(TIMER_MODE_TEXT), (char*)g_spareBuffer, MB_OK);
 }
 
 ///----------------------------------------------------------------------------
@@ -1178,40 +1169,88 @@ void DisplayTimerModeSettings(void)
 ///----------------------------------------------------------------------------
 void DisplayFlashUsageStats(void)
 {
-	char message[75];
-	char sizeUsedStr[30];
-	char sizeFreeStr[30];
+	char sizeUsedStr[40];
+	char sizeFreeStr[40];
+	char subString[50];
+	uint8 i = 0;
 
 	if (g_sdCardUsageStats.sizeUsed < 1000)
-		sprintf(&sizeUsedStr[0], "%s: %3.1fKB %d%%", getLangText(USED_TEXT),((float)g_sdCardUsageStats.sizeUsed / (float)1000), g_sdCardUsageStats.percentUsed);
+		sprintf(&sizeUsedStr[0], "%s: %.1fKB (%d%%)", getLangText(USED_TEXT), ((float)g_sdCardUsageStats.sizeUsed / (float)1000), g_sdCardUsageStats.percentUsed);
 	else if (g_sdCardUsageStats.sizeUsed < 1000000)
-		sprintf(&sizeUsedStr[0], "%s: %3luKB %d%%", getLangText(USED_TEXT),(g_sdCardUsageStats.sizeUsed / 1000), g_sdCardUsageStats.percentUsed);
+		sprintf(&sizeUsedStr[0], "%s: %luKB (%d%%)", getLangText(USED_TEXT), (g_sdCardUsageStats.sizeUsed / 1000), g_sdCardUsageStats.percentUsed);
 	else
-		sprintf(&sizeUsedStr[0], "%s: %4.0fMB %d%%", getLangText(USED_TEXT),((float)g_sdCardUsageStats.sizeUsed / (float)1000000), g_sdCardUsageStats.percentUsed);
+		sprintf(&sizeUsedStr[0], "%s: %.0fMB (%d%%)", getLangText(USED_TEXT), ((float)g_sdCardUsageStats.sizeUsed / (float)1000000), g_sdCardUsageStats.percentUsed);
 
 	if (g_sdCardUsageStats.sizeFree < 1000)
-		sprintf(&sizeFreeStr[0], "%s: %3.1fKB %d%%", getLangText(FREE_TEXT),((float)g_sdCardUsageStats.sizeFree / (float)1000), g_sdCardUsageStats.percentFree);
+		sprintf(&sizeFreeStr[0], "%s: %.1fKB (%d%%)", getLangText(FREE_TEXT), ((float)g_sdCardUsageStats.sizeFree / (float)1000), g_sdCardUsageStats.percentFree);
 	else if (g_sdCardUsageStats.sizeFree < 1000000)
-		sprintf(&sizeFreeStr[0], "%s: %3luKB %d%%", getLangText(FREE_TEXT),(g_sdCardUsageStats.sizeFree / 1000), g_sdCardUsageStats.percentFree);
+		sprintf(&sizeFreeStr[0], "%s: %luKB (%d%%)", getLangText(FREE_TEXT), (g_sdCardUsageStats.sizeFree / 1000), g_sdCardUsageStats.percentFree);
 	else
-		sprintf(&sizeFreeStr[0], "%s: %4.0fMB %d%%", getLangText(FREE_TEXT),((float)g_sdCardUsageStats.sizeFree / (float)1000000), g_sdCardUsageStats.percentFree);
-
-	sprintf(&message[0], "%s       %s %s %s: %s", getLangText(EVENT_DATA_TEXT),sizeUsedStr, sizeFreeStr, getLangText(WRAPPED_TEXT),(g_unitConfig.flashWrapping == YES) ? "YES" : "NO");
-
-	MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
+		sprintf(&sizeFreeStr[0], "%s: %.0fMB (%d%%)", getLangText(FREE_TEXT), ((float)g_sdCardUsageStats.sizeFree / (float)1000000), g_sdCardUsageStats.percentFree);
 
 	if (g_unitConfig.flashWrapping == NO)
 	{
-		if ((g_sdCardUsageStats.waveEventsLeft < 1000) && (g_sdCardUsageStats.barHoursLeft < 1000)) { sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(SPACE_REMAINING_TEXT),getLangText(WAVEFORMS_TEXT), g_sdCardUsageStats.waveEventsLeft, getLangText(BAR_HOURS_TEXT), g_sdCardUsageStats.barHoursLeft); }
-		else { sprintf(&message[0], "%s %s: %dK, %s: ~%dK", getLangText(SPACE_REMAINING_TEXT), getLangText(WAVEFORMS_TEXT), (uint16)(g_sdCardUsageStats.waveEventsLeft / 1000), getLangText(BAR_HOURS_TEXT), (uint16)(g_sdCardUsageStats.barHoursLeft / 1000)); }
+		sprintf((char*)g_spareBuffer, "%s %s", getLangText(EVENT_DATA_TEXT), sizeUsedStr);
+		MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+
+		sprintf((char*)g_spareBuffer, "%s %s", getLangText(EVENT_DATA_TEXT), sizeFreeStr);
+		MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+	}
+	else
+	{
+		sprintf((char*)g_spareBuffer, "%s (%s: %s) %s", getLangText(EVENT_DATA_TEXT), getLangText(WRAPPED_TEXT), ((g_unitConfig.flashWrapping == YES) ? "YES" : "NO"), sizeUsedStr);
+		MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+
+		sprintf((char*)g_spareBuffer, "%s (%s: %s) %s", getLangText(EVENT_DATA_TEXT), getLangText(WRAPPED_TEXT), ((g_unitConfig.flashWrapping == YES) ? "YES" : "NO"), sizeFreeStr);
+		MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+	}
+
+	sprintf(subString, "%s", getLangText(SPACE_REMAINING_TEXT));
+	while ((subString[i] != '\0') && (i < 50))
+	{
+		if (subString[i] == '(') { subString[i] = '\0'; }
+
+		i++;
+	}
+
+	if (g_unitConfig.flashWrapping == NO)
+	{
+		if ((g_sdCardUsageStats.waveEventsLeft < 1000) && (g_sdCardUsageStats.barHoursLeft < 1000))
+		{
+			sprintf((char*)g_spareBuffer, "%s %s: %d", subString, getLangText(WAVEFORMS_TEXT), g_sdCardUsageStats.waveEventsLeft);
+			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+
+			sprintf((char*)g_spareBuffer, "%s %s: ~%d", subString, getLangText(BAR_HOURS_TEXT), g_sdCardUsageStats.barHoursLeft);
+			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+		}
+		else
+		{
+			sprintf((char*)g_spareBuffer, "%s %s: %dK", subString, getLangText(WAVEFORMS_TEXT), (g_sdCardUsageStats.waveEventsLeft / 1000));
+			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+
+			sprintf((char*)g_spareBuffer, "%s %s: ~%dK", subString, getLangText(BAR_HOURS_TEXT), (g_sdCardUsageStats.barHoursLeft / 1000));
+			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+		}
 	}
 	else // Wrapping is on
 	{
-		if ((g_sdCardUsageStats.waveEventsLeft < 1000) && (g_sdCardUsageStats.barHoursLeft < 1000)) { sprintf(&message[0], "%s %s: %d, %s: ~%d", getLangText(BEFORE_OVERWRITE_TEXT),getLangText(WAVEFORMS_TEXT), g_sdCardUsageStats.waveEventsLeft, getLangText(BAR_HOURS_TEXT), g_sdCardUsageStats.barHoursLeft); }
-		else { sprintf(&message[0], "%s %s: %dK, %s: ~%dK", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(WAVEFORMS_TEXT), (uint16)(g_sdCardUsageStats.waveEventsLeft / 1000), getLangText(BAR_HOURS_TEXT), (uint16)(g_sdCardUsageStats.barHoursLeft / 1000)); }
-	}
+		if ((g_sdCardUsageStats.waveEventsLeft < 1000) && (g_sdCardUsageStats.barHoursLeft < 1000))
+		{
+			sprintf((char*)g_spareBuffer, "%s %s: %d", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(WAVEFORMS_TEXT), g_sdCardUsageStats.waveEventsLeft);
+			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
 
-	MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)message, MB_OK);
+			sprintf((char*)g_spareBuffer, "%s %s: ~%d", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(BAR_HOURS_TEXT), g_sdCardUsageStats.barHoursLeft);
+			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+		}
+		else
+		{
+			sprintf((char*)g_spareBuffer, "%s %s: %dK", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(WAVEFORMS_TEXT), (g_sdCardUsageStats.waveEventsLeft / 1000));
+			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+
+			sprintf((char*)g_spareBuffer, "%s %s: ~%dK", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(BAR_HOURS_TEXT), (g_sdCardUsageStats.barHoursLeft / 1000));
+			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+		}
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -1219,8 +1258,7 @@ void DisplayFlashUsageStats(void)
 ///----------------------------------------------------------------------------
 void DisplayAutoDialInfo(void)
 {
-	char message[75];
-	char dateStr[35];
+	char dateStr[40];
 
 	if (__autoDialoutTbl.lastConnectTime.valid == NO)
 	{
@@ -1237,8 +1275,8 @@ void DisplayAutoDialInfo(void)
 				__autoDialoutTbl.lastConnectTime.sec);
 	}
 
-	sprintf(&message[0], "%s: %d, %s: %d, %s: %s", getLangText(LAST_DIAL_EVENT_TEXT),__autoDialoutTbl.lastDownloadedEvent,
-			getLangText(LAST_RECEIVED_TEXT), GetLastStoredEventNumber(), getLangText(LAST_CONNECTED_TEXT),dateStr);
+	sprintf((char*)g_spareBuffer, "%s: %d, %s: %d, %s: %s", getLangText(LAST_DIAL_EVENT_TEXT),__autoDialoutTbl.lastDownloadedEvent,
+			getLangText(LAST_RECEIVED_TEXT), GetLastStoredEventNumber(), getLangText(LAST_CONNECTED_TEXT), dateStr);
 
-	MessageBox(getLangText(AUTO_DIALOUT_INFO_TEXT), (char*)message, MB_OK);
+	MessageBox(getLangText(AUTO_DIALOUT_INFO_TEXT), (char*)g_spareBuffer, MB_OK);
 }

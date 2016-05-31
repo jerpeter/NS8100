@@ -178,117 +178,136 @@ void MonitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 ///----------------------------------------------------------------------------
 void MonitorLogMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
-	uint8 buff[25];
 	uint8 length;
 
 	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Add in a title for the menu
-	memset(&buff[0], 0, sizeof(buff));
-	length = (uint8)sprintf((char*)buff, "-%s-", getLangText(VIEW_MONITOR_LOG_TEXT));
+	length = (uint8)sprintf((char*)g_spareBuffer, "-%s-", getLangText(VIEW_MONITOR_LOG_TEXT));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-	WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+	WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	if (s_MonitorMenuCurrentLogIndex != -1)
 	{
 		if (__monitorLogTbl[s_MonitorMenuCurrentLogIndex].status != EMPTY_LOG_ENTRY)
 		{
 			// Display Mode text
-			memset(&buff[0], 0, sizeof(buff));
 			switch(__monitorLogTbl[s_MonitorMenuCurrentLogIndex].mode)
 			{
-				case WAVEFORM_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(WAVEFORM_MODE_TEXT)); break;
-				case BARGRAPH_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(BARGRAPH_MODE_TEXT)); break;
-				case MANUAL_CAL_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(CALIBRATION_TEXT)); break;
-				case COMBO_MODE: length = (uint8)sprintf((char*)(&buff[0]), "%s", getLangText(COMBO_MODE_TEXT)); break;
+				case WAVEFORM_MODE: length = (uint8)sprintf((char*)g_spareBuffer, "%s", getLangText(WAVEFORM_MODE_TEXT)); break;
+				case BARGRAPH_MODE: length = (uint8)sprintf((char*)g_spareBuffer, "%s", getLangText(BARGRAPH_MODE_TEXT)); break;
+				case MANUAL_CAL_MODE: length = (uint8)sprintf((char*)g_spareBuffer, "%s", getLangText(CALIBRATION_TEXT)); break;
+				case COMBO_MODE: length = (uint8)sprintf((char*)g_spareBuffer, "%s", getLangText(COMBO_MODE_TEXT)); break;
 			}
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 			// Display Start Time text
-			memset(&buff[0], 0, sizeof(buff));
-			ConvertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[s_MonitorMenuCurrentLogIndex].startTime, REC_DATE_TIME_TYPE);
-			length = (uint8)strlen((char*)(&buff[0]));
+			ConvertTimeStampToString((char*)g_spareBuffer, &__monitorLogTbl[s_MonitorMenuCurrentLogIndex].startTime, REC_DATE_TIME_TYPE);
+			length = (uint8)strlen((char*)g_spareBuffer);
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_THREE;
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 			// Display Stop Time text
-			memset(&buff[0], 0, sizeof(buff));
-			ConvertTimeStampToString((char*)(&buff[0]), &__monitorLogTbl[s_MonitorMenuCurrentLogIndex].stopTime, REC_DATE_TIME_TYPE);
-			length = (uint8)strlen((char*)(&buff[0]));
+			ConvertTimeStampToString((char*)g_spareBuffer, &__monitorLogTbl[s_MonitorMenuCurrentLogIndex].stopTime, REC_DATE_TIME_TYPE);
+			length = (uint8)strlen((char*)g_spareBuffer);
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 			// Display Number of Events recorded text
 			if (__monitorLogTbl[s_MonitorMenuCurrentLogIndex].eventsRecorded == 0)
 			{
-				length = (uint8)sprintf((char*)(&buff[0]), "%s %s", getLangText(NO_TEXT), getLangText(EVENTS_RECORDED_TEXT));
+				length = (uint8)sprintf((char*)g_spareBuffer, "%s %s", getLangText(NO_TEXT), getLangText(EVENTS_RECORDED_TEXT));
 
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
-				wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-			}
-			else
-			{
-				length = (uint8)sprintf((char*)(&buff[0]), "%s: %d", getLangText(EVENTS_RECORDED_TEXT), __monitorLogTbl[s_MonitorMenuCurrentLogIndex].eventsRecorded);
 
-				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
-				wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
-
-				if (__monitorLogTbl[s_MonitorMenuCurrentLogIndex].eventsRecorded == 1)
+				if (length > 21)
 				{
-					length = (uint8)sprintf((char*)(&buff[0]), "%s: %d", getLangText(EVENT_NUMBER_TEXT), __monitorLogTbl[s_MonitorMenuCurrentLogIndex].startEventNumber);
+					wnd_layout_ptr->curr_col = 1;
+					WndMpWrtString(&g_spareBuffer[(length - 21)], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 				}
 				else
 				{
-					length = (uint8)sprintf((char*)(&buff[0]), "%s: %d-%d", getLangText(EVENT_NUMBER_TEXT), __monitorLogTbl[s_MonitorMenuCurrentLogIndex].startEventNumber,
+					wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+					WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+				}
+			}
+			else
+			{
+				length = (uint8)sprintf((char*)g_spareBuffer, "%s: %d", getLangText(EVENTS_RECORDED_TEXT), __monitorLogTbl[s_MonitorMenuCurrentLogIndex].eventsRecorded);
+
+				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
+
+				if (length > 21)
+				{
+					wnd_layout_ptr->curr_col = 1;
+					WndMpWrtString(&g_spareBuffer[(length - 21)], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+				}
+				else
+				{
+					wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+					WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+				}
+
+				if (__monitorLogTbl[s_MonitorMenuCurrentLogIndex].eventsRecorded == 1)
+				{
+					length = (uint8)sprintf((char*)g_spareBuffer, "%s: %d", getLangText(EVENT_NUMBER_TEXT), __monitorLogTbl[s_MonitorMenuCurrentLogIndex].startEventNumber);
+				}
+				else
+				{
+					length = (uint8)sprintf((char*)g_spareBuffer, "%s: %d-%d", getLangText(EVENT_NUMBER_TEXT), __monitorLogTbl[s_MonitorMenuCurrentLogIndex].startEventNumber,
 											(__monitorLogTbl[s_MonitorMenuCurrentLogIndex].startEventNumber + __monitorLogTbl[s_MonitorMenuCurrentLogIndex].eventsRecorded - 1));
 				}
 
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
-				wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+
+				if (length > 21)
+				{
+					wnd_layout_ptr->curr_col = 1;
+					WndMpWrtString(&g_spareBuffer[(length - 21)], wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+				}
+				else
+				{
+					wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
+					WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+				}
 			}
 		}
 
 		if (s_MonitorMenuCurrentLogIndex == s_MonitorMenuStartLogIndex)
 		{
 			// Display Start of Log
-			memset(&buff[0], 0, sizeof(buff));
-			length = (uint8)sprintf((char*)buff, "<%s>", getLangText(START_OF_LOG_TEXT));
+			length = (uint8)sprintf((char*)g_spareBuffer, "<%s>", getLangText(START_OF_LOG_TEXT));
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
 		else if (s_MonitorMenuCurrentLogIndex == s_MonitorMenuLastLogIndex)
 		{
 			// Display End of Log
-			memset(&buff[0], 0, sizeof(buff));
-			length = (uint8)sprintf((char*)buff, "<%s>", getLangText(END_OF_LOG_TEXT));
+			length = (uint8)sprintf((char*)g_spareBuffer, "<%s>", getLangText(END_OF_LOG_TEXT));
 
 			wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
 			wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-			WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+			WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		}
 	}
 	else
 	{
 		// Display Mode text
-		memset(&buff[0], 0, sizeof(buff));
-		length = (uint8)sprintf((char*)(&buff[0]), "<%s>", getLangText(EMPTY_TEXT));
+		length = (uint8)sprintf((char*)g_spareBuffer, "<%s>", getLangText(EMPTY_TEXT));
 
 		wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
 		wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
-		WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
+		WndMpWrtString(g_spareBuffer, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 	}
 }
