@@ -14,7 +14,6 @@
 #include "Menu.h"
 #include "InitDataBuffers.h"
 #include "ProcessBargraph.h"
-#include "ProcessCombo.h"
 #include "SysEvents.h"
 #include "Uart.h"
 #include "Keypad.h"
@@ -1005,7 +1004,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline void moveWaveformData_ISR_Inline(void)
 {
-	// Copy sample over to bargraph buffer
+	// Copy sample over to buffer
 	*(SAMPLE_DATA_STRUCT*) = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 
 	// Increment the write pointer
