@@ -31,6 +31,8 @@
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
+DATE_TIME_STRUCT s_time = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+DATE_TIME_STRUCT s_currentTime = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -202,24 +204,23 @@ uint8 SetExternalRtcDate(DATE_TIME_STRUCT* time)
 ///----------------------------------------------------------------------------
 DATE_TIME_STRUCT GetExternalRtcTime(void)
 {
-	DATE_TIME_STRUCT time;
 	RTC_DATE_TIME_STRUCT translateTime;
 
 	ExternalRtcRead(RTC_SECONDS_ADDR_TEMP, 7, (uint8*)&translateTime);
 
 	// Get time and date registers (24 Hour settings), BCD format
-	time.year = BCD_CONVERT_TO_UINT8(translateTime.years, RTC_BCD_YEARS_MASK);
-	time.month = BCD_CONVERT_TO_UINT8(translateTime.months, RTC_BCD_MONTHS_MASK);
-	time.day = BCD_CONVERT_TO_UINT8(translateTime.days, RTC_BCD_DAYS_MASK);
-	time.weekday = BCD_CONVERT_TO_UINT8(translateTime.weekdays, RTC_BCD_WEEKDAY_MASK);
+	s_time.year = BCD_CONVERT_TO_UINT8(translateTime.years, RTC_BCD_YEARS_MASK);
+	s_time.month = BCD_CONVERT_TO_UINT8(translateTime.months, RTC_BCD_MONTHS_MASK);
+	s_time.day = BCD_CONVERT_TO_UINT8(translateTime.days, RTC_BCD_DAYS_MASK);
+	s_time.weekday = BCD_CONVERT_TO_UINT8(translateTime.weekdays, RTC_BCD_WEEKDAY_MASK);
 
-	time.hour = BCD_CONVERT_TO_UINT8(translateTime.hours, RTC_BCD_HOURS_MASK);
-	time.min = BCD_CONVERT_TO_UINT8(translateTime.minutes, RTC_BCD_MINUTES_MASK);
-	time.sec = BCD_CONVERT_TO_UINT8(translateTime.seconds, RTC_BCD_SECONDS_MASK);
+	s_time.hour = BCD_CONVERT_TO_UINT8(translateTime.hours, RTC_BCD_HOURS_MASK);
+	s_time.min = BCD_CONVERT_TO_UINT8(translateTime.minutes, RTC_BCD_MINUTES_MASK);
+	s_time.sec = BCD_CONVERT_TO_UINT8(translateTime.seconds, RTC_BCD_SECONDS_MASK);
 
 	//debug("Ext RTC: Get Time: %02d:%02d:%02d (%d), %02d-%02d-%02d\n\r\n", time.hour, time.min, time.sec, time.weekday, time.month, time.day, time.year);
 
-	return (time);
+	return (s_time);
 }
 
 ///----------------------------------------------------------------------------
@@ -245,10 +246,11 @@ uint8 UpdateCurrentTime(void)
 ///----------------------------------------------------------------------------
 DATE_TIME_STRUCT GetCurrentTime(void)
 {
-	DATE_TIME_STRUCT currentTime = g_lastReadExternalRtcTime;
 	uint32 accumulatedSeconds = (g_rtcTickCountSinceLastExternalUpdate / 2);
 	struct tm convertTime;
 	time_t epochTime;
+
+	s_currentTime = g_lastReadExternalRtcTime;
 
 	if (accumulatedSeconds)
 	{
@@ -265,16 +267,39 @@ DATE_TIME_STRUCT GetCurrentTime(void)
 
 		convertTime = *localtime(&epochTime);
 
-		currentTime.year = (convertTime.tm_year - 100);
-		currentTime.month = (convertTime.tm_mon + 1);
-		currentTime.day = convertTime.tm_mday;
-		currentTime.hour = convertTime.tm_hour;
-		currentTime.min = convertTime.tm_min;
-		currentTime.sec = convertTime.tm_sec;
-		currentTime.weekday = GetDayOfWeek(currentTime.year, currentTime.month, currentTime.day);
+		s_currentTime.year = (convertTime.tm_year - 100);
+		s_currentTime.month = (convertTime.tm_mon + 1);
+		s_currentTime.day = convertTime.tm_mday;
+		s_currentTime.hour = convertTime.tm_hour;
+		s_currentTime.min = convertTime.tm_min;
+		s_currentTime.sec = convertTime.tm_sec;
+		s_currentTime.weekday = GetDayOfWeek(s_currentTime.year, s_currentTime.month, s_currentTime.day);
 	}
 
-	return (currentTime);
+	return (s_currentTime);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint32 GetCurrentEpochTime(void)
+{
+	uint32 accumulatedSeconds = (g_rtcTickCountSinceLastExternalUpdate / 2);
+	struct tm convertTime;
+	time_t epochTime;
+
+	convertTime.tm_year = (g_lastReadExternalRtcTime.year + 100); // From 1900;
+	convertTime.tm_mon = (g_lastReadExternalRtcTime.month - 1); // Month, 0 - jan
+	convertTime.tm_mday = g_lastReadExternalRtcTime.day; // Day of the month
+	convertTime.tm_hour = g_lastReadExternalRtcTime.hour;
+	convertTime.tm_min = g_lastReadExternalRtcTime.min;
+	convertTime.tm_sec = g_lastReadExternalRtcTime.sec;
+	convertTime.tm_isdst = -1; // Is DST on? 1 = yes, 0 = no, -1 = unknown
+	epochTime = mktime(&convertTime);
+
+	epochTime += accumulatedSeconds;
+
+	return (epochTime);
 }
 
 ///----------------------------------------------------------------------------

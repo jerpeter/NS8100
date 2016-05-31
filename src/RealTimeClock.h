@@ -708,6 +708,7 @@ uint8 SetExternalRtcDate(DATE_TIME_STRUCT* time);
 DATE_TIME_STRUCT GetExternalRtcTime(void);
 uint8 UpdateCurrentTime(void);
 DATE_TIME_STRUCT GetCurrentTime(void);
+uint32 GetCurrentEpochTime(void);
 void DisableExternalRtcAlarm(void);
 void EnableExternalRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second);
 void ConvertCurrentTimeForFat(uint8* fatTimeField);
