@@ -797,7 +797,9 @@ void InitInternalRTC(void)
 	rtc_init(&AVR32_RTC, 1, 0);
 
 	// Set top value to generate an interrupt every 1/2 second
-	rtc_set_top_value(&AVR32_RTC, 8192);
+	// Data sheet: When enabled, the RTC will increment until it reaches TOP, and then wrap to 0x0. The status bit TOPI in ISR is set when this occurs
+	// From 0x0 the counter will count TOP+1 cycles of the source clock before it wraps back to 0x0
+	rtc_set_top_value(&AVR32_RTC, 8191);
 
 	// Enable the Internal RTC
 	rtc_enable(&AVR32_RTC);
