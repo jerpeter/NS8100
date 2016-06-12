@@ -140,6 +140,9 @@
     //! USB host pipes transfers use USB communication interrupt (allows to use non-blocking functions)
 #define USB_HOST_PIPE_INTERRUPT_TRANSFER  DISABLE
 
+    //! Shutdown USB upon ID pin change
+#define ID_PIN_CHANGE_SHUTDOWN_USB   ENABLE
+
     //! Force CPU reset upon ID pin change
 #define ID_PIN_CHANGE_GENERATE_RESET   DISABLE // was ENABLE
 

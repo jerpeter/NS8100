@@ -457,21 +457,26 @@ static void usb_general_interrupt(void)
 	  Usb_send_event((Is_usb_device()) ? EVT_USB_DEVICE_FUNCTION :
                                          EVT_USB_HOST_FUNCTION);
       Usb_id_transition_action();
-      //! @todo ID pin hot state change!!!
-      // Preliminary management: HARDWARE RESET!!!
-  #if ID_PIN_CHANGE_GENERATE_RESET == ENABLE
-      // Hot ID transition generates CPU reset
+
+	  // Easier to recover from ID signal de-bounce and ID pin transitions by shutting down the USB and resetting state machine to re-init
+#if ID_PIN_CHANGE_SHUTDOWN_USB == ENABLE
       Usb_disable();
       Usb_disable_otg_pad();
+
+extern void UsbResetStateMachine(void);
+	  UsbResetStateMachine();
+
     #ifdef FREERTOS_USED
       // Release the semaphore in order to start a new device/host task
       taskENTER_CRITICAL();
       xSemaphoreGiveFromISR(usb_tsk_semphr, &task_woken);
       taskEXIT_CRITICAL();
-    #else
-//      Reset_CPU();
-    #endif
-  #endif
+	#endif
+#endif
+
+#if ID_PIN_CHANGE_GENERATE_RESET == ENABLE
+      Reset_CPU();
+#endif
     }
   }
 #endif  // End DEVICE/HOST FEATURE MODE

@@ -533,6 +533,32 @@ void init_hmatrix(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void UsbResetStateMachine(void)
+{
+	g_usbMassStorageState = USB_INIT_DRIVER;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+BOOL CheckUSBInOTGHostWaitingForDevice(void)
+{
+	// Check if USB state allows for sleep
+	if (ms_usb_prevent_sleep == NO)
+	{
+		// Check if USB is in OTG Host mode but no active device is connected (otherwise ms_usb_prevent_sleep would be yes)
+		if (!Is_usb_id_device())
+		{
+			return (YES);
+		}
+	}
+
+	return (NO);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 extern uint8 g_sampleProcessing;
 extern volatile U8 device_state;
 extern Bool wrong_class_connected;
@@ -547,6 +573,9 @@ void UsbDeviceManager(void)
 	uint16 totalEventsCopied;
 	uint16 totalEventsSkipped;
 
+	//___________________________________________________________________________________________
+	//
+	// USB Driver Init
 	//___________________________________________________________________________________________
 	if (g_usbMassStorageState == USB_INIT_DRIVER)
 	{
@@ -595,13 +624,36 @@ void UsbDeviceManager(void)
 		}
 
 		g_usbMassStorageState = USB_READY;
-		debug("USB State changed to: Ready\r\n");
+		ms_usb_prevent_sleep = NO;
+		debug("USB State changed to: Ready (Post init)\r\n");
+
+		//___________________________________________________________________________________________
+		//
+		// (On Re-Init) Check if USB was in OTG Host mode and cable + USB Thumb drive were removed at the same time (now in Device mode)
+		//___________________________________________________________________________________________
+		if (g_usbThumbDriveWasConnected == YES)
+		{
+			g_usbThumbDriveWasConnected = FALSE;
+			ms_process_first_connect_disconnect = FALSE;
+
+			sprintf((char*)g_spareBuffer, "%s %s", getLangText(USB_THUMB_DRIVE_TEXT), getLangText(DISCONNECTED_TEXT));
+			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
+
+			// Recall the current active menu to repaint the display
+			mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+			JUMP_TO_ACTIVE_MENU();
+		}
 	}
+	//___________________________________________________________________________________________
+	//
+	// USB Ready or USB Connected and actively Processing
 	//___________________________________________________________________________________________
 	else if ((g_usbMassStorageState == USB_READY) || (g_usbMassStorageState == USB_CONNECTED_AND_PROCESSING))
 	{
 		//___________________________________________________________________________________________
-		// Check if processing is needed elsewhere
+		//
+		// Check if processing is needed elsewhere (requiring USB to be disabled)
+		//___________________________________________________________________________________________
 		if ((g_sampleProcessing == ACTIVE_STATE) || (getSystemEventState(TRIGGER_EVENT)) || (g_activeMenu == CAL_SETUP_MENU) || (g_activeMenu == MONITOR_MENU))
 		{
 			// Need to disable USB for other processing
@@ -614,8 +666,9 @@ void UsbDeviceManager(void)
 			debug("USB State changed to: Disabled for other processing\r\n");
 		}
 		//___________________________________________________________________________________________
-		// Ready to process USB in either Device or OTG Host mode
-		else
+		//
+		else // Ready to process USB in either Device or OTG Host mode
+		//___________________________________________________________________________________________
 		{
 			usb_task();
 			device_mass_storage_task();
@@ -623,23 +676,35 @@ void UsbDeviceManager(void)
 			ushell_task();
 
 			//___________________________________________________________________________________________
-			// Check if USB is in Device mode
+			//
+			// Check if USB is in Device mode (Ready to connect to a PC)
+			//___________________________________________________________________________________________
 			if (Is_usb_id_device())
 			{
+				//___________________________________________________________________________________________
+				//
 				// Check if VBUS is high meaning a remote PC is powering
+				//___________________________________________________________________________________________
 				if (Is_usb_vbus_high())
 				{
 					if (g_usbMassStorageState == USB_READY)
 					{
 						g_usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
 						ms_usb_prevent_sleep = YES;
-						debug("USB State changed to: Connected and processing\r\n");
+						debug("USB State changed to: Connected and processing (Device)\r\n");
 					}
+					// else run as device in USB_CONNECTED_AND_PROCESSING state
 				}
-				// Check if state was connected and VBUS power has been removed
+				//___________________________________________________________________________________________
+				//
+				// Check if state was connected and VBUS power is not present or been removed
+				//___________________________________________________________________________________________
 				else if (g_usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
 				{
+					//___________________________________________________________________________________________
+					//
 					// Check if USB was in OTG Host mode and cable + USB Thumb drive were removed at the same time (now in Device mode)
+					//___________________________________________________________________________________________
 					if (g_usbThumbDriveWasConnected == YES)
 					{
 						g_usbThumbDriveWasConnected = FALSE;
@@ -659,9 +724,9 @@ void UsbDeviceManager(void)
 						OverlayMessage(getLangText(STATUS_TEXT), getLangText(USB_DEVICE_CABLE_WAS_REMOVED_TEXT), (2 * SOFT_SECS));
 					}
 #endif
-					g_usbMassStorageState = USB_READY;
+					g_usbMassStorageState = USB_INIT_DRIVER;
 					ms_usb_prevent_sleep = NO;
-					debug("USB State changed to: Ready\r\n");
+					debug("USB State changed to: Ready (After USB device cable or thumb drive removed)\r\n");
 				}
 #if 0 // Not working properly
 				else if (promptForUsbOtgHostCableRemoval == YES)
@@ -674,10 +739,14 @@ void UsbDeviceManager(void)
 #endif
 			}
 			//___________________________________________________________________________________________
-			else // USB is in OTG Host mode
+			//
+			else // USB is in OTG Host mode (Ready for USB Thumb drive)
+			//___________________________________________________________________________________________
 			{
 				//___________________________________________________________________________________________
+				//
 				// Check if the wrong class was connected
+				//___________________________________________________________________________________________
 				if (wrong_class_connected == TRUE) //|| (ms_device_not_supported == TRUE))
 				{
 					Usb_disable();
@@ -697,18 +766,20 @@ void UsbDeviceManager(void)
 					host_mass_storage_task_init();
 					ushell_task_init(FOSC0);
 
-					g_usbMassStorageState = USB_READY;
+					g_usbMassStorageState = USB_INIT_DRIVER;
 					ms_usb_prevent_sleep = NO;
-					debug("USB State changed to: Ready\r\n");
+					debug("USB State changed to: Ready (USB re-enable after wrong class connected)\r\n");
 				}
 				//___________________________________________________________________________________________
+				//
 				// Check if USB Thumb drive has just been connected
+				//___________________________________________________________________________________________
 				else if ((ms_connected == TRUE) && (ms_process_first_connect_disconnect == TRUE))
 				{
 					// USB is active
 					g_usbMassStorageState = USB_CONNECTED_AND_PROCESSING;
 					ms_usb_prevent_sleep = YES;
-					debug("USB State changed to: Connected and processing\r\n");
+					debug("USB State changed to: Connected and processing (Host)\r\n");
 
 					// Don't process this connection again until it's disconnected
 					ms_process_first_connect_disconnect = FALSE;
@@ -738,7 +809,10 @@ void UsbDeviceManager(void)
 					sprintf((char*)g_spareBuffer, "%s %s", getLangText(USB_THUMB_DRIVE_TEXT), getLangText(DISCOVERED_TEXT));
 					OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 
+					//___________________________________________________________________________________________
+					//
 					// Check if the user wants to sync the unit events to the USB Thumb drive
+					//___________________________________________________________________________________________
 					if (MessageBox(getLangText(USB_DOWNLOAD_TEXT), getLangText(SYNC_EVENTS_TO_USB_THUMB_DRIVE_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 					{
 						OverlayMessage(getLangText(STATUS_TEXT), getLangText(SYNC_IN_PROGRESS_TEXT), 0);
@@ -754,12 +828,18 @@ void UsbDeviceManager(void)
 							MessageBox(getLangText(USB_DOWNLOAD_TEXT), getLangText(SYNC_ENCOUNTERED_AN_ERROR_TEXT), MB_OK);
 						}
 					}
+					//___________________________________________________________________________________________
+					//
 					else // User does not want to sync events
+					//___________________________________________________________________________________________
 					{
 
 					}
 
+					//___________________________________________________________________________________________
+					//
 					// Check if there is no active external charging
+					//___________________________________________________________________________________________
 					if (GetExternalVoltageLevelAveraged(EXT_CHARGE_VOLTAGE) < EXTERNAL_VOLTAGE_PRESENT)
 					{
 						// Check if a device is still connected
@@ -774,7 +854,9 @@ void UsbDeviceManager(void)
 					JUMP_TO_ACTIVE_MENU();
 				}
 				//___________________________________________________________________________________________
+				//
 				// Check if USB Thumb drive has just been removed
+				//___________________________________________________________________________________________
 				else if ((ms_connected == FALSE) && (ms_process_first_connect_disconnect == TRUE))
 				{
 					if (g_usbThumbDriveWasConnected == YES)
@@ -792,15 +874,18 @@ void UsbDeviceManager(void)
 					// Don't process this disconnection again until it's connected
 					ms_process_first_connect_disconnect = FALSE;
 
-					// USB is ready for a device to be connected
-					g_usbMassStorageState = USB_READY;
+					// USB needs to be reset
+					g_usbMassStorageState = USB_INIT_DRIVER;
 					ms_usb_prevent_sleep = NO;
 					//promptForUsbOtgHostCableRemoval = YES;
-					debug("USB State changed to: Ready\r\n");
+					debug("USB State changed to: Ready (After USB thumb drive removed)\r\n");
 				}
 			}
 		}
 	}
+	//___________________________________________________________________________________________
+	//
+	// USB Disabled for other processing
 	//___________________________________________________________________________________________
 	else if (g_usbMassStorageState == USB_DISABLED_FOR_OTHER_PROCESSING)
 	{
@@ -816,7 +901,7 @@ void UsbDeviceManager(void)
 
 			g_usbMassStorageState = USB_READY;
 			ms_usb_prevent_sleep = NO;
-			debug("USB State changed to: Ready\r\n");
+			debug("USB State changed to: Ready (After Usb was disabled for other processing)\r\n");
 		}
 	}
 
@@ -1298,6 +1383,13 @@ void PowerManager(void)
 		// Check if not already set for Idle sleep and not max power savings and a remote/craft is connected (DSR and DCD)
 		if ((sleepStateNeeded != AVR32_PM_SMODE_IDLE) && ((READ_DSR == MODEM_CONNECTED) && (READ_DCD == CONNECTION_ESTABLISHED)))
 		{
+			sleepStateNeeded = AVR32_PM_SMODE_FROZEN;
+		}
+
+		// Check if USB is in OTG Host mode but no active device is connected (requiring sleep level be no deeper than Frozen)
+		if (CheckUSBInOTGHostWaitingForDevice() == YES)
+		{
+			// Set to frozen to allow USB OTG Host processing to recognize a device
 			sleepStateNeeded = AVR32_PM_SMODE_FROZEN;
 		}
 
