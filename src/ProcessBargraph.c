@@ -60,6 +60,7 @@ void StartNewBargraph(void)
 	g_barSampleCount = 0;
 	g_totalBarIntervalCnt = 0;
 	g_bargraphBarIntervalsCached = 0;
+	g_bargraphBarIntervalClock = 0;
 
 	// Update the current monitor log entry
 	UpdateMonitorLogEntry();
@@ -174,6 +175,9 @@ void CompleteSummaryInterval(void)
 	g_bargraphSummaryInterval.summariesCaptured = g_summaryCount;
 	g_bargraphSummaryInterval.intervalEnd_Time = GetCurrentTime();
 	g_bargraphSummaryInterval.batteryLevel = (uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
+	g_bargraphSummaryInterval.effectiveSampleRate = (uint16)(g_barSampleCount / (g_bargraphSummaryInterval.barIntervalsCaptured * g_triggerRecord.bgrec.barInterval));
+	g_barSampleCount = 0;
+
 	g_bargraphSummaryInterval.calcStructEndFlag = 0xEECCCCEE;	// End structure flag
 }
 
@@ -265,523 +269,19 @@ uint8 CalculateBargraphData(void)
 		// Wrap the data read pointer if at or beyond the end of the buffer
 		if (g_bargraphDataReadPtr >= g_bargraphDataEndPtr) g_bargraphDataReadPtr = g_bargraphDataStartPtr;
 
-		// Adjust for the correct bit accuracy
-		currentDataSample.a >>= g_bitShiftForAccuracy;
-		currentDataSample.r >>= g_bitShiftForAccuracy;
-		currentDataSample.v >>= g_bitShiftForAccuracy;
-		currentDataSample.t >>= g_bitShiftForAccuracy;
+		//________________________________________________________________________________________________
+		//
+		// Bargraph Bar Interval clocking changed to be time synced (instead of sample count synced)
+		//________________________________________________________________________________________________
 
-		// Normalize the raw data without the message bits
-		aTempNorm = FixDataToZero(currentDataSample.a);
-		rTempNorm = FixDataToZero(currentDataSample.r);
-		vTempNorm = FixDataToZero(currentDataSample.v);
-		tTempNorm = FixDataToZero(currentDataSample.t);
-
-		// Find the vector sum of the current sample
-		vsTemp =((uint32)rTempNorm * (uint32)rTempNorm) +
-				((uint32)vTempNorm * (uint32)vTempNorm) +
-				((uint32)tTempNorm * (uint32)tTempNorm);
-
-		//=================================================
-		// Impulse Interval
-		//=================================================
-		if (g_impulseMenuCount >= g_triggerRecord.berec.impulseMenuUpdateSecs)
+		// Check for end of Bar Interval key
+		if ((currentDataSample.a == BAR_INTERVAL_END_KEY) && (currentDataSample.r == BAR_INTERVAL_END_KEY) &&
+			(currentDataSample.v == BAR_INTERVAL_END_KEY) && (currentDataSample.t == BAR_INTERVAL_END_KEY))
 		{
-			g_impulseMenuCount = 0;
-			g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
-			g_vsImpulsePeak = 0;
-		}
-
-		// ---------------------------------
-		// A, R, V, T channel and Vector Sum
-		// ---------------------------------
-		// Store the max A, R, V or T normalized value if a new max was found
-		if (aTempNorm > g_aImpulsePeak) g_aImpulsePeak = aTempNorm;
-		if (rTempNorm > g_rImpulsePeak) g_rImpulsePeak = rTempNorm;
-		if (vTempNorm > g_vImpulsePeak) g_vImpulsePeak = vTempNorm;
-		if (tTempNorm > g_tImpulsePeak) g_tImpulsePeak = tTempNorm;
-		if (vsTemp > g_vsImpulsePeak) g_vsImpulsePeak = vsTemp;
-
-		//=================================================
-		// Bar Interval
-		//=================================================
-		// ---------
-		// A channel
-		// ---------
-		// Store the max Air normalized value if a new max was found
-		if (aTempNorm > g_bargraphBarIntervalWritePtr->aMax)
-			g_bargraphBarIntervalWritePtr->aMax = aTempNorm;
-
-		// ---------------
-		// R, V, T channel
-		// ---------------
-		// Store the max R, V or T normalized value if a new max was found
-		if (rTempNorm > g_bargraphBarIntervalWritePtr->rvtMax)
-			g_bargraphBarIntervalWritePtr->rvtMax = rTempNorm;
-
-		if (vTempNorm > g_bargraphBarIntervalWritePtr->rvtMax)
-			g_bargraphBarIntervalWritePtr->rvtMax = vTempNorm;
-
-		if (tTempNorm > g_bargraphBarIntervalWritePtr->rvtMax)
-			g_bargraphBarIntervalWritePtr->rvtMax = tTempNorm;
-
-		// ----------
-		// Vector Sum
-		// ----------
-		// Store the max Vector Sum if a new max was found
-		if (vsTemp > g_bargraphBarIntervalWritePtr->vsMax)
-			g_bargraphBarIntervalWritePtr->vsMax = vsTemp;
-
-		//=================================================
-		// Summary Interval
-		//=================================================
-		// ---------
-		// A channel
-		// ---------
-		// Check if the current sample is equal or greater than the stored max
-		if (aTempNorm >= g_bargraphSummaryInterval.a.peak)
-		{
-			// Check if the current max matches exactly to the stored max
-			if (aTempNorm == g_bargraphSummaryInterval.a.peak)
-			{
-				// Sample matches current max, set match flag
-				g_bargraphFreqCalcBuffer.a.matchFlag = TRUE;
-				// Store timestamp in case this is the max (and count) we want to keep
-				aTempTime = GetCurrentTime();
-			}
-			else
-			{
-				// Copy over new max
-				g_bargraphSummaryInterval.a.peak = aTempNorm;
-				// Update timestamp
-				g_bargraphSummaryInterval.a_Time = GetCurrentTime();
-				// Reset match flag since a new peak was found
-				g_bargraphFreqCalcBuffer.a.matchFlag = FALSE;
-			}
-
-			if (aTempNorm >= g_aJobPeak)
-			{
-				if (aTempNorm == g_aJobPeak)
-					g_aJobPeakMatch = YES;
-				else
-				{
-					g_aJobPeak = aTempNorm;
-					g_aJobPeakMatch = NO;
-				}
-
-				g_aJobFreqFlag = YES;
-			}
-
-			// Set update flag since we have either a matched or a new max
-			g_bargraphFreqCalcBuffer.a.updateFlag = TRUE;
-		}
-
-		// ---------
-		// R channel
-		// ---------
-		// Check if the current sample is equal or greater than the stored max
-		if (rTempNorm >= g_bargraphSummaryInterval.r.peak)
-		{
-			// Check if the current max matches exactly to the stored max
-			if (rTempNorm == g_bargraphSummaryInterval.r.peak)
-			{
-				// Sample matches current max, set match flag
-				g_bargraphFreqCalcBuffer.r.matchFlag = TRUE;
-				// Store timestamp in case this is the max (and count) we want to keep
-				rTempTime = GetCurrentTime();
-			}
-			else
-			{
-				// Copy over new max
-				g_bargraphSummaryInterval.r.peak = rTempNorm;
-				// Update timestamp
-				g_bargraphSummaryInterval.r_Time = GetCurrentTime();
-				// Reset match flag since a new peak was found
-				g_bargraphFreqCalcBuffer.r.matchFlag = FALSE;
-			}
-
-			if (rTempNorm >= g_rJobPeak)
-			{
-				if (rTempNorm == g_rJobPeak)
-					g_rJobPeakMatch = YES;
-				else
-				{
-					g_rJobPeak = rTempNorm;
-					g_rJobPeakMatch = NO;
-				}
-
-				g_rJobFreqFlag = YES;
-			}
-
-			// Set update flag since we have either a matched or a new max
-			g_bargraphFreqCalcBuffer.r.updateFlag = TRUE;
-		}
-
-		// ---------
-		// V channel
-		// ---------
-		// Check if the current sample is equal or greater than the stored max
-		if (vTempNorm >= g_bargraphSummaryInterval.v.peak)
-		{
-			// Check if the current max matches exactly to the stored max
-			if (vTempNorm == g_bargraphSummaryInterval.v.peak)
-			{
-				// Sample matches current max, set match flag
-				g_bargraphFreqCalcBuffer.v.matchFlag = TRUE;
-				// Store timestamp in case this is the max (and count) we want to keep
-				vTempTime = GetCurrentTime();
-			}
-			else
-			{
-				// Copy over new max
-				g_bargraphSummaryInterval.v.peak = vTempNorm;
-				// Update timestamp
-				g_bargraphSummaryInterval.v_Time = GetCurrentTime();
-				// Reset match flag since a new peak was found
-				g_bargraphFreqCalcBuffer.v.matchFlag = FALSE;
-			}
-
-			if (vTempNorm >= g_vJobPeak)
-			{
-				if (vTempNorm == g_vJobPeak)
-					g_vJobPeakMatch = YES;
-				else
-				{
-					g_vJobPeak = vTempNorm;
-					g_vJobPeakMatch = NO;
-				}
-
-				g_vJobFreqFlag = YES;
-			}
-
-			// Set update flag since we have either a matched or a new max
-			g_bargraphFreqCalcBuffer.v.updateFlag = TRUE;
-		}
-
-		// ---------
-		// T channel
-		// ---------
-		// Check if the current sample is equal or greater than the stored max
-		if (tTempNorm >= g_bargraphSummaryInterval.t.peak)
-		{
-			// Check if the current max matches exactly to the stored max
-			if (tTempNorm == g_bargraphSummaryInterval.t.peak)
-			{
-				// Sample matches current max, set match flag
-				g_bargraphFreqCalcBuffer.t.matchFlag = TRUE;
-				// Store timestamp in case this is the max (and count) we want to keep
-				tTempTime = GetCurrentTime();
-			}
-			else
-			{
-				// Copy over new max
-				g_bargraphSummaryInterval.t.peak = tTempNorm;
-				// Update timestamp
-				g_bargraphSummaryInterval.t_Time = GetCurrentTime();
-				// Reset match flag since a new peak was found
-				g_bargraphFreqCalcBuffer.t.matchFlag = FALSE;
-			}
-
-			if (tTempNorm >= g_tJobPeak)
-			{
-				if (tTempNorm == g_tJobPeak)
-					g_tJobPeakMatch = YES;
-				else
-				{
-					g_tJobPeak = tTempNorm;
-					g_tJobPeakMatch = NO;
-				}
-
-				g_tJobFreqFlag = YES;
-			}
-
-			// Set update flag since we have either a matched or a new max
-			g_bargraphFreqCalcBuffer.t.updateFlag = TRUE;
-		}
-
-		// ----------
-		// Vector Sum
-		// ----------
-		// Store the max Vector Sum if a new max was found
-		if (vsTemp > g_bargraphSummaryInterval.vectorSumPeak)
-		{
-			// Store max vector sum
-			g_bargraphSummaryInterval.vectorSumPeak = vsTemp;
-			// Store timestamp
-			g_bargraphSummaryInterval.vs_Time = GetCurrentTime();
-
-			if (vsTemp > g_vsJobPeak)
-			{
-				g_vsJobPeak = vsTemp;
-			}
-		}
-
-		//=================================================
-		// Freq Calc Information
-		//=================================================
-		// ------------
-		// All Channels
-		// ------------
-		// Check if the freq count is zero, meaning initial sample or the start of a new summary interval (doesn't matter which channel is checked)
-		if (g_bargraphFreqCalcBuffer.a.freq_count == 0)
-		{
-			g_bargraphFreqCalcBuffer.a.sign = (uint16)(currentDataSample.a & g_bitAccuracyMidpoint);
-			g_bargraphFreqCalcBuffer.r.sign = (uint16)(currentDataSample.r & g_bitAccuracyMidpoint);
-			g_bargraphFreqCalcBuffer.v.sign = (uint16)(currentDataSample.v & g_bitAccuracyMidpoint);
-			g_bargraphFreqCalcBuffer.t.sign = (uint16)(currentDataSample.t & g_bitAccuracyMidpoint);
-		}
-
-		// ---------
-		// A channel
-		// ---------
-		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.a.sign ^ (currentDataSample.a & g_bitAccuracyMidpoint))
-		{
-			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.a.sign = (uint16)(currentDataSample.a & g_bitAccuracyMidpoint);
-
-			// If the update flag was set, update freq count information
-			if (g_bargraphFreqCalcBuffer.a.updateFlag == TRUE)
-			{
-				// Check if the max values matched
-				if (g_bargraphFreqCalcBuffer.a.matchFlag == TRUE)
-				{
-					// Check if current count is greater (lower freq) than stored count
-					if (g_bargraphFreqCalcBuffer.a.freq_count > g_bargraphSummaryInterval.a.frequency)
-					{
-						// Save the new count (lower freq)
-						g_bargraphSummaryInterval.a.frequency = g_bargraphFreqCalcBuffer.a.freq_count;
-						// Save the timestamp corresponding to the lower freq
-						g_bargraphSummaryInterval.a_Time = aTempTime;
-					}
-				}
-				else // We had a new max, store count for freq calculation
-				{
-					// Move data to summary interval struct
-					g_bargraphSummaryInterval.a.frequency = g_bargraphFreqCalcBuffer.a.freq_count;
-				}
-
-				// Reset flags
-				g_bargraphFreqCalcBuffer.a.updateFlag = FALSE;
-				g_bargraphFreqCalcBuffer.a.matchFlag = FALSE;
-			}
-
-			if (g_aJobFreqFlag == YES)
-			{
-				if (g_aJobPeakMatch == YES)
-				{
-					if (g_bargraphFreqCalcBuffer.a.freq_count > g_aJobFreq)
-						g_aJobFreq = g_bargraphFreqCalcBuffer.a.freq_count;
-
-					g_aJobPeakMatch = NO;
-				}
-				else
-				{
-					g_aJobFreq = g_bargraphFreqCalcBuffer.a.freq_count;
-				}
-
-				g_aJobFreqFlag = NO;
-			}
-
-			// Reset count to 1 since we have a sample that's crossed zero boundary
-			g_bargraphFreqCalcBuffer.a.freq_count = 1;
-		}
-		else
-		{
-			// Increment count since we haven't crossed a zero boundary
-			g_bargraphFreqCalcBuffer.a.freq_count++;
-		}
-
-		// ---------
-		// R channel
-		// ---------
-		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.r.sign ^ (currentDataSample.r & g_bitAccuracyMidpoint))
-		{
-			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.r.sign = (uint16)(currentDataSample.r & g_bitAccuracyMidpoint);
-
-			// If the update flag was set, update freq count information
-			if (g_bargraphFreqCalcBuffer.r.updateFlag == TRUE)
-			{
-				// Check if the max values matched
-				if (g_bargraphFreqCalcBuffer.r.matchFlag == TRUE)
-				{
-					// Check if current count is greater (lower freq) than stored count
-					if (g_bargraphFreqCalcBuffer.r.freq_count > g_bargraphSummaryInterval.r.frequency)
-					{
-						// Save the new count (lower freq)
-						g_bargraphSummaryInterval.r.frequency = g_bargraphFreqCalcBuffer.r.freq_count;
-						// Save the timestamp corresponding to the lower freq
-						g_bargraphSummaryInterval.r_Time = rTempTime;
-					}
-				}
-				else // We had a new max, store count for freq calculation
-				{
-					// Move data to summary interval struct
-					g_bargraphSummaryInterval.r.frequency = g_bargraphFreqCalcBuffer.r.freq_count;
-				}
-
-				// Reset flags
-				g_bargraphFreqCalcBuffer.r.updateFlag = FALSE;
-				g_bargraphFreqCalcBuffer.r.matchFlag = FALSE;
-			}
-
-			if (g_rJobFreqFlag == YES)
-			{
-				if (g_rJobPeakMatch == YES)
-				{
-					if (g_bargraphFreqCalcBuffer.r.freq_count > g_rJobFreq)
-						g_rJobFreq = g_bargraphFreqCalcBuffer.r.freq_count;
-
-					g_rJobPeakMatch = NO;
-				}
-				else
-				{
-					g_rJobFreq = g_bargraphFreqCalcBuffer.r.freq_count;
-				}
-
-				g_rJobFreqFlag = NO;
-			}
-
-			// Reset count to 1 since we have a sample that's crossed zero boundary
-			g_bargraphFreqCalcBuffer.r.freq_count = 1;
-		}
-		else
-		{
-			// Increment count since we haven't crossed a zero boundary
-			g_bargraphFreqCalcBuffer.r.freq_count++;
-		}
-
-		// ---------
-		// V channel
-		// ---------
-		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.v.sign ^ (currentDataSample.v & g_bitAccuracyMidpoint))
-		{
-			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.v.sign = (uint16)(currentDataSample.v & g_bitAccuracyMidpoint);
-
-			// If the update flag was set, update freq count information
-			if (g_bargraphFreqCalcBuffer.v.updateFlag == TRUE)
-			{
-				// Check if the max values matched
-				if (g_bargraphFreqCalcBuffer.v.matchFlag == TRUE)
-				{
-					// Check if current count is greater (lower freq) than stored count
-					if (g_bargraphFreqCalcBuffer.v.freq_count > g_bargraphSummaryInterval.v.frequency)
-					{
-						// Save the new count (lower freq)
-						g_bargraphSummaryInterval.v.frequency = g_bargraphFreqCalcBuffer.v.freq_count;
-						// Save the timestamp corresponding to the lower freq
-						g_bargraphSummaryInterval.v_Time = vTempTime;
-					}
-				}
-				else // We had a new max, store count for freq calculation
-				{
-					// Move data to summary interval struct
-					g_bargraphSummaryInterval.v.frequency = g_bargraphFreqCalcBuffer.v.freq_count;
-				}
-
-				// Reset flags
-				g_bargraphFreqCalcBuffer.v.updateFlag = FALSE;
-				g_bargraphFreqCalcBuffer.v.matchFlag = FALSE;
-			}
-
-			if (g_vJobFreqFlag == YES)
-			{
-				if (g_vJobPeakMatch == YES)
-				{
-					if (g_bargraphFreqCalcBuffer.v.freq_count > g_vJobFreq)
-						g_vJobFreq = g_bargraphFreqCalcBuffer.v.freq_count;
-
-					g_vJobPeakMatch = NO;
-				}
-				else
-				{
-					g_vJobFreq = g_bargraphFreqCalcBuffer.v.freq_count;
-				}
-
-				g_vJobFreqFlag = NO;
-			}
-
-			// Reset count to 1 since we have a sample that's crossed zero boundary
-			g_bargraphFreqCalcBuffer.v.freq_count = 1;
-		}
-		else
-		{
-			// Increment count since we haven't crossed a zero boundary
-			g_bargraphFreqCalcBuffer.v.freq_count++;
-		}
-
-		// ---------
-		// T channel
-		// ---------
-		// Check if the stored sign comparison signals a zero crossing
-		if (g_bargraphFreqCalcBuffer.t.sign ^ (currentDataSample.t & g_bitAccuracyMidpoint))
-		{
-			// Store new sign for future zero crossing comparisons
-			g_bargraphFreqCalcBuffer.t.sign = (uint16)(currentDataSample.t & g_bitAccuracyMidpoint);
-
-			// If the update flag was set, update freq count information
-			if (g_bargraphFreqCalcBuffer.t.updateFlag == TRUE)
-			{
-				// Check if the max values matched
-				if (g_bargraphFreqCalcBuffer.t.matchFlag == TRUE)
-				{
-					// Check if current count is greater (lower freq) than stored count
-					if (g_bargraphFreqCalcBuffer.t.freq_count > g_bargraphSummaryInterval.t.frequency)
-					{
-						// Save the new count (lower freq)
-						g_bargraphSummaryInterval.t.frequency = g_bargraphFreqCalcBuffer.t.freq_count;
-						// Save the timestamp corresponding to the lower freq
-						g_bargraphSummaryInterval.t_Time = tTempTime;
-					}
-				}
-				else // We had a new max, store count for freq calculation
-				{
-					// Move data to summary interval struct
-					g_bargraphSummaryInterval.t.frequency = g_bargraphFreqCalcBuffer.t.freq_count;
-				}
-
-				// Reset flags
-				g_bargraphFreqCalcBuffer.t.updateFlag = FALSE;
-				g_bargraphFreqCalcBuffer.t.matchFlag = FALSE;
-			}
-
-			if (g_tJobFreqFlag == YES)
-			{
-				if (g_tJobPeakMatch == YES)
-				{
-					if (g_bargraphFreqCalcBuffer.t.freq_count > g_tJobFreq)
-						g_tJobFreq = g_bargraphFreqCalcBuffer.t.freq_count;
-
-					g_tJobPeakMatch = NO;
-				}
-				else
-				{
-					g_tJobFreq = g_bargraphFreqCalcBuffer.t.freq_count;
-				}
-
-				g_tJobFreqFlag = NO;
-			}
-
-			// Reset count to 1 since we have a sample that's crossed zero boundary
-			g_bargraphFreqCalcBuffer.t.freq_count = 1;
-		}
-		else
-		{
-			// Increment count since we haven't crossed a zero boundary
-			g_bargraphFreqCalcBuffer.t.freq_count++;
-		}
-
-		//=================================================
-		// End of Bar Interval
-		//=================================================
-		if (++g_barSampleCount == (uint32)(g_triggerRecord.bgrec.barInterval * g_triggerRecord.trec.sample_rate))
-		{
+			//=================================================
+			// End of Bar Interval
+			//=================================================
 			g_bargraphBarIntervalsCached++;
-			g_barSampleCount = 0;
 
 			// Advance the Bar Interval global buffer pointer
 			AdvanceBarIntervalBufPtr(WRITE_PTR);
@@ -798,7 +298,521 @@ uint8 CalculateBargraphData(void)
 				MoveUpdatedBargraphEventRecordToFile(BARGRAPH_SESSION_IN_PROGRESS);
 			}
 		}
+		else // Process real data
+		{
+			// Count each sample processed
+			g_barSampleCount++;
 
+			// Adjust for the correct bit accuracy
+			currentDataSample.a >>= g_bitShiftForAccuracy;
+			currentDataSample.r >>= g_bitShiftForAccuracy;
+			currentDataSample.v >>= g_bitShiftForAccuracy;
+			currentDataSample.t >>= g_bitShiftForAccuracy;
+
+			// Normalize the raw data without the message bits
+			aTempNorm = FixDataToZero(currentDataSample.a);
+			rTempNorm = FixDataToZero(currentDataSample.r);
+			vTempNorm = FixDataToZero(currentDataSample.v);
+			tTempNorm = FixDataToZero(currentDataSample.t);
+
+			// Find the vector sum of the current sample
+			vsTemp =((uint32)rTempNorm * (uint32)rTempNorm) +
+					((uint32)vTempNorm * (uint32)vTempNorm) +
+					((uint32)tTempNorm * (uint32)tTempNorm);
+
+			//=================================================
+			// Impulse Interval
+			//=================================================
+			if (g_impulseMenuCount >= g_triggerRecord.berec.impulseMenuUpdateSecs)
+			{
+				g_impulseMenuCount = 0;
+				g_aImpulsePeak = g_rImpulsePeak = g_vImpulsePeak = g_tImpulsePeak = 0;
+				g_vsImpulsePeak = 0;
+			}
+
+			// ---------------------------------
+			// A, R, V, T channel and Vector Sum
+			// ---------------------------------
+			// Store the max A, R, V or T normalized value if a new max was found
+			if (aTempNorm > g_aImpulsePeak) g_aImpulsePeak = aTempNorm;
+			if (rTempNorm > g_rImpulsePeak) g_rImpulsePeak = rTempNorm;
+			if (vTempNorm > g_vImpulsePeak) g_vImpulsePeak = vTempNorm;
+			if (tTempNorm > g_tImpulsePeak) g_tImpulsePeak = tTempNorm;
+			if (vsTemp > g_vsImpulsePeak) g_vsImpulsePeak = vsTemp;
+
+			//=================================================
+			// Bar Interval
+			//=================================================
+			// ---------
+			// A channel
+			// ---------
+			// Store the max Air normalized value if a new max was found
+			if (aTempNorm > g_bargraphBarIntervalWritePtr->aMax)
+				g_bargraphBarIntervalWritePtr->aMax = aTempNorm;
+
+			// ---------------
+			// R, V, T channel
+			// ---------------
+			// Store the max R, V or T normalized value if a new max was found
+			if (rTempNorm > g_bargraphBarIntervalWritePtr->rvtMax)
+				g_bargraphBarIntervalWritePtr->rvtMax = rTempNorm;
+
+			if (vTempNorm > g_bargraphBarIntervalWritePtr->rvtMax)
+				g_bargraphBarIntervalWritePtr->rvtMax = vTempNorm;
+
+			if (tTempNorm > g_bargraphBarIntervalWritePtr->rvtMax)
+				g_bargraphBarIntervalWritePtr->rvtMax = tTempNorm;
+
+			// ----------
+			// Vector Sum
+			// ----------
+			// Store the max Vector Sum if a new max was found
+			if (vsTemp > g_bargraphBarIntervalWritePtr->vsMax)
+				g_bargraphBarIntervalWritePtr->vsMax = vsTemp;
+
+			//=================================================
+			// Summary Interval
+			//=================================================
+			// ---------
+			// A channel
+			// ---------
+			// Check if the current sample is equal or greater than the stored max
+			if (aTempNorm >= g_bargraphSummaryInterval.a.peak)
+			{
+				// Check if the current max matches exactly to the stored max
+				if (aTempNorm == g_bargraphSummaryInterval.a.peak)
+				{
+					// Sample matches current max, set match flag
+					g_bargraphFreqCalcBuffer.a.matchFlag = TRUE;
+					// Store timestamp in case this is the max (and count) we want to keep
+					aTempTime = GetCurrentTime();
+				}
+				else
+				{
+					// Copy over new max
+					g_bargraphSummaryInterval.a.peak = aTempNorm;
+					// Update timestamp
+					g_bargraphSummaryInterval.a_Time = GetCurrentTime();
+					// Reset match flag since a new peak was found
+					g_bargraphFreqCalcBuffer.a.matchFlag = FALSE;
+				}
+
+				if (aTempNorm >= g_aJobPeak)
+				{
+					if (aTempNorm == g_aJobPeak)
+						g_aJobPeakMatch = YES;
+					else
+					{
+						g_aJobPeak = aTempNorm;
+						g_aJobPeakMatch = NO;
+					}
+
+					g_aJobFreqFlag = YES;
+				}
+
+				// Set update flag since we have either a matched or a new max
+				g_bargraphFreqCalcBuffer.a.updateFlag = TRUE;
+			}
+
+			// ---------
+			// R channel
+			// ---------
+			// Check if the current sample is equal or greater than the stored max
+			if (rTempNorm >= g_bargraphSummaryInterval.r.peak)
+			{
+				// Check if the current max matches exactly to the stored max
+				if (rTempNorm == g_bargraphSummaryInterval.r.peak)
+				{
+					// Sample matches current max, set match flag
+					g_bargraphFreqCalcBuffer.r.matchFlag = TRUE;
+					// Store timestamp in case this is the max (and count) we want to keep
+					rTempTime = GetCurrentTime();
+				}
+				else
+				{
+					// Copy over new max
+					g_bargraphSummaryInterval.r.peak = rTempNorm;
+					// Update timestamp
+					g_bargraphSummaryInterval.r_Time = GetCurrentTime();
+					// Reset match flag since a new peak was found
+					g_bargraphFreqCalcBuffer.r.matchFlag = FALSE;
+				}
+
+				if (rTempNorm >= g_rJobPeak)
+				{
+					if (rTempNorm == g_rJobPeak)
+						g_rJobPeakMatch = YES;
+					else
+					{
+						g_rJobPeak = rTempNorm;
+						g_rJobPeakMatch = NO;
+					}
+
+					g_rJobFreqFlag = YES;
+				}
+
+				// Set update flag since we have either a matched or a new max
+				g_bargraphFreqCalcBuffer.r.updateFlag = TRUE;
+			}
+
+			// ---------
+			// V channel
+			// ---------
+			// Check if the current sample is equal or greater than the stored max
+			if (vTempNorm >= g_bargraphSummaryInterval.v.peak)
+			{
+				// Check if the current max matches exactly to the stored max
+				if (vTempNorm == g_bargraphSummaryInterval.v.peak)
+				{
+					// Sample matches current max, set match flag
+					g_bargraphFreqCalcBuffer.v.matchFlag = TRUE;
+					// Store timestamp in case this is the max (and count) we want to keep
+					vTempTime = GetCurrentTime();
+				}
+				else
+				{
+					// Copy over new max
+					g_bargraphSummaryInterval.v.peak = vTempNorm;
+					// Update timestamp
+					g_bargraphSummaryInterval.v_Time = GetCurrentTime();
+					// Reset match flag since a new peak was found
+					g_bargraphFreqCalcBuffer.v.matchFlag = FALSE;
+				}
+
+				if (vTempNorm >= g_vJobPeak)
+				{
+					if (vTempNorm == g_vJobPeak)
+						g_vJobPeakMatch = YES;
+					else
+					{
+						g_vJobPeak = vTempNorm;
+						g_vJobPeakMatch = NO;
+					}
+
+					g_vJobFreqFlag = YES;
+				}
+
+				// Set update flag since we have either a matched or a new max
+				g_bargraphFreqCalcBuffer.v.updateFlag = TRUE;
+			}
+
+			// ---------
+			// T channel
+			// ---------
+			// Check if the current sample is equal or greater than the stored max
+			if (tTempNorm >= g_bargraphSummaryInterval.t.peak)
+			{
+				// Check if the current max matches exactly to the stored max
+				if (tTempNorm == g_bargraphSummaryInterval.t.peak)
+				{
+					// Sample matches current max, set match flag
+					g_bargraphFreqCalcBuffer.t.matchFlag = TRUE;
+					// Store timestamp in case this is the max (and count) we want to keep
+					tTempTime = GetCurrentTime();
+				}
+				else
+				{
+					// Copy over new max
+					g_bargraphSummaryInterval.t.peak = tTempNorm;
+					// Update timestamp
+					g_bargraphSummaryInterval.t_Time = GetCurrentTime();
+					// Reset match flag since a new peak was found
+					g_bargraphFreqCalcBuffer.t.matchFlag = FALSE;
+				}
+
+				if (tTempNorm >= g_tJobPeak)
+				{
+					if (tTempNorm == g_tJobPeak)
+						g_tJobPeakMatch = YES;
+					else
+					{
+						g_tJobPeak = tTempNorm;
+						g_tJobPeakMatch = NO;
+					}
+
+					g_tJobFreqFlag = YES;
+				}
+
+				// Set update flag since we have either a matched or a new max
+				g_bargraphFreqCalcBuffer.t.updateFlag = TRUE;
+			}
+
+			// ----------
+			// Vector Sum
+			// ----------
+			// Store the max Vector Sum if a new max was found
+			if (vsTemp > g_bargraphSummaryInterval.vectorSumPeak)
+			{
+				// Store max vector sum
+				g_bargraphSummaryInterval.vectorSumPeak = vsTemp;
+				// Store timestamp
+				g_bargraphSummaryInterval.vs_Time = GetCurrentTime();
+
+				if (vsTemp > g_vsJobPeak)
+				{
+					g_vsJobPeak = vsTemp;
+				}
+			}
+
+			//=================================================
+			// Freq Calc Information
+			//=================================================
+			// ------------
+			// All Channels
+			// ------------
+			// Check if the freq count is zero, meaning initial sample or the start of a new summary interval (doesn't matter which channel is checked)
+			if (g_bargraphFreqCalcBuffer.a.freq_count == 0)
+			{
+				g_bargraphFreqCalcBuffer.a.sign = (uint16)(currentDataSample.a & g_bitAccuracyMidpoint);
+				g_bargraphFreqCalcBuffer.r.sign = (uint16)(currentDataSample.r & g_bitAccuracyMidpoint);
+				g_bargraphFreqCalcBuffer.v.sign = (uint16)(currentDataSample.v & g_bitAccuracyMidpoint);
+				g_bargraphFreqCalcBuffer.t.sign = (uint16)(currentDataSample.t & g_bitAccuracyMidpoint);
+			}
+
+			// ---------
+			// A channel
+			// ---------
+			// Check if the stored sign comparison signals a zero crossing
+			if (g_bargraphFreqCalcBuffer.a.sign ^ (currentDataSample.a & g_bitAccuracyMidpoint))
+			{
+				// Store new sign for future zero crossing comparisons
+				g_bargraphFreqCalcBuffer.a.sign = (uint16)(currentDataSample.a & g_bitAccuracyMidpoint);
+
+				// If the update flag was set, update freq count information
+				if (g_bargraphFreqCalcBuffer.a.updateFlag == TRUE)
+				{
+					// Check if the max values matched
+					if (g_bargraphFreqCalcBuffer.a.matchFlag == TRUE)
+					{
+						// Check if current count is greater (lower freq) than stored count
+						if (g_bargraphFreqCalcBuffer.a.freq_count > g_bargraphSummaryInterval.a.frequency)
+						{
+							// Save the new count (lower freq)
+							g_bargraphSummaryInterval.a.frequency = g_bargraphFreqCalcBuffer.a.freq_count;
+							// Save the timestamp corresponding to the lower freq
+							g_bargraphSummaryInterval.a_Time = aTempTime;
+						}
+					}
+					else // We had a new max, store count for freq calculation
+					{
+						// Move data to summary interval struct
+						g_bargraphSummaryInterval.a.frequency = g_bargraphFreqCalcBuffer.a.freq_count;
+					}
+
+					// Reset flags
+					g_bargraphFreqCalcBuffer.a.updateFlag = FALSE;
+					g_bargraphFreqCalcBuffer.a.matchFlag = FALSE;
+				}
+
+				if (g_aJobFreqFlag == YES)
+				{
+					if (g_aJobPeakMatch == YES)
+					{
+						if (g_bargraphFreqCalcBuffer.a.freq_count > g_aJobFreq)
+							g_aJobFreq = g_bargraphFreqCalcBuffer.a.freq_count;
+
+						g_aJobPeakMatch = NO;
+					}
+					else
+					{
+						g_aJobFreq = g_bargraphFreqCalcBuffer.a.freq_count;
+					}
+
+					g_aJobFreqFlag = NO;
+				}
+
+				// Reset count to 1 since we have a sample that's crossed zero boundary
+				g_bargraphFreqCalcBuffer.a.freq_count = 1;
+			}
+			else
+			{
+				// Increment count since we haven't crossed a zero boundary
+				g_bargraphFreqCalcBuffer.a.freq_count++;
+			}
+
+			// ---------
+			// R channel
+			// ---------
+			// Check if the stored sign comparison signals a zero crossing
+			if (g_bargraphFreqCalcBuffer.r.sign ^ (currentDataSample.r & g_bitAccuracyMidpoint))
+			{
+				// Store new sign for future zero crossing comparisons
+				g_bargraphFreqCalcBuffer.r.sign = (uint16)(currentDataSample.r & g_bitAccuracyMidpoint);
+
+				// If the update flag was set, update freq count information
+				if (g_bargraphFreqCalcBuffer.r.updateFlag == TRUE)
+				{
+					// Check if the max values matched
+					if (g_bargraphFreqCalcBuffer.r.matchFlag == TRUE)
+					{
+						// Check if current count is greater (lower freq) than stored count
+						if (g_bargraphFreqCalcBuffer.r.freq_count > g_bargraphSummaryInterval.r.frequency)
+						{
+							// Save the new count (lower freq)
+							g_bargraphSummaryInterval.r.frequency = g_bargraphFreqCalcBuffer.r.freq_count;
+							// Save the timestamp corresponding to the lower freq
+							g_bargraphSummaryInterval.r_Time = rTempTime;
+						}
+					}
+					else // We had a new max, store count for freq calculation
+					{
+						// Move data to summary interval struct
+						g_bargraphSummaryInterval.r.frequency = g_bargraphFreqCalcBuffer.r.freq_count;
+					}
+
+					// Reset flags
+					g_bargraphFreqCalcBuffer.r.updateFlag = FALSE;
+					g_bargraphFreqCalcBuffer.r.matchFlag = FALSE;
+				}
+
+				if (g_rJobFreqFlag == YES)
+				{
+					if (g_rJobPeakMatch == YES)
+					{
+						if (g_bargraphFreqCalcBuffer.r.freq_count > g_rJobFreq)
+							g_rJobFreq = g_bargraphFreqCalcBuffer.r.freq_count;
+
+						g_rJobPeakMatch = NO;
+					}
+					else
+					{
+						g_rJobFreq = g_bargraphFreqCalcBuffer.r.freq_count;
+					}
+
+					g_rJobFreqFlag = NO;
+				}
+
+				// Reset count to 1 since we have a sample that's crossed zero boundary
+				g_bargraphFreqCalcBuffer.r.freq_count = 1;
+			}
+			else
+			{
+				// Increment count since we haven't crossed a zero boundary
+				g_bargraphFreqCalcBuffer.r.freq_count++;
+			}
+
+			// ---------
+			// V channel
+			// ---------
+			// Check if the stored sign comparison signals a zero crossing
+			if (g_bargraphFreqCalcBuffer.v.sign ^ (currentDataSample.v & g_bitAccuracyMidpoint))
+			{
+				// Store new sign for future zero crossing comparisons
+				g_bargraphFreqCalcBuffer.v.sign = (uint16)(currentDataSample.v & g_bitAccuracyMidpoint);
+
+				// If the update flag was set, update freq count information
+				if (g_bargraphFreqCalcBuffer.v.updateFlag == TRUE)
+				{
+					// Check if the max values matched
+					if (g_bargraphFreqCalcBuffer.v.matchFlag == TRUE)
+					{
+						// Check if current count is greater (lower freq) than stored count
+						if (g_bargraphFreqCalcBuffer.v.freq_count > g_bargraphSummaryInterval.v.frequency)
+						{
+							// Save the new count (lower freq)
+							g_bargraphSummaryInterval.v.frequency = g_bargraphFreqCalcBuffer.v.freq_count;
+							// Save the timestamp corresponding to the lower freq
+							g_bargraphSummaryInterval.v_Time = vTempTime;
+						}
+					}
+					else // We had a new max, store count for freq calculation
+					{
+						// Move data to summary interval struct
+						g_bargraphSummaryInterval.v.frequency = g_bargraphFreqCalcBuffer.v.freq_count;
+					}
+
+					// Reset flags
+					g_bargraphFreqCalcBuffer.v.updateFlag = FALSE;
+					g_bargraphFreqCalcBuffer.v.matchFlag = FALSE;
+				}
+
+				if (g_vJobFreqFlag == YES)
+				{
+					if (g_vJobPeakMatch == YES)
+					{
+						if (g_bargraphFreqCalcBuffer.v.freq_count > g_vJobFreq)
+							g_vJobFreq = g_bargraphFreqCalcBuffer.v.freq_count;
+
+						g_vJobPeakMatch = NO;
+					}
+					else
+					{
+						g_vJobFreq = g_bargraphFreqCalcBuffer.v.freq_count;
+					}
+
+					g_vJobFreqFlag = NO;
+				}
+
+				// Reset count to 1 since we have a sample that's crossed zero boundary
+				g_bargraphFreqCalcBuffer.v.freq_count = 1;
+			}
+			else
+			{
+				// Increment count since we haven't crossed a zero boundary
+				g_bargraphFreqCalcBuffer.v.freq_count++;
+			}
+
+			// ---------
+			// T channel
+			// ---------
+			// Check if the stored sign comparison signals a zero crossing
+			if (g_bargraphFreqCalcBuffer.t.sign ^ (currentDataSample.t & g_bitAccuracyMidpoint))
+			{
+				// Store new sign for future zero crossing comparisons
+				g_bargraphFreqCalcBuffer.t.sign = (uint16)(currentDataSample.t & g_bitAccuracyMidpoint);
+
+				// If the update flag was set, update freq count information
+				if (g_bargraphFreqCalcBuffer.t.updateFlag == TRUE)
+				{
+					// Check if the max values matched
+					if (g_bargraphFreqCalcBuffer.t.matchFlag == TRUE)
+					{
+						// Check if current count is greater (lower freq) than stored count
+						if (g_bargraphFreqCalcBuffer.t.freq_count > g_bargraphSummaryInterval.t.frequency)
+						{
+							// Save the new count (lower freq)
+							g_bargraphSummaryInterval.t.frequency = g_bargraphFreqCalcBuffer.t.freq_count;
+							// Save the timestamp corresponding to the lower freq
+							g_bargraphSummaryInterval.t_Time = tTempTime;
+						}
+					}
+					else // We had a new max, store count for freq calculation
+					{
+						// Move data to summary interval struct
+						g_bargraphSummaryInterval.t.frequency = g_bargraphFreqCalcBuffer.t.freq_count;
+					}
+
+					// Reset flags
+					g_bargraphFreqCalcBuffer.t.updateFlag = FALSE;
+					g_bargraphFreqCalcBuffer.t.matchFlag = FALSE;
+				}
+
+				if (g_tJobFreqFlag == YES)
+				{
+					if (g_tJobPeakMatch == YES)
+					{
+						if (g_bargraphFreqCalcBuffer.t.freq_count > g_tJobFreq)
+							g_tJobFreq = g_bargraphFreqCalcBuffer.t.freq_count;
+
+						g_tJobPeakMatch = NO;
+					}
+					else
+					{
+						g_tJobFreq = g_bargraphFreqCalcBuffer.t.freq_count;
+					}
+
+					g_tJobFreqFlag = NO;
+				}
+
+				// Reset count to 1 since we have a sample that's crossed zero boundary
+				g_bargraphFreqCalcBuffer.t.freq_count = 1;
+			}
+			else
+			{
+				// Increment count since we haven't crossed a zero boundary
+				g_bargraphFreqCalcBuffer.t.freq_count++;
+			}
+		}
 	} // While != loop
 
 	if (g_bargraphDataWritePtr != g_bargraphDataReadPtr)

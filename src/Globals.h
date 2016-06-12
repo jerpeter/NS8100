@@ -140,6 +140,7 @@ extern CALCULATED_DATA_STRUCT g_bargraphSummaryInterval;
 extern BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalWritePtr;
 extern BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalReadPtr;
 extern BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalEndPtr;
+extern time_t g_bargraphBarIntervalClock;
 extern uint16 g_bargraphBarIntervalsCached;
 extern uint16 g_bitAccuracyMidpoint;
 extern uint16 g_aImpulsePeak;

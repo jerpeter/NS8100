@@ -378,6 +378,20 @@ void Soft_timer_tick_irq(void)
 	}
 #endif
 
+	// Test adjusted modification of the RTC top value to effectively achieve the most accurate 1/2 second tick (resulting in no more than +/- 1 second over a day)
+	if ((g_lifetimeHalfSecondTickCount % 3) == 0)
+	{
+		// Check if the RTC is not busy moving data into registers
+		while (AVR32_RTC.ctrl & AVR32_RTC_CTRL_BUSY_MASK) { }
+		AVR32_RTC.top = 8191;
+	}
+	else
+	{
+		// Check if the RTC is not busy moving data into registers
+		while (AVR32_RTC.ctrl & AVR32_RTC_CTRL_BUSY_MASK) { }
+		AVR32_RTC.top = 8190;
+	}
+
 	// clear the interrupt flag
 	rtc_clear_interrupt(&AVR32_RTC);
 
@@ -1031,6 +1045,32 @@ static inline void moveBargraphData_ISR_Inline(void)
 	
 	// Check if write pointer is beyond the end of the circular bounds
 	if (g_bargraphDataWritePtr >= g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
+
+	//________________________________________________________________________________________________
+	//
+	// Bargraph Bar Interval clocking changed to be time synced (instead of sample count synced)
+	//________________________________________________________________________________________________
+
+	// Check if the clock needs to be initialized
+	if (g_bargraphBarIntervalClock == 0)
+	{
+		g_bargraphBarIntervalClock = g_lifetimeHalfSecondTickCount + (g_triggerRecord.bgrec.barInterval * TICKS_PER_SEC) - 1;
+	}
+
+	// Check if time signals end of a Bar Interval
+	if ((volatile int32)g_lifetimeHalfSecondTickCount > (volatile int32)g_bargraphBarIntervalClock)
+	{
+		g_bargraphBarIntervalClock = g_lifetimeHalfSecondTickCount + (g_triggerRecord.bgrec.barInterval * TICKS_PER_SEC) - 1;
+
+		// Signal end of Bar Interval with special key
+		*(SAMPLE_DATA_STRUCT*)g_bargraphDataWritePtr = (SAMPLE_DATA_STRUCT)BAR_INTERVAL_END_KEY_SAMPLE;
+
+		// Increment the write pointer
+		g_bargraphDataWritePtr += NUMBER_OF_CHANNELS_DEFAULT;
+
+		// Check if write pointer is beyond the end of the circular bounds
+		if (g_bargraphDataWritePtr >= g_bargraphDataEndPtr) g_bargraphDataWritePtr = g_bargraphDataStartPtr;
+	}
 
 	// Alert system that we have data in ram buffer, raise flag to calculate and move data to flash.
 	raiseSystemEventFlag_ISR(BARGRAPH_EVENT);

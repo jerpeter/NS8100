@@ -56,6 +56,11 @@ enum{
 	BARGRAPH_SESSION_IN_PROGRESS
 };
 
+// Using a key within the data set to best fit the design for asynchronously identifying end of a Bar Interval
+// Picked a pattern of alternating 1's and 0's, with the possibility of all 4 channels randomly being equal to this key at 1 chance in 18,446,744,073,709,551,616
+#define BAR_INTERVAL_END_KEY_SAMPLE		{0xAAAA, 0xAAAA, 0xAAAA, 0xAAAA}
+#define BAR_INTERVAL_END_KEY			0xAAAA
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------

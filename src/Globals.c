@@ -180,6 +180,7 @@ CALCULATED_DATA_STRUCT g_bargraphSummaryInterval;
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalWritePtr;
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalReadPtr;
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalEndPtr;
+uint32 g_bargraphBarIntervalClock = 0;
 uint16 g_bargraphBarIntervalsCached = 0;
 uint16 g_bitAccuracyMidpoint = 0x8000;
 uint16 g_aImpulsePeak;
