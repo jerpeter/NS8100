@@ -303,10 +303,10 @@ typedef struct
 
 	uint32				batteryLevel; // 0x25C (from 0xA55A), 0x88 (from struct start)
 	uint32				barIntervalsCaptured; // 0x260 (from 0xA55A), 0x8C (from struct start)
-	uint16				summariesCaptured; // 0x264(from 0xA55A), 0x90 (from struct start)
-	uint16				effectiveSampleRate; // 0x266 (from 0xA55A) // Space for expansion
+	uint16				summariesCaptured; // 0x264 (from 0xA55A), 0x90 (from struct start)
+	uint16				effectiveSampleRate; // 0x266 (from 0xA55A), 0x92 (from struct start)
 
-	uint8				unused[UNUSED_CALCULATED_SIZE]; // 0x268 (from 0xA55A) // Space for expansion
+	uint8				unused[UNUSED_CALCULATED_SIZE]; // 0x268 (from 0xA55A), 0x94 (from struct start) // Space for expansion
 	uint32				calcStructEndFlag; // 0x29C (from 0xA55A), 0xC8 (from struct start)
 } CALCULATED_DATA_STRUCT;
 #pragma pack()
