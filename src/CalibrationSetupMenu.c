@@ -411,6 +411,7 @@ void CalSetupMnProc(INPUT_MSG_STRUCT msg,
 void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	uint8 buff[50];
+	uint8 buff1[8], buff2[8], buff3[8];
 	uint8 length;
 	int32 chanMin[4];
 	int32 chanMax[4];
@@ -419,7 +420,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	uint16 i = 0, j = 0;
 	uint16 sampleDataMidpoint = 0x8000;
 	DATE_TIME_STRUCT time;
-	float div;
+	float div, r1, r2, r3, v1, v2, v3, t1, t2, t3;
 	uint16 sensorType;
 
 	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
@@ -441,7 +442,14 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		sensorType = g_factorySetupRecord.sensor_type;
 	}
 
-	div = (float)(ACCURACY_16_BIT_MIDPOINT * g_sensorInfo.sensorAccuracy * 2) / (float)(sensorType);
+	if (g_unitConfig.unitsOfMeasure == METRIC_TYPE)
+	{
+		div = (float)(ACCURACY_16_BIT_MIDPOINT * g_sensorInfo.sensorAccuracy * 2) / (float)(sensorType * METRIC);
+	}
+	else
+	{
+		div = (float)(ACCURACY_16_BIT_MIDPOINT * g_sensorInfo.sensorAccuracy * 2) / (float)(sensorType);
+	}
 #endif
 
 	// Allow the display to be maintained on the screen if in calibrate sensor menu and pause display selected
@@ -566,8 +574,16 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				// PRINT Table separator
 				memset(&buff[0], 0, sizeof(buff));
 				//sprintf((char*)buff, "--------------------");
-				if (g_displayAlternateResultState == DEFAULT_RESULTS) { sprintf((char*)buff, "-CAL SENSOR--Air:MB-"); }
-				else { sprintf((char*)buff, "-CAL SENSOR--Air:DB-"); }
+				if (g_unitConfig.unitsOfMeasure == METRIC_TYPE)
+				{
+					if (g_displayAlternateResultState == DEFAULT_RESULTS) { sprintf((char*)buff, "-CAL SEN:MM Air:MB-"); }
+					else { sprintf((char*)buff, "-CAL SEN:MM Air:DB-"); }
+				}
+				else // IMPERIAL_TYPE
+				{
+					if (g_displayAlternateResultState == DEFAULT_RESULTS) { sprintf((char*)buff, "-CAL SEN:IN Air:MB-"); }
+					else { sprintf((char*)buff, "-CAL SEN:IN Air:DB-"); }
+				}
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_TWO;
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT,REG_LN);
 			}
@@ -585,20 +601,35 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 				// PRINT R,V,T,A Min, Max and Avg
 				memset(&buff[0], 0, sizeof(buff));
-				sprintf((char*)buff, "R|%01.3f|%01.3f|%01.3f|", (float)((float)g_sensorCalPeaks[1].r / (float)div), (float)((float)g_sensorCalPeaks[2].r / (float)div),
-				(float)((float)g_sensorCalPeaks[3].r / (float)div));
+				r1 = (float)((float)g_sensorCalPeaks[1].r / (float)div);
+				r2 = (float)((float)g_sensorCalPeaks[2].r / (float)div);
+				r3 = (float)((float)g_sensorCalPeaks[3].r / (float)div);
+				if (r1 < 10) { sprintf((char*)buff1, "%01.3f", r1); } else if (r1 < 100) { sprintf((char*)buff1, "%02.2f", r1); } else { sprintf((char*)buff1, "%03.1f", r1); }
+				if (r2 < 10) { sprintf((char*)buff2, "%01.3f", r2); } else if (r2 < 100) { sprintf((char*)buff2, "%02.2f", r2); } else { sprintf((char*)buff2, "%03.1f", r2); }
+				if (r3 < 10) { sprintf((char*)buff3, "%01.3f", r3); } else if (r3 < 100) { sprintf((char*)buff3, "%02.2f", r3); } else { sprintf((char*)buff3, "%03.1f", r3); }
+				sprintf((char*)buff, "R|%s|%s|%s|", (char*)buff1, (char*)buff3, (char*)buff3);
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FOUR;
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 				memset(&buff[0], 0, sizeof(buff));
-				sprintf((char*)buff, "V|%01.3f|%01.3f|%01.3f|", (float)((float)g_sensorCalPeaks[1].v / (float)div), (float)((float)g_sensorCalPeaks[2].v / (float)div),
-				(float)((float)g_sensorCalPeaks[3].v / (float)div));
+				v1 = (float)((float)g_sensorCalPeaks[1].v / (float)div);
+				v2 = (float)((float)g_sensorCalPeaks[2].v / (float)div);
+				v3 = (float)((float)g_sensorCalPeaks[3].v / (float)div);
+				if (v1 < 10) { sprintf((char*)buff1, "%01.3f", v1); } else if (v1 < 100) { sprintf((char*)buff1, "%02.2f", v1); } else { sprintf((char*)buff1, "%03.1f", v1); }
+				if (v2 < 10) { sprintf((char*)buff2, "%01.3f", v2); } else if (v2 < 100) { sprintf((char*)buff2, "%02.2f", v2); } else { sprintf((char*)buff2, "%03.1f", v2); }
+				if (v3 < 10) { sprintf((char*)buff3, "%01.3f", v3); } else if (v3 < 100) { sprintf((char*)buff3, "%02.2f", v3); } else { sprintf((char*)buff3, "%03.1f", v3); }
+				sprintf((char*)buff, "V|%s|%s|%s|", (char*)buff1, (char*)buff3, (char*)buff3);
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_FIVE;
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 				memset(&buff[0], 0, sizeof(buff));
-				sprintf((char*)buff, "T|%01.3f|%01.3f|%01.3f|", (float)((float)g_sensorCalPeaks[1].t / (float)div), (float)((float)g_sensorCalPeaks[2].t / (float)div),
-				(float)((float)g_sensorCalPeaks[3].t / (float)div));
+				t1 = (float)((float)g_sensorCalPeaks[1].t / (float)div);
+				t2 = (float)((float)g_sensorCalPeaks[2].t / (float)div);
+				t3 = (float)((float)g_sensorCalPeaks[3].t / (float)div);
+				if (t1 < 10) { sprintf((char*)buff1, "%01.3f", t1); } else if (t1 < 100) { sprintf((char*)buff1, "%02.2f", t1); } else { sprintf((char*)buff1, "%03.1f", t1); }
+				if (t2 < 10) { sprintf((char*)buff2, "%01.3f", t2); } else if (t2 < 100) { sprintf((char*)buff2, "%02.2f", t2); } else { sprintf((char*)buff2, "%03.1f", t2); }
+				if (t3 < 10) { sprintf((char*)buff3, "%01.3f", t3); } else if (t3 < 100) { sprintf((char*)buff3, "%02.2f", t3); } else { sprintf((char*)buff3, "%03.1f", t3); }
+				sprintf((char*)buff, "T|%s|%s|%s|", (char*)buff1, (char*)buff3, (char*)buff3);
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SIX;
 				WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
