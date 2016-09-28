@@ -1182,7 +1182,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 			{
 				// Check if the units are metric and no alternative type is set and not the accelerometer
 				if ((g_unitConfig.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE) &&
-					(g_factorySetupRecord.sensor_type != SENSOR_ACC))
+					(g_factorySetupRecord.sensor_type != SENSOR_ACCELEROMETER))
 				{
 					// Init the float increment value adjusted by the units conversion
 					g_userMenuCacheData.floatIncrement = ((float)(g_factorySetupRecord.sensor_type * unitTypes[USER_MENU_ALT_TYPE(g_userMenuCachePtr)].conversion) / 
@@ -1202,7 +1202,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				
 				// The following code will check sensor type and sensitivity to auto adjust the accuracy being printed to the screen
 				if ((g_factorySetupRecord.sensor_type == SENSOR_20_IN) || 
-					((g_factorySetupRecord.sensor_type == SENSOR_ACC) && (g_triggerRecord.srec.sensitivity == LOW)) ||
+					((g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) && (g_triggerRecord.srec.sensitivity == LOW)) ||
 					((g_factorySetupRecord.sensor_type == SENSOR_10_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
 				{
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.3f-%.3f%s,N)",
@@ -1216,7 +1216,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 						sprintf(g_userMenuCachePtr[tempRow].text, "%.4f", g_userMenuCacheData.floatData);
 				}
 				else if (((g_factorySetupRecord.sensor_type == SENSOR_10_IN) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
-						((g_factorySetupRecord.sensor_type == SENSOR_ACC) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
+						((g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
 						((g_factorySetupRecord.sensor_type == SENSOR_5_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
 				{
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.4f-%.3f%s,N)",

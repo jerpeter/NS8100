@@ -945,7 +945,7 @@ void InitEventRecord(uint8 opMode)
 
 				tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
 
-				if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
+				if ((g_factorySetupRecord.sensor_type != SENSOR_ACCELEROMETER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
 				{
 					tempSesmicTriggerInUnits *= (float)METRIC;
 				}

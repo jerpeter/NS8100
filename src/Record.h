@@ -61,11 +61,11 @@ enum {
 
 #define ADC_RESOLUTION				0x8000	// +/- 0x800 (2048)
 
-#define SENSOR_20_IN	4096
-#define SENSOR_10_IN	2048
-#define SENSOR_5_IN		1024
-#define SENSOR_2_5_IN	512
-#define SENSOR_ACC		51200
+#define SENSOR_20_IN			4096
+#define SENSOR_10_IN			2048
+#define SENSOR_5_IN				1024
+#define SENSOR_2_5_IN			512
+#define SENSOR_ACCELEROMETER	51200
 
 #define SENSOR_MICROPHONE	1
 

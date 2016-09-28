@@ -219,7 +219,7 @@ void LoadFactorySetupRecord(void)
 		ConvertCalDatetoDateTime(&tempTime, &g_currentCalibration.date);
 		ConvertTimeStampToString(buff, &tempTime, REC_DATE_TYPE);
 
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&g_spareBuffer, "Acc"); }
+		if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) { strcpy((char*)&g_spareBuffer, "Acc"); }
 		else { sprintf((char*)&g_spareBuffer, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
 
 		// Check if an older unit doesn't have the Analog Channel Config set
@@ -262,7 +262,7 @@ void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
 
 	g_sensorInfo.sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
 
-	if ((IMPERIAL_TYPE == g_unitConfig.unitsOfMeasure) || (sensor_type == SENSOR_ACC))
+	if ((IMPERIAL_TYPE == g_unitConfig.unitsOfMeasure) || (sensor_type == SENSOR_ACCELEROMETER))
 	{
 		g_sensorInfo.measurementRatio = (float)IMPERIAL; 				// 1 = SAE; 25.4 = Metric
 	}

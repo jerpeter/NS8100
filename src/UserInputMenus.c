@@ -133,7 +133,7 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+		if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
 		{
 			USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
 			USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
@@ -1000,7 +1000,7 @@ void OperatorMenuHandler(uint8 keyPressed, void* data)
 		strcpy((char*)(&g_triggerRecord.trec.oper), (char*)data);
 		debug("Operator: <%s>, Length: %d\r\n", g_triggerRecord.trec.oper, strlen((char*)g_triggerRecord.trec.oper));
 
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+		if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
 		{
 			sprintf((char*)&g_menuTags[LOW_SENSITIVITY_MAX_TAG].text, " (%.0fmg)", 
 					(float)g_factorySetupRecord.sensor_type / (float)200);

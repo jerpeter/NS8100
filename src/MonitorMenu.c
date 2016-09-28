@@ -641,9 +641,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tempV = ((float)g_vImpulsePeak / (float)div);
 			}
 
-			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER))
 			{
-				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+				if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
 					strcpy(buff, "mg/s |");
 				else
 					strcpy(buff, "in/s |");
@@ -774,9 +774,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			}			
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS) { tempVS = sqrtf((float)g_vsJobPeak) / (float)div; }
 
-			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER))
 			{
-				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+				if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
 					strcpy(displayFormat, "mg/s");
 				else
 					strcpy(displayFormat, "in/s");
@@ -852,9 +852,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			tempPeakDisp = (float)normalize_max_peak / ((float)2 * (float)PI * (float)tempFreq);
 
-			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER))
 			{
-				if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+				if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
 					strcpy(displayFormat, "mg");
 				else
 					strcpy(displayFormat, "in");
@@ -927,7 +927,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			tempPeakAcc = (float)normalize_max_peak * (float)2 * (float)PI * (float)tempFreq;
 
-			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACC))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER))
 			{
 				tempPeakAcc /= (float)ONE_GRAVITY_IN_INCHES;
 			}
@@ -937,7 +937,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tempPeakAcc /= (float)ONE_GRAVITY_IN_MM;
 			}
 
-			if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy(displayFormat, "mg/s2"); }
+			if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) { strcpy(displayFormat, "mg/s2"); }
 			else { strcpy(displayFormat, "g"); }
 
 			sprintf(buff,"PEAK ACC %5.4f %s", tempPeakAcc, displayFormat);

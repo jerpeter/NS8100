@@ -1625,7 +1625,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 			(float)(g_factorySetupRecord.sensor_type);
 
 			tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
-			if ((g_factorySetupRecord.sensor_type != SENSOR_ACC) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE)) { tempSesmicTriggerInUnits *= (float)METRIC; }
+			if ((g_factorySetupRecord.sensor_type != SENSOR_ACCELEROMETER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE)) { tempSesmicTriggerInUnits *= (float)METRIC; }
 
 			sprintf((char*)seisString, "%05.2f %s", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
 		}
@@ -1638,7 +1638,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 			else { sprintf((char*)airString, "%d dB", (uint16)airInUnits); }
 		}
 
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { strcpy((char*)&sensorString, "Acc"); }
+		if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) { strcpy((char*)&sensorString, "Acc"); }
 		else { sprintf((char*)&sensorString, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
 
 		sprintf((char*)g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\

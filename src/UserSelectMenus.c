@@ -926,7 +926,7 @@ void BarChannelMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_triggerRecord.berec.barChannel = (uint8)barChannelMenu[newItemIndex].data;
 
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+		if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
 		{
 			sprintf((char*)&g_menuTags[BAR_SCALE_FULL_TAG].text, "100%% (%.0f mg)",
 					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_FULL));
@@ -1123,7 +1123,7 @@ void BarResultMenuHandler(uint8 keyPressed, void* data)
 		// If Combo mode, jump back over to waveform specific settings
 		if (g_triggerRecord.opMode == COMBO_MODE)
 		{
-			if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+			if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
 			{
 				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
@@ -1788,7 +1788,7 @@ void ExternalTriggerMenuHandler(uint8 keyPressed, void* data)
 			sprintf((char*)g_spareBuffer, "%s. %s", getLangText(NO_TRIGGER_SOURCE_SELECTED_TEXT), getLangText(PLEASE_CHANGE_TEXT));
 			MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
 
-			if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+			if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
 			{
 				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
@@ -2846,7 +2846,7 @@ void SensitivityMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_triggerRecord.opMode == WAVEFORM_MODE)
 		{
-			if (g_factorySetupRecord.sensor_type == SENSOR_ACC)
+			if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
 			{
 				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
@@ -2894,7 +2894,7 @@ USER_MENU_STRUCT sensorTypeMenu[SENSOR_TYPE_MENU_ENTRIES] = {
 {ITEM_2, 0, X2_10_IPS_TEXT,		NO_TAG, {SENSOR_10_IN}},
 {ITEM_3, 0, X4_5_IPS_TEXT,		NO_TAG, {SENSOR_5_IN}},
 {ITEM_4, 0, X8_2_5_IPS_TEXT,	NO_TAG, {SENSOR_2_5_IN}},
-{ITEM_5, 0, ACC_793L_TEXT,		NO_TAG, {SENSOR_ACC}},
+{ITEM_5, 0, ACC_793L_TEXT,		NO_TAG, {SENSOR_ACCELEROMETER}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SensorTypeMenuHandler}}
 };
 
@@ -2910,7 +2910,7 @@ void SensorTypeMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_factorySetupRecord.sensor_type = (uint16)sensorTypeMenu[newItemIndex].data;
 
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACC) { debug("Factory Setup: New Seismic sensor type: Accelerometer\r\n"); }
+		if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) { debug("Factory Setup: New Seismic sensor type: Accelerometer\r\n"); }
 		else { debug("Factory Setup: New Seismic sensor type: %3.1f in\r\n", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
 
 		if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)

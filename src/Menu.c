@@ -1053,11 +1053,11 @@ void DisplaySensorType(void)
 
 		switch (sensorType)
 		{
-			case SENSOR_20_IN	: sensorTypeTextElement = X1_20_IPS_TEXT; break;
-			case SENSOR_10_IN	: sensorTypeTextElement = X2_10_IPS_TEXT; break;
-			case SENSOR_5_IN	: sensorTypeTextElement = X4_5_IPS_TEXT; break;
-			case SENSOR_2_5_IN	: sensorTypeTextElement = X8_2_5_IPS_TEXT; break;
-			case SENSOR_ACC		: sensorTypeTextElement = ACC_793L_TEXT; break;
+			case SENSOR_20_IN			: sensorTypeTextElement = X1_20_IPS_TEXT; break;
+			case SENSOR_10_IN			: sensorTypeTextElement = X2_10_IPS_TEXT; break;
+			case SENSOR_5_IN			: sensorTypeTextElement = X4_5_IPS_TEXT; break;
+			case SENSOR_2_5_IN			: sensorTypeTextElement = X8_2_5_IPS_TEXT; break;
+			case SENSOR_ACCELEROMETER	: sensorTypeTextElement = ACC_793L_TEXT; break;
 		}
 
 		sprintf((char*)g_spareBuffer, "%s: %s", getLangText(SENSOR_GAIN_TYPE_TEXT), getLangText(sensorTypeTextElement));
