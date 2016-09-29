@@ -142,21 +142,16 @@ void CompleteSummaryInterval(void)
 {
 	float rFreq = (float)0, vFreq = (float)0, tFreq = (float)0;
 
+	// Special check to make sure the frequency isn't zero (channel never crosses zer0/mid level)
+	if (g_bargraphSummaryInterval.a.frequency == 0) { g_bargraphSummaryInterval.a.frequency = g_bargraphFreqCalcBuffer.a.freq_count; }
+	if (g_bargraphSummaryInterval.r.frequency == 0) { g_bargraphSummaryInterval.r.frequency = g_bargraphFreqCalcBuffer.r.freq_count; }
+	if (g_bargraphSummaryInterval.v.frequency == 0) { g_bargraphSummaryInterval.v.frequency = g_bargraphFreqCalcBuffer.v.freq_count; }
+	if (g_bargraphSummaryInterval.t.frequency == 0) { g_bargraphSummaryInterval.t.frequency = g_bargraphFreqCalcBuffer.t.freq_count; }
+
 	// Note: This should be raw unadjusted freq
-	if (g_bargraphSummaryInterval.r.frequency > 0)
-	{
-		rFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryInterval.r.frequency * 2) - 1));
-	}
-
-	if (g_bargraphSummaryInterval.v.frequency > 0)
-	{
-		vFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryInterval.v.frequency * 2) - 1));
-	}
-
-	if (g_bargraphSummaryInterval.t.frequency > 0)
-	{
-		tFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryInterval.t.frequency * 2) - 1));
-	}
+	rFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryInterval.r.frequency * 2) - 1));
+	vFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryInterval.v.frequency * 2) - 1));
+	tFreq = (float)((float)g_triggerRecord.trec.sample_rate / (float)((g_bargraphSummaryInterval.t.frequency * 2) - 1));
 
 	// Calculate the Peak Displacement
 	g_bargraphSummaryInterval.a.displacement = 0;
@@ -626,8 +621,11 @@ uint8 CalculateBargraphData(void)
 			}
 			else
 			{
-				// Increment count since we haven't crossed a zero boundary
-				g_bargraphFreqCalcBuffer.a.freq_count++;
+				// Increment count (if not maxed already) since we haven't crossed a zero boundary
+				if (g_bargraphFreqCalcBuffer.a.freq_count < 0xFFFF)
+				{
+					g_bargraphFreqCalcBuffer.a.freq_count++;
+				}
 			}
 
 			// ---------
@@ -687,8 +685,11 @@ uint8 CalculateBargraphData(void)
 			}
 			else
 			{
-				// Increment count since we haven't crossed a zero boundary
-				g_bargraphFreqCalcBuffer.r.freq_count++;
+				// Increment count (if not maxed already) since we haven't crossed a zero boundary
+				if (g_bargraphFreqCalcBuffer.r.freq_count < 0xFFFF)
+				{
+					g_bargraphFreqCalcBuffer.r.freq_count++;
+				}
 			}
 
 			// ---------
@@ -748,8 +749,11 @@ uint8 CalculateBargraphData(void)
 			}
 			else
 			{
-				// Increment count since we haven't crossed a zero boundary
-				g_bargraphFreqCalcBuffer.v.freq_count++;
+				// Increment count (if not maxed already) since we haven't crossed a zero boundary
+				if (g_bargraphFreqCalcBuffer.v.freq_count < 0xFFFF)
+				{
+					g_bargraphFreqCalcBuffer.v.freq_count++;
+				}
 			}
 
 			// ---------
@@ -809,8 +813,11 @@ uint8 CalculateBargraphData(void)
 			}
 			else
 			{
-				// Increment count since we haven't crossed a zero boundary
-				g_bargraphFreqCalcBuffer.t.freq_count++;
+				// Increment count (if not maxed already) since we haven't crossed a zero boundary
+				if (g_bargraphFreqCalcBuffer.t.freq_count < 0xFFFF)
+				{
+					g_bargraphFreqCalcBuffer.t.freq_count++;
+				}
 			}
 		}
 	} // While != loop
