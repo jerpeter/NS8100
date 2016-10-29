@@ -140,7 +140,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	// static non changing.
 	cfg.eventCfg.seismicSensorType = (uint16)(g_factorySetupRecord.sensor_type);
 	cfg.eventCfg.airSensorType = SENSOR_MICROPHONE;
-
+	cfg.eventCfg.adChannelVerification = g_unitConfig.adChannelVerification;
 	cfg.eventCfg.bitAccuracy = g_triggerRecord.trec.bitAccuracy;
 	cfg.eventCfg.numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;
 	cfg.eventCfg.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
@@ -680,6 +680,33 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			returnCode = CFG_ERR_TEMP_ADJUST;
 			goto SEND_UCM_ERROR_CODE;
 		}
+
+#if 0 // Move to this code block once SG can handle remotely
+		//---------------------------------------------------------------------------
+		// AD Channel Verification
+		//---------------------------------------------------------------------------
+		if ((cfg.eventCfg.adChannelVerification == ENABLED) || (cfg.eventCfg.adChannelVerification == DISABLED))
+		{
+			g_unitConfig.adChannelVerification = cfg.eventCfg.adChannelVerification;
+		}
+		else
+		{
+			returnCode = CFG_ERR_CHANNEL_VERIFICATION;
+			goto SEND_UCM_ERROR_CODE;
+		}
+#else // Only check for enabled and default to disabled in all other cases
+		//---------------------------------------------------------------------------
+		// AD Channel Verification
+		//---------------------------------------------------------------------------
+		if (cfg.eventCfg.adChannelVerification == ENABLED)
+		{
+			g_unitConfig.adChannelVerification = ENABLED;
+		}
+		else // Default to disabled
+		{
+			g_unitConfig.adChannelVerification = DISABLED;
+		}
+#endif
 
 		//---------------------------------------------------------------------------
 		// Auto Monitor Mode check

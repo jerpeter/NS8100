@@ -109,6 +109,9 @@ typedef struct
 #define SOFT_MSECS				1000 				// Scale usecs to msecs
 #define SOFT_SECS				(1000 * 1000) 		// Scale usecs to secs
 
+#define EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY	(0xFFFFFF00)
+#define EXCEPTION_MSG_DISPLAY_TIME				(8)	// Seconds
+
 #define SECS_PER_DAY			86400
 #define SECS_PER_HOUR			3600
 #define SECS_PER_MIN			60
@@ -219,7 +222,7 @@ enum {
 #define DEBUG_COM_PORT	2
 
 // Define Project Debug Port
-#define GLOBAL_DEBUG_PRINT_PORT	DEBUG_COM_PORT
+#define GLOBAL_DEBUG_PRINT_PORT	DEBUG_COM_PORT //CRAFT_COM_PORT
 #endif
 
 #define GLOBAL_DEBUG_BUFFER_SIZE		(65536)

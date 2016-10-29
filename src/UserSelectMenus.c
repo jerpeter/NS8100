@@ -32,6 +32,7 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
+extern USER_MENU_STRUCT adChannelVerificationMenu[];
 extern USER_MENU_STRUCT airTriggerMenu[];
 extern USER_MENU_STRUCT alarmOneMenu[];
 extern USER_MENU_STRUCT alarmTwoMenu[];
@@ -98,6 +99,43 @@ extern USER_MENU_STRUCT zeroEventNumberMenu[];
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
+
+//*****************************************************************************
+//=============================================================================
+// AD Channel Verification Menu
+//=============================================================================
+//*****************************************************************************
+#define AD_CHANNEL_VERIFICATION_MENU_ENTRIES 4
+USER_MENU_STRUCT adChannelVerificationMenu[AD_CHANNEL_VERIFICATION_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, CHAN_VERIFICATION_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, AD_CHANNEL_VERIFICATION_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, DISABLED_TEXT,	NO_TAG,	{DISABLED}},
+{ITEM_2, 0, ENABLED_TEXT,	NO_TAG,	{ENABLED}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AdChannelVerificationMenuHandler}}
+};
+
+//-------------------------------------
+// AD Channel Verification Menu Handler
+//-------------------------------------
+void AdChannelVerificationMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_unitConfig.adChannelVerification = (uint8)adChannelVerificationMenu[newItemIndex].data;
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu, CHANNEL_VERIFICATION);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
 
 //*****************************************************************************
 //=============================================================================
@@ -226,7 +264,7 @@ void AirSetupMenuHandler(uint8 keyPressed, void* data)
 //*****************************************************************************
 #define ALARM_TESTING_MENU_ENTRIES 7
 USER_MENU_STRUCT alarmTestingMenu[ALARM_TESTING_MENU_ENTRIES] = {
-{ALARM_TAG, 0, NULL_TEXT, TESTING_TAG,
+{TITLE_PRE_TAG, 0, ALARM_TESTING_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, ALARM_TESTING_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, END_TEXT,		NO_TAG,			{1}},
 {ITEM_2, 0, ALARM_1_TEXT,	ENABLED_TAG,	{2}},
@@ -1339,7 +1377,7 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
-#define CONFIG_MENU_ENTRIES 30
+#define CONFIG_MENU_ENTRIES 31
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1350,6 +1388,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, BATTERY_TEXT,				NO_TAG, {BATTERY}},
 {NO_TAG, 0, BAUD_RATE_TEXT,				NO_TAG, {BAUD_RATE}},
 {NO_TAG, 0, CALIBRATION_DATE_TEXT,		NO_TAG, {CALIBRATION_DATE}},
+{NO_TAG, 0, CHAN_VERIFICATION_TEXT,		NO_TAG, {CHANNEL_VERIFICATION}},
 {NO_TAG, 0, DATE_TIME_TEXT,				NO_TAG, {DATE_TIME}},
 {NO_TAG, 0, ERASE_MEMORY_TEXT,			NO_TAG, {ERASE_FLASH}},
 {NO_TAG, 0, EVENT_SUMMARIES_TEXT,		NO_TAG, {EVENT_SUMMARIES}},
@@ -1416,6 +1455,10 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 
 			case (CALIBRATION_DATE):
 				DisplayCalDate();
+			break;
+
+			case (CHANNEL_VERIFICATION):
+				SETUP_USER_MENU_MSG(&adChannelVerificationMenu, g_unitConfig.adChannelVerification);
 			break;
 
 			case (COPIES):

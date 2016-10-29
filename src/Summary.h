@@ -200,7 +200,7 @@ typedef struct
 //-------------------------------------------------------------------------------------
 // Parameters sub-structure
 //-------------------------------------------------------------------------------------
-#define UNUSED_PARAMETERS_SIZE	3
+#define UNUSED_PARAMETERS_SIZE	2
 typedef struct
 {
 	uint32	distToSource; // 0x5C (from 0xA55A)
@@ -251,8 +251,9 @@ typedef struct
 	uint8 acousticSensorInstrument; // 0x18F (from 0xA55A)
 
 	uint8 calibrationDateSource; // 0x190 (from 0xA55A)
+	uint8 adChannelVerification; // 0x191 (from 0xA55A)
 
-	uint8	unused[UNUSED_PARAMETERS_SIZE];	// 0x191 (from 0xA55A) // Space for expansion
+	uint8	unused[UNUSED_PARAMETERS_SIZE];	// 0x192 (from 0xA55A) // Space for expansion
 } PARAMETERS_STRUCT;
 #pragma pack()
 

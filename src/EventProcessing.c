@@ -858,7 +858,7 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.parameters.aWeighting = ((uint8)g_factorySetupRecord.aweight_option & (uint8)g_unitConfig.airScale); // Equals 1 if enabled (1) and scale is A-weighting (1)
 	eventRec->summary.parameters.seismicSensorType = g_factorySetupRecord.sensor_type;
 	eventRec->summary.parameters.airSensorType = SENSOR_MICROPHONE;
-
+	eventRec->summary.parameters.adChannelVerification = g_unitConfig.adChannelVerification;
 	eventRec->summary.parameters.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
 	eventRec->summary.parameters.seismicUnitsOfMeasure = g_unitConfig.unitsOfMeasure;
 	eventRec->summary.parameters.airUnitsOfMeasure = g_unitConfig.unitsOfAir;

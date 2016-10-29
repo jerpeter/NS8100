@@ -63,8 +63,6 @@ enum {
 	BAR_SCALE_EIGHTH_TAG,
 	ENABLED_TAG,
 	DISABLED_TAG,
-	ALARM_TAG,
-	TESTING_TAG,
 	// Add new separators before this line
 	TOTAL_TAGS
 };
@@ -402,6 +400,7 @@ enum {
 	BATTERY,
 	BAUD_RATE,
 	CALIBRATION_DATE,
+	CHANNEL_VERIFICATION,
 	COPIES,
 	DATE_TIME,
 	ERASE_FLASH,
@@ -813,6 +812,7 @@ void MonitorLogMn (INPUT_MSG_STRUCT msg);
 //----------------------------------------
 // User Select Menu Enter and Esc Handlers
 //----------------------------------------
+void AdChannelVerificationMenuHandler(uint8 key, void* data);
 void AirScaleMenuHandler(uint8 key, void* data);
 void AirSetupMenuHandler(uint8 key, void* data);
 void AlarmOneMenuHandler(uint8 key, void* data);

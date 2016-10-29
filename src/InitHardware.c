@@ -909,7 +909,7 @@ void InitExternalAD(void)
 #if EXTENDED_DEBUG
 	debug("Setup A/D config and channels (External Ref, Temp On)\r\n");
 #endif
-	SetupADChannelConfig(SAMPLE_RATE_DEFAULT);
+	SetupADChannelConfig(SAMPLE_RATE_DEFAULT, UNIT_CONFIG_CHANNEL_VERIFICATION);
 
 	// Read a few test samples
 	GetChannelOffsets(SAMPLE_RATE_DEFAULT);
@@ -1106,7 +1106,7 @@ void PowerDownAndHalt(void)
 
 	debug("Setup A/D config and channels\r\n");
 	// Setup the A/D Channel configuration
-	SetupADChannelConfig(1024);
+	SetupADChannelConfig(1024, UNIT_CONFIG_CHANNEL_VERIFICATION);
 
 	debug("Disable the A/D\r\n");
 	PowerControl(ANALOG_SLEEP_ENABLE, OFF);

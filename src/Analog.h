@@ -85,6 +85,11 @@ enum {
 	CHANNELS_R_AND_V_SWAPPED
 };
 
+enum {
+	UNIT_CONFIG_CHANNEL_VERIFICATION = 1,
+	OVERRIDE_ENABLE_CHANNEL_VERIFICATION
+};
+
 typedef union
 {
 	struct
@@ -120,6 +125,6 @@ void UpdateChannelOffsetsForTempChange(void);
 void AdSetCalSignalLow(void);
 void AdSetCalSignalHigh(void);
 void AdSetCalSignalOff(void);
-void SetupADChannelConfig(uint32 sampleRate);
+void SetupADChannelConfig(uint32 sampleRate, uint8 channelVerification);
 
 #endif //_ANALOG_H_

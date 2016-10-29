@@ -90,6 +90,7 @@ Chan 0 Config: 0xe1f0, Chan 1 Config: 0xe3f0, Chan 2 Config: 0xe5f0, Chan 3 Conf
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 0 // Unused at this time
 void GetAnalogConfigReadback(void)
 {
 	SAMPLE_DATA_STRUCT dummyData;
@@ -133,6 +134,7 @@ void GetAnalogConfigReadback(void)
 		debugRaw("Temp Config: 0x%x", channelConfigReadback);
 	}
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -285,7 +287,7 @@ void WriteADConfig(unsigned int config)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void SetupADChannelConfig(uint32 sampleRate)
+void SetupADChannelConfig(uint32 sampleRate, uint8 channelVerification)
 {
 	// AD config all channels, with temp, with read back
 	// Overwrite (set config), Unipolar, INx referenced to COM = GND ± 0.1 V, Stop after Channel 3 (0 bias), Full BW, 
@@ -308,21 +310,25 @@ void SetupADChannelConfig(uint32 sampleRate)
 	// For any sample rate 8K and below
 	if (sampleRate <= SAMPLE_RATE_8K)
 	{
-#if 1 // Read back config
-		// Setup config for 4 Chan, No read back, With temp
-		WriteADConfig(0x39D4);
-		WriteADConfig(0x39D4);
-		WriteADConfig(0x39D4);
+		// Read back config
+		if ((g_unitConfig.adChannelVerification == ENABLED) || (channelVerification == OVERRIDE_ENABLE_CHANNEL_VERIFICATION))
+		{
+			// Setup config for 4 Chan, With read back, With temp
+			WriteADConfig(0x39D4);
+			WriteADConfig(0x39D4);
+			WriteADConfig(0x39D4);
 		
-		g_adChannelConfig = FOUR_AD_CHANNELS_WITH_READBACK_WITH_TEMP;
-#else // Don't read back config
-		// Setup config for 4 Chan, No read back, With temp
-		WriteADConfig(0x39D5);
-		WriteADConfig(0x39D5);
-		WriteADConfig(0x39D5);
+			g_adChannelConfig = FOUR_AD_CHANNELS_WITH_READBACK_WITH_TEMP;
+		}
+		else // Don't read back config
+		{
+			// Setup config for 4 Chan, No read back, With temp
+			WriteADConfig(0x39D5);
+			WriteADConfig(0x39D5);
+			WriteADConfig(0x39D5);
 		
-		g_adChannelConfig = FOUR_AD_CHANNELS_NO_READBACK_WITH_TEMP;
-#endif
+			g_adChannelConfig = FOUR_AD_CHANNELS_NO_READBACK_WITH_TEMP;
+		}
 	}
 	else // Sample rates above 8192 take too long to read back config and temp, so skip them
 	{

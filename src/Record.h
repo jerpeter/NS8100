@@ -233,7 +233,7 @@ typedef struct
 	uint16 validationKey;
 	uint8 baudRate;
 	uint8 rs232PowerSavings;
-	uint8 unused1;
+	uint8 adChannelVerification;
 	uint8 externalTrigger;
 	uint8 saveCompressedData;
 	uint8 airScale;

@@ -48,13 +48,12 @@
 ///	Prototypes
 ///----------------------------------------------------------------------------
 void DataIsrInit(uint16 sampleRate);
-void StartDataCollection(uint32 sampleRate);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
 void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParamsPtr)
-{ 
+{
 	// Check if any events are still stored in buffers and need to be stored into flash
 	if (getSystemEventState(TRIGGER_EVENT))
 	{
@@ -162,6 +161,7 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 		debug("\tSample Rate: %d, Channels: %d\r\n", opModeParamsPtr->sample_rate, g_sensorInfo.numOfChannels);
 	}
 
+	debug("\tAD Channel Verification: %s\r\n", ((opModeParamsPtr->sample_rate <= SAMPLE_RATE_8K) && (g_unitConfig.adChannelVerification == ENABLED)) ? "Enabled" : "Disabled");
 	debug("---------------------------\r\n");
 
 	// Check if mode is Manual Cal
@@ -241,7 +241,7 @@ void StartDataCollection(uint32 sampleRate)
 	SoftUsecWait(50 * SOFT_MSECS);
 
 	// Setup the A/D Channel configuration
-	SetupADChannelConfig(sampleRate);
+	SetupADChannelConfig(sampleRate, UNIT_CONFIG_CHANNEL_VERIFICATION);
 	
 	// Get current A/D offsets for normalization
 	debug("Getting channel offsets...\r\n");

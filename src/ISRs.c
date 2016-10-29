@@ -1459,7 +1459,7 @@ static inline void HandleChannelSyncError_ISR_Inline(void)
 	SoftUsecWait(50 * SOFT_MSECS);
 
 	// Setup the A/D Channel configuration
-	SetupADChannelConfig(s_sampleRate);
+	SetupADChannelConfig(s_sampleRate, UNIT_CONFIG_CHANNEL_VERIFICATION);
 #endif
 }
 
