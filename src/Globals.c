@@ -156,9 +156,7 @@ USER_MENU_TAGS_STRUCT g_menuTags[TOTAL_TAGS] = {
 	{"",	BAR_SCALE_QUARTER_TAG},
 	{"",	BAR_SCALE_EIGHTH_TAG},
 	{" ENABLED",	ENABLED_TAG},
-	{" DISABLED",	DISABLED_TAG},
-	{"- ALARM",		ALARM_TAG},
-	{" TESTING -",	TESTING_TAG}
+	{" DISABLED",	DISABLED_TAG}
 };
 uint8 g_monitorOperationMode;
 uint8 g_waitForUser = FALSE;

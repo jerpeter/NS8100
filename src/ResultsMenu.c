@@ -301,6 +301,8 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	DATE_TIME_STRUCT time;
 	uint16 bitAccuracyScale;
 	uint8 calResults = PASSED;
+	char modeChar = 'W';
+	char chanVerifyChar = '-';
 
 	if ((g_updateResultsEventRecord == YES) || (g_forcedCalibration == YES))
 	{
@@ -358,11 +360,26 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		for (; i < (TOTAL_DOTS-1); i++)		dotBuff[i] = ' ';
 		if (++dotState >= TOTAL_DOTS)		dotState = 0;
 
-		if (g_triggerRecord.trec.sample_rate == 512)
-			sprintf((char*)srBuff, ".5K");
-		else
-			sprintf((char*)srBuff, "%dK", (int)(g_triggerRecord.trec.sample_rate / SAMPLE_RATE_1K));
+		if (g_triggerRecord.trec.sample_rate == 512) { sprintf((char*)srBuff, ".5K"); }
+		else { sprintf((char*)srBuff, "%dK", (int)(g_triggerRecord.trec.sample_rate / SAMPLE_RATE_1K)); }
 
+		// Set the mode character (default is 'W' for Waveform on init)
+		if (g_monitorOperationMode == BARGRAPH_MODE) { modeChar = 'B'; }
+		else if (g_monitorOperationMode == COMBO_MODE) { modeChar = 'C'; }
+
+		// Set the channel verification character (default is '-' for disabled on init)
+		if ((g_triggerRecord.trec.sample_rate <= SAMPLE_RATE_8K) && (g_unitConfig.adChannelVerification == ENABLED)) { chanVerifyChar = '+'; }
+
+		if (g_busyProcessingEvent == YES)
+		{
+			length = (uint8)sprintf((char*)buff, "%s%s(%c%c%s)", getLangText(PROCESSING_TEXT), dotBuff, modeChar, chanVerifyChar, srBuff);
+		}
+		else
+		{
+			length = (uint8)sprintf((char*)buff, "%s%s(%c%c%s)", getLangText(MONITORING_TEXT), dotBuff, modeChar, chanVerifyChar, srBuff);
+		}
+
+#if 0 // Replacing this old code
 		if (g_monitorOperationMode == WAVEFORM_MODE)
 		{
 			if (g_busyProcessingEvent == YES)
@@ -382,6 +399,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			length = (uint8)sprintf((char*)buff, "%s%s(C-%s)", getLangText(MONITORING_TEXT), dotBuff, srBuff);
 		}
+#endif
 	}
 	else
 	{
