@@ -1482,37 +1482,14 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 	int LTT = -1;
 	int LMT = -1;
 	int LCPT = -1;
-	uint16 testCounter = 0;
-	uint16* intMem = (uint16*)0x3000;
+	int exceptionReportFile;
+	uint16 loops = 5;
 
-	//uint8 state = 0;
-	//uint8 key = KEY_NONE;
-
-	/* Adjust SP to pre-exception value.
-		* PC and SR are 4 bytes each.
-		*/
+	// Adjust Stack pointer to pre-exception value (PC and SR are 4 bytes each)
 	sp += 8;
 
-	UNUSED(r12);
-	UNUSED(r11);
-	UNUSED(r10);
-	UNUSED(r9);
-	UNUSED(lr);
-	UNUSED(r7);
-	UNUSED(r6);
-	UNUSED(r5);
-	UNUSED(r4);
-	UNUSED(r3);
-	UNUSED(r2);
-	UNUSED(r1);
-	UNUSED(r0);
-	UNUSED(sp);
-	UNUSED(sr);
-	UNUSED(stack0);
-	UNUSED(stack1);
-	UNUSED(stack2);
-
-	//debugRaw("\r\n\nERROR - Exception: ");
+	UNUSED(r12); UNUSED(r11); UNUSED(r10); UNUSED(r9); UNUSED(lr); UNUSED(r7); UNUSED(r6); UNUSED(r5); UNUSED(r4); UNUSED(r3); UNUSED(r2); UNUSED(r1); UNUSED(r0);
+	UNUSED(sp); UNUSED(sr); UNUSED(stack0); UNUSED(stack1); UNUSED(stack2);
 
 	switch (((exception_number * 4) - 4))
 	{
@@ -1541,7 +1518,10 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		default: strcpy((char*)&exceptionText, "Unknown EVBA offset"); debugErr("Unknown EVBA offset"); break;
 	}
 
-	//debugRaw(" at PC = 0x%x\r\n\n", pc);
+	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastFSWrite) { LFST = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastFSWrite); }
+	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastTrigger) { LTT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastTrigger); }
+	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastMidnight) { LMT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastMidnight); }
+	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastCalPulse) { LCPT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastCalPulse); }
 
 	// Check if the LCD Power was turned off
 	if (g_lcdPowerFlag == DISABLED)
@@ -1560,106 +1540,81 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 		SetLcdBacklightState(BACKLIGHT_BRIGHT);
 	}
 
-#if 1
-	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastFSWrite) { LFST = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastFSWrite); }
-	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastTrigger) { LTT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastTrigger); }
-	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastMidnight) { LMT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastMidnight); }
-	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastCalPulse) { LCPT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastCalPulse); }
-#endif
-
-#if 0
-	char modeString[10];
-	char statusString[10];
-	char startTimeString[20];
-	char stopTimeString[20];
-	char seisString[15];
-	char airString[15];
-	char sensorString[10];
-	MONITOR_LOG_ENTRY_STRUCT *mle;
-	float tempSesmicTriggerInUnits;
-	float unitsDiv;
-	uint32 airInUnits;
-#endif
-	int exceptionReportFile;
-	uint8 fsAvail = NO;
-	uint8 errReportFiled = NO;
-
 	nav_select(FS_NAV_ID_DEFAULT);
-
 	exceptionReportFile = open(s_errorReportFilename, O_APPEND);
+
+	// Check if Exception report file doesn't exist
 	if (exceptionReportFile == -1)
 	{
+		// Create Exception report file for the first time
 		nav_setcwd(s_errorReportFilename, TRUE, TRUE);
 		exceptionReportFile = open(s_errorReportFilename, O_APPEND);
 	}
 
-	// Verify file ID
-	if (exceptionReportFile == -1)
+	// Verify file ID is valid
+	if (exceptionReportFile != -1)
 	{
-		//nav_exit();
-	}
-	else
-	{
-		fsAvail = YES;
-#if 0
-		mle = &__monitorLogTbl[__monitorLogTblIndex];
-
-		if (mle->mode == WAVEFORM_MODE) { strcpy((char*)&modeString, "Waveform"); }
-		else if (mle->mode == BARGRAPH_MODE) { strcpy((char*)&modeString, "Bargraph"); }
-		else if (mle->mode == COMBO_MODE) { strcpy((char*)&modeString, "Combo"); }
-
-		if (mle->status == COMPLETED_LOG_ENTRY) { strcpy((char*)&statusString, "Completed"); }
-		else if (mle->status == PARTIAL_LOG_ENTRY) { strcpy((char*)&statusString, "Partial"); }
-		else if (mle->status == INCOMPLETE_LOG_ENTRY) { strcpy((char*)&statusString, "Incomplete"); }
-
-		sprintf((char*)&startTimeString, "%02d-%02d-%02d %02d:%02d:%02d", mle->startTime.day, mle->startTime.month, mle->startTime.year,
-		mle->startTime.hour, mle->startTime.min, mle->startTime.sec);
-		sprintf((char*)&stopTimeString, "%02d-%02d-%02d %02d:%02d:%02d", mle->stopTime.day, mle->stopTime.month, mle->stopTime.year,
-		mle->stopTime.hour, mle->stopTime.min, mle->stopTime.sec);
-
-		if (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) {strcpy((char*)seisString, "None"); }
-		else
-		{
-			// Calculate the divider used for converting stored A/D peak counts to units of measure
-			unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) /
-			(float)(g_factorySetupRecord.sensor_type);
-
-			tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
-			if ((g_factorySetupRecord.sensor_type != SENSOR_ACCELEROMETER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE)) { tempSesmicTriggerInUnits *= (float)METRIC; }
-
-			sprintf((char*)seisString, "%05.2f %s", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
-		}
-
-		if (g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) {strcpy((char*)airString, "None"); }
-		else
-		{
-			airInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-			if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { sprintf((char*)airString, "%05.3f mB", ((float)airInUnits / 10000)); }
-			else { sprintf((char*)airString, "%d dB", (uint16)airInUnits); }
-		}
-
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) { strcpy((char*)&sensorString, "Acc"); }
-		else { sprintf((char*)&sensorString, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
-
-		sprintf((char*)g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
-		"Seismic Trig: %10s, Air Trig: %11s\r\n\tBit Acc: %d, Temp Adjust: %3s, Sensor: %8s, Sensitivity: %4s\r\n\n",
-		mle->uniqueEntryId, (char*)statusString, (char*)modeString, (char*)startTimeString, (char*)stopTimeString, mle->eventsRecorded, mle->startEventNumber,
-		(char*)seisString, (char*)airString, mle->bitAccuracy, ((mle->adjustForTempDrift == YES) ? "YES" : "NO"),
-		(char*)sensorString, ((mle->sensitivity == LOW) ? "LOW" : "HIGH"));
-
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+		sprintf((char*)g_spareBuffer, "===== Exception Report =====\r\n");
 		write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+		if (((exception_number * 4) - 4) == EVBA_BREAKPOINT)
+		{
+			switch (g_breakpointCause)
+			{
+				case BP_INT_MEM_CORRUPTED: sprintf((char*)&exceptionMessage, "BREAKPOINT: INTERNAL MEM TAMPERED"); break;
+				case BP_SOFT_LOOP: sprintf((char*)&exceptionMessage, "BREAKPOINT: NON ISR FOREVER LOOP DETECTED"); break;
+				case BP_MB_LOOP: sprintf((char*)&exceptionMessage, "BREAKPOINT: MESSAGE BOX FOREVER LOOP DETECTED"); break;
+				case BP_UNHANDLED_INT: sprintf((char*)&exceptionMessage, "BREAKPOINT: UNHANDLED INTERRUPT DETECTED"); break;
+				case BP_AD_CHAN_SYNC_ERR: sprintf((char*)&exceptionMessage, "BREAKPOINT: A/D CHAN SYNC ERROR"); break;
+				default: sprintf((char*)&exceptionMessage, "BREAKPOINT: CAUSE UNKNOWN");
+			}
 
+			sprintf((char*)g_spareBuffer, "%s: %s\r\n", (char*)&g_buildVersion, (char*)&exceptionMessage);
+			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+
+			if (g_breakpointCause == BP_MB_LOOP)
+			{
+				sprintf((char*)g_spareBuffer, "%s: MSG TEXT: %s\r\n", "EXC SCREEN 1", (char*)g_debugBuffer);
+				write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+			}
+		}
+		else // Non-Breakpoint exception
+		{
+			sprintf((char*)g_spareBuffer, "%s: EXC: %s at PC:0x%lx\r\n", (char*)&g_buildVersion, (char*)exceptionText, pc);
+			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+		}
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+		sprintf((char*)g_spareBuffer, "%s: SP:0x%lx S0:0x%lx S1:0x%lx S2:0x%lx\r\n", "EXC SCREEN 2", sp, stack0, stack1, stack2);
+		write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+		sprintf((char*)g_spareBuffer, "%s: SR:0x%lx LR:0x%lx EXC:0x%lx\r\n", "EXC SCREEN 3", sr, lr, exception_number);
+		write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+		sprintf((char*)g_spareBuffer, "%s: R0:0x%lx R1:0x%lx R2:0x%lx R3:0x%lx\r\n", "EXC SCREEN 4", r0, r1, r2, r3);
+		write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+		sprintf((char*)g_spareBuffer, "%s: R4:0x%lx R5:0x%lx R6:0x%lx R7:0x%lx\r\n", "EXC SCREEN 5", r4, r5, r6, r7);
+		write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+		sprintf((char*)g_spareBuffer, "%s: R9:0x%lx R10:0x%lx R11:0x%lx R12:0x%lx\r\n", "EXC SCREEN 6", r9, r10, r11, r12);
+		write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+		sprintf((char*)g_spareBuffer, "%s: SR:%lu FS:%d T:%d CP:%d M:%d\r\n", "EXC SCREEN 7", g_lifetimeHalfSecondTickCount, LFST, LTT, LCPT, LMT);
+		write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+		FillInAdditionalExceptionReportInfo(exceptionReportFile);
 		SetFileDateTimestamp(FS_DATE_LAST_WRITE);
-
-		// Done writing, close the exception report file
 		close(exceptionReportFile);
-#endif
+
+		AddOnOffLogTimestamp(OFF_EXCEPTION);
 	}
 
-	sprintf((char*)g_spareBuffer, "===== Exception Report =====\r\n");
-	write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
+	// Make sure all open files are closed and data is flushed
+	nav_exit();
 
-	uint16 loops = 5;
+	// Disable power off protection
+	WriteMcp23018(IO_ADDRESS_KPD, OLATA, 0x00);
 
 	while (loops--)
 	{
@@ -1674,131 +1629,38 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 				case BP_AD_CHAN_SYNC_ERR: sprintf((char*)&exceptionMessage, "BREAKPOINT: A/D CHAN SYNC ERROR"); break;
 				default: sprintf((char*)&exceptionMessage, "BREAKPOINT: CAUSE UNKNOWN");
 			}
-			OverlayMessage("EXC SCREEN 1", (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-			if ((fsAvail == YES) && (errReportFiled == NO))
-			{
-				sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 1", (char*)&exceptionMessage);
-				write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-			}
+			OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY | EXCEPTION_MSG_DISPLAY_TIME));
 
 			if (g_breakpointCause == BP_MB_LOOP)
 			{
 				sprintf((char*)&exceptionMessage, "MSG TEXT: %s", (char*)g_debugBuffer);
-				//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
-				OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-				if ((fsAvail == YES) && (errReportFiled == NO))
-				{
-					sprintf((char*)g_spareBuffer, "%s: %s\r\n", (char*)&g_buildVersion, (char*)&exceptionMessage);
-					write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-				}
-			}
-			else
-			{
-				sprintf((char*)&exceptionMessage, "MAX SD:%d bytes (TOP ADDR:%p)", (int)(0x1000 - testCounter), intMem);
-				//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
-				OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-				if ((fsAvail == YES) && (errReportFiled == NO))
-				{
-					sprintf((char*)g_spareBuffer, "%s: %s\r\n", (char*)&g_buildVersion, (char*)&exceptionMessage);
-					write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-				}
+				OverlayMessage("EXC SCREEN 1", (char*)&exceptionMessage, (EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY | EXCEPTION_MSG_DISPLAY_TIME));
 			}
 		}
 		else
 		{
 			sprintf((char*)&exceptionMessage, "EXC: %s at PC:0x%lx", (char*)exceptionText, pc);
-			OverlayMessage("EXC SCREEN 1", (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-			if ((fsAvail == YES) && (errReportFiled == NO))
-			{
-				sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 1", (char*)&exceptionMessage);
-				write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-			}
-
-			sprintf((char*)&exceptionMessage, "MAX SD:%d bytes (TOP ADDR:%p)", (int)(0x1000 - testCounter), intMem);
-			//OverlayMessage("EXC SCREEN 1a", (char*)&exceptionMessage, (8 * SOFT_SECS));
-			OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-			if ((fsAvail == YES) && (errReportFiled == NO))
-			{
-				sprintf((char*)g_spareBuffer, "%s: %s\r\n", (char*)&g_buildVersion, (char*)&exceptionMessage);
-				write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-			}
+			OverlayMessage((char*)&g_buildVersion, (char*)&exceptionMessage, (EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY | EXCEPTION_MSG_DISPLAY_TIME));
 		}
-
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 		sprintf((char*)&exceptionMessage, "SP:0x%lx S0:0x%lx S1:0x%lx S2:0x%lx", sp, stack0, stack1, stack2);
-		OverlayMessage("EXC SCREEN 2", (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-		if ((fsAvail == YES) && (errReportFiled == NO))
-		{
-			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 2", (char*)&exceptionMessage);
-			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-		}
-
+		OverlayMessage("EXC SCREEN 2", (char*)&exceptionMessage, (EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY | EXCEPTION_MSG_DISPLAY_TIME));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 		sprintf((char*)&exceptionMessage, "SR:0x%lx LR:0x%lx EXC:0x%lx", sr, lr, exception_number);
-		OverlayMessage("EXC SCREEN 3", (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-		if ((fsAvail == YES) && (errReportFiled == NO))
-		{
-			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 3", (char*)&exceptionMessage);
-			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-		}
-
+		OverlayMessage("EXC SCREEN 3", (char*)&exceptionMessage, (EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY | EXCEPTION_MSG_DISPLAY_TIME));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 		sprintf((char*)&exceptionMessage, "R0:0x%lx R1:0x%lx R2:0x%lx R3:0x%lx", r0, r1, r2, r3);
-		OverlayMessage("EXC SCREEN 4", (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-		if ((fsAvail == YES) && (errReportFiled == NO))
-		{
-			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 4", (char*)&exceptionMessage);
-			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-		}
-
+		OverlayMessage("EXC SCREEN 4", (char*)&exceptionMessage, (EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY | EXCEPTION_MSG_DISPLAY_TIME));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 		sprintf((char*)&exceptionMessage, "R4:0x%lx R5:0x%lx R6:0x%lx R7:0x%lx", r4, r5, r6, r7);
-		OverlayMessage("EXC SCREEN 5", (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-		if ((fsAvail == YES) && (errReportFiled == NO))
-		{
-			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 5", (char*)&exceptionMessage);
-			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-		}
-
+		OverlayMessage("EXC SCREEN 5", (char*)&exceptionMessage, (EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY | EXCEPTION_MSG_DISPLAY_TIME));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 		sprintf((char*)&exceptionMessage, "R9:0x%lx R10:0x%lx R11:0x%lx R12:0x%lx", r9, r10, r11, r12);
-		OverlayMessage("EXC SCREEN 6", (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-		if ((fsAvail == YES) && (errReportFiled == NO))
-		{
-			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 6", (char*)&exceptionMessage);
-			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-		}
-
+		OverlayMessage("EXC SCREEN 6", (char*)&exceptionMessage, (EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY | EXCEPTION_MSG_DISPLAY_TIME));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 		sprintf((char*)&exceptionMessage, "SR:%lu FS:%d T:%d CP:%d M:%d", g_lifetimeHalfSecondTickCount, LFST, LTT, LCPT, LMT);
-		OverlayMessage("EXC SCREEN 7", (char*)&exceptionMessage, (8 * SOFT_SECS));
-
-		if ((fsAvail == YES) && (errReportFiled == NO))
-		{
-			sprintf((char*)g_spareBuffer, "%s: %s\r\n", "EXC SCREEN 7", (char*)&exceptionMessage);
-			write(exceptionReportFile, g_spareBuffer, strlen((char*)g_spareBuffer));
-		}
-
-		if ((fsAvail == YES) && (errReportFiled == NO))
-		{
-			FillInAdditionalExceptionReportInfo(exceptionReportFile);
-			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
-			close(exceptionReportFile);
-
-			errReportFiled = YES;
-
-			AddOnOffLogTimestamp(OFF_EXCEPTION);
-
-			// Make sure all open files are closed and data is flushed
-			nav_exit();
-
-			// Disable power off protection
-			WriteMcp23018(IO_ADDRESS_KPD, OLATA, 0x00);
-		}
+		OverlayMessage("EXC SCREEN 7", (char*)&exceptionMessage, (EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY | EXCEPTION_MSG_DISPLAY_TIME));
+		//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	}
 
 	OverlayMessage(getLangText(STATUS_TEXT), getLangText(POWERING_UNIT_OFF_NOW_TEXT), 0);

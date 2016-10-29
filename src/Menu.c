@@ -896,6 +896,17 @@ void OverlayMessage(char* titleString, char* textString, uint32 displayTime)
 	{
 		SoftUsecWait(displayTime);
 	}
+	// Check for exception handling key
+	else if ((displayTime & EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY) == EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY)
+	{
+		// Remove the key
+		displayTime &= ~EXCEPTION_HANDLING_USE_SOFT_DELAY_KEY;
+
+		// Convert exception time to seconds
+		displayTime *= SOFT_SECS;
+
+		SoftUsecWait(displayTime);
+	}
 	else // Use the millisecond timer to handle the display time and call USB Manager to handle USB requests in the meantime
 	{
 		// Start the key timer
