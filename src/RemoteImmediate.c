@@ -217,7 +217,8 @@ void handleEEM(CMD_BUFFER_STRUCT* inCmd)
 	{
 		// Disable USB if there is an active connection
 		UsbDisableIfActive();
-		// Delete events, recalculate space and reinitialize tables
+
+		// Delete events, recalculate space and reinitialize tables
 		DeleteEventFileRecords();
 		GetSDCardUsageStats();
 		InitRamSummaryTbl();
@@ -703,6 +704,7 @@ uint8 sendDQMData(void)
 					g_dqmXferStructPtr->dqmData[idex].eventNumber = g_summaryList.cachedEntry.eventNumber;
 					memcpy(g_dqmXferStructPtr->dqmData[idex].serialNumber, g_summaryList.cachedEntry.serialNumber, SERIAL_NUMBER_STRING_SIZE);
 					g_dqmXferStructPtr->dqmData[idex].eventTime = g_summaryList.cachedEntry.eventTime;
+					g_dqmXferStructPtr->dqmData[idex].subMode = g_summaryList.cachedEntry.subMode;
 					g_dqmXferStructPtr->dqmData[idex].endFlag = 0xEE;
 					idex++;
 				}
