@@ -813,8 +813,10 @@ uint8 MessageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 	uint8 activeChoice = MB_FIRST_CHOICE;
 	volatile uint8 key = 0;
 
+#if 0 // ET test
 	g_debugBufferCount = 1;
 	strcpy((char*)g_debugBuffer, textString);
+#endif
 
 	// Build MessageBox into g_mmap with the following calls
 	MessageBorder();
@@ -867,7 +869,9 @@ uint8 MessageBox(char* titleString, char* textString, MB_CHOICE_TYPE choiceType)
 	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 	WriteMapToLcd(g_mmap);
 
+#if 0 // ET Test
 	g_debugBufferCount = 0;
+#endif
 
 	if (key == ENTER_KEY) { return (activeChoice); }
 	if (key == ON_ESC_KEY) { return (MB_SPECIAL_ACTION); }
