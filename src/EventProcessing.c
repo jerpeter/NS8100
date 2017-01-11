@@ -1075,15 +1075,6 @@ void IncrementCurrentEventNumber(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 GetUniqueEventNumber(SUMMARY_DATA* currentSummary)
-{
-	// Event number is stored in ram summary
-	return currentSummary->fileEventNum;
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
 void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer)
 {
 	char fileName[50]; // Should only be short filenames, 8.3 format + directory
@@ -2317,7 +2308,7 @@ inline void AdjustSampleForBitAccuracy(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void CompleteRamEventSummary(SUMMARY_DATA* ramSummaryPtr)
+void CompleteRamEventSummary(void)
 {
 	//--------------------------------
 	// Complete the Summary (used for Wave, Cal, Combo-Wave
@@ -2331,60 +2322,46 @@ void CompleteRamEventSummary(SUMMARY_DATA* ramSummaryPtr)
 		g_pendingEventRecord.summary.captured.comboBargraphEventNumberLink = g_pendingBargraphRecord.summary.eventNumber;
 	}
 
-	debug("Copy calculated from Waveform buffer to global ram event record\r\n");
-		
-	// Fill in calculated data (Bargraph data filled in at the end of bargraph)
-	g_pendingEventRecord.summary.calculated.a.peak = ramSummaryPtr->waveShapeData.a.peak;
-	g_pendingEventRecord.summary.calculated.r.peak = ramSummaryPtr->waveShapeData.r.peak;
-	g_pendingEventRecord.summary.calculated.v.peak = ramSummaryPtr->waveShapeData.v.peak;
-	g_pendingEventRecord.summary.calculated.t.peak = ramSummaryPtr->waveShapeData.t.peak;
+	debug("Newly stored peaks: a:%04x r:%04x v:%04x t:%04x\r\n", g_pendingEventRecord.summary.calculated.a.peak, g_pendingEventRecord.summary.calculated.r.peak,
+			g_pendingEventRecord.summary.calculated.v.peak,	g_pendingEventRecord.summary.calculated.t.peak);
 
-	debug("Newly stored peaks: a:%04x r:%04x v:%04x t:%04x\r\n", 
-			g_pendingEventRecord.summary.calculated.a.peak, 
-			g_pendingEventRecord.summary.calculated.r.peak,
-			g_pendingEventRecord.summary.calculated.v.peak,
-			g_pendingEventRecord.summary.calculated.t.peak);
-
-	g_pendingEventRecord.summary.calculated.a.frequency = ramSummaryPtr->waveShapeData.a.freq;
-	g_pendingEventRecord.summary.calculated.r.frequency = ramSummaryPtr->waveShapeData.r.freq;
-	g_pendingEventRecord.summary.calculated.v.frequency = ramSummaryPtr->waveShapeData.v.freq;
-	g_pendingEventRecord.summary.calculated.t.frequency = ramSummaryPtr->waveShapeData.t.freq;
-
-	debug("Newly stored freq: a:%d r:%d v:%d t:%d\r\n", 
-			g_pendingEventRecord.summary.calculated.a.frequency, 
-			g_pendingEventRecord.summary.calculated.r.frequency,
-			g_pendingEventRecord.summary.calculated.v.frequency,
-			g_pendingEventRecord.summary.calculated.t.frequency);
+	debug("Newly stored freq: a:%d r:%d v:%d t:%d\r\n", g_pendingEventRecord.summary.calculated.a.frequency, g_pendingEventRecord.summary.calculated.r.frequency,
+			g_pendingEventRecord.summary.calculated.v.frequency, g_pendingEventRecord.summary.calculated.t.frequency);
 
 	// Calculate Displacement as PPV/(2 * PI * Freq) with 1000000 to shift to keep accuracy and the 10 to adjust the frequency
-	g_pendingEventRecord.summary.calculated.a.displacement = 0;
-
-	if (ramSummaryPtr->waveShapeData.r.freq != 0)
+	// R Channel
+	if (g_pendingEventRecord.summary.calculated.r.frequency != 0)
 	{
-		g_pendingEventRecord.summary.calculated.r.displacement = (uint32)(ramSummaryPtr->waveShapeData.r.peak * 1000000 / 2 / PI / ramSummaryPtr->waveShapeData.r.freq * 10);
+		g_pendingEventRecord.summary.calculated.r.displacement = (uint32)(g_pendingEventRecord.summary.calculated.r.peak * 1000000 / 2 / PI / g_pendingEventRecord.summary.calculated.r.frequency * 10);
 	}
 	else { g_pendingEventRecord.summary.calculated.r.displacement = 0; }
 
-	if (ramSummaryPtr->waveShapeData.v.freq != 0)
+	// V Channel
+	if (g_pendingEventRecord.summary.calculated.v.frequency != 0)
 	{
-		g_pendingEventRecord.summary.calculated.v.displacement = (uint32)(ramSummaryPtr->waveShapeData.v.peak * 1000000 / 2 / PI / ramSummaryPtr->waveShapeData.v.freq * 10);
+		g_pendingEventRecord.summary.calculated.v.displacement = (uint32)(g_pendingEventRecord.summary.calculated.v.peak * 1000000 / 2 / PI / g_pendingEventRecord.summary.calculated.v.frequency * 10);
 	}
 	else { g_pendingEventRecord.summary.calculated.v.displacement = 0; }
 
-	if (ramSummaryPtr->waveShapeData.t.freq != 0)
+	// T Channel
+	if (g_pendingEventRecord.summary.calculated.t.frequency != 0)
 	{
-		g_pendingEventRecord.summary.calculated.t.displacement = (uint32)(ramSummaryPtr->waveShapeData.t.peak * 1000000 / 2 / PI / ramSummaryPtr->waveShapeData.t.freq * 10);
+		g_pendingEventRecord.summary.calculated.t.displacement = (uint32)(g_pendingEventRecord.summary.calculated.t.peak * 1000000 / 2 / PI / g_pendingEventRecord.summary.calculated.t.frequency * 10);
 	}
 	else { g_pendingEventRecord.summary.calculated.t.displacement = 0; }
+
+	// A Channel (No Displacement)
+	g_pendingEventRecord.summary.calculated.a.displacement = 0;
 
 	// Calculate Peak Acceleration as (2 * PI * PPV * Freq) / 1G, where 1G = 386.4in/sec2 or 9814.6 mm/sec2, using 1000 to shift to keep accuracy
 	// The divide by 10 at the end to adjust the frequency, since freq stored as freq * 10
 	// Not dividing by 1G at this time. Before displaying Peak Acceleration, 1G will need to be divided out
-	g_pendingEventRecord.summary.calculated.a.acceleration = 0;
+	g_pendingEventRecord.summary.calculated.r.acceleration = (uint32)(g_pendingEventRecord.summary.calculated.r.peak * 1000 * 2 * PI * g_pendingEventRecord.summary.calculated.r.frequency / 10);
+	g_pendingEventRecord.summary.calculated.v.acceleration = (uint32)(g_pendingEventRecord.summary.calculated.v.peak * 1000 * 2 * PI * g_pendingEventRecord.summary.calculated.v.frequency / 10);
+	g_pendingEventRecord.summary.calculated.t.acceleration = (uint32)(g_pendingEventRecord.summary.calculated.t.peak * 1000 * 2 * PI * g_pendingEventRecord.summary.calculated.t.frequency / 10);
 
-	g_pendingEventRecord.summary.calculated.r.acceleration = (uint32)(ramSummaryPtr->waveShapeData.r.peak * 1000 * 2 * PI * ramSummaryPtr->waveShapeData.r.freq / 10);
-	g_pendingEventRecord.summary.calculated.v.acceleration = (uint32)(ramSummaryPtr->waveShapeData.v.peak * 1000 * 2 * PI * ramSummaryPtr->waveShapeData.v.freq / 10);
-	g_pendingEventRecord.summary.calculated.t.acceleration = (uint32)(ramSummaryPtr->waveShapeData.t.peak * 1000 * 2 * PI * ramSummaryPtr->waveShapeData.t.freq / 10);
+	// A Channel (No Acceleration)
+	g_pendingEventRecord.summary.calculated.a.acceleration = 0;
 
 	//--------------------------------
 	g_pendingEventRecord.header.summaryChecksum = 0;

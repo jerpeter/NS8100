@@ -75,34 +75,12 @@ typedef struct
 
 //-------------------------------------------------------------------------------------
 typedef struct
-{
-	uint16 peak;
-	uint16 freq;
-	uint16* peakPtr;
-} CHAN_PEAK_AND_FREQ;
-
-//-------------------------------------------------------------------------------------
-typedef struct
-{
-	union
-	{
-		CHAN_PEAK_AND_FREQ chan[4];
-		struct {
-			CHAN_PEAK_AND_FREQ a;
-			CHAN_PEAK_AND_FREQ r;
-			CHAN_PEAK_AND_FREQ v;
-			CHAN_PEAK_AND_FREQ t;
-		};
-	};
-	uint32 vs;
-} SUMMARY_WAVESHAPE;
-
-//-------------------------------------------------------------------------------------
-typedef struct
 { 
 	uint32 fileEventNum;
-	uint8 mode;
-	SUMMARY_WAVESHAPE waveShapeData;
+	uint8 spare0;
+	uint8 spare1;
+	uint8 spare2;
+	uint8 spare3;
 } SUMMARY_DATA;
 
 //-------------------------------------------------------------------------------------

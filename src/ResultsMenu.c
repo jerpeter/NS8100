@@ -97,7 +97,7 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 		g_updateResultsEventRecord = YES;
 		
 		s_monitorSessionFirstEvent = GetStartingEventNumberForCurrentMonitorLog();
-		s_monitorSessionLastEvent = GetUniqueEventNumber(g_resultsRamSummaryPtr);
+		s_monitorSessionLastEvent = g_resultsRamSummaryPtr->fileEventNum;
 
 		// Check if we have recorded enough events to wrap the ram summary table
 		if ((s_monitorSessionLastEvent - s_monitorSessionFirstEvent) >= TOTAL_RAM_SUMMARIES)
@@ -230,7 +230,7 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					{
 						if (msg.data[0] == DOWN_ARROW_KEY)
 						{
-							if (GetUniqueEventNumber(g_resultsRamSummaryPtr) < s_monitorSessionLastEvent)
+							if (g_resultsRamSummaryPtr->fileEventNum < s_monitorSessionLastEvent)
 							{
 								g_resultsRamSummaryPtr++;
 								g_updateResultsEventRecord = YES;
@@ -243,7 +243,7 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 						}
 						else // msg.data[0] == UP_ARROW_KEY
 						{
-							if (GetUniqueEventNumber(g_resultsRamSummaryPtr) > s_monitorSessionFirstEvent)
+							if (g_resultsRamSummaryPtr->fileEventNum > s_monitorSessionFirstEvent)
 							{
 								g_resultsRamSummaryPtr--;
 								g_updateResultsEventRecord = YES;

@@ -24,8 +24,13 @@
 #define FIRST_FLASH_EVENT_DATA_SECTOR	0
 #define TOTAL_FLASH_EVENT_DATA_SECTORS	(TOTAL_FLASH_DATA_SECTORS - FIRST_FLASH_EVENT_DATA_SECTOR)
 
+#if 0 // Old
 #define LAST_RAM_SUMMARY_INDEX 			799 // Last index
 #define TOTAL_RAM_SUMMARIES 			(LAST_RAM_SUMMARY_INDEX + 1) // 800 total, was 925 total
+#else // Revamped
+#define LAST_RAM_SUMMARY_INDEX 			4399 // Last index
+#define TOTAL_RAM_SUMMARIES 			(LAST_RAM_SUMMARY_INDEX + 1) // 4400 total
+#endif
 
 // Defines
 #define FLASH_EVENT_START	(FLASH_BASE_ADDR + FLASH_BOOT_SIZE_x8 + (FIRST_FLASH_EVENT_DATA_SECTOR * FLASH_SECTOR_SIZE_x8))
@@ -94,9 +99,8 @@ void InitCurrentEventNumber(void);
 uint16 GetLastStoredEventNumber(void);
 void StoreCurrentEventNumber(void);
 void IncrementCurrentEventNumber(void);
-uint16 GetUniqueEventNumber(SUMMARY_DATA* currentSummary);
 uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr);
-void CompleteRamEventSummary(SUMMARY_DATA* ramSummaryPtr);
+void CompleteRamEventSummary(void);
 uint16* GetFlashDataPointer(void);
 void StoreData(uint16* dataPtr, uint16 dataWords);
 void GetSDCardUsageStats(void);

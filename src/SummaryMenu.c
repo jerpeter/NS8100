@@ -49,7 +49,6 @@ extern USER_MENU_STRUCT configMenu[];
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
-static SUMMARY_DATA *s_flashReadSummaryTablePtr = &__ramFlashSummaryTbl[0];
 static uint16 s_topMenuSummaryIndex = 0;
 static uint16 s_currentSummaryIndex = 0;
 static uint16 s_totalRamSummaries = 0;
@@ -59,8 +58,8 @@ static uint16 s_totalRamSummaries = 0;
 ///----------------------------------------------------------------------------
 SUMMARY_MENU_EVENT_CACHE_STRUCT* GetSummaryEventInfo(uint16 tempSummaryIndex);
 void SummaryMenu(INPUT_MSG_STRUCT);
-void SummaryMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT *, SUMMARY_DATA *);
-void SummaryMenuDisplay(WND_LAYOUT_STRUCT *, SUMMARY_DATA *);
+void SummaryMenuProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT *);
+void SummaryMenuDisplay(WND_LAYOUT_STRUCT *);
 void SummaryMenuScroll(char direction);
 uint16 GetFirstValidRamSummaryIndex(void);
 uint16 GetNextValidRamSummaryIndex(uint16 currentValidSummaryIndex);
@@ -77,11 +76,11 @@ void SummaryMenu(INPUT_MSG_STRUCT msg)
 	//static MN_LAYOUT_STRUCT mn_layout;
 	//BOOL mode = 0;
 
-	SummaryMenuProc(msg, &wnd_layout, s_flashReadSummaryTablePtr);
+	SummaryMenuProc(msg, &wnd_layout);
 	
 	if (g_activeMenu == SUMMARY_MENU)
 	{
-		SummaryMenuDisplay(&wnd_layout, s_flashReadSummaryTablePtr);
+		SummaryMenuDisplay(&wnd_layout);
 		WriteMapToLcd(g_mmap);
 	}
 }
@@ -89,12 +88,10 @@ void SummaryMenu(INPUT_MSG_STRUCT msg)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void SummaryMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, SUMMARY_DATA *rd_summary_ptr)
+void SummaryMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	INPUT_MSG_STRUCT mn_msg;
 	uint16 tempSummaryIndex = 0;
-
-	UNUSED(rd_summary_ptr);
 
 	if (msg.cmd == ACTIVATE_MENU_CMD)
 	{
@@ -197,7 +194,7 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, SU
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr, SUMMARY_DATA *rd_summary_ptr)
+void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 {
 	SUMMARY_MENU_EVENT_CACHE_STRUCT* eventInfo;
 	char dateBuff[25];
@@ -206,8 +203,6 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr, SUMMARY_DATA *rd_summ
 	uint16 itemsDisplayed = 1;
 	uint16 length;
 	uint16 tempSummaryIndex = 0;
-
-	UNUSED(rd_summary_ptr);
 
 	// Clear the LCD map
 	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));

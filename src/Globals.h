@@ -73,7 +73,6 @@ extern uint16* g_currentEventSamplePtr;
 extern uint16* g_currentEventStartPtr;
 extern uint16 g_eventBufferReadIndex;
 extern uint16 g_bitShiftForAccuracy;
-//extern SUMMARY_DATA g_summaryTable[MAX_RAM_SUMMARYS];
 extern SUMMARY_DATA* g_lastCompletedRamSummaryIndex;
 extern uint32 g_isTriggered;
 extern uint32 g_processingCal;

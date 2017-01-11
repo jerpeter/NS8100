@@ -86,7 +86,6 @@ uint16* g_currentEventSamplePtr;
 uint16* g_currentEventStartPtr;
 uint16 g_eventBufferReadIndex;
 uint16 g_bitShiftForAccuracy;
-//SUMMARY_DATA g_summaryTable[MAX_RAM_SUMMARYS];
 SUMMARY_DATA* g_lastCompletedRamSummaryIndex;
 uint32 g_isTriggered = 0;
 uint32 g_processingCal = 0;
