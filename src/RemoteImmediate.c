@@ -744,33 +744,123 @@ uint8 sendDQMData(void)
 ///----------------------------------------------------------------------------
 void HandleDSM(CMD_BUFFER_STRUCT* inCmd)
 {
-	// Download summary memory...
-	uint16 idex;
-	uint16 numberOfRecs;					// Count the number of records to send.
-	uint32 dataLength;						// Will hold the new data length of the message
+	uint32 dataLength = 0;						// Will hold the new data length of the message
 	uint8 flagData = 0;
+	uint8 dsmHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
+	uint8 msgTypeStr[HDR_TYPE_LEN+2];
+	uint32 msgCRC = 0;
+	uint16 startingEventNumber;
+	uint32 i;
 
 	// If the process is busy sending data, return;
 	if (YES == g_modemStatus.xferMutex)
+	{
 		return;
+	}
 
 	if (YES == ParseIncommingMsgHeader(inCmd, g_inCmdHeaderPtr))
 	{
 		return;
 	}
 
-	dataLength = 0;
-	numberOfRecs = 0;
+	memset((uint8*)g_dsmXferStructPtr, 0, sizeof(DSMx_XFER_STRUCT));
 
+#if 0 // Original method
 	// Determine the data size first. This size is needed for the header length.
+	uint16 idex;
 	for (idex = 0; idex < TOTAL_RAM_SUMMARIES; idex++)
 	{
 		if (__ramFlashSummaryTbl[idex].fileEventNum != 0xFFFFFFFF)
 		{
 			dataLength += sizeof(EVENT_RECORD_DOWNLOAD_STRUCT);
-			numberOfRecs++;
+			g_dsmXferStructPtr->numOfSummaries++;
 		}
 	}
+#else // New method - Subrange, data should be represented as number of event summaries, followed by the starting event number
+	// Check if the spare field has been filled in requesting a sub-range of summaries
+	if ((g_inCmdHeaderPtr->spare[0] == '0') && ((g_inCmdHeaderPtr->spare[1] == '2') || (g_inCmdHeaderPtr->spare[1] == '3')))
+	{
+		// Set the index to the start of the message data
+		i = MESSAGE_HEADER_LENGTH;
+
+		// Check if data is represented as ASCII hex (Option 2)
+		if (g_inCmdHeaderPtr->spare[1] == '2')
+		{
+			g_dsmXferStructPtr->numOfSummaries = (ConvertAscii2Binary(inCmd->msg[i + 0], inCmd->msg[i + 1]) << 8);
+			g_dsmXferStructPtr->numOfSummaries |= (ConvertAscii2Binary(inCmd->msg[i + 2], inCmd->msg[i + 3]) & 0x00FF);
+			startingEventNumber = (ConvertAscii2Binary(inCmd->msg[i + 4], inCmd->msg[i + 5]) << 8);
+			startingEventNumber |= (ConvertAscii2Binary(inCmd->msg[i + 6], inCmd->msg[i + 7]) & 0x00FF);
+		}
+		else // Data represented as ASCII decimal (Option 3)
+		{
+			g_dsmXferStructPtr->numOfSummaries = ((inCmd->msg[i + 0] - '0') * 10000) + ((inCmd->msg[i + 1] - '0') * 1000) +	((inCmd->msg[i + 2] - '0') * 100) +
+													((inCmd->msg[i + 3] - '0') * 10) + (inCmd->msg[i + 4] - '0');
+			startingEventNumber = ((inCmd->msg[i + 5] - '0') * 10000) + ((inCmd->msg[i + 6] - '0') * 1000) +	((inCmd->msg[i + 7] - '0') * 100) +
+									((inCmd->msg[i + 8] - '0') * 10) + (inCmd->msg[i + 9] - '0');
+		}
+
+		// Set the starting table index to an invalid number for checking against later
+		g_dsmXferStructPtr->tableIndex = 0xFFFF;
+
+		for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
+		{
+			if (__ramFlashSummaryTbl[i].fileEventNum == startingEventNumber)
+			{
+				g_dsmXferStructPtr->tableIndex = i;
+				break;
+			}
+		}
+
+		// Sanity check for correct size, valid number of summaries, valid event number, range doesn't exceed end event number, and starting event found
+		if ((inCmd->size < (MESSAGE_HEADER_LENGTH + 8)) || (g_dsmXferStructPtr->numOfSummaries == 0) || (startingEventNumber == 0) ||
+			((g_nextEventNumberToUse - g_dsmXferStructPtr->numOfSummaries - startingEventNumber) < 0) || (g_dsmXferStructPtr->tableIndex == 0xFFFF))
+		{
+			if (((g_inCmdHeaderPtr->spare[1] == '2') && (inCmd->size < (MESSAGE_HEADER_LENGTH + 8))) || ((g_inCmdHeaderPtr->spare[1] == '3') && (inCmd->size < (MESSAGE_HEADER_LENGTH + 10))))
+			{
+				i = CFG_ERR_MSG_LENGTH;
+			}
+			else // Something wrong with the subset parameters
+			{
+				i = CFG_ERR_BAD_SUBSET;
+			}
+
+			// Signal a bad message payload length
+			sprintf((char*)msgTypeStr, "%02lu", i);
+			BuildOutgoingSimpleHeaderBuffer((uint8*)dsmHdr, (uint8*)"DSMx",	(uint8*)msgTypeStr, MESSAGE_SIMPLE_TOTAL_LENGTH, COMPRESS_NONE, CRC_NONE);
+
+			// Send Starting CRLF
+			ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+
+			// Calculate the CRC on the header
+			g_transmitCRC = CalcCCITT32((uint8*)&dsmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);
+
+			// Send Simple header
+			ModemPuts((uint8*)dsmHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
+
+			// Send Ending Footer
+			ModemPuts((uint8*)&msgCRC, 4, NO_CONVERSION);
+			ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+
+			return;
+		}
+	}
+	else // Spare field does not specify a sub-range, use the total entires of the ram summary list
+	{
+		for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
+		{
+			if (__ramFlashSummaryTbl[i].fileEventNum != 0xFFFFFFFF)
+			{
+				g_dsmXferStructPtr->numOfSummaries++;
+			}
+		}
+
+		// Init index to the start of the table
+		g_dsmXferStructPtr->tableIndex = 0;
+	}
+
+	// Data length based on the total number of the requested summaries
+	dataLength = g_dsmXferStructPtr->numOfSummaries * sizeof(EVENT_RECORD_DOWNLOAD_STRUCT);
+#endif
 
 	// Now start building the outgoing header. Clear the outgoing header data.
 	memset((uint8*)g_outCmdHeaderPtr, 0, sizeof(COMMAND_MESSAGE_HEADER));
@@ -792,17 +882,10 @@ void HandleDSM(CMD_BUFFER_STRUCT* inCmd)
 	// Create the message buffer from the outgoing header data.
 	BuildOutgoingHeaderBuffer(g_outCmdHeaderPtr, g_dsmXferStructPtr->msgHdr);
 
-	// Fill in the number of records, fill in the data length
-	memset(g_dsmXferStructPtr->numOfRecStr, 0, (DATA_FIELD_LEN+1));
-	BuildIntDataField((char*)g_dsmXferStructPtr->numOfRecStr, numberOfRecs, FIELD_LEN_06);
+	// Fill in the number of records
+	BuildIntDataField((char*)g_dsmXferStructPtr->numOfRecStr, g_dsmXferStructPtr->numOfSummaries, FIELD_LEN_06);
 
 	//-----------------------------------------------------------
-	// Set the intial table index to the first element of the table
-	g_dsmXferStructPtr->tableIndex = 0;							// Index of current summary to xfer
-	g_dsmXferStructPtr->tableIndexStart = 0;						// Start of summaries to xfer
-	g_dsmXferStructPtr->tableIndexEnd = TOTAL_RAM_SUMMARIES;		// End of summaries to xfer
-	g_dsmXferStructPtr->tableIndexInUse = TOTAL_RAM_SUMMARIES;	// Summary not to print incase of in use.
-
 	g_dsmXferStructPtr->xferStateFlag = HEADER_XFER_STATE;	// This is the initail xfer state to start.
 	g_modemStatus.xferState = DSMx_CMD;								// This is the xfer command state.
 	g_modemStatus.xferMutex = YES;									// Mutex to prevent other commands.
@@ -865,30 +948,32 @@ uint8 sendDSMData(void)
 	// xfer the event record structure.
 	else if (SUMMARY_TABLE_SEARCH_STATE == g_dsmXferStructPtr->xferStateFlag)
 	{
-		// Loop for the first non-empty table summary.
-		while ((g_dsmXferStructPtr->tableIndex < g_dsmXferStructPtr->tableIndexEnd) &&
-				(__ramFlashSummaryTbl[g_dsmXferStructPtr->tableIndex].fileEventNum == 0xFFFFFFFF))
+		// Check if there are still summaries to send
+		if (g_dsmXferStructPtr->numOfSummaries)
 		{
-			g_dsmXferStructPtr->tableIndex++;
-		}
+			// Loop to make sure the current table index does not point to an empty entry
+			while (__ramFlashSummaryTbl[g_dsmXferStructPtr->tableIndex].fileEventNum == 0xFFFFFFFF)
+			{
+				g_dsmXferStructPtr->tableIndex++;
+				if (g_dsmXferStructPtr->tableIndex > LAST_RAM_SUMMARY_INDEX) { g_dsmXferStructPtr->tableIndex = 0; }
+			}
 
-		// If not at the end of the table, xfer it over, else we are done and go to the footer state.
-		if (g_dsmXferStructPtr->tableIndex < g_dsmXferStructPtr->tableIndexEnd)
-		{
 			GetEventFileRecord(__ramFlashSummaryTbl[g_dsmXferStructPtr->tableIndex].fileEventNum, &g_dsmXferStructPtr->dloadEventRec.eventRecord);
 
 			g_dsmXferStructPtr->dloadEventRec.structureFlag = START_DLOAD_FLAG;
 			g_dsmXferStructPtr->dloadEventRec.downloadDate = GetCurrentTime();
 			g_dsmXferStructPtr->dloadEventRec.endFlag = END_DLOAD_FLAG;
 
-			// Setup the xfer structure ptrs.
+			// Setup the transfer structure pointers
 			g_dsmXferStructPtr->startDloadPtr = (uint8*)&(g_dsmXferStructPtr->dloadEventRec);
 			g_dsmXferStructPtr->dloadPtr = g_dsmXferStructPtr->startDloadPtr;
-			g_dsmXferStructPtr->endDloadPtr = ((uint8*)g_dsmXferStructPtr->startDloadPtr +
-				sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
+			g_dsmXferStructPtr->endDloadPtr = ((uint8*)g_dsmXferStructPtr->startDloadPtr + sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
 
-			g_dsmXferStructPtr->tableIndex++;							// Increment for next time.
-			g_dsmXferStructPtr->xferStateFlag = EVENTREC_XFER_STATE;	// state to xfer the record.
+			g_dsmXferStructPtr->tableIndex++;							// Increment for next time
+			if (g_dsmXferStructPtr->tableIndex > LAST_RAM_SUMMARY_INDEX) { g_dsmXferStructPtr->tableIndex = 0; }
+
+			g_dsmXferStructPtr->numOfSummaries--;						// Decrement total summaries to send
+			g_dsmXferStructPtr->xferStateFlag = EVENTREC_XFER_STATE;	// Change state to transfer the record
 		}
 		else
 		{

@@ -176,6 +176,7 @@ enum {
 	CFG_ERR_RS232_POWER_SAVINGS,	// 50
 	CFG_ERR_NO_TRIGGER_SOURCE,		// 51
 	CFG_ERR_CHANNEL_VERIFICATION,	// 52
+	CFG_ERR_BAD_SUBSET,				// 53
 	CFG_ERR_END						// END
 };
 
@@ -312,13 +313,11 @@ typedef struct
 	uint8 xferStateFlag;
 	uint8 msgHdr[MESSAGE_HEADER_LENGTH+1];
 	uint8 numOfRecStr[DATA_FIELD_LEN+1];
-	uint8 dummyToMakeEvenBoundary;
+	uint8 spare;
 	EVENT_RECORD_DOWNLOAD_STRUCT	dloadEventRec;
 
-	uint32	tableIndex;
-	uint32	tableIndexInUse;
-	uint32	tableIndexStart;
-	uint32	tableIndexEnd;
+	uint16	tableIndex;
+	uint16	numOfSummaries;
 
 	uint8* startDloadPtr;
 	uint8* dloadPtr;
