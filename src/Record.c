@@ -41,6 +41,20 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 	uint16 loc;
 	uint16 rec_size;
 
+	/*===========================================
+	Record structure layout
+	---------------------------------------------
+	Default trigger settings (trigger record 0)
+	Saved trigger settings #1
+	...
+	Saved trigger settings #14
+	Unit config settings
+	Modem setup parameters
+	Factory setup parameters
+	Unique event ID storage
+	Unique monitor log ID storage
+	-------------------------------------------*/
+
 	switch (type)
 	{
 		case REC_TRIGGER_USER_MENU_TYPE:
@@ -70,8 +84,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			((MODEM_SETUP_STRUCT *)src_ptr)->invalid = 0x0000;
 
 			rec_size = sizeof(MODEM_SETUP_STRUCT);
-			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
-					sizeof(UNIT_CONFIG_STRUCT));
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + sizeof(UNIT_CONFIG_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
@@ -81,8 +94,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			((FACTORY_SETUP_STRUCT *)src_ptr)->invalid = 0x0000;
 
 			rec_size = sizeof(FACTORY_SETUP_STRUCT);
-			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
-					sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT));
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
@@ -92,8 +104,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			((FACTORY_SETUP_STRUCT *)src_ptr)->invalid = 0xFFFF;
 
 			rec_size = sizeof(FACTORY_SETUP_STRUCT);
-			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) +
-			sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT));
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
@@ -103,8 +114,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			((CURRENT_EVENT_NUMBER_STRUCT*)src_ptr)->invalid = 0x0000;
 
 			rec_size = sizeof(CURRENT_EVENT_NUMBER_STRUCT);
-			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
-					sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
 					sizeof(FACTORY_SETUP_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
@@ -115,8 +125,7 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			((MONITOR_LOG_ID_STRUCT*)src_ptr)->invalid = 0x0000;
 
 			rec_size = sizeof(MONITOR_LOG_ID_STRUCT);
-			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + 
-					sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
 					sizeof(FACTORY_SETUP_STRUCT) + sizeof(CURRENT_EVENT_NUMBER_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
@@ -127,13 +136,12 @@ void SaveRecordData(void* src_ptr, uint32 num, uint8 type)
 			((MONITOR_LOG_ID_STRUCT*)src_ptr)->invalid = 0xFFFF;
 
 			rec_size = sizeof(MONITOR_LOG_ID_STRUCT);
-			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) +
-			sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
-			sizeof(FACTORY_SETUP_STRUCT) + sizeof(CURRENT_EVENT_NUMBER_STRUCT));
+			loc = (sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1) + sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT) +
+					sizeof(FACTORY_SETUP_STRUCT) + sizeof(CURRENT_EVENT_NUMBER_STRUCT));
 			SaveParameterMemory((uint8*)src_ptr, loc, rec_size);
 			break;
 
-		default: // If type doesnt match, just return
+		default: // If type doesn't match, just return
 			return;
 			break;
 	}
