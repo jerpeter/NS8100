@@ -104,7 +104,7 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		g_summaryListMenuActive = YES;
 		
-		s_totalRamSummaries = g_summaryList.validEntries;
+		s_totalRamSummaries = g_summaryList.totalEntries;
 
 		if (msg.data[0] == START_FROM_TOP)
 		{
@@ -121,7 +121,7 @@ void SummaryMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			case (ENTER_KEY):
 				// Check if the top menu summary index represents a valid index
-				if (s_topMenuSummaryIndex < g_summaryList.validEntries)
+				if (s_topMenuSummaryIndex < s_totalRamSummaries)
 				{
 					// Grab the event info, assuming it's cached
 					cacheSummaryListEntry(s_currentSummaryIndex);
