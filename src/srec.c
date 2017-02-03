@@ -69,9 +69,9 @@ static char * Srec_UartGets(char *s, int channel)
                     end = TRUE;
                 }
                 break;
-            case CAN:
-                *b = CAN;
-                *s = CAN;
+            case CAN_CHAR:
+                *b = CAN_CHAR;
+                *s = CAN_CHAR;
                 end = TRUE;
                 break;
             default:
@@ -88,7 +88,7 @@ static char * Srec_UartGets(char *s, int channel)
         }
     }while(!end);
 
-    if (*b != CAN)
+    if (*b != CAN_CHAR)
     {
         *b = 0;
     }
@@ -114,7 +114,7 @@ int Get_and_save_srec(int file)
        Srec_get_line(&asciidata);
        //Srec_xOff();
 
-       if ((asciidata.RecordID == 0) || (asciidata.RecordID == CAN))
+       if ((asciidata.RecordID == 0) || (asciidata.RecordID == CAN_CHAR))
        {
            lastrecord = TRUE;
            imageType = -1;
@@ -224,7 +224,7 @@ int Unpack_srec(int file)
             bytes_loaded++;
         }
 
-        if ((asciidata.RecordID == 0) || (asciidata.RecordID == CAN))
+        if ((asciidata.RecordID == 0) || (asciidata.RecordID == CAN_CHAR))
         {
             lastrecord = TRUE;
             imageType = -1;
@@ -319,9 +319,9 @@ void Srec_get_line(ASCII_SREC_DATA * asciidata)
 
     Srec_UartGets((char*)&charbuffer[0], (int)DBG_USART);
 
-    if (charbuffer[0] == CAN)
+    if (charbuffer[0] == CAN_CHAR)
     {
-        asciidata->RecordID = CAN;
+        asciidata->RecordID = CAN_CHAR;
         return;
     }
 
@@ -440,7 +440,7 @@ void Srec_get_data(RECORD_DATA Linedata, uint8 *data)
 ///----------------------------------------------------------------------------
 void Srec_ack(void)
 {
-    usart_putchar(DBG_USART, ACK);
+    usart_putchar(DBG_USART, ACK_CHAR);
 }
 
 ///----------------------------------------------------------------------------
@@ -448,7 +448,7 @@ void Srec_ack(void)
 ///----------------------------------------------------------------------------
 void Srec_nack(void)
 {
-    usart_putchar(DBG_USART, NACK);
+    usart_putchar(DBG_USART, NACK_CHAR);
 }
 
 ///----------------------------------------------------------------------------
@@ -617,7 +617,7 @@ uint8 Atoh_1(uint8 * ch)
 ///----------------------------------------------------------------------------
 void Srec_xOff(void)
 {
-    usart_putchar(DBG_USART, XOFF);
+    usart_putchar(DBG_USART, XOFF_CHAR);
 }
 
 ///----------------------------------------------------------------------------
@@ -625,5 +625,5 @@ void Srec_xOff(void)
 ///----------------------------------------------------------------------------
 void Srec_xOn(void)
 {
-    usart_putchar(DBG_USART, XON);
+    usart_putchar(DBG_USART, XON_CHAR);
 }

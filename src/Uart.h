@@ -38,12 +38,12 @@ enum {
 	NO_CONVERSION
 };
 
-#define EOT		0x04
-#define ACK		0x06
-#define XON		0x11
-#define XOFF	0x13
-#define NACK	0x15
-#define CAN		0x18
+#define EOT_CHAR		0x04
+#define ACK_CHAR		0x06
+#define XON_CHAR		0x11
+#define XOFF_CHAR		0x13
+#define NACK_CHAR		0x15
+#define CAN_CHAR		0x18
 
 #define CLEAR_DTR	(AVR32_USART1.cr = (1 << AVR32_USART_DTRDIS))
 #define SET_DTR		(AVR32_USART1.cr = (1 << AVR32_USART_DTREN))

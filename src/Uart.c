@@ -335,9 +335,9 @@ char* UartGets(char* s, int32 channel)
 					end = TRUE;
 				}
 				break;
-			case CAN:
-				*b = CAN;
-				*s = CAN;
+			case CAN_CHAR:
+				*b = CAN_CHAR;
+				*s = CAN_CHAR;
 				end = TRUE;
 				break;
 			default:
@@ -353,7 +353,7 @@ char* UartGets(char* s, int32 channel)
 				break;
 		}
 	} while (!end);
-	if (*b != CAN)
+	if (*b != CAN_CHAR)
 	{
 		*b = 0;
 	}
