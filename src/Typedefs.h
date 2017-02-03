@@ -90,7 +90,7 @@ enum {SLOW = 0, FAST};
 enum {INPUT = 0, OUTPUT};
 enum {VSS = 0, VDD};
 enum {FAILED = 0, PASSED};
-enum {OUT_SERIAL = 0, OUT_FILE};
+enum {OUT_SERIAL = 0, OUT_FILE, OUT_BUFFER};
 
 #ifndef FALSE
 #define FALSE 0
