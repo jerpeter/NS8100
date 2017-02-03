@@ -47,8 +47,6 @@
 void MoveWaveformEventToFile(void)
 {
 	static WAVE_PROCESSING_STATE waveformProcessingState = WAVE_INIT;
-	//static SUMMARY_DATA* sumEntry;
-	static SUMMARY_DATA* ramSummaryEntryPtr;
 	static int32 sampGrpsLeft;
 	static uint32 vectorSumMax;
 	static uint16* aWaveformPeakPtr;
@@ -76,11 +74,6 @@ void MoveWaveformEventToFile(void)
 		switch (waveformProcessingState)
 		{
 			case WAVE_INIT:
-				if (GetRamSummaryEntry(&ramSummaryEntryPtr) == FALSE)
-				{
-					debugErr("Out of Ram Summary Entrys\r\n");
-				}
-
 				// Save event start time with buffered timestamp
 				g_pendingEventRecord.summary.captured.eventTime = g_startOfEventDateTimestampBuffer[g_eventBufferReadIndex];
 
@@ -238,7 +231,6 @@ void MoveWaveformEventToFile(void)
 				if ((g_spi1AccessLock == AVAILABLE) && (g_fileAccessLock == AVAILABLE))
 				{
 					GetSpi1MutexLock(SDMMC_LOCK);
-					//g_fileAccessLock = SDMMC_LOCK;
 
 					nav_select(FS_NAV_ID_DEFAULT);
 
@@ -325,8 +317,10 @@ void MoveWaveformEventToFile(void)
 							g_spareBufferIndex = 0;
 							compressSize = lzo1x_1_compress((void*)g_currentEventStartPtr, (g_wordSizeInEvent * 2), OUT_FILE);
 
+							// Check if any remaining compressed data is queued
 							if (g_spareBufferIndex)
 							{
+								// Finish writing the remaining compressed data
 								write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
 								g_spareBufferIndex = 0;
 							}
@@ -351,16 +345,10 @@ void MoveWaveformEventToFile(void)
 				break;
 
 			case WAVE_COMPLETE:
-				ramSummaryEntryPtr->fileEventNum = g_pendingEventRecord.summary.eventNumber;
-
 				UpdateMonitorLogEntry();
 
-#if 1 // Always store the event number for every event
-				// After event numbers have been saved, store current event number in persistent storage.
 				StoreCurrentEventNumber();
-#else // Just increment the number and save when the monitor session is done
-				IncrementCurrentEventNumber();
-#endif
+
 				UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_wordSizeInEvent);
 
 				// Reset External Trigger event record flag
@@ -385,8 +373,6 @@ void MoveWaveformEventToFile(void)
 				{
 					clearSystemEventFlag(TRIGGER_EVENT);
 				}
-
-				g_lastCompletedRamSummaryIndex = ramSummaryEntryPtr;
 
 				if (g_triggerRecord.opMode == WAVEFORM_MODE)
 				{

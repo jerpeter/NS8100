@@ -45,8 +45,6 @@
 ///----------------------------------------------------------------------------
 void MoveManualCalToFile(void)
 {
-	//static SUMMARY_DATA* sumEntry;
-	static SUMMARY_DATA* ramSummaryEntryPtr;
 	uint16 i;
 	uint16 sample;
 	uint16 normalizedData;
@@ -65,11 +63,6 @@ void MoveManualCalToFile(void)
 
 	if (g_freeEventBuffers < g_maxEventBuffers)
 	{
-		if (GetRamSummaryEntry(&ramSummaryEntryPtr) == FALSE)
-		{
-			debugErr("Out of Ram Summary Entrys\r\n");
-		}
-
 		g_pendingEventRecord.summary.captured.eventTime = GetCurrentTime();
 
 		// Clear out A, R, V, T channel calculated data (in case the pending event record is reused)
@@ -166,7 +159,6 @@ void MoveManualCalToFile(void)
 		else // (g_fileAccessLock == AVAILABLE)
 		{
 			GetSpi1MutexLock(SDMMC_LOCK);
-			//g_fileAccessLock = SDMMC_LOCK;
 
 			nav_select(FS_NAV_ID_DEFAULT);
 
@@ -175,7 +167,6 @@ void MoveManualCalToFile(void)
 
 			if (manualCalFileHandle == -1)
 			{
-				//g_fileAccessLock = AVAILABLE;
 				ReleaseSpi1MutexLock();
 
 				debugErr("Failed to get a new file handle for the Manual Cal event\r\n");
@@ -207,8 +198,10 @@ void MoveManualCalToFile(void)
 					g_spareBufferIndex = 0;
 					compressSize = lzo1x_1_compress((void*)g_currentEventStartPtr, (g_wordSizeInCal * 2), OUT_FILE);
 
+					// Check if any remaining compressed data is queued
 					if (g_spareBufferIndex)
 					{
+						// Finish writing the remaining compressed data
 						write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
 						g_spareBufferIndex = 0;
 					}
@@ -221,12 +214,9 @@ void MoveManualCalToFile(void)
 					close(g_globalFileHandle);
 				}
 #endif
-				//g_fileAccessLock = AVAILABLE;
 				ReleaseSpi1MutexLock();
 
 				debug("Manual Cal Event file closed\r\n");
-
-				ramSummaryEntryPtr->fileEventNum = g_pendingEventRecord.summary.eventNumber;
 
 				AddEventToSummaryList(&g_pendingEventRecord);
 
@@ -252,8 +242,6 @@ void MoveManualCalToFile(void)
 				g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
 			}
 			clearSystemEventFlag(MANUAL_CAL_EVENT);
-
-			g_lastCompletedRamSummaryIndex = ramSummaryEntryPtr;
 
 			// Set flag to display calibration results if not monitoring or monitoring in waveform
 			if ((g_sampleProcessing == IDLE_STATE) || ((g_sampleProcessing == ACTIVE_STATE) && (g_triggerRecord.opMode == WAVEFORM_MODE)))

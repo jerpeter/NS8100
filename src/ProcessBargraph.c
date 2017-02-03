@@ -39,15 +39,6 @@
 ///----------------------------------------------------------------------------
 void StartNewBargraph(void)
 {
-	g_bargraphSummaryPtr = NULL;
-
-	// Get the address of an empty Ram summary
-	if (GetRamSummaryEntry(&g_bargraphSummaryPtr) == FALSE)
-	{
-		debug("%s: Out of Ram Summary Entrys\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo");
-		return;
-	}
-
 	// Clear the initial Bar Interval plus the Summary Interval and Freq Calc buffers
 	memset(g_bargraphBarIntervalWritePtr, 0, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 	memset(&g_bargraphSummaryInterval, 0, sizeof(g_bargraphSummaryInterval));
@@ -104,7 +95,6 @@ void MoveBarIntervalDataToFile(void)
 		else // (g_fileAccessLock == AVAILABLE)
 		{
 			GetSpi1MutexLock(SDMMC_LOCK);
-			//g_fileAccessLock = SDMMC_LOCK;
 
 			nav_select(FS_NAV_ID_DEFAULT);
 
@@ -129,7 +119,6 @@ void MoveBarIntervalDataToFile(void)
 
 			debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
-			//g_fileAccessLock = AVAILABLE;
 			ReleaseSpi1MutexLock();
 		}
 	}
@@ -193,7 +182,6 @@ void MoveSummaryIntervalDataToFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		GetSpi1MutexLock(SDMMC_LOCK);
-		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -223,7 +211,6 @@ void MoveSummaryIntervalDataToFile(void)
 
 		debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
-		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
 	}
 
@@ -847,7 +834,6 @@ void MoveStartOfBargraphEventRecordToFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		GetSpi1MutexLock(SDMMC_LOCK);
-		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -865,7 +851,6 @@ void MoveStartOfBargraphEventRecordToFile(void)
 
 		debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
-		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
 
 		// Consume event number (also allow other events to be recorded during a Combo - Bargraph session)
@@ -896,7 +881,6 @@ void MoveUpdatedBargraphEventRecordToFile(uint8 status)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		GetSpi1MutexLock(SDMMC_LOCK);
-		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -971,8 +955,10 @@ void MoveUpdatedBargraphEventRecordToFile(uint8 status)
 				g_spareBufferIndex = 0;
 				compressSize = lzo1x_1_compress((void*)&g_eventDataBuffer[0], dataLength, OUT_FILE);
 
+				// Check if any remaining compressed data is queued
 				if (g_spareBufferIndex)
 				{
+					// Finish writing the remaining compressed data
 					write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
 					g_spareBufferIndex = 0;
 				}
@@ -987,14 +973,12 @@ void MoveUpdatedBargraphEventRecordToFile(uint8 status)
 
 			AddEventToSummaryList(&g_pendingBargraphRecord);
 
-			//g_fileAccessLock = AVAILABLE;
 			ReleaseSpi1MutexLock();
 
 			UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_pendingBargraphRecord.header.dataLength);
 		}
 		else // (status == BARGRAPH_SESSION_IN_PROGRESS)
 		{
-			//g_fileAccessLock = AVAILABLE;
 			ReleaseSpi1MutexLock();
 		}
 	}
