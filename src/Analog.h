@@ -53,6 +53,9 @@
 
 #define	MAX_TEMPERATURE_JUMP_PER_SAMPLE	4		// Check for A/D temperature sample that is bogus
 
+#define SENSOR_WARMUP_DELAY_IN_SECONDS	90		// Was 60 seconds, but not long enough for most sensors to stabilize from cold start, can take upwards of 120 seconds (this is where Zero Sensors comes in)
+#define ZERO_SENSOR_MAX_TIME_IN_SECONDS	90		// Maximum time allowed for zero sensors before monitoring
+
 enum {
 	DEFAULT_CAL_BUFFER_INDEX = 0,
 	ONCE_DELAYED_CAL_BUFFER_INDEX = 1,
@@ -121,6 +124,7 @@ void SetCalSignalEnable(uint8 enable);
 void SetCalSignal(uint8 data);
 void GenerateCalSignal(void);
 void GetChannelOffsets(uint32 sampleRate);
+void ZeroSensors(void);
 void UpdateChannelOffsetsForTempChange(void);
 void AdSetCalSignalLow(void);
 void AdSetCalSignalHigh(void);

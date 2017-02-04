@@ -48,10 +48,11 @@ typedef struct {
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
+static uint16* s_zeroSensorPretriggerComparePtr;
 static SAMPLE_DATA_STRUCT s_tempData;
 static CHANNEL_OFFSET_TOTALS s_workingChannelOffset;
 static CHANNEL_OFFSET_COUNTS s_workingChannelCounts;
-static CHANNEL_OFFSET_TOTALS s_compareChannelOffset = {0, 0, 0, 0};
+static CHANNEL_OFFSET_TOTALS s_compareChannelOffset;
 
 ///----------------------------------------------------------------------------
 ///	Analog information
@@ -685,44 +686,43 @@ void GetChannelOffsets(uint32 sampleRate)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void UpdateChannelOffsetsForTempChange(void)
+void ZeroSensors(void)
 {
-	// Make sure system isn't processing an event, not handling any system events but UPDATE_OFFSET_EVENT and not handling a manual cal pulse
-	if ((g_sleepModeEngaged == YES) && (g_busyProcessingEvent == NO) && (anySystemEventExcept(UPDATE_OFFSET_EVENT) == NO) && (g_triggerRecord.opMode != MANUAL_CAL_MODE))
+	// Check if the count has been established which means init has processed
+	if (g_updateOffsetCount)
 	{
-		// Check if the count has been established which means init has processed
-		if (g_updateOffsetCount)
+		// Check to make sure there is new data to process
+		if (s_zeroSensorPretriggerComparePtr != g_tailOfPretriggerBuff)
 		{
+			// Update the comparator
+			s_zeroSensorPretriggerComparePtr = g_tailOfPretriggerBuff;
+
 			// Get data
 			s_tempData.r = ((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r;
 			s_tempData.v = ((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v;
 			s_tempData.t = ((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t;
 			s_tempData.a = ((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->a;
-		
+
 			// Only capture samples that fall within the filter band (filtering spikes and seismic activity)
-			if ((s_tempData.r > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_ADJUST_FILTER)) && 
-				((s_tempData.r < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_ADJUST_FILTER))))
+			if ((s_tempData.r > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_ADJUST_FILTER)) && ((s_tempData.r < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_ADJUST_FILTER))))
 			{
 				s_workingChannelOffset.rTotal += s_tempData.r;
 				s_workingChannelCounts.rCount++;
 			}
 
-			if ((s_tempData.v > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_ADJUST_FILTER)) && 
-				((s_tempData.v < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_ADJUST_FILTER))))
+			if ((s_tempData.v > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_ADJUST_FILTER)) && ((s_tempData.v < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_ADJUST_FILTER))))
 			{
 				s_workingChannelOffset.vTotal += s_tempData.v;
 				s_workingChannelCounts.vCount++;
 			}
 
-			if ((s_tempData.t > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_ADJUST_FILTER)) && 
-				((s_tempData.t < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_ADJUST_FILTER))))
+			if ((s_tempData.t > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_ADJUST_FILTER)) && ((s_tempData.t < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_ADJUST_FILTER))))
 			{
 				s_workingChannelOffset.tTotal += s_tempData.t;
 				s_workingChannelCounts.tCount++;
 			}
 
-			if ((s_tempData.a > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_ADJUST_FILTER)) && 
-				((s_tempData.a < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_ADJUST_FILTER))))
+			if ((s_tempData.a > (ACCURACY_16_BIT_MIDPOINT - SEISMIC_TRIGGER_ADJUST_FILTER)) && ((s_tempData.a < (ACCURACY_16_BIT_MIDPOINT + SEISMIC_TRIGGER_ADJUST_FILTER))))
 			{
 				s_workingChannelOffset.aTotal += s_tempData.a;
 				s_workingChannelCounts.aCount++;
@@ -751,11 +751,11 @@ void UpdateChannelOffsetsForTempChange(void)
 					else // Check if the working offsets are within range of the comparison to suggest stability on the signals
 					{
 						if ((abs(s_workingChannelOffset.rTotal - s_compareChannelOffset.rTotal) < 4) &&
-							(abs(s_workingChannelOffset.rTotal - s_compareChannelOffset.rTotal) < 4) &&
-							(abs(s_workingChannelOffset.rTotal - s_compareChannelOffset.rTotal) < 4) &&
-							(abs(s_workingChannelOffset.rTotal - s_compareChannelOffset.rTotal) < 4))
+							(abs(s_workingChannelOffset.vTotal - s_compareChannelOffset.vTotal) < 4) &&
+							(abs(s_workingChannelOffset.tTotal - s_compareChannelOffset.tTotal) < 4) &&
+							(abs(s_workingChannelOffset.aTotal - s_compareChannelOffset.aTotal) < 4))
 						{
-							debug("Temp change - A/D Channel offsets (old): %d, %d, %d, %d\r\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
+							debug("Zero Sensor - A/D Channel offsets (old): %d, %d, %d, %d\r\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 
 							// Adjust the channel offsets
 							g_channelOffset.r_offset += (int16)(s_workingChannelOffset.rTotal - ACCURACY_16_BIT_MIDPOINT);
@@ -763,34 +763,46 @@ void UpdateChannelOffsetsForTempChange(void)
 							g_channelOffset.t_offset += (int16)(s_workingChannelOffset.tTotal - ACCURACY_16_BIT_MIDPOINT);
 							g_channelOffset.a_offset += (int16)(s_workingChannelOffset.aTotal - ACCURACY_16_BIT_MIDPOINT);
 
-							debug("Temp change - A/D Channel offsets (new): %d, %d, %d, %d\r\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
+							debug("Zero Sensor - A/D Channel offsets (new): %d, %d, %d, %d\r\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 
 							clearSystemEventFlag(UPDATE_OFFSET_EVENT);
 						}
 
-						// Clear the comparison structure (either case where a match is found or not)
+						// Clear the comparison structure (either case where a match is found or not, also initializes for next time)
 						memset(&s_compareChannelOffset, 0, sizeof(s_compareChannelOffset));
 					}
 				}
 				// else with the flag UPDATE_OFFSET_EVENT still set and g_updateOffsetCount == 0, the process will start over
 			}
 		}
-		else // Start processing counter for new zero crossing
+	}
+	else // Start processing counter for new zero crossing
+	{
+		// Check if the comparison structure is empty (unfilled)
+		if (s_compareChannelOffset.rTotal == 0)
 		{
-			// Check if the comparison structure is empty (unfilled)
-			if (s_compareChannelOffset.rTotal == 0)
-			{
-				debug("Resume Offset adjustment for temp drift (0x%x), First Pass...\r\n", g_storedTempReading);
-			}
-			else
-			{
-				debug("Resume Offset adjustment for temp drift (0x%x), Second Pass...\r\n", g_storedTempReading);
-			}
-			
-			// Initialize the counter for checking samples
-			g_updateOffsetCount = g_triggerRecord.trec.sample_rate;
-			
-			InitAndSeedChannelOffsetVariables();
+			debug("Resume Offset adjustment for temp drift (0x%x), First Pass...\r\n", g_storedTempReading);
 		}
+		else
+		{
+			debug("Resume Offset adjustment for temp drift (0x%x), Second Pass...\r\n", g_storedTempReading);
+		}
+			
+		// Initialize the counter for checking samples
+		g_updateOffsetCount = g_triggerRecord.trec.sample_rate;
+			
+		InitAndSeedChannelOffsetVariables();
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void UpdateChannelOffsetsForTempChange(void)
+{
+	// Make sure system isn't processing an event, not handling any system events but UPDATE_OFFSET_EVENT and not handling a manual cal pulse
+	if ((g_sleepModeEngaged == YES) && (g_busyProcessingEvent == NO) && (anySystemEventExcept(UPDATE_OFFSET_EVENT) == NO) && (g_triggerRecord.opMode != MANUAL_CAL_MODE))
+	{
+		ZeroSensors();
 	}
 }
