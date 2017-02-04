@@ -21,6 +21,28 @@
 #define SOFT_DATE		"6-22-2004"
 #define SOFT_TIME		"08:35pm"
 
+#define SYSTEM_PATH		"A:\\System\\"
+#define EVENTS_PATH		"A:\\Events\\"
+#define ER_DATA_PATH	"A:\\ERData\\"
+#define LANGUAGE_PATH	"A:\\Language\\"
+#define LOGS_PATH		"A:\\Logs\\"
+
+#define EVT_FILE		"Evt"
+#define EVTS_SUB_DIR	"Evts"
+
+#define SUMMARY_LIST_FILE			"SummaryList.bin"
+#define MONITOR_LOG_BIN_FILE		"MonitorLog.ns8"
+#define MONITOR_LOG_READABLE_FILE	"MonitorLogReadable.txt"
+#define ON_OFF_READABLE_FILE		"OnOffLogReadable.txt"
+#define EXCEPTION_REPORT_FILE		"ExceptionReport.txt"
+
+#define MAX_FILE_NAME_CHARS		255
+
+enum {
+	EVENT_FILE_TYPE = 1,
+	ER_DATA_FILE_TYPE
+};
+
 // Define core clock rate
 #if 1 // Normal
 #define FOSC0	66000000
@@ -200,6 +222,11 @@ enum {
 	BATTERY_VOLTAGE
 };
 
+enum {
+	USB_SYNC_NORMAL = 1,
+	USB_SYNC_FROM_SHELL
+};
+
 #define VIN_CHANNEL		2
 #define VBAT_CHANNEL	3
 
@@ -225,8 +252,8 @@ enum {
 #define GLOBAL_DEBUG_PRINT_PORT	DEBUG_COM_PORT //CRAFT_COM_PORT
 #endif
 
-#define GLOBAL_DEBUG_BUFFER_SIZE		(65536)
-#define GLOBAL_DEBUG_BUFFER_THRESHOLD	(32768)
+#define TOTAL_UNIQUE_EVENT_NUMBERS		(65535)
+#define DER_CACHE_SIZE					(65536)
 
 #define SPARE_BUFFER_SIZE				8192
 
@@ -271,6 +298,16 @@ enum USB_STATES {
 	USB_DISABLED_FOR_OTHER_PROCESSING,
 	USB_DEVICE_MODE_SELECTED,
 	USB_HOST_MODE_SELECTED
+};
+
+enum USB_SYNC_FILE_EXISTS_ACTIONS {
+	PROMPT_OPTION = 0,
+	SKIP_OPTION,
+	REPLACE_OPTION,
+	DUPLICATE_OPTION,
+	SKIP_ALL_OPTION,
+	REPLACE_ALL_OPTION,
+	DUPLICATE_ALL_OPTION
 };
 
 #if NS8100_BETA_PROTOTYPE
@@ -427,5 +464,8 @@ void ReleaseSpi1MutexLock(void);
 
 // Validate trigger source
 uint8 CheckTriggerSourceExists(void);
+
+// Process the USB Core routines
+void ProcessUsbCoreHandling(void);
 
 #endif // _COMMON_H_

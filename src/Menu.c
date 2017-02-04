@@ -921,9 +921,7 @@ void OverlayMessage(char* titleString, char* textString, uint32 displayTime)
 			if ((g_usbMassStorageState != USB_INIT_DRIVER) && (g_usbMassStorageState != USB_DISABLED_FOR_OTHER_PROCESSING))
 			{
 				// Process USB core routines (do not call UsbDeviceManager since it's not designed to be re-entrant)
-				usb_task();
-				device_mass_storage_task();
-				host_mass_storage_task();
+				ProcessUsbCoreHandling();
 			}
 		}
 

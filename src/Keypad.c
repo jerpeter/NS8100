@@ -24,6 +24,7 @@
 #include "usb_task.h"
 #include "device_mass_storage_task.h"
 #include "host_mass_storage_task.h"
+#include "string.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -265,12 +266,18 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					// Reset the factory setup process
 					g_factorySetupSequence = SEQ_NOT_STARTED;
 
+					//===================================================
+					// On-Enter Combo key
+					//---------------------------------------------------
 					if (keyPressed == ENTER_KEY)
 					{
 						// Issue a Ctrl-C for Manual Calibration
 						msg.cmd = CTRL_CMD;
 						msg.data[0] = 'C';
 					}
+					//===================================================
+					// On-Escape Combo key
+					//---------------------------------------------------
 					else if (keyPressed == ESC_KEY)
 					{
 #if 0 // Test
@@ -281,6 +288,9 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 						}
 #endif
 					}
+					//===================================================
+					// On-Help Combo key
+					//---------------------------------------------------
 					else if (keyPressed == HELP_KEY)
 					{
 #if 0 // Test
@@ -289,6 +299,9 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 						__asm__ __volatile__ ("breakpoint");
 #endif
 					}
+					//===================================================
+					// On-Backlight Combo key
+					//---------------------------------------------------
 					else if (keyPressed == KEY_BACKLIGHT)
 					{
 #if 1
@@ -454,9 +467,7 @@ uint8 GetKeypadKey(uint8 mode)
 			SoftUsecWait(1000);
 #else // Process USB as a delay
 			// Process USB core routines (do not call UsbDeviceManager since it's not designed to be re-entrant)
-			usb_task();
-			device_mass_storage_task();
-			host_mass_storage_task();
+			ProcessUsbCoreHandling();
 #endif
 			keyPressed = ScanKeypad();
 		}
@@ -469,9 +480,7 @@ uint8 GetKeypadKey(uint8 mode)
 			SoftUsecWait(1000);
 #else // Process USB as a delay
 			// Process USB core routines (do not call UsbDeviceManager since it's not designed to be re-entrant)
-			usb_task();
-			device_mass_storage_task();
-			host_mass_storage_task();
+			ProcessUsbCoreHandling();
 #endif
 			keyPressed = ScanKeypad();
 		}
@@ -494,9 +503,7 @@ uint8 GetKeypadKey(uint8 mode)
 			SoftUsecWait(1000);
 #else // Process USB as a delay
 			// Process USB core routines (do not call UsbDeviceManager since it's not designed to be re-entrant)
-			usb_task();
-			device_mass_storage_task();
-			host_mass_storage_task();
+			ProcessUsbCoreHandling();
 #endif
 		}
 	}

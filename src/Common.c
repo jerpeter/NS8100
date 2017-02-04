@@ -25,6 +25,9 @@
 #include "usart.h"
 #include "ctype.h"
 #include "usb_drv.h"
+#include "usb_task.h"
+#include "device_mass_storage_task.h"
+#include "host_mass_storage_task.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -557,7 +560,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 
 	memset((char*)&languageFilename[0], 0, sizeof(languageFilename));
 
-	strcpy((char*)&languageFilename[0], "A:\\Language\\");
+	strcpy((char*)&languageFilename[0], LANGUAGE_PATH);
 
 	switch (languageSelection)
 	{
@@ -584,7 +587,6 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		GetSpi1MutexLock(SDMMC_LOCK);
-		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -616,7 +618,6 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			close(languageFile);
 		}
 
-		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
 	}
 
@@ -667,11 +668,10 @@ void CheckBootloaderAppPresent(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		GetSpi1MutexLock(SDMMC_LOCK);
-		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
-		sprintf((char*)g_spareBuffer, "A:\\System\\%s", default_boot_name);
+		sprintf((char*)g_spareBuffer, "%s%s", SYSTEM_PATH, default_boot_name);
 
 		file = open((char*)g_spareBuffer, O_RDONLY);
 
@@ -687,7 +687,6 @@ void CheckBootloaderAppPresent(void)
 			debugWarn("Bootloader not found\r\n");
 		}
 
-		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
 	}
 }
@@ -1135,4 +1134,14 @@ uint8 CheckTriggerSourceExists(void)
 	{
 		return (YES);
 	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ProcessUsbCoreHandling(void)
+{
+	usb_task();
+	device_mass_storage_task();
+	host_mass_storage_task();
 }
