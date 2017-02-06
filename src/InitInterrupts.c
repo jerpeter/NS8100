@@ -180,13 +180,23 @@ void Setup_8100_EIC_External_RTC_ISR(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void Setup_8100_Usart_RS232_ISR(void)
+void Setup_8100_Usart1_RS232_ISR(void)
 {
 	INTC_register_interrupt(&Usart_1_rs232_irq, AVR32_USART1_IRQ, 1);
 
 	// Enable Receive Ready, Overrun, Parity and Framing error interrupts
-	AVR32_USART1.ier = (AVR32_USART_IER_RXRDY_MASK | AVR32_USART_IER_OVRE_MASK |
-	AVR32_USART_IER_PARE_MASK | AVR32_USART_IER_FRAME_MASK);
+	AVR32_USART1.ier = (AVR32_USART_IER_RXRDY_MASK | AVR32_USART_IER_OVRE_MASK | AVR32_USART_IER_PARE_MASK | AVR32_USART_IER_FRAME_MASK);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void Setup_8100_Usart0_RS232_ISR(void)
+{
+	INTC_register_interrupt(&Usart_0_rs232_irq, AVR32_USART0_IRQ, 1);
+
+	// Enable Receive Ready, Overrun, Parity and Framing error interrupts
+	AVR32_USART0.ier = (AVR32_USART_IER_RXRDY_MASK | AVR32_USART_IER_OVRE_MASK | AVR32_USART_IER_PARE_MASK | AVR32_USART_IER_FRAME_MASK);
 }
 
 ///----------------------------------------------------------------------------
@@ -318,7 +328,7 @@ void InitInterrupts_NS8100(void)
 
 #if 0 // Moved interrupt setup to the end of the BootloaderManager to allow for searching for Ctrl-B
 	InitCraftInterruptBuffers();
-	Setup_8100_Usart_RS232_ISR();
+	Setup_8100_Usart1_RS232_ISR();
 #endif
 	
 	Enable_global_interrupt();
