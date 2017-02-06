@@ -321,6 +321,44 @@ void Usart_1_rs232_irq(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+__attribute__((__interrupt__))
+void Usart_0_rs232_irq(void)
+{
+	// Test print to verify the interrupt is running
+	//debugRaw("`");
+
+	uint32 usart_0_status;
+	uint8 recieveData;
+
+	// Read control/status register to clear flags
+	usart_0_status = AVR32_USART0.csr;
+
+	// Read the data received (in combo with control/status read clears the interrupt)
+	recieveData = AVR32_USART0.rhr;
+
+	// Check if receive operation was successful
+	if (usart_0_status & AVR32_USART_CSR_RXRDY_MASK)
+	{
+		*g_gpsSerialData.writePtr++ = recieveData;
+
+		g_gpsSerialData.ready = YES;
+
+		if (g_gpsSerialData.writePtr == g_gpsSerialData.endPtr) { g_gpsSerialData.writePtr = &g_gpsSerialData.buffer[0]; }
+	}
+	else if (usart_0_status & (AVR32_USART_CSR_OVRE_MASK | AVR32_USART_CSR_FRAME_MASK | AVR32_USART_CSR_PARE_MASK))
+	{
+		AVR32_USART0.cr = AVR32_USART_CR_RSTSTA_MASK;
+		usart_0_status = AVR32_USART0.csr;
+	}
+
+#if 1 // Test reads to clear the bus
+	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
+#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // ET test
 static uint32 s_testForForeverLoop = 0;
 static uint32 s_lastExecCycles = 0;
