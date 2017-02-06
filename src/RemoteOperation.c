@@ -1178,7 +1178,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			// Saved updated settings
 			SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
-			SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 		}
 	}
 
