@@ -34,7 +34,7 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
-extern USER_MENU_STRUCT monitorLogMenu[];
+extern USER_MENU_STRUCT configMenu[];
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -159,7 +159,7 @@ void MonitorLogMnProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, M
 				case (PLUS_KEY): AdjustLcdContrast(LIGHTER); break;
 
 				case (ESC_KEY):
-					SETUP_USER_MENU_MSG(&monitorLogMenu, DEFAULT_ITEM_1);
+					SETUP_USER_MENU_MSG(&configMenu, MONITOR_LOG);
 					JUMP_TO_ACTIVE_MENU();
 				break;
 
