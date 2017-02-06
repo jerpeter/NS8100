@@ -15,3 +15,7 @@ Makefile
 *.desktop
 *.laptop
 *.binary
+NS8100_6_2.*
+NS8100.componentinfo.xml
+NS8100.atsuo
+.vs
