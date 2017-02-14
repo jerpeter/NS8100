@@ -61,6 +61,7 @@ extern USER_MENU_STRUCT externalTriggerMenu[];
 extern USER_MENU_STRUCT flashWrappingMenu[];
 extern USER_MENU_STRUCT freqPlotMenu[];
 extern USER_MENU_STRUCT freqPlotStandardMenu[];
+extern USER_MENU_STRUCT hardwareIDMenu[];
 extern USER_MENU_STRUCT helpMenu[];
 extern USER_MENU_STRUCT infoMenu[];
 extern USER_MENU_STRUCT languageMenu[];
@@ -88,10 +89,12 @@ extern USER_MENU_STRUCT sensitivityMenu[];
 extern USER_MENU_STRUCT sensorTypeMenu[];
 extern USER_MENU_STRUCT serialNumberMenu[];
 extern USER_MENU_STRUCT summaryIntervalMenu[];
+extern USER_MENU_STRUCT syncFileExistsMenu[];
 extern USER_MENU_STRUCT timerModeFreqMenu[];
 extern USER_MENU_STRUCT timerModeMenu[];
 extern USER_MENU_STRUCT unitsOfMeasureMenu[];
 extern USER_MENU_STRUCT unitsOfAirMenu[];
+extern USER_MENU_STRUCT usbSyncModeMenu[];
 extern USER_MENU_STRUCT vectorSumMenu[];
 extern USER_MENU_STRUCT waveformAutoCalMenu[];
 extern USER_MENU_STRUCT zeroEventNumberMenu[];
@@ -109,8 +112,8 @@ extern USER_MENU_STRUCT zeroEventNumberMenu[];
 USER_MENU_STRUCT adChannelVerificationMenu[AD_CHANNEL_VERIFICATION_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CHAN_VERIFICATION_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, AD_CHANNEL_VERIFICATION_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 0, DISABLED_TEXT,	NO_TAG,	{DISABLED}},
-{ITEM_2, 0, ENABLED_TEXT,	NO_TAG,	{ENABLED}},
+{ITEM_1, 0, ENABLED_TEXT,	NO_TAG,	{ENABLED}},
+{ITEM_2, 0, DISABLED_TEXT,	NO_TAG,	{DISABLED}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AdChannelVerificationMenuHandler}}
 };
 
@@ -266,11 +269,11 @@ void AirSetupMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT alarmTestingMenu[ALARM_TESTING_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, ALARM_TESTING_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, ALARM_TESTING_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 0, END_TEXT,		NO_TAG,			{1}},
-{ITEM_2, 0, ALARM_1_TEXT,	ENABLED_TAG,	{2}},
-{ITEM_3, 0, ALARM_1_TEXT,	DISABLED_TAG,	{3}},
-{ITEM_4, 0, ALARM_2_TEXT,	ENABLED_TAG,	{4}},
-{ITEM_5, 0, ALARM_2_TEXT,	DISABLED_TAG,	{5}},
+{ITEM_1, 0, END_TEXT,		NO_TAG,			{ALARM_TESTING_DONE}},
+{ITEM_2, 0, ALARM_1_TEXT,	ENABLED_TEXT,	{ALARM_1_TESTING_ENABLED}},
+{ITEM_3, 0, ALARM_1_TEXT,	DISABLED_TEXT,	{ALARM_1_TESTING_DISABLED}},
+{ITEM_4, 0, ALARM_2_TEXT,	ENABLED_TEXT,	{ALARM_2_TESTING_ENABLED}},
+{ITEM_5, 0, ALARM_2_TEXT,	DISABLED_TEXT,	{ALARM_2_TESTING_DISABLED}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AlarmTestingMenuHandler}}
 };
 
@@ -284,7 +287,7 @@ void AlarmTestingMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		if ((uint8)alarmTestingMenu[newItemIndex].data == 1)
+		if ((uint8)alarmTestingMenu[newItemIndex].data == ALARM_TESTING_DONE)
 		{
 			// Clear Alarm 1
 			gpio_clr_gpio_pin(ALARM_1_GPIO_PIN);
@@ -298,22 +301,22 @@ void AlarmTestingMenuHandler(uint8 keyPressed, void* data)
 		}
 		else
 		{
-			if ((uint8)alarmTestingMenu[newItemIndex].data == 2)
+			if ((uint8)alarmTestingMenu[newItemIndex].data == ALARM_1_TESTING_ENABLED)
 			{
 				// Start Alarm 1
 				gpio_set_gpio_pin(ALARM_1_GPIO_PIN);
 			}
-			else if ((uint8)alarmTestingMenu[newItemIndex].data == 3)
+			else if ((uint8)alarmTestingMenu[newItemIndex].data == ALARM_1_TESTING_DISABLED)
 			{
 				// Clear Alarm 1
 				gpio_clr_gpio_pin(ALARM_1_GPIO_PIN);
 			}
-			else if ((uint8)alarmTestingMenu[newItemIndex].data == 4)
+			else if ((uint8)alarmTestingMenu[newItemIndex].data == ALARM_2_TESTING_ENABLED)
 			{
 				// Start Alarm 2
 				gpio_set_gpio_pin(ALARM_2_GPIO_PIN);
 			}
-			else if ((uint8)alarmTestingMenu[newItemIndex].data == 5)
+			else if ((uint8)alarmTestingMenu[newItemIndex].data == ALARM_2_TESTING_DISABLED)
 			{
 				// Clear Alarm 2
 				gpio_clr_gpio_pin(ALARM_2_GPIO_PIN);
@@ -1002,7 +1005,11 @@ void BarChannelMenuHandler(uint8 keyPressed, void* data)
 					(float)(gainFactor * BAR_SCALE_EIGHTH)));
 		}
 
+#if 0 // Removing Bar Scale menu (only applies to printing units)
 		SETUP_USER_MENU_MSG(&barScaleMenu, g_triggerRecord.berec.barScale);
+#else
+		SETUP_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
@@ -1047,7 +1054,11 @@ void BarIntervalMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+#if 0 // Removing Bar Scale menu (only applies to printing units)
 		SETUP_USER_MENU_MSG(&barScaleMenu, g_triggerRecord.berec.barScale);
+#else
+		SETUP_USER_MENU_MSG(&barChannelMenu, g_triggerRecord.berec.barChannel);
+#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -1285,7 +1296,7 @@ void BaudRateMenuHandler(uint8 keyPressed, void* data)
 			InitCraftInterruptBuffers();
 
 			// Re-setup the interrupt since the handler is removed on usart_reset (buried in the usart_init)
-			Setup_8100_Usart_RS232_ISR();
+			Setup_8100_Usart1_RS232_ISR();
 
 #if 1 // ns8100 (Added to help Dave's Supergraphics handle Baud change)
 			//-------------------------------------------------------------------------
@@ -1377,7 +1388,7 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
-#define CONFIG_MENU_ENTRIES 31
+#define CONFIG_MENU_ENTRIES 32
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1412,6 +1423,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, TIMER_MODE_TEXT,			NO_TAG, {TIMER_MODE}},
 {NO_TAG, 0, UNITS_OF_MEASURE_TEXT,		NO_TAG, {UNITS_OF_MEASURE}},
 {NO_TAG, 0, UNITS_OF_AIR_TEXT,			NO_TAG, {UNITS_OF_AIR}},
+{NO_TAG, 0, USB_SYNC_MODE_TEXT,			NO_TAG, {USB_SYNC_MODE}},
 {NO_TAG, 0, VECTOR_SUM_TEXT,			NO_TAG, {VECTOR_SUM}},
 {NO_TAG, 0, WAVEFORM_AUTO_CAL_TEXT,		NO_TAG, {WAVEFORM_AUTO_CAL}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&ConfigMenuHandler}}
@@ -1520,7 +1532,11 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (MONITOR_LOG):
+#if 0 // Original
 				SETUP_USER_MENU_MSG(&monitorLogMenu, DEFAULT_ITEM_1);
+#else // Jump right to the source
+				SETUP_MENU_MSG(VIEW_MONITOR_LOG_MENU);
+#endif
 			break;
 
 			case (PRETRIGGER_SIZE):
@@ -1598,6 +1614,10 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 
 			case (UNITS_OF_AIR):
 				SETUP_USER_MENU_MSG(&unitsOfAirMenu, g_unitConfig.unitsOfAir);
+			break;
+
+			case (USB_SYNC_MODE):
+				SETUP_USER_MENU_MSG(&usbSyncModeMenu, g_unitConfig.usbSyncMode);
 			break;
 
 			case (VECTOR_SUM):
@@ -1704,8 +1724,7 @@ void EraseEventsMenuHandler(uint8 keyPressed, void* data)
 				// Recalculate free space and init buffers
 				OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALCULATING_EVENT_STORAGE_SPACE_FREE_TEXT), 0);
 				GetSDCardUsageStats();
-				InitRamSummaryTbl();
-				InitFlashBuffs();
+				InitEventNumberCache();
 
 				// Display a message that the operation is complete
 				OverlayMessage(getLangText(SUCCESS_TEXT), getLangText(ERASE_COMPLETE_TEXT), (2 * SOFT_SECS));
@@ -1760,13 +1779,13 @@ void EraseSettingsMenuHandler(uint8 keyPressed, void* data)
 
 			OverlayMessage(getLangText(STATUS_TEXT), getLangText(ERASE_OPERATION_IN_PROGRESS_TEXT), 0);
 
-			//SectorErase((uint16*)FLASH_BASE_ADDR, 1);
+			// Erase all used parameter memory (including factory setup to be copied right back after)
 			EraseParameterMemory(0, ((sizeof(REC_EVENT_MN_STRUCT) * (MAX_NUM_OF_SAVED_SETUPS + 1)) +
 									sizeof(UNIT_CONFIG_STRUCT) + sizeof(MODEM_SETUP_STRUCT)));
 
-			// Reprogram Factroy Setup record
+			// Reprogram Factory Setup record (re-write after erase)
 			SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
-			// Just in case, reinit Sensor Parameters
+			// Just in case, re-init Sensor Parameters
 			InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
 
 			// Load Defaults for Waveform
@@ -2039,16 +2058,57 @@ void FreqPlotStandardMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
+// Hardware ID Menu
+//=============================================================================
+//*****************************************************************************
+#define HARDWARE_ID_MENU_ENTRIES 5
+USER_MENU_STRUCT hardwareIDMenu[HARDWARE_ID_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, HARDWARE_ID_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, HARDWARE_ID_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, REV_8_NORMAL_TEXT,			NO_TAG, {HARDWARE_ID_REV_8_NORMAL}},
+{ITEM_2, 0, REV_8_WITH_GPS_MOD_TEXT,	NO_TAG, {HARDWARE_ID_REV_8_WITH_GPS_MOD}},
+{ITEM_3, 0, REV_8_WITH_USART_TEXT,		NO_TAG, {HARDWARE_ID_REV_8_WITH_USART}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&HardwareIDMenuHandler}}
+};
+
+//------------------
+// Help Menu Handler
+//------------------
+void HardwareIDMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_factorySetupRecord.hardwareID = hardwareIDMenu[newItemIndex].data;
+
+		// Re-read and display Smart Sensor info
+		DisplaySmartSensorInfo(INFO_ON_CHECK);
+
+		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&serialNumberMenu, &g_factorySetupRecord.serial_num);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
 // Help Menu
 //=============================================================================
 //*****************************************************************************
-#define HELP_MENU_ENTRIES 5
+#define HELP_MENU_ENTRIES 6
 USER_MENU_STRUCT helpMenu[HELP_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, HELP_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, HELP_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, CONFIG_AND_OPTIONS_TEXT,	NO_TAG, {CONFIG}},
 {ITEM_2, 0, HELP_INFORMATION_TEXT,		NO_TAG, {INFORMATION}},
 {ITEM_3, 0, SENSOR_CHECK_TEXT,			NO_TAG, {SENSOR_CHECK}},
+{ITEM_4, 0, GPS_LOCATION_TEXT,			NO_TAG, {GPS_LOCATION_DISPLAY}},
 //{ITEM_4, 0, TESTING_TEXT,				NO_TAG, {TESTING}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&HelpMenuHandler}}
 };
@@ -2082,6 +2142,25 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 		else if (helpMenu[newItemIndex].data == SENSOR_CHECK)
 		{
 			DisplaySmartSensorInfo(INFO_ON_CHECK);
+		}
+		else if (helpMenu[newItemIndex].data == GPS_LOCATION_DISPLAY)
+		{
+			if (GET_HARDWARE_ID == HARDWARE_ID_REV_8_WITH_GPS_MOD)
+			{
+				sprintf((char*)g_spareBuffer, "LAT %02d%02d.%04d(%c) LON %02d%02d.%04d(%c)", g_gpsPosition.latDegrees, g_gpsPosition.latMinutes, g_gpsPosition.latSeconds, g_gpsPosition.northSouth,
+						g_gpsPosition.longDegrees, g_gpsPosition.longMinutes, g_gpsPosition.longSeconds, g_gpsPosition.eastWest);
+			}
+			else
+			{
+				sprintf((char*)g_spareBuffer, "%s", getLangText(GPS_MODULE_NOT_INCLUDED_TEXT));
+			}
+
+			if (MessageBox(getLangText(GPS_LOCATION_TEXT), (char*)g_spareBuffer, MB_OK) == MB_SPECIAL_ACTION)
+			{
+				g_gpsOutputToCraft ^= YES;
+				sprintf((char*)g_spareBuffer, "GPS OUTPUT TO CRAFT <%s>", ((g_gpsOutputToCraft == YES) ? "YES" : "NO"));
+				OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
+			}
 		}
 		else // Testing
 		{
@@ -2552,9 +2631,10 @@ void PrintMonitorLogMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_unitConfig.printMonitorLog = (uint8)printMonitorLogMenu[newItemIndex].data;
-
-		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+		if (printMonitorLogMenu[newItemIndex].data == YES)
+		{
+			MessageBox(getLangText(STATUS_TEXT), getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT), MB_OK);
+		}
 
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
@@ -2969,7 +3049,11 @@ void SensorTypeMenuHandler(uint8 keyPressed, void* data)
 	{
 		if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
 		{
+#if 0 // Original
 			SETUP_USER_MENU_MSG(&serialNumberMenu, &g_factorySetupRecord.serial_num);
+#else // Add Hardware ID
+			SETUP_USER_MENU_MSG(&hardwareIDMenu, g_factorySetupRecord.hardwareID);
+#endif
 		}
 		else
 		{
@@ -3022,6 +3106,93 @@ void SummaryIntervalMenuHandler(uint8 keyPressed, void* data)
 
 	JUMP_TO_ACTIVE_MENU();
 }
+
+#if 1
+//*****************************************************************************
+//=============================================================================
+// Usb Sync Mode Menu
+//=============================================================================
+//*****************************************************************************
+#define USB_SYNC_MODE_MENU_ENTRIES 6
+USER_MENU_STRUCT usbSyncModeMenu[USB_SYNC_MODE_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, USB_SYNC_MODE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, USB_SYNC_MODE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, PROMPT_ON_CONFLICT_TEXT,	NO_TAG, {PROMPT_OPTION}},
+{ITEM_2, 0, SKIP_ALL_TEXT,				NO_TAG, {SKIP_ALL_OPTION}},
+{ITEM_3, 0, REPLACE_ALL_TEXT,			NO_TAG, {REPLACE_ALL_OPTION}},
+{ITEM_4, 0, DUPLICATE_ALL_TEXT,			NO_TAG, {DUPLICATE_ALL_OPTION}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&UsbSyncModeMenuHandler}}
+};
+
+//---------------------------
+// Usb Sync Mode Menu Handler
+//---------------------------
+void UsbSyncModeMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_unitConfig.usbSyncMode = usbSyncModeMenu[newItemIndex].data;
+
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu, USB_SYNC_MODE);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+#endif
+
+#if 1
+//*****************************************************************************
+//=============================================================================
+// Sync File Exists Menu
+//=============================================================================
+//*****************************************************************************
+#define SYNC_FILE_EXISTS_MENU_ENTRIES 9
+USER_MENU_STRUCT syncFileExistsMenu[SYNC_FILE_EXISTS_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, SYNC_FILE_EXISTS_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_SPECIAL_TYPE, SYNC_FILE_EXISTS_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
+{FILENAME_TAG, 0, NULL_TEXT,		NO_TAG, {0}},
+{ITEM_1, 0, SKIP_TEXT,				NO_TAG, {SKIP_OPTION}},
+{ITEM_2, 0, REPLACE_TEXT,			NO_TAG, {REPLACE_OPTION}},
+{ITEM_3, 0, DUPLICATE_TEXT,			NO_TAG, {DUPLICATE_OPTION}},
+{ITEM_4, 0, SKIP_ALL_TEXT,			NO_TAG, {SKIP_ALL_OPTION}},
+{ITEM_5, 0, REPLACE_ALL_TEXT,		NO_TAG, {REPLACE_ALL_OPTION}},
+{ITEM_6, 0, DUPLICATE_ALL_TEXT,		NO_TAG, {DUPLICATE_ALL_OPTION}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SyncFileExistsMenuHandler}}
+};
+
+//--------------------------------
+// Sync File Exists Menu Handler
+//--------------------------------
+void SyncFileExistsMenuHandler(uint8 keyPressed, void* data)
+{
+	//INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_syncFileExistsAction = syncFileExistsMenu[newItemIndex].data;
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		g_syncFileExistsAction = SKIP_OPTION;
+	}
+
+#if 0 // Prevent recall
+	// Recall the current active menu to repaint the display
+	mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+	JUMP_TO_ACTIVE_MENU();
+#endif
+}
+#endif
 
 //*****************************************************************************
 //=============================================================================
