@@ -58,7 +58,7 @@ void AdvanceInputChar(uint32 dir);
 void CopyMenuToCache(USER_MENU_STRUCT* currentMenu);
 void CopyDataToCache(void* data);
 void CopyDataToMenu(MN_LAYOUT_STRUCT*);
-uint16 FindCurrentItemEntry(uint32 item);
+uint16 FindCurrentItemEntry(uint16 startLine, uint32 item);
 void AdvanceInputNumber(uint32 dir);
 void RemoveExtraSpaces(void);
 
@@ -110,10 +110,10 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 			CopyMenuToCache((USER_MENU_STRUCT*)msg.data[CURRENT_USER_MENU]);
 
 			// Check if the current menu is a select type
-			if (USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE)
+			if ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE) || ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_SPECIAL_TYPE)))
 			{
-				// Get the current item and set the current line to be highlighted
-				mn_layout_ptr->curr_ln = FindCurrentItemEntry(msg.data[CURRENT_ITEM_VALUE]);
+				// Get the current item and set the current line to be highlighted (Adjust down one line for Select Special, otherwise start at the top
+				mn_layout_ptr->curr_ln = FindCurrentItemEntry(((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_SPECIAL_TYPE) ? (mn_layout_ptr->top_ln + 1) : mn_layout_ptr->top_ln), msg.data[CURRENT_ITEM_VALUE]);
 
 				// Adjust top line if current line is below the first screen's worth of text
 				if (mn_layout_ptr->curr_ln > 6)
@@ -140,7 +140,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 			input = msg.data[0];
 
 			// Check if the current menu is a select type
-			if (USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE)
+			if ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE) || ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_SPECIAL_TYPE)))
 			{
 				// Check if the total number of active items (minus the title and end line) is less than 10
 				if (USER_MENU_ACTIVE_ITEMS(g_userMenuCachePtr) < 10)
@@ -164,7 +164,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 					// Make sure the user menu handler is not null before jumping to the routine
 					if (g_userMenuHandler != NULL)
 					{
-						if (USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE)
+						if ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE) || ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_SPECIAL_TYPE)))
 						{
 							// Set the current index to the user menu current line
 							g_userMenuCacheData.currentIndex = mn_layout_ptr->curr_ln;
@@ -224,10 +224,16 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 
 				case (DOWN_ARROW_KEY):
 				case (UP_ARROW_KEY):
-					if (USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE)
+					if ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE) || ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_SPECIAL_TYPE)))
 					{
 						// Scroll the highlighted menu item up or down based on the key used
 						UserMenuScroll((uint8)input, SELECT_MN_WND_LNS, mn_layout_ptr);
+
+						// Make sure Select Special doesn't show the first line as an active item
+						if ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_SPECIAL_TYPE) && (mn_layout_ptr->curr_ln == 1))
+						{
+							mn_layout_ptr->curr_ln++;
+						}
 					}
 					else if ((USER_MENU_TYPE(g_userMenuCachePtr) == STRING_TYPE) || (USER_MENU_TYPE(g_userMenuCachePtr) == STRING_SPECIAL_TYPE))
 					{
@@ -259,7 +265,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 				break;
 
 				case (PLUS_KEY):
-					if (USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE)
+					if ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE) || ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_SPECIAL_TYPE)))
 					{
 						// Change the contrast
 						AdjustLcdContrast(LIGHTER);
@@ -291,7 +297,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 				break;
 
 				case (MINUS_KEY):
-					if (USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE)
+					if ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_TYPE) || ((USER_MENU_TYPE(g_userMenuCachePtr) == SELECT_SPECIAL_TYPE)))
 					{
 						// Change the contrast
 						AdjustLcdContrast(DARKER);
@@ -1354,12 +1360,12 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 FindCurrentItemEntry(uint32 item)
+uint16 FindCurrentItemEntry(uint16 startLine, uint32 item)
 {
 	uint16 i;
 	uint16 totalMenuElements = (uint8)(USER_MENU_DISPLAY_ITEMS(g_userMenuCachePtr));
 
-	for (i = 1; i < totalMenuElements; i++)
+	for (i = startLine; i < totalMenuElements; i++)
 	{
 		// Check if the current item matches the current index
 		if (g_userMenuCachePtr[i].data == item)
