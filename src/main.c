@@ -196,14 +196,6 @@ void SystemEventManager(void)
 			raiseSystemEventFlag(LOW_BATTERY_WARNING_EVENT);
 		}
 
-#if 0 // Removed debug log file due to inducing system problems
-		if ((g_debugBufferCount > GLOBAL_DEBUG_BUFFER_THRESHOLD) && (g_fileAccessLock == AVAILABLE))
-		{
-			debug("Dumping debug output to debug log file\r\n");
-			WriteDebugBufferToFile();
-		}
-#endif
-
 		CheckForMidnight();
 	}
 
@@ -228,9 +220,9 @@ void SystemEventManager(void)
 	}
 
 	//___________________________________________________________________________________________
-	if (getSystemEventState(WARNING1_EVENT))
+	if (getSystemEventState(WARNING_EVENT))
 	{
-		clearSystemEventFlag(WARNING1_EVENT);
+		clearSystemEventFlag(WARNING_EVENT);
 
 		if (IsSoftTimerActive(ALARM_ONE_OUTPUT_TIMER_NUM) == NO)
 		{
@@ -240,12 +232,6 @@ void SystemEventManager(void)
 			// Assign soft timer to turn the Alarm 1 signal off
 			AssignSoftTimer(ALARM_ONE_OUTPUT_TIMER_NUM, (uint32)(g_unitConfig.alarmOneTime * TICKS_PER_SEC), AlarmOneOutputTimerCallback);
 		}
-	}
-
-	//___________________________________________________________________________________________
-	if (getSystemEventState(WARNING2_EVENT))
-	{
-		clearSystemEventFlag(WARNING2_EVENT);
 
 		if (IsSoftTimerActive(ALARM_TWO_OUTPUT_TIMER_NUM) == NO)
 		{
@@ -420,6 +406,10 @@ void CraftManager(void)
 		{
 			g_modemStatus.xferState = sendDEMData();
 		}
+		else if (DERx_CMD == g_modemStatus.xferState)
+		{
+			g_modemStatus.xferState = ManageDER();
+		}
 		else if (DSMx_CMD == g_modemStatus.xferState)
 		{
 			g_modemStatus.xferState = sendDSMData();
@@ -446,6 +436,30 @@ void CraftManager(void)
 	{
 		clearSystemEventFlag(CRAFT_PORT_EVENT);
 		RemoteCmdMessageProcessing();
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void GpsManager(void)
+{
+	if (g_gpsSerialData.ready == YES)
+	{
+		g_gpsSerialData.ready = NO;
+		ProcessGpsSerialData();
+	}
+
+	if (g_gpsQueue.messageReady == YES)
+	{
+		g_gpsQueue.messageReady = NO;
+		ProcessGpsMessage();
+	}
+
+	if (g_gpsBinaryQueue.binaryMessageReady == YES)
+	{
+		g_gpsBinaryQueue.binaryMessageReady = NO;
+		ProcessGpsBinaryMessage();
 	}
 }
 
@@ -564,14 +578,16 @@ extern volatile U8 device_state;
 extern Bool wrong_class_connected;
 extern Bool ms_process_first_connect_disconnect;
 extern Bool ms_usb_prevent_sleep;
-extern Bool ushell_cmd_syncevents(uint16_t*, uint16_t*);
+extern Bool ushell_cmd_syncevents(uint8, uint16_t*, uint16_t*, uint16_t*, uint16_t*);
 #include "ushell_task.h"
 
 void UsbDeviceManager(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	uint16 totalEventsCopied;
-	uint16 totalEventsSkipped;
+	uint16 totalFilesCopied;
+	uint16 totalFilesSkipped;
+	uint16 totalFilesReplaced;
+	uint16 totalFilesDuplicated;
 
 	//___________________________________________________________________________________________
 	//
@@ -799,7 +815,7 @@ void UsbDeviceManager(void)
 
 						g_lcdBacklightFlag = ENABLED;
 						SetLcdBacklightState(BACKLIGHT_BRIGHT);
-						AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
+						AssignSoftTimer(LCD_BACKLIGHT_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 					}
 					else
 					{
@@ -817,23 +833,35 @@ void UsbDeviceManager(void)
 					{
 						OverlayMessage(getLangText(STATUS_TEXT), getLangText(SYNC_IN_PROGRESS_TEXT), 0);
 
-						if (ushell_cmd_syncevents(&totalEventsCopied, &totalEventsSkipped) == TRUE)
+						totalFilesCopied = totalFilesSkipped = totalFilesReplaced = totalFilesDuplicated = 0;
+
+						if (ushell_cmd_syncevents(USB_SYNC_NORMAL, &totalFilesCopied, &totalFilesSkipped, &totalFilesReplaced, &totalFilesDuplicated) == TRUE)
 						{
-							sprintf((char*)g_spareBuffer, "%s. %s: %d %s: %d (%s: %d)", getLangText(SYNC_SUCCESSFUL_TEXT), getLangText(TOTAL_EVENTS_TEXT),
-									(totalEventsCopied + totalEventsSkipped), getLangText(NEW_TEXT), totalEventsCopied, getLangText(EXISTING_TEXT), totalEventsSkipped);
+							sprintf((char*)g_spareBuffer, "%s. %s (%d) %s (%d) %s (%d)", getLangText(SYNC_SUCCESSFUL_TEXT), getLangText(TOTAL_FILES_TEXT),
+									(totalFilesCopied + totalFilesSkipped), getLangText(NEW_TEXT), totalFilesCopied, getLangText(SKIPPED_TEXT), totalFilesSkipped);
 							MessageBox(getLangText(USB_DOWNLOAD_TEXT), (char*)g_spareBuffer, MB_OK);
+
+							if (totalFilesReplaced || totalFilesDuplicated)
+							{
+								sprintf((char*)g_spareBuffer, "%s. %s (%d) %s (%d)", getLangText(SYNC_SUCCESSFUL_TEXT), getLangText(REPLACED_TEXT), totalFilesReplaced, getLangText(DUPLICATED_TEXT), totalFilesDuplicated);
+								MessageBox(getLangText(USB_DOWNLOAD_TEXT), (char*)g_spareBuffer, MB_OK);
+							}
 						}
 						else // Error
 						{
 							MessageBox(getLangText(USB_DOWNLOAD_TEXT), getLangText(SYNC_ENCOUNTERED_AN_ERROR_TEXT), MB_OK);
 						}
+
+						// Return to the main menu (in case the sync file exists menu is displayed)
+						SETUP_MENU_MSG(MAIN_MENU);
 					}
 					//___________________________________________________________________________________________
 					//
 					else // User does not want to sync events
 					//___________________________________________________________________________________________
 					{
-
+						// Recall the current active menu to repaint the display
+						mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
 					}
 
 					//___________________________________________________________________________________________
@@ -849,8 +877,6 @@ void UsbDeviceManager(void)
 						}
 					}
 
-					// Recall the current active menu to repaint the display
-					mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
 					JUMP_TO_ACTIVE_MENU();
 				}
 				//___________________________________________________________________________________________
@@ -1123,7 +1149,6 @@ const char default_boot_name[] = { "Boot.s" };
 
 void BootLoadManager(void)
 {
-	char fileName[50];
 	static void (*func)(void);
 	func = (void(*)())APPLICATION;
 	int file = -1;
@@ -1178,8 +1203,8 @@ void BootLoadManager(void)
 		}
 
 		nav_select(FS_NAV_ID_DEFAULT);
-		sprintf(fileName, "A:\\System\\%s", default_boot_name);
-		file = open(fileName, O_RDONLY);
+		sprintf(g_spareFileName, "%s%s", SYSTEM_PATH, default_boot_name);
+		file = open(g_spareFileName, O_RDONLY);
 
 		while (file == -1)
 		{
@@ -1206,7 +1231,7 @@ void BootLoadManager(void)
 			
 			SoftUsecWait(250 * SOFT_MSECS);
 			
-			file = open(fileName, O_RDONLY);
+			file = open(g_spareFileName, O_RDONLY);
 		}
 
 		// Display initializing message
@@ -1355,8 +1380,7 @@ void PowerManager(void)
 		if (g_sampleProcessing == ACTIVE_STATE)
 		{
 			// Check if a higher sample rate that can't use Stop sleep mode (Wave 16K and Bar 8K)
-			if ((g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K) ||
-				((g_triggerRecord.opMode == BARGRAPH_MODE) && (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_8K)))
+			if ((g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K) || ((g_triggerRecord.opMode == BARGRAPH_MODE) && (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_8K)))
 			{
 				sleepStateNeeded = AVR32_PM_SMODE_IDLE;
 			}
@@ -1382,6 +1406,12 @@ void PowerManager(void)
 
 		// Check if not already set for Idle sleep and not max power savings and a remote/craft is connected (DSR and DCD)
 		if ((sleepStateNeeded != AVR32_PM_SMODE_IDLE) && ((READ_DSR == MODEM_CONNECTED) && (READ_DCD == CONNECTION_ESTABLISHED)))
+		{
+			sleepStateNeeded = AVR32_PM_SMODE_FROZEN;
+		}
+
+		// Check if GPS module is selected and the GPS module is enabled (by checking if the GPS power off timer is active)
+		if ((sleepStateNeeded != AVR32_PM_SMODE_IDLE) && (GET_HARDWARE_ID == HARDWARE_ID_REV_8_WITH_GPS_MOD) && (IsSoftTimerActive(GPS_POWER_OFF_TIMER_NUM) == YES))
 		{
 			sleepStateNeeded = AVR32_PM_SMODE_FROZEN;
 		}
@@ -1459,13 +1489,14 @@ void TestExternalSamplingSource(void)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #include "fsaccess.h"
-static char s_errorReportFilename[] = "A:\\Logs\\ExceptionReport.txt";
+static char s_errorReportFilename[] = LOGS_PATH EXCEPTION_REPORT_FILE;
 void CheckExceptionReportLogExists(void)
 {
-		if (nav_setcwd("A:\\Logs\\ExceptionReport.txt", TRUE, FALSE))
-		{
-			MessageBox(getLangText(WARNING_TEXT), "EXCEPTION REPORT EXISTS DUE TO ERROR. PLEASE CONTACT SUPPORT.", MB_OK);
-		}
+	if (nav_setcwd(s_errorReportFilename, TRUE, FALSE))
+	{
+		sprintf((char*)g_spareBuffer, "%s. %s", getLangText(EXCEPTION_REPORT_EXISTS_DUE_TO_ERROR_TEXT), getLangText(PLEASE_CONTACT_SUPPORT_TEXT));
+		MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -1712,6 +1743,9 @@ int main(void)
 
 		// Handle craft processing
 		CraftManager();
+
+		// Handle GPS processing
+		GpsManager();
 
 		// Handle messages to be processed
 		MessageManager();
