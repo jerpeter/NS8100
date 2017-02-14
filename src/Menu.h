@@ -61,8 +61,7 @@ enum {
 	BAR_SCALE_HALF_TAG,
 	BAR_SCALE_QUARTER_TAG,
 	BAR_SCALE_EIGHTH_TAG,
-	ENABLED_TAG,
-	DISABLED_TAG,
+	FILENAME_TAG,
 	// Add new separators before this line
 	TOTAL_TAGS
 };
@@ -135,6 +134,7 @@ enum {
 // User Menu types
 enum {
 	SELECT_TYPE = 1,
+	SELECT_SPECIAL_TYPE,
 	STRING_TYPE,
 	STRING_SPECIAL_TYPE,
 	INTEGER_BYTE_TYPE,
@@ -377,6 +377,15 @@ enum {
 	IMPULSE_RESULTS
 };
 
+// Alarm testing types
+enum {
+	ALARM_TESTING_DONE = 1,
+	ALARM_1_TESTING_ENABLED,
+	ALARM_1_TESTING_DISABLED,
+	ALARM_2_TESTING_ENABLED,
+	ALARM_2_TESTING_DISABLED
+};
+
 // Mode Menu types
 enum {
 	MONITOR = 1,
@@ -388,6 +397,7 @@ enum {
 	CONFIG = 1,
 	INFORMATION,
 	SENSOR_CHECK,
+	GPS_LOCATION_DISPLAY,
 	TESTING
 };
 
@@ -426,6 +436,7 @@ enum {
 	TIMER_MODE,
 	UNITS_OF_MEASURE,
 	UNITS_OF_AIR,
+	USB_SYNC_MODE,
 	VECTOR_SUM,
 	WAVEFORM_AUTO_CAL,
 	ZERO_EVENT_NUMBER,
@@ -694,10 +705,12 @@ typedef struct {
 	DATE_TIME_STRUCT date;
 } USER_MENU_CACHE_DATA;
 
+#define MENU_TAGS_MAX_CHARS	22
+
 // User Menu Tags
 typedef struct 
 {
-	char text[20];
+	char text[MENU_TAGS_MAX_CHARS];
 	uint8 type;
 } USER_MENU_TAGS_STRUCT;
 
@@ -836,6 +849,7 @@ void ExternalTriggerMenuHandler(uint8 key, void* data);
 void FlashWrappingMenuHandler(uint8 key, void* data);
 void FreqPlotMenuHandler(uint8 key, void* data);
 void FreqPlotStandardMenuHandler(uint8 key, void* data);
+void HardwareIDMenuHandler(uint8 key, void* data);
 void HelpMenuHandler(uint8 key, void* data);
 void InfoMenuHandler(uint8 key, void* data);
 void LanguageMenuHandler(uint8 key, void* data);
@@ -855,10 +869,12 @@ void SaveSetupMenuHandler(uint8 key, void* data);
 void SensitivityMenuHandler(uint8 key, void* data);
 void SensorTypeMenuHandler(uint8 key, void* data);
 void SummaryIntervalMenuHandler(uint8 key, void* data);
+void SyncFileExistsMenuHandler(uint8 key, void* data);
 void TimerModeMenuHandler(uint8 key, void* data);
 void TimerModeFreqMenuHandler(uint8 key, void* data);
 void UnitsOfMeasureMenuHandler(uint8 key, void* data);
 void UnitsOfAirMenuHandler(uint8 key, void* data);
+void UsbSyncModeMenuHandler(uint8 key, void* data);
 void CalibratonDateSourceMenuHandler(uint8 key, void* data);
 void VectorSumMenuHandler(uint8 key, void* data);
 void WaveformAutoCalMenuHandler(uint8 key, void* data);
@@ -940,5 +956,7 @@ void StopMonitoringForLowPowerState(void);
 uint8 CheckAndDisplayErrorThatPreventsMonitoring(uint8 messageType);
 void PromptUserWaitingForSensorWarmup(void);
 void PromptUserWaitingForSensorZeroing(void);
+void StartADDataCollectionForCalibration(uint16 sampleRate);
+void StopADDataCollectionForCalibration(void);
 
 #endif // _MENU_H_
