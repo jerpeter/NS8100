@@ -16,11 +16,13 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define TIMER_UNASSIGNED 0
-#define TIMER_ASSIGNED 1 
+enum {
+	TIMER_DISABLED,
+	TIMER_ENABLED
+};
 
-enum{
-	DISPLAY_ON_OFF_TIMER_NUM = 0,
+enum {
+	LCD_BACKLIGHT_ON_OFF_TIMER_NUM = 0,
 	LCD_POWER_ON_OFF_TIMER_NUM,
 	AUTO_MONITOR_TIMER_NUM,
 	MENU_UPDATE_TIMER_NUM,
@@ -30,6 +32,9 @@ enum{
 	MODEM_DELAY_TIMER_NUM,
 	MODEM_RESET_TIMER_NUM,
 	KEYPAD_LED_TIMER_NUM,
+	GPS_POWER_OFF_TIMER_NUM,
+	GPS_POWER_ON_TIMER_NUM,
+	LOOSE_EVENT_MIGRATION_TIMER_NUM,
 	// Add new timers here
 	NUM_OF_SOFT_TIMERS
 };
@@ -82,5 +87,8 @@ void AlarmTwoOutputTimerCallback(void);
 void PowerOffTimerCallback(void);
 void ModemDelayTimerCallback(void);
 void ModemResetTimerCallback(void);
+void GpsPowerOffTimerCallBack(void);
+void GpsPowerOnTimerCallBack(void);
+void LooseEventMigrationTimerCallBack(void);
 
 #endif // _SOFT_TIMER_H_

@@ -35,6 +35,7 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
+extern Bool ms_usb_prevent_sleep;
 
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
@@ -45,7 +46,7 @@
 ///----------------------------------------------------------------------------
 uint8 IsSoftTimerActive(uint16 timerNum)
 {
-	if ((timerNum < NUM_OF_SOFT_TIMERS) && (g_rtcTimerBank[timerNum].state == TIMER_ASSIGNED))
+	if ((timerNum < NUM_OF_SOFT_TIMERS) && (g_rtcTimerBank[timerNum].state == TIMER_ENABLED))
 	{
 		return YES;
 	}
@@ -67,7 +68,7 @@ void AssignSoftTimer(uint16 timerNum, uint32 timeout, void* callback)
 	// Check that the timeout condition is set for some time in the future
 	if (timeout > 0)
 	{
-		g_rtcTimerBank[timerNum].state = TIMER_ASSIGNED;
+		g_rtcTimerBank[timerNum].state = TIMER_ENABLED;
 		g_rtcTimerBank[timerNum].tickStart = g_lifetimeHalfSecondTickCount;
 		g_rtcTimerBank[timerNum].timePeriod = g_lifetimeHalfSecondTickCount + timeout;
 		g_rtcTimerBank[timerNum].timeoutValue = timeout;
@@ -92,7 +93,7 @@ void ResetSoftTimer(uint16 timerNum)
 		return;
 	}
 
-	if (g_rtcTimerBank[timerNum].state == TIMER_ASSIGNED)
+	if (g_rtcTimerBank[timerNum].state == TIMER_ENABLED)
 	{
 		g_rtcTimerBank[timerNum].tickStart = g_lifetimeHalfSecondTickCount;
 		g_rtcTimerBank[timerNum].timePeriod = g_lifetimeHalfSecondTickCount + g_rtcTimerBank[timerNum].timeoutValue;
@@ -112,7 +113,7 @@ void ClearSoftTimer(uint16 timerNum)
 		return;
 	}
 
-	g_rtcTimerBank[timerNum].state = TIMER_UNASSIGNED;
+	g_rtcTimerBank[timerNum].state = TIMER_DISABLED;
 	g_rtcTimerBank[timerNum].tickStart = 0;
 	g_rtcTimerBank[timerNum].timePeriod = 0;
 	g_rtcTimerBank[timerNum].timeoutValue = 0;
@@ -130,7 +131,7 @@ void CheckSoftTimers(void)
 	for (softTimerIndex = 0; softTimerIndex < NUM_OF_SOFT_TIMERS; softTimerIndex++)
 	{
 		// Check if it is in use.
-		if (g_rtcTimerBank[softTimerIndex].state == TIMER_ASSIGNED)
+		if (g_rtcTimerBank[softTimerIndex].state == TIMER_ENABLED)
 		{
 			// Did our timer loop or wrap around the max?
 			if (g_rtcTimerBank[softTimerIndex].tickStart > g_rtcTimerBank[softTimerIndex].timePeriod)
@@ -141,13 +142,13 @@ void CheckSoftTimers(void)
 					// The counter looped so check the condition of the time period.
 					if (g_lifetimeHalfSecondTickCount >= g_rtcTimerBank[softTimerIndex].timePeriod)
 					{
-						// Once the timer has activated, clear the timer state and other values
-						g_rtcTimerBank[softTimerIndex].state = TIMER_UNASSIGNED;
+						// Once the timer has activated, disable the timer and clear values
+						g_rtcTimerBank[softTimerIndex].state = TIMER_DISABLED;
 						g_rtcTimerBank[softTimerIndex].tickStart = 0;
 						g_rtcTimerBank[softTimerIndex].timePeriod = 0;
 
-						// Process the callback, or func is null and an error.
-						if (NULL != g_rtcTimerBank[softTimerIndex].callback)
+						// Process the callback, or function is null and an error.
+						if (g_rtcTimerBank[softTimerIndex].callback != NULL)
 						{
 							(*(g_rtcTimerBank[softTimerIndex].callback)) ();
 						}
@@ -165,13 +166,13 @@ void CheckSoftTimers(void)
 				if ((g_lifetimeHalfSecondTickCount < g_rtcTimerBank[softTimerIndex].tickStart) ||
 					(g_lifetimeHalfSecondTickCount >= g_rtcTimerBank[softTimerIndex].timePeriod))
 				{
-					// Once the timer has activated, clear the timer state and other values
-					g_rtcTimerBank[softTimerIndex].state = TIMER_UNASSIGNED;
+					// Once the timer has activated, disable the timer state and clear values
+					g_rtcTimerBank[softTimerIndex].state = TIMER_DISABLED;
 					g_rtcTimerBank[softTimerIndex].tickStart = 0;
 					g_rtcTimerBank[softTimerIndex].timePeriod = 0;
 
-					// Process the callback, or func is null and an error.
-					if (NULL != g_rtcTimerBank[softTimerIndex].callback)
+					// Process the callback, or function is null and an error.
+					if (g_rtcTimerBank[softTimerIndex].callback != NULL)
 					{
 						(*(g_rtcTimerBank[softTimerIndex].callback)) ();
 					}
@@ -475,5 +476,84 @@ void AutoMonitorTimerCallBack(void)
 				JUMP_TO_ACTIVE_MENU();
 			}
 		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void GpsPowerOffTimerCallBack(void)
+{
+	DisableGps();
+
+	ActivateDisplayShortDuration(3);
+	sprintf((char*)g_spareBuffer, "%s. %s %s", getLangText(TIMED_OUT_TEXT), getLangText(LOCATION_TEXT), getLangText(NOT_FOUND_TEXT));
+	OverlayMessage(getLangText(GPS_LOCATION_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+
+	AssignSoftTimer(GPS_POWER_ON_TIMER_NUM, (GPS_REACTIVATION_TIME_SEARCH_FAIL * TICKS_PER_MIN), GpsPowerOnTimerCallBack);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void GpsPowerOnTimerCallBack(void)
+{
+	EnableGps();
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+#define TEST_MIGRATION_CRAFT_OUTPUT	0
+void LooseEventMigrationTimerCallBack(void)
+{
+	uint8 fileMoveStatus = YES;
+#if TEST_MIGRATION_CRAFT_OUTPUT // Test
+	uint16 length;
+#endif
+
+	// Check if no System Events and LCD is off and Modem is not transferring and USB is not connected
+	if ((g_systemEventFlags.wrd == NO_SYSTEM_EVENT_ACTIVE) && (GetPowerControlState(LCD_POWER_ENABLE) == OFF) && (g_modemStatus.xferState == NOP_CMD) && (ms_usb_prevent_sleep == NO))
+	{
+#if TEST_MIGRATION_CRAFT_OUTPUT // Test
+		length = sprintf((char*)g_spareBuffer, "Loose Event Migration System Inactive (Up: %lu s)\r\n", (g_lifetimeHalfSecondTickCount / 2));
+		ModemPuts(g_spareBuffer, length, NO_CONVERSION);
+#endif
+		if (g_fileAccessLock == AVAILABLE)
+		{
+			GetSpi1MutexLock(SDMMC_LOCK);
+
+			if (MigrateLooseFiles(EVENT_FILE_TYPE) == NO)
+			{
+				fileMoveStatus = MigrateLooseFiles(ER_DATA_FILE_TYPE);
+			}
+
+			SetNavDefault();
+			ReleaseSpi1MutexLock();
+		}
+	}
+#if TEST_MIGRATION_CRAFT_OUTPUT // Test
+	else
+	{
+		length = sprintf((char*)g_spareBuffer, "Loose Event Migration System Skip (%x, %d, %d, %d) (Up: %lu s)\r\n", g_systemEventFlags.wrd, GetPowerControlState(LCD_POWER_ENABLE), g_modemStatus.xferState, ms_usb_prevent_sleep, (g_lifetimeHalfSecondTickCount / 2));
+		ModemPuts(g_spareBuffer, length, NO_CONVERSION);
+	}
+#endif
+
+	if (fileMoveStatus == NO)
+	{
+#if TEST_MIGRATION_CRAFT_OUTPUT // Test
+		length = sprintf((char*)g_spareBuffer, "Loose Event Migration Complete (Up: %lu s)\r\n", (g_lifetimeHalfSecondTickCount / 2));
+		ModemPuts(g_spareBuffer, length, NO_CONVERSION);
+#endif
+		ClearSoftTimer(LOOSE_EVENT_MIGRATION_TIMER_NUM);
+	}
+	else // Continue working to migrate files
+	{
+#if TEST_MIGRATION_CRAFT_OUTPUT // Test
+		length = sprintf((char*)g_spareBuffer, "Loose Event Migration Timer Reset...  (Up: %lu s)\r\n", (g_lifetimeHalfSecondTickCount / 2));
+		ModemPuts(g_spareBuffer, length, NO_CONVERSION);
+#endif
+		AssignSoftTimer(LOOSE_EVENT_MIGRATION_TIMER_NUM, ((g_sampleProcessing == ACTIVE_STATE) ? (30 * TICKS_PER_SEC) : (3 * TICKS_PER_SEC)), LooseEventMigrationTimerCallBack);
 	}
 }
