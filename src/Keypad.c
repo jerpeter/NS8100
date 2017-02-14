@@ -305,17 +305,8 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					else if (keyPressed == KEY_BACKLIGHT)
 					{
 #if 1
-						DisplayTimerCallBack();
-						LcdPwTimerCallBack();
-						
-						while (g_kpadInterruptWhileProcessing == YES)
-						{
-							g_kpadInterruptWhileProcessing = NO;
-							ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
-						}
-
-						g_kpadProcessingFlag = DEACTIVATED;
-
+						TurnDisplayOff();
+#endif
 						return(PASSED);
 					}
 #endif
@@ -376,11 +367,11 @@ void KeypressEventMgr(void)
 	{
 		g_lcdBacklightFlag = ENABLED;
 		SetLcdBacklightState(BACKLIGHT_BRIGHT);
-		AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
+		AssignSoftTimer(LCD_BACKLIGHT_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 	}
 	else // Reassign the LCD Backlight countdown timer
 	{
-		AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
+		AssignSoftTimer(LCD_BACKLIGHT_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 	}
 
 	// Check if Auto Monitor is active and not in monitor mode
@@ -546,7 +537,7 @@ uint8 GetKeypadKey(uint8 mode)
 	AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
 	// Reassign the LCD Backlight countdown timer
-	AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
+	AssignSoftTimer(LCD_BACKLIGHT_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 
 	while (g_kpadInterruptWhileProcessing == YES)
 	{
