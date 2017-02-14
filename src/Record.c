@@ -18,6 +18,7 @@
 #include "RealTimeClock.h"
 #include "Display.h"
 #include "spi.h"
+#include "flashc.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -441,38 +442,39 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT* unitConfigPtr)
 	memset(unitConfigPtr, 0, sizeof(UNIT_CONFIG_STRUCT));
 
 	// Set default conditions
-	unitConfigPtr->rs232PowerSavings = ENABLED;
-	unitConfigPtr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
-	unitConfigPtr->externalTrigger = ENABLED;
-	unitConfigPtr->saveCompressedData = SAVE_EXTRA_FILE_COMPRESSED_DATA;
+	unitConfigPtr->adChannelVerification = ENABLED;
 	unitConfigPtr->airScale = AIR_SCALE_LINEAR;
-	unitConfigPtr->flashWrapping = NO;
-	unitConfigPtr->autoMonitorMode = AUTO_NO_TIMEOUT;
-	unitConfigPtr->autoCalMode = AUTO_NO_CAL_TIMEOUT;
-	unitConfigPtr->alarmOneMode = ALARM_MODE_OFF;
-	unitConfigPtr->alarmTwoMode = ALARM_MODE_OFF;
-	unitConfigPtr->alarmOneSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
 	unitConfigPtr->alarmOneAirLevel = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
-	unitConfigPtr->alarmTwoSeismicLevel = ALARM_TWO_SEIS_DEFAULT_TRIG_LVL;
-	unitConfigPtr->alarmTwoAirLevel = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
+	unitConfigPtr->alarmOneMode = ALARM_MODE_OFF;
+	unitConfigPtr->alarmOneSeismicLevel = ALARM_ONE_SEIS_DEFAULT_TRIG_LVL;
 	unitConfigPtr->alarmOneTime = ALARM_OUTPUT_TIME_DEFAULT;
+	unitConfigPtr->alarmTwoAirLevel = ALARM_TWO_AIR_DEFAULT_TRIG_LVL;
+	unitConfigPtr->alarmTwoMode = ALARM_MODE_OFF;
+	unitConfigPtr->alarmTwoSeismicLevel = ALARM_TWO_SEIS_DEFAULT_TRIG_LVL;
 	unitConfigPtr->alarmTwoTime = ALARM_OUTPUT_TIME_DEFAULT;
+	unitConfigPtr->autoCalForWaveform = NO;
+	unitConfigPtr->autoCalMode = AUTO_NO_CAL_TIMEOUT;
+	unitConfigPtr->autoMonitorMode = AUTO_NO_TIMEOUT;
+	unitConfigPtr->autoPrint = OFF;
 	unitConfigPtr->baudRate = BAUD_RATE_115200;
 	unitConfigPtr->copies = 1;
+	unitConfigPtr->externalTrigger = ENABLED;
+	unitConfigPtr->flashWrapping = NO;
+	unitConfigPtr->freqPlotMode = OFF;
 	unitConfigPtr->freqPlotType = 1;
 	unitConfigPtr->languageMode = ENGLISH_LANG;
 	unitConfigPtr->lcdContrast = DEFUALT_CONTRAST;
 	unitConfigPtr->lcdTimeout = 2;
-	unitConfigPtr->timerMode = DISABLED;
-	unitConfigPtr->unitsOfMeasure = IMPERIAL_TYPE;
-	unitConfigPtr->unitsOfAir = DECIBEL_TYPE;
-	unitConfigPtr->vectorSum = DISABLED;
+	unitConfigPtr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
 	unitConfigPtr->reportDisplacement = DISABLED;
 	unitConfigPtr->reportPeakAcceleration = DISABLED;
-	unitConfigPtr->autoCalForWaveform = NO;
-	unitConfigPtr->autoPrint = OFF;
-	unitConfigPtr->freqPlotMode = OFF;
-	unitConfigPtr->printMonitorLog = NO;
+	unitConfigPtr->rs232PowerSavings = ENABLED;
+	unitConfigPtr->saveCompressedData = SAVE_EXTRA_FILE_COMPRESSED_DATA;
+	unitConfigPtr->timerMode = DISABLED;
+	unitConfigPtr->unitsOfAir = DECIBEL_TYPE;
+	unitConfigPtr->unitsOfMeasure = IMPERIAL_TYPE;
+	unitConfigPtr->usbSyncMode = PROMPT_OPTION;
+	unitConfigPtr->vectorSum = DISABLED;
 }
 
 ///----------------------------------------------------------------------------
@@ -493,7 +495,7 @@ void ActivateUnitConfigOptions(void)
 	g_sensorInfo.unitsFlag = g_unitConfig.unitsOfMeasure;
 	g_sensorInfo.airUnitsFlag = g_unitConfig.unitsOfAir;
 
-	AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
+	AssignSoftTimer(LCD_BACKLIGHT_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 
 	if ((g_unitConfig.lcdTimeout < LCD_TIMEOUT_MIN_VALUE) || (g_unitConfig.lcdTimeout > LCD_TIMEOUT_MAX_VALUE))
 	{
@@ -717,4 +719,34 @@ void EraseParameterMemory(uint16 startAddr, uint16 dataLength)
 
 		ReleaseSpi1MutexLock();
 	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void GetFlashUserPageFactorySetup(FACTORY_SETUP_STRUCT* factorySetup)
+{
+	uint32* userPage = (uint32*)FLASH_USER_PAGE_BASE_ADDRESS; // 512 Bytes
+
+	memcpy(factorySetup, userPage, sizeof(FACTORY_SETUP_STRUCT));
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void SaveFlashUserPageFactorySetup(FACTORY_SETUP_STRUCT* factorySetup)
+{
+	uint32* userPage = (uint32*)FLASH_USER_PAGE_BASE_ADDRESS; // 512 Bytes
+
+	flashc_memcpy(userPage, factorySetup, sizeof(FACTORY_SETUP_STRUCT), YES);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void EraseFlashUserPageFactorySetup(void)
+{
+	uint32* userPage = (uint32*)FLASH_USER_PAGE_BASE_ADDRESS; // 512 Bytes
+
+	flashc_memset32(userPage, 0xFFFFFFFF, sizeof(FACTORY_SETUP_STRUCT), YES);
 }
