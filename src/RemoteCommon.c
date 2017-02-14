@@ -116,6 +116,32 @@ uint8 ParseIncommingMsgCmd(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* inc
 	return (errCode);
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 ParseIncommingDERRequestMsg(CMD_BUFFER_STRUCT* inCmd, DER_REQUEST* derRequest)
+{
+	char* msgRequestPtr = (char*)inCmd->msg;
+
+	// clear the incomming header data.
+	memset(derRequest, 0, sizeof(DER_REQUEST));
+
+	// Check if the DER request is of sufficient length and if the DER request passes a first check for errors
+	if ((strlen(msgRequestPtr) < MIN_DER_REQUEST_LENGTH) || (FirstPassValidateCommandString(msgRequestPtr) == FAIL))
+	{
+		// There is a problem
+		return (FAIL);
+	}
+
+	// Scan the DER request elements (non-populated elements will end up zero)
+	sscanf(msgRequestPtr, "%3s,%hu,%lu,%hu,%hu,%hu,%hu,%hu,%lu", derRequest->command, &derRequest->eventNumber, &derRequest->delayBeforeSend, &derRequest->enablePackets,
+			&derRequest->packetSize, &derRequest->startPacket, &derRequest->numberOfPackets, &derRequest->enableAck, &derRequest->responseTimeout);
+
+	debug("DER Request: %s E#:%d Delay:%lu EnPkt:%d PktSz:%d Start:%d #Pkts:%d EnAck:%d RspTmo:%lu\r\n", derRequest->command, &derRequest->eventNumber, &derRequest->delayBeforeSend,
+			&derRequest->enablePackets, &derRequest->packetSize, &derRequest->startPacket, &derRequest->numberOfPackets, &derRequest->enableAck, &derRequest->responseTimeout);
+
+	return (PASS);
+}
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -205,6 +231,38 @@ void SendErrorMsg(uint8* msgCmd, uint8* msgType)
 	// Send Ending Footer
 	ModemPuts((uint8*)&msgCRC, 4, NO_CONVERSION);
 	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 FirstPassValidateCommandString(char* command)
+{
+	uint16 i;
+	uint16 length = strlen(command);
+
+	for (i = 3; i < length; i++)
+	{
+		// Check if at the trailing CRLF
+		if ((command[i] == '\r') || (command[i] == '\n'))
+		{
+			break;
+		}
+
+		// Check to make sure input is either a number or a delimiter
+		if (((command[i] < '0') || (command[i] > '9')) && (command[i] != ','))
+		{
+			return (FAIL);
+		}
+
+		// Check for back to back delimiters
+		if ((command[i] == ',') && (command[i + 1] == ','))
+		{
+			return (FAIL);
+		}
+	}
+
+	return (PASS);
 }
 
 ///----------------------------------------------------------------------------
@@ -321,6 +379,10 @@ void WriteCompressedData(uint8 compressedData, uint8 outMode)
 			write(g_globalFileHandle, g_spareBuffer, SPARE_BUFFER_SIZE);
 			g_spareBufferIndex = 0;
 		}
+	}
+	else if (outMode == OUT_BUFFER)
+	{
+		*g_compressedDataOutletPtr++ = compressedData;
 	}
 }
 
