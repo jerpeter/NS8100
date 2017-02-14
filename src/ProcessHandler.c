@@ -161,8 +161,13 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 		debug("\tSample Rate: %d, Channels: %d\r\n", opModeParamsPtr->sample_rate, g_sensorInfo.numOfChannels);
 	}
 
-	debug("\tAD Channel Verification: %s\r\n", ((opModeParamsPtr->sample_rate <= SAMPLE_RATE_8K) && (g_unitConfig.adChannelVerification == ENABLED)) ? "Enabled" : "Disabled");
+	debug("\tAD Channel Verification: %s\r\n", ((opModeParamsPtr->sample_rate == SAMPLE_RATE_16K) || (g_unitConfig.adChannelVerification == DISABLED)) ? "Disabled" : "Enabled");
 	debug("---------------------------\r\n");
+
+	if (GET_HARDWARE_ID == HARDWARE_ID_REV_8_WITH_GPS_MOD)
+	{
+		EnableGps();
+	}
 
 	// Check if mode is Manual Cal
 	if (operationMode == MANUAL_CAL_MODE)
@@ -245,7 +250,6 @@ void StartDataCollection(uint32 sampleRate)
 	
 	// Get current A/D offsets for normalization
 	debug("Getting channel offsets...\r\n");
-	//OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALIBRATING_TEXT), 0);
 	GetChannelOffsets(sampleRate);
 
 	// Setup ISR to clock the data sampling
@@ -695,4 +699,56 @@ void StopMonitoringForLowPowerState(void)
 	// Jump to the main menu
 	SETUP_MENU_MSG(MAIN_MENU);
 	JUMP_TO_ACTIVE_MENU();
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void StartADDataCollectionForCalibration(uint16 sampleRate)
+{
+	// Setup Analog controls
+	SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW);
+	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
+	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
+
+	// Enable the A/D
+	debug("Enable the A/D\r\n");
+	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
+
+	// Delay to allow AD to power up/stabilize
+	SoftUsecWait(50 * SOFT_MSECS);
+
+	// Setup AD Channel config
+	SetupADChannelConfig(sampleRate, OVERRIDE_ENABLE_CHANNEL_VERIFICATION);
+
+	DataIsrInit(sampleRate);
+
+	// Get channel offsets
+	GetChannelOffsets(sampleRate);
+
+#if INTERNAL_SAMPLING_SOURCE
+	// Setup ISR to clock the data sampling
+	Setup_8100_TC_Clock_ISR(sampleRate, TC_CALIBRATION_TIMER_CHANNEL);
+
+	// Start the timer for collecting data
+	Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+	Setup_8100_EIC_External_RTC_ISR();
+
+	StartExternalRtcClock(sampleRate);
+#endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void StopADDataCollectionForCalibration(void)
+{
+#if INTERNAL_SAMPLING_SOURCE
+	Stop_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
+#elif EXTERNAL_SAMPLING_SOURCE
+	StopExternalRtcClock();
+#endif
+
+	PowerControl(ANALOG_SLEEP_ENABLE, ON);
 }
