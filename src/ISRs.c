@@ -216,7 +216,7 @@ void Eic_system_irq(void)
 
 			// Handle and finish any processing
 			StopMonitoring(g_triggerRecord.opMode, FINISH_PROCESSING);
-			OverlayMessage(getLangText(WARNING_TEXT), "FORCED POWER OFF", 0);
+			OverlayMessage(getLangText(WARNING_TEXT), getLangText(FORCED_POWER_OFF_TEXT), 0);
 			AddOnOffLogTimestamp(FORCED_OFF);
 			nav_exit();
 			SoftUsecWait(1 * SOFT_SECS);
