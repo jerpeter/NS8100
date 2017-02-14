@@ -23,6 +23,8 @@
 #include "Crc.h"
 #include "Minilzo.h"
 #include "TextTypes.h"
+#include "navigation.h"
+#include "fsaccess.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -221,8 +223,7 @@ void handleEEM(CMD_BUFFER_STRUCT* inCmd)
 		// Delete events, recalculate space and reinitialize tables
 		DeleteEventFileRecords();
 		GetSDCardUsageStats();
-		InitRamSummaryTbl();
-		InitFlashBuffs();
+		InitEventNumberCache();
 	}
 
 	sprintf((char*)msgTypeStr, "%02d", returnCode);
@@ -765,18 +766,7 @@ void HandleDSM(CMD_BUFFER_STRUCT* inCmd)
 
 	memset((uint8*)g_dsmXferStructPtr, 0, sizeof(DSMx_XFER_STRUCT));
 
-#if 0 // Original method
-	// Determine the data size first. This size is needed for the header length.
-	uint16 idex;
-	for (idex = 0; idex < TOTAL_RAM_SUMMARIES; idex++)
-	{
-		if (__ramFlashSummaryTbl[idex].fileEventNum != 0xFFFFFFFF)
-		{
-			dataLength += sizeof(EVENT_RECORD_DOWNLOAD_STRUCT);
-			g_dsmXferStructPtr->numOfSummaries++;
-		}
-	}
-#else // New method - Subrange, data should be represented as number of event summaries, followed by the starting event number
+	// New method - Subrange, data should be represented as number of event summaries, followed by the starting event number
 	// Check if the spare field has been filled in requesting a sub-range of summaries
 	if ((g_inCmdHeaderPtr->spare[0] == '0') && ((g_inCmdHeaderPtr->spare[1] == '2') || (g_inCmdHeaderPtr->spare[1] == '3')))
 	{
@@ -799,21 +789,16 @@ void HandleDSM(CMD_BUFFER_STRUCT* inCmd)
 									((inCmd->msg[i + 8] - '0') * 10) + (inCmd->msg[i + 9] - '0');
 		}
 
-		// Set the starting table index to an invalid number for checking against later
-		g_dsmXferStructPtr->tableIndex = 0xFFFF;
-
-		for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
+		// Check if the starting event number is valid
+		if (g_eventNumberCache[startingEventNumber] == EVENT_REFERENCE_VALID)
 		{
-			if (__ramFlashSummaryTbl[i].fileEventNum == startingEventNumber)
-			{
-				g_dsmXferStructPtr->tableIndex = i;
-				break;
-			}
+			// Set the starting event point
+			g_dsmXferStructPtr->currentEventNumber = startingEventNumber;
 		}
 
 		// Sanity check for correct size, valid number of summaries, valid event number, range doesn't exceed end event number, and starting event found
 		if ((inCmd->size < (MESSAGE_HEADER_LENGTH + 8)) || (g_dsmXferStructPtr->numOfSummaries == 0) || (startingEventNumber == 0) ||
-			((g_nextEventNumberToUse - g_dsmXferStructPtr->numOfSummaries - startingEventNumber) < 0) || (g_dsmXferStructPtr->tableIndex == 0xFFFF))
+			((g_nextEventNumberToUse - g_dsmXferStructPtr->numOfSummaries - startingEventNumber) < 0) || (g_dsmXferStructPtr->currentEventNumber == 0))
 		{
 			if (((g_inCmdHeaderPtr->spare[1] == '2') && (inCmd->size < (MESSAGE_HEADER_LENGTH + 8))) || ((g_inCmdHeaderPtr->spare[1] == '3') && (inCmd->size < (MESSAGE_HEADER_LENGTH + 10))))
 			{
@@ -846,21 +831,14 @@ void HandleDSM(CMD_BUFFER_STRUCT* inCmd)
 	}
 	else // Spare field does not specify a sub-range, use the total entires of the ram summary list
 	{
-		for (i = 0; i < TOTAL_RAM_SUMMARIES; i++)
-		{
-			if (__ramFlashSummaryTbl[i].fileEventNum != 0xFFFFFFFF)
-			{
-				g_dsmXferStructPtr->numOfSummaries++;
-			}
-		}
+		g_dsmXferStructPtr->numOfSummaries = g_eventNumberCacheValidEntries;
 
 		// Init index to the start of the table
-		g_dsmXferStructPtr->tableIndex = 0;
+		g_dsmXferStructPtr->currentEventNumber = 1;
 	}
 
 	// Data length based on the total number of the requested summaries
 	dataLength = g_dsmXferStructPtr->numOfSummaries * sizeof(EVENT_RECORD_DOWNLOAD_STRUCT);
-#endif
 
 	// Now start building the outgoing header. Clear the outgoing header data.
 	memset((uint8*)g_outCmdHeaderPtr, 0, sizeof(COMMAND_MESSAGE_HEADER));
@@ -952,13 +930,13 @@ uint8 sendDSMData(void)
 		if (g_dsmXferStructPtr->numOfSummaries)
 		{
 			// Loop to make sure the current table index does not point to an empty entry
-			while (__ramFlashSummaryTbl[g_dsmXferStructPtr->tableIndex].fileEventNum == 0xFFFFFFFF)
+			while (g_eventNumberCache[g_dsmXferStructPtr->currentEventNumber] != EVENT_REFERENCE_VALID)
 			{
-				g_dsmXferStructPtr->tableIndex++;
-				if (g_dsmXferStructPtr->tableIndex > LAST_RAM_SUMMARY_INDEX) { g_dsmXferStructPtr->tableIndex = 0; }
+				g_dsmXferStructPtr->currentEventNumber++;
+				if (g_dsmXferStructPtr->currentEventNumber == TOTAL_UNIQUE_EVENT_NUMBERS) { g_dsmXferStructPtr->currentEventNumber = 1; }
 			}
 
-			GetEventFileRecord(__ramFlashSummaryTbl[g_dsmXferStructPtr->tableIndex].fileEventNum, &g_dsmXferStructPtr->dloadEventRec.eventRecord);
+			GetEventFileRecord(g_dsmXferStructPtr->currentEventNumber, &g_dsmXferStructPtr->dloadEventRec.eventRecord);
 
 			g_dsmXferStructPtr->dloadEventRec.structureFlag = START_DLOAD_FLAG;
 			g_dsmXferStructPtr->dloadEventRec.downloadDate = GetCurrentTime();
@@ -969,8 +947,8 @@ uint8 sendDSMData(void)
 			g_dsmXferStructPtr->dloadPtr = g_dsmXferStructPtr->startDloadPtr;
 			g_dsmXferStructPtr->endDloadPtr = ((uint8*)g_dsmXferStructPtr->startDloadPtr + sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
 
-			g_dsmXferStructPtr->tableIndex++;							// Increment for next time
-			if (g_dsmXferStructPtr->tableIndex > LAST_RAM_SUMMARY_INDEX) { g_dsmXferStructPtr->tableIndex = 0; }
+			g_dsmXferStructPtr->currentEventNumber++;							// Increment for next time
+			if (g_dsmXferStructPtr->currentEventNumber == TOTAL_UNIQUE_EVENT_NUMBERS) { g_dsmXferStructPtr->currentEventNumber = 1; }
 
 			g_dsmXferStructPtr->numOfSummaries--;						// Decrement total summaries to send
 			g_dsmXferStructPtr->xferStateFlag = EVENTREC_XFER_STATE;	// Change state to transfer the record
@@ -1018,7 +996,626 @@ uint8 sendDSMData(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#include "navigation.h"
+void HandleACK(CMD_BUFFER_STRUCT* inCmd)
+{
+	UNUSED(inCmd);
+
+#if 0
+	uint16 len;
+	len = sprintf((char*)g_spareBuffer, "\r\n\r\n<--Received Ack-->\r\n\r\n");
+	ModemPuts((uint8*)g_spareBuffer, len, NO_CONVERSION);
+#endif
+
+	g_modemStatus.remoteResponse = ACKNOWLEDGE_PACKET;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleNAK(CMD_BUFFER_STRUCT* inCmd)
+{
+	UNUSED(inCmd);
+
+#if 0
+	uint16 len;
+	len = sprintf((char*)g_spareBuffer, "\r\n\r\n!--Received Nak--!\r\n\r\n");
+	ModemPuts((uint8*)g_spareBuffer, len, NO_CONVERSION);
+#endif
+
+	g_modemStatus.remoteResponse = NACK_PACKET;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleCAN(CMD_BUFFER_STRUCT* inCmd)
+{
+	UNUSED(inCmd);
+
+#if 0
+	uint16 len;
+	len = sprintf((char*)g_spareBuffer, "\r\n\r\nX--Received Can--X\r\n\r\n");
+	ModemPuts((uint8*)g_spareBuffer, len, NO_CONVERSION);
+#endif
+
+	g_modemStatus.remoteResponse = CANCEL_COMMAND;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleDER(CMD_BUFFER_STRUCT* inCmd)
+{
+	uint8 derHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
+	//DER_REQUEST derRequest;
+	uint32 msgCRC;
+	char msgTypeStr[8];
+	uint8 derError = NO;
+
+	debug("HandleDER: Entry\r\n");
+
+	// Check if the modem processing is busy
+	if (g_modemStatus.xferMutex == YES)
+	{
+		// Ignore request
+		return;
+	}
+
+	// Clear out the DER working structure
+	memset(&g_derXferStruct, 0, sizeof(DERx_XFER_STRUCT));
+
+	// Check to make sure the initial parse is correct
+	if (ParseIncommingDERRequestMsg(inCmd, &g_derXferStruct.derRequest) == FAIL) { derError = YES; }
+
+	// Check to make sure event number isn't larger than the max event number
+	if (g_derXferStruct.derRequest.eventNumber >= g_nextEventNumberToUse) { derError = YES; }
+	// Check to make sure the delay before sending isn't greater than 60 seconds
+	if (g_derXferStruct.derRequest.delayBeforeSend > 60000) { derError = YES; }
+	// Check to make sure the enable packets option is either 0 or 1
+	if (g_derXferStruct.derRequest.enablePackets > 1) { derError = YES; }
+	// Check to make sure the enable acknowledge option is either 0 or 1
+	if (g_derXferStruct.derRequest.enableAck > 1) { derError = YES; }
+	// Check to make sure the packet size is even
+	if (g_derXferStruct.derRequest.packetSize & 0x0001) { derError = YES; }
+
+	if (derError == YES)
+	{
+		debug("HandleDER: Request error\r\n");
+
+		sprintf((char*)msgTypeStr, "%02d", CFG_ERR_BAD_DER_REQUEST);
+		BuildOutgoingSimpleHeaderBuffer((uint8*)derHdr, (uint8*)"DERx",	(uint8*)msgTypeStr, MESSAGE_SIMPLE_TOTAL_LENGTH, COMPRESS_NONE, CRC_NONE);
+
+		// Send Starting CRLF
+		ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+		// Send Simple header
+		ModemPuts((uint8*)derHdr, MESSAGE_HEADER_SIMPLE_LENGTH, CONVERT_DATA_TO_ASCII);
+		// Send Ending Footer
+		ModemPuts((uint8*)&msgCRC, 4, NO_CONVERSION);
+		ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+
+		return;
+	}
+
+	// Further validation
+/*
+	uint16 eventNumber;
+	uint32 delayBeforeSend;
+	uint16 enablePackets;
+	uint16 packetSize;
+	uint16 startPacket;
+	uint16 numberOfPackets;
+	uint16 enableAck;
+	uint32 responseTimeout;
+*/
+/*
+	if delayBeforeSend < 3000 then soft delay
+	else setup soft timer for callback
+
+	if enablePackets = NO then run DEM
+	else run DER
+
+	Want to mimic DEM output (MESSAGE_HEADER_LENGTH with Msg header+footer_event size and flags)
+	Cache event summary to get compressed size
+
+*/
+
+	debug("eventNumToSend = %d \r\n",eventNumToSend);
+
+	// Initialize the flag and time fields.
+	g_derXferStruct.xferStateFlag = NOP_XFER_STATE;
+	g_derXferStruct.dloadEventRec.structureFlag = START_DLOAD_FLAG;
+	g_derXferStruct.dloadEventRec.downloadDate = GetCurrentTime();
+	g_derXferStruct.dloadEventRec.endFlag = END_DLOAD_FLAG;
+	g_derXferStruct.errorStatus = MODEM_SEND_SUCCESS;
+
+	// Reset flag to always attempt compression
+	g_derXferStruct.downloadMethod = COMPRESS_MINILZO;
+	g_derXferStruct.compressedEventDataFilePresent = CheckCompressedEventDataFileExists(g_derXferStruct.derRequest.eventNumber);
+
+	// Get the event file record
+	GetEventFileRecord(g_derXferStruct.derRequest.eventNumber, &g_derXferStruct.dloadEventRec.eventRecord);
+
+	// Need total uncompressed data size
+	g_derXferStruct.uncompressedEventSizePlusMessage = (uint16)(MESSAGE_HEADER_LENGTH + MESSAGE_FOOTER_LENGTH + g_derXferStruct.dloadEventRec.eventRecord.header.headerLength +
+															g_derXferStruct.dloadEventRec.eventRecord.header.summaryLength + g_derXferStruct.dloadEventRec.eventRecord.header.dataLength);
+
+	// Make sure compressed data pointer is null (actually done with the memset initially)
+	g_derXferStruct.compressedDataPtr = NULL;
+
+	// Determine the necessary download method and setup/cache based on that decision
+	if (g_derXferStruct.compressedEventDataFilePresent == YES)
+	{
+		g_derXferStruct.compressedEventDataSize = GetERDataSize(g_derXferStruct.derRequest.eventNumber);
+	}
+	// No compressed data file exists but the system is idle so the event data buffer can be used to cache the event
+	else if (g_sampleProcessing == IDLE_STATE)
+	{
+		CacheEventDataToRam(g_derXferStruct.derRequest.eventNumber, (uint8*)&g_eventDataBuffer[0], 0, g_derXferStruct.dloadEventRec.eventRecord.header.dataLength);
+
+		// Need to compress the data portion
+		// Check if the data length is less than 1/2 the buffer size (safe guesstimate for data + compressed data size given compression is typically 3:1)
+		if (g_derXferStruct.dloadEventRec.eventRecord.header.dataLength < (EVENT_BUFF_SIZE_IN_BYTES / 2))
+		{
+			g_compressedDataOutletPtr = (uint8*)&g_eventDataBuffer[((g_derXferStruct.dloadEventRec.eventRecord.header.dataLength + 2) / 2)];
+			g_derXferStruct.compressedEventDataSize = lzo1x_1_compress((void*)&g_eventDataBuffer[0], g_derXferStruct.dloadEventRec.eventRecord.header.dataLength, OUT_BUFFER);
+
+			g_derXferStruct.compressedDataPtr = (uint8*)&g_eventDataBuffer[((g_derXferStruct.dloadEventRec.eventRecord.header.dataLength + 2) / 2)];
+		}
+		else // No memory space to work, must save compressed data as a file
+		{
+			// Get new event file handle
+			g_globalFileHandle = GetERDataFileHandle(g_derXferStruct.dloadEventRec.eventRecord.summary.eventNumber, CREATE_EVENT_FILE);
+
+			g_spareBufferIndex = 0;
+			g_derXferStruct.compressedEventDataSize = lzo1x_1_compress((void*)&g_eventDataBuffer[0], g_derXferStruct.dloadEventRec.eventRecord.header.dataLength, OUT_FILE);
+
+			// Check if any remaining compressed data is queued
+			if (g_spareBufferIndex)
+			{
+				// Finish writing the remaining compressed data
+				write(g_globalFileHandle, g_spareBuffer, g_spareBufferIndex);
+				g_spareBufferIndex = 0;
+			}
+
+			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
+
+			// Done writing the event file, close the file handle
+			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
+			close(g_globalFileHandle);
+
+			g_derXferStruct.compressedEventDataFilePresent = YES;
+		}
+	}
+	else // Actively monitoring, no compressed event data file and can't use event data buffer to cache the event
+	{
+		// Signal to send the event raw/uncompressed
+		g_derXferStruct.downloadMethod = COMPRESS_NONE;
+
+		// Possible to create temp file with compressed event data?
+	}
+
+	// Check if the download method is still compress
+	if (g_derXferStruct.downloadMethod == COMPRESS_MINILZO)
+	{
+		// Compress the event record
+		g_compressedDataOutletPtr = (uint8*)&g_derXferStruct.compressedEventRecord;
+		g_derXferStruct.compressedEventRecordSize = lzo1x_1_compress((void*)&g_derXferStruct.dloadEventRec.eventRecord, sizeof(EVT_RECORD), OUT_BUFFER);
+
+		g_derXferStruct.totalPackageSize = (MESSAGE_HEADER_LENGTH + g_derXferStruct.compressedEventRecordSize + g_derXferStruct.compressedEventDataSize + MESSAGE_FOOTER_LENGTH);
+		g_derXferStruct.headerPlusEventRecordBoundary = (MESSAGE_HEADER_LENGTH + g_derXferStruct.compressedEventRecordSize);
+	}
+	else // (g_derXferStruct.downloadMethod == COMPRESS_NONE)
+	{
+		g_derXferStruct.totalPackageSize = g_derXferStruct.uncompressedEventSizePlusMessage;
+		g_derXferStruct.headerPlusEventRecordBoundary = (MESSAGE_HEADER_LENGTH + sizeof(EVT_RECORD));
+	}
+
+	// Tally the total number of packets
+	g_derXferStruct.totalPackets = ((g_derXferStruct.totalPackageSize / g_derXferStruct.derRequest.packetSize) + 1);
+	g_derXferStruct.currentPacket = g_derXferStruct.derRequest.startPacket;
+
+	if ((g_derXferStruct.derRequest.numberOfPackets) && (g_derXferStruct.totalPackets > (g_derXferStruct.derRequest.startPacket + g_derXferStruct.derRequest.numberOfPackets - 1)))
+	{
+		g_derXferStruct.endPacket = (g_derXferStruct.derRequest.startPacket + g_derXferStruct.derRequest.numberOfPackets - 1);
+	}
+	else // Grab all packets from specified start to the end
+	{
+		g_derXferStruct.endPacket = g_derXferStruct.totalPackets;
+	}
+
+	g_dsmXferStructPtr->xferStateFlag = CACHE_PACKETS_STATE;
+	g_modemStatus.xferState = DERx_CMD;
+	g_modemStatus.xferMutex = YES;
+	g_modemStatus.remoteResponse = WAITING_FOR_STATUS;
+
+	// Main - Craft Manager will pick up from here without directly calling
+	//ManageDER();
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint8 ManageDER(void)
+{
+	uint32 startLocation;
+	uint32 cacheSize;
+
+	/*
+	==========
+	DER Packet
+	----------
+	<CRLF>
+	DER Command
+	Event Number
+	Packet Number
+	Packet Size
+	<Packet Data>
+	Packet CRC
+	<CRLF>
+
+	DEMx0100028142000000000000000032000000 (38)
+	*/
+
+	//==========================================================================
+	// DER State: Wait for Remote Status
+	//--------------------------------------------------------------------------
+	if (g_derXferStruct.xferStateFlag == WAIT_REMOTE_STATUS_STATE)
+	{
+		// Check if the still waiting for a response
+		if (g_modemStatus.remoteResponse == WAITING_FOR_STATUS)
+		{
+			// Check response timeout status (use half second tick)
+			// TODO
+
+			return (DERx_CMD);
+		}
+		else if (g_modemStatus.remoteResponse == ACKNOWLEDGE_PACKET)
+		{
+			// Increment packet number
+			g_derXferStruct.currentPacket++;
+
+			// Check if finished sending
+			if (g_derXferStruct.currentPacket == g_derXferStruct.endPacket)
+			{
+				// Check if successfully completed the last packet of the event
+				if (g_derXferStruct.currentPacket == g_derXferStruct.totalPackets)
+				{
+					// Update last downloaded event
+					if (g_derXferStruct.derRequest.eventNumber > __autoDialoutTbl.lastDownloadedEvent) { __autoDialoutTbl.lastDownloadedEvent = g_derXferStruct.derRequest.eventNumber; }
+				}
+
+				// Done with the DER command, clear states and return
+				g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+			}
+			// Check if the next packet to send is not cached yet
+			else if (g_derXferStruct.currentPacket > g_derXferStruct.cacheEndPacket)
+			{
+				g_derXferStruct.xferStateFlag = CACHE_PACKETS_STATE;
+			}
+			else // Next packed to send is already cached
+			{
+				g_derXferStruct.xferStateFlag = SEND_PACKETS_STATE;
+			}
+		}
+		else if (g_modemStatus.remoteResponse == NACK_PACKET)
+		{
+			// Resend same packet number
+			g_derXferStruct.retransmitPacket = YES;
+			g_derXferStruct.xferStateFlag = SEND_PACKETS_STATE;
+		}
+		else // (g_modemStatus.remoteResponse == CANCEL_COMMAND)
+		{
+			g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+		}
+	}
+
+	//==========================================================================
+	// DER State: Cache Packets
+	//--------------------------------------------------------------------------
+	if (g_derXferStruct.xferStateFlag == CACHE_PACKETS_STATE)
+	{
+		startLocation = ((g_derXferStruct.currentPacket - 1) * g_derXferStruct.derRequest.packetSize);
+		//endLocation = g_derXferStruct.currentPacket * g_derXferStruct.derRequest.packetSize
+
+		g_derCacheIndex = 0;
+
+		// Check if caching the header and event summary
+		if (startLocation < g_derXferStruct.headerPlusEventRecordBoundary)
+		{
+			// Cache message header
+			memcpy(&g_derCache[g_derCacheIndex], &g_derXferStruct.msgHdr[0], MESSAGE_HEADER_LENGTH);
+			g_derCacheIndex += MESSAGE_HEADER_LENGTH;
+
+			// Cache compressed event record
+			if (g_derXferStruct.downloadMethod == COMPRESS_MINILZO)
+			{
+				memcpy(&g_derCache[g_derCacheIndex], &g_derXferStruct.compressedEventRecord, g_derXferStruct.compressedEventRecordSize);
+				g_derCacheIndex += g_derXferStruct.compressedEventRecordSize;
+			}
+			else // Cache uncompressed event record
+			{
+				memcpy(&g_derCache[g_derCacheIndex], &g_derXferStruct.dloadEventRec.eventRecord, sizeof(EVT_RECORD));
+				g_derCacheIndex += sizeof(EVT_RECORD);
+			}
+
+			// Cache compressed event data
+			if (g_derXferStruct.downloadMethod == COMPRESS_MINILZO)
+			{
+				// Check if the compressed data size is greater than the remaining cache size
+				if (g_derXferStruct.compressedEventDataSize > (uint32)(DER_CACHE_SIZE - g_derCacheIndex))
+				{
+					// Set cache size to remaining cache available
+					cacheSize = (DER_CACHE_SIZE - g_derCacheIndex);
+				}
+				else // Less compressed data than cache space
+				{
+					// Set cache size to the remaining compressed data available
+					cacheSize = g_derXferStruct.compressedEventDataSize;
+				}
+
+				// Check if compressed data is in the event data buffer
+				if (g_derXferStruct.compressedDataPtr)
+				{
+					memcpy(&g_derCache[g_derCacheIndex], g_derXferStruct.compressedDataPtr, cacheSize);
+				}
+				else // Compressed data is in a file
+				{
+					CacheERDataToBuffer(g_derXferStruct.derRequest.eventNumber, &g_derCache[g_derCacheIndex], 0, cacheSize);
+				}
+			}
+			else // Cache uncompressed event data
+			{
+				// Check if the uncompressed data size is greater than the remaining cache size
+				if (g_derXferStruct.dloadEventRec.eventRecord.header.dataLength > (uint32)(DER_CACHE_SIZE - g_derCacheIndex))
+				{
+					// Set cache size to remaining cache available
+					cacheSize = (DER_CACHE_SIZE - g_derCacheIndex);
+				}
+				else // Less compressed data than cache space
+				{
+					// Set cache size to the remaining compressed data available
+					cacheSize = g_derXferStruct.dloadEventRec.eventRecord.header.dataLength;
+				}
+
+				CacheEventDataToRam(g_derXferStruct.derRequest.eventNumber, &g_derCache[g_derCacheIndex], 0, cacheSize);
+			}
+
+			// Find the end packet cached
+			g_derXferStruct.cacheEndPacket = (g_derXferStruct.currentPacket + ((DER_CACHE_SIZE / g_derXferStruct.derRequest.packetSize) * g_derXferStruct.derRequest.packetSize) - 1);
+		}
+		else // Caching only event data
+		{
+			// Augment the data start location by the original header and event record
+			startLocation -= g_derXferStruct.headerPlusEventRecordBoundary;
+
+			// Cache compressed event data
+			if (g_derXferStruct.downloadMethod == COMPRESS_MINILZO)
+			{
+				// Check if the compressed data size is greater than the remaining cache size
+				if ((g_derXferStruct.compressedEventDataSize - startLocation) > DER_CACHE_SIZE)
+				{
+					// Set cache size to remaining cache available
+					cacheSize = DER_CACHE_SIZE;
+				}
+				else // Less compressed data than cache space
+				{
+					// Set cache size to the remaining compressed data available
+					cacheSize = (g_derXferStruct.compressedEventDataSize - startLocation);
+				}
+
+				// Check if compressed data is in the event data buffer
+				if (g_derXferStruct.compressedDataPtr)
+				{
+					memcpy(&g_derCache[g_derCacheIndex], &g_derXferStruct.compressedDataPtr[startLocation], cacheSize);
+				}
+				else // Compressed data is in a file
+				{
+					CacheERDataToBuffer(g_derXferStruct.derRequest.eventNumber, &g_derCache[0], startLocation, cacheSize);
+				}
+			}
+			else // Cache uncompressed event data
+			{
+				// Check if the uncompressed data size is greater than the remaining cache size
+				if ((g_derXferStruct.dloadEventRec.eventRecord.header.dataLength - startLocation) > DER_CACHE_SIZE)
+				{
+					// Set cache size to remaining cache available
+					cacheSize = DER_CACHE_SIZE;
+				}
+				else // Less compressed data than cache space
+				{
+					// Set cache size to the remaining compressed data available
+					cacheSize = (g_derXferStruct.dloadEventRec.eventRecord.header.dataLength - startLocation);
+				}
+
+				CacheEventDataToRam(g_derXferStruct.derRequest.eventNumber, &g_derCache[0], startLocation, cacheSize);
+			}
+
+			// Find the end packet cached
+			g_derXferStruct.cacheStartPacket = g_derXferStruct.currentPacket;
+			g_derXferStruct.cacheEndPacket = (g_derXferStruct.currentPacket + ((DER_CACHE_SIZE / g_derXferStruct.derRequest.packetSize) * g_derXferStruct.derRequest.packetSize) - 1);
+		}
+
+		g_derXferStruct.xferStateFlag = SEND_PACKETS_STATE;
+	}
+
+	//==========================================================================
+	// DER State: Send Packets
+	//--------------------------------------------------------------------------
+	if (g_derXferStruct.xferStateFlag == SEND_PACKETS_STATE)
+	{
+		// Send starting <CRLF>
+		// Send the DER packet header (DER Command, Event Number, Packet Number, Packet Size)
+		// Send the DER packet data
+		// Send the DER CRC
+		// Send ending <CRLF>
+
+		// Set response timeout (in half second value rounded up from response timeout value)
+
+		// Fill in packet header
+		strncpy(g_derXferStruct.derPacketHeader.command, "DERx", 4);
+		g_derXferStruct.derPacketHeader.eventNumber = g_derXferStruct.derRequest.eventNumber;
+		g_derXferStruct.derPacketHeader.packetNumber = g_derXferStruct.currentPacket;
+
+		// Check if last packet and sending a partial packet size
+		if (g_derXferStruct.currentPacket == g_derXferStruct.totalPackets)
+		{
+			g_derXferStruct.derPacketHeader.packetSize = (sizeof(DER_PACKET_HEADER) + (g_derXferStruct.totalPackageSize % g_derXferStruct.derRequest.packetSize) + (4 * sizeof(uint32)));
+
+			if (!g_derXferStruct.retransmitPacket)
+			{
+				g_derXferStruct.packetDataXmitSize += g_derXferStruct.derPacketHeader.packetSize;
+			}
+			// Need to add compressed event header size
+			// Need to add compressed event data size
+			// Need to add data length including self and CRC
+			// Need to add event CRC
+		}
+		else // Normal packet size
+		{
+			g_derXferStruct.derPacketHeader.packetSize = (sizeof(DER_PACKET_HEADER) + g_derXferStruct.derRequest.packetSize + sizeof(g_transmitCRC));
+			if (!g_derXferStruct.retransmitPacket)
+			{
+				g_derXferStruct.packetDataXmitSize += g_derXferStruct.derPacketHeader.packetSize;
+			}
+		}
+
+		// Send starting CRLF
+		if (ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION) == MODEM_SEND_FAILED)
+		{
+			g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+		}
+
+		// Calculate DER Packet CRC on DER Packet Header
+		g_transmitCRC = CalcCCITT32((uint8*)&g_derXferStruct.derPacketHeader, sizeof(DER_PACKET_HEADER), SEED_32);
+
+		// Send DER Packet Header
+		if (ModemPuts((uint8*)&g_derXferStruct.derPacketHeader, sizeof(DER_PACKET_HEADER), NO_CONVERSION) == MODEM_SEND_FAILED)
+		{
+			g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+		}
+
+		// Find the start of the cached packet data
+		startLocation = ((g_derXferStruct.currentPacket - g_derXferStruct.cacheStartPacket) * g_derXferStruct.derRequest.packetSize);
+
+		// Calculate DER Packet CRC on the DER Packet Data
+		g_transmitCRC = CalcCCITT32((uint8*)&g_derCache[startLocation], g_derXferStruct.derRequest.packetSize, g_transmitCRC);
+
+		if (!g_derXferStruct.retransmitPacket)
+		{
+			// Check if the first packet data is being sent
+			if (g_derXferStruct.derRequest.startPacket == g_derXferStruct.currentPacket)
+			{
+				// Start the packet data CRC calculation
+				g_derXferStruct.packetDataCRC = CalcCCITT32((uint8*)&g_derCache[startLocation], g_derXferStruct.derRequest.packetSize, SEED_32);
+			}
+			else // Not the first packet
+			{
+				// Continue the packet data CRC calculation
+				g_derXferStruct.packetDataCRC = CalcCCITT32((uint8*)&g_derCache[startLocation], g_derXferStruct.derRequest.packetSize, g_derXferStruct.packetDataCRC);
+			}
+		}
+
+		// Send DER Packet Data
+		if (ModemPuts((uint8*)&g_derCache[startLocation], g_derXferStruct.derRequest.packetSize, NO_CONVERSION) == MODEM_SEND_FAILED)
+		{
+			g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+		}
+
+		// Check if last packet and sending a partial packet size
+		if (g_derXferStruct.currentPacket == g_derXferStruct.totalPackets)
+		{
+			// TODO: Handle for uncompressed transmission
+
+			g_transmitCRC = CalcCCITT32((uint8*)&g_derXferStruct.compressedEventRecordSize, sizeof(uint32), g_transmitCRC);
+			g_derXferStruct.packetDataCRC = CalcCCITT32((uint8*)&g_derXferStruct.compressedEventRecordSize, sizeof(uint32), g_derXferStruct.packetDataCRC);
+
+			if (ModemPuts((uint8*)&g_derXferStruct.compressedEventRecordSize, sizeof(uint32), NO_CONVERSION) == MODEM_SEND_FAILED)
+			{
+				g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+			}
+
+			g_transmitCRC = CalcCCITT32((uint8*)&g_derXferStruct.compressedEventDataSize, sizeof(uint32), g_transmitCRC);
+			g_derXferStruct.packetDataCRC = CalcCCITT32((uint8*)&g_derXferStruct.compressedEventDataSize, sizeof(uint32), g_derXferStruct.packetDataCRC);
+
+			if (ModemPuts((uint8*)&g_derXferStruct.compressedEventDataSize, sizeof(uint32), NO_CONVERSION) == MODEM_SEND_FAILED)
+			{
+				g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+			}
+
+			g_transmitCRC = CalcCCITT32((uint8*)&g_derXferStruct.packetDataXmitSize, sizeof(uint32), g_transmitCRC);
+			g_derXferStruct.packetDataCRC = CalcCCITT32((uint8*)&g_derXferStruct.packetDataXmitSize, sizeof(uint32), g_derXferStruct.packetDataCRC);
+
+			if (ModemPuts((uint8*)&g_derXferStruct.packetDataXmitSize, sizeof(uint32), NO_CONVERSION) == MODEM_SEND_FAILED)
+			{
+				g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+			}
+
+			g_transmitCRC = CalcCCITT32((uint8*)&(g_derXferStruct.packetDataCRC), sizeof(uint32), g_transmitCRC);
+
+			if (ModemPuts((uint8*)&g_derXferStruct.packetDataCRC, sizeof(uint32), NO_CONVERSION) == MODEM_SEND_FAILED)
+			{
+				g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+			}
+		}
+
+		// CRC xmit
+		if (ModemPuts((uint8*)&g_transmitCRC, sizeof(g_transmitCRC), NO_CONVERSION) == MODEM_SEND_FAILED)
+		{
+			g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+		}
+
+		// crlf xmit
+		if (ModemPuts((uint8*)&g_CRLF, sizeof(uint16), NO_CONVERSION) == MODEM_SEND_FAILED)
+		{
+			g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+		}
+
+		// Reset flag (in case it was set)
+		g_derXferStruct.retransmitPacket = NO;
+
+		if (g_derXferStruct.derRequest.enableAck)
+		{
+			g_derXferStruct.xferStateFlag = WAIT_REMOTE_STATUS_STATE;
+			g_modemStatus.remoteResponse = WAITING_FOR_STATUS;
+
+			// Set response timeout (use half second tick)
+			// TODO
+		}
+		else
+		{
+			g_derXferStruct.currentPacket++;
+
+			// Check if finished sending all the requested packets
+			if (g_derXferStruct.currentPacket == g_derXferStruct.endPacket)
+			{
+				// Check if successfully completed the last packet of the event
+				if (g_derXferStruct.currentPacket == g_derXferStruct.totalPackets)
+				{
+					// Update last downloaded event
+					if (g_derXferStruct.derRequest.eventNumber > __autoDialoutTbl.lastDownloadedEvent) { __autoDialoutTbl.lastDownloadedEvent = g_derXferStruct.derRequest.eventNumber; }
+				}
+
+				// Done with the DER command, clear states and return
+				g_derXferStruct.xferStateFlag = NOP_XFER_STATE; g_modemStatus.xferMutex = NO; g_transferCount = 0; return (NOP_CMD);
+			}
+			// Check if the next packet to send is not cached yet
+			else if (g_derXferStruct.currentPacket > g_derXferStruct.cacheEndPacket)
+			{
+				g_derXferStruct.xferStateFlag = CACHE_PACKETS_STATE;
+			}
+			else // Next packed to send is already cached
+			{
+				g_derXferStruct.xferStateFlag = SEND_PACKETS_STATE;
+			}
+		}
+	}
+
+	return (DERx_CMD);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 {
 	uint16 eventNumToSend;					// In case there is a specific record to print.
@@ -1690,12 +2287,3 @@ void handleHLT(CMD_BUFFER_STRUCT* inCmd)
 
 	// Stop the processing.
 }
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void debugSummaryData(SUMMARY_DATA* ramTblElement)
-{
-	UNUSED(ramTblElement);
-}
-
