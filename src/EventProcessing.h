@@ -24,14 +24,6 @@
 #define FIRST_FLASH_EVENT_DATA_SECTOR	0
 #define TOTAL_FLASH_EVENT_DATA_SECTORS	(TOTAL_FLASH_DATA_SECTORS - FIRST_FLASH_EVENT_DATA_SECTOR)
 
-#if 0 // Old
-#define LAST_RAM_SUMMARY_INDEX 			799 // Last index
-#define TOTAL_RAM_SUMMARIES 			(LAST_RAM_SUMMARY_INDEX + 1) // 800 total, was 925 total
-#else // Revamped
-#define LAST_RAM_SUMMARY_INDEX 			4399 // Last index
-#define TOTAL_RAM_SUMMARIES 			(LAST_RAM_SUMMARY_INDEX + 1) // 4400 total
-#endif
-
 // Defines
 #define FLASH_EVENT_START	(FLASH_BASE_ADDR + FLASH_BOOT_SIZE_x8 + (FIRST_FLASH_EVENT_DATA_SECTOR * FLASH_SECTOR_SIZE_x8))
 #define FLASH_EVENT_END		(FLASH_EVENT_START + (TOTAL_FLASH_EVENT_DATA_SECTORS * FLASH_SECTOR_SIZE_x8))
@@ -69,11 +61,15 @@ typedef struct
 
 typedef enum {
 	CREATE_EVENT_FILE,
-	//CREATE_EVENT_FILE_WITH_OVERWRITE,
 	READ_EVENT_FILE,
 	APPEND_EVENT_FILE,
 	OVERWRITE_EVENT_FILE
 } EVENT_FILE_OPTION;
+
+enum {
+	ORIGINAL_EVENT_NAME_FORMAT,
+	LOOSE_EVENT_NAME_FORMAT
+};
 
 typedef struct
 {
@@ -89,19 +85,12 @@ typedef struct
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
-void InitRamSummaryTbl(void);
-void CopyValidFlashEventSummariesToRam(void);
-void CondenseRamSummaryTable(void);
-uint8 InitFlashEvtBuff(void);
-void InitFlashBuffs(void);
+void InitEventNumberCache(void);
 void InitEventRecord(uint8 opMode);
 void InitCurrentEventNumber(void);
 uint16 GetLastStoredEventNumber(void);
 void StoreCurrentEventNumber(void);
-void IncrementCurrentEventNumber(void);
-uint16 GetRamSummaryEntry(SUMMARY_DATA** sumEntryPtr);
 void CompleteRamEventSummary(void);
-uint16* GetFlashDataPointer(void);
 void StoreData(uint16* dataPtr, uint16 dataWords);
 void GetSDCardUsageStats(void);
 void UpdateSDCardUsageStats(uint32 removeSize);
@@ -110,7 +99,7 @@ void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
 void CacheEventDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize);
 uint32 GetERDataSize(uint16 eventNumber);
 void CacheERDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize);
-void CacheEventDataToRam(uint16 eventNumber, uint32 dataSize);
+void CacheEventDataToRam(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize);
 uint8 CacheEventToRam(uint16 eventNumber, EVT_RECORD* eventRecordPtr);
 BOOLEAN CheckValidEventFile(uint16 eventNumber);
 void DeleteEventFileRecord(uint16 eventNumber);
@@ -122,6 +111,11 @@ void PowerDownSDCard(void);
 void PowerUpSDCardAndInitFat32(void);
 uint16 AirTriggerConvert(uint32 airTriggerToConvert);
 uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert);
+
+void ManageEventsDirectory(void);
+uint8 MigrateLooseFiles(uint8 dirType);
+void SetNavDefault(void);
+char* GetEventFilenameAndPath(uint16 eventNumber, uint8 eventType);
 
 int OpenEventFile(uint16 eventNumber);
 void CloseEventFile(int);
