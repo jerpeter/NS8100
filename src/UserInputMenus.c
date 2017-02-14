@@ -47,6 +47,7 @@ extern USER_MENU_STRUCT bitAccuracyMenu[];
 extern USER_MENU_STRUCT configMenu[];
 extern USER_MENU_STRUCT distanceToSourceMenu[];
 extern USER_MENU_STRUCT externalTriggerMenu[];
+extern USER_MENU_STRUCT hardwareIDMenu[];
 extern USER_MENU_STRUCT modemSetupMenu[];
 extern USER_MENU_STRUCT modemDialMenu[];
 extern USER_MENU_STRUCT modemInitMenu[];
@@ -651,6 +652,43 @@ void DistanceToSourceMenuHandler(uint8 keyPressed, void* data)
 
 	JUMP_TO_ACTIVE_MENU();
 }
+
+//*****************************************************************************
+//=============================================================================
+// Gps Timeout Menu
+//=============================================================================
+//*****************************************************************************
+#if 0
+#define GPS_TIMEOUT_MENU_ENTRIES 4
+USER_MENU_STRUCT gpsTimeoutMenu[GPS_TIMEOUT_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, NULL_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(INTEGER_LONG_TYPE, GPS_TIMEOUT_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(SECS_TYPE, NO_ALT_TYPE)}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&GpsTimeoutMenuHandler}}
+};
+
+//-------------------------
+// Record Time Menu Handler
+//-------------------------
+void GpsTimeoutMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+
+	if (keyPressed == ENTER_KEY)
+	{
+		//GPS retryForPositionTimeoutInSeconds = *((uint32*)data);
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu GPS_TIMEOUT);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+#endif
 
 //*****************************************************************************
 //=============================================================================
@@ -1347,10 +1385,14 @@ void SerialNumberMenuHandler(uint8 keyPressed, void* data)
 		debug("Serial #: <%s>, Length: %d\r\n", (char*)data, strlen((char*)data));
 		strcpy((char*)g_factorySetupRecord.serial_num, (char*)data);
 
+#if 0 // Original
 		// Re-read and display Smart Sensor info
 		DisplaySmartSensorInfo(INFO_ON_CHECK);
 
 		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
+#else // Add Hardware ID
+		SETUP_USER_MENU_MSG(&hardwareIDMenu, g_factorySetupRecord.hardwareID);
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
