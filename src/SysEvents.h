@@ -42,8 +42,8 @@ typedef struct
 #define MIDNIGHT_EVENT				0x0040
 #define CAL_EVENT					0x0080
 #define AUTO_DIALOUT_EVENT			0x0100
-#define WARNING1_EVENT 				0x0200
-#define WARNING2_EVENT 				0x0400
+#define WARNING_EVENT 				0x0200
+#define UNUSED_EVENT				0x0400
 #define MANUAL_CAL_EVENT 			0x0800
 #define UPDATE_TIME_EVENT			0x1000
 #define UPDATE_MENU_EVENT			0x2000
