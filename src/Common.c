@@ -557,23 +557,27 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 	uint16 i, currIndex;
 	int languageFile = -1;
 	char languageFilename[50];
+	char promptTitle[25];
+	uint16 sizeCheck;
 
 	memset((char*)&languageFilename[0], 0, sizeof(languageFilename));
-
 	strcpy((char*)&languageFilename[0], LANGUAGE_PATH);
 
 	switch (languageSelection)
 	{
-		case ENGLISH_LANG: strcat((char*)&languageFilename[0], "English.tbl"); break;
-		case FRENCH_LANG: strcat((char*)&languageFilename[0], "French.tbl"); break;
-		case ITALIAN_LANG: strcat((char*)&languageFilename[0], "Italian.tbl"); break;
-		case GERMAN_LANG: strcat((char*)&languageFilename[0], "German.tbl"); break;
-		case SPANISH_LANG: strcat((char*)&languageFilename[0], "Spanish.tbl"); break;
+		case FRENCH_LANG:	strcat(languageFilename, "French.tbl");		strcpy(promptTitle, "ATTENTION");		strcpy((char*)g_spareBuffer, "FICHIER DE LANGUE NON COURANT. VEUILLEZ METTRE A JOUR");	sizeCheck = 8400; break;
+		case ITALIAN_LANG:	strcat(languageFilename, "Italian.tbl");	strcpy(promptTitle, "AVVERTIMENTO");	strcpy((char*)g_spareBuffer, "LINGUA FILE NON CORRENTE. PER FAVORE AGGIORNARE");		sizeCheck = 8200; break;
+		case GERMAN_LANG:	strcat(languageFilename, "German.tbl");		strcpy(promptTitle, "WARNUNG");			strcpy((char*)g_spareBuffer, "LANGUAGE DATEI NICHT STROM. BITTE AKTUALISIEREN");		sizeCheck = 8000; break;
+		case SPANISH_LANG:	strcat(languageFilename, "Spanish.tbl");	strcpy(promptTitle, "ADVERTENCIA");		strcpy((char*)g_spareBuffer, "ARCHIVO DE IDIOMA NO CORRIENTE. POR FAVOR ACTUALICE");	sizeCheck = 8800; break;
 
-		default:
-			strcat((char*)&languageFilename[0], "English.tbl");
-			g_unitConfig.languageMode = ENGLISH_LANG;
-			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+		case ENGLISH_LANG:
+		default:			strcat(languageFilename, "English.tbl");	strcpy(promptTitle, "WARNING");			strcpy((char*)g_spareBuffer, "LANGUAGE FILE IS NOT CURRENT. PLEASE UPDATE");			sizeCheck = 7200;
+			// Check if no match (default)
+			if (languageSelection != ENGLISH_LANG)
+			{
+				g_unitConfig.languageMode = ENGLISH_LANG;
+				SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+			}
 			break;
 	}
 
@@ -606,9 +610,11 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			}
 			else
 			{
-				if (fsaccess_file_get_size(languageFile) < 6660) // Slightly smaller than smallest updated language file
+				// Check if the language file is slightly smaller than the default updated langauge file for this build (allowing some room for change/reduced text)
+				if (fsaccess_file_get_size(languageFile) < sizeCheck)
 				{
-					OverlayMessage("WARNING", "LANGUAGE FILE IS NOT CURRENT. PLEASE UPDATE", (5 * SOFT_SECS));
+					// Prompt the user
+					OverlayMessage(promptTitle, (char*)g_spareBuffer, (5 * SOFT_SECS));
 				}
 
 				ReadWithSizeFix(languageFile, (uint8*)&g_languageTable[0], fsaccess_file_get_size(languageFile));
