@@ -159,7 +159,7 @@ void CompleteSummaryInterval(void)
 	g_bargraphSummaryInterval.summariesCaptured = g_summaryCount;
 	g_bargraphSummaryInterval.intervalEnd_Time = GetCurrentTime();
 	g_bargraphSummaryInterval.batteryLevel = (uint32)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
-	g_bargraphSummaryInterval.effectiveSampleRate = (uint16)(g_barSampleCount / (g_bargraphSummaryInterval.barIntervalsCaptured * g_triggerRecord.bgrec.barInterval));
+	g_bargraphSummaryInterval.bargraphEffectiveSampleRate = (uint16)(g_barSampleCount / (g_bargraphSummaryInterval.barIntervalsCaptured * g_triggerRecord.bgrec.barInterval));
 	g_barSampleCount = 0;
 
 	g_bargraphSummaryInterval.calcStructEndFlag = 0xEECCCCEE;	// End structure flag
