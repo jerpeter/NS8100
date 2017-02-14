@@ -18,6 +18,7 @@
 #include "Uart.h"
 #include "Record.h"
 #include "lcd.h"
+#include "M23018.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -347,8 +348,10 @@ void WriteStringToLcd(uint8* p, uint8 x, uint8 y, uint8 (*table_ptr)[2][10])
 	uint8 pixel_byte;
 
 	// Check if the LCD has power. If not, can't get status, so return
-	if (g_LcdPowerState != ENABLED)
+	if (GetPowerControlState(LCD_POWER_ENABLE) == OFF)
+	{
 		return;
+	}
 
 	/* THIS ROUTINE WAS FOR TESTING THE LCD ONLY */	
 	segment = LCD_SEGMENT1;
@@ -403,9 +406,11 @@ void WriteMapToLcd(uint8 (*g_mmap_ptr)[128])
 	uint8 col_index;
 	uint8 row_index;
 
-	// Check if the LCD has power. If not, cant get status, so return
-	if (g_LcdPowerState != ENABLED)
+	// Check if the LCD has power. If not, can't get status, so return
+	if (GetPowerControlState(LCD_POWER_ENABLE) == OFF)
+	{
 		return;
+	}
 
 	row_index = 0;
 
@@ -700,5 +705,54 @@ void SetLcdContrast(uint8 cmd)
 		
 		PowerControl(LCD_CONTRAST_ENABLE, OFF); // Set adjust low
 		SoftUsecWait(LCD_ACCESS_DELAY);
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void TurnDisplayOff(void)
+{
+	DisplayTimerCallBack();
+	LcdPwTimerCallBack();
+
+	while (g_kpadInterruptWhileProcessing == YES)
+	{
+		g_kpadInterruptWhileProcessing = NO;
+		ReadMcp23018(IO_ADDRESS_KPD, GPIOB);
+	}
+
+	g_kpadProcessingFlag = DEACTIVATED;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ActivateDisplayShortDuration(uint16 secondsToDisplay)
+{
+	// Check if the LCD Power was turned off
+	if (g_lcdPowerFlag == DISABLED)
+	{
+		g_lcdPowerFlag = ENABLED;
+		SetLcdContrast(g_contrast_value);
+		PowerControl(LCD_POWER_ENABLE, ON);
+		SoftUsecWait(LCD_ACCESS_DELAY);
+		InitLcdDisplay();					// Setup LCD segments and clear display buffer
+		AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (secondsToDisplay * TICKS_PER_SEC), LcdPwTimerCallBack);
+
+		// Check if the unit is monitoring, if so, reassign the monitor update timer
+		if (g_sampleProcessing == ACTIVE_STATE)
+		{
+			debug("Keypress Timer Mgr: enabling Monitor Update Timer.\r\n");
+			AssignSoftTimer(MENU_UPDATE_TIMER_NUM, ONE_SECOND_TIMEOUT, MenuUpdateTimerCallBack);
+		}
+	}
+
+	// Check if the LCD Backlight was turned off
+	if (g_lcdBacklightFlag == DISABLED)
+	{
+		g_lcdBacklightFlag = ENABLED;
+		SetLcdBacklightState(BACKLIGHT_BRIGHT);
+		AssignSoftTimer(LCD_BACKLIGHT_ON_OFF_TIMER_NUM, (secondsToDisplay * TICKS_PER_SEC), DisplayTimerCallBack);
 	}
 }

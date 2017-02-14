@@ -140,5 +140,7 @@ void SetLcdContrast(uint8);
 void LcdInit(void);
 void LcdWrite(uint8 mode, uint8 data, uint8 segment);
 uint8 LcdRead(uint8 mode, uint8 segment);
+void TurnDisplayOff(void);
+void ActivateDisplayShortDuration(uint16 secondsToDisplay);
 
 #endif // _DISPLAY_H_
