@@ -37,6 +37,7 @@
 #define EXCEPTION_REPORT_FILE		"ExceptionReport.txt"
 
 #define MAX_FILE_NAME_CHARS		255
+#define MAX_BASE_PATH_CHARS		20
 
 enum {
 	EVENT_FILE_TYPE = 1,
@@ -57,6 +58,17 @@ enum {
 #else
 #define EXTERNAL_SAMPLING_SOURCE	NO
 #endif
+
+#define FLASH_USER_PAGE_BASE_ADDRESS	(0x80800000)
+#define SHADOW_FACTORY_SETUP_CLEARED	(*(uint16*)FLASH_USER_PAGE_BASE_ADDRESS)
+#define GET_HARDWARE_ID					(*(uint8*)(0x8080000C)) // Factory setup location of Hardware ID
+#define GET_BUILD_ID					(*(uint8*)(0x8080000D)) // Factory setup location of Build ID
+
+enum {
+	HARDWARE_ID_REV_8_NORMAL = 0x08,
+	HARDWARE_ID_REV_8_WITH_GPS_MOD = 0x28,
+	HARDWARE_ID_REV_8_WITH_USART = 0x18,
+};
 
 #define PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP	if ((AVR32_FLASHC.fsr + *(uint16*)0xD0000000 + AVR32_PM.gplp[0] == 0)) { UNUSED(AVR32_PM.gplp[0]); } else { UNUSED(AVR32_PM.gplp[0]); }
 
@@ -331,8 +343,7 @@ enum {
 	BP_END
 };
 
-typedef enum
-{
+typedef enum {
 	AVAILABLE = 1,
 	EVENT_LOCK,
 	CAL_PULSE_LOCK,
@@ -341,9 +352,149 @@ typedef enum
 	EEPROM_LOCK
 } SPI1_LOCK_TYPE;
 
+enum {
+	GPS_MSG_START = 1,
+	GPS_MSG_BODY,
+	GPS_MSG_CHECKSUM_FIRST_NIBBLE,
+	GPS_MSG_CHECKSUM_SECOND_NIBBLE,
+	GPS_MSG_END,
+	GPS_BINARY_MSG_START,
+	GPS_BINARY_MSG_START_END,
+	GPS_BINARY_MSG_PAYLOAD_START,
+	GPS_BINARY_MSG_PAYLOAD,
+	GPS_BINARY_MSG_BODY,
+	GPS_BINARY_MSG_CHECKSUM,
+	GPS_BINARY_MSG_END
+};
+
+#define GPS_SERIAL_BUFFER_SIZE		500
+#define TOTAL_GPS_MESSAGES	5
+#define TOTAL_GPS_BINARY_MESSAGES	10
+#define GPS_MESSAGE_SIZE	100
+#define GPS_THRESHOLD_TOTAL_FIXES_FOR_BEST_LOCATION		(2 * 30) // 30 seconds of GGA and GLL location fixes
+#define GPS_ACTIVE_LOCATION_SEARCH_TIME		10
+#define GPS_REACTIVATION_TIME_SEARCH_FAIL	50
+#define GPS_REACTIVATION_TIME_NORMAL		60
+
+typedef struct {
+	uint8* readPtr;
+	uint8* writePtr;
+	uint8* endPtr;
+	uint8 buffer[GPS_SERIAL_BUFFER_SIZE];
+	uint8 ready;
+	uint8 state;
+	uint8 binaryState;
+} GPS_SERIAL_DATA;
+
+typedef struct {
+	uint8 data[GPS_MESSAGE_SIZE];
+	uint8 checksum;
+} GPS_MESSAGE;
+
+typedef struct {
+	uint8 binMsgValid;
+	uint8 binMsgSize;
+	uint8 data[GPS_MESSAGE_SIZE];
+} GPS_BINARY_MESSAGE;
+
+typedef struct {
+	uint8 readIndex;
+	uint8 writeIndex;
+	uint8 endIndex;
+	uint8 messageReady;
+	GPS_MESSAGE message[TOTAL_GPS_MESSAGES];
+} GPS_QUEUE;
+
+typedef struct {
+	uint8 readIndex;
+	uint8 writeIndex;
+	uint8 endIndex;
+	uint8 binaryMessageReady;
+	GPS_BINARY_MESSAGE message[TOTAL_GPS_BINARY_MESSAGES];
+} GPS_BINARY_QUEUE;
+
+typedef struct {
+	uint32 acquisitionStartTicks;
+	uint32 acqTickAccumulation;
+	uint16 totalAcquisitions;
+	uint16 failedAcquisitions;
+	uint16 retryForPositionTimeoutInSeconds;
+	uint8 positionFound;
+} GPS_INFO;
+
+enum {
+	GGA = 0,
+	GLL,
+	ZDA,
+	TOTAL_GPS_COMMANDS
+};
+
+enum {
+	GPS_BIN_MSG_ACK = 0,
+	GPS_BIN_MSG_NACK,
+	VERSION_QUERY,
+	SOFT_CRC_QUERY,
+	NMEA_MSG_INTERVAL_QUERY,
+	TOTAL_GPS_BINARY_COMMANDS
+};
+
+typedef struct
+{
+	int     year;       /**< Years since 1900 */
+	int     mon;        /**< Months since January - [0,11] */
+	int     day;        /**< Day of the month - [1,31] */
+	int     hour;       /**< Hours since midnight - [0,23] */
+	int     min;        /**< Minutes after the hour - [0,59] */
+	int     sec;        /**< Seconds after the minute - [0,59] */
+	int     hsec;       /**< Hundredth part of second - [0,99] */
+} nmeaTIME;
+
+typedef struct
+{
+	uint8 latDegrees;
+	uint8 latMinutes;
+	uint16 latSeconds;
+	uint8 longDegrees;
+	uint8 longMinutes;
+	uint16 longSeconds;
+	char northSouth;
+	char eastWest;
+	uint8 utcHour;
+	uint8 utcMin;
+	uint8 utcSec;
+	uint8 validLocationCount;
+	uint8 locationFoundWhileMonitoring;
+	uint8 positionFix;
+	int16 altitude;
+	uint16 utcYear;
+	uint8 utcMonth;
+	uint8 utcDay;
+} GPS_POSITION;
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
+// Gps routines
+void InitGpsBuffers(void);
+void EnableGps(void);
+void DisableGps(void);
+uint8 GpsChecksum(uint8* message);
+void ProcessGpsSerialData(void);
+void ProcessGpsMessage(void);
+void ProcessGpsBinaryMessage(void);
+void GpsQueryVersion(void);
+void GpsQuerySoftCrc(void);
+void GpsQueryNmeaMsgInterval(void);
+void GpsSendBinaryMessage(uint8* binaryMessage, uint16 messageLength);
+uint8 GpsCalcBinaryChecksum(uint8* binaryPayload, uint16 payloadLength);
+void HandleVersionQuery(void);
+void HandleSoftCrcQuery(void);
+void HandleNmeaMsgIntervalQuery(void);
+void GpsChangeNmeaMsgInterval(uint8 GGAInt, uint8 GSAInt, uint8 GSVInt, uint8 GLLInt, uint8 RMCInt, uint8 VTGInt, uint8 ZDAInt);
+void HandleBinaryMsgAck(void);
+void HandleBinaryMsgNack(void);
+void GpsChangeSerialBaud(void);
+
 // Battery routines
 float GetExternalVoltageLevelAveraged(uint8 type);
 BOOLEAN CheckExternalChargeVoltagePresent(void);
@@ -395,6 +546,7 @@ void BootLoadManager(void);
 void SystemEventManager(void);
 void MenuEventManager(void);
 void CraftManager(void);
+void GpsManager(void);
 void MessageManager(void);
 void FactorySetupManager(void);
 void UsbDeviceManager(void);
@@ -403,6 +555,7 @@ void CheckExceptionReportLogExists(void);
 
 // Init Hardware prototype extensions
 void InitSystemHardware_NS8100(void);
+void InitGps232(void);
 
 // Init Interrupts prototype extensions
 void InitInterrupts_NS8100(void);
@@ -411,7 +564,8 @@ void Setup_8100_EIC_Keypad_ISR(void);
 void Setup_8100_EIC_System_ISR(void);
 void Setup_8100_Soft_Timer_Tick_ISR(void);
 void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM);
-void Setup_8100_Usart_RS232_ISR(void);
+void Setup_8100_Usart1_RS232_ISR(void);
+void Setup_8100_Usart0_RS232_ISR(void);
 
 // Init Software prototype extensions
 void InitSoftwareSettings_NS8100(void);
@@ -424,6 +578,7 @@ void Eic_system_irq(void);
 void Eic_external_rtc_irq(void);
 void Tc_sample_irq(void);
 void Usart_1_rs232_irq(void);
+void Usart_0_rs232_irq(void);
 void Soft_timer_tick_irq(void);
 void Tc_typematic_irq(void);
 void Start_Data_Clock(TC_CHANNEL_NUM);
