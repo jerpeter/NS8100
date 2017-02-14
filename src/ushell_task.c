@@ -149,7 +149,7 @@ void  ushell_path_valid_syntac( char *path );
 void  ushell_cmdusb_ls        ( void );
 void  ushell_cmdusb_suspend   ( void );
 void  ushell_cmdusb_resume    ( void );
-Bool  ushell_cmd_syncevents   ( uint16_t*, uint16_t* );
+Bool  ushell_cmd_syncevents   ( uint8_t, uint16_t*, uint16_t*, uint16_t*, uint16_t* );
 
 
 //! @brief This function initializes the hardware/software resources required for ushell task.
@@ -213,9 +213,10 @@ void ushell_task_init(uint32_t pba_hz)
  */
 void ushell_task(void)
 {
-    uint16_t totalEventsCopied = 0;
-    uint16_t totalEventsSkipped = 0;
-
+    uint16_t totalFilesCopied;
+    uint16_t totalFilesSkipped;
+    uint16_t totalFilesReplaced;
+    uint16_t totalFilesDuplicated;
 
    //** No loop with the basic scheduler
    {
@@ -370,7 +371,7 @@ void ushell_task(void)
 #endif
 
       case CMD_SYNCEVENTS:
-	  ushell_cmd_syncevents(&totalEventsCopied, &totalEventsSkipped);
+	  ushell_cmd_syncevents(USB_SYNC_FROM_SHELL, &totalFilesCopied, &totalFilesSkipped, &totalFilesReplaced, &totalFilesDuplicated);
       break;
 
       case CMD_NONE:
@@ -1419,13 +1420,27 @@ ushell_cmd_sync_cancel:
 //! @return TRUE if success
 //!
 #include "Globals.h"
-Bool ushell_cmd_syncevents(uint16_t* eventsCopied, uint16_t* eventsSkipped)
+extern void HandleSystemEvents(void);
+Bool ushell_cmd_syncevents(uint8_t requestSource, uint16_t* filesCopied, uint16_t* filesSkipped, uint16_t* filesReplaced, uint16_t* filesDuplicated)
 {
    Fs_index sav_index;
    uint8_t u8_folder_level = 0;
 	int c_key;
-	*eventsCopied = 0;
-	*eventsSkipped = 0;
+	unsigned int duplicateCount = 0;
+	char fileExtension[255];
+	char* fileExtensionStartPtr;
+	uint8 lastSyncAction;
+
+	*filesCopied = 0;
+	*filesSkipped = 0;
+	*filesReplaced = 0;
+	*filesDuplicated = 0;
+
+#if 1 // New method to prompt the user what action for a file that already exists
+extern USER_MENU_STRUCT syncFileExistsMenu[];
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	g_syncFileExistsAction = g_unitConfig.usbSyncMode;
+#endif
 
 #if 0
    if( g_s_arg[0][0] == 0 )
@@ -1581,76 +1596,163 @@ Bool ushell_cmd_syncevents(uint16_t* eventsCopied, uint16_t* eventsSkipped)
          if( !nav_file_copy())
             goto ushell_cmd_syncevents_error;
 
+		duplicateCount = 0;
+
+		memset(g_spareBuffer, 0, MAX_FILE_NAME_CHARS);
+		sprintf((char*)g_spareBuffer, "%s: %s %s", getLangText(FILE_TEXT), (char*)g_s_arg[0], getLangText(SYNCING_TEXT));
+		OverlayMessage(getLangText(SYNC_PROGRESS_TEXT), (char*)g_spareBuffer, 0);
+
+		//=========================================================================
+		// Start copy operation
+		//-------------------------------------------------------------------------
          // Paste file in current dir of Destination disk
-         nav_select( FS_NAV_ID_USHELL_CMD );
-         while( !nav_file_paste_start( (FS_STRING)g_s_arg[0] ) )
+         nav_select(FS_NAV_ID_USHELL_CMD);
+         while (!nav_file_paste_start((FS_STRING)g_s_arg[0]))
          {
-            // Error
-            if( fs_g_status != FS_ERR_FILE_EXIST )
-               goto ushell_cmd_syncevents_error;
-#if 0 // Original
-            // File exists then deletes this one
-            usart_write_line((&AVR32_USART0), "File exists then deletes this one.\n\r");
-            if( !nav_file_del( TRUE ) )
-               goto ushell_cmd_syncevents_error;
-            // here, retry PASTE
-#else
-            // File exists so skip it
-            usart_write_line((&AVR32_USART0), "File exists - skipping copy of this file.\n\r");
+            // Check if the error code if anything but the file exists
+            if (fs_g_status != FS_ERR_FILE_EXIST)
+			{
+				goto ushell_cmd_syncevents_error;
+			}
+
+			//=========================================================================
+			// Destination file already exists
+			//-------------------------------------------------------------------------
+            usart_write_line((&AVR32_USART0), "File exists - Add prompt for action\n\r");
 			
-#if 0
-			uint8_t dotBuff[4];
-			uint8_t dotState = 0;
-			uint8_t i;
-			for (i = 0; i < dotState; i++) { dotBuff[i] = '.'; }
-			for (; i < (4 - 1); i++) { dotBuff[i] = ' '; }
-			if (++dotState >= 4) { dotState = 0; }
-#endif
-			memset(g_spareBuffer, 0, 80);
-			sprintf((char*)g_spareBuffer, "%s, %s: %s %s", getLangText(SYNC_PROGRESS_TEXT), getLangText(EVENT_TEXT), (char*)g_s_arg[0], getLangText(EXISTS_TEXT));
-			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
+			if (requestSource == USB_SYNC_FROM_SHELL)
+			{
+				g_syncFileExistsAction = SKIP_ALL_OPTION;
+			}
+
+			//=========================================================================
+			// New method to prompt the user what action for a file that already exists
+			//-------------------------------------------------------------------------
+			// Offer options the first time when the file already exists on the destination (skip, replace, duplicate, skip all, replace all, duplicate all)
+			if ((g_syncFileExistsAction < SKIP_ALL_OPTION) && (!duplicateCount))
+			{
+				lastSyncAction = g_syncFileExistsAction;
+				g_syncFileExistsAction = 0;
+
+				memset(g_menuTags[FILENAME_TAG].text, 0, MENU_TAGS_MAX_CHARS);
+				strncpy(g_menuTags[FILENAME_TAG].text, (char*)g_s_arg[0], (MENU_TAGS_MAX_CHARS - 1));
+
+				SoftUsecWait(750 * SOFT_MSECS);
+
+				SETUP_USER_MENU_MSG(&syncFileExistsMenu, lastSyncAction);
+				JUMP_TO_ACTIVE_MENU();
+
+				// Wait for user input, need key input
+				while (g_syncFileExistsAction == 0)
+				{
+					HandleSystemEvents();
+				}
+			}
+
+			//=========================================================================
+			// Skip option
+			//-------------------------------------------------------------------------
+			if ((g_syncFileExistsAction == SKIP_OPTION) || (g_syncFileExistsAction == SKIP_ALL_OPTION))
+			{
+				if (g_syncFileExistsAction == SKIP_OPTION)
+				{
+					memset(g_spareBuffer, 0, MAX_FILE_NAME_CHARS);
+					sprintf((char*)g_spareBuffer, "%s: %s %s, %s", getLangText(FILE_TEXT), (char*)g_s_arg[0], getLangText(EXISTS_TEXT), getLangText(SKIPPED_TEXT));
+					OverlayMessage(getLangText(SYNC_PROGRESS_TEXT), (char*)g_spareBuffer, (1 * SOFT_SECS));
+				}
+
+				*filesSkipped += 1;
+				break;
+			}
+			//=========================================================================
+			// Replace option
+			//-------------------------------------------------------------------------
+			else if ((g_syncFileExistsAction == REPLACE_OPTION) || (g_syncFileExistsAction == REPLACE_ALL_OPTION))
+			{
+				memset(g_spareBuffer, 0, MAX_FILE_NAME_CHARS);
+				sprintf((char*)g_spareBuffer, "%s: %s %s", getLangText(FILE_TEXT), (char*)g_s_arg[0], getLangText(REPLACED_TEXT));
+				OverlayMessage(getLangText(SYNC_PROGRESS_TEXT), (char*)g_spareBuffer, 0);
+
+				if (!nav_file_del(TRUE))
+				{
+					goto ushell_cmd_syncevents_error;
+				}
+
+				*filesReplaced += 1;
+			}
+			//=========================================================================
+			// Duplicate option
+			//-------------------------------------------------------------------------
+			else if ((g_syncFileExistsAction == DUPLICATE_OPTION) || (g_syncFileExistsAction == DUPLICATE_ALL_OPTION))
+			{
+				// Check if this is the first duplicate match
+				if (!duplicateCount)
+				{
+					memset(g_spareBuffer, 0, MAX_FILE_NAME_CHARS);
+					sprintf((char*)g_spareBuffer, "%s: %s %s", getLangText(FILE_TEXT), (char*)g_s_arg[0], getLangText(DUPLICATED_TEXT));
+					OverlayMessage(getLangText(SYNC_PROGRESS_TEXT), (char*)g_spareBuffer, 0);
+
+					memset(fileExtension, 0, sizeof(fileExtension));
+					memset(g_spareFileName, 0, sizeof(g_spareFileName));
+
+					fileExtensionStartPtr = strstr(g_s_arg[0], ".");
+
+					// Check if the '.' separator was found
+					if (fileExtensionStartPtr)
+					{
+						// Skip past '.' separator
+						sscanf((fileExtensionStartPtr + 1), "%s", fileExtension);
+
+						// Terminate the string at the '.' separator
+						*fileExtensionStartPtr = '\0';
+					}
+
+					// Copy the file name (either up to the '.' separator or the entire string if no separator was found)
+					strcpy(g_spareFileName, (char*)g_s_arg[0]);
+
+					*filesDuplicated += 1;
+				}
+
+				if (strlen(fileExtension))
+				{
+					sprintf((char*)g_s_arg[0], "%s (%d).%s", g_spareFileName, ++duplicateCount, fileExtension);
+				}
+				else
+				{
+					sprintf((char*)g_s_arg[0], "%s (%d)", g_spareFileName, ++duplicateCount);
+				}
+			}
 
 #if 0 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
 			g_execCycles++;
 #endif
-			*eventsSkipped += 1;
-			break;
-#endif
          }
-#if 1 // Test
+
 		if (fs_g_status != FS_ERR_FILE_EXIST)
 		{
-#endif
 			// Set file creation and last access for new copied file
 			SetFileDateTimestamp(FS_DATE_CREATION);
 			SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
-         // Copy running
-         {
-         uint8_t status;
-         do{
-            status = nav_file_paste_state(FALSE);
-         }while( COPY_BUSY == status );
+			// Copy running
+			{
+				uint8_t status;
 
-         if( COPY_FINISH != status )
-            goto ushell_cmd_syncevents_error;
+				do
+				{
+					status = nav_file_paste_state(FALSE);
+				} while (COPY_BUSY == status);
 
-#if 0
-			for (i = 0; i < dotState; i++) { dotBuff[i] = '.'; }
-			for (; i < (4 - 1); i++) { dotBuff[i] = ' '; }
-			if (++dotState >= 4) { dotState = 0; }
-#endif
-			memset(g_spareBuffer, 0, 80);
-			sprintf((char*)g_spareBuffer, "%s, %s: %s %s", getLangText(SYNC_PROGRESS_TEXT), getLangText(EVENT_TEXT), (char*)g_s_arg[0], getLangText(SYNCING_TEXT));
-			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
+				if (COPY_FINISH != status)
+				{
+					goto ushell_cmd_syncevents_error;
+				}
 
 #if 0 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
-			g_execCycles++;
+				g_execCycles++;
 #endif
-			*eventsCopied += 1;
-#if 1 // Test
-		 }
-#endif
+				*filesCopied += 1;
+			}
          }
       } // if dir OR file
    } // end of first while(1)
@@ -1669,7 +1771,7 @@ ushell_cmd_syncevents_finish:
 	SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 #endif
    nav_gotoindex(&sav_index);
-   sprintf((char*)&pBuffer[0], "Events copied: %d\r\nEnd of copy\n\r", *eventsCopied);
+   sprintf((char*)&pBuffer[0], "Events copied: %d\r\nEnd of copy\n\r", *filesCopied);
    usart_write_line((&AVR32_USART0), pBuffer);
    return TRUE;
 
