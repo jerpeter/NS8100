@@ -18,6 +18,7 @@
 #include "TextTypes.h"
 #include "string.h"
 #include "Common.h"
+#include "navigation.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -331,9 +332,8 @@ uint16 NumOfNewMonitorLogEntries(uint16 uid)
 ///	Function Break
 ///----------------------------------------------------------------------------
 #include "fsaccess.h"
-static char s_monitorLogFilename[] = "A:\\Logs\\MonitorLog.ns8";
-static char s_monitorLogHumanReadableFilename[] = "A:\\Logs\\MonitorLogReadable.txt";
-//static char testBufferFilename[] = "A:\\Logs\\TestBuffer.txt";
+static char s_monitorLogFilename[] = LOGS_PATH MONITOR_LOG_BIN_FILE;
+static char s_monitorLogHumanReadableFilename[] = LOGS_PATH MONITOR_LOG_READABLE_FILE;
 void AppendMonitorLogEntryFile(void)
 {
 	char modeString[10];
@@ -357,7 +357,6 @@ void AppendMonitorLogEntryFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		GetSpi1MutexLock(SDMMC_LOCK);
-		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -465,7 +464,6 @@ void AppendMonitorLogEntryFile(void)
 			debug("Monitor log readable entry appended to log file\r\n");
 		}
 
-		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
 	}
 }
@@ -489,7 +487,6 @@ void InitMonitorLogTableFromLogFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		GetSpi1MutexLock(SDMMC_LOCK);
-		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -551,7 +548,6 @@ void InitMonitorLogTableFromLogFile(void)
 			debug("Found Valid Monitor Log Entries, ID's: %d --> %d\r\n", lowestId, highestId);
 		}
 
-		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
 	}
 }
@@ -559,7 +555,7 @@ void InitMonitorLogTableFromLogFile(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-static char s_onOffLogHumanReadableFilename[] = "A:\\Logs\\OnOffLogReadable.txt";
+static char s_onOffLogHumanReadableFilename[] = LOGS_PATH ON_OFF_READABLE_FILE;
 void AddOnOffLogTimestamp(uint8 onOffState)
 {
 	DATE_TIME_STRUCT time = GetCurrentTime();
@@ -576,7 +572,6 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		GetSpi1MutexLock(SDMMC_LOCK);
-		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -620,7 +615,6 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 			close(onOffLogHumanReadableFile);
 		}
 
-		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
 	}
 }
@@ -628,7 +622,7 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-static char s_debugLogFilename[] = "A:\\Logs\\DebugLogReadable.txt";
+#if 0
 void WriteDebugBufferToFile(void)
 {
 	int debugLogFile;
@@ -640,7 +634,6 @@ void WriteDebugBufferToFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		GetSpi1MutexLock(SDMMC_LOCK);
-		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_select(FS_NAV_ID_DEFAULT);
 
@@ -673,15 +666,15 @@ void WriteDebugBufferToFile(void)
 			g_debugBufferCount = 0;
 		}
 
-		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
 	}
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-#include "navigation.h"
+#if 0
 void SwitchDebugLogFile(void)
 {
 	uint8 status = PASSED;
@@ -693,14 +686,13 @@ void SwitchDebugLogFile(void)
 	else // (g_fileAccessLock == AVAILABLE)
 	{
 		GetSpi1MutexLock(SDMMC_LOCK);
-		//g_fileAccessLock = SDMMC_LOCK;
 
 		nav_drive_set(0);
 		nav_partition_mount();
 		nav_select(FS_NAV_ID_DEFAULT);
 
 		// Remove old run debug file (if it exists)
-		if (nav_setcwd("A:\\Logs\\DebugLogLastRun.txt", TRUE, FALSE))
+		if (nav_setcwd("%sDebugLogLastRun.txt", LOGS_PATH, TRUE, FALSE))
 		{
 			if (!nav_file_del(TRUE))
 			{
@@ -712,7 +704,7 @@ void SwitchDebugLogFile(void)
 		if (status == PASSED)
 		{
 			// Select source file
-			if (nav_setcwd("A:\\Logs\\DebugLogReadable.txt", TRUE, FALSE))
+			if (nav_setcwd("%sDebugLogReadable.txt", LOGS_PATH, TRUE, FALSE))
 			{
 				// Rename file or directory
 				if (!nav_file_rename("DebugLogLastRun.txt"))
@@ -730,10 +722,10 @@ void SwitchDebugLogFile(void)
 
 		if (status == PASSED) { debug("Debug log file moved to last run debug file\r\n"); }
 
-		//g_fileAccessLock = AVAILABLE;
 		ReleaseSpi1MutexLock();
 	}
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
