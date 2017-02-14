@@ -325,28 +325,96 @@ void PromptUserWaitingForSensorWarmup(void)
 ///----------------------------------------------------------------------------
 void PromptUserWaitingForSensorZeroing(void)
 {
-	uint8 i = 3;
+	OFFSET_DATA_STRUCT zeroCheck = {0, 0, 0, 0};
+	OFFSET_DATA_STRUCT zeroCheckCompare = {0, 0, 0, 0};
+	uint32 startZeroSensorTime;
+	uint32 lastHalfSecondTime;
+	uint16 rDiff, vDiff, tDiff, aDiff;
 
 	debug("Monitor pending sensor zeroing\r\n");
 
-	// Personally I hate a forced useless delay
-	sprintf((char*)g_spareBuffer, "%s ", getLangText(ZEROING_SENSORS_TEXT));
-	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
-
-	while (i--)
+	//=========================================================================
+	// Sensor Warm Up Delay
+	//-------------------------------------------------------------------------
+	if (g_lifetimeHalfSecondTickCount < (SENSOR_WARMUP_DELAY_IN_SECONDS * 2))
 	{
-		strcat((char*)g_spareBuffer, ".");
-		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+		while ((volatile uint32)g_lifetimeHalfSecondTickCount < (SENSOR_WARMUP_DELAY_IN_SECONDS * 2))
+		{
+			sprintf((char*)g_spareBuffer, "%s (%lu sec)", getLangText(SENSOR_WARMING_UP_FROM_COLD_START_TEXT), (((SENSOR_WARMUP_DELAY_IN_SECONDS * 2) - g_lifetimeHalfSecondTickCount) / 2));
+			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (1 * SOFT_SECS));
+		}
+
+		ResetSoftTimer(LCD_BACKLIGHT_ON_OFF_TIMER_NUM);
+		ResetSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM);
 	}
 
-	if (g_lifetimeHalfSecondTickCount < 120)
-	{
-		debugWarn("Sensors still warming up\r\n");
+	//=========================================================================
+	// Zero Sensor Calibration
+	//-------------------------------------------------------------------------
+	sprintf((char*)g_spareBuffer, "%s (%s %d %s) ", getLangText(ZEROING_SENSORS_TEXT), getLangText(MAX_TEXT), ZERO_SENSOR_MAX_TIME_IN_SECONDS, getLangText(SEC_TEXT));
+	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 
-		while ((volatile uint32)g_lifetimeHalfSecondTickCount < 120)
+	// Fool system and initialize buffers and pointers as if a waveform
+	InitDataBuffs(WAVEFORM_MODE);
+
+	StartADDataCollectionForCalibration(g_triggerRecord.trec.sample_rate);
+
+	lastHalfSecondTime = startZeroSensorTime = g_lifetimeHalfSecondTickCount;
+
+	raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
+
+	while (g_lifetimeHalfSecondTickCount < (startZeroSensorTime + (ZERO_SENSOR_MAX_TIME_IN_SECONDS * 2)))
+	{
+		ZeroSensors();
+
+		// Check if the time changed, used for display purposes
+		if (g_lifetimeHalfSecondTickCount != lastHalfSecondTime)
 		{
-			strcat((char*)g_spareBuffer, ".");
-			OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+			lastHalfSecondTime = g_lifetimeHalfSecondTickCount;
+
+			if (lastHalfSecondTime % 4 == 0)
+			{
+				strcat((char*)g_spareBuffer, ".");
+				OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
+			}
+		}
+
+		// Check if Update Offset Event flag was cleared meaning a successful Zero Sensor cycle passed
+		if (getSystemEventState(UPDATE_OFFSET_EVENT) == NO)
+		{
+			// Get differential from current Zero Sensor cycle and previous results
+			rDiff = abs(g_channelOffset.r_offset - zeroCheck.r_offset);
+			vDiff = abs(g_channelOffset.v_offset - zeroCheck.v_offset);
+			tDiff = abs(g_channelOffset.t_offset - zeroCheck.t_offset);
+			aDiff = abs(g_channelOffset.a_offset - zeroCheck.a_offset);
+
+			// Check if differential is less than 2 counts for every channel for current and previous cycle
+			if ((rDiff < 2) && (vDiff < 2) && (tDiff < 2) && (aDiff < 2))
+			{
+				// Get differential from current Zero Sensor cycle and previous
+				rDiff = abs(zeroCheckCompare.r_offset - zeroCheck.r_offset);
+				vDiff = abs(zeroCheckCompare.v_offset - zeroCheck.v_offset);
+				tDiff = abs(zeroCheckCompare.t_offset - zeroCheck.t_offset);
+				aDiff = abs(zeroCheckCompare.a_offset - zeroCheck.a_offset);
+
+				// Check if differential is less than 2 counts for every channel for previous two cycles (more used to determine sensor drift during warm up)
+				if ((rDiff < 2) && (vDiff < 2) && (tDiff < 2) && (aDiff < 2))
+				{
+					// Found a match close enough to proceed
+					break;
+				}
+			}
+
+			// Save current Zero Sensor comparison next time
+			zeroCheckCompare = zeroCheck;
+			zeroCheck = g_channelOffset;
+
+			// Raise the Update Offset flag
+			raiseSystemEventFlag(UPDATE_OFFSET_EVENT);
 		}
 	}
+
+	StopADDataCollectionForCalibration();
+
+	clearSystemEventFlag(UPDATE_OFFSET_EVENT);
 }
