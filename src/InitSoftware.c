@@ -204,7 +204,27 @@ void LoadFactorySetupRecord(void)
 
 	GetRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 
-	// Check if the Factory Setup Record is valid
+	// Check if the Factory Setup Record is invalid
+	if (g_factorySetupRecord.invalid)
+	{
+		// Warn the user
+		debugWarn("Factory setup record not found.\r\n");
+		OverlayMessage(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), (2 * SOFT_SECS));
+
+		// Check if the Shadow Factory setup is valid
+		if (!SHADOW_FACTORY_SETUP_CLEARED)
+		{
+			// Warn the user
+			debugWarn("Factory setup shadow copy exists.\r\n");
+			if (MessageBox(getLangText(CONFIRM_TEXT), getLangText(RESTORE_FACTORY_SETUP_FROM_BACKUP_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
+			{
+				GetFlashUserPageFactorySetup(&g_factorySetupRecord);
+				SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+			}
+		}
+	}
+
+	// Check if the Factory Setup Record is valid (in case shadow factory setup was copied over)
 	if (!g_factorySetupRecord.invalid)
 	{
 		if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
@@ -234,12 +254,6 @@ void LoadFactorySetupRecord(void)
 		debug("Factory Setup: Sensor Type: %s\r\n", (char*)g_spareBuffer);
 		debug("Factory Setup: A-Weighting: %s\r\n", (g_factorySetupRecord.aweight_option == YES) ? "Enabled" : "Disabled");
 		debug("Factory Setup: Analog Channel Config: %s\r\n", (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC) ? "Schematic" : "Swapped");
-	}
-	else // Factory Setup Record is not found or invalid
-	{
-		// Warn the user
-		debugWarn("Factory setup record not found.\r\n");
-		OverlayMessage(getLangText(ERROR_TEXT), getLangText(FACTORY_SETUP_DATA_COULD_NOT_BE_FOUND_TEXT), (2 * SOFT_SECS));
 	}
 }
 
@@ -384,18 +398,14 @@ void InitSoftwareSettings_NS8100(void)
 	InitMonitorLog(); debug("Monitor Log initialized\r\n");
 
 	//-------------------------------------------------------------------------
-	// Init Flash Buffers
-	//-------------------------------------------------------------------------
-	InitFlashBuffs(); debug("Flash Buffers initalized\r\n");
-
-	//-------------------------------------------------------------------------
-	// Init the sensor parameters
+	// Init the Sensor Parameters
 	//-------------------------------------------------------------------------
 	InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity); debug("Sensor Parameters initialized\r\n");
 
 	//-------------------------------------------------------------------------
 	// Init the Summary List file
 	//-------------------------------------------------------------------------
+	ManageEventsDirectory();
 	InitSummaryListFile(); debug("Summary List initialized\r\n");
 
 	//-------------------------------------------------------------------------
@@ -435,7 +445,7 @@ void InitSoftwareSettings_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Reset LCD timers
 	//-------------------------------------------------------------------------
-	ResetSoftTimer(DISPLAY_ON_OFF_TIMER_NUM);
+	ResetSoftTimer(LCD_BACKLIGHT_ON_OFF_TIMER_NUM);
 	ResetSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM);
 
 	//-------------------------------------------------------------------------
@@ -460,7 +470,12 @@ void InitSoftwareSettings_NS8100(void)
 	// Enable Craft input (delayed to prevent serial input from locking unit)
 	//-------------------------------------------------------------------------
 	InitCraftInterruptBuffers();
-	Setup_8100_Usart_RS232_ISR();
+	Setup_8100_Usart1_RS232_ISR();
+
+	if (GET_HARDWARE_ID == HARDWARE_ID_REV_8_WITH_GPS_MOD)
+	{
+		EnableGps();
+	}
 
 	//-------------------------------------------------------------------------
 	// Enable keypad key input (delayed to prevent key input from locking unit)
