@@ -243,6 +243,8 @@ void MoveWaveformEventToFile(void)
 					}					
 					else // Write the file event to the SD card
 					{
+						ActivateDisplayShortDuration(1);
+
 						sprintf((char*)g_spareBuffer, "%s %s #%d %s... (%s)",
 								(g_triggerRecord.opMode == WAVEFORM_MODE) ? getLangText(WAVEFORM_TEXT) : getLangText(COMBO_WAVEFORM_TEXT), getLangText(EVENT_TEXT),
 								g_pendingEventRecord.summary.eventNumber, getLangText(BEING_SAVED_TEXT), getLangText(MAY_TAKE_TIME_TEXT));
@@ -387,7 +389,7 @@ void MoveWaveformEventToFile(void)
 
 				if (GetPowerControlState(LCD_POWER_ENABLE) == OFF)
 				{
-					AssignSoftTimer(DISPLAY_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
+					AssignSoftTimer(LCD_BACKLIGHT_ON_OFF_TIMER_NUM, LCD_BACKLIGHT_TIMEOUT, DisplayTimerCallBack);
 					AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 				}
 
