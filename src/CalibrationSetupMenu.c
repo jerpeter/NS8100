@@ -71,8 +71,6 @@ static CALIBRATION_DATA* s_calibrationData;
 void CalSetupMn(INPUT_MSG_STRUCT);
 void CalSetupMnDsply(WND_LAYOUT_STRUCT*);
 void CalSetupMnProc(INPUT_MSG_STRUCT, WND_LAYOUT_STRUCT*, MN_LAYOUT_STRUCT*);
-void MnStartCal(void);
-void MnStopCal(void);
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -147,14 +145,12 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
 						{
-							//debug("Cal Menu Screen CD selected\r\n");
 							sprintf((char*)g_spareBuffer, "%s (%s) %s", getLangText(DISPLAY_CALIBRATED_TEXT), getLangText(ZERO_TEXT), getLangText(MIN_MAX_AVG_TEXT));
 							OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
 						{
-							//debug("Cal Menu Screen NCD selected\r\n");
 							// Clear the stored offsets so that the A/D channel data is raw
 							memset(&g_channelOffset, 0, sizeof(g_channelOffset));
 							
@@ -196,25 +192,20 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 							// Clear the Pretrigger buffer
 							SoftUsecWait(250 * SOFT_MSECS);
 
-							//debug("Cal Menu Screen CD selected\r\n");
-							//OverlayMessage(getLangText(STATUS_TEXT), "DISPLAY CALIBRATED (ZERO) MIN MAX AVG", 0);
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_DISPLAY)
 						{
-							//debug("Cal Menu Screen NP selected\r\n");
 							OverlayMessage(getLangText(STATUS_TEXT), getLangText(CHANNEL_NOISE_PERCENTAGES_TEXT), (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATED_CHAN_NOISE_PERCENT_DISPLAY)
 						{
-							//debug("Cal Menu Screen DS selected\r\n");
 							OverlayMessage(getLangText(STATUS_TEXT), getLangText(DISPLAY_SUCCESSIVE_SAMPLES_TEXT), (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_DISPLAY_SAMPLES;
 						}
 						else if (s_calDisplayScreen == CAL_MENU_DISPLAY_SAMPLES)
 						{
-							//debug("Cal Menu Screen DS selected\r\n");
 							OverlayMessage(getLangText(STATUS_TEXT), getLangText(SENSOR_CALIBRATION_TEXT), (1 * SOFT_SECS));
 							s_calDisplayScreen = CAL_MENU_CALIBRATE_SENSOR;
 						}
@@ -254,7 +245,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 				}
 			}
 
-			MnStopCal();
+			StopADDataCollectionForCalibration();
 			
 			// Reestablish the previously stored sample rate
 			g_triggerRecord.trec.sample_rate = s_calSavedSampleRate;
@@ -270,7 +261,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 			{
 				if (MessageBox(getLangText(CONFIRM_TEXT), getLangText(ERASE_FACTORY_SETUP_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 				{
-					if (MessageBox(getLangText(CONFIRM_TEXT), "ALSO ERASE THE REST OF THE EEPROM?", MB_YESNO) == MB_FIRST_CHOICE)
+					if (MessageBox(getLangText(CONFIRM_TEXT), getLangText(ALSO_ERASE_THE_REST_OF_THE_EEPROM_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 					{
 						// Erase entire EEPROM
 						memset(g_spareBuffer, 0xFF, sizeof(g_spareBuffer));
@@ -282,10 +273,16 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 						SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_CLEAR_TYPE);
 					}
 
+					if (MessageBox(getLangText(CONFIRM_TEXT), getLangText(ERASE_FACTORY_SETUP_SHADOW_COPY_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
+					{
+						// Erase Factory Setup shadow copy in the Flash User Page
+						EraseFlashUserPageFactorySetup();
+					}
+
 					clearedFSRecord = YES;
 				}
 
-				if (MessageBox(getLangText(CONFIRM_TEXT), "ERASE ALL NON ESSENTIAL SYSTEM FILES?", MB_YESNO) == MB_FIRST_CHOICE)
+				if (MessageBox(getLangText(CONFIRM_TEXT), getLangText(ERASE_ALL_NON_ESSENTIAL_SYSTEM_FILES_Q_TEXT), MB_YESNO) == MB_FIRST_CHOICE)
 				{
 					// Delete Non-Essential files
 					DeleteNonEssentialFiles();
@@ -297,6 +294,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 		if (clearedFSRecord == NO)
 		{
 			SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+			SaveFlashUserPageFactorySetup(&g_factorySetupRecord);
 
 			if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
 			{
@@ -365,7 +363,10 @@ void CalSetupMnProc(INPUT_MSG_STRUCT msg,
 			g_endOfPretriggerBuff = &(g_pretriggerBuff[1024]);
 
 			// Hand setup A/D data collection and start the data clock
-			MnStartCal();
+			StartADDataCollectionForCalibration(CALIBRATION_FIXED_SAMPLE_RATE);
+
+			// Clear channel offsets since uncalibrated is the first menu
+			memset(&g_channelOffset, 0, sizeof(g_channelOffset));
 			
 			// Allow Pretrigger buffer to fill up
 			SoftUsecWait(250 * SOFT_MSECS);
@@ -781,63 +782,4 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString(buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 
 	}
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void MnStartCal(void)
-{
-	// Setup Analog controls
-	SetAnalogCutoffFrequency(ANALOG_CUTOFF_FREQ_LOW);
-	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
-	SetAcousticGainSelect(ACOUSTIC_GAIN_NORMAL);
-
-	// Enable the A/D
-	debug("Enable the A/D\r\n");
-	PowerControl(ANALOG_SLEEP_ENABLE, OFF);
-
-	// Delay to allow AD to power up/stabilize
-	SoftUsecWait(50 * SOFT_MSECS);
-
-	// Setup AD Channel config
-	SetupADChannelConfig(CALIBRATION_FIXED_SAMPLE_RATE, OVERRIDE_ENABLE_CHANNEL_VERIFICATION);
-
-	DataIsrInit(CALIBRATION_FIXED_SAMPLE_RATE);
-
-#if 1 // Now skipped since the default menu display (CAL_MENU_DEFAULT_NON_CALIBRATED_DISPLAY) does not use channel offsets
-	// Get channel offsets
-	GetChannelOffsets(CALIBRATION_FIXED_SAMPLE_RATE);
-
-	g_channelOffset.r_offset = 0;
-	g_channelOffset.v_offset = 0;
-	g_channelOffset.t_offset = 0;
-	g_channelOffset.a_offset = 0;
-#endif
-
-#if INTERNAL_SAMPLING_SOURCE
-	// Setup ISR to clock the data sampling
-	Setup_8100_TC_Clock_ISR(CALIBRATION_FIXED_SAMPLE_RATE, TC_CALIBRATION_TIMER_CHANNEL);
-
-	// Start the timer for collecting data
-	Start_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
-#elif EXTERNAL_SAMPLING_SOURCE
-	Setup_8100_EIC_External_RTC_ISR();
-
-	StartExternalRtcClock(CALIBRATION_FIXED_SAMPLE_RATE);
-#endif
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void MnStopCal(void)
-{
-#if INTERNAL_SAMPLING_SOURCE
-	Stop_Data_Clock(TC_CALIBRATION_TIMER_CHANNEL);
-#elif EXTERNAL_SAMPLING_SOURCE
-	StopExternalRtcClock();
-#endif
-
-	PowerControl(ANALOG_SLEEP_ENABLE, ON);		
 }
