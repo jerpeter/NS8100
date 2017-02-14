@@ -287,8 +287,6 @@ void ProcessGpsSerialData(void)
 
 	while (g_gpsSerialData.readPtr != g_gpsSerialData.writePtr)
 	{
-		//ModemPutc(*g_gpsSerialData.readPtr, NO_CONVERSION);
-
 		//______________________________________________________________________________________________________________
 		//
 		// Binary message parse
@@ -1214,8 +1212,11 @@ void GpsDumpBinaryMessage(void)
 		}
 	}
 
-	ModemPutc(0x0D, NO_CONVERSION);
-	ModemPutc(0x0A, NO_CONVERSION);
+	if (g_gpsOutputToCraft)
+	{
+		ModemPutc(0x0D, NO_CONVERSION);
+		ModemPutc(0x0A, NO_CONVERSION);
+	}
 }
 
 ///----------------------------------------------------------------------------
