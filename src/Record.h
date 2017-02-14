@@ -20,7 +20,7 @@ enum {
 	REC_TRIGGER_USER_MENU_TYPE = 1,
 	REC_PRINTER_USER_MENU_TYPE,
 	REC_ALARM_USER_MENU_TYPE,
-	REC_SUMMARY_DATA_TYPE,
+	REC_UNUSED_TYPE,
 	REC_DATE_TYPE,
 	REC_DATE_TIME_TYPE,
 	REC_DATE_TIME_AM_PM_TYPE,
@@ -39,9 +39,9 @@ enum {
 #define DEFAULT_RECORD 			0
 #define MAX_NUM_OF_SAVED_SETUPS 14
 
-#define VALID_RAM_SUMMARY_TABLE_KEY 0xA55AF00F
-#define VALID_MONITOR_LOG_TABLE_KEY 0x0FF05A5A
-#define VALID_AUTODIALOUT_TABLE_KEY 0x12ABCDEF
+#define VALID_EVENT_NUMBER_CACHE_KEY	0xA55AF00F
+#define VALID_MONITOR_LOG_TABLE_KEY		0x0FF05A5A
+#define VALID_AUTODIALOUT_TABLE_KEY		0x12ABCDEF
 
 #define EEPROM_SPI_NPCS		0
 
@@ -85,6 +85,11 @@ enum {
 #define CALIBRATION_NUMBER_OF_SAMPLES 100
 
 #define TOTAL_MONITOR_LOG_ENTRIES	((0x1000 - 8) / sizeof(MONITOR_LOG_ENTRY_STRUCT))
+
+enum {
+	EVENT_REFERENCE_VALID = 1,
+	EVENT_FILE_FOUND
+};
 
 enum TRIGGER_DEFAULT_RECORD_INDEX
 {
@@ -255,7 +260,7 @@ typedef struct
 	uint8 unitsOfAir;
 	uint8 alarmOneMode;
 	uint8 alarmTwoMode;
-	uint8 printMonitorLog;
+	uint8 usbSyncMode;
 	uint8 pretrigBufferDivider;
 	uint32 alarmOneSeismicLevel;
 	uint32 alarmOneSeismicMinLevel;
@@ -278,14 +283,16 @@ typedef struct
 
 typedef struct
 {
-	uint16 invalid;
-	CALIBRATION_DATE_STRUCT calDate;
-	uint8 calibrationDateSource;
-	uint8 unused[7];
-	uint16 sensor_type;
-	char serial_num[16];
-	uint8 aweight_option;
-	uint8 analogChannelConfig;
+	uint16 invalid;						// 0x00
+	CALIBRATION_DATE_STRUCT calDate;	// 0x02
+	uint8 calibrationDateSource;		// 0x06
+	uint8 unused[5];					// 0x07
+	uint8 hardwareID;					// 0x0C
+	uint8 buildID;						// 0x0D
+	uint16 sensor_type;					// 0x0E
+	char serial_num[16];				// 0x10
+	uint8 aweight_option;				// 0x20
+	uint8 analogChannelConfig;			// 0x21
 } FACTORY_SETUP_STRUCT;
 
 typedef struct
@@ -377,5 +384,8 @@ void SwitchDebugLogFile(void);
 void GetParameterMemory(uint8* dest, uint16 address, uint16 size);
 void SaveParameterMemory(uint8* src, uint16 address, uint16 size);
 void EraseParameterMemory(uint16 address, uint16 size);
+void GetFlashUserPageFactorySetup(FACTORY_SETUP_STRUCT* factorySetup);
+void SaveFlashUserPageFactorySetup(FACTORY_SETUP_STRUCT* factorySetup);
+void EraseFlashUserPageFactorySetup(void);
 
 #endif // _REC_H_
