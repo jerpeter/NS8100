@@ -395,7 +395,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	uint8 arrowChar;
 	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
 	char modeChar = 'W';
-	char chanVerifyChar = '-';
+	char chanVerifyChar = '+';
 	DATE_TIME_STRUCT time;
 
 	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
@@ -430,10 +430,10 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	if (g_monitorOperationMode == BARGRAPH_MODE) { modeChar = 'B'; }
 	else if (g_monitorOperationMode == COMBO_MODE) { modeChar = 'C'; }
 
-	// Set the channel verification character (default is '-' for disabled on init)
-	if ((g_triggerRecord.trec.sample_rate <= SAMPLE_RATE_8K) && (g_unitConfig.adChannelVerification == ENABLED)) { chanVerifyChar = '+'; }
+	// Set the channel verification character (default is '+' for enabled on init)
+	if ((g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K) || (g_unitConfig.adChannelVerification == DISABLED)) { chanVerifyChar = '-'; }
 
-	if (g_busyProcessingEvent == YES)
+	if (g_busyProcessingEvent)
 	{
 		length = (uint8)sprintf((char*)buff, "%s%s(%c%c%s)", getLangText(PROCESSING_TEXT), dotBuff, modeChar, chanVerifyChar, srBuff);
 	}
@@ -445,7 +445,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 #if 0 // Replacing this old code
 	if (g_monitorOperationMode == WAVEFORM_MODE)
 	{
-		if (g_busyProcessingEvent == YES)
+		if (g_busyProcessingEvent)
 		{
 			length = (uint8)sprintf((char*)buff, "%s%s(W-%s)", getLangText(PROCESSING_TEXT), dotBuff, srBuff);
 		}
@@ -460,7 +460,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else if (g_monitorOperationMode == COMBO_MODE)
 	{
-		if (g_busyProcessingEvent == YES)
+		if (g_busyProcessingEvent)
 		{
 			length = (uint8)sprintf((char*)buff, "%s%s(C-%s)", getLangText(PROCESSING_TEXT), dotBuff, srBuff);
 		}
