@@ -18,11 +18,6 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-#define NEW_TABLE_ENTRY			0
-#define HEAD_TABLE_ENTRY 		1
-#define CURR_TABLE_ENTRY 		2
-
-// Defined in rec. h
 #define VERSION_STRING_SIZE				8
 #define MODEL_STRING_SIZE				20
 #define SERIAL_NUMBER_STRING_SIZE		20
@@ -32,15 +27,6 @@
 #define SESSION_LOCATION_STRING_SIZE	32
 #define SESSION_COMMENTS_STRING_SIZE	102
 
-// slowest sample rate * samllest time ??
-//#define MAX_RAM_SUMMARYS 				120
-
-#define BARGRAPH_PEAK_BUFFER_SIZE 		30
-#define BARGRAPH_INTERVAL_BUFFER_SIZE	4
-
-//#define PRE_TRIGGER_SIZE 				0.25
-//#define PRE_TRIGGER_TIME_MSEC			250
-//#define PRE_TRIGGER_TIME_SEC			0.25
 #define PRETRIGGER_BUFFER_QUARTER_SEC_DIV	4
 #define PRETRIGGER_BUFFER_HALF_SEC_DIV		2
 #define PRETRIGGER_BUFFER_FULL_SEC_DIV		1
@@ -72,16 +58,6 @@ typedef struct
 	uint32 vs;	// Max Vector sum data (squared)
 } BAR_INTERVAL_DATA_STRUCT;
 #pragma pack()
-
-//-------------------------------------------------------------------------------------
-typedef struct
-{ 
-	uint32 fileEventNum;
-	uint8 spare0;
-	uint8 spare1;
-	uint8 spare2;
-	uint8 spare3;
-} SUMMARY_DATA;
 
 //-------------------------------------------------------------------------------------
 typedef struct
@@ -123,7 +99,7 @@ typedef struct
 	uint8 gainSelect;
 	uint8 bitAccuracy;
 	uint32 vectorSumPeak;
-} SUMMARY_LIST_ENTRY_STRUCT;
+} SUMMARY_LIST_ENTRY_STRUCT; // 96 bytes
 
 //-------------------------------------------------------------------------------------
 typedef struct
@@ -172,7 +148,7 @@ typedef struct
 	SMART_SENSOR_ROM seismicSensorRom; // 0x48 (from 0xA55A)
 	SMART_SENSOR_ROM acousticSensorRom; // 0x50 (from 0xA55A)
 	uint8	unused[UNUSED_VERSION_SIZE]; // 0x58 (from 0xA55A)
-} VERSION_INFO_STRUCT;
+} VERSION_INFO_STRUCT; // 68 bytes
 
 #pragma pack(1)
 //-------------------------------------------------------------------------------------
@@ -232,7 +208,7 @@ typedef struct
 	uint8 adChannelVerification; // 0x191 (from 0xA55A)
 
 	uint8	unused[UNUSED_PARAMETERS_SIZE];	// 0x192 (from 0xA55A) // Space for expansion
-} PARAMETERS_STRUCT;
+} PARAMETERS_STRUCT; // 312 bytes
 #pragma pack()
 
 #pragma pack(1)
@@ -254,40 +230,45 @@ typedef struct
 	uint16				comboEventsRecordedEndNumber; // 0x1C2 (from 0xA55A)
 	uint16				comboBargraphEventNumberLink; // 0x1C4 (from 0xA55A)
 	uint8				unused[UNUSED_CAPTURE_SIZE]; // 0x1C6 (from 0xA55A) // Space for expansion
-} CAPTURE_INFO_STRUCT;
+} CAPTURE_INFO_STRUCT; // 64 bytes
 #pragma pack()
 
 #pragma pack(1)
 //-------------------------------------------------------------------------------------
-// Calcualted sub-structure
+// Calculated sub-structure
 //-------------------------------------------------------------------------------------
-#define UNUSED_CALCULATED_SIZE	52
+#define UNUSED_CALCULATED_SIZE	(54 - sizeof(GPS_POSITION))
 typedef struct
 {
 	// Used for both Waveform and Bargraph (and Bargraph Summaries), 0xCC in size (204 bytes)
-	CHANNEL_CALCULATED_DATA_STRUCT	a; // 0x1D4 (from 0xA55A), 0x0 (from struct start)
-	CHANNEL_CALCULATED_DATA_STRUCT	r; // 0x1E0 (from 0xA55A), 0xC (from struct start)
-	CHANNEL_CALCULATED_DATA_STRUCT	v; // 0x1EC (from 0xA55A), 0x18 (from struct start)
-	CHANNEL_CALCULATED_DATA_STRUCT	t; // 0x1F8 (from 0xA55A), 0x24 (from struct start)
-	CHANNEL_CALCULATED_DATA_STRUCT	unused1; // 0x204 (from 0xA55A), 0x30 (from struct start)
-	uint32				vectorSumPeak; // 0x210 (from 0xA55A), 0x3C (from struct start)
+	CHANNEL_CALCULATED_DATA_STRUCT a; // 0x1D4 (from 0xA55A), 0x0 (from struct start)
+	CHANNEL_CALCULATED_DATA_STRUCT r; // 0x1E0 (from 0xA55A), 0xC (from struct start)
+	CHANNEL_CALCULATED_DATA_STRUCT v; // 0x1EC (from 0xA55A), 0x18 (from struct start)
+	CHANNEL_CALCULATED_DATA_STRUCT t; // 0x1F8 (from 0xA55A), 0x24 (from struct start)
+
+	uint16 bargraphEffectiveSampleRate;
+	uint16 unused1;
+	uint32 unused2;
+	uint32 unused3;
+	uint32 vectorSumPeak; // 0x210 (from 0xA55A), 0x3C (from struct start)
 
 	// Bargraph specific variables.
-	DATE_TIME_STRUCT	a_Time; // 0x214 (from 0xA55A), 0x40 (from struct start)
-	DATE_TIME_STRUCT	r_Time; // 0x220 (from 0xA55A), 0x4C (from struct start)
-	DATE_TIME_STRUCT	v_Time; // 0x22C (from 0xA55A), 0x58 (from struct start)
-	DATE_TIME_STRUCT	t_Time; // 0x238 (from 0xA55A), 0x64 (from struct start)
-	DATE_TIME_STRUCT	vs_Time; // 0x244 (from 0xA55A), 0x70 (from struct start)
-	DATE_TIME_STRUCT	intervalEnd_Time; // 0x250 (from 0xA55A), 0x7C (from struct start)	
+	DATE_TIME_STRUCT a_Time; // 0x214 (from 0xA55A), 0x40 (from struct start)
+	DATE_TIME_STRUCT r_Time; // 0x220 (from 0xA55A), 0x4C (from struct start)
+	DATE_TIME_STRUCT v_Time; // 0x22C (from 0xA55A), 0x58 (from struct start)
+	DATE_TIME_STRUCT t_Time; // 0x238 (from 0xA55A), 0x64 (from struct start)
+	DATE_TIME_STRUCT vs_Time; // 0x244 (from 0xA55A), 0x70 (from struct start)
+	DATE_TIME_STRUCT intervalEnd_Time; // 0x250 (from 0xA55A), 0x7C (from struct start)
 
-	uint32				batteryLevel; // 0x25C (from 0xA55A), 0x88 (from struct start)
-	uint32				barIntervalsCaptured; // 0x260 (from 0xA55A), 0x8C (from struct start)
-	uint16				summariesCaptured; // 0x264 (from 0xA55A), 0x90 (from struct start)
-	uint16				effectiveSampleRate; // 0x266 (from 0xA55A), 0x92 (from struct start)
+	uint32 batteryLevel; // 0x25C (from 0xA55A), 0x88 (from struct start)
+	uint32 barIntervalsCaptured; // 0x260 (from 0xA55A), 0x8C (from struct start)
+	uint16 summariesCaptured; // 0x264 (from 0xA55A), 0x90 (from struct start)
 
-	uint8				unused[UNUSED_CALCULATED_SIZE]; // 0x268 (from 0xA55A), 0x94 (from struct start) // Space for expansion
-	uint32				calcStructEndFlag; // 0x29C (from 0xA55A), 0xC8 (from struct start)
-} CALCULATED_DATA_STRUCT;
+	GPS_POSITION		gpsPosition; // 0x268 (from 0xA55A) // 0x94 (from struct start)
+
+	uint8				unused[UNUSED_CALCULATED_SIZE]; // 0x280 (from 0xA55A) // 0xAC (from struct start)
+	uint32 calcStructEndFlag; // 0x29C (from 0xA55A), 0xC8 (from struct start)
+} CALCULATED_DATA_STRUCT; // 204 bytes
 #pragma pack()
 
 typedef struct
@@ -303,7 +284,7 @@ typedef struct
 	uint16 unused1; // 0x12 (from 0xA55A)
 	uint16 unused2; // 0x14 (from 0xA55A)
 	uint16 unused3; // 0x16 (from 0xA55A)
-} EVENT_HEADER_STRUCT;
+} EVENT_HEADER_STRUCT; // 24 bytes
 
 typedef struct
 {
@@ -314,14 +295,14 @@ typedef struct
 	uint16 					eventNumber; // 0x2A0 (from 0xA55A)
 	uint8					mode; // 0x2A2 (from 0xA55A)
 	uint8					subMode; // 0x2A3 (from 0xA55A)
-} EVENT_SUMMARY_STRUCT;
+} EVENT_SUMMARY_STRUCT; // 652 bytes
 
 //#pragma pack(4)
 typedef struct
 {
 	EVENT_HEADER_STRUCT 		header;
 	EVENT_SUMMARY_STRUCT		summary;
-} EVT_RECORD;
+} EVT_RECORD; // 676 bytes
 //#pragma pack()
 
 
