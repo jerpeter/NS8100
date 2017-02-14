@@ -306,10 +306,9 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					{
 #if 1
 						TurnDisplayOff();
-#endif
 						return(PASSED);
-					}
 #endif
+					}
 				}
 				else if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 				{
