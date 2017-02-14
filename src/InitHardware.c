@@ -500,18 +500,30 @@ void InitProcessorNoConnectPins(void)
 #if NS8100_ORIGINAL_PROTOTYPE
 	gpio_clr_gpio_pin(AVR32_PIN_PA00); // USART0_RXD
 	gpio_clr_gpio_pin(AVR32_PIN_PA01); // USART0_TXD
-	gpio_clr_gpio_pin(AVR32_PIN_PB19); // GPIO 51
 	gpio_clr_gpio_pin(AVR32_EBI_SDA10_0_PIN);
 	gpio_clr_gpio_pin(AVR32_EBI_RAS_0_PIN);
-	gpio_clr_gpio_pin(AVR32_EBI_CAS_0_PIN);
-	gpio_clr_gpio_pin(AVR32_EBI_SDWE_0_PIN);
-	gpio_clr_gpio_pin(AVR32_EBI_SDCS_0_PIN);
 	gpio_clr_gpio_pin(AVR32_EBI_NWAIT_0_PIN);
+
+	//gpio_clr_gpio_pin(AVR32_PIN_PB19); // GPIO 51 (Pin 143)
+	//gpio_clr_gpio_pin(AVR32_EBI_CAS_0_PIN); // GPIO 45 (Pin 126)
+	//gpio_clr_gpio_pin(AVR32_EBI_SDWE_0_PIN); // GPIO 46 (Pin 127)
+	//gpio_clr_gpio_pin(AVR32_EBI_SDCS_0_PIN); // GPIO 62 (Pin 21)
 #else // (NS8100_ALPHA_PROTOTYPE || NS8100_BETA_PROTOTYPE) (Pins brought to connector so can be an input or output)
-	gpio_clr_gpio_pin(AVR32_PIN_PB30); // GPIO 62 (Pin 21)
-	gpio_clr_gpio_pin(AVR32_PIN_PB13); // GPIO 45 (Pin 126)
-	gpio_clr_gpio_pin(AVR32_PIN_PB14); // GPIO 46 (Pin 127)
-	gpio_clr_gpio_pin(AVR32_PIN_PB19); // GPIO 51 (Pin 143)
+	if (GET_HARDWARE_ID == HARDWARE_ID_REV_8_WITH_GPS_MOD) // Unit with GPS Module
+	{
+		gpio_clr_gpio_pin(AVR32_PIN_PB13); // GPIO 45 (Pin 126 / EBI - CAS) // Set GPS UART Baud config low to prevent back powering the GPS module (Pin 7 Expansion header P2)
+		gpio_set_gpio_pin(AVR32_PIN_PB14); // GPIO 46 (Pin 127 / EBI - SDWE) // Disable power for Gps module (Pin 6 Expansion header P2)
+		gpio_clr_gpio_pin(AVR32_PIN_PB19); // GPIO 51 (Pin 143 / U28-143) // Gps eeprom data line (Pin 13 Expansion header P2)
+		gpio_enable_gpio_pin(AVR32_PIN_PB30); // GPIO 62 (Pin 21 / EBI - SDCS) // Gps module input (Pin 1 Expansion header P2)
+		gpio_enable_pin_pull_up(AVR32_PIN_PB30); // Enable pull-up on pin
+	}
+	else // Normal unit
+	{
+		gpio_clr_gpio_pin(AVR32_PIN_PB30); // GPIO 62 (Pin 21)
+		gpio_clr_gpio_pin(AVR32_PIN_PB19); // GPIO 51 (Pin 143)
+		gpio_clr_gpio_pin(AVR32_PIN_PB13); // GPIO 45 (Pin 126) // Set line low to prevent back powering the GPS module if attached
+		gpio_set_gpio_pin(AVR32_PIN_PB14); // GPIO 46 (Pin 127) // Set line high to disable power for GPS module if attached
+	}
 #endif
 
 #if INTERNAL_SAMPLING_SOURCE
@@ -739,6 +751,27 @@ void InitDebug232(void)
 	usart_write_line((&AVR32_USART0), "---------------------------------------------------------------------------------------\r\n");
 	usart_write_line((&AVR32_USART0), "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n\r\n");
 #endif
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void InitGps232(void)
+{
+	// Setup Gps serial port
+	usart_options_t usart_0_rs232_options =
+	{
+		.baudrate = 9600,
+		.charlength = 8,
+		.paritytype = USART_NO_PARITY,
+		.stopbits = USART_1_STOPBIT,
+		.channelmode = USART_NORMAL_CHMODE
+	};
+
+	// Initialize RS232 mode.
+	usart_init_rs232(&AVR32_USART0, &usart_0_rs232_options, FOSC0);
+
+	gpio_enable_pin_pull_up(AVR32_USART0_RXD_0_0_PIN);
 }
 
 ///----------------------------------------------------------------------------
@@ -1183,7 +1216,10 @@ void InitSystemHardware_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Configure Debug rs232
 	//-------------------------------------------------------------------------
-	InitDebug232();	debug("Debug Port enabled\r\n");
+	if (GET_HARDWARE_ID != HARDWARE_ID_REV_8_WITH_GPS_MOD)
+	{
+		InitDebug232();	debug("Debug Port enabled\r\n");
+	}
 
 	//-------------------------------------------------------------------------
 	// Smart Sensor data/control init (Hardware pull up on signal)
