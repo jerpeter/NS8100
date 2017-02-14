@@ -79,6 +79,9 @@ static const COMMAND_MESSAGE_STRUCT s_cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] 
 	{ 'D', 'Q', 'M', HandleDQM },		// Download summary memory.
 	{ 'D', 'S', 'M', HandleDSM },		// Download summary memory.
 	{ 'D', 'E', 'M', HandleDEM },		// Download event memory.
+#if 0 // Command not complete
+	{ 'D', 'E', 'R', HandleDER },		// Download event resume.
+#endif
 	{ 'E', 'E', 'M', handleEEM },		// Erase event memory.
 	{ 'D', 'C', 'M', HandleDCM },		// Download configuration memory.
 	{ 'U', 'C', 'M', HandleUCM },		// Upload configuration memory.
@@ -89,6 +92,11 @@ static const COMMAND_MESSAGE_STRUCT s_cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] 
 	{ 'G', 'A', 'D', handleGAD },		// Get Auto-Dialout/Download information
 	{ 'G', 'F', 'S', handleGFS },		// Get Flash Stats
 	{ 'V', 'F', 'V', HandleVFV },		// Get Flash Stats
+
+	{ 'A', 'C', 'K', HandleACK },		// Acknowledge
+	{ 'N', 'A', 'K', HandleNAK },		// Nack
+	{ 'C', 'A', 'N', HandleCAN },		// Cancel
+
 	{ 'Z', 'Z', 'Z', HandleAAA }		// Help on menus.
 };
 
@@ -151,6 +159,22 @@ uint8 RemoteCmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 					if ((cmdMsg->msg[0] == s_cmdMessageTable[ cmdIndex ].cmdChar1) &&
 						(cmdMsg->msg[1] == s_cmdMessageTable[ cmdIndex ].cmdChar2) &&
 						(cmdMsg->msg[2] == s_cmdMessageTable[ cmdIndex ].cmdChar3))
+					{
+						// Command successfully decoded, signal that data has been transfered
+						g_modemDataTransfered = YES;
+
+						s_cmdMessageTable[ cmdIndex ].cmdFunction(cmdMsg);
+						break;
+					}
+				}
+			}
+			else // Check for ACK, NAK, CAN while mutex is active
+			{
+				for (cmdIndex = ACK; cmdIndex < CAN; cmdIndex++)
+				{
+					if ((cmdMsg->msg[0] == s_cmdMessageTable[ cmdIndex ].cmdChar1) &&
+					(cmdMsg->msg[1] == s_cmdMessageTable[ cmdIndex ].cmdChar2) &&
+					(cmdMsg->msg[2] == s_cmdMessageTable[ cmdIndex ].cmdChar3))
 					{
 						// Command successfully decoded, signal that data has been transfered
 						g_modemDataTransfered = YES;
