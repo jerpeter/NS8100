@@ -311,19 +311,23 @@ void SetupADChannelConfig(uint32 sampleRate, uint8 channelVerification)
 	// For any sample rate 8K and below
 	if (sampleRate <= SAMPLE_RATE_8K)
 	{
-		// Read back config
-		if ((g_unitConfig.adChannelVerification == ENABLED) || (channelVerification == OVERRIDE_ENABLE_CHANNEL_VERIFICATION))
+		// Check if channel verification is not disabled or verification override is enabled to allow reading back the config
+		if ((g_unitConfig.adChannelVerification != DISABLED) || (channelVerification == OVERRIDE_ENABLE_CHANNEL_VERIFICATION))
 		{
+			//===================================================
 			// Setup config for 4 Chan, With read back, With temp
+			//---------------------------------------------------
 			WriteADConfig(0x39D4);
 			WriteADConfig(0x39D4);
 			WriteADConfig(0x39D4);
 		
 			g_adChannelConfig = FOUR_AD_CHANNELS_WITH_READBACK_WITH_TEMP;
 		}
-		else // Don't read back config
+		else // Verification disabled, don't read back config
 		{
+			//=================================================
 			// Setup config for 4 Chan, No read back, With temp
+			//-------------------------------------------------
 			WriteADConfig(0x39D5);
 			WriteADConfig(0x39D5);
 			WriteADConfig(0x39D5);
@@ -333,7 +337,9 @@ void SetupADChannelConfig(uint32 sampleRate, uint8 channelVerification)
 	}
 	else // Sample rates above 8192 take too long to read back config and temp, so skip them
 	{
+		//===============================================
 		// Setup config for 4 Chan, No read back, No temp
+		//-----------------------------------------------
 		WriteADConfig(0x39F7);
 		WriteADConfig(0x39F7);
 		WriteADConfig(0x39F7);
