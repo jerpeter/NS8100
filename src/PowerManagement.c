@@ -114,12 +114,10 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			if (mode == ON)
 			{
 				gpio_set_gpio_pin(AVR32_PIN_PB21);
-				g_LcdPowerState = ENABLED;
 			}
 			else // (mode == OFF)
 			{
 				gpio_clr_gpio_pin(AVR32_PIN_PB21);
-				g_LcdPowerState = DISABLED;
 			}
 			break;
 
@@ -271,11 +269,11 @@ void PowerControl(POWER_MGMT_OPTIONS option, BOOLEAN mode)
 			//debug("Analog Sleep Enable: %s.\r\n", mode == ON ? "On" : "Off");
 			if (mode == ON)
 			{
-				// Fill in at some point
+				// Fill in at some point if power control for the A/D is available
 			}
 			else // (mode == OFF)
 			{
-				// Fill in at some point
+				// Fill in at some point if power control for the A/D is available
 			}
 			break;
 
