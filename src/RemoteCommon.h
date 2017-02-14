@@ -177,6 +177,7 @@ enum {
 	CFG_ERR_NO_TRIGGER_SOURCE,		// 51
 	CFG_ERR_CHANNEL_VERIFICATION,	// 52
 	CFG_ERR_BAD_SUBSET,				// 53
+	CFG_ERR_BAD_DER_REQUEST,		// 54
 	CFG_ERR_END						// END
 };
 
@@ -205,7 +206,12 @@ enum {
 	DATA_XFER_STATE,
 	FOOTER_XFER_STATE,
 
+	CACHE_PACKETS_STATE,
+	SEND_PACKETS_STATE,
+	WAIT_REMOTE_STATUS_STATE,
+
 	DEMx_CMD,
+	DERx_CMD,
 	DSMx_CMD,
 	DQMx_CMD,
 	VMLx_CMD,
@@ -226,6 +232,13 @@ enum {
 	AUTO_DIAL_FINISH
 };
 
+enum {
+	WAITING_FOR_STATUS = 1,
+	ACKNOWLEDGE_PACKET,
+	NACK_PACKET,
+	CANCEL_COMMAND
+};
+
 #define	FIELD_LEN_02			4
 #define	FIELD_LEN_04			4
 #define	FIELD_LEN_06			6
@@ -237,6 +250,7 @@ typedef struct
 	uint8 modemAvailable;		// Flag to indicate modem is available.
 	uint8 connectionState;		// State flahg to indicate which modem command to handle.
 	uint8 craftPortRcvFlag;		// Flag to indicate that incomming data is not modem commands.
+	uint8 remoteResponse;
 
 	uint8 xferState;			// Flag for xmitting data to the craft.
 	uint8 xferMutex;			// Flag to stop other message command from executing.
@@ -265,6 +279,29 @@ typedef struct
 	uint8 dataVersion[HDR_DATAVERSION_LEN + 1]; // 2
 	uint8 spare[HDR_SPARE_LEN + 1]; // 2
 } COMMAND_MESSAGE_HEADER;
+
+#define MIN_DER_REQUEST_LENGTH	5 // DER,1\r\n
+
+// DER request structure
+typedef struct {
+	char command[4];
+	uint16 eventNumber;
+	uint32 delayBeforeSend;
+	uint16 enablePackets;
+	uint16 packetSize;
+	uint16 startPacket;
+	uint16 numberOfPackets;
+	uint16 enableAck;
+	uint32 responseTimeout;
+} DER_REQUEST;
+
+// DER request structure
+typedef struct {
+	char command[4];
+	uint16 eventNumber;
+	uint32 packetNumber;
+	uint16 packetSize;
+} DER_PACKET_HEADER;
 
 // Command processing structure
 typedef struct
@@ -310,13 +347,52 @@ typedef struct
 
 typedef struct
 {
+	uint8 	xferStateFlag;
+	uint8 	msgHdr[MESSAGE_HEADER_LENGTH+1];
+	EVENT_RECORD_DOWNLOAD_STRUCT	dloadEventRec;
+
+	EVT_RECORD compressedEventRecord;
+	uint16 compressedEventRecordSize;
+	uint32 compressedEventDataSize;
+	uint32 uncompressedEventSizePlusMessage;
+	uint32 totalPackageSize;
+	uint32 headerPlusEventRecordBoundary;
+
+	uint16 totalPackets;
+	uint16 currentPacket;
+	uint16 endPacket;
+	uint16 cacheStartPacket;
+	uint16 cacheEndPacket;
+	uint32 packetDataXmitSize;
+	uint32 packetDataCRC;
+	DER_REQUEST derRequest;
+	DER_PACKET_HEADER derPacketHeader;
+
+	uint8* startDloadPtr;
+	uint8* dloadPtr;
+	uint8* endDloadPtr;
+
+	uint8* startDataPtr;
+	uint8* dataPtr;
+	uint8* endDataPtr;
+	uint8* compressedDataPtr;
+	uint8 errorStatus;
+	uint8 downloadMethod;
+	uint8 retransmitPacket;
+	uint8 compressedEventDataFilePresent;
+	uint8 xmitBuffer[ CMD_BUFFER_SIZE ];
+	uint32 xmitSize;
+} DERx_XFER_STRUCT;
+
+typedef struct
+{
 	uint8 xferStateFlag;
 	uint8 msgHdr[MESSAGE_HEADER_LENGTH+1];
 	uint8 numOfRecStr[DATA_FIELD_LEN+1];
 	uint8 spare;
 	EVENT_RECORD_DOWNLOAD_STRUCT	dloadEventRec;
 
-	uint16	tableIndex;
+	uint16	currentEventNumber;
 	uint16	numOfSummaries;
 
 	uint8* startDloadPtr;
@@ -506,6 +582,9 @@ enum CMD_MESSAGE_INDEX {
 	DQM,		// Download Quick summary memory.
 	DSM,		// Download summary memory.
 	DEM,		// Download event memory.
+#if 0 // Command not complete
+	DER,		// Download event resume.
+#endif
 	EEM,		// Erase event memory.
 	DCM,		// Download configuration memory.
 	UCM,		// Upload configuration memory.
@@ -516,6 +595,9 @@ enum CMD_MESSAGE_INDEX {
 	GAD,		// Get Auto-Dialout/Download information
 	GFS,		// Get flash stats
 	VFV,		// View firmware version
+	ACK,		// Acknowledge
+	NAK,		// Nack
+	CAN,		// Cancel
 	ZZZ,
 	TOTAL_COMMAND_MESSAGES
 };
@@ -537,6 +619,9 @@ void InitAutoDialout(void);
 void CheckAutoDialoutStatus(void);
 void StartAutoDialoutProcess(void);
 void AutoDialoutStateMachine(void);
+
+uint8 FirstPassValidateCommandString(char* command);
+uint8 ParseIncommingDERRequestMsg(CMD_BUFFER_STRUCT* inCmd, DER_REQUEST* derRequest);
 
 #endif // _REMOTE_COMMON_H_
 
