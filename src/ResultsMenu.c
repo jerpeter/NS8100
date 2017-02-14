@@ -93,20 +93,11 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 		mn_layout_ptr->curr_ln =	RESULTS_MN_TBL_START_LINE;
 		mn_layout_ptr->top_ln =		RESULTS_MN_TBL_START_LINE;
 
-		g_resultsRamSummaryPtr = g_lastCompletedRamSummaryIndex;
+		g_resultsEventIndex = GetLastStoredEventNumber();
 		g_updateResultsEventRecord = YES;
 		
 		s_monitorSessionFirstEvent = GetStartingEventNumberForCurrentMonitorLog();
-		s_monitorSessionLastEvent = g_resultsRamSummaryPtr->fileEventNum;
-
-		// Check if we have recorded enough events to wrap the ram summary table
-		if ((s_monitorSessionLastEvent - s_monitorSessionFirstEvent) >= TOTAL_RAM_SUMMARIES)
-		{
-			// Set the first event number to the oldest ram summary entry reference event number
-			s_monitorSessionFirstEvent = (uint16)(s_monitorSessionLastEvent - TOTAL_RAM_SUMMARIES + 1);
-		}
-
-		debug("g_lastCompletedRamSummaryIndex Event Number = %d\r\n", g_lastCompletedRamSummaryIndex->fileEventNum);
+		s_monitorSessionLastEvent = g_resultsEventIndex;
 	}
 	else if (msg.cmd == KEYPRESS_MENU_CMD)
 	{
@@ -230,28 +221,18 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					{
 						if (msg.data[0] == DOWN_ARROW_KEY)
 						{
-							if (g_resultsRamSummaryPtr->fileEventNum < s_monitorSessionLastEvent)
+							if (g_resultsEventIndex < s_monitorSessionLastEvent)
 							{
-								g_resultsRamSummaryPtr++;
+								g_resultsEventIndex++;
 								g_updateResultsEventRecord = YES;
-
-								if (g_resultsRamSummaryPtr > &__ramFlashSummaryTbl[LAST_RAM_SUMMARY_INDEX])
-								{
-									g_resultsRamSummaryPtr = &__ramFlashSummaryTbl[0];
-								}
 							}
 						}
 						else // msg.data[0] == UP_ARROW_KEY
 						{
-							if (g_resultsRamSummaryPtr->fileEventNum > s_monitorSessionFirstEvent)
+							if (g_resultsEventIndex > s_monitorSessionFirstEvent)
 							{
-								g_resultsRamSummaryPtr--;
+								g_resultsEventIndex--;
 								g_updateResultsEventRecord = YES;
-
-								if (g_resultsRamSummaryPtr < &__ramFlashSummaryTbl[0])
-								{
-									g_resultsRamSummaryPtr = &__ramFlashSummaryTbl[LAST_RAM_SUMMARY_INDEX];
-								}
 							}
 						}
 					}
@@ -302,7 +283,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	uint16 bitAccuracyScale;
 	uint8 calResults = PASSED;
 	char modeChar = 'W';
-	char chanVerifyChar = '-';
+	char chanVerifyChar = '+';
 
 	if ((g_updateResultsEventRecord == YES) || (g_forcedCalibration == YES))
 	{
@@ -312,7 +293,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}			
 		else
 		{
-			GetSummaryFromSummaryList(g_resultsRamSummaryPtr->fileEventNum);
+			GetSummaryFromSummaryList(g_resultsEventIndex);
 		}		
 
 		g_updateResultsEventRecord = NO;
@@ -367,10 +348,10 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		if (g_monitorOperationMode == BARGRAPH_MODE) { modeChar = 'B'; }
 		else if (g_monitorOperationMode == COMBO_MODE) { modeChar = 'C'; }
 
-		// Set the channel verification character (default is '-' for disabled on init)
-		if ((g_triggerRecord.trec.sample_rate <= SAMPLE_RATE_8K) && (g_unitConfig.adChannelVerification == ENABLED)) { chanVerifyChar = '+'; }
+		// Set the channel verification character (default is '+' for enabled on init)
+		if ((g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K) || (g_unitConfig.adChannelVerification == DISABLED)) { chanVerifyChar = '-'; }
 
-		if (g_busyProcessingEvent == YES)
+		if (g_busyProcessingEvent)
 		{
 			length = (uint8)sprintf((char*)buff, "%s%s(%c%c%s)", getLangText(PROCESSING_TEXT), dotBuff, modeChar, chanVerifyChar, srBuff);
 		}
@@ -382,7 +363,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 #if 0 // Replacing this old code
 		if (g_monitorOperationMode == WAVEFORM_MODE)
 		{
-			if (g_busyProcessingEvent == YES)
+			if (g_busyProcessingEvent)
 			{
 				length = (uint8)sprintf((char*)buff, "%s%s(W-%s)", getLangText(PROCESSING_TEXT), dotBuff, srBuff);
 			}
