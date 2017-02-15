@@ -61,6 +61,8 @@ enum {
 	BAR_SCALE_HALF_TAG,
 	BAR_SCALE_QUARTER_TAG,
 	BAR_SCALE_EIGHTH_TAG,
+	ENABLED_TAG,
+	DISABLED_TAG,
 	FILENAME_TAG,
 	// Add new separators before this line
 	TOTAL_TAGS

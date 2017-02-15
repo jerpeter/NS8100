@@ -154,6 +154,8 @@ USER_MENU_TAGS_STRUCT g_menuTags[TOTAL_TAGS] = {
 	{"",	BAR_SCALE_HALF_TAG},
 	{"",	BAR_SCALE_QUARTER_TAG},
 	{"",	BAR_SCALE_EIGHTH_TAG},
+	{" ENABLED",	ENABLED_TAG},
+	{" DISABLED",	DISABLED_TAG},
 	{"",	FILENAME_TAG}
 };
 uint8 g_monitorOperationMode;
