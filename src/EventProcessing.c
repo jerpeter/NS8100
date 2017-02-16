@@ -1181,6 +1181,7 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	memcpy(&(eventRec->summary.version.seismicSensorRom), (void*)&g_seismicSmartSensorRom, sizeof(g_seismicSmartSensorRom));
 	memset(&(eventRec->summary.version.acousticSensorRom), 0, sizeof(g_acousticSmartSensorRom));
 	memcpy(&(eventRec->summary.version.acousticSensorRom), (void*)&g_acousticSmartSensorRom, sizeof(g_acousticSmartSensorRom));
+	eventRec->summary.version.hardwareId = GET_HARDWARE_ID;
 
 	//-----------------------
 	eventRec->summary.parameters.bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_10_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ? 

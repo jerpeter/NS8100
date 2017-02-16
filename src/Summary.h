@@ -139,7 +139,7 @@ typedef struct
 //-------------------------------------------------------------------------------------
 // Version sub-structure
 //-------------------------------------------------------------------------------------
-#define UNUSED_VERSION_SIZE		4
+#define UNUSED_VERSION_SIZE		3
 typedef struct
 {
 	uint8 modelNumber[MODEL_STRING_SIZE]; // 0x18 (from 0xA55A)
@@ -147,7 +147,8 @@ typedef struct
 	uint8 softwareVersion[VERSION_STRING_SIZE]; // 0x40 (from 0xA55A)
 	SMART_SENSOR_ROM seismicSensorRom; // 0x48 (from 0xA55A)
 	SMART_SENSOR_ROM acousticSensorRom; // 0x50 (from 0xA55A)
-	uint8	unused[UNUSED_VERSION_SIZE]; // 0x58 (from 0xA55A)
+	uint8 hardwareId; // 0x58 (from 0xA55A)
+	uint8 unused[UNUSED_VERSION_SIZE]; // 0x59 (from 0xA55A)
 } VERSION_INFO_STRUCT; // 68 bytes
 
 #pragma pack(1)
