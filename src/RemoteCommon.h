@@ -592,6 +592,7 @@ enum CMD_MESSAGE_INDEX {
 	UMM,		// Upload modem configuration memory.
 	GMN,		// Go start Monitoring waveform/bargraph/combo.
 	HLT,		// Halt Monitoring waveform/bargraph/combo.
+	UDE,		// Update last Download Event number
 	GAD,		// Get Auto-Dialout/Download information
 	GFS,		// Get flash stats
 	VFV,		// View firmware version
