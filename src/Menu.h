@@ -330,12 +330,12 @@ enum {
 
 // Timer mode freq types
 enum {
-	TIMER_MODE_ONE_TIME = 1,
-	TIMER_MODE_HOURLY,
-	TIMER_MODE_DAILY,
-	TIMER_MODE_WEEKDAYS,
-	TIMER_MODE_WEEKLY,
-	TIMER_MODE_MONTHLY
+	TIMER_MODE_ONE_TIME = 1, // Specific values matter for UCM/Dave's SG (1..5)
+	TIMER_MODE_DAILY,		// 2
+	TIMER_MODE_WEEKDAYS,	// 3
+	TIMER_MODE_WEEKLY,		// 4
+	TIMER_MODE_MONTHLY,		// 5
+	TIMER_MODE_HOURLY		// 6
 };
 
 // Seismic Trigger stuff

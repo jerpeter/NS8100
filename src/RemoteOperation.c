@@ -1077,6 +1077,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					case TIMER_MODE_WEEKDAYS:
 					case TIMER_MODE_WEEKLY:
 					case TIMER_MODE_MONTHLY:
+					case TIMER_MODE_HOURLY:
 						break;
 					
 					default:
