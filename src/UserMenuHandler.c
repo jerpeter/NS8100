@@ -46,7 +46,8 @@ static USER_TYPE_STRUCT unitTypes[TOTAL_TYPES] = {
 {"mb", MB_TYPE, 1},
 {"secs", SECS_TYPE, 1},
 {"mins", MINS_TYPE, 1},
-{"mg", MG_TYPE, 1}
+{"mg", MG_TYPE, 1},
+{"hour", HOUR_TYPE, 1}
 };
 
 ///----------------------------------------------------------------------------
@@ -218,7 +219,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 
 				case (HELP_KEY):
 					// Jump to the Help menu
-					SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
+					SETUP_USER_MENU_MSG(&helpMenu, CONFIG_CHOICE);
 					JUMP_TO_ACTIVE_MENU();
 				break;
 
@@ -985,7 +986,7 @@ void CopyDataToCache(void* data)
 			if (USER_MENU_DEFAULT_TYPE(g_userMenuCachePtr) == DB_TYPE)
 			{
 				// Check if the factory setup is valid and A weighting is enabled
-				if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
+				if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aWeightOption == ENABLED))
 				{
 					// Set the unit text pointer to the alternative type
 					g_userMenuCacheData.unitText = unitTypes[USER_MENU_ALT_TYPE(g_userMenuCachePtr)].text;
@@ -1188,16 +1189,16 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 			{
 				// Check if the units are metric and no alternative type is set and not the accelerometer
 				if ((g_unitConfig.unitsOfMeasure == METRIC_TYPE) && (USER_MENU_ALT_TYPE(g_userMenuCachePtr) != NO_ALT_TYPE) &&
-					(g_factorySetupRecord.sensor_type != SENSOR_ACCELEROMETER))
+					(g_factorySetupRecord.seismicSensorType != SENSOR_ACCELEROMETER))
 				{
 					// Init the float increment value adjusted by the units conversion
-					g_userMenuCacheData.floatIncrement = ((float)(g_factorySetupRecord.sensor_type * unitTypes[USER_MENU_ALT_TYPE(g_userMenuCachePtr)].conversion) / 
+					g_userMenuCacheData.floatIncrement = ((float)(g_factorySetupRecord.seismicSensorType * unitTypes[USER_MENU_ALT_TYPE(g_userMenuCachePtr)].conversion) /
 														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400) * g_bitAccuracyMidpoint));
 				}
 				else
 				{
 					// Init the float increment value
-					g_userMenuCacheData.floatIncrement = ((float)(g_factorySetupRecord.sensor_type) / 
+					g_userMenuCacheData.floatIncrement = ((float)(g_factorySetupRecord.seismicSensorType) /
 														(float)(((g_triggerRecord.srec.sensitivity == LOW) ? 200 : 400) * g_bitAccuracyMidpoint));
 				}
 
@@ -1207,9 +1208,9 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				g_userMenuCacheData.floatData = (float)g_userMenuCacheData.numLongData * g_userMenuCacheData.floatIncrement;
 				
 				// The following code will check sensor type and sensitivity to auto adjust the accuracy being printed to the screen
-				if ((g_factorySetupRecord.sensor_type == SENSOR_20_IN) || 
-					((g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) && (g_triggerRecord.srec.sensitivity == LOW)) ||
-					((g_factorySetupRecord.sensor_type == SENSOR_10_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
+				if ((g_factorySetupRecord.seismicSensorType == SENSOR_20_IN) ||
+					((g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER) && (g_triggerRecord.srec.sensitivity == LOW)) ||
+					((g_factorySetupRecord.seismicSensorType == SENSOR_10_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
 				{
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.3f-%.3f%s,N)",
 						g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, g_userMenuCacheData.unitText);
@@ -1221,9 +1222,9 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 					else
 						sprintf(g_userMenuCachePtr[tempRow].text, "%.4f", g_userMenuCacheData.floatData);
 				}
-				else if (((g_factorySetupRecord.sensor_type == SENSOR_10_IN) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
-						((g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
-						((g_factorySetupRecord.sensor_type == SENSOR_5_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
+				else if (((g_factorySetupRecord.seismicSensorType == SENSOR_10_IN) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
+						((g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
+						((g_factorySetupRecord.seismicSensorType == SENSOR_5_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
 				{
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.4f-%.3f%s,N)",
 						g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, g_userMenuCacheData.unitText);
@@ -1235,8 +1236,8 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 					else
 						sprintf(g_userMenuCachePtr[tempRow].text, "%.5f", g_userMenuCacheData.floatData);
 				}
-				else if (((g_factorySetupRecord.sensor_type == SENSOR_5_IN) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
-						((g_factorySetupRecord.sensor_type == SENSOR_2_5_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
+				else if (((g_factorySetupRecord.seismicSensorType == SENSOR_5_IN) && (g_triggerRecord.srec.sensitivity == HIGH)) ||
+						((g_factorySetupRecord.seismicSensorType == SENSOR_2_5_IN) && (g_triggerRecord.srec.sensitivity == LOW)))
 				{
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.5f-%.3f%s,N)",
 						g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, g_userMenuCacheData.unitText);
@@ -1248,7 +1249,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 					else
 						sprintf(g_userMenuCachePtr[tempRow].text, "%.6f", g_userMenuCacheData.floatData);
 				}
-				else // ((g_factorySetupRecord.sensor_type == SENSOR_2_5_IN) && (g_triggerRecord.srec.sensitivity == HIGH))
+				else // ((g_factorySetupRecord.seismicSensorType == SENSOR_2_5_IN) && (g_triggerRecord.srec.sensitivity == HIGH))
 				{
 					if (g_unitConfig.unitsOfMeasure == IMPERIAL_TYPE)
 						sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.6f-%.3f%s,N)",
