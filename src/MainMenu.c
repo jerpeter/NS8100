@@ -185,7 +185,7 @@ void MainMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 					break;
 				case (HELP_KEY):
 					ClearSoftTimer(MENU_UPDATE_TIMER_NUM);
-					SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
+					SETUP_USER_MENU_MSG(&helpMenu, CONFIG_CHOICE);
 					JUMP_TO_ACTIVE_MENU();
 					break;
 				default:
