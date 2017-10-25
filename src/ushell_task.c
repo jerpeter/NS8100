@@ -1454,16 +1454,16 @@ extern USER_MENU_STRUCT syncFileExistsMenu[];
 	if (VIRTUAL_MEM == ENABLE) { strcpy(g_s_arg[0], "b:\\Events\\"); }
 	else { strcpy(g_s_arg[0], "a:\\Events\\"); }
 
-	if ((g_factorySetupRecord.invalid) || (g_factorySetupRecord.serial_num[0] == '\0') 
-		|| ((g_factorySetupRecord.serial_num[0] == ' ') && (g_factorySetupRecord.serial_num[1] == '\0')))
+	if ((g_factorySetupRecord.invalid) || (g_factorySetupRecord.unitSerialNumber[0] == '\0')
+		|| ((g_factorySetupRecord.unitSerialNumber[0] == ' ') && (g_factorySetupRecord.unitSerialNumber[1] == '\0')))
 	{
 		if (VIRTUAL_MEM == ENABLE) { strcpy(g_s_arg[1], "c:\\NS8100-No-Serial-Events\\"); }
 		else { strcpy(g_s_arg[1], "b:\\NS8100-No-Serial-Events\\"); }
 	}
 	else // Serial number is valid
 	{
-		if (VIRTUAL_MEM == ENABLE) { sprintf(g_s_arg[1], "%s%s%s", "c:\\NS8100-", g_factorySetupRecord.serial_num, "-Events\\"); }
-		else { sprintf(g_s_arg[1], "%s%s%s", "b:\\NS8100-", g_factorySetupRecord.serial_num, "-Events\\"); }
+		if (VIRTUAL_MEM == ENABLE) { sprintf(g_s_arg[1], "%s%s%s", "c:\\NS8100-", g_factorySetupRecord.unitSerialNumber, "-Events\\"); }
+		else { sprintf(g_s_arg[1], "%s%s%s", "b:\\NS8100-", g_factorySetupRecord.unitSerialNumber, "-Events\\"); }
 	}
 #endif
 

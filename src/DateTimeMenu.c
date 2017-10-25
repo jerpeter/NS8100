@@ -158,7 +158,7 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STR
 					{
 						if (!g_factorySetupRecord.invalid)
 						{
-							tempPtr = &g_factorySetupRecord.serial_num;
+							tempPtr = &g_factorySetupRecord.unitSerialNumber;
 						}
 
 						SETUP_USER_MENU_MSG(&serialNumberMenu, tempPtr);
@@ -225,7 +225,7 @@ void DateTimeMnProc(INPUT_MSG_STRUCT msg, REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STR
 						{
 							if (!g_factorySetupRecord.invalid)
 							{
-								tempPtr = &g_factorySetupRecord.serial_num;
+								tempPtr = &g_factorySetupRecord.unitSerialNumber;
 							}
 
 							SETUP_USER_MENU_MSG(&serialNumberMenu, tempPtr);

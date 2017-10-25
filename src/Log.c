@@ -164,7 +164,7 @@ void NewMonitorLogEntry(uint8 mode)
 														ACCURACY_16_BIT : g_triggerRecord.trec.bitAccuracy;
 	__monitorLogTbl[__monitorLogTblIndex].adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
 
-	__monitorLogTbl[__monitorLogTblIndex].sensor_type = g_factorySetupRecord.sensor_type;
+	__monitorLogTbl[__monitorLogTblIndex].seismicSensorType = g_factorySetupRecord.seismicSensorType;
 	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
 
 	//ConvertTimeStampToString((char*)g_spareBuffer, &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
@@ -288,7 +288,7 @@ uint8 GetNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, M
 			debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\r\n",
 			logEntry->uniqueEntryId, logEntry->mode, logEntry->startEventNumber, logEntry->status,
 			logEntry->seismicTriggerLevel, logEntry->airTriggerLevel, logEntry->bitAccuracy, logEntry->adjustForTempDrift,
-			logEntry->sensor_type, logEntry->sensitivity);
+			logEntry->seismicSensorType, logEntry->sensitivity);
 #endif
 
 			// Set the found flag to mark that an entry was discovered
@@ -428,10 +428,10 @@ void AppendMonitorLogEntryFile(void)
 			{
 				// Calculate the divider used for converting stored A/D peak counts to units of measure
 				unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) /
-				(float)(g_factorySetupRecord.sensor_type);
+				(float)(g_factorySetupRecord.seismicSensorType);
 
 				tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
-				if ((g_factorySetupRecord.sensor_type != SENSOR_ACCELEROMETER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE)) { tempSesmicTriggerInUnits *= (float)METRIC; }
+				if ((g_factorySetupRecord.seismicSensorType != SENSOR_ACCELEROMETER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE)) { tempSesmicTriggerInUnits *= (float)METRIC; }
 
 				sprintf((char*)seisString, "%05.2f %s", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
 			}
@@ -444,8 +444,8 @@ void AppendMonitorLogEntryFile(void)
 				else { sprintf((char*)airString, "%d dB", (uint16)airInUnits); }
 			}
 
-			if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) { strcpy((char*)&sensorString, "Acc"); }
-			else { sprintf((char*)&sensorString, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
+			if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER) { strcpy((char*)&sensorString, "Acc"); }
+			else { sprintf((char*)&sensorString, "%3.1f in", (float)g_factorySetupRecord.seismicSensorType / (float)204.8); }
 
 			sprintf((char*)g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
 					"Seismic Trig: %10s, Air Trig: %11s\r\n\tBit Acc: %d, Temp Adjust: %3s, Sensor: %8s, Sensitivity: %4s\r\n\n",
@@ -531,7 +531,7 @@ void InitMonitorLogTableFromLogFile(void)
 					debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\r\n",
 							monitorLogEntry.uniqueEntryId, monitorLogEntry.mode, monitorLogEntry. startEventNumber, monitorLogEntry.status,
 							monitorLogEntry.seismicTriggerLevel, monitorLogEntry.airTriggerLevel, monitorLogEntry.bitAccuracy, monitorLogEntry.adjustForTempDrift,
-							monitorLogEntry.sensor_type, monitorLogEntry.sensitivity);
+							monitorLogEntry.seismicSensorType, monitorLogEntry.sensitivity);
 #endif
 					__monitorLogTbl[__monitorLogTblIndex] = monitorLogEntry;
 			
@@ -602,7 +602,7 @@ void AddOnOffLogTimestamp(uint8 onOffState)
 			sprintf((char*)&timeString, "%02d-%02d-%02d %02d:%02d:%02d", time.day, time.month, time.year, time.hour, time.min, time.sec);
 
 			sprintf((char*)g_spareBuffer, "Unit <%s>: %3s, Version: %s, Mode: %6s, Time: %s, Battery: %3.2fv, Ext charge: %6s\r\n",
-					(char*)&g_factorySetupRecord.serial_num, (char*)onOffStateString, (char*)g_buildVersion,
+					(char*)&g_factorySetupRecord.unitSerialNumber, (char*)onOffStateString, (char*)g_buildVersion,
 					((g_unitConfig.timerMode == ENABLED) ? "Timer" : "Normal"), (char*)timeString,
 					GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE), extChargeString);
 

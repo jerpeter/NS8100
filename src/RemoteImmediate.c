@@ -426,7 +426,7 @@ void handleGAD(CMD_BUFFER_STRUCT* inCmd)
 	UNUSED(inCmd);
 
 	memset(&serialNumber[0], 0, sizeof(serialNumber));
-	strcpy((char*)&serialNumber[0], g_factorySetupRecord.serial_num);
+	strcpy((char*)&serialNumber[0], g_factorySetupRecord.unitSerialNumber);
 
 	// Transmit a carrige return line feed
 	if (ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION) == MODEM_SEND_FAILED)
@@ -1119,7 +1119,7 @@ void HandleDER(CMD_BUFFER_STRUCT* inCmd)
 
 */
 
-	debug("eventNumToSend = %d \r\n",eventNumToSend);
+	//debug("eventNumToSend = %d \r\n",eventNumToSend);
 
 	// Initialize the flag and time fields.
 	g_derXferStruct.xferStateFlag = NOP_XFER_STATE;
