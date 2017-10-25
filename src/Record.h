@@ -57,7 +57,6 @@ enum {
 // Sensor information
 #define NUMBER_OF_CHANNELS_DEFAULT 	4
 #define SENSOR_ACCURACY_100X_SHIFT 	100
-#define NUMBER_OF_SENSOR_TYPES 		8
 
 #define ADC_RESOLUTION				0x8000	// +/- 0x800 (2048)
 
@@ -67,7 +66,8 @@ enum {
 #define SENSOR_2_5_IN			512
 #define SENSOR_ACCELEROMETER	51200
 
-#define SENSOR_MICROPHONE	1
+#define SENSOR_MIC_148			0xA1
+#define SENSOR_MIC_160			0xA4 // This mic is 4 times the scale of the 148
 
 #define INCH_PER_CM			 		2.54
 #define LBS_PER_KG			 		2.2
@@ -88,7 +88,8 @@ enum {
 
 enum {
 	EVENT_REFERENCE_VALID = 1,
-	EVENT_FILE_FOUND
+	EVENT_FILE_FOUND,
+	INVALID_EVENT_FILE_FOUND
 };
 
 enum TRIGGER_DEFAULT_RECORD_INDEX
@@ -244,8 +245,8 @@ typedef struct
 	uint8 airScale;
 	uint8 vectorSum;
 	uint8 autoCalForWaveform;
-	uint8 reportPeakAcceleration;
-	uint8 reportDisplacement;
+	uint8 cycleEndTimeHour;
+	uint8 unused1;
 	uint8 flashWrapping;
 	uint8 autoMonitorMode;
 	uint8 autoCalMode;
@@ -286,12 +287,13 @@ typedef struct
 	uint16 invalid;						// 0x00
 	CALIBRATION_DATE_STRUCT calDate;	// 0x02
 	uint8 calibrationDateSource;		// 0x06
-	uint8 unused[5];					// 0x07
+	uint8 acousticSensorType;			// 0x07
+	uint8 unused[4];					// 0x08
 	uint8 hardwareID;					// 0x0C
 	uint8 buildID;						// 0x0D
-	uint16 sensor_type;					// 0x0E
-	char serial_num[16];				// 0x10
-	uint8 aweight_option;				// 0x20
+	uint16 seismicSensorType;			// 0x0E
+	char unitSerialNumber[16];			// 0x10
+	uint8 aWeightOption;				// 0x20
 	uint8 analogChannelConfig;			// 0x21
 } FACTORY_SETUP_STRUCT;
 
@@ -332,7 +334,7 @@ typedef struct
 	uint32				airTriggerLevel;
 	uint8				bitAccuracy;
 	uint8				adjustForTempDrift;
-	uint16				sensor_type;
+	uint16				seismicSensorType;
 	uint32				sensitivity;
 } MONITOR_LOG_ENTRY_STRUCT;
 
@@ -350,7 +352,7 @@ typedef struct
 void SaveRecordData(void*, uint32, uint8);
 void GetRecordData(void*, uint32, uint8);
 void ConvertTimeStampToString(char*, DATE_TIME_STRUCT*, uint8);
-void CopyFlashBlock(uint16* src, uint16* dst, uint32 len);
+void CopyFlashBlock(uint16* dst, uint16* src, uint32 len);
 void CopyRecordIntoFlashBk(uint16*, uint16*, uint32, uint32);
 uint8 CheckForAvailableTriggerRecordEntry(char* name, uint8* match);
 void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT *rec_ptr, uint8 opMode);

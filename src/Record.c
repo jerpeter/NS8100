@@ -419,7 +419,7 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT* triggerRecordPtr, uint8 opMode)
 	// Check if sensor type is valid
 	if (!g_factorySetupRecord.invalid)
 	{
-		triggerRecordPtr->trec.seismicTriggerLevel = ((DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * ACCURACY_16_BIT_MIDPOINT) / g_factorySetupRecord.sensor_type);
+		triggerRecordPtr->trec.seismicTriggerLevel = ((DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * ACCURACY_16_BIT_MIDPOINT) / g_factorySetupRecord.seismicSensorType);
 	}
 	else // Don't know sensor type, use a 10 inch sensor as default
 	{
@@ -466,8 +466,8 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT* unitConfigPtr)
 	unitConfigPtr->lcdContrast = DEFUALT_CONTRAST;
 	unitConfigPtr->lcdTimeout = 2;
 	unitConfigPtr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
-	unitConfigPtr->reportDisplacement = DISABLED;
-	unitConfigPtr->reportPeakAcceleration = DISABLED;
+	unitConfigPtr->cycleEndTimeHour = 0;
+	unitConfigPtr->unused1 = DISABLED;
 	unitConfigPtr->rs232PowerSavings = ENABLED;
 	unitConfigPtr->saveCompressedData = SAVE_EXTRA_FILE_COMPRESSED_DATA;
 	unitConfigPtr->timerMode = DISABLED;
@@ -506,7 +506,7 @@ void ActivateUnitConfigOptions(void)
 	debug("Auto Monitor Mode: %s\r\n", (g_unitConfig.autoMonitorMode == AUTO_NO_TIMEOUT) ? "Disabled" : "Enabled");
 	AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
 
-	// Check if Auto Calibration at midnight is active (any value but zero)
+	// Check if Auto Calibration at cycle change is active (any value but zero)
 	if (g_unitConfig.autoCalMode) // != AUTO_NO_CAL_TIMEOUT
 	{
 		g_autoCalDaysToWait = 1;
