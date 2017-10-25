@@ -125,13 +125,21 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 
 			if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
 			{
-				g_factorySetupRecord.sensor_type = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+				g_factorySetupRecord.seismicSensorType = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+			}
+
+			if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+			{
+				if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160))
+				{
+					g_factorySetupRecord.acousticSensorType = g_acousticSmartSensorMemory.sensorType;
+				}
 			}
 
 			UpdateWorkingCalibrationDate();
 
 			// Make sure the parameters are up to date based on the trigger setup information
-			InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
+			InitSensorParameters(g_factorySetupRecord.seismicSensorType, (uint8)g_triggerRecord.srec.sensitivity);
 
 			PromptUserWaitingForSensorZeroing();
 
@@ -151,10 +159,12 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
 					
+#if 0 // Original
 					if (g_unitConfig.reportDisplacement == DISABLED)
 					{
 						g_displayAlternateResultState = DEFAULT_RESULTS;
 					}
+#endif
 
 					// Check if the sample rate is greater than max working sample rate
 					if (((g_monitorOperationMode == BARGRAPH_MODE) && (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_8K)) ||
@@ -618,7 +628,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString((uint8*)(&buff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 
-		div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.sensor_type);
+		div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.seismicSensorType);
 
 		if (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL)
 		{
@@ -658,9 +668,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tempV = ((float)g_vImpulsePeak / (float)div);
 			}
 
-			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER))
 			{
-				if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
+				if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER)
 					strcpy(buff, "mg/s |");
 				else
 					strcpy(buff, "in/s |");
@@ -791,9 +801,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			}			
 			else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS) { tempVS = sqrtf((float)g_vsJobPeak) / (float)div; }
 
-			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER))
 			{
-				if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
+				if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER)
 					strcpy(displayFormat, "mg/s");
 				else
 					strcpy(displayFormat, "in/s");
@@ -869,9 +879,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			tempPeakDisp = (float)normalize_max_peak / ((float)2 * (float)PI * (float)tempFreq);
 
-			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER))
 			{
-				if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
+				if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER)
 					strcpy(displayFormat, "mg");
 				else
 					strcpy(displayFormat, "in");
@@ -944,7 +954,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			tempPeakAcc = (float)normalize_max_peak * (float)2 * (float)PI * (float)tempFreq;
 
-			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER))
+			if ((g_sensorInfo.unitsFlag == IMPERIAL_TYPE) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER))
 			{
 				tempPeakAcc /= (float)ONE_GRAVITY_IN_INCHES;
 			}
@@ -954,7 +964,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				tempPeakAcc /= (float)ONE_GRAVITY_IN_MM;
 			}
 
-			if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) { strcpy(displayFormat, "mg/s2"); }
+			if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER) { strcpy(displayFormat, "mg/s2"); }
 			else { strcpy(displayFormat, "g"); }
 
 			sprintf(buff,"PEAK ACC %5.4f %s", tempPeakAcc, displayFormat);
@@ -968,11 +978,11 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				{
 					if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 					{
-						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), HexToMB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), HexToMB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
 					}
 					else // Report Air in DB
 					{
-						sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), HexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+						sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), HexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
 					}
 				}
 				else // (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS) || (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
@@ -987,11 +997,11 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 						{
-							sprintf(buff, "AIR %0.3f mb ", HexToMB(g_bargraphSummaryInterval.a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							sprintf(buff, "AIR %0.3f mb ", HexToMB(g_bargraphSummaryInterval.a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
 						}
 						else // Report Air in DB
 						{
-							sprintf(buff, "AIR %4.1f dB ", HexToDB(g_bargraphSummaryInterval.a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							sprintf(buff, "AIR %4.1f dB ", HexToDB(g_bargraphSummaryInterval.a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
 						}
 					}
 					else // g_displayBargraphResultsMode == JOB_PEAK_RESULTS
@@ -1004,11 +1014,11 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 						{
-							sprintf(buff, "AIR %0.3f mb ", HexToMB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							sprintf(buff, "AIR %0.3f mb ", HexToMB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
 						}
 						else // Report Air in DB
 						{
-							sprintf(buff, "AIR %4.1f dB ", HexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint));
+							sprintf(buff, "AIR %4.1f dB ", HexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
 						}
 					}
 

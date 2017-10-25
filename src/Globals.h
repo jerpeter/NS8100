@@ -252,7 +252,7 @@ extern GPS_POSITION g_gpsPosition;
 extern uint32 g_gpsOutputToCraft;
 extern uint32 g_testTimeSinceLastFSWrite;
 extern uint32 g_testTimeSinceLastTrigger;
-extern uint32 g_testTimeSinceLastMidnight;
+extern uint32 g_testTimeSinceLastCycleChange;
 extern uint32 g_testTimeSinceLastCalPulse;
 
 #endif /* GLOBALS_H_ */

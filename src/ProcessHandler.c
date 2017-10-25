@@ -216,7 +216,7 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 	else { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
 
 	// Check if A-weighting is enabled
-	if ((g_factorySetupRecord.aweight_option == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_A_WEIGHTING))
+	if ((g_factorySetupRecord.aWeightOption == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_A_WEIGHTING))
 	{
 		// Set acoustic for A-weighted gain
 		SetAcousticGainSelect(ACOUSTIC_GAIN_A_WEIGHTED);
@@ -435,12 +435,12 @@ uint16 AirTriggerConvert(uint32 airTriggerToConvert)
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
 			// Convert dB to an A/D count
-			airTriggerToConvert = (uint32)(DbToHex(airTriggerToConvert));
+			airTriggerToConvert = (uint32)(DbToHex(airTriggerToConvert, g_factorySetupRecord.acousticSensorType));
 		}
 		else
 		{
 			// Convert mb to an A/D count
-			airTriggerToConvert = (uint32)(MbToHex(airTriggerToConvert));
+			airTriggerToConvert = (uint32)(MbToHex(airTriggerToConvert, g_factorySetupRecord.acousticSensorType));
 		}
 	}
 
@@ -457,11 +457,11 @@ uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert)
 	{
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
-			airTriggerToConvert = HexToDB(airTriggerToConvert, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT);
+			airTriggerToConvert = HexToDB(airTriggerToConvert, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, g_factorySetupRecord.acousticSensorType);
 		}
 		else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
-			airTriggerToConvert = (HexToMB(airTriggerToConvert, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT) * 10000);
+			airTriggerToConvert = (HexToMB(airTriggerToConvert, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, g_factorySetupRecord.acousticSensorType) * 10000);
 		}
 	}
 
@@ -484,7 +484,7 @@ void GetManualCalibration(void)
 	SetSeismicGainSelect(SEISMIC_GAIN_LOW);
 
 	// Check if A-weighting is enabled
-	if ((g_factorySetupRecord.aweight_option == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_A_WEIGHTING))
+	if ((g_factorySetupRecord.aWeightOption == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_A_WEIGHTING))
 	{
 		// Set acoustic for A-weighted gain
 		SetAcousticGainSelect(ACOUSTIC_GAIN_A_WEIGHTED);
@@ -517,7 +517,7 @@ void HandleManualCalibration(void)
 	// Check if actively monitoring in Waveform mode (don't process for Bargraph and Combo)
 	if ((g_sampleProcessing == ACTIVE_STATE) && (g_triggerRecord.opMode == WAVEFORM_MODE))
 	{
-		// Check if not busy processing an event (otherwise skip midnight calibration since handling an event will be accompanied by a cal pulse)
+		// Check if not busy processing an event (otherwise skip cycle change calibration since handling an event will be accompanied by a cal pulse)
 		if ((g_busyProcessingEvent == NO) && (!getSystemEventState(TRIGGER_EVENT)))
 		{
 			// Check if there is no room to store a calibration event
@@ -527,7 +527,7 @@ void HandleManualCalibration(void)
 				getLangText(CALIBRATION_TEXT), getLangText(UNAVAILABLE_TEXT));
 				OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
 			}
-			else // Handle midnight calibration while in Waveform mode (without leaving monitor session)
+			else // Handle cycle change calibration while in Waveform mode (without leaving monitor session)
 			{
 				// Stop data transfer
 				StopDataClock();
@@ -558,7 +558,7 @@ void HandleManualCalibration(void)
 				else { SetSeismicGainSelect(SEISMIC_GAIN_HIGH); }
 
 				// Check if A-weighting is enabled
-				if ((g_factorySetupRecord.aweight_option == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_A_WEIGHTING))
+				if ((g_factorySetupRecord.aWeightOption == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_A_WEIGHTING))
 				{
 					// Set acoustic for A-weighted gain
 					SetAcousticGainSelect(ACOUSTIC_GAIN_A_WEIGHTED);
@@ -629,12 +629,12 @@ void ForcedCalibration(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void HandleMidnightEvent(void)
+void HandleCycleChangeEvent(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
-	uint8 performMidnightCalibration = NO;
+	uint8 performCycleChangeCalibration = NO;
 
-	// Check if Auto Calibration at midnight is active (any value but zero)
+	// Check if Auto Calibration at cycle change is active (any value but zero)
 	if (g_unitConfig.autoCalMode) // != AUTO_NO_CAL_TIMEOUT
 	{
 		// Decrement days to wait
@@ -643,7 +643,7 @@ void HandleMidnightEvent(void)
 		// Check if time to do Auto Calibration
 		if (g_autoCalDaysToWait == 0)
 		{
-			performMidnightCalibration = YES;
+			performCycleChangeCalibration = YES;
 
 			// Reset the days to wait count
 			switch (g_unitConfig.autoCalMode)
@@ -655,7 +655,7 @@ void HandleMidnightEvent(void)
 		}
 	}
 
-	// Check if actively monitoring in either Bargraph or Combo mode (ignore Midnight calibration since the start of a new session creates a calibration)
+	// Check if actively monitoring in either Bargraph or Combo mode (ignore cycle change calibration since the start of a new session creates a calibration)
 	if ((g_sampleProcessing == ACTIVE_STATE) && ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)))
 	{
 		// Overlay a message that the current Bargraph or Combo is ending
@@ -669,7 +669,7 @@ void HandleMidnightEvent(void)
 		SETUP_MENU_WITH_DATA_MSG(MONITOR_MENU, g_triggerRecord.opMode);
 		JUMP_TO_ACTIVE_MENU();
 	}
-	else if (performMidnightCalibration == YES)
+	else if (performCycleChangeCalibration == YES)
 	{
 		HandleManualCalibration();
 	}
@@ -677,7 +677,7 @@ void HandleMidnightEvent(void)
 	// Check if Auto Dialout processing is not active
 	if (g_autoDialoutState == AUTO_DIAL_IDLE)
 	{
-		// At midnight reset the modem (to better handle problems with USR modems)
+		// At cycle change reset the modem (to better handle problems with USR modems)
 		g_autoRetries = 0;
 		ModemResetProcess();
 	}

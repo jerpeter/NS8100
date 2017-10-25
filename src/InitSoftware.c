@@ -229,7 +229,15 @@ void LoadFactorySetupRecord(void)
 	{
 		if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
 		{
-			g_factorySetupRecord.sensor_type = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+			g_factorySetupRecord.seismicSensorType = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+		}
+
+		if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+		{
+			if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160))
+			{
+				g_factorySetupRecord.acousticSensorType = g_acousticSmartSensorMemory.sensorType;
+			}
 		}
 
 		UpdateWorkingCalibrationDate();
@@ -239,8 +247,8 @@ void LoadFactorySetupRecord(void)
 		ConvertCalDatetoDateTime(&tempTime, &g_currentCalibration.date);
 		ConvertTimeStampToString(buff, &tempTime, REC_DATE_TYPE);
 
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) { strcpy((char*)&g_spareBuffer, "Acc"); }
-		else { sprintf((char*)&g_spareBuffer, "%3.1f in", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
+		if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER) { strcpy((char*)&g_spareBuffer, "Acc"); }
+		else { sprintf((char*)&g_spareBuffer, "%3.1f in", (float)g_factorySetupRecord.seismicSensorType / (float)204.8); }
 
 		// Check if an older unit doesn't have the Analog Channel Config set
 		if ((g_factorySetupRecord.analogChannelConfig != CHANNELS_R_AND_V_SCHEMATIC) && (g_factorySetupRecord.analogChannelConfig != CHANNELS_R_AND_V_SWAPPED))
@@ -249,10 +257,10 @@ void LoadFactorySetupRecord(void)
 			g_factorySetupRecord.analogChannelConfig = CHANNELS_R_AND_V_SWAPPED;
 		}
 
-		debug("Factory Setup: Serial #: %s\r\n", g_factorySetupRecord.serial_num);
+		debug("Factory Setup: Serial #: %s\r\n", g_factorySetupRecord.unitSerialNumber);
 		debug("Factory Setup: Cal Date: %s\r\n", buff);
 		debug("Factory Setup: Sensor Type: %s\r\n", (char*)g_spareBuffer);
-		debug("Factory Setup: A-Weighting: %s\r\n", (g_factorySetupRecord.aweight_option == YES) ? "Enabled" : "Disabled");
+		debug("Factory Setup: A-Weighting: %s\r\n", (g_factorySetupRecord.aWeightOption == YES) ? "Enabled" : "Disabled");
 		debug("Factory Setup: Analog Channel Config: %s\r\n", (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SCHEMATIC) ? "Schematic" : "Swapped");
 	}
 }
@@ -260,7 +268,7 @@ void LoadFactorySetupRecord(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
+void InitSensorParameters(uint16 seismicSensorType, uint8 sensitivity)
 {
 	uint8 gainFactor = (uint8)((sensitivity == LOW) ? 2 : 4);
 
@@ -274,9 +282,9 @@ void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
 	// Get the shift value
 	g_sensorInfo.shiftVal = 1;
 
-	g_sensorInfo.sensorTypeNormalized = (float)(sensor_type)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
+	g_sensorInfo.sensorTypeNormalized = (float)(seismicSensorType)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
 
-	if ((IMPERIAL_TYPE == g_unitConfig.unitsOfMeasure) || (sensor_type == SENSOR_ACCELEROMETER))
+	if ((IMPERIAL_TYPE == g_unitConfig.unitsOfMeasure) || (seismicSensorType == SENSOR_ACCELEROMETER))
 	{
 		g_sensorInfo.measurementRatio = (float)IMPERIAL; 				// 1 = SAE; 25.4 = Metric
 	}
@@ -291,7 +299,7 @@ void InitSensorParameters(uint16 sensor_type, uint8 sensitivity)
 	// the conversion is length(in or mm) = hexValue * (sensor scale/ADC Max Value)
 	g_sensorInfo.hexToLengthConversion = (float)((float)ADC_RESOLUTION / (float)g_sensorInfo.sensorTypeNormalized);
 
-	g_sensorInfo.sensorValue = (uint16)(g_factorySetupRecord.sensor_type / gainFactor); // sensor value X 100.
+	g_sensorInfo.sensorValue = (uint16)(g_factorySetupRecord.seismicSensorType / gainFactor); // sensor value X 100.
 }
 
 ///----------------------------------------------------------------------------
@@ -400,7 +408,7 @@ void InitSoftwareSettings_NS8100(void)
 	//-------------------------------------------------------------------------
 	// Init the Sensor Parameters
 	//-------------------------------------------------------------------------
-	InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity); debug("Sensor Parameters initialized\r\n");
+	InitSensorParameters(g_factorySetupRecord.seismicSensorType, (uint8)g_triggerRecord.srec.sensitivity); debug("Sensor Parameters initialized\r\n");
 
 	//-------------------------------------------------------------------------
 	// Init the Summary List file

@@ -298,7 +298,15 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 
 			if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
 			{
-				g_factorySetupRecord.sensor_type = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+				g_factorySetupRecord.seismicSensorType = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+			}
+
+			if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+			{
+				if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160))
+				{
+					g_factorySetupRecord.acousticSensorType = g_acousticSmartSensorMemory.sensorType;
+				}
 			}
 
 			LoadTrigRecordDefaults(&g_triggerRecord, WAVEFORM_MODE);
@@ -391,7 +399,7 @@ void CalSetupMnProc(INPUT_MSG_STRUCT msg,
 						break;
 					}
 
-					SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
+					SETUP_USER_MENU_MSG(&helpMenu, CONFIG_CHOICE);
 					JUMP_TO_ACTIVE_MENU();
 					break;
 
@@ -423,6 +431,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	DATE_TIME_STRUCT time;
 	float div, r1, r2, r3, v1, v2, v3, t1, t2, t3;
 	uint16 sensorType;
+	uint8 acousticSensorType = g_factorySetupRecord.acousticSensorType;
 
 	wnd_layout_ptr->curr_row = wnd_layout_ptr->start_row;
 	wnd_layout_ptr->curr_col = wnd_layout_ptr->start_col;
@@ -431,7 +440,7 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 #if 0 // Old
 	uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
-	div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.sensor_type);
+	div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.seismicSensorType);
 #else
 	// Check if optioned to use Seismic Smart Sensor and Seismic smart sensor was successfully read
 	if ((g_factorySetupRecord.calibrationDateSource == SEISMIC_SMART_SENSOR_CAL_DATE) && (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
@@ -440,7 +449,15 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 	else // Default to factory setup record sensor type
 	{
-		sensorType = g_factorySetupRecord.sensor_type;
+		sensorType = g_factorySetupRecord.seismicSensorType;
+	}
+
+	if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+	{
+		if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160))
+		{
+			acousticSensorType = g_acousticSmartSensorMemory.sensorType;
+		}
 	}
 
 	if (g_unitConfig.unitsOfMeasure == METRIC_TYPE)
@@ -637,16 +654,16 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 				memset(&buff[0], 0, sizeof(buff));
 				if (g_displayAlternateResultState == DEFAULT_RESULTS)
 				{
-					sprintf((char*)buff, "A|%05.3f|%05.3f|%05.3f|", HexToMB(g_sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
-							HexToMB(g_sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
-							HexToMB(g_sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
+					sprintf((char*)buff, "A|%05.3f|%05.3f|%05.3f|", HexToMB(g_sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, acousticSensorType),
+							HexToMB(g_sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, acousticSensorType),
+							HexToMB(g_sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, acousticSensorType));
 					strcpy((char*)g_spareBuffer, (char*)buff);
 				}
 				else
 				{
-					sprintf((char*)buff, "A|%5.1f|%5.1f|%5.1f|", HexToDB(g_sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
-							HexToDB(g_sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT),
-							HexToDB(g_sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT));
+					sprintf((char*)buff, "A|%5.1f|%5.1f|%5.1f|", HexToDB(g_sensorCalPeaks[1].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, acousticSensorType),
+							HexToDB(g_sensorCalPeaks[2].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, acousticSensorType),
+							HexToDB(g_sensorCalPeaks[3].a, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, acousticSensorType));
 					strcpy((char*)&g_spareBuffer[50], (char*)buff);
 				}
 				wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;

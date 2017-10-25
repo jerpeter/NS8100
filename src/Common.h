@@ -516,13 +516,12 @@ void SpinBar(void);
 
 // Conversion routines
 uint16 SwapInt(uint16);
-float HexToDB(uint16, uint8, uint16);
-float HexToMB(uint16, uint8, uint16);
-float HexToPsi(uint16, uint8, uint16);
-uint16 DbToHex(uint16);
-uint16 MbToHex(float);
-uint32 ConvertDBtoMB(uint32);
-uint32 ConvertMBtoDB(uint32);
+float HexToDB(uint16, uint8, uint16, uint8);
+float HexToMB(uint16, uint8, uint16, uint8);
+uint16 DbToHex(uint16, uint8);
+uint16 MbToHex(float, uint8);
+uint32 ConvertDBtoMB(uint32, uint32);
+uint32 ConvertMBtoDB(uint32, uint32);
 
 // PIT timers
 void startPitTimer(PIT_TIMER timer);
@@ -592,7 +591,7 @@ void Tc_ms_timer_irq(void);
 // Process Handler prototype extensions
 void StartDataCollection(uint32 sampleRate);
 void GetManualCalibration(void);
-void HandleMidnightEvent(void);
+void HandleCycleChangeEvent(void);
 
 // Keypad prototype extensions
 void InitKeypad(void);
@@ -603,7 +602,7 @@ uint16 GetTotalDaysFromReference(TM_DATE_STRUCT date);
 void GetDateString(char*, uint8, uint8);
 uint8 GetDaysPerMonth(uint8, uint16);
 void InitTimeMsg(void);
-void CheckForMidnight(void);
+void CheckForCycleChange(void);
 
 // Error routines
 void ReportFileSystemAccessProblem(char*);

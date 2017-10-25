@@ -1051,6 +1051,7 @@ void DisplaySensorType(void)
 {
 	uint16 sensorType;
 	uint16 sensorTypeTextElement = NULL_TEXT;
+	uint8 acousticSensorType = g_factorySetupRecord.acousticSensorType;
 
 	if (!g_factorySetupRecord.invalid)
 	{
@@ -1061,7 +1062,7 @@ void DisplaySensorType(void)
 		}
 		else // Default to factory setup record sensor type
 		{
-			sensorType = g_factorySetupRecord.sensor_type;
+			sensorType = g_factorySetupRecord.seismicSensorType;
 		}
 
 		switch (sensorType)
@@ -1073,7 +1074,18 @@ void DisplaySensorType(void)
 			case SENSOR_ACCELEROMETER	: sensorTypeTextElement = ACC_793L_TEXT; break;
 		}
 
-		sprintf((char*)g_spareBuffer, "%s: %s", getLangText(SENSOR_GAIN_TYPE_TEXT), getLangText(sensorTypeTextElement));
+		sprintf((char*)g_spareBuffer, "%s: %s", "SEISMIC GAIN/TYPE", getLangText(sensorTypeTextElement));
+		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
+
+		if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+		{
+			if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160))
+			{
+				acousticSensorType = g_acousticSmartSensorMemory.sensorType;
+			}
+		}
+
+		sprintf((char*)g_spareBuffer, "%s: %s", "ACOUSTIC GAIN/TYPE", ((acousticSensorType = SENSOR_MIC_160) ? "MIC 160 dB" : "MIC 148 dB"));
 		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 	else
@@ -1102,7 +1114,7 @@ void DisplaySerialNumber(void)
 	if (!g_factorySetupRecord.invalid)
 	{
 		memset(&serialNumberString[0], 0, sizeof(serialNumberString));
-		memcpy(&serialNumberString[0], &g_factorySetupRecord.serial_num[0], sizeof(g_factorySetupRecord.serial_num));
+		memcpy(&serialNumberString[0], &g_factorySetupRecord.unitSerialNumber[0], sizeof(g_factorySetupRecord.unitSerialNumber));
 		sprintf((char*)g_spareBuffer, "%s: %s", getLangText(SERIAL_NUMBER_TEXT), (char*)serialNumberString);
 		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}

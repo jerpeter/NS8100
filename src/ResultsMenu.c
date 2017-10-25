@@ -284,6 +284,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	uint8 calResults = PASSED;
 	char modeChar = 'W';
 	char chanVerifyChar = '+';
+	uint8 acousticSensorType;
 
 	if ((g_updateResultsEventRecord == YES) || (g_forcedCalibration == YES))
 	{
@@ -326,6 +327,9 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	// Calculate the divider used for converting stored A/D peak counts to units of measure
 	div = (float)(bitAccuracyScale * SENSOR_ACCURACY_100X_SHIFT * gainFactor) / (float)(g_summaryList.cachedEntry.seismicSensorType);
+
+	// Get the acoustic sensor type, stored in the acceleration element (overloaded) since the air channel does not use acceleration calculation
+	acousticSensorType = (uint8)g_summaryList.cachedEntry.channelSummary.a.acceleration;
 
 	//-----------------------------------------------------------------------
 	// PRINT MONITORING
@@ -766,22 +770,22 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		{
 			if (g_displayAlternateResultState != DEFAULT_ALTERNATE_RESULTS)
 			{
-				sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+				sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
 			}
 			else
 			{
-				sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+				sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
 			}
 		}
 		else // Report Air in DB
 		{
 			if (g_displayAlternateResultState != DEFAULT_ALTERNATE_RESULTS)
 			{
-				sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+				sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
 			}
 			else
 			{
-				sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale));
+				sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
 			}
 		}
 

@@ -362,11 +362,11 @@ uint16 SwapInt(uint16 Scr)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-float HexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
+float HexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint, uint8 acousticSensorType)
 {
 	float tempValue;
 
-	tempValue = HexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint) * (float)DB_CONVERSION_VALUE;
+	tempValue = HexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint, acousticSensorType) * (float)DB_CONVERSION_VALUE;
 
 	if (tempValue > 0)
 	{
@@ -379,7 +379,7 @@ float HexToDB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-float HexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
+float HexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint, uint8 acousticSensorType)
 {
 	float millibars;
 
@@ -400,27 +400,18 @@ float HexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
 	// Scale appropriate to bit accuracy based on the original calc for 12-bit
 	millibars /= (float)((float)bitAccuracyMidpoint / (float)ACCURACY_12_BIT_MIDPOINT);
 
+	if (acousticSensorType == SENSOR_MIC_160)
+{
+		millibars *= 4;
+	}
+
 	return (millibars);
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-float HexToPsi(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint)
-{
-	float psi;
-
-	psi = HexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint);
-
-	psi = (float)((psi * (float)14.7)/(float)1013.25);
-
-	return (psi);
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-uint16 DbToHex(uint16 db)
+uint16 DbToHex(uint16 db, uint8 acousticSensorType)
 {
 	// Convert dB to an offset from 0 to 2048 and upscale to 16-bit
 
@@ -436,13 +427,18 @@ uint16 DbToHex(uint16 db)
 	// Upscale from 12-bit to 16-bit
 	dbValue *= 16;
 
+	if (acousticSensorType == SENSOR_MIC_160)
+	{
+		dbValue /= 4;
+	}
+
 	return (ceil(dbValue));
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 MbToHex(float mb)
+uint16 MbToHex(float mb, uint8 acousticSensorType)
 {
 	// Convert mb to an offset from 0 to 2048 and upscale to 16-bit
 
@@ -452,13 +448,18 @@ uint16 MbToHex(float mb)
 	// Upscale from 12-bit to 16-bit
 	mbValue *= 16;
 
+	if (acousticSensorType == SENSOR_MIC_160)
+	{
+		mbValue /= 4;
+	}
+
 	return (ceil(mbValue));
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint32 ConvertDBtoMB(uint32 level)
+uint32 ConvertDBtoMB(uint32 level, uint32 acousticMaxValue)
 {
 	double mbValue;
 	uint32 mbConverted;
@@ -478,7 +479,7 @@ uint32 ConvertDBtoMB(uint32 level)
 		mbConverted = ceil(mbValue);
 		
 		if (mbConverted <= AIR_TRIGGER_MB_MIN_VALUE) { mbConverted = AIR_TRIGGER_MB_MIN_VALUE; }
-		else if (mbConverted >= AIR_TRIGGER_MB_MAX_VALUE) { mbConverted = AIR_TRIGGER_MB_MAX_VALUE; }
+		else if (mbConverted >= acousticMaxValue) { mbConverted = acousticMaxValue; }
 		
 		return (mbConverted);
 	}
@@ -487,7 +488,7 @@ uint32 ConvertDBtoMB(uint32 level)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint32 ConvertMBtoDB(uint32 level)
+uint32 ConvertMBtoDB(uint32 level, uint32 acousticMaxValue)
 {
 	double dbValue;
 	uint32 dbConverted;
@@ -505,7 +506,7 @@ uint32 ConvertMBtoDB(uint32 level)
 		dbConverted = floor(dbValue);
 		
 		if (dbConverted <= AIR_TRIGGER_MIN_VALUE) { dbConverted = AIR_TRIGGER_MIN_VALUE; }
-		else if (dbConverted >= AIR_TRIGGER_MAX_VALUE) { dbConverted = AIR_TRIGGER_MAX_VALUE; }
+		else if (dbConverted >= acousticMaxValue) { dbConverted = acousticMaxValue; }
 
 		return (dbConverted);
 	}
@@ -1084,26 +1085,26 @@ void ConvertCalDatetoDateTime(DATE_TIME_STRUCT* dateTime, CALIBRATION_DATE_STRUC
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void CheckForMidnight(void)
+void CheckForCycleChange(void)
 {
-	static uint8 processingMidnight = NO;
+	static uint8 processingCycleChange = NO;
 	DATE_TIME_STRUCT currentTime = GetCurrentTime();
 
-	// Check for Midnight and make sure that the current Midnight isn't already been processed
-	if ((currentTime.hour == 0) && (currentTime.min == 0) && (processingMidnight == NO))
+	// Check for cycle end time match and make sure that the current cycle end isn't already been processed
+	if ((currentTime.hour == g_unitConfig.cycleEndTimeHour) && (currentTime.min == 0) && (processingCycleChange == NO))
 	{
-		// Check that the unit has been on for 1 minute before processing a midnight event (especially in the case of powering up at midnight)
+		// Check that the unit has been on for 1 minute before processing a cycle change event (especially in the case of powering up at cycle time)
 		if (g_lifetimeHalfSecondTickCount > (1 * TICKS_PER_MIN))
 		{
-			processingMidnight = YES;
-			raiseSystemEventFlag(MIDNIGHT_EVENT);
+			processingCycleChange = YES;
+			raiseSystemEventFlag(CYCLE_CHANGE_EVENT);
 		}
 	}
-	else if (processingMidnight == YES)
+	else if (processingCycleChange == YES)
 	{
-		if ((currentTime.hour != 0) && (currentTime.min != 0))
+		if ((currentTime.hour != g_unitConfig.cycleEndTimeHour) && (currentTime.min != 0))
 		{
-			processingMidnight = NO;
+			processingCycleChange = NO;
 		}
 	}
 }

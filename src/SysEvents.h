@@ -39,7 +39,7 @@ typedef struct
 #define LOW_BATTERY_WARNING_EVENT	0x0008
 #define KEYPAD_EVENT				0x0010
 #define CYCLIC_EVENT				0x0020
-#define MIDNIGHT_EVENT				0x0040
+#define CYCLE_CHANGE_EVENT			0x0040
 #define CAL_EVENT					0x0080
 #define AUTO_DIALOUT_EVENT			0x0100
 #define WARNING_EVENT 				0x0200

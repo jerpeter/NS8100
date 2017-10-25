@@ -919,7 +919,7 @@ void DisplaySmartSensorInfo(SMART_SENSOR_INFO situation)
 	if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
 	{
 		sprintf((char*)g_spareBuffer, "%s: %s %s, %s: %s", getLangText(DISCOVERED_TEXT), getLangText(ACOUSTIC_TEXT), getLangText(SMART_SENSOR_TEXT),
-				getLangText(TYPE_TEXT), getLangText(STANDARD_TEXT));
+				getLangText(TYPE_TEXT), ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160) ? "MIC 160 dB" : "MIC 148 dB"));
 		debug("Discovered: Acoustic smart sensor, type: Standard\r\n");
 		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
 	}
@@ -953,7 +953,7 @@ void DisplaySmartSensorSerialNumber(SMART_SENSOR_TYPE sensor)
 	{
 		serialNumBuffer = &g_acousticSmartSensorMemory.serialNumber[0];
 		sprintf(serialNumber, "%d%d%d%d%d%d", serialNumBuffer[0], serialNumBuffer[1], serialNumBuffer[2], serialNumBuffer[3], serialNumBuffer[4], serialNumBuffer[5]);
-		sprintf((char*)g_spareBuffer, "%s SN#: %s, %s: %s", getLangText(ACOUSTIC_TEXT), serialNumber, getLangText(TYPE_TEXT), getLangText(STANDARD_TEXT));
+		sprintf((char*)g_spareBuffer, "%s SN#: %s, %s: %s", getLangText(ACOUSTIC_TEXT), serialNumber, getLangText(TYPE_TEXT), ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160) ? "MIC 160 dB" : "MIC 148 dB"));
 		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 }

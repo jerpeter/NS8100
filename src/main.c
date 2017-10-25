@@ -196,18 +196,18 @@ void SystemEventManager(void)
 			raiseSystemEventFlag(LOW_BATTERY_WARNING_EVENT);
 		}
 
-		CheckForMidnight();
+		CheckForCycleChange();
 	}
 
 	//___________________________________________________________________________________________
-	if (getSystemEventState(MIDNIGHT_EVENT))
+	if (getSystemEventState(CYCLE_CHANGE_EVENT))
 	{
-		debug("Midnight Event\r\n");
-		clearSystemEventFlag(MIDNIGHT_EVENT);
+		debug("Cycle Change Event (24 Hour cycle end)\r\n");
+		clearSystemEventFlag(CYCLE_CHANGE_EVENT);
 
-		g_testTimeSinceLastMidnight = g_lifetimeHalfSecondTickCount;
+		g_testTimeSinceLastCycleChange = g_lifetimeHalfSecondTickCount;
 
-		HandleMidnightEvent();
+		HandleCycleChangeEvent();
 	}
 
 	//___________________________________________________________________________________________
@@ -1551,7 +1551,7 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 
 	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastFSWrite) { LFST = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastFSWrite); }
 	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastTrigger) { LTT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastTrigger); }
-	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastMidnight) { LMT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastMidnight); }
+	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastCycleChange) { LMT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastCycleChange); }
 	if (g_lifetimeHalfSecondTickCount >= g_testTimeSinceLastCalPulse) { LCPT = (g_lifetimeHalfSecondTickCount - g_testTimeSinceLastCalPulse); }
 
 	// Check if the LCD Power was turned off
