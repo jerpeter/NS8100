@@ -138,8 +138,8 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.eventCfg.recordTime = g_triggerRecord.trec.record_time;
 
 	// static non changing.
-	cfg.eventCfg.seismicSensorType = (uint16)(g_factorySetupRecord.sensor_type);
-	cfg.eventCfg.airSensorType = SENSOR_MICROPHONE;
+	cfg.eventCfg.seismicSensorType = (uint16)(g_factorySetupRecord.seismicSensorType);
+	cfg.eventCfg.airSensorType = g_factorySetupRecord.acousticSensorType;
 	cfg.eventCfg.adChannelVerification = g_unitConfig.adChannelVerification;
 	cfg.eventCfg.bitAccuracy = g_triggerRecord.trec.bitAccuracy;
 	cfg.eventCfg.numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;
@@ -147,12 +147,12 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.eventCfg.pretrigBufferDivider = g_unitConfig.pretrigBufferDivider;
 	cfg.eventCfg.numOfSamples = 0;				// Not used for configuration settings
 
-	if ((g_factorySetupRecord.aweight_option == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_LINEAR))
+	if ((g_factorySetupRecord.aWeightOption == ENABLED) && (g_unitConfig.airScale == AIR_SCALE_LINEAR))
 	{
 		// Need to signal remote side that current setting is linear but that A-weighting is available
 		cfg.eventCfg.aWeighting = (AIR_SCALE_LINEAR | (cfg.eventCfg.aWeighting << cfg.eventCfg.aWeighting));
 	}
-	else { cfg.eventCfg.aWeighting = g_factorySetupRecord.aweight_option; }
+	else { cfg.eventCfg.aWeighting = g_factorySetupRecord.aWeightOption; }
 
 	cfg.eventCfg.preBuffNumOfSamples = (g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider);
 	cfg.eventCfg.calDataNumOfSamples = CALIBRATION_NUMBER_OF_SAMPLES;
@@ -207,9 +207,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	cfg.timerCfg.timerMode = g_unitConfig.timerMode;
 	cfg.timerCfg.timerModeFrequency = g_unitConfig.timerModeFrequency;
-#if 1 // fix_ns8100 - Size changed to uint32 however this field isn't needed
-	cfg.timerCfg.TimerModeActiveMinutes = (uint16)g_unitConfig.TimerModeActiveMinutes;
-#endif
+	cfg.timerCfg.cycleEndTimeHour = ((g_unitConfig.cycleEndTimeHour == 0) ? 24 : g_unitConfig.cycleEndTimeHour); // Using 24 as midnight value for remote config since a zero default with older SG would incorrectly reset it
 
 	if (DISABLED == g_unitConfig.timerMode)
 	{
@@ -500,7 +498,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//---------------------------------------------------------------------------
 		if ((cfg.eventCfg.aWeighting == YES) || (cfg.eventCfg.aWeighting == NO))
 		{
-			if (g_factorySetupRecord.aweight_option == ENABLED)
+			if (g_factorySetupRecord.aWeightOption == ENABLED)
 			{
 				if (cfg.eventCfg.aWeighting == YES) { g_unitConfig.airScale = AIR_SCALE_A_WEIGHTING; }
 				else { g_unitConfig.airScale = AIR_SCALE_LINEAR; }
@@ -1058,6 +1056,23 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				goto SEND_UCM_ERROR_CODE;
 			}
 		}
+
+		//---------------------------------------------------------------------------
+		// Cycle End Time Hour (24hr)
+		//---------------------------------------------------------------------------
+		// Check if cycle end time hour is non-zero and valid
+		if ((cfg.timerCfg.cycleEndTimeHour) && (cfg.timerCfg.cycleEndTimeHour < 25)) // Valid hours 1 to 24
+		{
+			// Update the unit config
+			if (cfg.timerCfg.cycleEndTimeHour == 24) { g_unitConfig.cycleEndTimeHour = 0; }
+			else { g_unitConfig.cycleEndTimeHour = cfg.timerCfg.cycleEndTimeHour; }
+		}
+#if 0 // For now ignore changing the unit's value to a default if out of range
+		else // Set a default
+		{
+			g_unitConfig.cycleEndTimeHour = 0;
+		}
+#endif
 
 		//---------------------------------------------------------------------------
 		// Timer mode check
