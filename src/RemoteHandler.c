@@ -220,7 +220,7 @@ void RemoteCmdMessageProcessing()
 
 	RemoteCmdMessageHandler(&(g_msgPool[s_msgReadIndex]));
 
-	memset(g_msgPool[s_msgReadIndex].msg, 0, sizeof(CMD_BUFFER_SIZE));
+	memset(g_msgPool[s_msgReadIndex].msg, 0, CMD_BUFFER_SIZE);
 	g_msgPool[s_msgReadIndex].size = 0;	
 	g_msgPool[s_msgReadIndex].readPtr = g_msgPool[s_msgReadIndex].msg;	
 	g_msgPool[s_msgReadIndex].writePtr = g_msgPool[s_msgReadIndex].msg;
