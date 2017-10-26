@@ -167,6 +167,7 @@ enum {
 	SECS_TYPE,
 	MINS_TYPE,
 	MG_TYPE,
+	HOUR_TYPE,
 	// Add types before this line
 	TOTAL_TYPES
 };
@@ -204,12 +205,22 @@ enum {
 #define AIR_TRIGGER_DEFAULT_VALUE		NO_TRIGGER_CHAR
 #define AIR_TRIGGER_INC_VALUE			1
 #define AIR_TRIGGER_MIN_VALUE			92
+#if 0 // Old
 #define AIR_TRIGGER_MAX_VALUE			148
+#else
+#define AIR_TRIGGER_MIC_148_MAX_VALUE	148
+#define AIR_TRIGGER_MIC_160_MAX_VALUE	160
+#endif
 
 #define AIR_TRIGGER_MB_DEFAULT_VALUE	NO_TRIGGER_CHAR
 #define AIR_TRIGGER_MB_INC_VALUE		25
 #define AIR_TRIGGER_MB_MIN_VALUE		100
+#if 0 // Old
 #define AIR_TRIGGER_MB_MAX_VALUE		51200
+#else
+#define AIR_TRIGGER_MIC_148_MB_MAX_VALUE	51200
+#define AIR_TRIGGER_MIC_160_MB_MAX_VALUE	204800
+#endif
 
 #define AIR_TRIGGER_MIN_COUNT			64
 #define AIR_TRIGGER_MIN_COUNT_92DB		51
@@ -233,11 +244,11 @@ enum {
 
 #define ALARM_AIR_DEFAULT_VALUE			(AIR_TRIGGER_MIN_VALUE)
 #define ALARM_AIR_MIN_VALUE				(AIR_TRIGGER_MIN_VALUE)
-#define ALARM_AIR_MAX_VALUE				(AIR_TRIGGER_MAX_VALUE)
+//#define ALARM_AIR_MAX_VALUE				(AIR_TRIGGER_MAX_VALUE) // Now variable
 
 #define ALARM_AIR_MB_DEFAULT_VALUE		(AIR_TRIGGER_MB_MIN_VALUE)
 #define ALARM_AIR_MB_MIN_VALUE			(AIR_TRIGGER_MB_MIN_VALUE)
-#define ALARM_AIR_MB_MAX_VALUE			(AIR_TRIGGER_MB_MAX_VALUE)
+//#define ALARM_AIR_MB_MAX_VALUE			(AIR_TRIGGER_MB_MAX_VALUE) // Now variable
 
 // Alarm Times
 #define ALARM_OUTPUT_TIME_DEFAULT	5 		// secs
@@ -281,6 +292,11 @@ enum {
 #define LCD_TIMEOUT_DEFAULT_VALUE	2
 #define LCD_TIMEOUT_MIN_VALUE		2
 #define LCD_TIMEOUT_MAX_VALUE		60
+
+// Cycle End Time Hour (24hr)
+#define CYCLE_END_TIME_HOUR_DEFAULT_VALUE	0
+#define CYCLE_END_TIME_HOUR_MIN_VALUE		0
+#define CYCLE_END_TIME_HOUR_MAX_VALUE		23
 
 // Language stuff
 enum {
@@ -396,11 +412,12 @@ enum {
 
 // Help Menu types
 enum {
-	CONFIG = 1,
-	INFORMATION,
-	SENSOR_CHECK,
-	GPS_LOCATION_DISPLAY,
-	TESTING
+	CONFIG_CHOICE = 1,
+	INFORMATION_CHOICE,
+	SENSOR_CHECK_CHOICE,
+	GPS_LOCATION_DISPLAY_CHOICE,
+	CHECK_SUMMARY_FILE_CHOICE,
+	TESTING_CHOICE
 };
 
 // Config Menu types
@@ -442,6 +459,7 @@ enum {
 	VECTOR_SUM,
 	WAVEFORM_AUTO_CAL,
 	ZERO_EVENT_NUMBER,
+	CYCLE_END_TIME_HOUR,
 	// Add new typed before this line
 	TOTAL_CONFIG_MENU_TYPES
 };
@@ -827,6 +845,7 @@ void MonitorLogMn (INPUT_MSG_STRUCT msg);
 //----------------------------------------
 // User Select Menu Enter and Esc Handlers
 //----------------------------------------
+void AcousticSensorTypeMenuHandler(uint8 key, void* data);
 void AdChannelVerificationMenuHandler(uint8 key, void* data);
 void AirScaleMenuHandler(uint8 key, void* data);
 void AirSetupMenuHandler(uint8 key, void* data);
@@ -868,8 +887,8 @@ void RecalibrateMenuHandler(uint8 key, void* data);
 void SaveCompressedDataMenuHandler(uint8 key, void* data);
 void SampleRateMenuHandler(uint8 key, void* data);
 void SaveSetupMenuHandler(uint8 key, void* data);
+void SeismicSensorTypeMenuHandler(uint8 key, void* data);
 void SensitivityMenuHandler(uint8 key, void* data);
-void SensorTypeMenuHandler(uint8 key, void* data);
 void SummaryIntervalMenuHandler(uint8 key, void* data);
 void SyncFileExistsMenuHandler(uint8 key, void* data);
 void TimerModeMenuHandler(uint8 key, void* data);
@@ -897,6 +916,7 @@ void AlarmTwoAirLevelMenuHandler(uint8 key, void* data);
 void AlarmTwoTimeMenuHandler(uint8 key, void* data);
 void CompanyMenuHandler(uint8 key, void* data);
 void CopiesMenuHandler(uint8 key, void* data);
+void CycleEndTimeMenuHandler(uint8 keyPressed, void* data);
 void DistanceToSourceMenuHandler(uint8 key, void* data);
 void LcdImpulseTimeMenuHandler(uint8 key, void* data);
 void LcdTimeoutMenuHandler(uint8 key, void* data);
@@ -953,7 +973,7 @@ void DisplaySerialNumber(void);
 void DisplayTimerModeSettings(void);
 void DisplayFlashUsageStats(void);
 void DisplayAutoDialInfo(void);
-void InitSensorParameters(uint16 sensor_type, uint8 sensitivity);
+void InitSensorParameters(uint16 seismicSensorType, uint8 sensitivity);
 void StopMonitoringForLowPowerState(void);
 uint8 CheckAndDisplayErrorThatPreventsMonitoring(uint8 messageType);
 void PromptUserWaitingForSensorWarmup(void);
