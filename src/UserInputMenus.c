@@ -678,11 +678,12 @@ void CycleEndTimeMenuHandler(uint8 keyPressed, void* data)
 
 			if (g_unitConfig.cycleEndTimeHour == 0)
 			{
-				sprintf((char*)g_spareBuffer, "24HR CYCLE WILL NOW OCCUR AT MIDNIGHT");
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(TWENTY_FOUR_HR_CYCLE_WILL_NOW_OCCUR_AT_TEXT), getLangText(MIDNIGHT_TEXT));
 			}
 			else
 			{
-				sprintf((char*)g_spareBuffer, "24HR CYCLE WILL NOW OCCUR AT %d %s", ((g_unitConfig.cycleEndTimeHour > 12) ? (g_unitConfig.cycleEndTimeHour - 12) : g_unitConfig.cycleEndTimeHour), ((g_unitConfig.cycleEndTimeHour > 12) ? "PM" : "AM"));
+				sprintf((char*)g_spareBuffer, "%s %d %s", getLangText(TWENTY_FOUR_HR_CYCLE_WILL_NOW_OCCUR_AT_TEXT), ((g_unitConfig.cycleEndTimeHour > 12) ? (g_unitConfig.cycleEndTimeHour - 12) : g_unitConfig.cycleEndTimeHour),
+						((g_unitConfig.cycleEndTimeHour > 12) ? "PM" : "AM"));
 			}
 			MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 		}
