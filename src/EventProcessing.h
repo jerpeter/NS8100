@@ -114,6 +114,7 @@ uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert);
 
 void ManageEventsDirectory(void);
 uint8 MigrateLooseFiles(uint8 dirType);
+void ValidateSummaryListFileWithEventCache(void);
 void SetNavDefault(void);
 char* GetEventFilenameAndPath(uint16 eventNumber, uint8 eventType);
 

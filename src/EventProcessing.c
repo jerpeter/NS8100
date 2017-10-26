@@ -389,8 +389,6 @@ void ManageEventsDirectory(void)
 			AssignSoftTimer(LOOSE_EVENT_MIGRATION_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LooseEventMigrationTimerCallBack);
 		}
 	}
-
-	//debug("Done copying events to summary (discovered %d)\r\n", ramSummaryIndex);
 }
 
 ///----------------------------------------------------------------------------
@@ -467,7 +465,6 @@ void CountExistingEvents(void)
 		Stop_Data_Clock(TC_MILLISECOND_TIMER_CHANNEL);
 	}
 
-	//debug("Done copying events to summary (discovered %d)\r\n", ramSummaryIndex);
 	uint16 length;
 	length = sprintf((char*)g_spareBuffer, "CountExistingEvents Total: %d, Time: %lu ms", eventsFound, msCountTime);
 	ModemPuts(g_spareBuffer, length, NO_CONVERSION);
@@ -684,6 +681,10 @@ void AddEventToSummaryList(EVT_RECORD* event)
 	g_summaryList.cachedEntry.bitAccuracy = event->summary.parameters.bitAccuracy;
 	g_summaryList.cachedEntry.vectorSumPeak = event->summary.calculated.vectorSumPeak;
 
+#if 1 // New - Override A channel acceleration
+	g_summaryList.cachedEntry.channelSummary.a.acceleration = event->summary.parameters.airSensorType;
+#endif
+
 	// Parent handles GetSpi1MutexLock(SDMMC_LOCK)
 
 	nav_select(FS_NAV_ID_DEFAULT);
@@ -712,6 +713,7 @@ void AddEventToSummaryList(EVT_RECORD* event)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 0
 void CacheNextSummaryListEntry(void)
 {
 	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
@@ -778,10 +780,12 @@ void CacheNextSummaryListEntry(void)
 		ReleaseSpi1MutexLock();
 	}
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 0
 void CachePreviousSummaryListEntry(void)
 {
 	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
@@ -864,6 +868,7 @@ void CachePreviousSummaryListEntry(void)
 		ReleaseSpi1MutexLock();
 	}
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -1172,9 +1177,9 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	memcpy(&(eventRec->summary.parameters.sessionComments[0]), &(g_triggerRecord.trec.comments[0]), sizeof(g_triggerRecord.trec.comments));
 	//-----------------------
 	memset(&(eventRec->summary.version.modelNumber[0]), 0, MODEL_STRING_SIZE);
-	memcpy(&(eventRec->summary.version.modelNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
+	memcpy(&(eventRec->summary.version.modelNumber[0]), &(g_factorySetupRecord.unitSerialNumber[0]), 15);
 	memset(&(eventRec->summary.version.serialNumber[0]), 0, SERIAL_NUMBER_STRING_SIZE);
-	memcpy(&(eventRec->summary.version.serialNumber[0]), &(g_factorySetupRecord.serial_num[0]), 15);
+	memcpy(&(eventRec->summary.version.serialNumber[0]), &(g_factorySetupRecord.unitSerialNumber[0]), 15);
 	memset(&(eventRec->summary.version.softwareVersion[0]), 0, VERSION_STRING_SIZE);
 	memcpy(&(eventRec->summary.version.softwareVersion[0]), (void*)&g_buildVersion[0], strlen(g_buildVersion));
 	memset(&(eventRec->summary.version.seismicSensorRom), 0, sizeof(g_seismicSmartSensorRom));
@@ -1187,9 +1192,9 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.parameters.bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_10_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ? 
 												ACCURACY_16_BIT : g_triggerRecord.trec.bitAccuracy;
 	eventRec->summary.parameters.numOfChannels = NUMBER_OF_CHANNELS_DEFAULT;
-	eventRec->summary.parameters.aWeighting = ((uint8)g_factorySetupRecord.aweight_option & (uint8)g_unitConfig.airScale); // Equals 1 if enabled (1) and scale is A-weighting (1)
-	eventRec->summary.parameters.seismicSensorType = g_factorySetupRecord.sensor_type;
-	eventRec->summary.parameters.airSensorType = SENSOR_MICROPHONE;
+	eventRec->summary.parameters.aWeighting = ((uint8)g_factorySetupRecord.aWeightOption & (uint8)g_unitConfig.airScale); // Equals 1 if enabled (1) and scale is A-weighting (1)
+	eventRec->summary.parameters.seismicSensorType = g_factorySetupRecord.seismicSensorType;
+	eventRec->summary.parameters.airSensorType = g_factorySetupRecord.acousticSensorType;
 	eventRec->summary.parameters.adChannelVerification = g_unitConfig.adChannelVerification;
 	eventRec->summary.parameters.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
 	eventRec->summary.parameters.seismicUnitsOfMeasure = g_unitConfig.unitsOfMeasure;
@@ -1276,11 +1281,11 @@ void InitEventRecord(uint8 opMode)
 
 				// Calculate the divider used for converting stored A/D peak counts to units of measure
 				unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) /
-				(float)(g_factorySetupRecord.sensor_type);
+				(float)(g_factorySetupRecord.seismicSensorType);
 
 				tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
 
-				if ((g_factorySetupRecord.sensor_type != SENSOR_ACCELEROMETER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
+				if ((g_factorySetupRecord.seismicSensorType != SENSOR_ACCELEROMETER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
 				{
 					tempSesmicTriggerInUnits *= (float)METRIC;
 				}
@@ -3167,4 +3172,108 @@ uint8 MigrateLooseFiles(uint8 dirType)
 	}
 
 	return (NO);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ValidateSummaryListFileWithEventCache(void)
+{
+	// Count g_eventNumberCache entires stored as EVENT_FILE_FOUND that weren't migrated to EVENT_REFERENCE_VALID
+	uint16 validEventFileCount = 0;
+	uint16 invalidEventFileCount = 0;
+	uint16 i = 0;
+	EVT_RECORD tempEventRecord;
+	uint8 promptDelay = YES;
+
+	for (i = 0; i < TOTAL_UNIQUE_EVENT_NUMBERS; i++)
+	{
+		if (g_eventNumberCache[i] == EVENT_FILE_FOUND)
+		{
+			if (promptDelay) { OverlayMessage(getLangText(STATUS_TEXT), getLangText(COMPARING_EVENTS_TO_SUMMARY_LIST_TEXT), 0); promptDelay = NO; }
+
+			// Cache the event record
+			GetEventFileRecord(i, &tempEventRecord);
+
+			// String compare the current unit serial number against the stored event serial number up to 15 characters (which is all that can be set by the user through the edit menu)
+			if (strncmp((char*)tempEventRecord.summary.version.serialNumber, (char*)g_factorySetupRecord.unitSerialNumber, 15) == 0)
+			{
+				// Count the valid event file
+				validEventFileCount++;
+			}
+			else // Serial numbers do not match meaning this event was not created from this unit
+			{
+				// Change the event cache designation to invalid and count
+				g_eventNumberCache[i] = INVALID_EVENT_FILE_FOUND;
+				invalidEventFileCount++;
+			}
+		}
+		else if (g_eventNumberCache[i] == INVALID_EVENT_FILE_FOUND)
+		{
+			invalidEventFileCount++;
+		}
+	}
+
+	// Check if either valid or invalid event files exist
+	if (validEventFileCount || invalidEventFileCount)
+	{
+		if (validEventFileCount)
+		{
+			sprintf((char*)g_spareBuffer, "%s %d %s (%s) %s", getLangText(FOUND_TEXT), validEventFileCount, getLangText(VALID_EVENTS_TEXT), getLangText(MATCH_SERIAL_TEXT), getLangText(NOT_IN_SUMMARY_TEXT));
+			MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
+
+			sprintf((char*)g_spareBuffer, "%s %s (%s) %s", getLangText(MERGE_TEXT), getLangText(VALID_EVENTS_TEXT), getLangText(MATCH_SERIAL_TEXT), getLangText(TO_SUMMARY_Q_TEXT));
+			if (MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_YESNO) == MB_FIRST_CHOICE)
+			{
+				for (i = 0; i < TOTAL_UNIQUE_EVENT_NUMBERS; i++)
+				{
+					if (g_eventNumberCache[i] == EVENT_FILE_FOUND)
+					{
+						if (promptDelay) { OverlayMessage(getLangText(STATUS_TEXT), getLangText(COMPARING_EVENTS_TO_SUMMARY_LIST_TEXT), 0); promptDelay = NO; }
+
+						GetEventFileRecord(i, &tempEventRecord);
+
+						GetSpi1MutexLock(SDMMC_LOCK);
+						nav_select(FS_NAV_ID_DEFAULT);
+						AddEventToSummaryList(&tempEventRecord);
+						ReleaseSpi1MutexLock();
+						g_eventNumberCache[i] = EVENT_REFERENCE_VALID;
+						validEventFileCount--;
+					}
+				}
+			}
+		}
+
+		if (invalidEventFileCount)
+		{
+			sprintf((char*)g_spareBuffer, "%s %d %s (%s)", getLangText(FOUND_TEXT), invalidEventFileCount, getLangText(INVALID_EVENTS_TEXT), getLangText(WRONG_SERIAL_TEXT));
+			MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
+
+#if 0 // Used for testing, want to prevent unauthorized event merging for events not associated with the unit serial number
+			sprintf((char*)g_spareBuffer, "%s %s (%s) %s", getLangText(MERGE_TEXT), getLangText(INVALID_EVENTS_TEXT), getLangText(WRONG_SERIAL_TEXT), getLangText(TO_SUMMARY_Q_TEXT));
+			if (MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_YESNO) == MB_FIRST_CHOICE)
+			{
+				for (i = 0; i < TOTAL_UNIQUE_EVENT_NUMBERS; i++)
+				{
+					if (g_eventNumberCache[i] == INVALID_EVENT_FILE_FOUND)
+					{
+						GetEventFileRecord(i, &tempEventRecord);
+
+						GetSpi1MutexLock(SDMMC_LOCK);
+						nav_select(FS_NAV_ID_DEFAULT);
+						AddEventToSummaryList(&tempEventRecord);
+						ReleaseSpi1MutexLock();
+						g_eventNumberCache[i] = EVENT_REFERENCE_VALID;
+						invalidEventFileCount--;
+					}
+				}
+			}
+#endif
+		}
+	}
+	else
+	{
+		sprintf((char*)g_spareBuffer, "%s (%s)", getLangText(SUMMARY_FILE_MATCHES_EVENT_STORAGE_TEXT), getLangText(NO_STRAY_EVENTS_TEXT));
+		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
+	}
 }
