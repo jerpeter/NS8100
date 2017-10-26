@@ -292,7 +292,7 @@ GPS_POSITION g_gpsPosition = {0, 0, 0, 0, 0, 0, '-', '-', 0, 0, 0, 0, 0, NO, 0, 
 uint32 g_gpsOutputToCraft = NO;
 uint32 g_testTimeSinceLastFSWrite = 0xffffffff;
 uint32 g_testTimeSinceLastTrigger = 0xffffffff;
-uint32 g_testTimeSinceLastMidnight = 0xffffffff;
+uint32 g_testTimeSinceLastCycleChange = 0xffffffff;
 uint32 g_testTimeSinceLastCalPulse = 0xffffffff;
 
 // End of the list
