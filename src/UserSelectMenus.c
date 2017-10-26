@@ -32,6 +32,7 @@
 ///	Externs
 ///----------------------------------------------------------------------------
 #include "Globals.h"
+extern USER_MENU_STRUCT acousticSensorTypeMenu[];
 extern USER_MENU_STRUCT adChannelVerificationMenu[];
 extern USER_MENU_STRUCT airTriggerMenu[];
 extern USER_MENU_STRUCT alarmOneMenu[];
@@ -54,6 +55,7 @@ extern USER_MENU_STRUCT calibratonDateSourceMenu[];
 extern USER_MENU_STRUCT companyMenu[];
 extern USER_MENU_STRUCT copiesMenu[];
 extern USER_MENU_STRUCT configMenu[];
+extern USER_MENU_STRUCT cycleEndTimeMenu[];
 extern USER_MENU_STRUCT displacementMenu[];
 extern USER_MENU_STRUCT eraseEventsMenu[];
 extern USER_MENU_STRUCT eraseSettingsMenu[];
@@ -84,9 +86,9 @@ extern USER_MENU_STRUCT saveSetupMenu[];
 extern USER_MENU_STRUCT sampleRateMenu[];
 extern USER_MENU_STRUCT sampleRateBargraphMenu[];
 extern USER_MENU_STRUCT sampleRateComboMenu[];
+extern USER_MENU_STRUCT seismicSensorTypeMenu[];
 extern USER_MENU_STRUCT seismicTriggerMenu[];
 extern USER_MENU_STRUCT sensitivityMenu[];
-extern USER_MENU_STRUCT sensorTypeMenu[];
 extern USER_MENU_STRUCT serialNumberMenu[];
 extern USER_MENU_STRUCT summaryIntervalMenu[];
 extern USER_MENU_STRUCT syncFileExistsMenu[];
@@ -192,12 +194,12 @@ void AirScaleMenuHandler(uint8 keyPressed, void* data)
 				if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 				{
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
-					AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+														AIR_TRIGGER_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
 				}
 				else
 				{
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
-					AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
+														AIR_TRIGGER_MB_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
 				}
 			}
 		}
@@ -235,9 +237,9 @@ void AirSetupMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_factorySetupRecord.aweight_option = (uint8)airSetupMenu[newItemIndex].data;
+		g_factorySetupRecord.aWeightOption = (uint8)airSetupMenu[newItemIndex].data;
 
-		if ((g_factorySetupRecord.aweight_option == DISABLED) || ((g_unitConfig.airScale != AIR_SCALE_LINEAR) && (g_unitConfig.airScale != AIR_SCALE_A_WEIGHTING)))
+		if ((g_factorySetupRecord.aWeightOption == DISABLED) || ((g_unitConfig.airScale != AIR_SCALE_LINEAR) && (g_unitConfig.airScale != AIR_SCALE_A_WEIGHTING)))
 		{
 			g_unitConfig.airScale = AIR_SCALE_LINEAR;
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
@@ -325,7 +327,7 @@ void AlarmTestingMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
+		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aWeightOption);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -354,6 +356,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
+	uint32 airMaxValue;
 
 	if (keyPressed == ENTER_KEY)
 	{
@@ -454,10 +457,19 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 
 					g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_unitConfig.alarmOneAirLevel);
 
+					if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+					{
+						airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE);
+					}
+					else
+					{
+						airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE);
+					}
+
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
 														AirTriggerConvertToUnits(g_unitConfig.alarmOneAirMinLevel),
 														AirTriggerConvertToUnits(g_unitConfig.alarmOneAirMinLevel),
-														(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
+														airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
 				}
 			break;
 
@@ -572,6 +584,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
+	uint32 airMaxValue;
 
 	if (keyPressed == ENTER_KEY)
 	{
@@ -674,11 +687,20 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 
 					g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirLevel);
 
+					if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+					{
+						airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE);
+					}
+					else
+					{
+						airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE);
+					}
+
 					// Call Alarm One Air Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
 														AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirMinLevel),
 														AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirMinLevel),
-														(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
+														airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
 				}
 			break;
 
@@ -842,7 +864,7 @@ void AnalogChannelConfigMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
+		SETUP_USER_MENU_MSG(&acousticSensorTypeMenu, g_factorySetupRecord.acousticSensorType);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -880,7 +902,7 @@ void AutoCalMenuHandler(uint8 keyPressed, void* data)
 		{
 			g_autoCalDaysToWait = 0;
 		}
-		else // Auto Cal enabled, set to process the first midnight
+		else // Auto Cal enabled, set to process the first cycle change
 		{
 			g_autoCalDaysToWait = 1;
 		}
@@ -967,41 +989,41 @@ void BarChannelMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_triggerRecord.berec.barChannel = (uint8)barChannelMenu[newItemIndex].data;
 
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
+		if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER)
 		{
 			sprintf((char*)&g_menuTags[BAR_SCALE_FULL_TAG].text, "100%% (%.0f mg)",
-					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_FULL));
+					(float)g_factorySetupRecord.seismicSensorType / (float)(gainFactor * BAR_SCALE_FULL));
 			sprintf((char*)&g_menuTags[BAR_SCALE_HALF_TAG].text, " 50%% (%.0f mg)",
-					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_HALF));
+					(float)g_factorySetupRecord.seismicSensorType / (float)(gainFactor * BAR_SCALE_HALF));
 			sprintf((char*)&g_menuTags[BAR_SCALE_QUARTER_TAG].text, " 25%% (%.0f mg)",
-					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_QUARTER));
+					(float)g_factorySetupRecord.seismicSensorType / (float)(gainFactor * BAR_SCALE_QUARTER));
 			sprintf((char*)&g_menuTags[BAR_SCALE_EIGHTH_TAG].text, " 12%% (%.0f mg)",
-					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_EIGHTH));
+					(float)g_factorySetupRecord.seismicSensorType / (float)(gainFactor * BAR_SCALE_EIGHTH));
 		}
 		else if (g_unitConfig.unitsOfMeasure == IMPERIAL_TYPE)
 		{
 			sprintf((char*)&g_menuTags[BAR_SCALE_FULL_TAG].text, "100%% (%.2f in/s)",
-					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_FULL));
+					(float)g_factorySetupRecord.seismicSensorType / (float)(gainFactor * BAR_SCALE_FULL));
 			sprintf((char*)&g_menuTags[BAR_SCALE_HALF_TAG].text, " 50%% (%.2f in/s)",
-					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_HALF));
+					(float)g_factorySetupRecord.seismicSensorType / (float)(gainFactor * BAR_SCALE_HALF));
 			sprintf((char*)&g_menuTags[BAR_SCALE_QUARTER_TAG].text, " 25%% (%.2f in/s)",
-					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_QUARTER));
+					(float)g_factorySetupRecord.seismicSensorType / (float)(gainFactor * BAR_SCALE_QUARTER));
 			sprintf((char*)&g_menuTags[BAR_SCALE_EIGHTH_TAG].text, " 12%% (%.2f in/s)",
-					(float)g_factorySetupRecord.sensor_type / (float)(gainFactor * BAR_SCALE_EIGHTH));
+					(float)g_factorySetupRecord.seismicSensorType / (float)(gainFactor * BAR_SCALE_EIGHTH));
 		}
 		else // g_unitConfig.unitsOfMeasure == METRIC_TYPE
 		{
 			sprintf((char*)&g_menuTags[BAR_SCALE_FULL_TAG].text, "100%% (%lu mm/s)",
-					(uint32)((float)g_factorySetupRecord.sensor_type * (float)25.4 /
+					(uint32)((float)g_factorySetupRecord.seismicSensorType * (float)25.4 /
 					(float)(gainFactor * BAR_SCALE_FULL)));
 			sprintf((char*)&g_menuTags[BAR_SCALE_HALF_TAG].text, " 50%% (%lu mm/s)",
-					(uint32)((float)g_factorySetupRecord.sensor_type * (float)25.4 /
+					(uint32)((float)g_factorySetupRecord.seismicSensorType * (float)25.4 /
 					(float)(gainFactor * BAR_SCALE_HALF)));
 			sprintf((char*)&g_menuTags[BAR_SCALE_QUARTER_TAG].text, " 25%% (%lu mm/s)",
-					(uint32)((float)g_factorySetupRecord.sensor_type * (float)25.4 /
+					(uint32)((float)g_factorySetupRecord.seismicSensorType * (float)25.4 /
 					(float)(gainFactor * BAR_SCALE_QUARTER)));
 			sprintf((char*)&g_menuTags[BAR_SCALE_EIGHTH_TAG].text, " 12%% (%lu mm/s)",
-					(uint32)((float)g_factorySetupRecord.sensor_type * (float)25.4 /
+					(uint32)((float)g_factorySetupRecord.seismicSensorType * (float)25.4 /
 					(float)(gainFactor * BAR_SCALE_EIGHTH)));
 		}
 
@@ -1132,7 +1154,7 @@ void CalibratonDateSourceMenuHandler(uint8 keyPressed, void* data)
 		if (g_factorySetupRecord.calibrationDateSource == UNIT_CAL_DATE) { debug("Factory Setup: Use Cal Date from: Unit\r\n"); }
 		else { debug("Factory Setup: Use Cal Date from: %s Smart Sensor\r\n", (g_factorySetupRecord.calibrationDateSource == SEISMIC_SMART_SENSOR_CAL_DATE) ? "Seismic" : "Acoustic"); }
 
-		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aweight_option);
+		SETUP_USER_MENU_MSG(&airSetupMenu, g_factorySetupRecord.aWeightOption);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
@@ -1172,7 +1194,7 @@ void BarResultMenuHandler(uint8 keyPressed, void* data)
 		// If Combo mode, jump back over to waveform specific settings
 		if (g_triggerRecord.opMode == COMBO_MODE)
 		{
-			if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
+			if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER)
 			{
 				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
@@ -1206,7 +1228,7 @@ void BarResultMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 		if ((g_triggerRecord.opMode == BARGRAPH_MODE) && (!g_factorySetupRecord.invalid) &&
-			(g_factorySetupRecord.aweight_option == ENABLED))
+			(g_factorySetupRecord.aWeightOption == ENABLED))
 		{
 			SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
 		}
@@ -1388,7 +1410,11 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
+#if 0 // Original
 #define CONFIG_MENU_ENTRIES 32
+#else // New
+#define CONFIG_MENU_ENTRIES 33
+#endif
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1400,6 +1426,9 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, BAUD_RATE_TEXT,				NO_TAG, {BAUD_RATE}},
 {NO_TAG, 0, CALIBRATION_DATE_TEXT,		NO_TAG, {CALIBRATION_DATE}},
 {NO_TAG, 0, CHAN_VERIFICATION_TEXT,		NO_TAG, {CHANNEL_VERIFICATION}},
+#if 1 // New
+{NO_TAG, 0, CYCLE_END_TIME_24HR_TEXT,	NO_TAG, {CYCLE_END_TIME_HOUR}},
+#endif
 {NO_TAG, 0, DATE_TIME_TEXT,				NO_TAG, {DATE_TIME}},
 {NO_TAG, 0, ERASE_MEMORY_TEXT,			NO_TAG, {ERASE_FLASH}},
 {NO_TAG, 0, EVENT_SUMMARIES_TEXT,		NO_TAG, {EVENT_SUMMARIES}},
@@ -1473,8 +1502,13 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				SETUP_USER_MENU_MSG(&adChannelVerificationMenu, g_unitConfig.adChannelVerification);
 			break;
 
+#if 0 // Unused
 			case (COPIES):
 				MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
+			break;
+#endif
+			case (CYCLE_END_TIME_HOUR):
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&cycleEndTimeMenu, &g_unitConfig.cycleEndTimeHour, CYCLE_END_TIME_HOUR_DEFAULT_VALUE, CYCLE_END_TIME_HOUR_MIN_VALUE, CYCLE_END_TIME_HOUR_MAX_VALUE);
 			break;
 
 			case (DATE_TIME):
@@ -1523,8 +1557,7 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 			break;
 
 			case (LCD_TIMEOUT):
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdTimeoutMenu, &g_unitConfig.lcdTimeout,
-					LCD_TIMEOUT_DEFAULT_VALUE, LCD_TIMEOUT_MIN_VALUE, LCD_TIMEOUT_MAX_VALUE);
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdTimeoutMenu, &g_unitConfig.lcdTimeout, LCD_TIMEOUT_DEFAULT_VALUE, LCD_TIMEOUT_MIN_VALUE, LCD_TIMEOUT_MAX_VALUE);
 			break;
 
 			case (MODEM_SETUP):
@@ -1631,12 +1664,13 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
+		SETUP_USER_MENU_MSG(&helpMenu, CONFIG_CHOICE);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
 }
 
+#if 0 // Unused
 //*****************************************************************************
 //=============================================================================
 // Displacement Menu
@@ -1674,6 +1708,7 @@ void DisplacementMenuHandler(uint8 keyPressed, void* data)
 
 	JUMP_TO_ACTIVE_MENU();
 }
+#endif
 
 //*****************************************************************************
 //=============================================================================
@@ -1786,7 +1821,7 @@ void EraseSettingsMenuHandler(uint8 keyPressed, void* data)
 			// Reprogram Factory Setup record (re-write after erase)
 			SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 			// Just in case, re-init Sensor Parameters
-			InitSensorParameters(g_factorySetupRecord.sensor_type, (uint8)g_triggerRecord.srec.sensitivity);
+			InitSensorParameters(g_factorySetupRecord.seismicSensorType, (uint8)g_triggerRecord.srec.sensitivity);
 
 			// Load Defaults for Waveform
 			LoadTrigRecordDefaults(&g_triggerRecord, WAVEFORM_MODE);
@@ -1850,7 +1885,7 @@ void ExternalTriggerMenuHandler(uint8 keyPressed, void* data)
 			sprintf((char*)g_spareBuffer, "%s. %s", getLangText(NO_TRIGGER_SOURCE_SELECTED_TEXT), getLangText(PLEASE_CHANGE_TEXT));
 			MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
 
-			if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
+			if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER)
 			{
 				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
@@ -1885,7 +1920,7 @@ void ExternalTriggerMenuHandler(uint8 keyPressed, void* data)
 			else // (g_externalTriggerMenuActiveForSetup == YES)
 			{
 				// Check if the A-weighting option is enabled
-				if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aweight_option == ENABLED))
+				if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aWeightOption == ENABLED))
 				{
 					SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
 				}
@@ -1910,12 +1945,12 @@ void ExternalTriggerMenuHandler(uint8 keyPressed, void* data)
 			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{
 				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
-				AIR_TRIGGER_MIN_VALUE, AIR_TRIGGER_MAX_VALUE);
+													AIR_TRIGGER_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
 			}
 			else
 			{
 				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
-				AIR_TRIGGER_MB_MIN_VALUE, AIR_TRIGGER_MB_MAX_VALUE);
+													AIR_TRIGGER_MB_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
 			}
 		}
 	}
@@ -2086,11 +2121,11 @@ void HardwareIDMenuHandler(uint8 keyPressed, void* data)
 		// Re-read and display Smart Sensor info
 		DisplaySmartSensorInfo(INFO_ON_CHECK);
 
-		SETUP_USER_MENU_MSG(&sensorTypeMenu, g_factorySetupRecord.sensor_type);
+		SETUP_USER_MENU_MSG(&seismicSensorTypeMenu, g_factorySetupRecord.seismicSensorType);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&serialNumberMenu, &g_factorySetupRecord.serial_num);
+		SETUP_USER_MENU_MSG(&serialNumberMenu, &g_factorySetupRecord.unitSerialNumber);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -2101,15 +2136,15 @@ void HardwareIDMenuHandler(uint8 keyPressed, void* data)
 // Help Menu
 //=============================================================================
 //*****************************************************************************
-#define HELP_MENU_ENTRIES 6
+#define HELP_MENU_ENTRIES 7
 USER_MENU_STRUCT helpMenu[HELP_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, HELP_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, HELP_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 0, CONFIG_AND_OPTIONS_TEXT,	NO_TAG, {CONFIG}},
-{ITEM_2, 0, HELP_INFORMATION_TEXT,		NO_TAG, {INFORMATION}},
-{ITEM_3, 0, SENSOR_CHECK_TEXT,			NO_TAG, {SENSOR_CHECK}},
-{ITEM_4, 0, GPS_LOCATION_TEXT,			NO_TAG, {GPS_LOCATION_DISPLAY}},
-//{ITEM_4, 0, TESTING_TEXT,				NO_TAG, {TESTING}},
+{ITEM_1, 0, CONFIG_AND_OPTIONS_TEXT,	NO_TAG, {CONFIG_CHOICE}},
+{ITEM_2, 0, HELP_INFORMATION_TEXT,		NO_TAG, {INFORMATION_CHOICE}},
+{ITEM_3, 0, SENSOR_CHECK_TEXT,			NO_TAG, {SENSOR_CHECK_CHOICE}},
+{ITEM_4, 0, GPS_LOCATION_TEXT,			NO_TAG, {GPS_LOCATION_DISPLAY_CHOICE}},
+{ITEM_5, 0, CHECK_SUMMARY_FILE_TEXT,	NO_TAG, {CHECK_SUMMARY_FILE_CHOICE}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&HelpMenuHandler}}
 };
 
@@ -2124,11 +2159,11 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		if (helpMenu[newItemIndex].data == CONFIG)
+		if (helpMenu[newItemIndex].data == CONFIG_CHOICE)
 		{
 			SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 		}
-		else if (helpMenu[newItemIndex].data == INFORMATION)
+		else if (helpMenu[newItemIndex].data == INFORMATION_CHOICE)
 		{
 			sprintf(buildString, "%s %s %s", getLangText(SOFTWARE_VER_TEXT), (char*)g_buildVersion, (char*)g_buildDate);
 			if (MessageBox(getLangText(STATUS_TEXT), buildString, MB_OK) == MB_SPECIAL_ACTION)
@@ -2139,11 +2174,11 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 
 			CheckExceptionReportLogExists();
 		}
-		else if (helpMenu[newItemIndex].data == SENSOR_CHECK)
+		else if (helpMenu[newItemIndex].data == SENSOR_CHECK_CHOICE)
 		{
 			DisplaySmartSensorInfo(INFO_ON_CHECK);
 		}
-		else if (helpMenu[newItemIndex].data == GPS_LOCATION_DISPLAY)
+		else if (helpMenu[newItemIndex].data == GPS_LOCATION_DISPLAY_CHOICE)
 		{
 			if (GET_HARDWARE_ID == HARDWARE_ID_REV_8_WITH_GPS_MOD)
 			{
@@ -2161,6 +2196,10 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 				sprintf((char*)g_spareBuffer, "GPS OUTPUT TO CRAFT <%s>", ((g_gpsOutputToCraft == YES) ? "YES" : "NO"));
 				OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (2 * SOFT_SECS));
 			}
+		}
+		else if (helpMenu[newItemIndex].data == CHECK_SUMMARY_FILE_CHOICE)
+		{
+			ValidateSummaryListFileWithEventCache();
 		}
 		else // Testing
 		{
@@ -2221,11 +2260,11 @@ void InfoMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
+		SETUP_USER_MENU_MSG(&helpMenu, CONFIG_CHOICE);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&helpMenu, INFORMATION);
+		SETUP_USER_MENU_MSG(&helpMenu, INFORMATION_CHOICE);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -2445,6 +2484,7 @@ void MonitorLogMenuHandler(uint8 keyPressed, void* data)
 	JUMP_TO_ACTIVE_MENU();
 }
 
+#if 0 // Unused
 //*****************************************************************************
 //=============================================================================
 // Peak Acceleration Menu
@@ -2482,6 +2522,7 @@ void PeakAccMenuHandler(uint8 keyPressed, void* data)
 
 	JUMP_TO_ACTIVE_MENU();
 }
+#endif
 
 //*****************************************************************************
 //=============================================================================
@@ -2562,6 +2603,7 @@ void PrinterEnableMenuHandler(uint8 keyPressed, void* data)
 	JUMP_TO_ACTIVE_MENU();
 }
 
+#if 0 // Unused
 //*****************************************************************************
 //=============================================================================
 // Print Out Menu
@@ -2606,6 +2648,7 @@ void PrintOutMenuHandler(uint8 keyPressed, void* data)
 
 	JUMP_TO_ACTIVE_MENU();
 }
+#endif
 
 //*****************************************************************************
 //=============================================================================
@@ -2969,7 +3012,7 @@ void SensitivityMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_triggerRecord.opMode == WAVEFORM_MODE)
 		{
-			if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER)
+			if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER)
 			{
 				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
 				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
@@ -3006,59 +3049,77 @@ void SensitivityMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
-// Sensor Type Menu
+// Acoustic Sensor Type Menu
 //=============================================================================
 //*****************************************************************************
-#define SENSOR_TYPE_MENU_ENTRIES 7
-USER_MENU_STRUCT sensorTypeMenu[SENSOR_TYPE_MENU_ENTRIES] = {
-{TITLE_PRE_TAG, 0, SENSOR_GAIN_TYPE_TEXT, TITLE_POST_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, SENSOR_TYPE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
-{ITEM_1, 0, X1_20_IPS_TEXT,		NO_TAG, {SENSOR_20_IN}},
-{ITEM_2, 0, X2_10_IPS_TEXT,		NO_TAG, {SENSOR_10_IN}},
-{ITEM_3, 0, X4_5_IPS_TEXT,		NO_TAG, {SENSOR_5_IN}},
-{ITEM_4, 0, X8_2_5_IPS_TEXT,	NO_TAG, {SENSOR_2_5_IN}},
-{ITEM_5, 0, ACC_793L_TEXT,		NO_TAG, {SENSOR_ACCELEROMETER}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SensorTypeMenuHandler}}
+#define ACOUSTIC_SENSOR_TYPE_MENU_ENTRIES 4
+USER_MENU_STRUCT acousticSensorTypeMenu[ACOUSTIC_SENSOR_TYPE_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, ACOUSTIC_GAIN_TYPE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, ACOUSTIC_SENSOR_TYPE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, MIC_148_DB_TEXT,	NO_TAG, {SENSOR_MIC_148}},
+{ITEM_2, 0, MIC_160_DB_TEXT,	NO_TAG, {SENSOR_MIC_160}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AcousticSensorTypeMenuHandler}}
 };
 
 //-------------------------
 // Sensor Type Menu Handler
 //-------------------------
-void SensorTypeMenuHandler(uint8 keyPressed, void* data)
+void AcousticSensorTypeMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
 
 	if (keyPressed == ENTER_KEY)
 	{
-		g_factorySetupRecord.sensor_type = (uint16)sensorTypeMenu[newItemIndex].data;
+		g_factorySetupRecord.acousticSensorType = (uint8)acousticSensorTypeMenu[newItemIndex].data;
 
-		if (g_factorySetupRecord.sensor_type == SENSOR_ACCELEROMETER) { debug("Factory Setup: New Seismic sensor type: Accelerometer\r\n"); }
-		else { debug("Factory Setup: New Seismic sensor type: %3.1f in\r\n", (float)g_factorySetupRecord.sensor_type / (float)204.8); }
-
-		if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
-		{
-			SETUP_USER_MENU_MSG(&analogChannelConfigMenu, g_factorySetupRecord.analogChannelConfig);
-		}
-		else
-		{
-			SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
-		}
+		SETUP_USER_MENU_MSG(&analogChannelConfigMenu, g_factorySetupRecord.analogChannelConfig);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (g_factorySetupSequence == PROCESS_FACTORY_SETUP)
-		{
-#if 0 // Original
-			SETUP_USER_MENU_MSG(&serialNumberMenu, &g_factorySetupRecord.serial_num);
-#else // Add Hardware ID
+		SETUP_USER_MENU_MSG(&seismicSensorTypeMenu, g_factorySetupRecord.seismicSensorType);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Seismic Sensor Type Menu
+//=============================================================================
+//*****************************************************************************
+#define SEISMIC_SENSOR_TYPE_MENU_ENTRIES 7
+USER_MENU_STRUCT seismicSensorTypeMenu[SEISMIC_SENSOR_TYPE_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, SEISMIC_GAIN_TYPE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, SEISMIC_SENSOR_TYPE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_2)}},
+{ITEM_1, 0, X1_20_IPS_TEXT,		NO_TAG, {SENSOR_20_IN}},
+{ITEM_2, 0, X2_10_IPS_TEXT,		NO_TAG, {SENSOR_10_IN}},
+{ITEM_3, 0, X4_5_IPS_TEXT,		NO_TAG, {SENSOR_5_IN}},
+{ITEM_4, 0, X8_2_5_IPS_TEXT,	NO_TAG, {SENSOR_2_5_IN}},
+{ITEM_5, 0, ACC_793L_TEXT,		NO_TAG, {SENSOR_ACCELEROMETER}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SeismicSensorTypeMenuHandler}}
+};
+
+//-------------------------
+// Sensor Type Menu Handler
+//-------------------------
+void SeismicSensorTypeMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_factorySetupRecord.seismicSensorType = (uint16)seismicSensorTypeMenu[newItemIndex].data;
+
+		if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER) { debug("Factory Setup: New Seismic sensor type: Accelerometer\r\n"); }
+		else { debug("Factory Setup: New Seismic sensor type: %3.1f in\r\n", (float)g_factorySetupRecord.seismicSensorType / (float)204.8); }
+
+		SETUP_USER_MENU_MSG(&acousticSensorTypeMenu, g_factorySetupRecord.acousticSensorType);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
 			SETUP_USER_MENU_MSG(&hardwareIDMenu, g_factorySetupRecord.hardwareID);
-#endif
-		}
-		else
-		{
-			SETUP_USER_MENU_MSG(&helpMenu, CONFIG);
-		}
 	}
 
 	JUMP_TO_ACTIVE_MENU();
