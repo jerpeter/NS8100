@@ -450,8 +450,8 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		if ((SAMPLE_RATE_1K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_2K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_4K == cfg.eventCfg.sampleRate) ||
 			(SAMPLE_RATE_8K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_16K == cfg.eventCfg.sampleRate))
 		{
-			if (((BARGRAPH_MODE == g_triggerRecord.opMode) || (COMBO_MODE == g_triggerRecord.opMode)) &&
-				(cfg.eventCfg.sampleRate > SAMPLE_RATE_4K))
+			// Check if the selected sample rate is higher than the allowed for either Bargraph or Combo
+			if (((g_triggerRecord.opMode == BARGRAPH_MODE) && (cfg.eventCfg.sampleRate > SAMPLE_RATE_8K)) || ((g_triggerRecord.opMode == COMBO_MODE) && (cfg.eventCfg.sampleRate > SAMPLE_RATE_4K)))
 			{
 				returnCode = CFG_ERR_SAMPLE_RATE;
 				goto SEND_UCM_ERROR_CODE;
