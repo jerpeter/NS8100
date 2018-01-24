@@ -623,10 +623,12 @@ void HandleDQM(CMD_BUFFER_STRUCT* inCmd)
 	g_modemStatus.xferPrintState = g_unitConfig.autoPrint;
 	g_transferCount = 0;
 
+#if 0 // Old
 	if (g_sampleProcessing == IDLE_STATE)
 	{
 		DumpSummaryListFileToEventBuffer();
 	}
+#endif
 
 	return;
 }
@@ -638,6 +640,7 @@ uint8 sendDQMData(void)
 {
 	uint8 idex;
 	uint8 xferState = DQMx_CMD;
+	EVENT_LIST_ENTRY_STRUCT* eventListCache = (EVENT_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[EVENT_LIST_CACHE_OFFSET];
 
 	// If the beginning of sending data, send the crlf.
 	if (HEADER_XFER_STATE == g_dqmXferStructPtr->xferStateFlag)
@@ -672,7 +675,7 @@ uint8 sendDQMData(void)
 	// xfer the event record structure.
 	else if (SUMMARY_TABLE_SEARCH_STATE == g_dqmXferStructPtr->xferStateFlag)
 	{
-		if (g_dqmXferStructPtr->ramTableIndex >= g_summaryList.validEntries)
+		if (g_dqmXferStructPtr->ramTableIndex == EVENT_LIST_CACHE_ENTRIES_LAST_INDEX)
 		{
 			memset((uint8*)g_dqmXferStructPtr->dqmData, 0xCC, sizeof(DQMx_DATA_STRUCT));
 			g_dqmXferStructPtr->dqmData[0].endFlag = 0xEE;
@@ -693,24 +696,22 @@ uint8 sendDQMData(void)
 		else
 		{
 			idex = 0;
-			while ((idex < DQM_XFER_SIZE) &&
-				(g_dqmXferStructPtr->ramTableIndex < g_summaryList.totalEntries))
+			while ((idex < DQM_XFER_SIZE) && (g_dqmXferStructPtr->ramTableIndex < EVENT_LIST_CACHE_ENTRIES_LAST_INDEX))
 			{
-				CacheSummaryEntryByIndex(g_dqmXferStructPtr->ramTableIndex);
-
-				if (g_summaryList.cachedEntry.eventNumber)
+				// Check if mode has been set meaning we have a valid entry
+				if (eventListCache[g_dqmXferStructPtr->ramTableIndex].mode)
 				{
 					g_dqmXferStructPtr->dqmData[idex].dqmxFlag = 0xCC;
-					g_dqmXferStructPtr->dqmData[idex].mode = g_summaryList.cachedEntry.mode;
-					g_dqmXferStructPtr->dqmData[idex].eventNumber = g_summaryList.cachedEntry.eventNumber;
-					memcpy(g_dqmXferStructPtr->dqmData[idex].serialNumber, g_summaryList.cachedEntry.serialNumber, SERIAL_NUMBER_STRING_SIZE);
-					g_dqmXferStructPtr->dqmData[idex].eventTime = g_summaryList.cachedEntry.eventTime;
-					g_dqmXferStructPtr->dqmData[idex].subMode = g_summaryList.cachedEntry.subMode;
+					g_dqmXferStructPtr->dqmData[idex].mode = eventListCache[g_dqmXferStructPtr->ramTableIndex].mode;
+					g_dqmXferStructPtr->dqmData[idex].eventNumber = g_dqmXferStructPtr->ramTableIndex;
+					memcpy(g_dqmXferStructPtr->dqmData[idex].serialNumber, &g_serialNumberCache[eventListCache[g_dqmXferStructPtr->ramTableIndex].serialNumberCacheIndex], FACTORY_SERIAL_NUMBER_SIZE);
+					g_dqmXferStructPtr->dqmData[idex].eventTime = ConvertEpochTimeToDateTime(eventListCache[g_dqmXferStructPtr->ramTableIndex].epochEventTime);
+					g_dqmXferStructPtr->dqmData[idex].subMode = eventListCache[g_dqmXferStructPtr->ramTableIndex].subMode;
 					g_dqmXferStructPtr->dqmData[idex].endFlag = 0xEE;
 					idex++;
 				}
 
-				g_dqmXferStructPtr->ramTableIndex = ++g_summaryList.currentEntryIndex;
+				g_dqmXferStructPtr->ramTableIndex++;
 			}
 
 			g_transmitCRC = CalcCCITT32((uint8*)g_dqmXferStructPtr->dqmData,
@@ -1746,7 +1747,8 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			GetEventFileRecord(eventNumToSend, &g_demXferStructPtr->dloadEventRec.eventRecord);
 		}
-		else if (g_sampleProcessing == IDLE_STATE)
+		// Check if idle (not actively monitoring) and not in the Summary Menu (which utilizes the event data buffer)
+		else if ((g_sampleProcessing == IDLE_STATE) && (g_activeMenu != SUMMARY_MENU))
 		{
 			if (CacheEventToRam(eventNumToSend, &g_demXferStructPtr->dloadEventRec.eventRecord) == EVENT_CACHE_FAILURE)
 			{
@@ -1762,6 +1764,11 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 			g_demXferStructPtr->downloadMethod = COMPRESS_NONE;
 
 			GetEventFileRecord(eventNumToSend, &g_demXferStructPtr->dloadEventRec.eventRecord);
+
+			if (g_activeMenu == SUMMARY_MENU)
+			{
+				OverlayMessage(getLangText(STATUS_TEXT), "REMOTE EVENT DOWNLOAD REQUEST. PLEASE BE PATIENT", 0);
+			}
 		}
 
 		// Call to actually send the event
@@ -1929,6 +1936,7 @@ void prepareDEMDataToSend(COMMAND_MESSAGE_HEADER* inCmdHeaderPtr)
 			}
 		}
 	}
+	// Check if method is compressed but no compressed event data file is present
 	else if (g_demXferStructPtr->downloadMethod == COMPRESS_MINILZO)
 	{
 		g_demXferStructPtr->xmitSize = 0;
