@@ -424,7 +424,7 @@ uint16 GetPreviousValidRamSummaryIndex(uint16 currentValidSummaryIndex)
 BOOLEAN CheckRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 {
 	BOOLEAN validEventLink = NO;
-	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
+	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[0];
 
 	if (ramSummaryIndex < s_totalRamSummaries)
 	{
@@ -443,7 +443,7 @@ BOOLEAN CheckRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 SUMMARY_MENU_EVENT_CACHE_STRUCT* GetSummaryEventInfo(uint16 tempSummaryIndex)
 {
 	static SUMMARY_MENU_EVENT_CACHE_STRUCT summaryMenuCacheEntry;
-	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
+	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[0];
 
 	//debug("Summary Menu: Get Summary Info for index: %d\r\n", tempSummaryIndex);
 
@@ -461,7 +461,7 @@ SUMMARY_MENU_EVENT_CACHE_STRUCT* GetSummaryEventInfo(uint16 tempSummaryIndex)
 ///----------------------------------------------------------------------------
 void cacheSummaryListEntry(uint16 tempSummaryIndex)
 {
-	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[SUMMARY_LIST_CACHE_OFFSET];
+	SUMMARY_LIST_ENTRY_STRUCT* summaryListCache = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[0];
 
 	memcpy(&g_summaryList.cachedEntry, &summaryListCache[tempSummaryIndex], sizeof(SUMMARY_LIST_ENTRY_STRUCT));
 }
