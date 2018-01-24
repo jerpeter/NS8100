@@ -13,6 +13,7 @@
 ///----------------------------------------------------------------------------
 #include "Typedefs.h"
 #include "Common.h"
+#include "time.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -713,6 +714,8 @@ void DisableExternalRtcAlarm(void);
 void EnableExternalRtcAlarm(uint8 day, uint8 hour, uint8 minute, uint8 second);
 void ConvertCurrentTimeForFat(uint8* fatTimeField);
 void ConvertCurrentDateForFat(uint8* fatTimeDate);
+DATE_TIME_STRUCT ConvertEpochTimeToDateTime(time_t epochTime);
+time_t ConvertDateTimeToEpochTime(DATE_TIME_STRUCT dateTime);
 void ExternalRtcWrite(uint8 register_address, int length, uint8* data);
 void ExternalRtcRead(uint8 register_address, int length, uint8* data);
 void StartExternalRtcClock(uint16 sampleRate);

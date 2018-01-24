@@ -247,32 +247,33 @@ uint8 UpdateCurrentTime(void)
 DATE_TIME_STRUCT GetCurrentTime(void)
 {
 	uint32 accumulatedSeconds = (g_rtcTickCountSinceLastExternalUpdate / 2);
-	struct tm convertTime;
+	struct tm currentTime;
+	struct tm *convertTime;
 	time_t epochTime;
 
 	s_currentTime = g_lastReadExternalRtcTime;
 
 	if (accumulatedSeconds)
 	{
-		convertTime.tm_year = (g_lastReadExternalRtcTime.year + 100); // From 1900;
-		convertTime.tm_mon = (g_lastReadExternalRtcTime.month - 1); // Month, 0 - jan
-		convertTime.tm_mday = g_lastReadExternalRtcTime.day; // Day of the month
-		convertTime.tm_hour = g_lastReadExternalRtcTime.hour;
-		convertTime.tm_min = g_lastReadExternalRtcTime.min;
-		convertTime.tm_sec = g_lastReadExternalRtcTime.sec;
-		convertTime.tm_isdst = -1; // Is DST on? 1 = yes, 0 = no, -1 = unknown
-		epochTime = mktime(&convertTime);
+		currentTime.tm_year = (g_lastReadExternalRtcTime.year + 100); // From 1900;
+		currentTime.tm_mon = (g_lastReadExternalRtcTime.month - 1); // Month, 0 - jan
+		currentTime.tm_mday = g_lastReadExternalRtcTime.day; // Day of the month
+		currentTime.tm_hour = g_lastReadExternalRtcTime.hour;
+		currentTime.tm_min = g_lastReadExternalRtcTime.min;
+		currentTime.tm_sec = g_lastReadExternalRtcTime.sec;
+		currentTime.tm_isdst = -1; // Is DST on? 1 = yes, 0 = no, -1 = unknown
+		epochTime = mktime(&currentTime);
 
 		epochTime += accumulatedSeconds;
 
-		convertTime = *localtime(&epochTime);
+		convertTime = localtime(&epochTime);
 
-		s_currentTime.year = (convertTime.tm_year - 100);
-		s_currentTime.month = (convertTime.tm_mon + 1);
-		s_currentTime.day = convertTime.tm_mday;
-		s_currentTime.hour = convertTime.tm_hour;
-		s_currentTime.min = convertTime.tm_min;
-		s_currentTime.sec = convertTime.tm_sec;
+		s_currentTime.year = (convertTime->tm_year - 100);
+		s_currentTime.month = (convertTime->tm_mon + 1);
+		s_currentTime.day = convertTime->tm_mday;
+		s_currentTime.hour = convertTime->tm_hour;
+		s_currentTime.min = convertTime->tm_min;
+		s_currentTime.sec = convertTime->tm_sec;
 		s_currentTime.weekday = GetDayOfWeek(s_currentTime.year, s_currentTime.month, s_currentTime.day);
 	}
 
@@ -298,6 +299,47 @@ uint32 GetCurrentEpochTime(void)
 	epochTime = mktime(&convertTime);
 
 	epochTime += accumulatedSeconds;
+
+	return (epochTime);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+DATE_TIME_STRUCT ConvertEpochTimeToDateTime(time_t epochTime)
+{
+	struct tm *convertTime;
+
+	convertTime = localtime(&epochTime);
+
+	s_currentTime.year = (convertTime->tm_year - 100);
+	s_currentTime.month = (convertTime->tm_mon + 1);
+	s_currentTime.day = convertTime->tm_mday;
+	s_currentTime.hour = convertTime->tm_hour;
+	s_currentTime.min = convertTime->tm_min;
+	s_currentTime.sec = convertTime->tm_sec;
+	s_currentTime.weekday = GetDayOfWeek(s_currentTime.year, s_currentTime.month, s_currentTime.day);
+
+	return (s_currentTime);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+time_t ConvertDateTimeToEpochTime(DATE_TIME_STRUCT dateTime)
+{
+	struct tm currentTime;
+	time_t epochTime;
+
+	currentTime.tm_year = (dateTime.year + 100); // From 1900;
+	currentTime.tm_mon = (dateTime.month - 1); // Month, 0 - jan
+	currentTime.tm_mday = dateTime.day; // Day of the month
+	currentTime.tm_hour = dateTime.hour;
+	currentTime.tm_min = dateTime.min;
+	currentTime.tm_sec = dateTime.sec;
+	currentTime.tm_isdst = -1; // Is DST on? 1 = yes, 0 = no, -1 = unknown
+
+	epochTime = mktime(&currentTime);
 
 	return (epochTime);
 }
