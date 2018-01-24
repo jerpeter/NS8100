@@ -1085,7 +1085,7 @@ void DisplaySensorType(void)
 			}
 		}
 
-		sprintf((char*)g_spareBuffer, "%s: %s", "ACOUSTIC GAIN/TYPE", ((acousticSensorType = SENSOR_MIC_160) ? "MIC 160 dB" : "MIC 148 dB"));
+		sprintf((char*)g_spareBuffer, "%s: %s", "ACOUSTIC GAIN/TYPE", ((acousticSensorType == SENSOR_MIC_160) ? "MIC 160 dB" : "MIC 148 dB"));
 		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 	else
@@ -1206,12 +1206,20 @@ void DisplayFlashUsageStats(void)
 	else
 		sprintf(&sizeUsedStr[0], "%s: %.0fMB (%d%%)", getLangText(USED_TEXT), ((float)g_sdCardUsageStats.sizeUsed / (float)1000000), g_sdCardUsageStats.percentUsed);
 
+#if 0 // Test (always display in bytes)
+	sprintf(&sizeUsedStr[0], "%s: %lu B (%d%%)", getLangText(USED_TEXT), g_sdCardUsageStats.sizeUsed, g_sdCardUsageStats.percentUsed);
+#endif
+
 	if (g_sdCardUsageStats.sizeFree < 1000)
 		sprintf(&sizeFreeStr[0], "%s: %.1fKB (%d%%)", getLangText(FREE_TEXT), ((float)g_sdCardUsageStats.sizeFree / (float)1000), g_sdCardUsageStats.percentFree);
 	else if (g_sdCardUsageStats.sizeFree < 1000000)
 		sprintf(&sizeFreeStr[0], "%s: %luKB (%d%%)", getLangText(FREE_TEXT), (g_sdCardUsageStats.sizeFree / 1000), g_sdCardUsageStats.percentFree);
 	else
 		sprintf(&sizeFreeStr[0], "%s: %.0fMB (%d%%)", getLangText(FREE_TEXT), ((float)g_sdCardUsageStats.sizeFree / (float)1000000), g_sdCardUsageStats.percentFree);
+
+#if 0 // Test (always display in bytes)
+	sprintf(&sizeFreeStr[0], "%s: %lu B (%d%%)", getLangText(FREE_TEXT), g_sdCardUsageStats.sizeFree, g_sdCardUsageStats.percentFree);
+#endif
 
 	if (g_unitConfig.flashWrapping == NO)
 	{
@@ -1240,38 +1248,48 @@ void DisplayFlashUsageStats(void)
 
 	if (g_unitConfig.flashWrapping == NO)
 	{
-		if ((g_sdCardUsageStats.waveEventsLeft < 1000) && (g_sdCardUsageStats.barHoursLeft < 1000))
+		if (g_sdCardUsageStats.waveEventsLeft < 1000)
 		{
 			sprintf((char*)g_spareBuffer, "%s %s: %d", subString, getLangText(WAVEFORMS_TEXT), g_sdCardUsageStats.waveEventsLeft);
 			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
-
-			sprintf((char*)g_spareBuffer, "%s %s: ~%d", subString, getLangText(BAR_HOURS_TEXT), g_sdCardUsageStats.barHoursLeft);
-			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
 		}
-		else
+		else // Scale output in thousands
 		{
 			sprintf((char*)g_spareBuffer, "%s %s: %dK", subString, getLangText(WAVEFORMS_TEXT), (g_sdCardUsageStats.waveEventsLeft / 1000));
 			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+		}
 
+		if (g_sdCardUsageStats.barHoursLeft < 1000)
+		{
+			sprintf((char*)g_spareBuffer, "%s %s: ~%d", subString, getLangText(BAR_HOURS_TEXT), g_sdCardUsageStats.barHoursLeft);
+			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+		}
+		else // Scale output in thousands
+		{
 			sprintf((char*)g_spareBuffer, "%s %s: ~%dK", subString, getLangText(BAR_HOURS_TEXT), (g_sdCardUsageStats.barHoursLeft / 1000));
 			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
 		}
 	}
 	else // Wrapping is on
 	{
-		if ((g_sdCardUsageStats.waveEventsLeft < 1000) && (g_sdCardUsageStats.barHoursLeft < 1000))
+		if (g_sdCardUsageStats.waveEventsLeft < 1000)
 		{
 			sprintf((char*)g_spareBuffer, "%s %s: %d", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(WAVEFORMS_TEXT), g_sdCardUsageStats.waveEventsLeft);
-			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
-
-			sprintf((char*)g_spareBuffer, "%s %s: ~%d", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(BAR_HOURS_TEXT), g_sdCardUsageStats.barHoursLeft);
 			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
 		}
 		else
 		{
 			sprintf((char*)g_spareBuffer, "%s %s: %dK", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(WAVEFORMS_TEXT), (g_sdCardUsageStats.waveEventsLeft / 1000));
 			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+		}
 
+		if (g_sdCardUsageStats.barHoursLeft < 1000)
+		{
+			sprintf((char*)g_spareBuffer, "%s %s: ~%d", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(BAR_HOURS_TEXT), g_sdCardUsageStats.barHoursLeft);
+			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
+		}
+		else
+		{
 			sprintf((char*)g_spareBuffer, "%s %s: ~%dK", getLangText(BEFORE_OVERWRITE_TEXT), getLangText(BAR_HOURS_TEXT), (g_sdCardUsageStats.barHoursLeft / 1000));
 			MessageBox(getLangText(FLASH_USAGE_STATS_TEXT), (char*)g_spareBuffer, MB_OK);
 		}
