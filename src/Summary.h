@@ -14,6 +14,7 @@
 #include "Typedefs.h"
 #include "Common.h"
 #include "Sensor.h"
+#include "time.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -21,6 +22,8 @@
 #define VERSION_STRING_SIZE				8
 #define MODEL_STRING_SIZE				20
 #define SERIAL_NUMBER_STRING_SIZE		20
+#define SERIAL_NUMBER_CACHE_ENTRIES		256
+#define FACTORY_SERIAL_NUMBER_SIZE		16
 
 #define COMPANY_NAME_STRING_SIZE		32
 #define SEISMIC_OPERATOR_STRING_SIZE	32
@@ -104,6 +107,16 @@ typedef struct
 //-------------------------------------------------------------------------------------
 typedef struct
 {
+	uint8 mode;
+	uint8 subMode;
+	uint8 serialNumberCacheIndex;
+	uint8 spare; // Needed to make structure even and keep time long bounded
+	time_t epochEventTime; // 4 bytes
+} EVENT_LIST_ENTRY_STRUCT; // 8 bytes
+
+//-------------------------------------------------------------------------------------
+typedef struct
+{
 	uint16 sign;
 	uint16 freq_count;
 	uint8 updateFlag;
@@ -125,6 +138,13 @@ typedef struct
 	uint16 aMax;
 	uint16 rvtMax;
 	uint32 vsMax;
+	uint16 rMax;
+	uint16 vMax;
+	uint16 tMax;
+	uint16 aFreq;
+	uint16 rFreq;
+	uint16 vFreq;
+	uint16 tFreq;
 } BARGRAPH_BAR_INTERVAL_DATA;
 
 //-------------------------------------------------------------------------------------
@@ -155,7 +175,7 @@ typedef struct
 //-------------------------------------------------------------------------------------
 // Parameters sub-structure
 //-------------------------------------------------------------------------------------
-#define UNUSED_PARAMETERS_SIZE	2
+#define UNUSED_PARAMETERS_SIZE	1
 typedef struct
 {
 	uint32	distToSource; // 0x5C (from 0xA55A)
@@ -208,7 +228,8 @@ typedef struct
 	uint8 calibrationDateSource; // 0x190 (from 0xA55A)
 	uint8 adChannelVerification; // 0x191 (from 0xA55A)
 
-	uint8	unused[UNUSED_PARAMETERS_SIZE];	// 0x192 (from 0xA55A) // Space for expansion
+	uint8 barIntervalDataType; // 0x192 (form 0xA55A)
+	uint8	unused[UNUSED_PARAMETERS_SIZE];	// 0x193 (from 0xA55A) // Space for expansion
 } PARAMETERS_STRUCT; // 312 bytes
 #pragma pack()
 
