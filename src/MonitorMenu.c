@@ -81,6 +81,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 {
 	INPUT_MSG_STRUCT mn_msg;
 	REC_EVENT_MN_STRUCT temp_g_triggerRecord;
+	uint8 recheckSpaceRemaining = NO;
 
 	switch (msg.cmd)
 	{
@@ -94,6 +95,21 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 
 			memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 			
+			if (g_usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+			{
+				recheckSpaceRemaining = YES;
+			}
+
+			// Special call before Monitoring to disable USB processing
+			UsbDeviceManager();
+
+			if (recheckSpaceRemaining)
+			{
+				// Recalculate remaining space in case
+				OverlayMessage(getLangText(STATUS_TEXT), getLangText(CALCULATING_EVENT_STORAGE_SPACE_FREE_TEXT), 0);
+				GetSDCardUsageStats();
+			}
+
 			g_monitorOperationMode = (uint8)msg.data[0];
 
 			// Check if flash wrapping is disabled and if there is space left in flash
@@ -101,6 +117,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 			{
 				if (((g_monitorOperationMode == WAVEFORM_MODE) && (g_sdCardUsageStats.waveEventsLeft == 0)) ||
 					((g_monitorOperationMode == BARGRAPH_MODE) && (g_sdCardUsageStats.barHoursLeft == 0)) ||
+					((g_monitorOperationMode == COMBO_MODE) && (g_sdCardUsageStats.waveEventsLeft == 0) && (g_sdCardUsageStats.barHoursLeft == 0)) ||
 					((g_monitorOperationMode == MANUAL_CAL_MODE) && (g_sdCardUsageStats.manualCalsLeft == 0)))
 				{
 					// Unable to store any more data in the selected mode
@@ -115,9 +132,6 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					return;
 				}
 			}
-			
-			// Special call before Monitoring to disable USB processing
-			UsbDeviceManager();
 
 			// Read and cache Smart Sensor data
 			SmartSensorReadRomAndMemory(SEISMIC_SENSOR);
@@ -141,7 +155,8 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 			// Make sure the parameters are up to date based on the trigger setup information
 			InitSensorParameters(g_factorySetupRecord.seismicSensorType, (uint8)g_triggerRecord.srec.sensitivity);
 
-			PromptUserWaitingForSensorZeroing();
+			CheckAndPromptUserWaitingForSensorWarmup();
+			ZeroingSensorCalibration();
 
 			switch(g_monitorOperationMode)
 			{
@@ -378,6 +393,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 			SETUP_MENU_MSG(MAIN_MENU);
 			JUMP_TO_ACTIVE_MENU();
 			
+			ActivateDisplayShortDuration(5);
 			sprintf((char*)g_spareBuffer, "%s (%s %s) %s %s", getLangText(FLASH_MEMORY_IS_FULL_TEXT), getLangText(WRAPPING_TEXT), getLangText(DISABLED_TEXT),
 					getLangText(MONITORING_TEXT), getLangText(STOPPED_TEXT));
 			OverlayMessage(getLangText(WARNING_TEXT), (char*)g_spareBuffer, (5 * SOFT_SECS));
