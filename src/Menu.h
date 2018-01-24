@@ -858,6 +858,7 @@ void AutoCalMenuHandler(uint8 key, void* data);
 void AutoMonitorMenuHandler(uint8 key, void* data);
 void BarChannelMenuHandler(uint8 key, void* data);
 void BarIntervalMenuHandler(uint8 key, void* data);
+void BarIntervalDataTypeMenuHandler(uint8 key, void* data);
 void BarScaleMenuHandler(uint8 key, void* data);
 void BarResultMenuHandler(uint8 key, void* data);
 void BaudRateMenuHandler(uint8 key, void* data);
@@ -976,8 +977,7 @@ void DisplayAutoDialInfo(void);
 void InitSensorParameters(uint16 seismicSensorType, uint8 sensitivity);
 void StopMonitoringForLowPowerState(void);
 uint8 CheckAndDisplayErrorThatPreventsMonitoring(uint8 messageType);
-void PromptUserWaitingForSensorWarmup(void);
-void PromptUserWaitingForSensorZeroing(void);
+void CheckAndPromptUserWaitingForSensorWarmup(void);
 void StartADDataCollectionForCalibration(uint16 sampleRate);
 void StopADDataCollectionForCalibration(void);
 
