@@ -1405,19 +1405,23 @@ void InitEventRecord(uint8 opMode)
 		eventRec->summary.parameters.calDataNumOfSamples = 0;
 		eventRec->summary.parameters.activeChannels = g_triggerRecord.berec.barChannel;
 
-#if 0 // New Bar Interval Data Type feature pending remote side handling
-		// Check if either of the new Bar Interval Data types have been selected
-		if ((g_triggerRecord.berec.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) || (g_triggerRecord.berec.barIntervalDataType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE))
+		// New Bar Interval Data Type feature pending remote side handling
+		if (g_factorySetupRecord.tempBargraphFullDataTypeFeatureEnable == YES)
 		{
-			eventRec->summary.parameters.barIntervalDataType = g_triggerRecord.berec.barIntervalDataType;
+			// Check if either of the new Bar Interval Data types have been selected
+			if ((g_triggerRecord.berec.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) || (g_triggerRecord.berec.barIntervalDataType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE))
+			{
+				eventRec->summary.parameters.barIntervalDataType = g_triggerRecord.berec.barIntervalDataType;
+			}
+			else // Set to the original which also covers initial condition
+			{
+				eventRec->summary.parameters.barIntervalDataType = g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
+			}
 		}
-		else // Set to the original which also covers initial condition
+		else // Force the original format
 		{
 			eventRec->summary.parameters.barIntervalDataType = g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
 		}
-#else // Force the original format
-		eventRec->summary.parameters.barIntervalDataType = g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
-#endif
 	}	
 }
 

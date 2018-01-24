@@ -595,18 +595,22 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//---------------------------------------------------------------------------
 		// Bar Interval Data Type check
 		//---------------------------------------------------------------------------
-#if 0 // New Bar Interval Data Type feature pending remote side handling
-		if ((cfg.eventCfg.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) || (cfg.eventCfg.barIntervalDataType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE))
+		// New Bar Interval Data Type feature pending remote side handling
+		if (g_factorySetupRecord.tempBargraphFullDataTypeFeatureEnable == YES)
 		{
-			g_triggerRecord.berec.barIntervalDataType = cfg.eventCfg.barIntervalDataType;
+			if ((cfg.eventCfg.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) || (cfg.eventCfg.barIntervalDataType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE))
+			{
+				g_triggerRecord.berec.barIntervalDataType = cfg.eventCfg.barIntervalDataType;
+			}
+			else
+			{
+				g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
+			}
 		}
-		else
+		else // Force the original format
 		{
 			g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
 		}
-#else // Force the original format
-		g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
-#endif
 
 		//---------------------------------------------------------------------------
 		// Copy Client, Operator, Location and Comments strings to default trigger record

@@ -293,7 +293,12 @@ typedef struct
 	CALIBRATION_DATE_STRUCT calDate;	// 0x02
 	uint8 calibrationDateSource;		// 0x06
 	uint8 acousticSensorType;			// 0x07
+#if 0 // Original
 	uint8 unused[4];					// 0x08
+#else // Temporary until feature is permanently operational
+	uint8 unused[3];
+	uint8 tempBargraphFullDataTypeFeatureEnable;
+#endif
 	uint8 hardwareID;					// 0x0C
 	uint8 buildID;						// 0x0D
 	uint16 seismicSensorType;			// 0x0E

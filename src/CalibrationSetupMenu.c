@@ -317,7 +317,23 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 
 		UpdateWorkingCalibrationDate();
 
+#if 0 // Original
 		MessageBox(getLangText(STATUS_TEXT), getLangText(FACTORY_SETUP_COMPLETE_TEXT), MB_OK);
+#else // Temporary until feature is permanently operational
+		if (MessageBox(getLangText(STATUS_TEXT), getLangText(FACTORY_SETUP_COMPLETE_TEXT), MB_OK) == MB_SPECIAL_ACTION)
+		{
+			if (MessageBox(getLangText(STATUS_TEXT), "ENABLE BARGRAPH FULL DATA FEATURE?", MB_YESNO) == MB_FIRST_CHOICE)
+			{
+				g_factorySetupRecord.tempBargraphFullDataTypeFeatureEnable = YES;
+			}
+			else
+			{
+				g_factorySetupRecord.tempBargraphFullDataTypeFeatureEnable = NO;
+			}
+
+			SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
+		}
+#endif
 
 		// Restore the previous mode
 		g_triggerRecord.opMode = previousMode;
