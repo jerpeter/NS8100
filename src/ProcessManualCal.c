@@ -185,11 +185,16 @@ void MoveManualCalToFile(void)
 
 				SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
+				// Update the remaining space left
+				UpdateSDCardUsageStats(nav_file_lgt());
+
 				// Done writing the event file, close the file handle
 				g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 				close(manualCalFileHandle);
 
-#if 1 // New method to save compressed data file
+				//==========================================================================================================
+				// Save compressed data file
+				//----------------------------------------------------------------------------------------------------------
 				if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
 				{
 					// Get new event file handle
@@ -209,11 +214,15 @@ void MoveManualCalToFile(void)
 
 					SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
+					// Update the remaining space left
+					UpdateSDCardUsageStats(nav_file_lgt());
+
 					// Done writing the event file, close the file handle
 					g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 					close(g_globalFileHandle);
 				}
-#endif
+				//==========================================================================================================
+
 				ReleaseSpi1MutexLock();
 
 				debug("Manual Cal Event file closed\r\n");
@@ -225,8 +234,6 @@ void MoveManualCalToFile(void)
 
 				// After event numbers have been saved, store current event number in persistent storage.
 				StoreCurrentEventNumber();
-
-				UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_wordSizeInCal);
 
 				// Now store the updated event number in the universal ram storage.
 				g_pendingEventRecord.summary.eventNumber = g_nextEventNumberToUse;
@@ -241,6 +248,7 @@ void MoveManualCalToFile(void)
 			{
 				g_currentEventSamplePtr = g_startOfEventBufferPtr + (g_eventBufferReadIndex * g_wordSizeInEvent);
 			}
+
 			clearSystemEventFlag(MANUAL_CAL_EVENT);
 
 			// Set flag to display calibration results if not monitoring or monitoring in waveform

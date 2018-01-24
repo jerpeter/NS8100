@@ -68,8 +68,9 @@ void MoveWaveformEventToFile(void)
 	uint32 compressSize;
 	uint16* tempDataPtr;
 	int waveformFileHandle = -1;
+	char spaceLeftBuffer[25] = {'\0'};
 
-	if (g_freeEventBuffers < g_maxEventBuffers)
+	if ((g_freeEventBuffers < g_maxEventBuffers) && ((g_sdCardUsageStats.waveEventsLeft != 0)))
 	{
 		switch (waveformProcessingState)
 		{
@@ -244,11 +245,18 @@ void MoveWaveformEventToFile(void)
 					else // Write the file event to the SD card
 					{
 						ActivateDisplayShortDuration(1);
-
-						sprintf((char*)g_spareBuffer, "%s %s #%d %s... (%s)",
-								(g_triggerRecord.opMode == WAVEFORM_MODE) ? getLangText(WAVEFORM_TEXT) : getLangText(COMBO_WAVEFORM_TEXT), getLangText(EVENT_TEXT),
+						sprintf((char*)g_spareBuffer, "%s %s #%d %s... (%s)", (g_triggerRecord.opMode == WAVEFORM_MODE) ? getLangText(WAVEFORM_TEXT) : getLangText(COMBO_WAVEFORM_TEXT), getLangText(EVENT_TEXT),
 								g_pendingEventRecord.summary.eventNumber, getLangText(BEING_SAVED_TEXT), getLangText(MAY_TAKE_TIME_TEXT));
-						OverlayMessage(getLangText(EVENT_COMPLETE_TEXT), (char*)g_spareBuffer, 0);
+
+						if (g_sdCardUsageStats.waveEventsLeft < 100)
+						{
+							sprintf((char*)spaceLeftBuffer, "%d EVT TILL FULL", (g_sdCardUsageStats.waveEventsLeft - 1));
+							OverlayMessage((char*)spaceLeftBuffer, (char*)g_spareBuffer, 0);
+						}
+						else
+						{
+							OverlayMessage(getLangText(EVENT_COMPLETE_TEXT), (char*)g_spareBuffer, 0);
+						}
 
 						// Write the event record header and summary
 						bytesWritten = write(waveformFileHandle, &g_pendingEventRecord, sizeof(EVT_RECORD));
@@ -306,11 +314,16 @@ void MoveWaveformEventToFile(void)
 
 						SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
+						// Update the remaining space left
+						UpdateSDCardUsageStats(nav_file_lgt());
+
 						// Done writing the event file, close the file handle
 						g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 						close(waveformFileHandle);
 
-#if 1 // New method to save compressed data file
+						//==========================================================================================================
+						// Save compressed data file
+						//----------------------------------------------------------------------------------------------------------
 						if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
 						{
 							// Get new event file handle
@@ -330,11 +343,15 @@ void MoveWaveformEventToFile(void)
 
 							SetFileDateTimestamp(FS_DATE_LAST_WRITE);
 
+							// Update the remaining space left
+							UpdateSDCardUsageStats(nav_file_lgt());
+
 							// Done writing the event file, close the file handle
 							g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 							close(g_globalFileHandle);
 						}
-#endif
+						//==========================================================================================================
+
 						debug("Waveform Event file closed\r\n");
 					}
 
@@ -350,8 +367,6 @@ void MoveWaveformEventToFile(void)
 				UpdateMonitorLogEntry();
 
 				StoreCurrentEventNumber();
-
-				UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_wordSizeInEvent);
 
 				// Reset External Trigger event record flag
 				g_pendingEventRecord.summary.captured.externalTrigger = NO;
@@ -412,6 +427,7 @@ void MoveWaveformEventToFile(void)
 	else
 	{
 		clearSystemEventFlag(TRIGGER_EVENT);
+		clearSystemEventFlag(EXT_TRIGGER_EVENT);
 
 		// Check if not monitoring
 		if (g_sampleProcessing != ACTIVE_STATE)
@@ -419,6 +435,17 @@ void MoveWaveformEventToFile(void)
  			// There were queued event buffers after monitoring was stopped
  			// Close the monitor log entry now since all events have been stored
 			CloseMonitorLogEntry();
+		}
+
+		// Check if no more room for another event, then send a signal to stop monitoring
+		if (g_unitConfig.flashWrapping == NO)
+		{
+			if (g_sdCardUsageStats.waveEventsLeft == 0)
+			{
+				msg.cmd = STOP_MONITORING_CMD;
+				msg.length = 1;
+				(*g_menufunc_ptrs[MONITOR_MENU])(msg);
+			}
 		}
 	}
 }
