@@ -298,22 +298,6 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 
 						__asm__ __volatile__ ("breakpoint");
 #endif
-#if 0 // Test
-						static uint8 externalTriggerState = OFF;
-
-						if (externalTriggerState == OFF)
-						{
-							externalTriggerState = ON;
-							MessageBox(getLangText(STATUS_TEXT), "EXTERNAL TRIGGER TIMER ACTIVE", MB_OK);
-							AssignSoftTimer(EXTERNAL_TRIGGER_TIMER_NUM, (15 * TICKS_PER_SEC), ExternalTriggerTimerCallBack);
-						}
-						else
-						{
-							externalTriggerState = OFF;
-							OverlayMessage(getLangText(STATUS_TEXT), "EXTERNAL TRIGGER TIMER STOPPED", (2 * SOFT_SECS));
-							ClearSoftTimer(EXTERNAL_TRIGGER_TIMER_NUM);
-						}
-#endif
 					}
 					//===================================================
 					// On-Backlight Combo key
