@@ -3199,7 +3199,7 @@ void SummaryIntervalMenuHandler(uint8 keyPressed, void* data)
 #if 1 // Original
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
 			LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
-#else // New Bar Interval Data Type feature
+#else // New Bar Interval Data Type feature pending remote side handling
 		SETUP_USER_MENU_MSG(&barIntervalDataTypeMenu, g_triggerRecord.berec.barIntervalDataType);
 #endif
 	}

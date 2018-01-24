@@ -829,7 +829,7 @@ void LcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 	{
 #if 1 // Original
 		SETUP_USER_MENU_MSG(&summaryIntervalMenu, g_triggerRecord.bgrec.summaryInterval);
-#else // New Bar Interval Data Type feature
+#else // New Bar Interval Data Type feature pending remote side handling
 		SETUP_USER_MENU_MSG(&barIntervalDataTypeMenu, g_triggerRecord.berec.barIntervalDataType);
 #endif
 	}
