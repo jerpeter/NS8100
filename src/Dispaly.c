@@ -734,9 +734,9 @@ void ActivateDisplayShortDuration(uint16 secondsToDisplay)
 	if (g_lcdPowerFlag == DISABLED)
 	{
 		g_lcdPowerFlag = ENABLED;
-		SetLcdContrast(g_contrast_value);
 		PowerControl(LCD_POWER_ENABLE, ON);
 		SoftUsecWait(LCD_ACCESS_DELAY);
+		SetLcdContrast(g_contrast_value);
 		InitLcdDisplay();					// Setup LCD segments and clear display buffer
 		AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (secondsToDisplay * TICKS_PER_SEC), LcdPwTimerCallBack);
 

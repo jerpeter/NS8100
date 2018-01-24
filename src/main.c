@@ -807,9 +807,9 @@ void UsbDeviceManager(void)
 					if (g_lcdPowerFlag == DISABLED)
 					{
 						g_lcdPowerFlag = ENABLED;
-						SetLcdContrast(g_contrast_value);
 						PowerControl(LCD_POWER_ENABLE, ON);
 						SoftUsecWait(LCD_ACCESS_DELAY);
+						SetLcdContrast(g_contrast_value);
 						InitLcdDisplay();					// Setup LCD segments and clear display buffer
 						AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
@@ -1175,9 +1175,9 @@ void BootLoadManager(void)
 
 		if (g_lcdPowerFlag == DISABLED)
 		{
-			SetLcdContrast(g_contrast_value);
 			PowerControl(LCD_POWER_ENABLE, ON);
 			SoftUsecWait(LCD_ACCESS_DELAY);
+			SetLcdContrast(g_contrast_value);
 			InitLcdDisplay();
 			SetLcdBacklightState(BACKLIGHT_BRIGHT);
 		}
@@ -1208,7 +1208,6 @@ void BootLoadManager(void)
 
 		while (file == -1)
 		{
-			//WriteLCD_smText(0, 64, (unsigned char *)"Connect USB..", NORMAL_LCD);
 			sprintf((char*)g_spareBuffer, "%s %s. %s", getLangText(APP_LOADER_TEXT), getLangText(FILE_NOT_FOUND_TEXT), getLangText(CONNECT_USB_CABLE_TEXT));
 			OverlayMessage(getLangText(APP_LOADER_TEXT), (char*)g_spareBuffer, 0);
 
@@ -1558,9 +1557,9 @@ void exception(uint32_t r12, uint32_t r11, uint32_t r10, uint32_t r9, uint32_t e
 	if (g_lcdPowerFlag == DISABLED)
 	{
 		g_lcdPowerFlag = ENABLED;
-		SetLcdContrast(g_contrast_value);
 		PowerControl(LCD_POWER_ENABLE, ON);
 		SoftUsecWait(LCD_ACCESS_DELAY);
+		SetLcdContrast(g_contrast_value);
 		InitLcdDisplay();
 	}
 

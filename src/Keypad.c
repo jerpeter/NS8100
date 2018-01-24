@@ -298,6 +298,22 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 
 						__asm__ __volatile__ ("breakpoint");
 #endif
+#if 0 // Test
+						static uint8 externalTriggerState = OFF;
+
+						if (externalTriggerState == OFF)
+						{
+							externalTriggerState = ON;
+							MessageBox(getLangText(STATUS_TEXT), "EXTERNAL TRIGGER TIMER ACTIVE", MB_OK);
+							AssignSoftTimer(EXTERNAL_TRIGGER_TIMER_NUM, (15 * TICKS_PER_SEC), ExternalTriggerTimerCallBack);
+						}
+						else
+						{
+							externalTriggerState = OFF;
+							OverlayMessage(getLangText(STATUS_TEXT), "EXTERNAL TRIGGER TIMER STOPPED", (2 * SOFT_SECS));
+							ClearSoftTimer(EXTERNAL_TRIGGER_TIMER_NUM);
+						}
+#endif
 					}
 					//===================================================
 					// On-Backlight Combo key
@@ -343,9 +359,9 @@ void KeypressEventMgr(void)
 	{
 		g_lcdPowerFlag = ENABLED;
 		raiseSystemEventFlag(UPDATE_MENU_EVENT);
-		SetLcdContrast(g_contrast_value);
 		PowerControl(LCD_POWER_ENABLE, ON);
 		SoftUsecWait(LCD_ACCESS_DELAY);
+		SetLcdContrast(g_contrast_value);
 		InitLcdDisplay();					// Setup LCD segments and clear display buffer
 		AssignSoftTimer(LCD_POWER_ON_OFF_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LcdPwTimerCallBack);
 
