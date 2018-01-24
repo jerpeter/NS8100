@@ -830,11 +830,11 @@ void LcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 		// New Bar Interval Data Type feature pending remote side handling
 		if (g_factorySetupRecord.tempBargraphFullDataTypeFeatureEnable == YES)
 		{
-			SETUP_USER_MENU_MSG(&summaryIntervalMenu, g_triggerRecord.bgrec.summaryInterval);
+			SETUP_USER_MENU_MSG(&barIntervalDataTypeMenu, g_triggerRecord.berec.barIntervalDataType);
 		}
 		else // Force the original format
 		{
-			SETUP_USER_MENU_MSG(&barIntervalDataTypeMenu, g_triggerRecord.berec.barIntervalDataType);
+			SETUP_USER_MENU_MSG(&summaryIntervalMenu, g_triggerRecord.bgrec.summaryInterval);
 		}
 	}
 
