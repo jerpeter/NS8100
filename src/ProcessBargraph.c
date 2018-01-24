@@ -102,9 +102,25 @@ void MoveBarIntervalDataToFile(void)
 
 			while (g_bargraphBarIntervalsCached)
 			{
+#if 0 // original
 				write(bargraphFileHandle, g_bargraphBarIntervalReadPtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 
 				g_pendingBargraphRecord.header.dataLength += sizeof(BARGRAPH_BAR_INTERVAL_DATA);
+#else // New BI with options
+				if (g_pendingBargraphRecord.summary.parameters.barIntervalDataType == BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE)
+				{
+					write(bargraphFileHandle, g_bargraphBarIntervalReadPtr, BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE);
+				}
+				else // New Bar Interval data type option, store A max, then R, V, T max, then A, R, V, T freq (if selected), and finally VS max
+				{
+					write(bargraphFileHandle, &g_bargraphBarIntervalReadPtr->aMax, sizeof(g_bargraphBarIntervalReadPtr->aMax));
+					write(bargraphFileHandle, &g_bargraphBarIntervalReadPtr->rMax, (sizeof(g_bargraphBarIntervalReadPtr->rMax) * ((g_pendingBargraphRecord.summary.parameters.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) ? 3 : 7)));
+					write(bargraphFileHandle, &g_bargraphBarIntervalReadPtr->vsMax, sizeof(g_bargraphBarIntervalReadPtr->vsMax));
+				}
+
+				// Increment based on the size of the Bar Interval data type
+				g_pendingBargraphRecord.header.dataLength += g_pendingBargraphRecord.summary.parameters.barIntervalDataType;
+#endif
 
 				// Advance the Bar Interval global buffer pointer
 				AdvanceBarIntervalBufPtr(READ_PTR);
@@ -190,9 +206,25 @@ void MoveSummaryIntervalDataToFile(void)
 		// Write any cached bar intervals before storing the summary interval (may not match with bar interval write threshold)
 		while (g_bargraphBarIntervalsCached)
 		{
+#if 0 // original
 			write(bargraphFileHandle, g_bargraphBarIntervalReadPtr, sizeof(BARGRAPH_BAR_INTERVAL_DATA));
 
 			g_pendingBargraphRecord.header.dataLength += sizeof(BARGRAPH_BAR_INTERVAL_DATA);
+#else // New BI with options
+			if (g_pendingBargraphRecord.summary.parameters.barIntervalDataType == BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE)
+			{
+				write(bargraphFileHandle, g_bargraphBarIntervalReadPtr, BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE);
+			}
+			else // New Bar Interval data type option, store A max, then R, V, T max, then A, R, V, T freq (if selected), and finally VS max
+			{
+				write(bargraphFileHandle, &g_bargraphBarIntervalReadPtr->aMax, sizeof(g_bargraphBarIntervalReadPtr->aMax));
+				write(bargraphFileHandle, &g_bargraphBarIntervalReadPtr->rMax, (sizeof(g_bargraphBarIntervalReadPtr->rMax) * ((g_pendingBargraphRecord.summary.parameters.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) ? 3 : 7)));
+				write(bargraphFileHandle, &g_bargraphBarIntervalReadPtr->vsMax, sizeof(g_bargraphBarIntervalReadPtr->vsMax));
+			}
+
+			// Increment based on the size of the Bar Interval data type
+			g_pendingBargraphRecord.header.dataLength += g_pendingBargraphRecord.summary.parameters.barIntervalDataType;
+#endif
 
 			// Advance the Bar Interval global buffer pointer
 			AdvanceBarIntervalBufPtr(READ_PTR);
@@ -329,28 +361,30 @@ uint8 CalculateBargraphData(void)
 			// A channel
 			// ---------
 			// Store the max Air normalized value if a new max was found
-			if (aTempNorm > g_bargraphBarIntervalWritePtr->aMax)
-				g_bargraphBarIntervalWritePtr->aMax = aTempNorm;
+			if (aTempNorm > g_bargraphBarIntervalWritePtr->aMax) { g_bargraphBarIntervalWritePtr->aMax = aTempNorm; g_bargraphBarIntervalWritePtr->aFreq = ((g_bargraphFreqCalcBuffer.a.freq_count * 2) + 1); }
 
 			// ---------------
 			// R, V, T channel
 			// ---------------
 			// Store the max R, V or T normalized value if a new max was found
-			if (rTempNorm > g_bargraphBarIntervalWritePtr->rvtMax)
-				g_bargraphBarIntervalWritePtr->rvtMax = rTempNorm;
+			if (rTempNorm > g_bargraphBarIntervalWritePtr->rvtMax) { g_bargraphBarIntervalWritePtr->rvtMax = rTempNorm; }
+			if (vTempNorm > g_bargraphBarIntervalWritePtr->rvtMax) { g_bargraphBarIntervalWritePtr->rvtMax = vTempNorm; }
+			if (tTempNorm > g_bargraphBarIntervalWritePtr->rvtMax) { g_bargraphBarIntervalWritePtr->rvtMax = tTempNorm; }
 
-			if (vTempNorm > g_bargraphBarIntervalWritePtr->rvtMax)
-				g_bargraphBarIntervalWritePtr->rvtMax = vTempNorm;
-
-			if (tTempNorm > g_bargraphBarIntervalWritePtr->rvtMax)
-				g_bargraphBarIntervalWritePtr->rvtMax = tTempNorm;
+			// Check if using either new Bar Interval data type format
+			if (g_pendingBargraphRecord.summary.parameters.barIntervalDataType != BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE)
+			{
+				// Store the max R, V and T normalized value if a new max was found
+				if (rTempNorm > g_bargraphBarIntervalWritePtr->rMax) { g_bargraphBarIntervalWritePtr->rMax = rTempNorm;	g_bargraphBarIntervalWritePtr->rFreq = ((g_bargraphFreqCalcBuffer.r.freq_count * 2) + 1); }
+				if (vTempNorm > g_bargraphBarIntervalWritePtr->vMax) { g_bargraphBarIntervalWritePtr->vMax = vTempNorm;	g_bargraphBarIntervalWritePtr->vFreq = ((g_bargraphFreqCalcBuffer.v.freq_count * 2) + 1); }
+				if (tTempNorm > g_bargraphBarIntervalWritePtr->tMax) { g_bargraphBarIntervalWritePtr->tMax = tTempNorm;	g_bargraphBarIntervalWritePtr->tFreq = ((g_bargraphFreqCalcBuffer.t.freq_count * 2) + 1); }
+			}
 
 			// ----------
 			// Vector Sum
 			// ----------
 			// Store the max Vector Sum if a new max was found
-			if (vsTemp > g_bargraphBarIntervalWritePtr->vsMax)
-				g_bargraphBarIntervalWritePtr->vsMax = vsTemp;
+			if (vsTemp > g_bargraphBarIntervalWritePtr->vsMax) { g_bargraphBarIntervalWritePtr->vsMax = vsTemp; }
 
 			//=================================================
 			// Summary Interval
@@ -922,7 +956,7 @@ void MoveUpdatedBargraphEventRecordToFile(uint8 status)
 		// Rewrite the event record
 		write(bargraphFileHandle, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
 
-		// New method to save data compressed (if Bargraph session is complete)
+		// Setup for saving data compressed (if Bargraph session is complete)
 		if (status == BARPGRAPH_SESSION_COMPLETE)
 		{
 			if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
@@ -944,7 +978,7 @@ void MoveUpdatedBargraphEventRecordToFile(uint8 status)
 
 		debug("%s event file closed\r\n", (g_triggerRecord.opMode == BARGRAPH_MODE) ? "Bargraph" : "Combo - Bargraph");
 
-		// New method to save compressed data file (if Bargraph session is complete)
+		// Save compressed data file (if Bargraph session is complete)
 		if (status == BARPGRAPH_SESSION_COMPLETE)
 		{
 			if (g_unitConfig.saveCompressedData != DO_NOT_SAVE_EXTRA_FILE_COMPRESSED_DATA)
