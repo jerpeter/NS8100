@@ -56,6 +56,7 @@ enum {
 
 // Sensor information
 #define NUMBER_OF_CHANNELS_DEFAULT 	4
+#define BYTES_PER_CHANNEL			2
 #define SENSOR_ACCURACY_100X_SHIFT 	100
 
 #define ADC_RESOLUTION				0x8000	// +/- 0x800 (2048)
@@ -208,11 +209,15 @@ typedef struct
 
 typedef struct
 {
-	// Warning, DO NOT change the order or types of the following
-	// Even if defined as 'uint8 unused[7]' will cause a size change in the g_triggerRecord
+	// Warning, following structure is aligned on a boundary
 	uint8 barChannel;
 	uint8 barScale;
-	int32 unused3;
+	uint8 barIntervalDataType;
+	uint8 unused1;
+	uint8 unused2;
+	uint8 unused3;
+	uint8 unused4;
+	uint8 unused5;
 	uint8 impulseMenuUpdateSecs;
 } BAR_GRAPH_EXTRA_DATA_STRUCT;
 

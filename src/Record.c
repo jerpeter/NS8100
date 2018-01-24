@@ -414,6 +414,7 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT* triggerRecordPtr, uint8 opMode)
 	triggerRecordPtr->bgrec.summaryInterval = ONE_HOUR_INTVL;
 	triggerRecordPtr->berec.barScale = BAR_SCALE_FULL;
 	triggerRecordPtr->berec.barChannel = BAR_BOTH_CHANNELS;
+	triggerRecordPtr->berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
 	triggerRecordPtr->berec.impulseMenuUpdateSecs = 1;
 
 	// Check if sensor type is valid
