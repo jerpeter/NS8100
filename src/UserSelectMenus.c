@@ -47,6 +47,7 @@ extern USER_MENU_STRUCT alarmTestingMenu[];
 extern USER_MENU_STRUCT analogChannelConfigMenu[];
 extern USER_MENU_STRUCT barChannelMenu[];
 extern USER_MENU_STRUCT barIntervalMenu[];
+extern USER_MENU_STRUCT barIntervalDataTypeMenu[];
 extern USER_MENU_STRUCT barScaleMenu[];
 extern USER_MENU_STRUCT barResultMenu[];
 extern USER_MENU_STRUCT baudRateMenu[];
@@ -1081,6 +1082,44 @@ void BarIntervalMenuHandler(uint8 keyPressed, void* data)
 #else
 		SETUP_USER_MENU_MSG(&barChannelMenu, g_triggerRecord.berec.barChannel);
 #endif
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Bar Interval Data Type Menu
+//=============================================================================
+//*****************************************************************************
+#define BAR_INTERVAL_DATA_TYPE_MENU_ENTRIES 5
+USER_MENU_STRUCT barIntervalDataTypeMenu[BAR_INTERVAL_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, BAR_DATA_TO_STORE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAR_INTERVAL_DATA_TYPE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0,	A_RVT_MAX_TEXT,			NO_TAG, {BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE}},
+{ITEM_2, 0, A_R_V_T_MAX_TEXT,		NO_TAG, {BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE}},
+{ITEM_3, 0, A_R_V_T_MAX_WITH_FREQ,	NO_TAG, {BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&BarIntervalDataTypeMenuHandler}}
+};
+
+//------------------------------------
+// Bar Interval Data Type Menu Handler
+//------------------------------------
+void BarIntervalDataTypeMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_triggerRecord.berec.barIntervalDataType = barIntervalDataTypeMenu[newItemIndex].data;
+
+		SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
+											LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&summaryIntervalMenu, g_triggerRecord.bgrec.summaryInterval);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -3157,8 +3196,12 @@ void SummaryIntervalMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_triggerRecord.bgrec.summaryInterval = summaryIntervalMenu[newItemIndex].data;
 
+#if 1 // Original
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
 			LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+#else // New Bar Interval Data Type feature
+		SETUP_USER_MENU_MSG(&barIntervalDataTypeMenu, g_triggerRecord.berec.barIntervalDataType);
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{

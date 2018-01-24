@@ -43,6 +43,7 @@ extern USER_MENU_STRUCT analogChannelConfigMenu[];
 extern USER_MENU_STRUCT airScaleMenu[];
 extern USER_MENU_STRUCT barChannelMenu[];
 extern USER_MENU_STRUCT barResultMenu[];
+extern USER_MENU_STRUCT barIntervalDataTypeMenu[];
 extern USER_MENU_STRUCT bitAccuracyMenu[];
 extern USER_MENU_STRUCT configMenu[];
 extern USER_MENU_STRUCT distanceToSourceMenu[];
@@ -826,7 +827,11 @@ void LcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+#if 1 // Original
 		SETUP_USER_MENU_MSG(&summaryIntervalMenu, g_triggerRecord.bgrec.summaryInterval);
+#else // New Bar Interval Data Type feature
+		SETUP_USER_MENU_MSG(&barIntervalDataTypeMenu, g_triggerRecord.berec.barIntervalDataType);
+#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();
