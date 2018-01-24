@@ -92,6 +92,7 @@ uint16 GetLastStoredEventNumber(void);
 void StoreCurrentEventNumber(void);
 void CompleteRamEventSummary(void);
 void StoreData(uint16* dataPtr, uint16 dataWords);
+void InitSDCardUsageStats(void);
 void GetSDCardUsageStats(void);
 void UpdateSDCardUsageStats(uint32 removeSize);
 void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
@@ -145,5 +146,9 @@ void InitSummaryListFile(void);
 
 void VerifyCacheEventToRam(uint16 eventNumber, char* subMessage);
 void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber);
+
+uint8 CacheSerialNumberAndReturnIndex(char* serialNumberString);
+void CacheSummaryListEntryToEventList(void);
+void ClearEventListCache(void);
 
 #endif // _FLASHEVTS_H_
