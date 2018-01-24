@@ -172,6 +172,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	// Bargraph specific - Initial conditions.
 	cfg.eventCfg.barInterval = (uint16)g_triggerRecord.bgrec.barInterval;
 	cfg.eventCfg.summaryInterval = (uint16)g_triggerRecord.bgrec.summaryInterval;
+	cfg.eventCfg.barIntervalDataType = g_triggerRecord.berec.barIntervalDataType;
 
 	memcpy((uint8*)cfg.eventCfg.companyName, g_triggerRecord.trec.client, COMPANY_NAME_STRING_SIZE - 2);
 	memcpy((uint8*)cfg.eventCfg.seismicOperator, g_triggerRecord.trec.oper, SEISMIC_OPERATOR_STRING_SIZE - 2);
@@ -589,6 +590,18 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				returnCode = CFG_ERR_SUM_INTERVAL;
 				goto SEND_UCM_ERROR_CODE;
 				break;
+		}
+
+		//---------------------------------------------------------------------------
+		// Bar Interval Data Type check
+		//---------------------------------------------------------------------------
+		if ((cfg.eventCfg.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) || (cfg.eventCfg.barIntervalDataType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE))
+		{
+			g_triggerRecord.berec.barIntervalDataType = cfg.eventCfg.barIntervalDataType;
+		}
+		else
+		{
+			g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
 		}
 
 		//---------------------------------------------------------------------------
