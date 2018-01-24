@@ -361,6 +361,7 @@ uint8 Bit_Swap(uint8 data);
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 0
 void WriteLCD_Vline(uint8 x_pos, uint8 y_pos1, uint8 y_pos2, uint8 bLineType)
 {
 	uint8 ColAddr;
@@ -487,10 +488,12 @@ void WriteLCD_Vline(uint8 x_pos, uint8 y_pos1, uint8 y_pos2, uint8 bLineType)
 	} //End while
 
 } // End of function
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 0
 void WriteLCD_Hline(uint8 y_pos, uint8 start, uint8 end, uint8 bLineType)
 {
 	uint8 bTemp;
@@ -566,6 +569,7 @@ void WriteLCD_Hline(uint8 y_pos, uint8 start, uint8 end, uint8 bLineType)
 	//Write_display(COMMAND_REGISTER, END); // enable the auto inc
 
 } // End of function
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
