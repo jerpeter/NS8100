@@ -401,7 +401,7 @@ float HexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint,
 	millibars /= (float)((float)bitAccuracyMidpoint / (float)ACCURACY_12_BIT_MIDPOINT);
 
 	if (acousticSensorType == SENSOR_MIC_160)
-{
+	{
 		millibars *= 4;
 	}
 
