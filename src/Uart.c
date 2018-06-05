@@ -29,7 +29,11 @@
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
+#if 0 // Original
 static char s_uartBuffer[256];
+#else // Make sure there is enough buffer space for comparing remote command 1K message sizes
+static char s_uartBuffer[(1024 + 256)];
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -367,7 +371,11 @@ short Craft(char* fmt, ...)
 {
 	va_list arg_ptr;
 	short l;
+#if 0 // Original
 	char buf[256];
+#else // Make sure there is enough buffer space for printing remote command 1K message sizes
+	char buf[(1024 + 256)];
+#endif
 	static uint32 repeatingBuf = 0;
 	char repeatCountStr[10];
 
@@ -420,7 +428,11 @@ short DebugPrint(uint8 mode, char* fmt, ...)
 {
 	va_list arg_ptr;
 	short length = 0;
+#if 0 // Original
 	char buf[256];
+#else // Make sure there is enough buffer space for printing remote command 1K message sizes
+	char buf[(1024 + 256)];
+#endif
 	static uint32 repeatingBuf = 0;
 	static uint8 strippedNewline = 0;
 	char repeatCountStr[10];
