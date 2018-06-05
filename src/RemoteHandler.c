@@ -108,8 +108,10 @@ void InitCraftInterruptBuffers(void)
 {
 	memset(g_isrMessageBufferPtr, 0, sizeof(CMD_BUFFER_STRUCT));
 	g_isrMessageBufferPtr->status = CMD_MSG_NO_ERR;
-	g_isrMessageBufferPtr->overRunCheck = 0xBADD;
 	g_isrMessageBufferPtr->writePtr = g_isrMessageBufferPtr->readPtr = g_isrMessageBufferPtr->msg;
+#if 0 // No longer needed
+	g_isrMessageBufferPtr->overRunCheck = 0xBADD;
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -206,12 +208,14 @@ uint8 RemoteCmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 ///----------------------------------------------------------------------------
 void RemoteCmdMessageProcessing()
 {
+#if 0 // No longer needed
 	// Check if there is a potentially fatal error.
 	if (0xBADD != g_msgPool[s_msgReadIndex].overRunCheck)
 	{
 		g_msgPool[s_msgReadIndex].overRunCheck = 0xBADD;
 		OverlayMessage(getLangText(STATUS_TEXT), getLangText(CRAFT_SERIAL_ERROR_TEXT), 0);
 	}
+#endif
 
 	// NOTE: Need a different message if the command comming across contains
 	// data or additional info other then the 3 char cmd field. Currently
@@ -224,7 +228,9 @@ void RemoteCmdMessageProcessing()
 	g_msgPool[s_msgReadIndex].size = 0;	
 	g_msgPool[s_msgReadIndex].readPtr = g_msgPool[s_msgReadIndex].msg;	
 	g_msgPool[s_msgReadIndex].writePtr = g_msgPool[s_msgReadIndex].msg;
+#if 0 // No longer needed
 	g_msgPool[s_msgReadIndex].overRunCheck = 0xBADD;
+#endif
 	
 	s_msgReadIndex++;
 	if (s_msgReadIndex >= CMD_MSG_POOL_SIZE)
@@ -252,6 +258,7 @@ void ProcessCraftData()
 	// Halt all debugging message when recieving data.	
 	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
 
+#if 0 // Original
 	// Check status and then reset it to no error.
 	if (CMD_MSG_OVERFLOW_ERR == g_isrMessageBufferPtr->status)
 	{
@@ -261,7 +268,9 @@ void ProcessCraftData()
 		return;
 #endif
 	}
+#endif
 
+#if 0 // No longer needed
 	// Check status and then reset it to no error.
 	if (0xBADD != g_isrMessageBufferPtr->overRunCheck)
 	{
@@ -271,6 +280,7 @@ void ProcessCraftData()
 		return;
 #endif
 	}
+#endif
 
 	while (g_isrMessageBufferPtr->readPtr != g_isrMessageBufferPtr->writePtr)
 	{
@@ -283,6 +293,7 @@ void ProcessCraftData()
 			g_msgPool[s_msgWriteIndex].writePtr++;
 			g_msgPool[s_msgWriteIndex].size++;
 
+#if 0 // Original
 			// The buffer is full, go to the next buffer pool.
 			if (g_msgPool[s_msgWriteIndex].size >= (CMD_BUFFER_SIZE-2))
 			{
@@ -293,6 +304,22 @@ void ProcessCraftData()
 #endif
 				newPoolBuffer = YES;
 			}
+#else // Clear buffer if full and no terminating CR or LF, or if there was a serial overrun
+			// Check if the buffer is full with no terminating CR or LF
+			if ((g_msgPool[s_msgWriteIndex].size >= (CMD_BUFFER_SIZE-2)) || (g_isrMessageBufferPtr->status == CMD_MSG_OVERFLOW_ERR))
+			{
+				// Clear buffer
+				memset(g_msgPool[s_msgWriteIndex].msg, 0, CMD_BUFFER_SIZE);
+				g_msgPool[s_msgWriteIndex].size = 0;
+				g_msgPool[s_msgWriteIndex].writePtr = g_msgPool[s_msgWriteIndex].msg;
+
+				if(g_isrMessageBufferPtr->status == CMD_MSG_OVERFLOW_ERR)
+				{
+					OverlayMessage(getLangText(STATUS_TEXT), getLangText(MODEM_SYNC_FAILED_TEXT), 0);
+					g_isrMessageBufferPtr->status = CMD_MSG_NO_ERR;
+				}
+			}
+#endif
 		}
 		else
 		{
@@ -347,9 +374,11 @@ void RemoteCmdMessageHandlerInit()
 
 	for (s_msgWriteIndex = 0; s_msgWriteIndex < CMD_MSG_POOL_SIZE; s_msgWriteIndex++)
 	{	
-		g_msgPool[s_msgWriteIndex].overRunCheck = 0xBADD;
 		g_msgPool[s_msgWriteIndex].readPtr = g_msgPool[s_msgWriteIndex].msg;
 		g_msgPool[s_msgWriteIndex].writePtr = g_msgPool[s_msgWriteIndex].msg;
+#if 0 // No longer needed
+		g_msgPool[s_msgWriteIndex].overRunCheck = 0xBADD;
+#endif
 	}
 	
 	// Initialize index to the start.

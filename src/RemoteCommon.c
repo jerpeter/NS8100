@@ -102,11 +102,17 @@ uint8 ParseIncommingMsgCmd(CMD_BUFFER_STRUCT* inCmd, COMMAND_MESSAGE_HEADER* inc
 	// clear the incomming header data.
 	memset((uint8*)incommingHdr, 0, sizeof(COMMAND_MESSAGE_HEADER));
 
+#if 0 // Original
 	if (strlen(msgPtr) >= HDR_CMD_LEN)
+#else // Size known
+	if (inCmd->size >= HDR_CMD_LEN)
+#endif
 	{
 		// Parse the string into a header data struct.
 		memcpy(incommingHdr->cmd, msgPtr, HDR_CMD_LEN);
+#if 0 // Useless
 		msgPtr += HDR_CMD_LEN;
+#endif
 	}
 	else
 	{
