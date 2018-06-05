@@ -985,8 +985,7 @@ void DisplaySplashScreen(void)
 	// Add in Software Version
 	//----------------------------------------------------------------------------------------
 	memset(&buff[0], 0, sizeof(buff));
-	sprintf((char*)(&buff[0]), "%s %s", getLangText(SOFTWARE_VER_TEXT), (char*)g_buildVersion);
-	length = (uint8)strlen((char*)(&buff[0]));
+	length = (uint8)sprintf((char*)(&buff[0]), "%s %s", getLangText(SOFTWARE_VER_TEXT), (char*)g_buildVersion);
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_THREE;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
@@ -996,8 +995,7 @@ void DisplaySplashScreen(void)
 	// Add in Software Date and Time
 	//----------------------------------------------------------------------------------------
 	memset(&buff[0], 0, sizeof(buff));
-	sprintf((char*)(&buff[0]), "%s", (char*)g_buildDate);
-	length = (uint8)strlen((char*)buff);
+	length = (uint8)sprintf((char*)(&buff[0]), "%s", (char*)g_buildDate);
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_FOUR;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
@@ -1007,8 +1005,7 @@ void DisplaySplashScreen(void)
 	// Add in Battery Voltage
 	//----------------------------------------------------------------------------------------
 	memset(&buff[0], 0, sizeof(buff));
-	sprintf((char*)(&buff[0]), "%s: %.2f", getLangText(BATT_VOLTAGE_TEXT), GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
-	length = (uint8)strlen((char*)(&buff[0]));
+	length = (uint8)sprintf((char*)(&buff[0]), "%s: %.2f", getLangText(BATT_VOLTAGE_TEXT), GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
 
 	wnd_layout.curr_row = DEFAULT_MENU_ROW_SIX;
 	wnd_layout.curr_col = (uint16)(((wnd_layout.end_col)/2) - ((length * SIX_COL_SIZE)/2));
