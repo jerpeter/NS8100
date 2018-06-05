@@ -332,8 +332,7 @@ void DisplayDateTimeMn(REC_MN_STRUCT *rec_ptr, WND_LAYOUT_STRUCT *wnd_layout_ptr
 	top = (uint8)mn_layout_ptr->top_ln;
 
 	// Add in a title for the menu
-	sprintf((char*)sbuff, "-%s-", getLangText(DATE_TIME_TEXT));
-	length = (uint8)strlen((char*)sbuff);
+	length = (uint8)sprintf((char*)sbuff, "-%s-", getLangText(DATE_TIME_TEXT));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
