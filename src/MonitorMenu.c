@@ -628,7 +628,11 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 		if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 		{
+#if 0 // Original
 			length = (uint8)sprintf(buff, "%s", getLangText(SUMMARY_INTERVAL_TEXT));
+#else // Add SI number to display
+			length = (uint8)sprintf(buff, "%s %d", getLangText(SUMMARY_INTERVAL_TEXT), (g_pendingBargraphRecord.summary.calculated.summariesCaptured + 1));
+#endif
 		}
 		else if (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 		{
