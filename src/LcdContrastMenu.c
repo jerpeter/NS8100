@@ -209,9 +209,7 @@ void AddLcdContrastLevelDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	}
 
 	debug("Contrast level: <%s>\r\n", buff);
-	sprintf((char*)buff,"[%s]", contrast_buff);
-
-	length = (uint8)strlen((char*)buff);
+	length = (uint8)sprintf((char*)buff,"[%s]", contrast_buff);
 	wnd_layout_ptr->curr_col =(uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_SEVEN;
