@@ -208,8 +208,7 @@ void SummaryMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 	memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 
 	// Display the Title centered on the Top line
-	sprintf(lineBuff, "-%s-", getLangText(LIST_OF_SUMMARIES_TEXT));
-	length = (uint8)strlen((char*)lineBuff);
+	length = (uint8)sprintf(lineBuff, "-%s-", getLangText(LIST_OF_SUMMARIES_TEXT));
 	wnd_layout_ptr->curr_row = DEFAULT_MENU_ROW_ZERO;
 	wnd_layout_ptr->curr_col = (uint16)(((wnd_layout_ptr->end_col)/2) - ((length * SIX_COL_SIZE)/2));
 	WndMpWrtString((uint8*)(&lineBuff[0]), wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
