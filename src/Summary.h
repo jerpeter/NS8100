@@ -286,9 +286,9 @@ typedef struct
 	uint32 barIntervalsCaptured; // 0x260 (from 0xA55A), 0x8C (from struct start)
 	uint16 summariesCaptured; // 0x264 (from 0xA55A), 0x90 (from struct start)
 
-	GPS_POSITION		gpsPosition; // 0x268 (from 0xA55A) // 0x94 (from struct start)
+	GPS_POSITION		gpsPosition; // 0x266 (from 0xA55A) // 0x92 (from struct start)
 
-	uint8				unused[UNUSED_CALCULATED_SIZE]; // 0x280 (from 0xA55A) // 0xAC (from struct start)
+	uint8				unused[UNUSED_CALCULATED_SIZE]; // 0x27C (from 0xA55A) // 0xA8 (from struct start)
 	uint32 calcStructEndFlag; // 0x29C (from 0xA55A), 0xC8 (from struct start)
 } CALCULATED_DATA_STRUCT; // 204 bytes
 #pragma pack()
