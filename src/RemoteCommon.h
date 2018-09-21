@@ -88,6 +88,8 @@
 
 #define DQM_XFER_SIZE			10
 
+#define DQM_LEGACY_EVENT_LIMIT	800
+
 #define VML_DATA_LOG_ENTRIES	4
 
 #define START_DLOAD_FLAG	0xAABBBBAA		// Do not change - flags are used in the supergraphics app
@@ -492,7 +494,9 @@ typedef struct
 	uint32 alarmTwoAirMinLevel;
 	uint32 alarmOneTime;
 	uint32 alarmTwoTime;
-	uint8 unused[4];
+	uint8 legacyDqmLimit;
+	uint8 storedEventsCapMode;
+	uint16 storedEventLimit;
 } ALARM_CFG;
 #pragma pack()
 
