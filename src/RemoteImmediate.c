@@ -583,7 +583,8 @@ void HandleDQM(CMD_BUFFER_STRUCT* inCmd)
 	uint32 dataLength;						// Will hold the new data length of the message
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
 	uint8* dqmPtr;
-
+	uint16 i;
+	uint16 validEventCount = 1;
 
 	UNUSED(inCmd);
 
@@ -593,10 +594,36 @@ void HandleDQM(CMD_BUFFER_STRUCT* inCmd)
 		return;
 	}
 
+	// Clear the transfer structure
 	memset((uint8*)g_dqmXferStructPtr, 0, sizeof(DQMx_XFER_STRUCT));
 
-	// Set the number of records to the number of valid entries in the summary list
-	g_dqmXferStructPtr->numOfRecs = g_summaryList.validEntries;
+	// Set the initial table index to the first element of the table
+	g_dqmXferStructPtr->ramTableIndex = 0;
+
+	// Set the number of records to the number of valid entries in the event cache
+	g_dqmXferStructPtr->numOfRecs = g_eventNumberCacheValidEntries;
+
+#if 1 // New option to prevent responses greater than 800 entries (legacy)
+	if ((g_unitConfig.legacyDqmLimit == ENABLED) && (g_dqmXferStructPtr->numOfRecs > DQM_LEGACY_EVENT_LIMIT))
+	{
+		// Cap the number at DQM_LEGACY_EVENT_LIMIT (800)
+		g_dqmXferStructPtr->numOfRecs = DQM_LEGACY_EVENT_LIMIT;
+
+		// Set index to the upper limit
+		i = g_nextEventNumberToUse - 1;
+
+		// Find the starting index of the last 800 events by working backwards
+		while (validEventCount < DQM_LEGACY_EVENT_LIMIT)
+		{
+			if (g_eventNumberCache[--i] == EVENT_REFERENCE_VALID)
+			{
+				validEventCount++;
+			}
+		}
+
+		g_dqmXferStructPtr->ramTableIndex = i;
+	}
+#endif
 
 	// Add 1 additional record as an end marker (which filled with 0xCC's)
 	g_dqmXferStructPtr->numOfRecs++;
@@ -615,8 +642,6 @@ void HandleDQM(CMD_BUFFER_STRUCT* inCmd)
 	sprintf((char*)dqmPtr, "%04d", g_dqmXferStructPtr->numOfRecs);
 
 	//-----------------------------------------------------------
-	// Set the intial table index to the first element of the table
-	g_dqmXferStructPtr->ramTableIndex = 0;
 	g_dqmXferStructPtr->xferStateFlag = HEADER_XFER_STATE;		// This is the initial xfer state to start.
 	g_modemStatus.xferState = DQMx_CMD;							// This is the xfer command state.
 	g_modemStatus.xferMutex = YES;								// Mutex to prevent other commands.
@@ -675,7 +700,8 @@ uint8 sendDQMData(void)
 	// xfer the event record structure.
 	else if (SUMMARY_TABLE_SEARCH_STATE == g_dqmXferStructPtr->xferStateFlag)
 	{
-		if (g_dqmXferStructPtr->ramTableIndex == EVENT_LIST_CACHE_ENTRIES_LAST_INDEX)
+		// Check if down to the last record (the end marker record)
+		if (g_dqmXferStructPtr->numOfRecs == 1)
 		{
 			memset((uint8*)g_dqmXferStructPtr->dqmData, 0xCC, sizeof(DQMx_DATA_STRUCT));
 			g_dqmXferStructPtr->dqmData[0].endFlag = 0xEE;
@@ -696,10 +722,10 @@ uint8 sendDQMData(void)
 		else
 		{
 			idex = 0;
-			while ((idex < DQM_XFER_SIZE) && (g_dqmXferStructPtr->ramTableIndex < EVENT_LIST_CACHE_ENTRIES_LAST_INDEX))
+			while ((idex < DQM_XFER_SIZE) && (g_dqmXferStructPtr->numOfRecs > 1))
 			{
-				// Check if mode has been set meaning we have a valid entry
-				if (eventListCache[g_dqmXferStructPtr->ramTableIndex].mode)
+				// Check if the current index is a valid event entry
+				if (g_eventNumberCache[g_dqmXferStructPtr->ramTableIndex] == EVENT_REFERENCE_VALID)
 				{
 					g_dqmXferStructPtr->dqmData[idex].dqmxFlag = 0xCC;
 					g_dqmXferStructPtr->dqmData[idex].mode = eventListCache[g_dqmXferStructPtr->ramTableIndex].mode;
@@ -708,7 +734,9 @@ uint8 sendDQMData(void)
 					g_dqmXferStructPtr->dqmData[idex].eventTime = ConvertEpochTimeToDateTime(eventListCache[g_dqmXferStructPtr->ramTableIndex].epochEventTime);
 					g_dqmXferStructPtr->dqmData[idex].subMode = eventListCache[g_dqmXferStructPtr->ramTableIndex].subMode;
 					g_dqmXferStructPtr->dqmData[idex].endFlag = 0xEE;
+
 					idex++;
+					g_dqmXferStructPtr->numOfRecs--;
 				}
 
 				g_dqmXferStructPtr->ramTableIndex++;
@@ -1164,6 +1192,9 @@ void HandleDER(CMD_BUFFER_STRUCT* inCmd)
 		}
 		else // No memory space to work, must save compressed data as a file
 		{
+			GetSpi1MutexLock(SDMMC_LOCK);
+			nav_select(FS_NAV_ID_DEFAULT);
+
 			// Get new event file handle
 			g_globalFileHandle = GetERDataFileHandle(g_derXferStruct.dloadEventRec.eventRecord.summary.eventNumber, CREATE_EVENT_FILE);
 
@@ -1183,6 +1214,8 @@ void HandleDER(CMD_BUFFER_STRUCT* inCmd)
 			// Done writing the event file, close the file handle
 			g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
 			close(g_globalFileHandle);
+
+			ReleaseSpi1MutexLock();
 
 			g_derXferStruct.compressedEventDataFilePresent = YES;
 		}
