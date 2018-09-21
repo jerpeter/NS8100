@@ -427,7 +427,7 @@ BOOLEAN CheckRamSummaryIndexForValidEventLink(uint16 ramSummaryIndex)
 
 	if (ramSummaryIndex < s_totalRamSummaries)
 	{
-		if (summaryListCache[ramSummaryIndex].eventNumber != 0)
+		if ((summaryListCache[ramSummaryIndex].eventNumber != 0) && (g_eventNumberCache[summaryListCache[ramSummaryIndex].eventNumber] == EVENT_REFERENCE_VALID))
 		{
 			validEventLink = YES;
 		}
