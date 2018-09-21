@@ -71,6 +71,11 @@ enum {
 	LOOSE_EVENT_NAME_FORMAT
 };
 
+enum {
+	INIT_LIST,
+	NEW_ENTRY
+};
+
 typedef struct
 {
 	int16 file;
@@ -106,6 +111,7 @@ BOOLEAN CheckValidEventFile(uint16 eventNumber);
 void DeleteEventFileRecord(uint16 eventNumber);
 void DeleteEventFileRecords(void);
 void DeleteNonEssentialFiles(void);
+void RemoveExcessEventsAboveCap(void);
 void ReInitSdCardAndFat32(void);
 inline void AdjustSampleForBitAccuracy(void);
 void PowerDownSDCard(void);
@@ -148,7 +154,7 @@ void VerifyCacheEventToRam(uint16 eventNumber, char* subMessage);
 void SaveRemoteEventDownloadStreamToFile(uint16 eventNumber);
 
 uint8 CacheSerialNumberAndReturnIndex(char* serialNumberString);
-void CacheSummaryListEntryToEventList(void);
+void CacheSummaryListEntryToEventList(uint8 entryType);
 void ClearEventListCache(void);
 
 #endif // _FLASHEVTS_H_

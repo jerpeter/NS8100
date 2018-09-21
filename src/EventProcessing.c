@@ -47,10 +47,10 @@ void InitEventNumberCache(void)
 {
 	debug("Initializing event number cache...\r\n");
 
-	// Basically copying all FF's to the ram summary table
-	memset(&g_eventNumberCache[0], 0xFF, TOTAL_UNIQUE_EVENT_NUMBERS);
+	memset(&g_eventNumberCache[0], NO_EVENT_FILE, TOTAL_UNIQUE_EVENT_NUMBERS);
 
 	g_eventNumberCacheValidEntries = 0;
+	g_eventNumberCacheOldestIndex = 0;
 	g_eventNumberCacheMaxIndex = 1;
 	g_eventNumberCacheValidKey = VALID_EVENT_NUMBER_CACHE_KEY;
 }
@@ -60,7 +60,7 @@ void InitEventNumberCache(void)
 ///----------------------------------------------------------------------------
 void AddEventNumberToCache(uint16 eventNumber)
 {
-	if (g_eventNumberCache[eventNumber] == 0xFF)
+	if (g_eventNumberCache[eventNumber] == NO_EVENT_FILE)
 	{
 		g_eventNumberCache[eventNumber] = EVENT_REFERENCE_VALID;
 		g_eventNumberCacheValidEntries++;
@@ -74,7 +74,7 @@ void AddEventNumberToCache(uint16 eventNumber)
 ///----------------------------------------------------------------------------
 void AddEventNumberFromFileToCache(uint16 eventNumber)
 {
-	if (g_eventNumberCache[eventNumber] == 0xFF)
+	if (g_eventNumberCache[eventNumber] == NO_EVENT_FILE)
 	{
 		g_eventNumberCache[eventNumber] = EVENT_FILE_FOUND;
 
@@ -708,7 +708,7 @@ void AddEventToSummaryList(EVT_RECORD* event)
 	g_summaryList.totalEntries++;
 	g_summaryList.validEntries++;
 
-	CacheSummaryListEntryToEventList();
+	CacheSummaryListEntryToEventList(NEW_ENTRY);
 }
 
 ///----------------------------------------------------------------------------
@@ -1060,7 +1060,7 @@ uint8 CacheSerialNumberAndReturnIndex(char* serialNumberString)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void CacheSummaryListEntryToEventList(void)
+void CacheSummaryListEntryToEventList(uint8 entryType)
 {
 	EVENT_LIST_ENTRY_STRUCT* eventListCache = (EVENT_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[EVENT_LIST_CACHE_OFFSET];
 
@@ -1068,6 +1068,25 @@ void CacheSummaryListEntryToEventList(void)
 	eventListCache[g_summaryList.cachedEntry.eventNumber].subMode = g_summaryList.cachedEntry.subMode;
 	eventListCache[g_summaryList.cachedEntry.eventNumber].serialNumberCacheIndex = CacheSerialNumberAndReturnIndex((char*)&g_summaryList.cachedEntry.serialNumber[0]);
 	eventListCache[g_summaryList.cachedEntry.eventNumber].epochEventTime = ConvertDateTimeToEpochTime(g_summaryList.cachedEntry.eventTime);
+
+	if (entryType == INIT_LIST)
+	{
+		// Check if oldest epoch reference is valid (non-zero, stored in index 0 which is not a valid event number)
+		if (eventListCache[0].epochEventTime)
+		{
+			// Check if an older event time was found
+			if (eventListCache[g_summaryList.cachedEntry.eventNumber].epochEventTime < eventListCache[0].epochEventTime)
+			{
+				// Save the older time and index of the oldest event
+				eventListCache[0].epochEventTime = eventListCache[g_summaryList.cachedEntry.eventNumber].epochEventTime;
+				g_eventNumberCacheOldestIndex = g_summaryList.cachedEntry.eventNumber;
+			}
+		}
+		else // Initial condition
+		{
+			eventListCache[0].epochEventTime = eventListCache[g_summaryList.cachedEntry.eventNumber].epochEventTime;
+		}
+	}
 }
 
 ///----------------------------------------------------------------------------
@@ -1081,7 +1100,10 @@ void ClearEventListCache(void)
 	// Clear out the serial number cache
 	memset(&g_serialNumberCache[0], 0, (SERIAL_NUMBER_CACHE_ENTRIES * SERIAL_NUMBER_STRING_SIZE));
 
+	// Copy the current serial number to the first entry
 	memcpy(&g_serialNumberCache[0], g_factorySetupRecord.unitSerialNumber, FACTORY_SERIAL_NUMBER_SIZE);
+
+	// Label the last entry as error
 	strcpy((char*)&g_serialNumberCache[255], getLangText(ERROR_TEXT));
 }
 
@@ -1101,8 +1123,7 @@ void ParseAndCountSummaryListEntries(void)
 	{
 		if (g_summaryList.cachedEntry.eventNumber)
 		{
-#if 1 // Add check to make sure event file hasn't been deleted under the covers
-			// Validate event file is present
+			// Validate event file is present to make sure it hasn't been deleted under the covers
 			if (ValidateEventNumber(g_summaryList.cachedEntry.eventNumber))
 			{
 #if 0 // Test
@@ -1111,7 +1132,7 @@ void ParseAndCountSummaryListEntries(void)
 #endif
 				g_summaryList.validEntries++;
 
-				CacheSummaryListEntryToEventList();
+				CacheSummaryListEntryToEventList(INIT_LIST);
 			}
 			else // Event file is missing, need to clear summary list entry
 			{
@@ -1127,13 +1148,14 @@ void ParseAndCountSummaryListEntries(void)
 
 				// Write out the empty summary entry
 				WriteWithSizeFix(g_summaryList.file, (uint8*)&g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+
+				// Entry removed this run
+				g_summaryList.deletedEntries++;
 			}
-#else
-			g_summaryList.validEntries++;
-#endif
 		}
 		else
 		{
+			// Entry was removed on a prior run
 			g_summaryList.deletedEntries++;
 		}
 	}
@@ -1348,12 +1370,15 @@ void InitEventRecord(uint8 opMode)
 				eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
 
 				// Calculate the divider used for converting stored A/D peak counts to units of measure
-				unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) /
-				(float)(g_factorySetupRecord.seismicSensorType);
+				if ((g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0200) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0500))
+				{
+					unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType * ACC_832M1_SCALER);
+				}
+				else unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
 
 				tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
 
-				if ((g_factorySetupRecord.seismicSensorType != SENSOR_ACCELEROMETER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
+				if ((g_factorySetupRecord.seismicSensorType < SENSOR_ACC_RANGE_DIVIDER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
 				{
 					tempSesmicTriggerInUnits *= (float)METRIC;
 				}
@@ -2587,11 +2612,125 @@ void SetFileDateTimestamp(uint8 option)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void RemoveEventFile(uint16 eventNumber)
+{
+	uint16 lowerBounds, upperBounds;
+
+	GetSubDirLowerAndUpperBounds(eventNumber, &lowerBounds, &upperBounds);
+
+#if 1 // Test
+	sprintf((char*)g_spareBuffer, "REMOVING %s %d (ABOVE EVT CAP, OLDEST FIRST)", EVT_FILE, eventNumber);
+	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
+#endif
+
+	//-------------------------------------------------------------------------
+	// Remove Event data file (should exist)
+	//-------------------------------------------------------------------------
+	sprintf(g_spareFileName, "%s%s %d-%d\\%s%d.ns8", EVENTS_PATH, EVTS_SUB_DIR, lowerBounds, upperBounds, EVT_FILE, eventNumber);
+
+	// Check if the Event data file is in the normal location
+	if (nav_setcwd(g_spareFileName, TRUE, FALSE) == TRUE)
+	{
+		// Delete the file and check if successful
+		if (nav_file_del(TRUE) == FALSE)
+		{
+			sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+			OverlayMessage(g_spareFileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
+		}
+	}
+	else // Check if the Event data file is in the legacy location
+	{
+		sprintf(g_spareFileName, "%s%s%d.ns8", EVENTS_PATH, EVT_FILE, eventNumber);
+
+		if (nav_setcwd(g_spareFileName, TRUE, FALSE) == TRUE)
+		{
+			// Delete the file and check if successful
+			if (nav_file_del(TRUE) == FALSE)
+			{
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+				OverlayMessage(g_spareFileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
+			}
+		}
+	}
+
+	//-------------------------------------------------------------------------
+	// Remove compressed data file (if it exists)
+	//-------------------------------------------------------------------------
+	sprintf(g_spareFileName, "%s%s %d-%d\\%s%d.nsD", ER_DATA_PATH, EVTS_SUB_DIR, lowerBounds, upperBounds, EVT_FILE, eventNumber);
+
+	// Check if the Compressed Event data file is in the normal location
+	if (nav_setcwd(g_spareFileName, TRUE, FALSE) == TRUE)
+	{
+		// Delete the file and check if successful
+		if (nav_file_del(TRUE) == FALSE)
+		{
+			sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+			OverlayMessage(g_spareFileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
+		}
+	}
+	else // Check if the Event data file is in the legacy location
+	{
+		sprintf(g_spareFileName, "%s%s%d.nsD", ER_DATA_PATH, EVT_FILE, eventNumber);
+
+		if (nav_setcwd(g_spareFileName, TRUE, FALSE) == TRUE)
+		{
+			// Delete the file and check if successful
+			if (nav_file_del(TRUE) == FALSE)
+			{
+				sprintf((char*)g_spareBuffer, "%s %s", getLangText(UNABLE_TO_DELETE_TEXT), getLangText(EVENT_TEXT));
+				OverlayMessage(g_spareFileName, (char*)g_spareBuffer, 3 * SOFT_SECS);
+			}
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void RemoveExcessEventsAboveCap(void)
+{
+	uint16 loopCount = 0;
+	uint16 currentEventIndex = g_eventNumberCacheOldestIndex;
+
+	while (g_eventNumberCacheValidEntries >= g_unitConfig.storedEventLimit)
+	{
+		if (g_eventNumberCache[currentEventIndex] == EVENT_REFERENCE_VALID)
+		{
+			// Remove event file
+			RemoveEventFile(currentEventIndex);
+
+			// Event number cache adjustments
+			g_eventNumberCache[currentEventIndex] = NO_EVENT_FILE;
+			g_eventNumberCacheOldestIndex++;
+			g_eventNumberCacheValidEntries--;
+		}
+
+		currentEventIndex++;
+		loopCount++;
+
+		// Check if a full cycled around the event list has occurred
+		if (loopCount == EVENT_LIST_CACHE_ENTRIES_LAST_INDEX)
+		{
+			break;
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 {
 	int fileHandle;
 	int fileOption;
 	uint16 lowerBounds, upperBounds;
+
+#if 1 // New feature
+	if ((option == CREATE_EVENT_FILE) && (g_unitConfig.storedEventsCapMode == ENABLED) && (g_eventNumberCacheValidEntries >= g_unitConfig.storedEventLimit))
+	{
+		RemoveExcessEventsAboveCap();
+	}
+#endif
 
 	GetSubDirLowerAndUpperBounds(newFileEventNumber, &lowerBounds, &upperBounds);
 
@@ -2604,7 +2743,7 @@ int GetEventFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 	// Set the file option flags for the file process
 	switch (option)
 	{
-		case CREATE_EVENT_FILE:	debug("File to create: %s\r\n", g_spareFileName);
+		case CREATE_EVENT_FILE: debug("File to create: %s\r\n", g_spareFileName);
 			fileOption = (O_CREAT | O_WRONLY); break;
 		case READ_EVENT_FILE: debug("File to read: %s\r\n", g_spareFileName);
 			fileOption = O_RDONLY; break;
@@ -2641,7 +2780,6 @@ int GetERDataFileHandle(uint16 newFileEventNumber, EVENT_FILE_OPTION option)
 {
 	int fileHandle;
 	int fileOption;
-
 	uint16 lowerBounds, upperBounds;
 
 	GetSubDirLowerAndUpperBounds(newFileEventNumber, &lowerBounds, &upperBounds);
