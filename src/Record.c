@@ -466,11 +466,14 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT* unitConfigPtr)
 	unitConfigPtr->languageMode = ENGLISH_LANG;
 	unitConfigPtr->lcdContrast = DEFUALT_CONTRAST;
 	unitConfigPtr->lcdTimeout = 2;
+	unitConfigPtr->legacyDqmLimit = DISABLED;
 	unitConfigPtr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
 	unitConfigPtr->cycleEndTimeHour = 0;
 	unitConfigPtr->unused1 = DISABLED;
 	unitConfigPtr->rs232PowerSavings = ENABLED;
 	unitConfigPtr->saveCompressedData = SAVE_EXTRA_FILE_COMPRESSED_DATA;
+	unitConfigPtr->storedEventsCapMode = DISABLED;
+	unitConfigPtr->storedEventLimit = STORED_EVENT_LIMIT_DEFAULT_VALUE;
 	unitConfigPtr->timerMode = DISABLED;
 	unitConfigPtr->unitsOfAir = DECIBEL_TYPE;
 	unitConfigPtr->unitsOfMeasure = IMPERIAL_TYPE;

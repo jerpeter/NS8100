@@ -61,11 +61,19 @@ enum {
 
 #define ADC_RESOLUTION				0x8000	// +/- 0x800 (2048)
 
+#define ACC_832M1_SCALER		4
+
+#define SENSOR_80_IN			16384
+#define SENSOR_40_IN			8192
 #define SENSOR_20_IN			4096
 #define SENSOR_10_IN			2048
 #define SENSOR_5_IN				1024
 #define SENSOR_2_5_IN			512
 #define SENSOR_ACCELEROMETER	51200
+#define SENSOR_ACC_832M1_0200	(80000 / ACC_832M1_SCALER) // Divide by 832M1 scaler to keep value within 65536 limit of 16-bit storage (must remove scaler on display side)
+#define SENSOR_ACC_832M1_0500	(200000 / ACC_832M1_SCALER) // Divide by 832M1 scaler to keep value within 65536 limit of 16-bit storage (must remove scaler on display side)
+
+#define SENSOR_ACC_RANGE_DIVIDER	(SENSOR_ACC_832M1_0200 - 1)
 
 #define SENSOR_MIC_148			0xA1
 #define SENSOR_MIC_160			0xA4 // This mic is 4 times the scale of the 148
@@ -90,7 +98,8 @@ enum {
 enum {
 	EVENT_REFERENCE_VALID = 1,
 	EVENT_FILE_FOUND,
-	INVALID_EVENT_FILE_FOUND
+	INVALID_EVENT_FILE_FOUND,
+	NO_EVENT_FILE = 0xFF
 };
 
 enum TRIGGER_DEFAULT_RECORD_INDEX
@@ -269,13 +278,15 @@ typedef struct
 	uint8 usbSyncMode;
 	uint8 pretrigBufferDivider;
 	uint32 alarmOneSeismicLevel;
-	uint32 alarmOneSeismicMinLevel;
+	uint32 spare1; // Move Min Levels to globals to make room for other storage elements
 	uint32 alarmOneAirLevel;
-	uint32 alarmOneAirMinLevel;
+	uint32 spare2; // Move Min Levels to globals to make room for other storage elements
 	uint32 alarmTwoSeismicLevel;
-	uint32 alarmTwoSeismicMinLevel;
+	uint32 spare3; // Move Min Levels to globals to make room for other storage elements
 	uint32 alarmTwoAirLevel;
-	uint32 alarmTwoAirMinLevel;
+	uint8 legacyDqmLimit;
+	uint8 storedEventsCapMode;
+	uint16 storedEventLimit;
 	float alarmOneTime;
 	float alarmTwoTime;
 	uint32 TimerModeActiveMinutes;
