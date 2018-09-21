@@ -85,6 +85,15 @@ static uint8 s_consecutiveEventsWithoutCalThreshold = CONSEC_EVENTS_WITHOUT_CAL_
 static uint8 s_channelReadsToSync = 0;
 #endif
 
+static SAMPLE_DATA_STRUCT s_tempSensorCalPeaks;
+static SAMPLE_DATA_STRUCT s_tempSensorCalFreqCounts;
+static SAMPLE_DATA_STRUCT s_tempSensorCalFreqSign;
+static SAMPLE_DATA_STRUCT s_tempSensorCalFreqCounter;
+static int32 s_tempChanMin[MAX_NUM_OF_CHANNELS];
+static int32 s_tempChanMax[MAX_NUM_OF_CHANNELS];
+static int32 s_tempChanAvg[MAX_NUM_OF_CHANNELS];
+static uint32 s_tempChanMed[MAX_NUM_OF_CHANNELS][8];
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
@@ -1160,28 +1169,188 @@ static inline void checkForTemperatureDrift_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-static inline void saveMaxPeaksLastThreeSecondsForSensorCal_ISR_Inline(void)
+void SensorCalibrationDataInit(void)
 {
-	s_sensorCalSampleCount--;
+	uint16 i;
 
-	if (s_R_channelReading > g_sensorCalPeaks[0].r) { g_sensorCalPeaks[0].r = s_R_channelReading; }
-	if (s_V_channelReading > g_sensorCalPeaks[0].v) { g_sensorCalPeaks[0].v = s_V_channelReading; }
-	if (s_T_channelReading > g_sensorCalPeaks[0].t) { g_sensorCalPeaks[0].t = s_T_channelReading; }
-	if (s_A_channelReading > g_sensorCalPeaks[0].a) { g_sensorCalPeaks[0].a = s_A_channelReading; }
+	memset(&s_tempSensorCalPeaks, 0, sizeof(s_tempSensorCalPeaks));
+	memset(&s_tempChanMed[0][0], 0, sizeof(s_tempChanMed));
+	memset(&s_tempSensorCalFreqCounter, 0, sizeof(s_tempSensorCalFreqCounter));
+	memset(&s_tempSensorCalFreqCounts, 0, sizeof(s_tempSensorCalFreqCounts));
 
-	if (s_sensorCalSampleCount == 0)
+	// Reset the Min and Max to initial condition and Avg to zero
+	for (i = 0; i < MAX_NUM_OF_CHANNELS; i++)
+	{
+		s_tempChanMin[i] = 0xFFFF;
+		s_tempChanMax[i] = 0x0000;
+		s_tempChanAvg[i] = 0;
+	}
+
+	s_sensorCalSampleCount = CALIBRATION_FIXED_SAMPLE_RATE;
+	g_calibrationGeneratePulse = NO;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ProcessSensorCalibrationData(void)
+{
+	uint16 i, j;
+
+	//=============================================================================================
+	// Process data at end of 1 second cycle
+	//=============================================================================================
+
+	// Check if at the end of a 1 second cycle
+	if (--s_sensorCalSampleCount == 0)
 	{
 		// Reset the counter
 		s_sensorCalSampleCount = CALIBRATION_FIXED_SAMPLE_RATE;
 
-		// Shift the Peaks out after a second (index 1 being the current peak for the last second, index 2 for the peak the second before, etc)
-		g_sensorCalPeaks[3] = g_sensorCalPeaks[2];
+		//=================
+		// Sensor Cal Peaks
+		//-----------------
+
+		// Shift the Peaks out after a second (index 1 being the current peak for the last second, index 2 for the peak the second before, etc) and save frequency counts
 		g_sensorCalPeaks[2] = g_sensorCalPeaks[1];
 		g_sensorCalPeaks[1] = g_sensorCalPeaks[0];
+		g_sensorCalPeaks[0] = s_tempSensorCalPeaks;
+		g_sensorCalFreqCounts = s_tempSensorCalFreqCounts;
 
 		// Clear out the first Peak hold values
-		memset(&g_sensorCalPeaks[0], 0, sizeof(SAMPLE_DATA_STRUCT));
+		memset(&s_tempSensorCalPeaks, 0, sizeof(SAMPLE_DATA_STRUCT));
+
+		//==============
+		// Channel Noise
+		//--------------
+
+		// Calculate the channel med percentages
+		for (i = 0; i < MAX_NUM_OF_CHANNELS; i++)
+		{
+			for (j = 0; j < 7; j++)
+			{
+				s_tempChanMed[i][j] *= 100;
+				s_tempChanMed[i][j] /= CALIBRATION_FIXED_SAMPLE_RATE;
+			}
+
+			// Calculate the percentage of samples found withing the +/- 6 band
+			s_tempChanMed[i][7] = CALIBRATION_FIXED_SAMPLE_RATE - s_tempChanMed[i][7];
+			s_tempChanMed[i][7] *= 100;
+			s_tempChanMed[i][7] /= CALIBRATION_FIXED_SAMPLE_RATE;
+		}
+
+		// Move the Med to display structure
+		memcpy(&g_sensorCalChanMed[0][0], &s_tempChanMed[0][0], sizeof(s_tempChanMed));
+
+		// Zero the Med
+		memset(&s_tempChanMed[0][0], 0, sizeof(s_tempChanMed));
+
+		//=================
+		// Min, Max and Avg
+		//-----------------
+
+		// Remove midpoint from Min, Max and Avg calculations (to center around 0 instead of ACCURACY_16_BIT_MIDPOINT)
+		for (i = 0; i < MAX_NUM_OF_CHANNELS; i++)
+		{
+			s_tempChanMin[i] -= ACCURACY_16_BIT_MIDPOINT;
+			s_tempChanMax[i] -= ACCURACY_16_BIT_MIDPOINT;
+
+			s_tempChanAvg[i] /= CALIBRATION_FIXED_SAMPLE_RATE;
+			s_tempChanAvg[i] -= ACCURACY_16_BIT_MIDPOINT;
+		}
+
+		// Move the Min, Max and Avg to display struct
+		memcpy(&g_sensorCalChanMin, &s_tempChanMin, sizeof(s_tempChanMin));
+		memcpy(&g_sensorCalChanMax, &s_tempChanMax, sizeof(s_tempChanMax));
+		memcpy(&g_sensorCalChanAvg, &s_tempChanAvg, sizeof(s_tempChanAvg));
+
+		// Reset the Min and Max to initial condition and Avg to zero
+		for (i = 0; i < MAX_NUM_OF_CHANNELS; i++)
+		{
+			s_tempChanMin[i] = 0xFFFF;
+			s_tempChanMax[i] = 0x0000;
+			s_tempChanAvg[i] = 0;
+		}
 	}
+
+	//=============================================================================================
+	// Generate cal pulse if selected
+	//=============================================================================================
+	if (g_calibrationGeneratePulse == YES)
+	{
+		// Process the cal in about the middle of the second
+		if ((s_sensorCalSampleCount - (CALIBRATION_FIXED_SAMPLE_RATE / 2)) == CAL_SAMPLE_COUNT_FIRST_TRANSITION_HIGH) { AdSetCalSignalHigh(); }	// (~10 ms)
+		if ((s_sensorCalSampleCount - (CALIBRATION_FIXED_SAMPLE_RATE / 2)) == CAL_SAMPLE_COUNT_SECOND_TRANSITION_LOW) { AdSetCalSignalLow(); }	// (~20 ms)
+		if ((s_sensorCalSampleCount - (CALIBRATION_FIXED_SAMPLE_RATE / 2)) == CAL_SAMPLE_COUNT_THIRD_TRANSITION_HIGH) { AdSetCalSignalHigh(); }	// (~10 ms)
+		if ((s_sensorCalSampleCount - (CALIBRATION_FIXED_SAMPLE_RATE / 2)) == CAL_SAMPLE_COUNT_FOURTH_TRANSITION_OFF) { AdSetCalSignalOff(); }	// (~55 ms)
+	}
+
+	//=============================================================================================
+	// Process current sample data
+	//=============================================================================================
+
+	//========================
+	// Process frequency count
+	//------------------------
+
+	// Check for initial condition
+	if (s_tempSensorCalFreqCounter.a == 0)
+	{
+		// Init the sign and counter
+		s_tempSensorCalFreqSign.r = (uint16)(s_R_channelReading & g_bitAccuracyMidpoint); s_tempSensorCalFreqCounter.r = 1;
+		s_tempSensorCalFreqSign.v = (uint16)(s_V_channelReading & g_bitAccuracyMidpoint); s_tempSensorCalFreqCounter.v = 1;
+		s_tempSensorCalFreqSign.t = (uint16)(s_T_channelReading & g_bitAccuracyMidpoint); s_tempSensorCalFreqCounter.t = 1;
+		s_tempSensorCalFreqSign.a = (uint16)(s_A_channelReading & g_bitAccuracyMidpoint); s_tempSensorCalFreqCounter.a = 1;
+	}
+
+	// Check if the stored sign comparison signals a zero crossing and if so save new sign and reset freq counter otherwise increment count
+	if (s_tempSensorCalFreqSign.r ^ (s_R_channelReading & g_bitAccuracyMidpoint)) { s_tempSensorCalFreqSign.r = (uint16)(s_R_channelReading & g_bitAccuracyMidpoint); s_tempSensorCalFreqCounter.r = 1; }
+	else { if (s_tempSensorCalFreqCounter.r < 0xFFFF) { s_tempSensorCalFreqCounter.r++; } }
+
+	if (s_tempSensorCalFreqSign.v ^ (s_V_channelReading & g_bitAccuracyMidpoint)) { s_tempSensorCalFreqSign.v = (uint16)(s_V_channelReading & g_bitAccuracyMidpoint); s_tempSensorCalFreqCounter.v = 1; }
+	else { if (s_tempSensorCalFreqCounter.v < 0xFFFF) { s_tempSensorCalFreqCounter.v++; } }
+
+	if (s_tempSensorCalFreqSign.t ^ (s_T_channelReading & g_bitAccuracyMidpoint)) { s_tempSensorCalFreqSign.t = (uint16)(s_T_channelReading & g_bitAccuracyMidpoint); s_tempSensorCalFreqCounter.t = 1; }
+	else { if (s_tempSensorCalFreqCounter.t < 0xFFFF) { s_tempSensorCalFreqCounter.t++; } }
+
+	if (s_tempSensorCalFreqSign.a ^ (s_A_channelReading & g_bitAccuracyMidpoint)) { s_tempSensorCalFreqSign.a = (uint16)(s_A_channelReading & g_bitAccuracyMidpoint); s_tempSensorCalFreqCounter.a = 1; }
+	else { if (s_tempSensorCalFreqCounter.a < 0xFFFF) { s_tempSensorCalFreqCounter.a++; } }
+
+	//=================
+	// Min, Max and Avg
+	//-----------------
+	if (s_R_channelReading < s_tempChanMin[1]) { s_tempChanMin[1] = s_R_channelReading; }
+	if (s_R_channelReading > s_tempChanMax[1]) { s_tempChanMax[1] = s_R_channelReading; }
+	s_tempChanAvg[1] += s_R_channelReading;
+
+	if (s_V_channelReading < s_tempChanMin[2]) { s_tempChanMin[2] = s_V_channelReading; }
+	if (s_V_channelReading > s_tempChanMax[2]) { s_tempChanMax[2] = s_V_channelReading; }
+	s_tempChanAvg[2] += s_V_channelReading;
+
+	if (s_T_channelReading < s_tempChanMin[3]) { s_tempChanMin[3] = s_T_channelReading; }
+	if (s_T_channelReading > s_tempChanMax[3]) { s_tempChanMax[3] = s_T_channelReading; }
+	s_tempChanAvg[3] += s_T_channelReading;
+
+	if (s_A_channelReading < s_tempChanMin[0]) { s_tempChanMin[0] = s_A_channelReading; }
+	if (s_A_channelReading > s_tempChanMax[0]) { s_tempChanMax[0] = s_A_channelReading; }
+	s_tempChanAvg[0] += s_A_channelReading;
+
+	//======================
+	// Normalize sample data
+	//----------------------
+
+	normalizeSampleData_ISR_Inline();
+
+	// Get the max peak from the normalized data and store the current frequency count
+	if (s_R_channelReading > s_tempSensorCalPeaks.r) { s_tempSensorCalPeaks.r = s_R_channelReading; s_tempSensorCalFreqCounts.r = s_tempSensorCalFreqCounter.r; }
+	if (s_V_channelReading > s_tempSensorCalPeaks.v) { s_tempSensorCalPeaks.v = s_V_channelReading; s_tempSensorCalFreqCounts.v = s_tempSensorCalFreqCounter.v; }
+	if (s_T_channelReading > s_tempSensorCalPeaks.t) { s_tempSensorCalPeaks.t = s_T_channelReading; s_tempSensorCalFreqCounts.t = s_tempSensorCalFreqCounter.t; }
+	if (s_A_channelReading > s_tempSensorCalPeaks.a) { s_tempSensorCalPeaks.a = s_A_channelReading; s_tempSensorCalFreqCounts.a = s_tempSensorCalFreqCounter.a; }
+
+	if (s_R_channelReading < 7) { s_tempChanMed[1][s_R_channelReading]++; } else { s_tempChanMed[1][7]++; }
+	if (s_V_channelReading < 7) { s_tempChanMed[2][s_V_channelReading]++; } else { s_tempChanMed[2][7]++; }
+	if (s_T_channelReading < 7) { s_tempChanMed[3][s_T_channelReading]++; } else { s_tempChanMed[3][7]++; }
+	if (s_A_channelReading < 7)	{ s_tempChanMed[0][s_A_channelReading]++; } else { s_tempChanMed[0][7]++; }
 }
 
 ///----------------------------------------------------------------------------
@@ -1658,11 +1827,10 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 	{
 		// Idle and not processing, could adjust the channel offsets
 
-		// Isolate processing for just the sensor calibration, testing feature (remove reference and check at some point)
+		// Isolate processing for just the sensor calibration
 		if (g_activeMenu == CAL_SETUP_MENU)
 		{
-			normalizeSampleData_ISR_Inline();
-			saveMaxPeaksLastThreeSecondsForSensorCal_ISR_Inline();
+			ProcessSensorCalibrationData();
 		}
 	}
 	//___________________________________________________________________________________________
