@@ -247,7 +247,7 @@ void LoadFactorySetupRecord(void)
 		ConvertCalDatetoDateTime(&tempTime, &g_currentCalibration.date);
 		ConvertTimeStampToString(buff, &tempTime, REC_DATE_TYPE);
 
-		if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER) { strcpy((char*)&g_spareBuffer, "Acc"); }
+		if (g_factorySetupRecord.seismicSensorType > SENSOR_ACC_RANGE_DIVIDER) { strcpy((char*)&g_spareBuffer, "Acc"); }
 		else { sprintf((char*)&g_spareBuffer, "%3.1f in", (float)g_factorySetupRecord.seismicSensorType / (float)204.8); }
 
 		// Check if an older unit doesn't have the Analog Channel Config set
@@ -282,9 +282,13 @@ void InitSensorParameters(uint16 seismicSensorType, uint8 sensitivity)
 	// Get the shift value
 	g_sensorInfo.shiftVal = 1;
 
-	g_sensorInfo.sensorTypeNormalized = (float)(seismicSensorType)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
+	if ((g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0200) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0500))
+	{
+		g_sensorInfo.sensorTypeNormalized = (float)(seismicSensorType) * (float)ACC_832M1_SCALER /(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
+	}
+	else g_sensorInfo.sensorTypeNormalized = (float)(seismicSensorType)/(float)(gainFactor * SENSOR_ACCURACY_100X_SHIFT);
 
-	if ((IMPERIAL_TYPE == g_unitConfig.unitsOfMeasure) || (seismicSensorType == SENSOR_ACCELEROMETER))
+	if ((IMPERIAL_TYPE == g_unitConfig.unitsOfMeasure) || (seismicSensorType > SENSOR_ACC_RANGE_DIVIDER))
 	{
 		g_sensorInfo.measurementRatio = (float)IMPERIAL; 				// 1 = SAE; 25.4 = Metric
 	}
@@ -299,7 +303,11 @@ void InitSensorParameters(uint16 seismicSensorType, uint8 sensitivity)
 	// the conversion is length(in or mm) = hexValue * (sensor scale/ADC Max Value)
 	g_sensorInfo.hexToLengthConversion = (float)((float)ADC_RESOLUTION / (float)g_sensorInfo.sensorTypeNormalized);
 
-	g_sensorInfo.sensorValue = (uint16)(g_factorySetupRecord.seismicSensorType / gainFactor); // sensor value X 100.
+	if ((g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0200) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0500))
+	{
+		g_sensorInfo.sensorValue = (uint16)(g_factorySetupRecord.seismicSensorType * ACC_832M1_SCALER / gainFactor); // sensor value X 100.
+	}
+	else g_sensorInfo.sensorValue = (uint16)(g_factorySetupRecord.seismicSensorType / gainFactor); // sensor value X 100.
 }
 
 ///----------------------------------------------------------------------------

@@ -1064,6 +1064,8 @@ void DisplaySensorType(void)
 
 		switch (sensorType)
 		{
+			case SENSOR_80_IN			: sensorTypeTextElement = X025_80_IPS_TEXT; break;
+			case SENSOR_40_IN			: sensorTypeTextElement = X05_40_IPS_TEXT; break;
 			case SENSOR_20_IN			: sensorTypeTextElement = X1_20_IPS_TEXT; break;
 			case SENSOR_10_IN			: sensorTypeTextElement = X2_10_IPS_TEXT; break;
 			case SENSOR_5_IN			: sensorTypeTextElement = X4_5_IPS_TEXT; break;
@@ -1071,7 +1073,15 @@ void DisplaySensorType(void)
 			case SENSOR_ACCELEROMETER	: sensorTypeTextElement = ACC_793L_TEXT; break;
 		}
 
-		sprintf((char*)g_spareBuffer, "%s: %s", "SEISMIC GAIN/TYPE", getLangText(sensorTypeTextElement));
+		if (sensorType == SENSOR_ACC_832M1_0200)
+		{
+			sprintf((char*)g_spareBuffer, "SEISMIC GAIN/TYPE: ACC (832M1-0200)");
+		}
+		else if (sensorType == SENSOR_ACC_832M1_0500)
+		{
+			sprintf((char*)g_spareBuffer, "SEISMIC GAIN/TYPE: ACC (832M1-0500)");
+		}
+		else sprintf((char*)g_spareBuffer, "%s: %s", "SEISMIC GAIN/TYPE", getLangText(sensorTypeTextElement));
 		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 
 		if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
