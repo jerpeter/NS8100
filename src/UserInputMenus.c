@@ -65,6 +65,8 @@ extern USER_MENU_STRUCT seismicTriggerMenu[];
 extern USER_MENU_STRUCT seismicLocationMenu[];
 extern USER_MENU_STRUCT seismicSensorTypeMenu[];
 extern USER_MENU_STRUCT sensitivityMenu[];
+extern USER_MENU_STRUCT storedEventsCapModeMenu[];
+extern USER_MENU_STRUCT storedEventLimitMenu[];
 extern USER_MENU_STRUCT summaryIntervalMenu[];
 extern USER_MENU_STRUCT unlockCodeMenu[];
 extern USER_MENU_STRUCT weightPerDelayMenu[];
@@ -135,7 +137,7 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (g_factorySetupRecord.seismicSensorType == SENSOR_ACCELEROMETER)
+		if (g_factorySetupRecord.seismicSensorType > SENSOR_ACC_RANGE_DIVIDER)
 		{
 			USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
 			USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
@@ -214,8 +216,8 @@ void AlarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 			}
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
-												AirTriggerConvertToUnits(g_unitConfig.alarmOneAirMinLevel),
-												AirTriggerConvertToUnits(g_unitConfig.alarmOneAirMinLevel),
+												AirTriggerConvertToUnits(g_alarmOneAirMinLevel),
+												AirTriggerConvertToUnits(g_alarmOneAirMinLevel),
 												airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
 		}
 		else // g_unitConfig.alarmOneMode == ALARM_MODE_SEISMIC
@@ -273,8 +275,8 @@ void AlarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 			}		
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
-				(g_unitConfig.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-				(g_unitConfig.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
+				(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+				(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 		}
 		else
 		{
@@ -331,8 +333,8 @@ void AlarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 			}
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
-												AirTriggerConvertToUnits(g_unitConfig.alarmOneAirMinLevel),
-												AirTriggerConvertToUnits(g_unitConfig.alarmOneAirMinLevel),
+												AirTriggerConvertToUnits(g_alarmOneAirMinLevel),
+												AirTriggerConvertToUnits(g_alarmOneAirMinLevel),
 												airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
 		}
 		else if (g_unitConfig.alarmOneMode == ALARM_MODE_SEISMIC)
@@ -344,8 +346,8 @@ void AlarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 			}		
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
-				(g_unitConfig.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-				(g_unitConfig.alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+				(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+				(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
 		}
 		else // g_unitConfig.alarmOneMode == ALARM_MODE_OFF
@@ -410,8 +412,8 @@ void AlarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 			}
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
-												AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirMinLevel),
-												AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirMinLevel),
+												AirTriggerConvertToUnits(g_alarmTwoAirMinLevel),
+												AirTriggerConvertToUnits(g_alarmTwoAirMinLevel),
 												airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
 		}
 		else // g_unitConfig.alarmTwoMode == ALARM_MODE_SEISMIC
@@ -469,8 +471,8 @@ void AlarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 			}		
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
-				(g_unitConfig.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-				(g_unitConfig.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
+				(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+				(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 		}
 		else
 		{
@@ -529,8 +531,8 @@ void AlarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 			}
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
-												AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirMinLevel),
-												AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirMinLevel),
+												AirTriggerConvertToUnits(g_alarmTwoAirMinLevel),
+												AirTriggerConvertToUnits(g_alarmTwoAirMinLevel),
 												airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
 		}
 		else if (g_unitConfig.alarmTwoMode == ALARM_MODE_SEISMIC)
@@ -542,8 +544,8 @@ void AlarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 			}		
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
-				(g_unitConfig.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-				(g_unitConfig.alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
+				(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+				(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 		}
 		else // g_unitConfig.alarmTwoMode == ALARM_MODE_OFF
 		{
@@ -1148,6 +1150,11 @@ void OperatorMenuHandler(uint8 keyPressed, void* data)
 			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.0fmg)", 
 					(float)g_factorySetupRecord.seismicSensorType / (float)400);
 		}
+		else if ((g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0200) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0500))
+		{
+			sprintf((char*)&g_menuTags[LOW_SENSITIVITY_MAX_TAG].text, " (%.0fmg)", (float)g_factorySetupRecord.seismicSensorType * ACC_832M1_SCALER / (float)200);
+			sprintf((char*)&g_menuTags[HIGH_SENSITIVITY_MAX_TAG].text, " (%.0fmg)",	(float)g_factorySetupRecord.seismicSensorType * ACC_832M1_SCALER / (float)400);
+		}
 		else if (g_unitConfig.unitsOfMeasure == IMPERIAL_TYPE)
 		{
 			sprintf((char*)&g_menuTags[LOW_SENSITIVITY_MAX_TAG].text, " (%.2fin)", 
@@ -1500,6 +1507,54 @@ void SerialNumberMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_MENU_MSG(DATE_TIME_MENU);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Stored Event Limit Menu
+//=============================================================================
+//*****************************************************************************
+#define STORED_EVENT_LIMIT_MENU_ENTRIES 4
+USER_MENU_STRUCT storedEventLimitMenu[STORED_EVENT_LIMIT_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, MAX_EVTS_TO_KEEP_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(INTEGER_WORD_TYPE, STORED_EVENT_LIMIT_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(NO_TYPE, NO_ALT_TYPE)}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&StoredEventLimitMenuHandler}}
+};
+
+//--------------------------------
+// Stored Event Limit Menu Handler
+//--------------------------------
+void StoredEventLimitMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_unitConfig.storedEventsCapMode = ENABLED;
+		g_unitConfig.storedEventLimit = *((uint16*)data);
+
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+		if (g_summaryList.validEntries > g_unitConfig.storedEventLimit)
+		{
+			if (MessageBox(getLangText(WARNING_TEXT), "STORED EVTS MORE THAN MAX. DELETE OLD EVTS NOW?", MB_YESNO) == MB_FIRST_CHOICE)
+			{
+				// Remove excess events above max now
+				OverlayMessage(getLangText(STATUS_TEXT), "REMOVING EVENTS ABOVE CAP (OLDEST FIRST)...", 0);
+				RemoveExcessEventsAboveCap();
+			}
+		}
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&storedEventsCapModeMenu, g_unitConfig.storedEventsCapMode);
 	}
 
 	JUMP_TO_ACTIVE_MENU();

@@ -298,6 +298,11 @@ enum {
 #define CYCLE_END_TIME_HOUR_MIN_VALUE		0
 #define CYCLE_END_TIME_HOUR_MAX_VALUE		23
 
+// Stored Event Limits
+#define STORED_EVENT_LIMIT_DEFAULT_VALUE	1000
+#define STORED_EVENT_LIMIT_MIN_VALUE		100
+#define STORED_EVENT_LIMIT_MAX_VALUE		65500
+
 // Language stuff
 enum {
 	ENGLISH_LANG = 1,
@@ -431,6 +436,7 @@ enum {
 	CALIBRATION_DATE,
 	CHANNEL_VERIFICATION,
 	COPIES,
+	CYCLE_END_TIME_HOUR,
 	DATE_TIME,
 	ERASE_FLASH,
 	EVENT_SUMMARIES,
@@ -441,6 +447,7 @@ enum {
 	LANGUAGE,
 	LCD_CONTRAST,
 	LCD_TIMEOUT,
+	LEGACY_DQM_LIMIT,
 	MODEM_SETUP,
 	MONITOR_LOG,
 	PRETRIGGER_SIZE,
@@ -452,6 +459,7 @@ enum {
 	SAVE_COMPRESSED_DATA,
 	SENSOR_GAIN_TYPE,
 	SERIAL_NUMBER,
+	STORED_EVENTS_CAP_MODE,
 	TIMER_MODE,
 	UNITS_OF_MEASURE,
 	UNITS_OF_AIR,
@@ -459,7 +467,6 @@ enum {
 	VECTOR_SUM,
 	WAVEFORM_AUTO_CAL,
 	ZERO_EVENT_NUMBER,
-	CYCLE_END_TIME_HOUR,
 	// Add new typed before this line
 	TOTAL_CONFIG_MENU_TYPES
 };
@@ -875,6 +882,7 @@ void HardwareIDMenuHandler(uint8 key, void* data);
 void HelpMenuHandler(uint8 key, void* data);
 void InfoMenuHandler(uint8 key, void* data);
 void LanguageMenuHandler(uint8 key, void* data);
+void LegacyDqmLimitMenuHandler(uint8 key, void* data);
 void ModeMenuHandler(uint8 key, void* data);
 void ModemSetupMenuHandler(uint8 key, void* data);
 void MonitorLogMenuHandler(uint8 key, void* data);
@@ -890,6 +898,7 @@ void SampleRateMenuHandler(uint8 key, void* data);
 void SaveSetupMenuHandler(uint8 key, void* data);
 void SeismicSensorTypeMenuHandler(uint8 key, void* data);
 void SensitivityMenuHandler(uint8 key, void* data);
+void StoredEventsCapModeMenuHandler(uint8 key, void* data);
 void SummaryIntervalMenuHandler(uint8 key, void* data);
 void SyncFileExistsMenuHandler(uint8 key, void* data);
 void TimerModeMenuHandler(uint8 key, void* data);
@@ -933,6 +942,7 @@ void SaveRecordMenuHandler(uint8 key, void* data);
 void SeismicLocationMenuHandler(uint8 key, void* data);
 void SeismicTriggerMenuHandler(uint8 key, void* data);
 void SerialNumberMenuHandler(uint8 key, void* data);
+void StoredEventLimitMenuHandler(uint8 key, void* data);
 void UnlockCodeMenuHandler(uint8 key, void* data);
 void WeightPerDelayMenuHandler(uint8 key, void* data);
 //----------------------------------------
