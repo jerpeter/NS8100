@@ -194,17 +194,21 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	cfg.alarmCfg.alarmOneMode = g_unitConfig.alarmOneMode;
 	cfg.alarmCfg.alarmOneSeismicLevel = g_unitConfig.alarmOneSeismicLevel;
-	cfg.alarmCfg.alarmOneSeismicMinLevel = g_unitConfig.alarmOneSeismicMinLevel;
+	cfg.alarmCfg.alarmOneSeismicMinLevel = g_unitConfig.alarmOneSeismicLevel;
 	cfg.alarmCfg.alarmOneAirLevel = g_unitConfig.alarmOneAirLevel;
-	cfg.alarmCfg.alarmOneAirMinLevel = g_unitConfig.alarmOneAirMinLevel;
+	cfg.alarmCfg.alarmOneAirMinLevel = g_unitConfig.alarmOneAirLevel;
 	cfg.alarmCfg.alarmOneTime = (uint32)(g_unitConfig.alarmOneTime * (float)100.0);
 
 	cfg.alarmCfg.alarmTwoMode = g_unitConfig.alarmTwoMode;
 	cfg.alarmCfg.alarmTwoSeismicLevel = g_unitConfig.alarmTwoSeismicLevel;
-	cfg.alarmCfg.alarmTwoSeismicMinLevel = g_unitConfig.alarmTwoSeismicMinLevel;
+	cfg.alarmCfg.alarmTwoSeismicMinLevel = g_unitConfig.alarmTwoSeismicLevel;
 	cfg.alarmCfg.alarmTwoAirLevel = g_unitConfig.alarmTwoAirLevel;
-	cfg.alarmCfg.alarmTwoAirMinLevel = g_unitConfig.alarmTwoAirMinLevel;
+	cfg.alarmCfg.alarmTwoAirMinLevel = g_unitConfig.alarmTwoAirLevel;
 	cfg.alarmCfg.alarmTwoTime = (uint32)(g_unitConfig.alarmTwoTime * (float)100.0);
+
+	cfg.alarmCfg.legacyDqmLimit = g_unitConfig.legacyDqmLimit;
+	cfg.alarmCfg.storedEventsCapMode = g_unitConfig.storedEventsCapMode;
+	cfg.alarmCfg.storedEventLimit = g_unitConfig.storedEventLimit;
 
 	cfg.timerCfg.timerMode = g_unitConfig.timerMode;
 	cfg.timerCfg.timerModeFrequency = g_unitConfig.timerModeFrequency;
@@ -1075,6 +1079,26 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			{
 				returnCode = CFG_ERR_ALARM_TWO_TIME;
 				goto SEND_UCM_ERROR_CODE;
+			}
+		}
+
+		//---------------------------------------------------------------------------
+		// Legacy DQM Limit
+		//---------------------------------------------------------------------------
+		if (cfg.alarmCfg.legacyDqmLimit == ENABLED)
+		{
+			g_unitConfig.legacyDqmLimit = ENABLED;
+		}
+
+		//---------------------------------------------------------------------------
+		// Stored Event Cap & Limit
+		//---------------------------------------------------------------------------
+		if (cfg.alarmCfg.storedEventsCapMode == ENABLED)
+		{
+			if ((cfg.alarmCfg.storedEventLimit >= STORED_EVENT_LIMIT_MIN_VALUE) && (cfg.alarmCfg.storedEventLimit <= STORED_EVENT_LIMIT_MIN_VALUE))
+			{
+				g_unitConfig.storedEventsCapMode = ENABLED;
+				g_unitConfig.storedEventLimit = cfg.alarmCfg.storedEventLimit;
 			}
 		}
 
