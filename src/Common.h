@@ -583,6 +583,8 @@ void Tc_typematic_irq(void);
 void Start_Data_Clock(TC_CHANNEL_NUM);
 void Stop_Data_Clock(TC_CHANNEL_NUM);
 void HandleActiveAlarmExtension(void);
+void SensorCalibrationDataInit(void);
+void ProcessSensorCalibrationData(void);
 
 #if EXTERNAL_SAMPLING_SOURCE
 void Tc_ms_timer_irq(void);
