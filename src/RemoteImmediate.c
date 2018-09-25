@@ -584,7 +584,7 @@ void HandleDQM(CMD_BUFFER_STRUCT* inCmd)
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
 	uint8* dqmPtr;
 	uint16 i;
-	uint16 validEventCount = 1;
+	uint16 validEventCount = 0;
 
 	UNUSED(inCmd);
 
@@ -609,19 +609,20 @@ void HandleDQM(CMD_BUFFER_STRUCT* inCmd)
 		// Cap the number at DQM_LEGACY_EVENT_LIMIT (800)
 		g_dqmXferStructPtr->numOfRecs = DQM_LEGACY_EVENT_LIMIT;
 
-		// Set index to the upper limit
+		// Set index to the upper limit (last event number stored)
 		i = g_nextEventNumberToUse - 1;
 
 		// Find the starting index of the last 800 events by working backwards
 		while (validEventCount < DQM_LEGACY_EVENT_LIMIT)
 		{
-			if (g_eventNumberCache[--i] == EVENT_REFERENCE_VALID)
+			if (g_eventNumberCache[i--] == EVENT_REFERENCE_VALID)
 			{
 				validEventCount++;
 			}
 		}
 
-		g_dqmXferStructPtr->ramTableIndex = i;
+		// Set the new table index to the last cache reference (incremented by 1 to account for the last loop decrement)
+		g_dqmXferStructPtr->ramTableIndex = (i + 1);
 	}
 #endif
 
