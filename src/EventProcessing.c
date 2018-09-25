@@ -47,7 +47,7 @@ void InitEventNumberCache(void)
 {
 	debug("Initializing event number cache...\r\n");
 
-	memset(&g_eventNumberCache[0], NO_EVENT_FILE, TOTAL_UNIQUE_EVENT_NUMBERS);
+	memset(&g_eventNumberCache[0], NO_EVENT_FILE, EVENT_NUMBER_CACHE_MAX_ENTRIES);
 
 	g_eventNumberCacheValidEntries = 0;
 	g_eventNumberCacheOldestIndex = 0;
@@ -1500,6 +1500,14 @@ void StoreCurrentEventNumber(void)
 
 	// Increment to a new Event number
 	g_nextEventNumberToUse++;
+
+	// Check if the next event number is at the max total unique events allowed
+	if (g_nextEventNumberToUse == TOTAL_UNIQUE_EVENT_NUMBERS)
+	{
+		// Loop the event number back to the start (0 is invalid)
+		g_nextEventNumberToUse = 1;
+	}
+
 	debug("Saved Event ID: %d, Next Event ID to use: %d\r\n", (g_nextEventNumberToUse - 1), g_nextEventNumberToUse);
 
 	return;

@@ -48,7 +48,7 @@ extern uint32 g_eventNumberCacheValidKey;
 extern uint16 g_eventNumberCacheValidEntries;
 extern uint16 g_eventNumberCacheMaxIndex;
 extern uint16 g_eventNumberCacheOldestIndex;
-extern uint8 g_eventNumberCache[TOTAL_UNIQUE_EVENT_NUMBERS];
+extern uint8 g_eventNumberCache[EVENT_NUMBER_CACHE_MAX_ENTRIES];
 extern uint16 g_pretriggerBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
 extern uint16* g_startOfPretriggerBuff;
 extern uint16* g_tailOfPretriggerBuff;

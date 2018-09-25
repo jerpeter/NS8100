@@ -60,7 +60,7 @@ uint32 g_eventNumberCacheValidKey;
 uint16 g_eventNumberCacheValidEntries;
 uint16 g_eventNumberCacheMaxIndex;
 uint16 g_eventNumberCacheOldestIndex;
-uint8 g_eventNumberCache[TOTAL_UNIQUE_EVENT_NUMBERS];
+uint8 g_eventNumberCache[EVENT_NUMBER_CACHE_MAX_ENTRIES];
 //uint16 g_pretriggerBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
 uint16 g_pretriggerBuff[(SAMPLE_RATE_16K * 4)];
 uint16* g_startOfPretriggerBuff;
