@@ -2627,7 +2627,7 @@ void RemoveEventFile(uint16 eventNumber)
 	GetSubDirLowerAndUpperBounds(eventNumber, &lowerBounds, &upperBounds);
 
 #if 1 // Test
-	sprintf((char*)g_spareBuffer, "REMOVING %s %d (ABOVE EVT CAP, OLDEST FIRST)", EVT_FILE, eventNumber);
+	sprintf((char*)g_spareBuffer, "%s %s %d (%s, %s)", getLangText(REMOVING_TEXT), EVT_FILE, eventNumber, getLangText(ABOVE_EVT_CAP_TEXT), getLangText(OLDEST_FIRST_TEXT));
 	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
 #endif
 

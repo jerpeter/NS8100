@@ -250,7 +250,7 @@ void MoveWaveformEventToFile(void)
 
 						if (g_sdCardUsageStats.waveEventsLeft < 100)
 						{
-							sprintf((char*)spaceLeftBuffer, "%d EVT TILL FULL", (g_sdCardUsageStats.waveEventsLeft - 1));
+							sprintf((char*)spaceLeftBuffer, "%d EVTS TILL FULL", (g_sdCardUsageStats.waveEventsLeft - 1));
 							OverlayMessage((char*)spaceLeftBuffer, (char*)g_spareBuffer, 0);
 						}
 						else

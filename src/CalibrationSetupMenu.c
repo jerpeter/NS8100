@@ -205,7 +205,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 						}
 						else if (s_calDisplayScreen == CAL_MENU_CALIBRATE_SENSOR)
 						{
-							OverlayMessage(getLangText(STATUS_TEXT), "SENSOR CAL PULSE", (1 * SOFT_SECS));
+							OverlayMessage(getLangText(STATUS_TEXT), getLangText(SENSOR_CAL_PULSE_TEXT), (1 * SOFT_SECS));
 							s_pauseDisplay = NO;
 							g_calibrationGeneratePulse = YES;
 							s_calDisplayScreen = CAL_MENU_CALIBRATION_PULSE;

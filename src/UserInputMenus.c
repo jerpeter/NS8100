@@ -1542,10 +1542,10 @@ void StoredEventLimitMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_summaryList.validEntries > g_unitConfig.storedEventLimit)
 		{
-			if (MessageBox(getLangText(WARNING_TEXT), "STORED EVTS MORE THAN MAX. DELETE OLD EVTS NOW?", MB_YESNO) == MB_FIRST_CHOICE)
+			sprintf((char*)g_spareBuffer, "%s. %s", getLangText(STORED_EVTS_MORE_THAN_MAX_TEXT), getLangText(DELETE_OLD_EVTS_NOW_Q_TEXT));
+			if (MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_YESNO) == MB_FIRST_CHOICE)
 			{
 				// Remove excess events above max now
-				OverlayMessage(getLangText(STATUS_TEXT), "REMOVING EVENTS ABOVE CAP (OLDEST FIRST)...", 0);
 				RemoveExcessEventsAboveCap();
 			}
 		}
