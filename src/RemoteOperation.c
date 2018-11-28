@@ -1095,7 +1095,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//---------------------------------------------------------------------------
 		if (cfg.alarmCfg.storedEventsCapMode == ENABLED)
 		{
-			if ((cfg.alarmCfg.storedEventLimit >= STORED_EVENT_LIMIT_MIN_VALUE) && (cfg.alarmCfg.storedEventLimit <= STORED_EVENT_LIMIT_MIN_VALUE))
+			if ((cfg.alarmCfg.storedEventLimit >= STORED_EVENT_LIMIT_MIN_VALUE) && (cfg.alarmCfg.storedEventLimit <= STORED_EVENT_LIMIT_MAX_VALUE))
 			{
 				g_unitConfig.storedEventsCapMode = ENABLED;
 				g_unitConfig.storedEventLimit = cfg.alarmCfg.storedEventLimit;
