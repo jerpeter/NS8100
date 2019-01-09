@@ -1100,6 +1100,11 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 				g_unitConfig.storedEventsCapMode = ENABLED;
 				g_unitConfig.storedEventLimit = cfg.alarmCfg.storedEventLimit;
 			}
+			else
+			{
+				returnCode = CFG_ERR_STORED_EVT_LIMIT_RANGE;
+				goto SEND_UCM_ERROR_CODE;
+			}
 		}
 
 		//---------------------------------------------------------------------------
