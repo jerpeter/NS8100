@@ -200,7 +200,8 @@ typedef struct
 	float dist_to_source;
 	float weight_per_delay;
 	uint8 oper[TRIGGER_EVENT_STRING_SIZE];
-	uint16 unused4;
+	uint8 variableTriggerEnable;
+	uint8 variableTriggerVibrationStandard;
 	uint32 seismicTriggerLevel;
 	uint32 airTriggerLevel;
 	uint32 record_time;
@@ -260,7 +261,7 @@ typedef struct
 	uint8 vectorSum;
 	uint8 autoCalForWaveform;
 	uint8 cycleEndTimeHour;
-	uint8 unused1;
+	uint8 barLiveMonitor;
 	uint8 flashWrapping;
 	uint8 autoMonitorMode;
 	uint8 autoCalMode;

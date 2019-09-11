@@ -457,6 +457,7 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT* unitConfigPtr)
 	unitConfigPtr->autoCalMode = AUTO_NO_CAL_TIMEOUT;
 	unitConfigPtr->autoMonitorMode = AUTO_NO_TIMEOUT;
 	unitConfigPtr->autoPrint = OFF;
+	unitConfigPtr->barLiveMonitor = NO;
 	unitConfigPtr->baudRate = BAUD_RATE_115200;
 	unitConfigPtr->copies = 1;
 	unitConfigPtr->externalTrigger = ENABLED;
@@ -469,7 +470,6 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT* unitConfigPtr)
 	unitConfigPtr->legacyDqmLimit = DISABLED;
 	unitConfigPtr->pretrigBufferDivider = PRETRIGGER_BUFFER_QUARTER_SEC_DIV;
 	unitConfigPtr->cycleEndTimeHour = 0;
-	unitConfigPtr->unused1 = DISABLED;
 	unitConfigPtr->rs232PowerSavings = ENABLED;
 	unitConfigPtr->saveCompressedData = SAVE_EXTRA_FILE_COMPRESSED_DATA;
 	unitConfigPtr->storedEventsCapMode = DISABLED;
