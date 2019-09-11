@@ -597,8 +597,8 @@ void HandleGGA(uint8* message)
 
 	if (g_gpsOutputToCraft)
 	{
-		messageLength = sprintf((char*)g_spareBuffer, "Lat: %.4f(%c), Lon:%.4f(%c), Time:%02d:%02d:%02d, GPS-Qual:%d, Sats-Used: %d, Alt:%fm\r\n",
-								gga.lat, gga.ns, gga.lon, gga.ew, gga.utc.hour, gga.utc.min, gga.utc.sec, gga.sig, gga.satinuse, gga.elv);
+		messageLength = sprintf((char*)g_spareBuffer, "Lat: %.4f(%c), Lon:%.4f(%c), Time:%02d:%02d:%02d.%02d, GPS-Qual:%d, Sats-Used: %d, Alt:%fm\r\n",
+								gga.lat, gga.ns, gga.lon, gga.ew, gga.utc.hour, gga.utc.min, gga.utc.sec, gga.utc.hsec, gga.sig, gga.satinuse, gga.elv);
 		ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
 	}
 
@@ -699,8 +699,8 @@ void HandleGLL(uint8* message)
 
 	if (g_gpsOutputToCraft)
 	{
-		messageLength = sprintf((char*)g_spareBuffer, "Lat: %.4f(%c), Lon:%.4f(%c), Time:%02d:%02d:%02d, Stat: %c, SI: %c\r\n", gll.lat, gll.ns, gll.lon, gll.ew,
-								gll.utc.hour, gll.utc.min, gll.utc.sec, gll.sta, gll.sig);
+		messageLength = sprintf((char*)g_spareBuffer, "Lat: %.4f(%c), Lon:%.4f(%c), Time:%02d:%02d:%02d.%02d, Stat: %c, SI: %c\r\n", gll.lat, gll.ns, gll.lon, gll.ew,
+								gll.utc.hour, gll.utc.min, gll.utc.sec, gll.utc.hsec, gll.sta, gll.sig);
 		ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
 	}
 
@@ -792,8 +792,8 @@ void HandleZDA(uint8* message)
 
 	if (g_gpsOutputToCraft)
 	{
-		messageLength = sprintf((char*)g_spareBuffer, "Date: %02d-%02d-%04d, Time:%02d:%02d:%02d, Local Zone Hours: %02d, Local Zone Minutes: %02d\r\n",
-		zda.utc.day, zda.utc.mon, zda.utc.year, zda.utc.hour, zda.utc.min, zda.utc.sec, zda.lzHours, zda.lzMins);
+		messageLength = sprintf((char*)g_spareBuffer, "Date: %02d-%02d-%04d, Time:%02d:%02d:%02d.%02d, Local Zone Hours: %02d, Local Zone Minutes: %02d\r\n",
+								zda.utc.day, zda.utc.mon, zda.utc.year, zda.utc.hour, zda.utc.min, zda.utc.sec, zda.utc.hsec, zda.lzHours, zda.lzMins);
 		ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
 	}
 
