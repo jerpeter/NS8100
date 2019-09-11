@@ -28,6 +28,7 @@
 #include "EventProcessing.h"
 #include "Analog.h"
 #include "Sensor.h"
+#include "usb_drv.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -95,7 +96,8 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 
 			memset(&(g_mmap[0][0]), 0, sizeof(g_mmap));
 			
-			if (g_usbMassStorageState == USB_CONNECTED_AND_PROCESSING)
+			// Check if USB device mode is active and connected to a PC (where it's possible to change the contents of the SD card under the covers)
+			if ((g_usbMassStorageState == USB_CONNECTED_AND_PROCESSING) && (Is_usb_id_device()))
 			{
 				recheckSpaceRemaining = YES;
 			}
