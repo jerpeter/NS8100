@@ -366,6 +366,7 @@ void MoveWaveformEventToFile(void)
 			case WAVE_COMPLETE:
 				UpdateMonitorLogEntry();
 
+				AddEventNumberToCache(g_pendingEventRecord.summary.eventNumber);
 				StoreCurrentEventNumber();
 
 				// Reset External Trigger event record flag

@@ -233,6 +233,7 @@ void MoveManualCalToFile(void)
 				//UpdateMonitorLogEntry();
 
 				// After event numbers have been saved, store current event number in persistent storage.
+				AddEventNumberToCache(g_pendingEventRecord.summary.eventNumber);
 				StoreCurrentEventNumber();
 
 				// Now store the updated event number in the universal ram storage.
