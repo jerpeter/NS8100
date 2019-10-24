@@ -141,7 +141,17 @@ void NewMonitorLogEntry(uint8 mode)
 	__monitorLogTbl[__monitorLogTblIndex].status = PARTIAL_LOG_ENTRY;
 	
 	// Bit accuracy adjusted trigger level
-	if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR))
+	if (g_triggerRecord.trec.variableTriggerEnable == YES)
+	{
+		__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = (VARIABLE_TRIGGER_CHAR_BASE + g_triggerRecord.trec.variableTriggerVibrationStandard);
+	}
+#if 1 // Fixed method (keep as native 16-bit to standardize/match DCM/UCM)
+	else
+	{
+		__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+	}
+#else // Bit accuracy adjusted (original)
+	else if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 	{
 		__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
 	}
@@ -149,8 +159,11 @@ void NewMonitorLogEntry(uint8 mode)
 	{
 		__monitorLogTbl[__monitorLogTblIndex].seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
 	}
+#endif
 
-	// Bit accuracy adjusted trigger level as A/D count
+#if 1 // Fixed method (keep as native 16-bit to standardize/match DCM/UCM)
+	__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+#else // Bit accuracy adjusted (original)
 	if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 	{
 		__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
@@ -159,13 +172,18 @@ void NewMonitorLogEntry(uint8 mode)
 	{
 		__monitorLogTbl[__monitorLogTblIndex].airTriggerLevel = g_triggerRecord.trec.airTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
 	}
+#endif
 
 	__monitorLogTbl[__monitorLogTblIndex].bitAccuracy = ((g_triggerRecord.trec.bitAccuracy < ACCURACY_10_BIT) || (g_triggerRecord.trec.bitAccuracy > ACCURACY_16_BIT)) ?
 														ACCURACY_16_BIT : g_triggerRecord.trec.bitAccuracy;
 	__monitorLogTbl[__monitorLogTblIndex].adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
 
 	__monitorLogTbl[__monitorLogTblIndex].seismicSensorType = g_factorySetupRecord.seismicSensorType;
-	__monitorLogTbl[__monitorLogTblIndex].sensitivity = g_triggerRecord.srec.sensitivity;
+#if 1 // New field added
+	__monitorLogTbl[__monitorLogTblIndex].acousticSensorType = g_factorySetupRecord.acousticSensorType;
+#endif
+	__monitorLogTbl[__monitorLogTblIndex].sensitivity = (uint8)g_triggerRecord.srec.sensitivity;
+	__monitorLogTbl[__monitorLogTblIndex].spare1 = 0;
 
 	//ConvertTimeStampToString((char*)g_spareBuffer, &__monitorLogTbl[__monitorLogTblIndex].startTime, REC_DATE_TIME_TYPE);
 	//debug("\tStart Time: %s\r\n", (char*)g_spareBuffer);
@@ -285,10 +303,10 @@ uint8 GetNextMonitorLogEntry(uint16 uid, uint16 startIndex, uint16* tempIndex, M
 			*logEntry = __monitorLogTbl[(*tempIndex)];
 
 #if EXTENDED_DEBUG
-			debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, G: %d\r\n",
+			debug("(ID: %03d) M: %d, Evt#: %d, S: %d, ST: 0x%x, AT: 0x%x, BA: %d, TA: %d, ST: %d, AT: %d, G: %d\r\n",
 			logEntry->uniqueEntryId, logEntry->mode, logEntry->startEventNumber, logEntry->status,
 			logEntry->seismicTriggerLevel, logEntry->airTriggerLevel, logEntry->bitAccuracy, logEntry->adjustForTempDrift,
-			logEntry->seismicSensorType, logEntry->sensitivity);
+			logEntry->seismicSensorType, logEntry->acousticSensorType, logEntry->sensitivity);
 #endif
 
 			// Set the found flag to mark that an entry was discovered
@@ -340,9 +358,10 @@ void AppendMonitorLogEntryFile(void)
 	char statusString[10];
 	char startTimeString[20];
 	char stopTimeString[20];
-	char seisString[15];
+	char seisString[25];
 	char airString[15];
-	char sensorString[10];
+	char seisSensorString[10];
+	char airSensorString[15];
 	MONITOR_LOG_ENTRY_STRUCT *mle;
 	float tempSesmicTriggerInUnits;
 	float unitsDiv;
@@ -424,6 +443,16 @@ void AppendMonitorLogEntryFile(void)
 					mle->stopTime.hour, mle->stopTime.min, mle->stopTime.sec);
 
 			if (g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) {strcpy((char*)seisString, "None"); }
+			else if (g_triggerRecord.trec.variableTriggerEnable == YES)
+			{
+				switch (g_triggerRecord.trec.variableTriggerVibrationStandard)
+				{
+					case USBM_RI_8507_DRYWALL_STANDARD: strcpy((char*)seisString, "VT (USBM Drywall)"); break;
+					case USBM_RI_8507_PLASTER_STANDARD: strcpy((char*)seisString, "VT (USBM Plaster)"); break;
+					case OSM_REGULATIONS_STANDARD: strcpy((char*)seisString, "VT (OSM Regulations)"); break;
+					default: strcpy((char*)seisString, "VT (No VS/error)"); break;
+				}
+			}
 			else
 			{
 				// Calculate the divider used for converting stored A/D peak counts to units of measure
@@ -447,14 +476,17 @@ void AppendMonitorLogEntryFile(void)
 				else { sprintf((char*)airString, "%d dB", (uint16)airInUnits); }
 			}
 
-			if (g_factorySetupRecord.seismicSensorType > SENSOR_ACC_RANGE_DIVIDER) { strcpy((char*)&sensorString, "Acc"); }
-			else { sprintf((char*)&sensorString, "%3.1f in", (float)g_factorySetupRecord.seismicSensorType / (float)204.8); }
+			if (g_factorySetupRecord.seismicSensorType > SENSOR_ACC_RANGE_DIVIDER) { strcpy((char*)&seisSensorString, "Acc"); }
+			else { sprintf((char*)&seisSensorString, "%3.1f in", (float)g_factorySetupRecord.seismicSensorType / (float)204.8); }
+
+			if (g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) { strcpy((char*)&airSensorString, "Mic 160dB"); }
+			else { strcpy((char*)&airSensorString, "Mic 148dB"); }
 
 			sprintf((char*)g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
-					"Seismic Trig: %10s, Air Trig: %11s\r\n\tBit Acc: %d, Temp Adjust: %3s, Sensor: %8s, Sensitivity: %4s\r\n\n",
+					"Seismic Trig: %10s, Air Trig: %11s\r\n\tBit Acc: %d, Temp Adjust: %3s, Seismic Sensor: %8s, Acoustic Sensor: %8s, Sensitivity: %6s\r\n\n",
 					mle->uniqueEntryId, (char*)statusString, (char*)modeString, (char*)startTimeString, (char*)stopTimeString, mle->eventsRecorded, mle->startEventNumber,
 					(char*)seisString, (char*)airString, mle->bitAccuracy, ((mle->adjustForTempDrift == YES) ? "YES" : "NO"),
-					(char*)sensorString, ((mle->sensitivity == LOW) ? "LOW" : "HIGH"));
+					(char*)seisSensorString, (char*)airSensorString, ((mle->sensitivity == LOW) ? "NORMAL" : "HIGH"));
 
 			write(monitorLogHumanReadableFile, g_spareBuffer, strlen((char*)g_spareBuffer));
 
