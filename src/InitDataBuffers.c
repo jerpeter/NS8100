@@ -66,7 +66,22 @@ void InitDataBuffs(uint8 opMode)
 	// Setup the Pretrigger buffer pointers
 	g_startOfPretriggerBuff = &(g_pretriggerBuff[0]);
 	g_tailOfPretriggerBuff = &(g_pretriggerBuff[0]);
+
+#if VT_FEATURE_DISABLED
 	g_endOfPretriggerBuff = &(g_pretriggerBuff[pretriggerBufferSize]);
+#else // New VT feature
+	// Check if using standard trigger (not variable)
+	if (g_triggerRecord.trec.variableTriggerEnable == NO)
+	{
+		// Cap the pretrigger buffer right at the desired size
+		g_endOfPretriggerBuff = &(g_pretriggerBuff[pretriggerBufferSize]);
+	}
+	else // Using variable trigger standard (USBM, OSM)
+	{
+		// Use full size of the pretrigger buffer
+		g_endOfPretriggerBuff = &(g_pretriggerBuff[(((SAMPLE_RATE_16K * 4) + 4) * 2)]);
+	}
+#endif
 
 	// Setup Bit Accuracy globals
 	if (opMode == MANUAL_CAL_MODE)
@@ -155,6 +170,7 @@ void InitDataBuffs(uint8 opMode)
 		// Init Bar Interval pointers
 		g_bargraphBarIntervalWritePtr = (BARGRAPH_BAR_INTERVAL_DATA*)&(g_eventDataBuffer[0]);
 		g_bargraphBarIntervalReadPtr = (BARGRAPH_BAR_INTERVAL_DATA*)&(g_eventDataBuffer[0]);
+		g_bargraphBarIntervalLiveMonitoringReadPtr = (BARGRAPH_BAR_INTERVAL_DATA*)&(g_eventDataBuffer[0]);
 		g_bargraphBarIntervalEndPtr = (BARGRAPH_BAR_INTERVAL_DATA*)&(g_eventDataBuffer[barIntervalOffsetInWords]);
 
 		g_bargraphDataStartPtr = &(g_eventDataBuffer[barIntervalOffsetInWords]);
