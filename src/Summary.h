@@ -145,6 +145,13 @@ typedef struct
 	uint16 rFreq;
 	uint16 vFreq;
 	uint16 tFreq;
+#if 1 // Bargraph live monitoring
+	uint16 barIntervalCount;
+	uint16 summaryIntervalCount;
+	uint16 currentBargraphEventNumber;
+	uint16 currentComboWaveformEventNumber;
+	uint32 epochTime;
+#endif
 } BARGRAPH_BAR_INTERVAL_DATA;
 
 //-------------------------------------------------------------------------------------
