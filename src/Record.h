@@ -357,7 +357,13 @@ typedef struct
 	uint8				bitAccuracy;
 	uint8				adjustForTempDrift;
 	uint16				seismicSensorType;
+#if 0 // Original
 	uint32				sensitivity;
+#else // Updated to create space for Acoustic Sensor type (and space) from extra storage spave of sensitivity
+	uint16				spare1;
+	uint8				acousticSensorType;
+	uint8				sensitivity;
+#endif
 } MONITOR_LOG_ENTRY_STRUCT;
 
 typedef struct
