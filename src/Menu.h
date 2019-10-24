@@ -64,6 +64,20 @@ enum {
 	ENABLED_TAG,
 	DISABLED_TAG,
 	FILENAME_TAG,
+#if 1 // Test build with built in strings
+	BAR_LIVE_MONITOR_TITLE_TAG,
+	BAR_LIVE_MONITOR_TAG,
+	BLM_START_STOP_MSG_TITLE_TAG,
+	BLM_START_STOP_MSG_TAG,
+	SEISMIC_TRIGGER_TYPE_TITLE_TAG,
+	VARIABLE_USBM_OSM_TAG,
+	VIBRATION_STANDARD_TITLE_TAG,
+	USBM_8507_DRYWALL_TAG,
+	USBM_8507_PLASTER_TAG,
+	OSM_REGULATIONS_TAG,
+	REMOTE_CONTROL_TAG,
+	BLIND_SEND_TAG,
+#endif
 	// Add new separators before this line
 	TOTAL_TAGS
 };
@@ -231,6 +245,10 @@ enum {
 #define ALARM_MODE_SEISMIC	0x01
 #define ALARM_MODE_AIR		0x02
 #define ALARM_MODE_BOTH		(ALARM_MODE_SEISMIC + ALARM_MODE_AIR)
+
+// BLM Alarm types
+#define ALERT_ALARM_ONE		0x01
+#define ALERT_ALARM_TWO		0x02
 
 // Alarm 1 & 2 defaults
 #define ALARM_ONE_SEIS_DEFAULT_TRIG_LVL	16384	//1024 // (2048 * 2 / 4) 50%
@@ -431,8 +449,10 @@ enum {
 	AUTO_CALIBRATION,
 	AUTO_DIAL_INFO,
 	AUTO_MONITOR,
+	ANALOG_CUTOFF_FREQ,
 	BATTERY,
 	BAUD_RATE,
+	BAR_LIVE_MONITOR,
 	CALIBRATION_DATE,
 	CHANNEL_VERIFICATION,
 	COPIES,
@@ -549,6 +569,7 @@ enum {
 #define NO_TRIGGER_CHAR 				0xEFFF
 #define EXTERNAL_TRIGGER_CHAR			0xF000
 #define MANUAL_TRIGGER_CHAR 			0xF001
+#define VARIABLE_TRIGGER_CHAR_BASE		0xF100
 
 // Manual Cal default rate
 #define MANUAL_CAL_DEFAULT_SAMPLE_RATE			SAMPLE_RATE_1K
@@ -866,6 +887,8 @@ void AutoMonitorMenuHandler(uint8 key, void* data);
 void BarChannelMenuHandler(uint8 key, void* data);
 void BarIntervalMenuHandler(uint8 key, void* data);
 void BarIntervalDataTypeMenuHandler(uint8 key, void* data);
+void BarLiveMonitorMenuHandler(uint8 key, void* data);
+void BLMStartStopMsgMenuHandler(uint8 key, void* data);
 void BarScaleMenuHandler(uint8 key, void* data);
 void BarResultMenuHandler(uint8 key, void* data);
 void BaudRateMenuHandler(uint8 key, void* data);
@@ -897,6 +920,7 @@ void SaveCompressedDataMenuHandler(uint8 key, void* data);
 void SampleRateMenuHandler(uint8 key, void* data);
 void SaveSetupMenuHandler(uint8 key, void* data);
 void SeismicSensorTypeMenuHandler(uint8 key, void* data);
+void SeismicTriggerTypeMenuHandler(uint8 keyPressed, void* data);
 void SensitivityMenuHandler(uint8 key, void* data);
 void StoredEventsCapModeMenuHandler(uint8 key, void* data);
 void SummaryIntervalMenuHandler(uint8 key, void* data);
@@ -908,6 +932,7 @@ void UnitsOfAirMenuHandler(uint8 key, void* data);
 void UsbSyncModeMenuHandler(uint8 key, void* data);
 void CalibratonDateSourceMenuHandler(uint8 key, void* data);
 void VectorSumMenuHandler(uint8 key, void* data);
+void VibrationStandardMenuHandler(uint8 keyPressed, void* data);
 void WaveformAutoCalMenuHandler(uint8 key, void* data);
 void ZeroEventNumberMenuHandler(uint8 key, void* data);
 //----------------------------------------
