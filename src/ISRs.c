@@ -33,6 +33,9 @@
 #include "usart.h"
 #include "string.h"
 #include "navigation.h"
+#include "cycle_counter.h"
+#include "compiler.h"
+#include "math.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -64,6 +67,9 @@ static uint32 s_pretriggerCount = 0;
 static uint32 s_alarmOneCount = 0;
 static uint32 s_alarmTwoCount = 0;
 
+static uint16* s_variablePretriggerBuffPtr;
+static uint16* s_variableEventPretriggerBuffPtr;
+
 static uint16 s_sampleRate = 1024;
 static uint16 s_consecSeismicTriggerCount = 0;
 static uint16 s_consecAirTriggerCount = 0;
@@ -93,6 +99,9 @@ static int32 s_tempChanMin[MAX_NUM_OF_CHANNELS];
 static int32 s_tempChanMax[MAX_NUM_OF_CHANNELS];
 static int32 s_tempChanAvg[MAX_NUM_OF_CHANNELS];
 static uint32 s_tempChanMed[MAX_NUM_OF_CHANNELS][8];
+
+static VARIABLE_TRIGGER_FREQ_CALC_BUFFER s_variableTriggerFreqCalcBuffer;
+static float s_vtDiv;
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -260,7 +269,7 @@ void Eic_system_irq(void)
 			if (g_unitConfig.externalTrigger == ENABLED)
 			{
 				// Signal the start of an event
-				g_externalTrigger = YES;
+				g_externalTrigger = EXTERNAL_TRIGGER_EVENT;
 			}
 		}
 	}
@@ -321,6 +330,26 @@ void Usart_1_rs232_irq(void)
 		AVR32_USART1.cr = AVR32_USART_CR_RSTSTA_MASK;
 		usart_1_status = AVR32_USART1.csr;
 	}
+#if 1 // Bargraph live monitoring
+	else if (usart_1_status & AVR32_USART_CSR_TXRDY_MASK)
+	{
+		// Make sure BLM is actively trying to send
+		if (g_bargraphLiveMonitoringBISendActive == YES)
+		{
+			// Check if the end of the string was reached or if attempting to overrun the storage buffer
+			if ((*g_bargraphBarIntervalLiveMonitorBIDataPtr == '\0') || (g_bargraphBarIntervalLiveMonitorBIDataPtr == &g_blmBuffer[MAX_TEXT_LINE_CHARS]))
+			{
+				AVR32_USART1.idr = AVR32_USART_IER_TXRDY_MASK;
+				g_bargraphLiveMonitoringBISendActive = NO;
+				g_bargraphBarIntervalLiveMonitorBIDataPtr = g_blmBuffer;
+			}
+			else
+			{
+				AVR32_USART1.thr = *g_bargraphBarIntervalLiveMonitorBIDataPtr++;
+			}
+		}
+	}
+#endif
 
 #if 1 // Test reads to clear the bus
 	PB_READ_TO_CLEAR_BUS_BEFORE_SLEEP;
@@ -619,6 +648,8 @@ static inline void checkAlarms_ISR_Inline(void)
 
 					// Set Alarm 1 count to time in seconds multiplied by sample rate
 					s_alarmOneCount = (uint32)(g_unitConfig.alarmOneTime * s_sampleRate);
+
+					g_blmAlertAlarmStatus |= ALERT_ALARM_ONE;
 				}
 			}
 
@@ -632,6 +663,8 @@ static inline void checkAlarms_ISR_Inline(void)
 
 					// Set Alarm 1 count to time in seconds multiplied by sample rate
 					s_alarmOneCount = (uint32)(g_unitConfig.alarmOneTime * s_sampleRate);
+
+					g_blmAlertAlarmStatus |= ALERT_ALARM_ONE;
 				}
 			}
 		}
@@ -664,6 +697,8 @@ static inline void checkAlarms_ISR_Inline(void)
 
 					// Set Alarm 2 count to time in seconds multiplied by sample rate
 					s_alarmTwoCount = (uint32)(g_unitConfig.alarmTwoTime * s_sampleRate);
+
+					g_blmAlertAlarmStatus |= ALERT_ALARM_TWO;
 				}
 			}
 
@@ -677,8 +712,244 @@ static inline void checkAlarms_ISR_Inline(void)
 
 					// Set Alarm 2 count to time in seconds multiplied by sample rate
 					s_alarmTwoCount = (uint32)(g_unitConfig.alarmTwoTime * s_sampleRate);
+
+					g_blmAlertAlarmStatus |= ALERT_ALARM_TWO;
 				}
 			}
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+static inline uint8 usbmAndOsmFirstSlope_ISR_Inline(float freq, uint16 peak)
+{
+	// PPV in in(Hz) = 0.19 * Hz^0.99044558852614769170042919000987
+
+	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
+	if (peak > (s_vtDiv * 0.19 * pow(freq, 0.990))) { return (YES); }
+
+	return (NO);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+static inline uint8 usbmSecondSlope_ISR_Inline(float freq, uint16 peak)
+{
+	// PPV in in(Hz) = 0.05 * Hz^1
+
+	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
+	if (peak > (s_vtDiv * 0.05 * freq)) { return (YES); }
+
+	return (NO);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+static inline uint8 osmSecondSlope_ISR_Inline(float freq, uint16 peak)
+{
+	// PPV in in(Hz) = 0.09600017012716818151541500881744 * Hz^0.89278926071437231129858134302827
+
+	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
+	if (peak > (s_vtDiv * 0.096 * pow(freq, 0.8928))) { return (YES); }
+
+	return (NO);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
+{
+/*
+	============
+	USBM Drywall
+	------------
+	0.19 ips/5 mm @ 1 Hz (slope up)
+	(0.50 ips/12.7 mm @ 2.5 Hz) (pass thru)
+	0.75 ips/19.05 mm @ 4 Hz (flat line)
+	0.75 ips/19.05 mm @ 15 Hz (slope up)
+	2.00 ips/50.8 mm @ 40 Hz (flat line out)
+
+	============
+	USBM Plaster
+	------------
+	0.19 ips/5 mm @ 1 Hz (slope up)
+	0.50 ips/12.7 mm @ 2.5 Hz (flat line)
+	0.50 ips/12.7 mm @ 10 Hz (slope up)
+	(0.75 ips/19.05 mm @ 15 Hz) (pass thru)
+	2.00 ips/50.8 mm @ 40 Hz (flat line out)
+
+	==================
+	OSM Standard Slope
+	------------------
+	0.19 ips/5 mm @ 1 Hz (slope up)
+	(0.50 ips/12.7 mm @ 2.5 Hz) (pass thru)
+	0.75 ips/19.05 mm @ 4 Hz (flat line)
+	0.75 ips/19.05 mm @ 10 Hz (slope up)
+	2.00 ips/50.8 mm @ 30 Hz (flat line out)
+*/
+
+	float freq = (float)(g_triggerRecord.trec.sample_rate) / (float)(chan->freq_count * 2);
+	uint8 triggerFound = NO;
+	//uint32 pretriggerBufferSize;
+
+	// Filter out any frequencies lower than 1 Hz (which is below the specs of the transducer)
+	if (freq < 1.0) { return; }
+
+	// Check the frequency band for the specific vibration standard
+	if (g_triggerRecord.trec.variableTriggerVibrationStandard == USBM_RI_8507_DRYWALL_STANDARD)
+	{
+		if (freq < 4.0) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
+		else if (freq < 15.0) {	if (((float)chan->peak / s_vtDiv) > 0.75) { triggerFound = YES; } }
+		else if (freq < 40.0) { if (usbmSecondSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
+	}
+	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == USBM_RI_8507_PLASTER_STANDARD)
+	{
+		if (freq < 2.5) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
+		else if (freq < 10.0) {	if (((float)chan->peak / s_vtDiv) > 0.50) { triggerFound = YES; } }
+		else if (freq < 40.0) { if (usbmSecondSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
+	}
+	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == OSM_REGULATIONS_STANDARD)
+	{
+		if (freq < 4.0) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
+		else if (freq < 10.0) {	if (((float)chan->peak / s_vtDiv) > 0.75) { triggerFound = YES; } }
+		else if (freq < 30.0) { if (osmSecondSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
+	}
+
+	if (triggerFound)
+	{
+		g_externalTrigger = VARIABLE_TRIGGER_EVENT;
+		s_variableEventPretriggerBuffPtr = chan->peakSamplePtr;
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+static inline void processVariableTriggerData_ISR_Inline(void)
+{
+/*
+	If crossover:
+		If freq count more than low limit freq threshold (1 Hz):
+			Check peak and freq against standards curve
+		Reset peak and freq values
+	else:
+		Increment freq count
+		If sample > stored sample (normalized):
+			Save sample
+			//Get timestamp? (leave for actual trigger)
+*/
+	// ------------
+	// All Channels
+	// ------------
+	// Check if the freq count is zero, meaning initial sample (doesn't matter which channel is checked)
+	if (s_variableTriggerFreqCalcBuffer.r.freq_count == 0)
+	{
+		s_variableTriggerFreqCalcBuffer.r.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & g_bitAccuracyMidpoint);
+		s_variableTriggerFreqCalcBuffer.v.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & g_bitAccuracyMidpoint);
+		s_variableTriggerFreqCalcBuffer.t.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & g_bitAccuracyMidpoint);
+
+		// Set the divider for length conversion
+		s_vtDiv = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
+	}
+
+	// ---------
+	// R channel
+	// ---------
+	// Check if the stored sign comparison signals a zero crossing
+	if (s_variableTriggerFreqCalcBuffer.r.sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & g_bitAccuracyMidpoint))
+	{
+		// Check if the half wave count is less than sample rate divided by 2 (meaning freq greater than 1 Hz)
+		if (s_variableTriggerFreqCalcBuffer.r.freq_count < (g_triggerRecord.trec.sample_rate / 2)) { checkVariableTriggerAndFreq(&s_variableTriggerFreqCalcBuffer.r); }
+
+		// Store new sign for future zero crossing comparisons
+		s_variableTriggerFreqCalcBuffer.r.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & g_bitAccuracyMidpoint);
+
+		// Reset count to 1 since we have a sample that's crossed zero boundary
+		s_variableTriggerFreqCalcBuffer.r.freq_count = 1;
+
+		// Reset peak and peak pointer to the current sample
+		s_variableTriggerFreqCalcBuffer.r.peak = s_R_channelReading;
+		s_variableTriggerFreqCalcBuffer.r.peakSamplePtr = g_tailOfPretriggerBuff;
+	}
+	else
+	{
+		// Increment count (if not maxed already) since we haven't crossed a zero boundary
+		if (s_variableTriggerFreqCalcBuffer.r.freq_count < 0xFFFF) { s_variableTriggerFreqCalcBuffer.r.freq_count++; }
+
+		// Check if a new peak was found, and the store it
+		if (s_R_channelReading > s_variableTriggerFreqCalcBuffer.r.peak)
+		{
+			s_variableTriggerFreqCalcBuffer.r.peak = s_R_channelReading;
+			s_variableTriggerFreqCalcBuffer.r.peakSamplePtr = g_tailOfPretriggerBuff;
+		}
+	}
+
+	// ---------
+	// V channel
+	// ---------
+	// Check if the stored sign comparison signals a zero crossing
+	if (s_variableTriggerFreqCalcBuffer.v.sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & g_bitAccuracyMidpoint))
+	{
+		// Check if the half wave count is less than sample rate divided by 2 (meaning freq greater than 1 Hz)
+		if (s_variableTriggerFreqCalcBuffer.v.freq_count < (g_triggerRecord.trec.sample_rate / 2)) { checkVariableTriggerAndFreq(&s_variableTriggerFreqCalcBuffer.v); }
+
+		// Store new sign for future zero crossing comparisons
+		s_variableTriggerFreqCalcBuffer.v.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & g_bitAccuracyMidpoint);
+
+		// Reset count to 1 since we have a sample that's crossed zero boundary
+		s_variableTriggerFreqCalcBuffer.v.freq_count = 1;
+
+		// Reset peak and peak pointer to the current sample
+		s_variableTriggerFreqCalcBuffer.v.peak = s_V_channelReading;
+		s_variableTriggerFreqCalcBuffer.v.peakSamplePtr = g_tailOfPretriggerBuff;
+	}
+	else
+	{
+		// Increment count (if not maxed already) since we haven't crossed a zero boundary
+		if (s_variableTriggerFreqCalcBuffer.v.freq_count < 0xFFFF) { s_variableTriggerFreqCalcBuffer.v.freq_count++; }
+
+		// Check if a new peak was found, and the store it
+		if (s_V_channelReading > s_variableTriggerFreqCalcBuffer.v.peak)
+		{
+			s_variableTriggerFreqCalcBuffer.v.peak = s_V_channelReading;
+			s_variableTriggerFreqCalcBuffer.v.peakSamplePtr = g_tailOfPretriggerBuff;
+		}
+	}
+
+	// ---------
+	// T channel
+	// ---------
+	// Check if the stored sign comparison signals a zero crossing
+	if (s_variableTriggerFreqCalcBuffer.t.sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & g_bitAccuracyMidpoint))
+	{
+		// Check if the half wave count is less than sample rate divided by 2 (meaning freq greater than 1 Hz)
+		if (s_variableTriggerFreqCalcBuffer.t.freq_count < (g_triggerRecord.trec.sample_rate / 2)) { checkVariableTriggerAndFreq(&s_variableTriggerFreqCalcBuffer.t); }
+
+		// Store new sign for future zero crossing comparisons
+		s_variableTriggerFreqCalcBuffer.t.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & g_bitAccuracyMidpoint);
+
+		// Reset count to 1 since we have a sample that's crossed zero boundary
+		s_variableTriggerFreqCalcBuffer.t.freq_count = 1;
+
+		// Reset peak and peak pointer to the current sample
+		s_variableTriggerFreqCalcBuffer.t.peak = s_T_channelReading;
+		s_variableTriggerFreqCalcBuffer.t.peakSamplePtr = g_tailOfPretriggerBuff;
+	}
+	else
+	{
+		// Increment count (if not maxed already) since we haven't crossed a zero boundary
+		if (s_variableTriggerFreqCalcBuffer.t.freq_count < 0xFFFF) { s_variableTriggerFreqCalcBuffer.t.freq_count++; }
+
+		// Check if a new peak was found, and the store it
+		if (s_T_channelReading > s_variableTriggerFreqCalcBuffer.t.peak)
+		{
+			s_variableTriggerFreqCalcBuffer.t.peak = s_T_channelReading;
+			s_variableTriggerFreqCalcBuffer.t.peakSamplePtr = g_tailOfPretriggerBuff;
 		}
 	}
 }
@@ -756,17 +1027,51 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			else { s_consecAirTriggerCount = 0; }
 		}				
 
+#if (!VT_FEATURE_DISABLED) // New VT feature
+		if (g_triggerRecord.trec.variableTriggerEnable == YES) // Variable trigger
+		{
+			processVariableTriggerData_ISR_Inline();
+		}
+#endif
 		//___________________________________________________________________________________________
 		//___Check if either a seismic or acoustic trigger threshold condition was achieved or an external trigger was found
-		if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || 
-			(s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || (g_externalTrigger == YES))
+		if ((s_consecSeismicTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || (s_consecAirTriggerCount == CONSECUTIVE_TRIGGERS_THRESHOLD) || (g_externalTrigger))
 		{
 			//debug("--> Trigger Found! %x %x %x %x\r\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
 			//usart_write_char(&AVR32_USART1, '$');
 			g_testTimeSinceLastTrigger = g_lifetimeHalfSecondTickCount;
 			
+#if (!VT_FEATURE_DISABLED) // New VT feature
+			if (g_triggerRecord.trec.variableTriggerEnable == YES) // Variable trigger
+			{
+				uint32 pretriggerBufferSize;
+
+				// Check if the trigger was above the fixed 2.0 IPS limit for variable trigger (skipping the frequency algorithm)
+				if (g_externalTrigger != VARIABLE_TRIGGER_EVENT)
+				{
+					// Set variable trigger event pointer to the trigger sample in the pretrigger buffer
+					s_variableEventPretriggerBuffPtr = g_tailOfPretriggerBuff;
+				}
+
+				// Calculate number of pretrigger samples (in words)
+				pretriggerBufferSize = ((uint32)(g_triggerRecord.trec.sample_rate / g_unitConfig.pretrigBufferDivider) * g_sensorInfo.numOfChannels);
+
+				// Check if the pretrigger start point wraps back in the pretrigger circular buffer
+				if ((s_variableEventPretriggerBuffPtr - pretriggerBufferSize) < g_startOfPretriggerBuff)
+				{
+					// Calculate the wrapped pretrigger start location
+					s_variablePretriggerBuffPtr = (g_endOfPretriggerBuff - (g_startOfPretriggerBuff - (s_variableEventPretriggerBuffPtr - pretriggerBufferSize)));
+
+				}
+				else // Pretrigger start does not wrap in the pretrigger circular buffer
+				{
+					s_variablePretriggerBuffPtr = (s_variableEventPretriggerBuffPtr - pretriggerBufferSize);
+				}
+			}
+#endif
+
 			// Check if this event was triggered by an external trigger signal
-			if (g_externalTrigger == YES)
+			if (g_externalTrigger == EXTERNAL_TRIGGER_EVENT)
 			{
 				// Flag as an External Trigger for handling the event
 				raiseSystemEventFlag_ISR(EXT_TRIGGER_EVENT);
@@ -775,13 +1080,16 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				g_externalTrigger = NO;
 			}
 			// The trigger source was local (not an external trigger)
-			else // (g_externalTrigger == NO)
+			else // ((g_externalTrigger == NO) || (g_externalTrigger == VARIABLE_TRIGGER_EVENT))
 			{
 				//debugRaw("+ET+");
 
 				// Signal a trigger found for any external unit connected (Active high control)
 				PowerControl(TRIGGER_OUT, ON);
 					
+				// Check if variable trigger event was the source and reset the flag
+				if (g_externalTrigger) { g_externalTrigger = NO; }
+
 				// Trigger out will be cleared when our own ISR catches the active high signal
 			}
 
@@ -827,7 +1135,8 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				
 				// Clear count (also needs to remain zero until event recording is done to prevent reentry into this 'if' section)
 				s_pendingCalCount = 0;
-									
+
+#if VT_FEATURE_DISABLED
 				//___________________________________________________________________________________________
 				//___Copy current Pretrigger buffer sample to event
 				*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
@@ -838,12 +1147,51 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				{
 					// Copy first (which is currently the oldest) Pretrigger buffer sample to Pretrigger buffer
 					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfPretriggerBuff;
-				}										
+				}
 				else // Copy oldest Pretrigger buffer sample to Pretrigger
 				{
 					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT);
-				}										
+				}
 
+#else
+				// Check if using the standard trigger
+				if (g_triggerRecord.trec.variableTriggerEnable == NO)
+				{
+					//___________________________________________________________________________________________
+					//___Copy current Pretrigger buffer sample to event
+					*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
+
+					//___________________________________________________________________________________________
+					//___Copy oldest Pretrigger buffer sample to Pretrigger
+					if ((g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfPretriggerBuff)
+					{
+						// Copy first (which is currently the oldest) Pretrigger buffer sample to Pretrigger buffer
+						*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfPretriggerBuff;
+					}
+					else // Copy oldest Pretrigger buffer sample to Pretrigger
+					{
+						*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT);
+					}
+				}
+				else // Variable trigger standard (USBM, OSM)
+				{
+					//___________________________________________________________________________________________
+					//___Copy current Pretrigger buffer sample to event
+					*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)s_variableEventPretriggerBuffPtr;
+
+					//___________________________________________________________________________________________
+					//___Copy oldest Pretrigger buffer sample to Pretrigger
+					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)s_variablePretriggerBuffPtr;
+
+					// Increment both variable pretrigger pointers
+					s_variableEventPretriggerBuffPtr += NUMBER_OF_CHANNELS_DEFAULT;
+					s_variablePretriggerBuffPtr += NUMBER_OF_CHANNELS_DEFAULT;
+
+					// Check if variable pretrigger pointers wrapped and adjust accordingly
+					if (s_variableEventPretriggerBuffPtr >= g_endOfPretriggerBuff) { s_variableEventPretriggerBuffPtr = g_startOfPretriggerBuff; }
+					if (s_variablePretriggerBuffPtr >= g_endOfPretriggerBuff) { s_variablePretriggerBuffPtr = g_startOfPretriggerBuff; }
+				}
+#endif
 				//___________________________________________________________________________________________
 				//___Advance data pointers and decrement counts
 				s_samplePtr += NUMBER_OF_CHANNELS_DEFAULT;
@@ -873,6 +1221,14 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		{
 			g_doneTakingEvents = YES;
 		}
+#if 0 // Disabled to move further up in this functions execution
+#if (!VT_FEATURE_DISABLED) // New VT feature
+		else if (g_triggerRecord.trec.variableTriggerEnable == YES) // Variable trigger
+		{
+			processVariableTriggerData_ISR_Inline();
+		}
+#endif
+#endif
 	}
 	//___________________________________________________________________________________________
 	//___Check if handling event samples
@@ -882,25 +1238,73 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		//___Check if pretrig data to copy
 		if (s_pretrigCount)
 		{
+#if VT_FEATURE_DISABLED
 			// Check if the end of the Pretrigger buffer has been reached
 			if ((g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfPretriggerBuff)
 			{
 				// Copy oldest (which is currently the first) Pretrigger buffer samples to event Pretrigger
 				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfPretriggerBuff;
-			}										
+			}
 			else // Copy oldest Pretrigger buffer samples to event Pretrigger
 			{
 				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT);
-			}										
+			}
+#else
+			// Check if using the standard trigger
+			if (g_triggerRecord.trec.variableTriggerEnable == NO)
+			{
+				// Check if the end of the Pretrigger buffer has been reached
+				if ((g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfPretriggerBuff)
+				{
+					// Copy oldest (which is currently the first) Pretrigger buffer samples to event Pretrigger
+					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)g_startOfPretriggerBuff;
+				}
+				else // Copy oldest Pretrigger buffer samples to event Pretrigger
+				{
+					*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)(g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT);
+				}
+			}
+			else // Variable trigger standard (USBM, OSM)
+			{
+				// Copy oldest Pretrigger buffer sample to Pretrigger
+				*(SAMPLE_DATA_STRUCT*)s_pretrigPtr = *(SAMPLE_DATA_STRUCT*)s_variablePretriggerBuffPtr;
 
+				// Increment variable pretrigger pointer
+				s_variablePretriggerBuffPtr += NUMBER_OF_CHANNELS_DEFAULT;
+
+				// Check if variable pretrigger pointer wrapped and adjust accordingly
+				if (s_variablePretriggerBuffPtr >= g_endOfPretriggerBuff) { s_variablePretriggerBuffPtr = g_startOfPretriggerBuff; }
+			}
+#endif
 			s_pretrigPtr += NUMBER_OF_CHANNELS_DEFAULT;
 			s_pretrigCount--;
 		}
 
+#if VT_FEATURE_DISABLED
 		//___________________________________________________________________________________________
 		//___Copy data samples to event buffer
 		*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
+#else
+		// Check if using the standard trigger
+		if (g_triggerRecord.trec.variableTriggerEnable == NO)
+		{
+			//___________________________________________________________________________________________
+			//___Copy data samples to event buffer
+			*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
+		}
+		else // Variable trigger standard (USBM, OSM)
+		{
+			//___________________________________________________________________________________________
+			//___Copy data samples to event buffer
+			*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)s_variableEventPretriggerBuffPtr;
 
+			// Increment variable pretrigger pointer
+			s_variableEventPretriggerBuffPtr += NUMBER_OF_CHANNELS_DEFAULT;
+
+			// Check if variable pretrigger pointer wrapped and adjust accordingly
+			if (s_variableEventPretriggerBuffPtr >= g_endOfPretriggerBuff) { s_variableEventPretriggerBuffPtr = g_startOfPretriggerBuff; }
+		}
+#endif
 		s_samplePtr += NUMBER_OF_CHANNELS_DEFAULT;
 		s_sampleCount--;
 					
@@ -1364,7 +1768,7 @@ static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 	s_V_channelReading -= g_channelOffset.v_offset;
 	s_T_channelReading -= g_channelOffset.t_offset;
 	s_A_channelReading -= g_channelOffset.a_offset;
-#else // Test (Mark cal pulse with identifable data when no sensor connected)
+#else // Test (Mark cal pulse with identifiable data when no sensor connected)
 	if ((s_calPulse == YES) && (s_calSampleCount))
 	{
 		s_R_channelReading = (0x2000 + s_calSampleCount - 100);
@@ -1386,15 +1790,6 @@ static inline void applyOffsetAndCacheSampleData_ISR_Inline(void)
 	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v = s_V_channelReading;
 	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t = s_T_channelReading;
 	((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->a = s_A_channelReading;
-
-#if 0 // Test
-	// Store samples in event buffer
-	testSamples[samplesCollected++] = s_R_channelReading;
-	testSamples[samplesCollected++] = s_V_channelReading;
-	testSamples[samplesCollected++] = s_T_channelReading;
-	testSamples[samplesCollected++] = s_A_channelReading;
-	testSamples[samplesCollected++] = g_currentTempReading;
-#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -1682,6 +2077,11 @@ void DataIsrInit(uint16 sampleRate)
 	s_alarmTwoCount = 0;
 	s_channelSyncErrorCount = 0;
 
+#if 0 // Test
+	extern uint32 sampleProcessTiming;
+	sampleProcessTiming = 0;
+#endif
+
 	if ((g_maxEventBuffers - 1) < CONSEC_EVENTS_WITHOUT_CAL_THRESHOLD)
 	{
 		s_consecutiveEventsWithoutCalThreshold = (g_maxEventBuffers - 1);
@@ -1690,6 +2090,10 @@ void DataIsrInit(uint16 sampleRate)
 
 	if (g_factorySetupRecord.analogChannelConfig == CHANNELS_R_AND_V_SWAPPED) { s_channelConfig = CHANNELS_R_AND_V_SWAPPED; }
 	else { s_channelConfig = CHANNELS_R_AND_V_SCHEMATIC; }
+
+#if (!VT_FEATURE_DISABLED)
+	memset(&s_variableTriggerFreqCalcBuffer, 0, sizeof(s_variableTriggerFreqCalcBuffer));
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -1723,9 +2127,16 @@ void HandleActiveAlarmExtension(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+#if 0 // Test
+uint32 sampleProcessTiming = 0;
+#endif
 __attribute__((__interrupt__))
 void Tc_sample_irq(void)
 {
+#if 0 // Test
+	uint32 startTiming = Get_system_register(AVR32_COUNT);
+#endif
+
 #if EXTERNAL_SAMPLING_SOURCE
 	static uint8 skipProcessingFor512 = 0;
 	
@@ -1879,6 +2290,11 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 
 #if 0 // Test
 	gpio_clr_gpio_pin(AVR32_PIN_PB20);
+#endif
+
+#if 0 // Test
+	if (sampleProcessTiming) { sampleProcessTiming += (Get_system_register(AVR32_COUNT) - startTiming); sampleProcessTiming /= 2; }
+	else { sampleProcessTiming = (Get_system_register(AVR32_COUNT) - startTiming); }
 #endif
 
 	// clear the interrupt flag
