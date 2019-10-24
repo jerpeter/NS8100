@@ -110,11 +110,22 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 
 	// Waveform specific - Initial conditions.
 #if 1 // Original - Fixed method (Dave prefers trigger level as 16-bit regardless of bit accuracy setting)
-	cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+	if (g_triggerRecord.trec.variableTriggerEnable == YES)
+	{
+		cfg.eventCfg.seismicTriggerLevel = (VARIABLE_TRIGGER_CHAR_BASE + g_triggerRecord.trec.variableTriggerVibrationStandard);
+	}
+	else // NO_TRIGGER_CHAR, EXTERNAL_TRIGGER_CHAR or valid trigger
+	{
+		cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+	}
 #else // New - Bit accuracy adjusted
 	if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR))
 	{
 		cfg.eventCfg.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+	}
+	else if (g_triggerRecord.trec.variableTriggerEnable == YES)
+	{
+		cfg.eventCfg.seismicTriggerLevel = (VARIABLE_TRIGGER_CHAR_BASE + g_triggerRecord.trec.variableTriggerVibrationStandard);
 	}
 	else
 	{
@@ -293,6 +304,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
 	float timeCheckFloat;
 	float timeAlarmFloat;
+	float div;
 
 	if (ACTIVE_STATE == g_sampleProcessing)
 	{
@@ -473,12 +485,61 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		//---------------------------------------------------------------------------
+		// Sensitivity check (Must be set before Seismic Trigger level)
+		//---------------------------------------------------------------------------
+		if ((cfg.extraUnitCfg.sensitivity == LOW) || (cfg.extraUnitCfg.sensitivity == HIGH))
+		{
+			g_triggerRecord.srec.sensitivity = cfg.extraUnitCfg.sensitivity;
+		}
+		else
+		{
+			returnCode = CFG_ERR_SENSITIVITY;
+			goto SEND_UCM_ERROR_CODE;
+		}
+
+		//---------------------------------------------------------------------------
+		// Bit Accuracy check (Must be set before Seismic Trigger level)
+		//---------------------------------------------------------------------------
+		if ((cfg.eventCfg.bitAccuracy == ACCURACY_10_BIT) || (cfg.eventCfg.bitAccuracy == ACCURACY_12_BIT) ||
+		(cfg.eventCfg.bitAccuracy == ACCURACY_14_BIT) || (cfg.eventCfg.bitAccuracy == ACCURACY_16_BIT))
+		{
+			g_triggerRecord.trec.bitAccuracy = cfg.eventCfg.bitAccuracy;
+
+			switch (g_triggerRecord.trec.bitAccuracy)
+			{
+				case ACCURACY_10_BIT: { g_bitAccuracyMidpoint = ACCURACY_10_BIT_MIDPOINT; } break;
+				case ACCURACY_12_BIT: { g_bitAccuracyMidpoint = ACCURACY_12_BIT_MIDPOINT; } break;
+				case ACCURACY_14_BIT: { g_bitAccuracyMidpoint = ACCURACY_14_BIT_MIDPOINT; } break;
+				default: { g_bitAccuracyMidpoint = ACCURACY_16_BIT_MIDPOINT; } break;
+			}
+		}
+		else
+		{
+			returnCode = CFG_ERR_BIT_ACCURACY;
+			goto SEND_UCM_ERROR_CODE;
+		}
+
+		//---------------------------------------------------------------------------
 		// Seismic Trigger Level check
 		//---------------------------------------------------------------------------
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.seismicTriggerLevel) || (NO_TRIGGER_CHAR == cfg.eventCfg.seismicTriggerLevel) ||
 			((cfg.eventCfg.seismicTriggerLevel >= SEISMIC_TRIGGER_MIN_VALUE) && (cfg.eventCfg.seismicTriggerLevel <= SEISMIC_TRIGGER_MAX_VALUE)))
 		{
+			g_triggerRecord.trec.variableTriggerEnable = NO;
 			g_triggerRecord.trec.seismicTriggerLevel = cfg.eventCfg.seismicTriggerLevel;
+		}
+		else if ((cfg.eventCfg.seismicTriggerLevel > VARIABLE_TRIGGER_CHAR_BASE) && (cfg.eventCfg.seismicTriggerLevel < (VARIABLE_TRIGGER_CHAR_BASE + END_OF_VIBRATION_STANDARDS_LIST)))
+		{
+			g_triggerRecord.trec.variableTriggerEnable = YES;
+			g_triggerRecord.trec.variableTriggerVibrationStandard = (cfg.eventCfg.seismicTriggerLevel - VARIABLE_TRIGGER_CHAR_BASE);
+
+			div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
+
+			// Set the fixed trigger level to 2 IPS since anything above this level is an automatic trigger for all vibration standards
+			g_triggerRecord.trec.seismicTriggerLevel = (uint32)(2.00 * div);
+
+			// Up convert to 16-bit since user selected level is based on selected bit accuracy
+			g_triggerRecord.trec.seismicTriggerLevel *= (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
 		}
 		else
 		{
@@ -625,19 +686,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		memcpy((uint8*)g_triggerRecord.trec.comments, cfg.eventCfg.sessionComments, SESSION_COMMENTS_STRING_SIZE - 2);
 
 		//---------------------------------------------------------------------------
-		// Sensitivity check
-		//---------------------------------------------------------------------------
-		if ((cfg.extraUnitCfg.sensitivity == LOW) || (cfg.extraUnitCfg.sensitivity == HIGH))
-		{
-			g_triggerRecord.srec.sensitivity = cfg.extraUnitCfg.sensitivity;
-		}
-		else
-		{
-			returnCode = CFG_ERR_SENSITIVITY;
-			goto SEND_UCM_ERROR_CODE;
-		}
-		
-		//---------------------------------------------------------------------------
 		// Bar Scale check
 		//---------------------------------------------------------------------------
 		if ((cfg.extraUnitCfg.barScale == 1) || (cfg.extraUnitCfg.barScale == 2) || (cfg.extraUnitCfg.barScale == 4) || (cfg.extraUnitCfg.barScale == 8))
@@ -677,20 +725,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			goto SEND_UCM_ERROR_CODE;
 		}
 
-		//---------------------------------------------------------------------------
-		// Bit Accuracy check
-		//---------------------------------------------------------------------------
-		if ((cfg.eventCfg.bitAccuracy == ACCURACY_10_BIT) || (cfg.eventCfg.bitAccuracy == ACCURACY_12_BIT) || 
-			(cfg.eventCfg.bitAccuracy == ACCURACY_14_BIT) || (cfg.eventCfg.bitAccuracy == ACCURACY_16_BIT))
-		{
-			g_triggerRecord.trec.bitAccuracy = cfg.eventCfg.bitAccuracy;
-		}
-		else
-		{
-			returnCode = CFG_ERR_BIT_ACCURACY;
-			goto SEND_UCM_ERROR_CODE;
-		}
-		
 		//---------------------------------------------------------------------------
 		// Adjust for Temperature drift check
 		//---------------------------------------------------------------------------
@@ -1645,6 +1679,8 @@ void ModemResetProcess(void)
 {
 	if (g_modemStatus.testingFlag == YES) g_disableDebugPrinting = NO;
 	debug("HandleMRC\r\n");
+
+	WaitForBargraphLiveMonitoringDataToFinishSendingWithTimeout();
 
 	g_modemStatus.systemIsLockedFlag = YES;
 
