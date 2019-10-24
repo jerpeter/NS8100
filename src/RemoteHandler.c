@@ -89,6 +89,9 @@ static const COMMAND_MESSAGE_STRUCT s_cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] 
 	{ 'U', 'M', 'M', HandleUMM },		// Upload modem configuration memory.
 	{ 'G', 'M', 'N', handleGMN },		// Start Monitoring waveform/bargraph/combo.
 	{ 'H', 'L', 'T', handleHLT },		// Halt Monitoring waveform/bargraph/combo.
+	{ 'G', 'L', 'M', HandleGLM },		// Get/Start Bar Live Monitoring
+	{ 'H', 'L', 'M', HandleHLM },		// Halt Bar Live Monitoring
+	{ 'D', 'L', 'M', HandleDLM },		// Download Bar Live Monitoring pending event record
 	{ 'U', 'D', 'E', HandleUDE },		// Update last Downloaded Event number
 	{ 'G', 'A', 'D', handleGAD },		// Get Auto-Dialout/Download information
 	{ 'G', 'F', 'S', handleGFS },		// Get Flash Stats
@@ -165,6 +168,8 @@ uint8 RemoteCmdMessageHandler(CMD_BUFFER_STRUCT* cmdMsg)
 					{
 						// Command successfully decoded, signal that data has been transfered
 						g_modemDataTransfered = YES;
+
+						WaitForBargraphLiveMonitoringDataToFinishSendingWithTimeout();
 
 						s_cmdMessageTable[ cmdIndex ].cmdFunction(cmdMsg);
 						break;
