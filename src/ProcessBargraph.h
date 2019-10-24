@@ -17,7 +17,7 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
-// Bargraph Bar Interval ranges
+// Bargraph Bar Interval ranges in seconds
 #define ONE_SEC_PRD 	 1
 #define TEN_SEC_PRD 	10
 #define TWENTY_SEC_PRD 	20
@@ -26,7 +26,7 @@
 #define FIFTY_SEC_PRD 	50
 #define SIXTY_SEC_PRD 	60
 
-// Bargraph Summary Interval ranges
+// Bargraph Summary Interval ranges in seconds
 #define FIVE_MINUTE_INTVL	 		300
 #define FIFTEEN_MINUTE_INTVL		900
 #define THIRTY_MINUTE_INTVL			1800
@@ -51,6 +51,7 @@ enum // Set unique values to the following types (actual value doesn't matter)
 {
 	READ_PTR,
 	WRITE_PTR,
+	BLM_READ_PTR,
 	BG_BUFFER_EMPTY,
 	BG_BUFFER_NOT_EMPTY
 };
@@ -78,5 +79,11 @@ void MoveStartOfBargraphEventRecordToFile(void);
 void MoveUpdatedBargraphEventRecordToFile(uint8 status);
 void AdvanceBarIntervalBufPtr(uint8);
 uint8 CalculateBargraphData(void);
+uint8 CheckBargraphLiveMonitoringAuthorizedToSend(void);
+void ChecksumAndSetupBargraphLiveMonitorDataForISRTransfer(void);
+void HandleBargraphLiveMonitoringDataTransfer(void);
+void HandleBargraphLiveMonitoringStartMsg(void);
+void HandleBargraphLiveMonitoringEndMsg(void);
+void WaitForBargraphLiveMonitoringDataToFinishSendingWithTimeout(void);
 
 #endif //_DATABUFFS_H_
