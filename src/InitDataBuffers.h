@@ -31,11 +31,15 @@
 #define MAX_CAL_SAMPLES				100
 #define START_CAL_SIGNAL			(100 + 1)
 #define MAX_DATA_PER_SAMPLE			(MAX_NUM_OF_CHANNELS * CHANNEL_DATA_IN_BYTES) // 8
-#define MAX_DATA_PER_SECOND			(MAX_SAMPLE_RATE * MAX_DATA_PER_SAMPLE) // 64K
+#define MAX_DATA_PER_SECOND			(MAX_SAMPLE_RATE * MAX_DATA_PER_SAMPLE) // 131K
 
 #define LARGEST_PRETIRGGER_SIZE_IN_BYTES	(MAX_DATA_PER_SECOND)
+#if VT_FEATURE_DISABLED // Original
 #define LARGEST_EVENT_SIZE_IN_BYTES			(MAX_DATA_PER_SECOND * 55) // Determined by max data and ram storage available
-#define LARGEST_CAL_SIZE_IN_BYTES			(MAX_DATA_PER_SAMPLE * MAX_CAL_SAMPLES) // 1600
+#else // New VT feature
+#define LARGEST_EVENT_SIZE_IN_BYTES			(MAX_DATA_PER_SECOND * 54) // Determined by max data and ram storage available (remove 1 second max rate for pretrigger increase due to variable trigger feature
+#endif
+#define LARGEST_CAL_SIZE_IN_BYTES			(MAX_DATA_PER_SAMPLE * MAX_CAL_SAMPLES) // 800
 
 #define PRE_TRIG_BUFF_SIZE_IN_BYTES 	(LARGEST_PRETIRGGER_SIZE_IN_BYTES + MAX_DATA_PER_SAMPLE) // Max 1 second + 1 sample
 #define PRE_TRIG_BUFF_SIZE_IN_WORDS 	(PRE_TRIG_BUFF_SIZE_IN_BYTES / 2)
