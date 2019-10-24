@@ -64,11 +64,15 @@ extern USER_MENU_STRUCT saveSetupMenu[];
 extern USER_MENU_STRUCT seismicTriggerMenu[];
 extern USER_MENU_STRUCT seismicLocationMenu[];
 extern USER_MENU_STRUCT seismicSensorTypeMenu[];
+#if (!VT_FEATURE_DISABLED)
+extern USER_MENU_STRUCT seismicTriggerTypeMenu[];
+#endif
 extern USER_MENU_STRUCT sensitivityMenu[];
 extern USER_MENU_STRUCT storedEventsCapModeMenu[];
 extern USER_MENU_STRUCT storedEventLimitMenu[];
 extern USER_MENU_STRUCT summaryIntervalMenu[];
 extern USER_MENU_STRUCT unlockCodeMenu[];
+extern USER_MENU_STRUCT vibrationStandardMenu[];
 extern USER_MENU_STRUCT weightPerDelayMenu[];
 
 ///----------------------------------------------------------------------------
@@ -137,6 +141,7 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+#if VT_FEATURE_DISABLED // Original
 		if (g_factorySetupRecord.seismicSensorType > SENSOR_ACC_RANGE_DIVIDER)
 		{
 			USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
@@ -151,13 +156,43 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 		// Down convert to current bit accuracy setting
 		if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
 		{
-			g_tempTriggerLevelForMenuAdjsutment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
+			g_tempTriggerLevelForMenuAdjustment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
 		}		
 
-		SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment,
+		SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjustment,
 			(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 			(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
 			g_bitAccuracyMidpoint);
+#else // New Variable Trigger feature
+		if (g_triggerRecord.trec.variableTriggerEnable == YES)
+		{
+			SETUP_USER_MENU_MSG(&vibrationStandardMenu, g_triggerRecord.trec.variableTriggerVibrationStandard);
+		}
+		else // (g_triggerRecord.trec.variableTriggerEnable == NO)
+		{
+			if (g_factorySetupRecord.seismicSensorType > SENSOR_ACC_RANGE_DIVIDER)
+			{
+				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
+				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
+			}
+			else
+			{
+				USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = IN_TYPE;
+				USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
+			}
+
+			// Down convert to current bit accuracy setting
+			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
+			{
+				g_tempTriggerLevelForMenuAdjustment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
+			}
+
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjustment,
+				(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
+				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
+				g_bitAccuracyMidpoint);
+		}
+#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -204,7 +239,7 @@ void AlarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_unitConfig.alarmOneMode == ALARM_MODE_BOTH)
 		{
-			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_unitConfig.alarmOneAirLevel);
+			g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_unitConfig.alarmOneAirLevel);
 
 			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{
@@ -215,7 +250,7 @@ void AlarmOneSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 				airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE);
 			}
 
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
 												AirTriggerConvertToUnits(g_alarmOneAirMinLevel),
 												AirTriggerConvertToUnits(g_alarmOneAirMinLevel),
 												airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
@@ -271,10 +306,10 @@ void AlarmOneAirLevelMenuHandler(uint8 keyPressed, void* data)
 			// Down convert to current bit accuracy setting
 			if (g_unitConfig.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_tempTriggerLevelForMenuAdjsutment = g_unitConfig.alarmOneSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_tempTriggerLevelForMenuAdjustment = g_unitConfig.alarmOneSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
 				(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 		}
@@ -321,7 +356,7 @@ void AlarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((g_unitConfig.alarmOneMode == ALARM_MODE_BOTH) || (g_unitConfig.alarmOneMode == ALARM_MODE_AIR))
 		{
-			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_unitConfig.alarmOneAirLevel);
+			g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_unitConfig.alarmOneAirLevel);
 
 			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{
@@ -332,7 +367,7 @@ void AlarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 				airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE);
 			}
 
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
 												AirTriggerConvertToUnits(g_alarmOneAirMinLevel),
 												AirTriggerConvertToUnits(g_alarmOneAirMinLevel),
 												airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
@@ -342,10 +377,10 @@ void AlarmOneTimeMenuHandler(uint8 keyPressed, void* data)
 			// Down convert to current bit accuracy setting
 			if (g_unitConfig.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_tempTriggerLevelForMenuAdjsutment = g_unitConfig.alarmOneSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_tempTriggerLevelForMenuAdjustment = g_unitConfig.alarmOneSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
 				(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				g_bitAccuracyMidpoint);
@@ -400,7 +435,7 @@ void AlarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_unitConfig.alarmTwoMode == ALARM_MODE_BOTH)
 		{
-			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirLevel);
+			g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirLevel);
 
 			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{
@@ -411,7 +446,7 @@ void AlarmTwoSeismicLevelMenuHandler(uint8 keyPressed, void* data)
 				airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE);
 			}
 
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
 												AirTriggerConvertToUnits(g_alarmTwoAirMinLevel),
 												AirTriggerConvertToUnits(g_alarmTwoAirMinLevel),
 												airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
@@ -467,10 +502,10 @@ void AlarmTwoAirLevelMenuHandler(uint8 keyPressed, void* data)
 			// Down convert to current bit accuracy setting
 			if (g_unitConfig.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_tempTriggerLevelForMenuAdjsutment = g_unitConfig.alarmTwoSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_tempTriggerLevelForMenuAdjustment = g_unitConfig.alarmTwoSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
 				(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 		}
@@ -519,7 +554,7 @@ void AlarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((g_unitConfig.alarmTwoMode == ALARM_MODE_BOTH) || (g_unitConfig.alarmTwoMode == ALARM_MODE_AIR))
 		{
-			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirLevel);
+			g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirLevel);
 
 			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{
@@ -530,7 +565,7 @@ void AlarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 				airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE);
 			}
 
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
 												AirTriggerConvertToUnits(g_alarmTwoAirMinLevel),
 												AirTriggerConvertToUnits(g_alarmTwoAirMinLevel),
 												airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
@@ -540,10 +575,10 @@ void AlarmTwoTimeMenuHandler(uint8 keyPressed, void* data)
 			// Down convert to current bit accuracy setting
 			if (g_unitConfig.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
 			{
-				g_tempTriggerLevelForMenuAdjsutment = g_unitConfig.alarmTwoSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
+				g_tempTriggerLevelForMenuAdjustment = g_unitConfig.alarmTwoSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
 			}		
 
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjsutment,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
 				(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
 				(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 		}
@@ -1236,16 +1271,16 @@ void RecordTimeMenuHandler(uint8 keyPressed, void* data)
 		}
 		else
 		{
-			g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+			g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
 			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE,
 													AIR_TRIGGER_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
 			}
 			else
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE,
 													AIR_TRIGGER_MB_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
 			}
 		}
@@ -1440,29 +1475,33 @@ void SeismicTriggerMenuHandler(uint8 keyPressed, void* data)
 			debug("Seismic Trigger: %d counts\r\n", g_triggerRecord.trec.seismicTriggerLevel);
 		}
 
-		g_tempTriggerLevelForMenuAdjsutment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+		g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_DEFAULT_VALUE,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE,
 												AIR_TRIGGER_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
 		}
 		else
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjsutment, AIR_TRIGGER_MB_DEFAULT_VALUE,
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE,
 												AIR_TRIGGER_MB_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+#if VT_FEATURE_DISABLED // Original
 		if (g_triggerRecord.opMode == COMBO_MODE)
 		{
 			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
 		}		
 		else // WAVEFORM_MODE
 		{
-			SETUP_USER_MENU_MSG(&sensitivityMenu, g_triggerRecord.srec.sensitivity);	
+			SETUP_USER_MENU_MSG(&sensitivityMenu, g_triggerRecord.srec.sensitivity);
 		}
+#else // New Variable Trigger feature
+		SETUP_USER_MENU_MSG(&seismicTriggerTypeMenu, g_triggerRecord.trec.variableTriggerEnable);
+#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();
