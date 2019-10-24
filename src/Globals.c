@@ -62,7 +62,11 @@ uint16 g_eventNumberCacheMaxIndex;
 uint16 g_eventNumberCacheOldestIndex;
 uint8 g_eventNumberCache[EVENT_NUMBER_CACHE_MAX_ENTRIES];
 //uint16 g_pretriggerBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
-uint16 g_pretriggerBuff[(SAMPLE_RATE_16K * 4)];
+#if VT_FEATURE_DISABLED // Normal
+uint16 g_pretriggerBuff[((SAMPLE_RATE_16K * 4) + 4)];
+#else // New variable trigger feature
+uint16 g_pretriggerBuff[(((SAMPLE_RATE_16K * 4) + 4) * 2)]; // Double the Pretrigger size to accommodate the new variable trigger feature (possible to do only 1/2 more if 1/2 wave approx for freq is sufficient)
+#endif
 uint16* g_startOfPretriggerBuff;
 uint16* g_tailOfPretriggerBuff;
 uint16* g_endOfPretriggerBuff;
@@ -90,7 +94,7 @@ uint16 g_eventBufferReadIndex;
 uint16 g_bitShiftForAccuracy;
 uint32 g_isTriggered = 0;
 uint32 g_processingCal = 0;
-uint16 g_eventsNotCompressed = 0; 
+uint16 g_testCounter = 0;
 uint16* g_bargraphDataStartPtr;
 uint16* g_bargraphDataWritePtr;
 uint16* g_bargraphDataReadPtr;
@@ -157,7 +161,23 @@ USER_MENU_TAGS_STRUCT g_menuTags[TOTAL_TAGS] = {
 	{"",	BAR_SCALE_EIGHTH_TAG},
 	{" ENABLED",	ENABLED_TAG},
 	{" DISABLED",	DISABLED_TAG},
+#if 0 // Release ready
 	{"",	FILENAME_TAG}
+#else // Test build with built in strings
+	{"",	FILENAME_TAG},
+	{"-BAR LIVE MONITOR-", BAR_LIVE_MONITOR_TITLE_TAG},
+	{"BAR LIVE MONITOR", BAR_LIVE_MONITOR_TAG},
+	{"-BLM START STOP MSG-", BLM_START_STOP_MSG_TITLE_TAG},
+	{"BLM START STOP MSG", BLM_START_STOP_MSG_TAG},
+	{"-SEISMIC TRIG TYPE-", SEISMIC_TRIGGER_TYPE_TITLE_TAG},
+	{"VARIABLE (USBM/OSM)", VARIABLE_USBM_OSM_TAG},
+	{"-VIBRATION STANDARD-", VIBRATION_STANDARD_TITLE_TAG},
+	{"USBM 8507 DRYWALL", USBM_8507_DRYWALL_TAG},
+	{"USBM 8507 PLASTER", USBM_8507_PLASTER_TAG},
+	{"OSM REGULATIONS", OSM_REGULATIONS_TAG},
+	{"REMOTE CONTROL", REMOTE_CONTROL_TAG},
+	{"BLIND SEND", BLIND_SEND_TAG}
+#endif
 };
 uint8 g_monitorOperationMode;
 uint8 g_waitForUser = FALSE;
@@ -169,15 +189,14 @@ uint8 g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
 uint8 g_displayAlternateResultState = DEFAULT_RESULTS;
 uint8 g_calDisplayAlternateResultState = DEFAULT_RESULTS;
 uint8 g_allowQuickPowerOffForTimerModeSetup = NO;
-uint16 g_oneMinuteCount = 0;
-uint32 g_oneSecondCnt = 0;
 uint32 g_barSampleCount = 0;
-uint32 g_totalBarIntervalCnt = 0;
+uint32 g_blmBarIntervalQueueCount = 0;
 uint16 g_summaryCount = 0;
 BARGRAPH_FREQ_CALC_BUFFER g_bargraphFreqCalcBuffer;
 CALCULATED_DATA_STRUCT g_bargraphSummaryInterval;
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalWritePtr;
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalReadPtr;
+BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalLiveMonitoringReadPtr;
 BARGRAPH_BAR_INTERVAL_DATA* g_bargraphBarIntervalEndPtr;
 uint32 g_bargraphBarIntervalClock = 0;
 uint16 g_bargraphBarIntervalsCached = 0;
@@ -252,7 +271,7 @@ uint8 g_lowBatteryState = NO;
 uint32 g_sleepModeState = AVR32_PM_SMODE_STOP;
 uint8 g_sleepModeEngaged = NO;
 char* g_languageLinkTable[TOTAL_TEXT_STRINGS];
-uint32 g_tempTriggerLevelForMenuAdjsutment;
+uint32 g_tempTriggerLevelForMenuAdjustment;
 volatile uint16 g_storedTempReading;
 volatile uint16 g_currentTempReading;
 volatile uint16 g_previousTempReading;
@@ -266,7 +285,8 @@ uint8 g_spareBuffer[SPARE_BUFFER_SIZE];
 uint32 g_spareBufferIndex = 0;
 char g_spareFileName[MAX_FILE_NAME_CHARS];
 char g_eventPathAndFilename[MAX_FILE_NAME_CHARS];
-uint8 g_debugBuffer[MAX_FILE_NAME_CHARS];
+uint8 g_debugBuffer[(MAX_TEXT_LINE_CHARS + 1)];
+uint8 g_blmBuffer[(MAX_TEXT_LINE_CHARS + 1)];
 uint8 g_derCache[DER_CACHE_SIZE];
 uint16 g_derCacheIndex = 0;
 DATE_TIME_STRUCT g_startOfEventDateTimestampBuffer[MAX_EVENT_TIMESTAMP_BUFFERS];
@@ -284,6 +304,9 @@ uint8 g_usbMode;
 uint8 g_usbThumbDriveWasConnected = NO;
 uint8 g_syncFileExistsAction = 0;
 uint8 g_calibrationGeneratePulse = NO;
+uint8 g_bargraphLiveMonitoringBISendActive = NO;
+uint8 g_blmAlertAlarmStatus = 0;
+uint8* g_bargraphBarIntervalLiveMonitorBIDataPtr = g_blmBuffer;
 SAMPLE_DATA_STRUCT g_sensorCalPeaks[3] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
 SAMPLE_DATA_STRUCT g_sensorCalFreqCounts;
 int32 g_sensorCalChanMin[MAX_NUM_OF_CHANNELS];
