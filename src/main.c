@@ -51,6 +51,7 @@
 #include "tc.h"
 #include "fsaccess.h"
 #include "M23018.h"
+#include "cycle_counter.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -93,6 +94,7 @@ void SystemEventManager(void)
 		if ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
 			CalculateBargraphData();
+			HandleBargraphLiveMonitoringDataTransfer();
 		}
 	}
 
@@ -155,14 +157,15 @@ void SystemEventManager(void)
 	{
 		clearSystemEventFlag(CYCLIC_EVENT);
 
-#if 1 // Test (ISR/Exec Cycles)
+#if 0 // Test (ISR/Exec Cycles)
+		extern uint32 sampleProcessTiming;
 		// Check if USB is in device mode otherwise in Host and conflicts with uShell
 		if (Is_usb_id_device())
 		{
 			if ((g_execCycles / 4) > 10000) { strcpy((char*)g_spareBuffer, ">10K"); }
 			else { sprintf((char*)g_spareBuffer, "%d", (uint16)(g_execCycles / 4)); }
 
-			debug("(Cyclic Event) ISR Ticks/sec: %d (E:%s), Exec/sec: %s\r\n", (g_sampleCountHold / 4), ((g_channelSyncError == YES) ? "YES" : "NO"), (char*)g_spareBuffer);
+			debug("(Cyclic Event) ISR Ticks/sec: %d (E:%s), Exec/sec: %s, SPT: %dus\r\n", (g_sampleCountHold / 4), ((g_channelSyncError == YES) ? "YES" : "NO"), (char*)g_spareBuffer, cpu_cy_2_us(sampleProcessTiming, FOSC0));
 		}
 		g_sampleCountHold = 0;
 		g_execCycles = 0;
@@ -203,11 +206,12 @@ void SystemEventManager(void)
 	if (getSystemEventState(CYCLE_CHANGE_EVENT))
 	{
 		debug("Cycle Change Event (24 Hour cycle end)\r\n");
-		clearSystemEventFlag(CYCLE_CHANGE_EVENT);
-
 		g_testTimeSinceLastCycleChange = g_lifetimeHalfSecondTickCount;
 
 		HandleCycleChangeEvent();
+
+		// Clear flag after HandleCycleChangeEvent call to allowing checking for cycle change status
+		clearSystemEventFlag(CYCLE_CHANGE_EVENT);
 	}
 
 	//___________________________________________________________________________________________
@@ -370,6 +374,18 @@ void CraftManager(void)
 
 			// Relock the system
 			g_modemStatus.systemIsLockedFlag = YES;
+
+#if 1 //New BLM feature
+			if (g_bargraphLiveMonitoringBISendActive == YES)
+			{
+				// Kill the Bar live data transfer
+				AVR32_USART1.idr = AVR32_USART_IER_TXRDY_MASK;
+				g_bargraphLiveMonitoringBISendActive = NO;
+			}
+
+			// Stop sending BLM data unless remote side requests
+			g_modemStatus.barLiveMonitorOverride = BAR_LIVE_MONITORING_OVERRIDE_STOP;
+#endif
 
 			if (CONNECTED == g_modemStatus.firstConnection)
 			{
@@ -680,6 +696,13 @@ void UsbDeviceManager(void)
 			g_usbMassStorageState = USB_DISABLED_FOR_OTHER_PROCESSING;
 			ms_usb_prevent_sleep = NO;
 			debug("USB State changed to: Disabled for other processing\r\n");
+#if 1 // Added to prevent Host mode problems when a USB thumb drive is still connected going into monitoring and causing file system issues
+			// Re-Init the USB and Mass Storage driver
+			usb_task_init();
+			device_mass_storage_task_init();
+			host_mass_storage_task_init();
+			ushell_task_init(FOSC0);
+#endif
 		}
 		//___________________________________________________________________________________________
 		//
@@ -1379,7 +1402,7 @@ void PowerManager(void)
 		if (g_sampleProcessing == ACTIVE_STATE)
 		{
 			// Check if a higher sample rate that can't use Stop sleep mode (Wave 16K and Bar 8K)
-			if ((g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K) || ((g_triggerRecord.opMode == BARGRAPH_MODE) && (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_8K)))
+			if ((g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K) || (((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)) && (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_8K)))
 			{
 				sleepStateNeeded = AVR32_PM_SMODE_IDLE;
 			}
