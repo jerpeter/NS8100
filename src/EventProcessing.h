@@ -83,7 +83,7 @@ typedef struct
 	uint16 validEntries;
 	uint16 deletedEntries;
 	uint16 currentEntryIndex;
-	uint32 currentMonitorSessionStartSummary;
+	uint32 unused;
 	SUMMARY_LIST_ENTRY_STRUCT cachedEntry;
 } SUMMARY_LIST_FILE_DETAILS;
 
@@ -94,6 +94,7 @@ void InitEventNumberCache(void);
 void InitEventRecord(uint8 opMode);
 void InitCurrentEventNumber(void);
 uint16 GetLastStoredEventNumber(void);
+void AddEventNumberToCache(uint16 eventNumber);
 void StoreCurrentEventNumber(void);
 void CompleteRamEventSummary(void);
 void StoreData(uint16* dataPtr, uint16 dataWords);
@@ -147,6 +148,8 @@ void CacheNextSummaryListEntry(void);
 void CachePreviousSummaryListEntry(void);
 void CacheSummaryEntryByIndex(uint16 index);
 void ParseAndCountSummaryListEntries(void);
+void ParseAndCountSummaryListEntriesWithRewrite(void);
+void ParseAndCountSummaryListEntriesWithRewrite2(void);
 void AddEventToSummaryList(EVT_RECORD* event);
 void InitSummaryListFile(void);
 
