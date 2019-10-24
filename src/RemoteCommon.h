@@ -247,6 +247,7 @@ enum {
 #define	FIELD_LEN_06			6
 #define	FIELD_LEN_08			8
 
+#define BAR_LIVE_MONITORING_OVERRIDE_STOP	2
 
 typedef struct
 {
@@ -263,6 +264,7 @@ typedef struct
 	uint8 systemIsLockedFlag;
 	uint8 numberOfRings;
 	uint8 firstConnection;
+	uint8 barLiveMonitorOverride;
 
 	uint8 testingFlag;			// Modem is being tested/debugged, set to print to the PC
 	uint8 testingPrintFlag;		// Modem is being tested/debugged set debug to true.
@@ -540,7 +542,7 @@ typedef struct
 // enum list for command index.
 enum CMD_MESSAGE_INDEX {
 	AAA = 0,	// Dummy function call.
-	MRC,		// Modem reset.
+	MRS,		// Modem reset.
 
 #if 0
 	MVS,		// Modem view settings.
@@ -577,7 +579,6 @@ enum CMD_MESSAGE_INDEX {
 	VSL,		// View summary log.
 	VEL,		// View event log.
 	ESM,		// Erase summary memory.
-	EEM,		// Erase event memory.
 	ECM,		// Erase configuration memory.
 	TRG,		// Trigger an event.
 #endif
@@ -596,6 +597,9 @@ enum CMD_MESSAGE_INDEX {
 	UMM,		// Upload modem configuration memory.
 	GMN,		// Go start Monitoring waveform/bargraph/combo.
 	HLT,		// Halt Monitoring waveform/bargraph/combo.
+	GLM,		// Get/Start Bar Live Monitoring
+	HLM,		// Halt Bar Live Monitoring
+	DLM,		// Download Bar Live Monitoring pending event record
 	UDE,		// Update last Download Event number
 	GAD,		// Get Auto-Dialout/Download information
 	GFS,		// Get flash stats
