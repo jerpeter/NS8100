@@ -113,6 +113,14 @@ void HandleUNL(CMD_BUFFER_STRUCT* inCmd)
 		ModemPuts((uint8*)(sendStr), strlen(sendStr), CONVERT_DATA_TO_ASCII);
 		ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
+		if (g_modemStatus.systemIsLockedFlag == NO)
+		{
+			if (g_sampleProcessing == ACTIVE_STATE)
+			{
+				SendLMA();
+			}
+		}
+
 		g_modemStatus.xferState = NOP_CMD;
 	}
 
@@ -187,6 +195,169 @@ void HandleDAI(CMD_BUFFER_STRUCT* inCmd)
 	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	return;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleGLM(CMD_BUFFER_STRUCT* inCmd)
+{
+	UNUSED(inCmd);
+
+	g_modemStatus.barLiveMonitorOverride = YES;
+
+	HandleBargraphLiveMonitoringStartMsg();
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleHLM(CMD_BUFFER_STRUCT* inCmd)
+{
+	UNUSED(inCmd);
+
+	g_modemStatus.barLiveMonitorOverride = BAR_LIVE_MONITORING_OVERRIDE_STOP;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void SendLMA(void)
+{
+	uint16 length;
+
+	// Setup LMA message
+	if (g_triggerRecord.opMode == WAVEFORM_MODE)
+	{
+		// Send LMA for Waveform, Last stored event number and starting Waveform session time
+		length = sprintf((char*)g_spareBuffer, "LMA,%d,%d,%lu", g_triggerRecord.opMode, GetLastStoredEventNumber(), ConvertDateTimeToEpochTime(g_pendingBargraphRecord.summary.captured.endTime));
+	}
+	else // ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
+	{
+		// Send LMA for BG/Combo, BG event number and BG event start time (aka monitor session start time)
+		length = sprintf((char*)g_spareBuffer, "LMA,%d,%d,%lu", g_triggerRecord.opMode, g_pendingBargraphRecord.summary.eventNumber, ConvertDateTimeToEpochTime(g_pendingBargraphRecord.summary.captured.eventTime));
+	}
+
+	ModemPuts((uint8*)&g_spareBuffer, length, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleDLM(CMD_BUFFER_STRUCT* inCmd)
+{
+	UNUSED(inCmd);
+
+	uint32 dataLength = 0;						// Will hold the new data length of the message
+	uint8 flagData = 0;
+
+	// If the process is busy sending data, return;
+	if (YES == g_modemStatus.xferMutex)
+	{
+		return;
+	}
+
+	memset((uint8*)g_dsmXferStructPtr, 0, sizeof(DSMx_XFER_STRUCT));
+
+	// Check if there is an active pending Bargraph event record
+	if ((g_sampleProcessing == ACTIVE_STATE) && ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)))
+	{
+		g_dsmXferStructPtr->numOfSummaries = 1;
+		dataLength = sizeof(EVENT_RECORD_DOWNLOAD_STRUCT);
+	}
+	else // No active pending Bargraph event record to send
+	{
+		g_dsmXferStructPtr->numOfSummaries = 0;
+		dataLength = 0;
+	}
+
+	// Now start building the outgoing header. Clear the outgoing header data.
+	memset((uint8*)g_outCmdHeaderPtr, 0, sizeof(COMMAND_MESSAGE_HEADER));
+
+	// Copy the existing header data into the outgoing buffer.
+	strcpy((char*)g_outCmdHeaderPtr->cmd, "DLMx");
+
+	// Start Building the outgoing header. Set the msg type to a one for a response message.
+	sprintf((char*)g_outCmdHeaderPtr->type, "%02d", MSGTYPE_RESPONSE);
+
+	BuildIntDataField((char*)g_outCmdHeaderPtr->dataLength, (dataLength + MESSAGE_HEADER_LENGTH + MESSAGE_FOOTER_LENGTH + (DATA_FIELD_LEN)), FIELD_LEN_08);
+
+	flagData = CRC_32BIT;
+	flagData = (uint8)(flagData << 4);
+	flagData = (uint8)((uint8)(flagData) | ((uint8)COMPRESS_NONE));
+	sprintf((char*)g_outCmdHeaderPtr->compressCrcFlags,"%02x", flagData);
+
+	// Create the message buffer from the outgoing header data.
+	BuildOutgoingHeaderBuffer(g_outCmdHeaderPtr, g_dsmXferStructPtr->msgHdr);
+
+	// Fill in the number of records
+	BuildIntDataField((char*)g_dsmXferStructPtr->numOfRecStr, g_dsmXferStructPtr->numOfSummaries, FIELD_LEN_06);
+
+	//-----------------------------------------------------------
+
+	g_transferCount = 0;
+
+	// If the beginning of sending data, send the crlf.
+	if (MODEM_SEND_FAILED == ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION))
+	{
+		g_dsmXferStructPtr->xferStateFlag = NOP_XFER_STATE;
+		g_modemStatus.xferMutex = NO;
+		g_transferCount = 0;
+	}
+
+	// g_transmitCRC will be the seed value for the rest of the CRC calculations.
+	g_transmitCRC = CalcCCITT32((uint8*)g_dsmXferStructPtr->msgHdr, MESSAGE_HEADER_LENGTH, SEED_32);
+
+	if (MODEM_SEND_FAILED == ModemPuts((uint8*)g_dsmXferStructPtr->msgHdr, MESSAGE_HEADER_LENGTH, g_binaryXferFlag))
+	{
+		g_dsmXferStructPtr->xferStateFlag = NOP_XFER_STATE;
+		g_modemStatus.xferMutex = NO;
+		g_transferCount = 0;
+	}
+
+	g_transmitCRC = CalcCCITT32((uint8*)g_dsmXferStructPtr->numOfRecStr, FIELD_LEN_06, g_transmitCRC);
+
+	if (MODEM_SEND_FAILED == ModemPuts((uint8*)g_dsmXferStructPtr->numOfRecStr, FIELD_LEN_06, g_binaryXferFlag))
+	{
+		g_dsmXferStructPtr->xferStateFlag = NOP_XFER_STATE;
+		g_modemStatus.xferMutex = NO;
+		g_transferCount = 0;
+	}
+
+	g_transferCount = MESSAGE_HEADER_LENGTH + FIELD_LEN_06 + 2;
+
+	// Check if there is an active pending Bargraph event record
+	if (g_dsmXferStructPtr->numOfSummaries)
+	{
+		// Stage the data
+		g_dsmXferStructPtr->dloadEventRec.structureFlag = START_DLOAD_FLAG;
+		g_dsmXferStructPtr->dloadEventRec.downloadDate = GetCurrentTime();
+		memcpy(&g_dsmXferStructPtr->dloadEventRec.eventRecord, &g_pendingBargraphRecord, sizeof(EVT_RECORD));
+		g_dsmXferStructPtr->dloadEventRec.endFlag = END_DLOAD_FLAG;
+
+		// Setup the transfer structure pointers
+		g_dsmXferStructPtr->startDloadPtr = (uint8*)&(g_dsmXferStructPtr->dloadEventRec);
+		g_dsmXferStructPtr->dloadPtr = g_dsmXferStructPtr->startDloadPtr;
+		g_dsmXferStructPtr->endDloadPtr = ((uint8*)g_dsmXferStructPtr->startDloadPtr + sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
+
+		// Send the data
+		g_transmitCRC = CalcCCITT32((uint8*)g_dsmXferStructPtr->startDloadPtr, sizeof(EVENT_RECORD_DOWNLOAD_STRUCT), g_transmitCRC);
+
+		if (MODEM_SEND_FAILED == ModemPuts((uint8*)g_dsmXferStructPtr->startDloadPtr, sizeof(EVENT_RECORD_DOWNLOAD_STRUCT), g_binaryXferFlag))
+		{
+			g_dsmXferStructPtr->xferStateFlag = NOP_XFER_STATE;
+			g_modemStatus.xferMutex = NO;
+			g_transferCount = 0;
+		}
+
+		g_transferCount += 	sizeof(EVENT_RECORD_DOWNLOAD_STRUCT);
+	}
+
+	// Send the footer
+	ModemPuts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+	g_transferCount = 0;
 }
 
 ///----------------------------------------------------------------------------
