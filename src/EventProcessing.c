@@ -87,7 +87,7 @@ void AddEventNumberFromFileToCache(uint16 eventNumber)
 ///----------------------------------------------------------------------------
 uint8 ValidateEventNumber(uint16 eventNumber)
 {
-	if (g_eventNumberCache[eventNumber] == EVENT_FILE_FOUND)
+	if ((eventNumber) && (g_eventNumberCache[eventNumber] == EVENT_FILE_FOUND))
 	{
 		g_eventNumberCache[eventNumber] = EVENT_REFERENCE_VALID;
 		g_eventNumberCacheValidEntries++;
@@ -288,8 +288,8 @@ void ManageEventsDirectory(void)
 
 	debug("Managing Events directory files and caching event numbers...\r\n");
 
-	sprintf((char*)g_spareBuffer, "%s %s", getLangText(EVENT_TEXT), getLangText(SYNC_IN_PROGRESS_TEXT));
-	OverlayMessage(getLangText(SUMMARY_LIST_TEXT), (char*)g_spareBuffer, (1 * SOFT_SECS));
+	sprintf((char*)g_debugBuffer, "%s %s", getLangText(EVENT_TEXT), getLangText(SYNC_IN_PROGRESS_TEXT));
+	OverlayMessage(getLangText(SUMMARY_LIST_TEXT), (char*)g_debugBuffer, (1 * SOFT_SECS));
 
 	if (g_fileAccessLock != AVAILABLE)
 	{
@@ -312,10 +312,13 @@ void ManageEventsDirectory(void)
 			{
 				nav_file_name((FS_STRING)g_spareBuffer, 80, FS_NAME_GET, FALSE);
 
-				sprintf((char*)g_debugBuffer, "%s%s\\", EVENTS_PATH, (char*)g_spareBuffer);
-				nav_setcwd((char*)g_debugBuffer, TRUE, TRUE);
+				sprintf((char*)g_debugBuffer, "%s %s (%s %s)", getLangText(EVENT_TEXT), getLangText(SYNC_IN_PROGRESS_TEXT), getLangText(DIR_TEXT), g_spareBuffer);
+				OverlayMessage(getLangText(SUMMARY_LIST_TEXT), (char*)g_debugBuffer, 0);
 
-				while (nav_filelist_set(0 , FS_FIND_NEXT))
+				sprintf((char*)g_spareFileName, "%s%s\\", EVENTS_PATH, (char*)g_spareBuffer);
+				nav_setcwd((char*)g_spareFileName, TRUE, TRUE);
+
+				while (nav_filelist_set(0, FS_FIND_NEXT))
 				{
 					if (!nav_file_isdir())
 					{
@@ -425,8 +428,8 @@ void CountExistingEvents(void)
 			{
 				nav_file_name((FS_STRING)g_spareBuffer, 80, FS_NAME_GET, FALSE);
 
-				sprintf((char*)g_debugBuffer, "%s%s\\", EVENTS_PATH, (char*)g_spareBuffer);
-				nav_setcwd((char*)g_debugBuffer, TRUE, TRUE);
+				sprintf((char*)g_spareFileName, "%s%s\\", EVENTS_PATH, (char*)g_spareBuffer);
+				nav_setcwd((char*)g_spareFileName, TRUE, TRUE);
 
 				while (nav_filelist_set(0 , FS_FIND_NEXT))
 				{
@@ -563,14 +566,14 @@ char* GetEventFilenameAndPath(uint16 eventNumber, uint8 eventType)
 				if (nav_file_checkext(fileExtension))
 				{
 					// Get the event number from the filename
-					nav_file_name((FS_STRING)g_debugBuffer, 255, FS_NAME_GET, FALSE);
-					fileEventNumber = GetEventNumberFromFilename((char*)g_debugBuffer, LOOSE_EVENT_NAME_FORMAT);
+					nav_file_name((FS_STRING)g_spareFileName, 255, FS_NAME_GET, FALSE);
+					fileEventNumber = GetEventNumberFromFilename((char*)g_spareFileName, LOOSE_EVENT_NAME_FORMAT);
 
 					// Check if the event number is valid
 					if (fileEventNumber == eventNumber)
 					{
 						// Found file
-						strcat(g_eventPathAndFilename, (char*)g_debugBuffer);
+						strcat(g_eventPathAndFilename, (char*)g_spareFileName);
 #if 0 // Test
 						length = sprintf((char*)g_debugBuffer, "Get Path and File: Primary directory found for Event(%d): %s\r\n", eventNumber, g_eventPathAndFilename);
 						ModemPuts(g_debugBuffer, length, NO_CONVERSION);
@@ -599,14 +602,14 @@ char* GetEventFilenameAndPath(uint16 eventNumber, uint8 eventType)
 				if (nav_file_checkext(fileExtension))
 				{
 					// Get the event number from the filename
-					nav_file_name((FS_STRING)g_debugBuffer, 255, FS_NAME_GET, FALSE);
-					fileEventNumber = GetEventNumberFromFilename((char*)g_debugBuffer, LOOSE_EVENT_NAME_FORMAT);
+					nav_file_name((FS_STRING)g_spareFileName, 255, FS_NAME_GET, FALSE);
+					fileEventNumber = GetEventNumberFromFilename((char*)g_spareFileName, LOOSE_EVENT_NAME_FORMAT);
 
 					// Check if the event number is valid
 					if (fileEventNumber == eventNumber)
 					{
 						// Found file
-						strcat(g_eventPathAndFilename, (char*)g_debugBuffer);
+						strcat(g_eventPathAndFilename, (char*)g_spareFileName);
 #if 0 // Test
 						length = sprintf((char*)g_debugBuffer, "Get Path and File: Secondary directory found for Event(%d): %s\r\n", eventNumber, g_eventPathAndFilename);
 						ModemPuts(g_debugBuffer, length, NO_CONVERSION);
@@ -1160,6 +1163,239 @@ void ParseAndCountSummaryListEntries(void)
 		}
 	}
 
+	// Set the summary list total entries
+	g_summaryList.totalEntries = g_summaryList.validEntries + g_summaryList.deletedEntries;
+
+	if (g_summaryList.totalEntries != (g_summaryList.validEntries + g_summaryList.deletedEntries))
+	{
+		debugErr("Summary List Parse and Count showing incorrect amount of total entries\r\n");
+	}
+	else
+	{
+		debug("Summary List file: Valid Entires: %d, Deleted Entries: %d (Total: %d)\r\n", g_summaryList.validEntries, g_summaryList.deletedEntries, g_summaryList.totalEntries);
+	}
+
+	//nav_select(FS_NAV_ID_DEFAULT);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ParseAndCountSummaryListEntriesWithRewrite(void)
+{
+#if 0 // Test
+	uint16 length;
+#endif
+	SUMMARY_LIST_ENTRY_STRUCT* readSummaryListEntryPtr = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[0];
+	SUMMARY_LIST_ENTRY_STRUCT* writeSummaryListEntryPtr = NULL;
+	SUMMARY_LIST_ENTRY_STRUCT* endSummaryListEntryPtr = NULL;
+	uint16 totalEntries = (nav_file_lgt() / sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+
+	ClearEventListCache();
+
+	//file_seek(0, FS_SEEK_SET);
+
+	// Read the whole Summary list to memory
+	ReadWithSizeFix(g_summaryList.file, &g_eventDataBuffer[0], nav_file_lgt());
+
+	while (totalEntries--)
+	{
+		if (readSummaryListEntryPtr->eventNumber)
+		{
+			// Validate event file is present to make sure it hasn't been deleted under the covers
+			if (ValidateEventNumber(readSummaryListEntryPtr->eventNumber))
+			{
+#if 0 // Test
+				length = sprintf((char*)g_debugBuffer, "Validated Summary List Event#: %d\r\n", g_summaryList.cachedEntry.eventNumber);
+				ModemPuts(g_debugBuffer, length, NO_CONVERSION);
+#endif
+				g_summaryList.validEntries++;
+
+				g_summaryList.cachedEntry.eventNumber = readSummaryListEntryPtr->eventNumber;
+				g_summaryList.cachedEntry.mode = readSummaryListEntryPtr->mode;
+				g_summaryList.cachedEntry.subMode = readSummaryListEntryPtr->subMode;
+				memcpy(&g_summaryList.cachedEntry.serialNumber, readSummaryListEntryPtr->serialNumber, SERIAL_NUMBER_STRING_SIZE);
+				memcpy(&g_summaryList.cachedEntry.eventTime, &readSummaryListEntryPtr->eventTime, sizeof(DATE_TIME_STRUCT));
+
+				CacheSummaryListEntryToEventList(INIT_LIST);
+			}
+			else // Event file is missing, need to clear summary list entry
+			{
+#if 0 // Test
+				length = sprintf((char*)g_debugBuffer, "Removing Summary List entry due to missing Event#: %d\r\n", g_summaryList.cachedEntry.eventNumber);
+				ModemPuts(g_debugBuffer, length, NO_CONVERSION);
+#endif
+				// Clear out summary list cache
+				readSummaryListEntryPtr->eventNumber = 0;
+
+				// Entry removed this run
+				g_summaryList.deletedEntries++;
+			}
+		}
+		else
+		{
+			// Entry was removed on a prior run
+			g_summaryList.deletedEntries++;
+		}
+
+		readSummaryListEntryPtr++;
+	}
+
+	// Set end summary list pointer to where the read summary list pointer ended (parsing the list)
+	endSummaryListEntryPtr = readSummaryListEntryPtr;
+
+	// Reset the read pointer
+	readSummaryListEntryPtr = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[0];
+
+	// Check if any entries were deleted
+	if (g_summaryList.deletedEntries)
+	{
+		// Loop through the list again
+		while (readSummaryListEntryPtr < endSummaryListEntryPtr)
+		{
+			// Check if the current summary list entry is valid
+			if (readSummaryListEntryPtr->eventNumber)
+			{
+				// Check if the write pointer in no longer in initial condition
+				if (writeSummaryListEntryPtr)
+				{
+					// Copy valid summary list entry, incrementing both the write and read pointers
+					memcpy(writeSummaryListEntryPtr++, readSummaryListEntryPtr++, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+				}
+				else
+				{
+					// Skip to the next summary list entry
+					readSummaryListEntryPtr++;
+				}
+			}
+			else // Non-valid event number
+			{
+				// Check if initial condition of the write pointer
+				if (writeSummaryListEntryPtr == NULL)
+				{
+					// Set the write pointer to the first empty summary list entry and increment the read pointer
+					writeSummaryListEntryPtr = readSummaryListEntryPtr++;
+				}
+
+				// Find the next valid summary list entry but prevent going past the end of the list
+				while((readSummaryListEntryPtr->eventNumber == 0) && (readSummaryListEntryPtr < endSummaryListEntryPtr))
+				{
+					readSummaryListEntryPtr++;
+				}
+
+				// Check if a valid summary was found (and not at the end of the list)
+				if (readSummaryListEntryPtr->eventNumber)
+				{
+					// Copy valid summary list entry, incrementing both the write and read pointers
+					memcpy(writeSummaryListEntryPtr++, readSummaryListEntryPtr++, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+				}
+			}
+		}
+
+		// Reset to the beginning of the summary list file
+		file_seek(0, FS_SEEK_SET);
+
+		// Re-write the summary list minus the deleted entries
+		WriteWithSizeFix(g_summaryList.file, &g_eventDataBuffer[0], (g_summaryList.validEntries * sizeof(SUMMARY_LIST_ENTRY_STRUCT)));
+
+		// Set the end of the file after the write to clip the blank space now at the end
+		file_set_eof();
+
+		// Reset the deleted entry count
+		g_summaryList.deletedEntries = 0;
+	}
+
+	// Set the summary list total entries
+	g_summaryList.totalEntries = g_summaryList.validEntries;
+
+	if (g_summaryList.totalEntries != (g_summaryList.validEntries + g_summaryList.deletedEntries))
+	{
+		debugErr("Summary List Parse and Count showing incorrect amount of total entries\r\n");
+	}
+	else
+	{
+		debug("Summary List file: Valid Entires: %d, Deleted Entries: %d (Total: %d)\r\n", g_summaryList.validEntries, g_summaryList.deletedEntries, g_summaryList.totalEntries);
+	}
+
+	//nav_select(FS_NAV_ID_DEFAULT);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ParseAndCountSummaryListEntriesWithRewrite2(void)
+{
+	uint32 startRewriteFileLocation = 0;
+	SUMMARY_LIST_ENTRY_STRUCT* rewriteSummaryListEntryCachePtr = NULL;
+	uint32 displacedEntries = 0;
+	uint16 totalEntries = (nav_file_lgt() / sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+	uint32 halfSecondCompare = 0;
+
+	ClearEventListCache();
+
+	sprintf((char*)g_spareBuffer, "%s %s (%d of %d)", getLangText(EVENT_TEXT), getLangText(SYNC_IN_PROGRESS_TEXT), 1, totalEntries);
+	OverlayMessage(getLangText(SUMMARY_LIST_TEXT), (char*)g_spareBuffer, 0);
+	halfSecondCompare = g_lifetimeHalfSecondTickCount + 1;
+
+	file_seek(0, FS_SEEK_SET);
+	while (ReadWithSizeFix(g_summaryList.file, (uint8*)&g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT)) != -1)
+	{
+		// Check if a second has passed
+		if (g_lifetimeHalfSecondTickCount > halfSecondCompare)
+		{
+			// Update progress to LCD
+			sprintf((char*)g_spareBuffer, "%s %s (%d of %d)", getLangText(EVENT_TEXT), getLangText(SYNC_IN_PROGRESS_TEXT), (g_summaryList.validEntries + g_summaryList.deletedEntries), totalEntries);
+			OverlayMessage(getLangText(SUMMARY_LIST_TEXT), (char*)g_spareBuffer, 0);
+			halfSecondCompare = g_lifetimeHalfSecondTickCount + 1;
+		}
+
+		// Validate event file is present to make sure it hasn't been deleted under the covers
+		if (ValidateEventNumber(g_summaryList.cachedEntry.eventNumber))
+		{
+			g_summaryList.validEntries++;
+
+			CacheSummaryListEntryToEventList(INIT_LIST);
+
+			// Check if the write pointer was initialized meaning a deleted entry was found
+			if (rewriteSummaryListEntryCachePtr)
+			{
+				memcpy(rewriteSummaryListEntryCachePtr++, &g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
+				displacedEntries++;
+			}
+			else
+			{
+				// Update the position of the last known good string of valid event summaries
+				startRewriteFileLocation = file_getpos();
+			}
+		}
+		else // Event file is missing or erased, need to clear summary list entry
+		{
+			if (rewriteSummaryListEntryCachePtr == NULL) { rewriteSummaryListEntryCachePtr = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[0]; }
+
+			// Entry removed this run
+			g_summaryList.deletedEntries++;
+		}
+	}
+
+	// Check if any entries were deleted
+	if (g_summaryList.deletedEntries)
+	{
+		// Reset to the marked rewrite location of the summary list file
+		file_seek(startRewriteFileLocation, FS_SEEK_SET);
+
+		// Re-write the summary list minus the deleted entries
+		WriteWithSizeFix(g_summaryList.file, &g_eventDataBuffer[0], (displacedEntries * sizeof(SUMMARY_LIST_ENTRY_STRUCT)));
+
+		// Set the end of the file after the write to clip the blank space now at the end
+		file_set_eof();
+
+		// Reset the deleted entry count
+		g_summaryList.deletedEntries = 0;
+	}
+
+	// Set the summary list total entries
+	g_summaryList.totalEntries = g_summaryList.validEntries;
+
 	if (g_summaryList.totalEntries != (g_summaryList.validEntries + g_summaryList.deletedEntries))
 	{
 		debugErr("Summary List Parse and Count showing incorrect amount of total entries\r\n");
@@ -1187,17 +1423,14 @@ void InitSummaryListFile(void)
 	{
 		g_summaryList.file = open(s_summaryListFileName, O_RDWR);
 
-		if (nav_file_lgt() % sizeof(SUMMARY_LIST_ENTRY_STRUCT) == 0)
-		{
-			g_summaryList.totalEntries = (nav_file_lgt() / sizeof(SUMMARY_LIST_ENTRY_STRUCT));
-			g_summaryList.currentMonitorSessionStartSummary = nav_file_lgt();
-		}
-		else
+		if (nav_file_lgt() % sizeof(SUMMARY_LIST_ENTRY_STRUCT) != 0)
 		{
 			debugErr("Summary List file contains a corrupted entry\r\n");
 		}
 
 		ParseAndCountSummaryListEntries();
+		//ParseAndCountSummaryListEntriesWithRewrite();
+		//ParseAndCountSummaryListEntriesWithRewrite2();
 	}
 	else
 	{
@@ -1365,7 +1598,13 @@ void InitEventRecord(uint8 opMode)
 
 				debug("Seismic trigger in units: No Trigger\r\n");
 			}
-			else // Seismic trigger is valid
+			else if (g_triggerRecord.trec.variableTriggerEnable == YES)
+			{
+				eventRec->summary.parameters.seismicTriggerLevel = (VARIABLE_TRIGGER_CHAR_BASE + g_triggerRecord.trec.variableTriggerVibrationStandard);
+
+				debug("Seismic trigger in units: Variable Trigger (Vibration Standard: %d)\r\n", g_triggerRecord.trec.variableTriggerVibrationStandard);
+			}
+			else // Seismic trigger is standard/valid
 			{
 				eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
 
@@ -1489,7 +1728,9 @@ void StoreCurrentEventNumber(void)
 {
 	CURRENT_EVENT_NUMBER_STRUCT currentEventNumberRecord;
 
+#if 0 // Removed to solve pending Bargraph DQM pull picking up the entry early
 	AddEventNumberToCache(g_nextEventNumberToUse);
+#endif
 
 	// Store as the last Event recorded in AutoDialout table
 	__autoDialoutTbl.lastStoredEvent = g_nextEventNumberToUse;
@@ -1766,8 +2007,6 @@ void DeleteEventFileRecord(uint16 eventNumber)
 ///----------------------------------------------------------------------------
 void DeleteEventFileRecords(void)
 {
-	uint16 eventsDeleted = 0;
-
 	debug("Deleting Events...\r\n");
 
 	if (g_fileAccessLock != AVAILABLE)
@@ -1799,7 +2038,6 @@ void DeleteEventFileRecords(void)
 				}
 				else
 				{
-					eventsDeleted++;
 #if 0 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
 					g_execCycles++;
 #endif
@@ -1826,7 +2064,6 @@ void DeleteEventFileRecords(void)
 				}
 				else
 				{
-					eventsDeleted++;
 #if 0 // Exception testing (Prevent non-ISR soft loop watchdog from triggering)
 					g_execCycles++;
 #endif
@@ -1862,7 +2099,7 @@ void DeleteEventFileRecords(void)
 
 		ReleaseSpi1MutexLock();
 
-		sprintf((char*)g_spareBuffer, "%s %d %s", getLangText(REMOVED_TEXT), eventsDeleted, getLangText(EVENTS_TEXT));
+		sprintf((char*)g_spareBuffer, "%s %d %s", getLangText(REMOVED_TEXT), g_eventNumberCacheValidEntries, getLangText(EVENTS_TEXT));
 		OverlayMessage(getLangText(DELETE_EVENTS_TEXT), (char*)g_spareBuffer, 3 * SOFT_SECS);
 
 		InitEventNumberCache();
