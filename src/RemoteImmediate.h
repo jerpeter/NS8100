@@ -78,9 +78,17 @@ void HandleCAN(CMD_BUFFER_STRUCT* inCmd);
 
 // Function: handleGMN - Start Monitoring waveform/bargraph/combo.
 void handleGMN(CMD_BUFFER_STRUCT* inCmd);
-
 // Function: handleHLP - Halt Monitoring waveform/bargraph/combo.
 void handleHLT(CMD_BUFFER_STRUCT* inCmd);
+
+// Function: handleGLM - Start Bar Live Monitoring
+void HandleGLM(CMD_BUFFER_STRUCT* inCmd);
+// Function: handleHLM - Halt Bar Live Monitoring
+void HandleHLM(CMD_BUFFER_STRUCT* inCmd);
+// Function: handleDLM - Download Bar Live Monitoring Pending Event Record
+void HandleDLM(CMD_BUFFER_STRUCT* inCmd);
+// Function: SendLMA - Live Monitoring Available status
+void SendLMA(void);
 
 #endif // _REMOTE_IMMEDIATE_H_
 
