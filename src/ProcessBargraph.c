@@ -20,6 +20,7 @@
 #include "ProcessBargraph.h"
 #include "EventProcessing.h"
 #include "Minilzo.h"
+#include "Math.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -46,12 +47,16 @@ void StartNewBargraph(void)
 
 	// Init counts
 	g_summaryCount = 0;
-	g_oneSecondCnt = 0;
-	g_oneMinuteCount = 0;
 	g_barSampleCount = 0;
-	g_totalBarIntervalCnt = 0;
 	g_bargraphBarIntervalsCached = 0;
 	g_bargraphBarIntervalClock = 0;
+	g_blmBarIntervalQueueCount = 0;
+
+	// Init flags
+	g_bargraphLiveMonitoringBISendActive = NO;
+	g_modemStatus.barLiveMonitorOverride = NO;
+
+	HandleBargraphLiveMonitoringStartMsg();
 
 	// Update the current monitor log entry
 	UpdateMonitorLogEntry();
@@ -74,6 +79,8 @@ void EndBargraph(void)
 	}
 
 	MoveUpdatedBargraphEventRecordToFile(BARPGRAPH_SESSION_COMPLETE);
+
+	HandleBargraphLiveMonitoringEndMsg();
 }
 
 ///----------------------------------------------------------------------------
@@ -259,6 +266,186 @@ void MoveSummaryIntervalDataToFile(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+uint8 CheckBargraphLiveMonitoringAuthorizedToSend(void)
+{
+	// Check if Bar Live Monitoring is active, but give remote side the power to override unit setting
+	if ((g_unitConfig.barLiveMonitor || g_modemStatus.barLiveMonitorOverride == YES) && (g_modemStatus.barLiveMonitorOverride != BAR_LIVE_MONITORING_OVERRIDE_STOP))
+	{
+		// Make sure not actively handling a remote command response transfer of data
+		if ((g_modemStatus.xferMutex == NO) && (READ_DCD == CONNECTION_ESTABLISHED) && (g_modemStatus.systemIsLockedFlag == NO) && (g_bargraphLiveMonitoringBISendActive != YES))
+		{
+			return (YES);
+		}
+	}
+
+	return (NO);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void WaitForBargraphLiveMonitoringDataToFinishSendingWithTimeout(void)
+{
+	uint32 barLiveDataTransferTimeout;
+
+	// Set the timeout to ~1 second
+	barLiveDataTransferTimeout = g_lifetimeHalfSecondTickCount + 2;
+
+	// Try to allow the full Bar Interval line data to send (ISR)
+	while (g_bargraphLiveMonitoringBISendActive == YES)
+	{
+		if (barLiveDataTransferTimeout == g_lifetimeHalfSecondTickCount)
+		{
+			// Kill the Bar live data transfer if unable to complete in 1 second
+			AVR32_USART1.idr = AVR32_USART_IER_TXRDY_MASK;
+			g_bargraphLiveMonitoringBISendActive = NO;
+			break;
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void ChecksumAndSetupBargraphLiveMonitorDataForISRTransfer(void)
+{
+	uint8 checksum = 0;
+	uint8* checksumDataPtr;
+	uint16 charCount = (MAX_TEXT_LINE_CHARS - 3); // Total chars minus 3 bytes for checksum, CR&LF
+
+	// Calculate checksum
+	checksumDataPtr = g_blmBuffer;
+	while ((*checksumDataPtr) && (--charCount)) { checksum ^= *checksumDataPtr++; }
+
+	// Apend the checksum to the end of the output string
+	sprintf((char*)checksumDataPtr, "%d\r\n", checksum);
+
+	g_bargraphBarIntervalLiveMonitorBIDataPtr = g_blmBuffer;
+	g_bargraphLiveMonitoringBISendActive = YES;
+
+	// Enable the transmit ready interrupt
+	AVR32_USART1.ier = (AVR32_USART_IER_TXRDY_MASK | AVR32_USART_IER_RXRDY_MASK | AVR32_USART_IER_OVRE_MASK | AVR32_USART_IER_PARE_MASK | AVR32_USART_IER_FRAME_MASK);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleBargraphLiveMonitoringDataTransfer(void)
+{
+	// Check if there is a Bar Interval ready to send (prefer this as the top level conditional which is expected to fail/dropout the most)
+	if (g_bargraphBarIntervalLiveMonitoringReadPtr != g_bargraphBarIntervalWritePtr)
+	{
+		// Verify data is authorized to be sent
+		if (CheckBargraphLiveMonitoringAuthorizedToSend())
+		{
+			// Handle the available Bar Interval
+			uint8 gainFactor = (uint8)((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4);
+			float div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.seismicSensorType);
+
+			// Check if the queue count is above the cached BI's meaning a full SI has passed without sending BLM data
+			if (g_blmBarIntervalQueueCount > (g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
+			{
+				// Reset the BLM read pointer to the current write pointer
+				g_bargraphBarIntervalLiveMonitoringReadPtr = g_bargraphBarIntervalWritePtr;
+
+				// Reset the BLM queue count
+				g_blmBarIntervalQueueCount = 0;
+
+				// Drop out to wait for the current BI to complete
+				return;
+			}
+
+			// Setup BLM data buffer for interrupt driven send over the wire
+			sprintf((char*)g_blmBuffer, "BLM,%d,%d,%d,%d,A,%f,%.1f,R,%f,%.1f,V,%f,%.1f,T,%f,%.1f,VS,%f,%lu,",
+				(g_bargraphBarIntervalLiveMonitoringReadPtr->summaryIntervalCount + 1), g_bargraphBarIntervalLiveMonitoringReadPtr->barIntervalCount,
+				g_bargraphBarIntervalLiveMonitoringReadPtr->currentBargraphEventNumber, g_bargraphBarIntervalLiveMonitoringReadPtr->currentComboWaveformEventNumber,
+				(HexToMB(g_bargraphBarIntervalLiveMonitoringReadPtr->aMax, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType)), ((float)g_pendingBargraphRecord.summary.parameters.sampleRate/(float)g_bargraphBarIntervalLiveMonitoringReadPtr->aFreq),
+				(float)(g_bargraphBarIntervalLiveMonitoringReadPtr->rMax/div), ((float)g_pendingBargraphRecord.summary.parameters.sampleRate/(float)g_bargraphBarIntervalLiveMonitoringReadPtr->rFreq),
+				(float)(g_bargraphBarIntervalLiveMonitoringReadPtr->vMax/div), ((float)g_pendingBargraphRecord.summary.parameters.sampleRate/(float)g_bargraphBarIntervalLiveMonitoringReadPtr->vFreq),
+				(float)(g_bargraphBarIntervalLiveMonitoringReadPtr->tMax/div), ((float)g_pendingBargraphRecord.summary.parameters.sampleRate/(float)g_bargraphBarIntervalLiveMonitoringReadPtr->tFreq),
+				(float)(sqrtf((float)g_bargraphBarIntervalLiveMonitoringReadPtr->vsMax)/div), g_bargraphBarIntervalLiveMonitoringReadPtr->epochTime);
+
+			// Advance the read pointer
+			AdvanceBarIntervalBufPtr(BLM_READ_PTR);
+			if (g_blmBarIntervalQueueCount) { g_blmBarIntervalQueueCount--; }
+
+			ChecksumAndSetupBargraphLiveMonitorDataForISRTransfer();
+		}
+	}
+	else if (g_blmAlertAlarmStatus)
+	{
+		// Verify data is authorized to be sent
+		if (CheckBargraphLiveMonitoringAuthorizedToSend())
+		{
+			// Setup BLM data buffer for interrupt driven send over the wire
+			sprintf((char*)g_blmBuffer, "ALM,%d,", g_blmAlertAlarmStatus);
+
+			// CLear the status
+			g_blmAlertAlarmStatus = 0;
+
+			ChecksumAndSetupBargraphLiveMonitorDataForISRTransfer();
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleBargraphLiveMonitoringStartMsg(void)
+{
+	if (CheckBargraphLiveMonitoringAuthorizedToSend())
+	{
+		// Create data string
+		sprintf((char*)g_blmBuffer, "SLM,%d,%d,%d,START,", g_pendingBargraphRecord.summary.parameters.summaryInterval, g_pendingBargraphRecord.summary.parameters.barInterval, g_pendingBargraphRecord.summary.eventNumber);
+
+		ChecksumAndSetupBargraphLiveMonitorDataForISRTransfer();
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleBargraphLiveMonitoringEndMsg(void)
+{
+	uint32 barLiveDataTransferTimeout;
+
+	// Check if actively sending Bar live monitor data
+	if (g_bargraphLiveMonitoringBISendActive == YES)
+	{
+		// Set the timeout to ~1 second
+		barLiveDataTransferTimeout = g_lifetimeHalfSecondTickCount + 2;
+
+		// Try to allow the last full Bar Interval line data to send (ISR)
+		while (g_bargraphLiveMonitoringBISendActive == YES)
+		{
+			if (barLiveDataTransferTimeout == g_lifetimeHalfSecondTickCount)
+			{
+				// Timeout hit
+				break;
+			}
+		}
+	}
+
+	// Make sure the BLM is authorized to send
+	if (CheckBargraphLiveMonitoringAuthorizedToSend())
+	{
+		// Create data string
+		sprintf((char*)g_blmBuffer, "ELM,%d,%lu,%d,%s,", g_pendingBargraphRecord.summary.calculated.summariesCaptured, g_pendingBargraphRecord.summary.calculated.barIntervalsCaptured, g_pendingBargraphRecord.summary.eventNumber,
+				(getSystemEventState(CYCLE_CHANGE_EVENT) ? "CYCLE" : "END"));
+
+		ChecksumAndSetupBargraphLiveMonitorDataForISRTransfer();
+	}
+	else // Something wrong with the transfer
+	{
+		// Kill the Bar live data transfer by disabling the transmit ready interrupt
+		AVR32_USART1.idr = AVR32_USART_IER_TXRDY_MASK;
+		g_bargraphLiveMonitoringBISendActive = NO;
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint8 CalculateBargraphData(void)
 {
 	// Temp variables, assigned as static to prevent storing on stack
@@ -296,6 +483,7 @@ uint8 CalculateBargraphData(void)
 			// End of Bar Interval
 			//=================================================
 			g_bargraphBarIntervalsCached++;
+			g_bargraphSummaryInterval.barIntervalsCaptured++;
 
 			// Advance the Bar Interval global buffer pointer
 			AdvanceBarIntervalBufPtr(WRITE_PTR);
@@ -303,7 +491,7 @@ uint8 CalculateBargraphData(void)
 			//=================================================
 			// End of Summary Interval
 			//=================================================
-			if (++g_bargraphSummaryInterval.barIntervalsCaptured == (uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
+			if (g_bargraphSummaryInterval.barIntervalsCaptured == (uint32)(g_triggerRecord.bgrec.summaryInterval / g_triggerRecord.bgrec.barInterval))
 			{
 				// Move Summary Interval data to the event file (and cached Bar Intervals will be saved prior to Summary)
 				MoveSummaryIntervalDataToFile();
@@ -372,7 +560,9 @@ uint8 CalculateBargraphData(void)
 			if (tTempNorm > g_bargraphBarIntervalWritePtr->rvtMax) { g_bargraphBarIntervalWritePtr->rvtMax = tTempNorm; }
 
 			// Check if using either new Bar Interval data type format
+#if 0 // Don't filter the new BI option data to allow access with Bargraph Live Monitoring
 			if (g_pendingBargraphRecord.summary.parameters.barIntervalDataType != BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE)
+#endif
 			{
 				// Store the max R, V and T normalized value if a new max was found
 				if (rTempNorm > g_bargraphBarIntervalWritePtr->rMax) { g_bargraphBarIntervalWritePtr->rMax = rTempNorm;	g_bargraphBarIntervalWritePtr->rFreq = ((g_bargraphFreqCalcBuffer.r.freq_count * 2) + 1); }
@@ -887,6 +1077,8 @@ void MoveStartOfBargraphEventRecordToFile(void)
 
 		ReleaseSpi1MutexLock();
 
+		// Event validation in the Event number cache will happen at the end of Bargraph (to prevent DQM from picking up the Active Bargraph event early)
+
 		// Consume event number (also allow other events to be recorded during a Combo - Bargraph session)
 		StoreCurrentEventNumber();
 
@@ -1009,7 +1201,15 @@ void MoveUpdatedBargraphEventRecordToFile(uint8 status)
 
 			ReleaseSpi1MutexLock();
 
+			// Delay the addition of the valid event until the end of Bargraph (to prevent DQM from picking up the Active Bargraph event early)
+			AddEventNumberToCache(g_pendingBargraphRecord.summary.eventNumber);
+
 			UpdateSDCardUsageStats(sizeof(EVT_RECORD) + g_pendingBargraphRecord.header.dataLength);
+
+#if 1 // New ability to check if we need to send out a signal that this Bargraph event is available
+			// Check if AutoDialout is enabled and signal the system if necessary
+			CheckAutoDialoutStatus();
+#endif
 		}
 		else // (status == BARGRAPH_SESSION_IN_PROGRESS)
 		{
@@ -1031,8 +1231,27 @@ void AdvanceBarIntervalBufPtr(uint8 bufferType)
 			g_bargraphBarIntervalReadPtr = (BARGRAPH_BAR_INTERVAL_DATA*)&g_eventDataBuffer[0];
 		}
 	}
+	else if (bufferType == BLM_READ_PTR)
+	{
+		g_bargraphBarIntervalLiveMonitoringReadPtr++;
+		if (g_bargraphBarIntervalLiveMonitoringReadPtr >= g_bargraphBarIntervalEndPtr)
+		{
+			g_bargraphBarIntervalLiveMonitoringReadPtr = (BARGRAPH_BAR_INTERVAL_DATA*)&g_eventDataBuffer[0];
+		}
+	}
 	else // (bufferType == WRITE_PTR)
 	{
+#if 1 // Bargraph live monitoring
+		// Set the sequence count to the current BI capture plus the total BI's captured to this point (summary intervals * BI's/SI)
+		g_bargraphBarIntervalWritePtr->barIntervalCount = (uint16)g_bargraphSummaryInterval.barIntervalsCaptured;
+		g_bargraphBarIntervalWritePtr->summaryIntervalCount = g_summaryCount;
+		g_bargraphBarIntervalWritePtr->currentBargraphEventNumber = g_pendingBargraphRecord.summary.eventNumber;
+		if (g_triggerRecord.opMode == BARGRAPH_MODE) {	g_bargraphBarIntervalWritePtr->currentComboWaveformEventNumber = 0; }
+		else { g_bargraphBarIntervalWritePtr->currentComboWaveformEventNumber = GetLastStoredEventNumber(); }
+		g_bargraphBarIntervalWritePtr->epochTime = ConvertDateTimeToEpochTime(GetCurrentTime());
+
+		g_blmBarIntervalQueueCount++;
+#endif
 		g_bargraphBarIntervalWritePtr++;
 		if (g_bargraphBarIntervalWritePtr >= g_bargraphBarIntervalEndPtr)
 		{
