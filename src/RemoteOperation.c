@@ -660,19 +660,11 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//---------------------------------------------------------------------------
 		// Bar Interval Data Type check
 		//---------------------------------------------------------------------------
-		// New Bar Interval Data Type feature pending remote side handling
-		if (g_factorySetupRecord.tempBargraphFullDataTypeFeatureEnable == YES)
+		if ((cfg.eventCfg.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) || (cfg.eventCfg.barIntervalDataType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE))
 		{
-			if ((cfg.eventCfg.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) || (cfg.eventCfg.barIntervalDataType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE))
-			{
-				g_triggerRecord.berec.barIntervalDataType = cfg.eventCfg.barIntervalDataType;
-			}
-			else
-			{
-				g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
-			}
+			g_triggerRecord.berec.barIntervalDataType = cfg.eventCfg.barIntervalDataType;
 		}
-		else // Force the original format
+		else
 		{
 			g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
 		}
