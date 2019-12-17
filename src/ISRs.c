@@ -789,7 +789,7 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 	0.19 ips/5 mm @ 1 Hz (slope up)
 	(0.50 ips/12.7 mm @ 2.5 Hz) (pass thru)
 	0.75 ips/19.05 mm @ 4 Hz (flat line)
-	0.75 ips/19.05 mm @ 10 Hz (slope up)
+	0.75 ips/19.05 mm @ 12 Hz (slope up)
 	2.00 ips/50.8 mm @ 30 Hz (flat line out)
 */
 
@@ -816,7 +816,7 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == OSM_REGULATIONS_STANDARD)
 	{
 		if (freq < 4.0) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
-		else if (freq < 10.0) {	if (((float)chan->peak / s_vtDiv) > 0.75) { triggerFound = YES; } }
+		else if (freq < 12.0) {	if (((float)chan->peak / s_vtDiv) > 0.75) { triggerFound = YES; } }
 		else if (freq < 30.0) { if (osmSecondSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
 	}
 
