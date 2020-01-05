@@ -280,11 +280,68 @@ void SortRamSummaryTable2(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void DeleteEmptyDirectories(uint8 dirType)
+{
+	uint16 navIndex;
+	uint8 dirDeleted = NO;
+	uint8 firstDirNotEmpty = NO;
+
+	nav_select(FS_NAV_ID_DEFAULT);
+	if (dirType == EVENT_FILE_TYPE) { nav_setcwd(EVENTS_PATH, TRUE, TRUE); }
+	else { nav_setcwd(ER_DATA_PATH, TRUE, TRUE); }
+
+	// Check all entries in the current directory
+	while (nav_filelist_set(0, FS_FIND_NEXT))
+	{
+		navIndex = nav_filelist_get();
+
+		// Check if the entry is a directory (sub-directory of the Events directory)
+		if (nav_file_isdir())
+		{
+			nav_file_name((FS_STRING)g_spareBuffer, 80, FS_NAME_GET, FALSE);
+
+			// Delete directory only if empty
+			if (nav_file_del(TRUE) == TRUE)
+			{
+				sprintf((char*)g_debugBuffer, "%s %s (%s %s)", getLangText(REMOVED_TEXT), getLangText(EMPTY_TEXT), getLangText(DIR_TEXT), g_spareBuffer);
+				OverlayMessage(getLangText(SUMMARY_LIST_TEXT), (char*)g_debugBuffer, 0);
+
+				// Check if the first entry is a directory that was erased (special case)
+				dirDeleted = YES;
+				if (navIndex) { navIndex--; }
+			}
+			else // Directory is not empty
+			{
+				// Check if the first entry is a directory that is not empty (special case)
+				if (navIndex == 0) { firstDirNotEmpty = YES; }
+			}
+
+			// Have to reset the current directory after a nav_file_del command
+			if (dirType == EVENT_FILE_TYPE) { nav_setcwd(EVENTS_PATH, TRUE, TRUE); }
+			else { nav_setcwd(ER_DATA_PATH, TRUE, TRUE); }
+		}
+
+		// Check if the nav index is non-zero or a special case
+		if ((navIndex) || ((navIndex == 0) && ((dirDeleted == NO) || (firstDirNotEmpty == YES))))
+		{
+			// Set the current index
+			nav_filelist_goto(navIndex);
+		}
+
+		// Reset flag
+		dirDeleted = NO;
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void ManageEventsDirectory(void)
 {
 	uint16 navIndex = 0;
 	uint16 eventNumber;
 	uint8 eventsToMigrate = NO;
+	uint8 emptyEventDirs = NO;
 
 	debug("Managing Events directory files and caching event numbers...\r\n");
 
@@ -317,6 +374,14 @@ void ManageEventsDirectory(void)
 
 				sprintf((char*)g_spareFileName, "%s%s\\", EVENTS_PATH, (char*)g_spareBuffer);
 				nav_setcwd((char*)g_spareFileName, TRUE, TRUE);
+
+				if ((emptyEventDirs == NO) && (nav_filelist_set(0, FS_FIND_NEXT) == FALSE))
+				{
+					emptyEventDirs = YES;
+				}
+
+				// Reset the file position to unselected to prevent the empty check from starting at position 1 which causes the following logic to skip the 1st entry
+				nav_filelist_reset();
 
 				while (nav_filelist_set(0, FS_FIND_NEXT))
 				{
@@ -380,14 +445,16 @@ void ManageEventsDirectory(void)
 			navIndex++;
 		}
 
+		if (emptyEventDirs == YES)
+		{
+			DeleteEmptyDirectories(EVENT_FILE_TYPE);
+			DeleteEmptyDirectories(ER_DATA_FILE_TYPE);
+		}
+
 		ReleaseSpi1MutexLock();
 
 		if (eventsToMigrate)
 		{
-#if 0 // Test
-			uint16 length = sprintf((char*)g_spareBuffer, "Loose Event Migration Timer Started...\r\n");
-			ModemPuts(g_spareBuffer, length, NO_CONVERSION);
-#endif
 			// Found loose events, set timer to handle the event file migration process from secondary to primary location (wait at least the LCD timeout to start)
 			AssignSoftTimer(LOOSE_EVENT_MIGRATION_TIMER_NUM, (uint32)(g_unitConfig.lcdTimeout * TICKS_PER_MIN), LooseEventMigrationTimerCallBack);
 		}
@@ -1088,6 +1155,7 @@ void CacheSummaryListEntryToEventList(uint8 entryType)
 		else // Initial condition
 		{
 			eventListCache[0].epochEventTime = eventListCache[g_summaryList.cachedEntry.eventNumber].epochEventTime;
+			g_eventNumberCacheOldestIndex = g_summaryList.cachedEntry.eventNumber;
 		}
 	}
 }
@@ -1182,148 +1250,6 @@ void ParseAndCountSummaryListEntries(void)
 ///	Function Break
 ///----------------------------------------------------------------------------
 void ParseAndCountSummaryListEntriesWithRewrite(void)
-{
-#if 0 // Test
-	uint16 length;
-#endif
-	SUMMARY_LIST_ENTRY_STRUCT* readSummaryListEntryPtr = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[0];
-	SUMMARY_LIST_ENTRY_STRUCT* writeSummaryListEntryPtr = NULL;
-	SUMMARY_LIST_ENTRY_STRUCT* endSummaryListEntryPtr = NULL;
-	uint16 totalEntries = (nav_file_lgt() / sizeof(SUMMARY_LIST_ENTRY_STRUCT));
-
-	ClearEventListCache();
-
-	//file_seek(0, FS_SEEK_SET);
-
-	// Read the whole Summary list to memory
-	ReadWithSizeFix(g_summaryList.file, &g_eventDataBuffer[0], nav_file_lgt());
-
-	while (totalEntries--)
-	{
-		if (readSummaryListEntryPtr->eventNumber)
-		{
-			// Validate event file is present to make sure it hasn't been deleted under the covers
-			if (ValidateEventNumber(readSummaryListEntryPtr->eventNumber))
-			{
-#if 0 // Test
-				length = sprintf((char*)g_debugBuffer, "Validated Summary List Event#: %d\r\n", g_summaryList.cachedEntry.eventNumber);
-				ModemPuts(g_debugBuffer, length, NO_CONVERSION);
-#endif
-				g_summaryList.validEntries++;
-
-				g_summaryList.cachedEntry.eventNumber = readSummaryListEntryPtr->eventNumber;
-				g_summaryList.cachedEntry.mode = readSummaryListEntryPtr->mode;
-				g_summaryList.cachedEntry.subMode = readSummaryListEntryPtr->subMode;
-				memcpy(&g_summaryList.cachedEntry.serialNumber, readSummaryListEntryPtr->serialNumber, SERIAL_NUMBER_STRING_SIZE);
-				memcpy(&g_summaryList.cachedEntry.eventTime, &readSummaryListEntryPtr->eventTime, sizeof(DATE_TIME_STRUCT));
-
-				CacheSummaryListEntryToEventList(INIT_LIST);
-			}
-			else // Event file is missing, need to clear summary list entry
-			{
-#if 0 // Test
-				length = sprintf((char*)g_debugBuffer, "Removing Summary List entry due to missing Event#: %d\r\n", g_summaryList.cachedEntry.eventNumber);
-				ModemPuts(g_debugBuffer, length, NO_CONVERSION);
-#endif
-				// Clear out summary list cache
-				readSummaryListEntryPtr->eventNumber = 0;
-
-				// Entry removed this run
-				g_summaryList.deletedEntries++;
-			}
-		}
-		else
-		{
-			// Entry was removed on a prior run
-			g_summaryList.deletedEntries++;
-		}
-
-		readSummaryListEntryPtr++;
-	}
-
-	// Set end summary list pointer to where the read summary list pointer ended (parsing the list)
-	endSummaryListEntryPtr = readSummaryListEntryPtr;
-
-	// Reset the read pointer
-	readSummaryListEntryPtr = (SUMMARY_LIST_ENTRY_STRUCT*)&g_eventDataBuffer[0];
-
-	// Check if any entries were deleted
-	if (g_summaryList.deletedEntries)
-	{
-		// Loop through the list again
-		while (readSummaryListEntryPtr < endSummaryListEntryPtr)
-		{
-			// Check if the current summary list entry is valid
-			if (readSummaryListEntryPtr->eventNumber)
-			{
-				// Check if the write pointer in no longer in initial condition
-				if (writeSummaryListEntryPtr)
-				{
-					// Copy valid summary list entry, incrementing both the write and read pointers
-					memcpy(writeSummaryListEntryPtr++, readSummaryListEntryPtr++, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
-				}
-				else
-				{
-					// Skip to the next summary list entry
-					readSummaryListEntryPtr++;
-				}
-			}
-			else // Non-valid event number
-			{
-				// Check if initial condition of the write pointer
-				if (writeSummaryListEntryPtr == NULL)
-				{
-					// Set the write pointer to the first empty summary list entry and increment the read pointer
-					writeSummaryListEntryPtr = readSummaryListEntryPtr++;
-				}
-
-				// Find the next valid summary list entry but prevent going past the end of the list
-				while((readSummaryListEntryPtr->eventNumber == 0) && (readSummaryListEntryPtr < endSummaryListEntryPtr))
-				{
-					readSummaryListEntryPtr++;
-				}
-
-				// Check if a valid summary was found (and not at the end of the list)
-				if (readSummaryListEntryPtr->eventNumber)
-				{
-					// Copy valid summary list entry, incrementing both the write and read pointers
-					memcpy(writeSummaryListEntryPtr++, readSummaryListEntryPtr++, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
-				}
-			}
-		}
-
-		// Reset to the beginning of the summary list file
-		file_seek(0, FS_SEEK_SET);
-
-		// Re-write the summary list minus the deleted entries
-		WriteWithSizeFix(g_summaryList.file, &g_eventDataBuffer[0], (g_summaryList.validEntries * sizeof(SUMMARY_LIST_ENTRY_STRUCT)));
-
-		// Set the end of the file after the write to clip the blank space now at the end
-		file_set_eof();
-
-		// Reset the deleted entry count
-		g_summaryList.deletedEntries = 0;
-	}
-
-	// Set the summary list total entries
-	g_summaryList.totalEntries = g_summaryList.validEntries;
-
-	if (g_summaryList.totalEntries != (g_summaryList.validEntries + g_summaryList.deletedEntries))
-	{
-		debugErr("Summary List Parse and Count showing incorrect amount of total entries\r\n");
-	}
-	else
-	{
-		debug("Summary List file: Valid Entires: %d, Deleted Entries: %d (Total: %d)\r\n", g_summaryList.validEntries, g_summaryList.deletedEntries, g_summaryList.totalEntries);
-	}
-
-	//nav_select(FS_NAV_ID_DEFAULT);
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-void ParseAndCountSummaryListEntriesWithRewrite2(void)
 {
 	uint32 startRewriteFileLocation = 0;
 	SUMMARY_LIST_ENTRY_STRUCT* rewriteSummaryListEntryCachePtr = NULL;
@@ -1428,9 +1354,11 @@ void InitSummaryListFile(void)
 			debugErr("Summary List file contains a corrupted entry\r\n");
 		}
 
+#if 0 // Original
 		ParseAndCountSummaryListEntries();
-		//ParseAndCountSummaryListEntriesWithRewrite();
-		//ParseAndCountSummaryListEntriesWithRewrite2();
+#else // New parse with rewrite
+		ParseAndCountSummaryListEntriesWithRewrite();
+#endif
 	}
 	else
 	{
@@ -1520,6 +1448,7 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.parameters.airSensorType = g_factorySetupRecord.acousticSensorType;
 	eventRec->summary.parameters.adChannelVerification = g_unitConfig.adChannelVerification;
 	eventRec->summary.parameters.adjustForTempDrift = g_triggerRecord.trec.adjustForTempDrift;
+	eventRec->summary.parameters.pretrigBufferDivider = g_unitConfig.pretrigBufferDivider;
 	eventRec->summary.parameters.seismicUnitsOfMeasure = g_unitConfig.unitsOfMeasure;
 	eventRec->summary.parameters.airUnitsOfMeasure = g_unitConfig.unitsOfAir;
 	eventRec->summary.parameters.distToSource = (uint32)(g_triggerRecord.trec.dist_to_source * 100.0);
@@ -1669,20 +1598,12 @@ void InitEventRecord(uint8 opMode)
 		eventRec->summary.parameters.calDataNumOfSamples = 0;
 		eventRec->summary.parameters.activeChannels = g_triggerRecord.berec.barChannel;
 
-		// New Bar Interval Data Type feature pending remote side handling
-		if (g_factorySetupRecord.tempBargraphFullDataTypeFeatureEnable == YES)
+		// Check if either of the new Bar Interval Data types have been selected
+		if ((g_triggerRecord.berec.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) || (g_triggerRecord.berec.barIntervalDataType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE))
 		{
-			// Check if either of the new Bar Interval Data types have been selected
-			if ((g_triggerRecord.berec.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) || (g_triggerRecord.berec.barIntervalDataType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE))
-			{
-				eventRec->summary.parameters.barIntervalDataType = g_triggerRecord.berec.barIntervalDataType;
-			}
-			else // Set to the original which also covers initial condition
-			{
-				eventRec->summary.parameters.barIntervalDataType = g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
-			}
+			eventRec->summary.parameters.barIntervalDataType = g_triggerRecord.berec.barIntervalDataType;
 		}
-		else // Force the original format
+		else // Set to the original which also covers initial condition
 		{
 			eventRec->summary.parameters.barIntervalDataType = g_triggerRecord.berec.barIntervalDataType = BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE;
 		}
@@ -2863,10 +2784,8 @@ void RemoveEventFile(uint16 eventNumber)
 
 	GetSubDirLowerAndUpperBounds(eventNumber, &lowerBounds, &upperBounds);
 
-#if 1 // Test
 	sprintf((char*)g_spareBuffer, "%s %s %d (%s, %s)", getLangText(REMOVING_TEXT), EVT_FILE, eventNumber, getLangText(ABOVE_EVT_CAP_TEXT), getLangText(OLDEST_FIRST_TEXT));
 	OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, 0);
-#endif
 
 	//-------------------------------------------------------------------------
 	// Remove Event data file (should exist)
@@ -3711,6 +3630,9 @@ void ValidateSummaryListFileWithEventCache(void)
 						validEventFileCount--;
 					}
 				}
+
+				// Make sure contents are written to file
+				fat_cache_flush();
 			}
 		}
 
