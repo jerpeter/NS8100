@@ -79,7 +79,7 @@ void InitDataBuffs(uint8 opMode)
 	else // Using variable trigger standard (USBM, OSM)
 	{
 		// Use full size of the pretrigger buffer
-		g_endOfPretriggerBuff = &(g_pretriggerBuff[(((SAMPLE_RATE_16K * 4) + 4) * 2)]);
+		g_endOfPretriggerBuff = &(g_pretriggerBuff[(((SAMPLE_RATE_8K * 4) + 4) * 2)]);
 	}
 #endif
 
