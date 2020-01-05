@@ -73,13 +73,13 @@ void InitDataBuffs(uint8 opMode)
 	// Check if using standard trigger (not variable)
 	if (g_triggerRecord.trec.variableTriggerEnable == NO)
 	{
-		// Cap the pretrigger buffer right at the desired size
+		// Cap the Pretrigger buffer right at the desired size
 		g_endOfPretriggerBuff = &(g_pretriggerBuff[pretriggerBufferSize]);
 	}
 	else // Using variable trigger standard (USBM, OSM)
 	{
-		// Use full size of the pretrigger buffer
-		g_endOfPretriggerBuff = &(g_pretriggerBuff[(((SAMPLE_RATE_8K * 4) + 4) * 2)]);
+		// Use full size of the Pretrigger buffer (which is 16K 1sec buffer, max VT is 8K but needs double space, so using the full Pretrigger size)
+		g_endOfPretriggerBuff = &(g_pretriggerBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS]);
 	}
 #endif
 
