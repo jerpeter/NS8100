@@ -170,22 +170,11 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 				case COMBO_MODE:
 					// Set the default display mode to be the summary interval results
 					g_displayBargraphResultsMode = SUMMARY_INTERVAL_RESULTS;
+					g_displayAlternateResultState = DEFAULT_RESULTS;
 					
-					if (g_unitConfig.vectorSum == DISABLED)
-					{
-						g_displayAlternateResultState = DEFAULT_RESULTS;
-					}
-					
-#if 0 // Original
-					if (g_unitConfig.reportDisplacement == DISABLED)
-					{
-						g_displayAlternateResultState = DEFAULT_RESULTS;
-					}
-#endif
-
 					// Check if the sample rate is greater than max working sample rate
 					if (((g_monitorOperationMode == BARGRAPH_MODE) && (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_8K)) ||
-						((g_monitorOperationMode == COMBO_MODE) && (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_4K)))
+						((g_monitorOperationMode == COMBO_MODE) && (g_triggerRecord.trec.sample_rate > SAMPLE_RATE_8K)))
 					{
 						// Set to a default
 						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_1K;
@@ -656,7 +645,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		}
 		else div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * gainFactor) / (float)(g_factorySetupRecord.seismicSensorType);
 
-		if (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL)
+		if (1) // Removing option to check the Bar Channel (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL)
 		{
 			//-----------------------------------------------------------------------
 			// Max Results Header
@@ -818,7 +807,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		tempA = (float)0.0;
 
 		// Check if displaying the vector sum and if the bar channel isn't just air
-		if ((g_displayAlternateResultState == VECTOR_SUM_RESULTS) && (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL))
+		if (g_displayAlternateResultState == VECTOR_SUM_RESULTS) // Removing option to check Bar Channel (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL)
 		{
 			if (g_displayBargraphResultsMode == IMPULSE_RESULTS) { tempVS = sqrtf((float)g_vsImpulsePeak) / (float)div; }
 			else if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
@@ -843,7 +832,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			sprintf(buff,"VS %.2f %s", tempVS, displayFormat);
 		}
-		else if ((g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS) && (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL))
+		else if (g_displayAlternateResultState == PEAK_DISPLACEMENT_RESULTS) // Removing option to check Bar Channel (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL)
 		{
 			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
@@ -921,7 +910,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 			sprintf(buff, "PEAK DISP %5.4f %s", tempPeakDisp, displayFormat);
 		}
-		else if ((g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS) && (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL))
+		else if (g_displayAlternateResultState == PEAK_ACCELERATION_RESULTS) // Removing option to check Bar Channel (g_triggerRecord.berec.barChannel != BAR_AIR_CHANNEL)
 		{
 			if (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS)
 			{
@@ -998,7 +987,7 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		else // g_displayAlternateResultState == DEFAULT_RESULTS || g_triggerRecord.berec.barChannel == BAR_AIR_CHANNEL
 		{
 			// Check if the bar channel to display isn't just seismic
-			if (g_triggerRecord.berec.barChannel != BAR_SEISMIC_CHANNEL)
+			if (1) // Removing option to check Bar Channel (g_triggerRecord.berec.barChannel != BAR_SEISMIC_CHANNEL)
 			{
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
