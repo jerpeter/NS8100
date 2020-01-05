@@ -462,29 +462,6 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		}
 
 		//---------------------------------------------------------------------------
-		// Sample Rate check
-		//---------------------------------------------------------------------------
-		if ((SAMPLE_RATE_1K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_2K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_4K == cfg.eventCfg.sampleRate) ||
-			(SAMPLE_RATE_8K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_16K == cfg.eventCfg.sampleRate))
-		{
-			// Check if the selected sample rate is higher than the allowed for either Bargraph or Combo
-			if (((g_triggerRecord.opMode == BARGRAPH_MODE) && (cfg.eventCfg.sampleRate > SAMPLE_RATE_8K)) || ((g_triggerRecord.opMode == COMBO_MODE) && (cfg.eventCfg.sampleRate > SAMPLE_RATE_8K)))
-			{
-				returnCode = CFG_ERR_SAMPLE_RATE;
-				goto SEND_UCM_ERROR_CODE;
-			}
-			else
-			{
-				g_triggerRecord.trec.sample_rate = (uint32)cfg.eventCfg.sampleRate;
-			}
-		}
-		else
-		{
-			returnCode = CFG_ERR_SAMPLE_RATE;
-			goto SEND_UCM_ERROR_CODE;
-		}
-
-		//---------------------------------------------------------------------------
 		// Sensitivity check (Must be set before Seismic Trigger level)
 		//---------------------------------------------------------------------------
 		if ((cfg.extraUnitCfg.sensitivity == LOW) || (cfg.extraUnitCfg.sensitivity == HIGH))
@@ -547,6 +524,30 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			goto SEND_UCM_ERROR_CODE;
 		}
 		
+		//---------------------------------------------------------------------------
+		// Sample Rate check
+		//---------------------------------------------------------------------------
+		if ((SAMPLE_RATE_1K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_2K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_4K == cfg.eventCfg.sampleRate) ||
+			(SAMPLE_RATE_8K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_16K == cfg.eventCfg.sampleRate))
+		{
+			// Check if the selected sample rate is higher than the allowed for either Bargraph or Combo
+			if (((g_triggerRecord.opMode == BARGRAPH_MODE) && (cfg.eventCfg.sampleRate > SAMPLE_RATE_8K)) || ((g_triggerRecord.opMode == COMBO_MODE) && (cfg.eventCfg.sampleRate > SAMPLE_RATE_8K)) ||
+				((g_triggerRecord.trec.variableTriggerEnable == YES) && (cfg.eventCfg.sampleRate == SAMPLE_RATE_16K)))
+			{
+				returnCode = CFG_ERR_SAMPLE_RATE;
+				goto SEND_UCM_ERROR_CODE;
+			}
+			else
+			{
+				g_triggerRecord.trec.sample_rate = (uint32)cfg.eventCfg.sampleRate;
+			}
+		}
+		else
+		{
+			returnCode = CFG_ERR_SAMPLE_RATE;
+			goto SEND_UCM_ERROR_CODE;
+		}
+
 		//---------------------------------------------------------------------------
 		// Update air sensor type DB or MB
 		//---------------------------------------------------------------------------
