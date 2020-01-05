@@ -62,11 +62,7 @@ uint16 g_eventNumberCacheMaxIndex;
 uint16 g_eventNumberCacheOldestIndex;
 uint8 g_eventNumberCache[EVENT_NUMBER_CACHE_MAX_ENTRIES];
 //uint16 g_pretriggerBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
-#if VT_FEATURE_DISABLED // Normal
-uint16 g_pretriggerBuff[((SAMPLE_RATE_16K * 4) + 4)];
-#else // New variable trigger feature
-uint16 g_pretriggerBuff[(((SAMPLE_RATE_16K * 4) + 4) * 2)]; // Double the Pretrigger size to accommodate the new variable trigger feature (possible to do only 1/2 more if 1/2 wave approx for freq is sufficient)
-#endif
+uint16 g_pretriggerBuff[PRE_TRIG_BUFF_SIZE_IN_WORDS];
 uint16* g_startOfPretriggerBuff;
 uint16* g_tailOfPretriggerBuff;
 uint16* g_endOfPretriggerBuff;
