@@ -81,6 +81,8 @@ void EndBargraph(void)
 	MoveUpdatedBargraphEventRecordToFile(BARPGRAPH_SESSION_COMPLETE);
 
 	HandleBargraphLiveMonitoringEndMsg();
+
+	clearSystemEventFlag(BARGRAPH_EVENT);
 }
 
 ///----------------------------------------------------------------------------
