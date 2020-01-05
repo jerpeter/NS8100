@@ -852,14 +852,51 @@ void LcdImpulseTimeMenuHandler(uint8 keyPressed, void* data)
 		SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
 
 		// Check if Bargraph mode and A-weighting is enabled
-		if ((g_triggerRecord.opMode == BARGRAPH_MODE) && (!g_factorySetupRecord.invalid) &&
-			(g_factorySetupRecord.aWeightOption == ENABLED))
+		if ((g_triggerRecord.opMode == BARGRAPH_MODE) && (!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aWeightOption == ENABLED))
 		{
 			SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
 		}
 		else
 		{
+#if 0 // Removing this option
 			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+#else
+			// If Combo mode, jump back over to waveform specific settings
+			if (g_triggerRecord.opMode == COMBO_MODE)
+			{
+#if VT_FEATURE_DISABLED // Original
+				if (g_factorySetupRecord.seismicSensorType > SENSOR_ACC_RANGE_DIVIDER)
+				{
+					USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = MG_TYPE;
+					USER_MENU_ALT_TYPE(seismicTriggerMenu) = MG_TYPE;
+				}
+				else
+				{
+					USER_MENU_DEFAULT_TYPE(seismicTriggerMenu) = IN_TYPE;
+					USER_MENU_ALT_TYPE(seismicTriggerMenu) = MM_TYPE;
+				}
+
+				// Down convert to current bit accuracy setting
+				if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
+				{
+					g_tempTriggerLevelForMenuAdjustment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
+				}
+
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, (SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
+													(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
+#else // New VT feature
+				SETUP_USER_MENU_MSG(&seismicTriggerTypeMenu, g_triggerRecord.trec.variableTriggerEnable);
+#endif
+			}
+			else if ((g_unitConfig.alarmOneMode) || (g_unitConfig.alarmTwoMode))
+			{
+				SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
+			}
+			else // Save setup
+			{
+				SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
+			}
+#endif
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -1244,14 +1281,13 @@ void RecordTimeMenuHandler(uint8 keyPressed, void* data)
 		g_triggerRecord.trec.record_time = *((uint32*)data);
 		debug("Record Time: %d\r\n", g_triggerRecord.trec.record_time);
 
-		// If alarm mode is off, then proceed to save setup
-		if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) && (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
-		{
-			SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
-		}
-		else // Goto Alarm setup menus
+		if ((g_unitConfig.alarmOneMode) || (g_unitConfig.alarmTwoMode))
 		{
 			SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
+		}
+		else // Save setup
+		{
+			SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -1485,7 +1521,11 @@ void SeismicTriggerMenuHandler(uint8 keyPressed, void* data)
 #if VT_FEATURE_DISABLED // Original
 		if (g_triggerRecord.opMode == COMBO_MODE)
 		{
+#if 0 // Removing this option
 			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+#else
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs, LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+#endif
 		}		
 		else // WAVEFORM_MODE
 		{

@@ -182,12 +182,22 @@ void AirScaleMenuHandler(uint8 keyPressed, void* data)
 	{
 		if ((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
-				RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time, RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
 		}
 		else // (g_triggerRecord.opMode == BARGRAPH_MODE)
 		{
+#if 0 // Removing this option
 			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+#else
+			if ((g_unitConfig.alarmOneMode) || (g_unitConfig.alarmTwoMode))
+			{
+				SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
+			}
+			else // Save setup
+			{
+				SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
+			}
+#endif
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -217,8 +227,7 @@ void AirScaleMenuHandler(uint8 keyPressed, void* data)
 		}
 		else // (g_triggerRecord.opMode == BARGRAPH_MODE)
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
-				LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,	LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
 		}
 	}
 
@@ -566,7 +575,18 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 		}
 		else if (g_triggerRecord.opMode == BARGRAPH_MODE)
 		{
-			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+			if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aWeightOption == ENABLED))
+			{
+				SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
+			}
+			else
+			{
+#if 0 // Removing this option
+				SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+#else
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs, LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+#endif
+			}
 		}
 	}
 
@@ -973,6 +993,7 @@ void AutoMonitorMenuHandler(uint8 keyPressed, void* data)
 	JUMP_TO_ACTIVE_MENU();
 }
 
+#if 0 // Removing this menu
 //*****************************************************************************
 //=============================================================================
 // Bar Channel Menu
@@ -1063,6 +1084,7 @@ void BarChannelMenuHandler(uint8 keyPressed, void* data)
 
 	JUMP_TO_ACTIVE_MENU();
 }
+#endif
 
 //*****************************************************************************
 //=============================================================================
@@ -1102,7 +1124,11 @@ void BarIntervalMenuHandler(uint8 keyPressed, void* data)
 #if 0 // Removing Bar Scale menu (only applies to printing units)
 		SETUP_USER_MENU_MSG(&barScaleMenu, g_triggerRecord.berec.barScale);
 #else
+#if 0 // Removing this option
 		SETUP_USER_MENU_MSG(&barChannelMenu, g_triggerRecord.berec.barChannel);
+#else // New path
+		SETUP_USER_MENU_MSG(&sensitivityMenu, g_triggerRecord.srec.sensitivity);
+#endif
 #endif
 	}
 
@@ -1136,8 +1162,7 @@ void BarIntervalDataTypeMenuHandler(uint8 keyPressed, void* data)
 	{
 		g_triggerRecord.berec.barIntervalDataType = barIntervalDataTypeMenu[newItemIndex].data;
 
-		SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
-											LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+		SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs, LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
@@ -1193,6 +1218,7 @@ void BarLiveMonitorMenuHandler(uint8 keyPressed, void* data)
 	JUMP_TO_ACTIVE_MENU();
 }
 
+#if 0 // Remvoing this menu
 //*****************************************************************************
 //=============================================================================
 // Bar Scale Menu
@@ -1230,6 +1256,7 @@ void BarScaleMenuHandler(uint8 keyPressed, void* data)
 
 	JUMP_TO_ACTIVE_MENU();
 }
+#endif
 
 //*****************************************************************************
 //=============================================================================
@@ -1271,6 +1298,7 @@ void CalibratonDateSourceMenuHandler(uint8 keyPressed, void* data)
 	JUMP_TO_ACTIVE_MENU();
 }
 
+#if 0 // Removing this option
 //*****************************************************************************
 //=============================================================================
 // Bar Result Menu
@@ -1327,31 +1355,30 @@ void BarResultMenuHandler(uint8 keyPressed, void* data)
 			SETUP_USER_MENU_MSG(&seismicTriggerTypeMenu, g_triggerRecord.trec.variableTriggerEnable);
 #endif
 		}
-		else if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) && (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
-		{
-			SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
-		}
-		else
+		else if ((g_unitConfig.alarmOneMode) || (g_unitConfig.alarmTwoMode))
 		{
 			SETUP_USER_MENU_MSG(&alarmOneMenu, g_unitConfig.alarmOneMode);
+		}
+		else // Save setup
+		{
+			SETUP_USER_MENU_MSG(&saveSetupMenu, YES);
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if ((g_triggerRecord.opMode == BARGRAPH_MODE) && (!g_factorySetupRecord.invalid) &&
-			(g_factorySetupRecord.aWeightOption == ENABLED))
+		if ((g_triggerRecord.opMode == BARGRAPH_MODE) && (!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aWeightOption == ENABLED))
 		{
 			SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
 		}
 		else
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,
-				LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs,	LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
 		}
 	}
 
 	JUMP_TO_ACTIVE_MENU();
 }
+#endif
 
 //*****************************************************************************
 //=============================================================================
@@ -1521,11 +1548,7 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
-#if 0 // Original
-#define CONFIG_MENU_ENTRIES 33
-#else // New
-#define CONFIG_MENU_ENTRIES 36
-#endif
+#define CONFIG_MENU_ENTRIES 35
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1573,7 +1596,9 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, UNITS_OF_MEASURE_TEXT,		NO_TAG, {UNITS_OF_MEASURE}},
 {NO_TAG, 0, UNITS_OF_AIR_TEXT,			NO_TAG, {UNITS_OF_AIR}},
 {NO_TAG, 0, USB_SYNC_MODE_TEXT,			NO_TAG, {USB_SYNC_MODE}},
+#if 0 // Removing this option
 {NO_TAG, 0, VECTOR_SUM_TEXT,			NO_TAG, {VECTOR_SUM}},
+#endif
 {NO_TAG, 0, WAVEFORM_AUTO_CAL_TEXT,		NO_TAG, {WAVEFORM_AUTO_CAL}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&ConfigMenuHandler}}
 };
@@ -1784,10 +1809,11 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 				SETUP_USER_MENU_MSG(&usbSyncModeMenu, g_unitConfig.usbSyncMode);
 			break;
 
+#if 0 // Removing this option
 			case (VECTOR_SUM):
 				SETUP_USER_MENU_MSG(&vectorSumMenu, g_unitConfig.vectorSum);
 			break;
-
+#endif
 			case (WAVEFORM_AUTO_CAL):
 				SETUP_USER_MENU_MSG(&waveformAutoCalMenu, g_unitConfig.autoCalForWaveform);
 			break;
@@ -2985,7 +3011,7 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 		if ((sampleRateMenu[newItemIndex].data < sampleRateMenu[ITEM_1].data) || 
 			(sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_6].data) ||
 			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && (g_triggerRecord.opMode == BARGRAPH_MODE)) ||
-			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_3].data) && (g_triggerRecord.opMode == COMBO_MODE)))
+			((sampleRateMenu[newItemIndex].data > sampleRateMenu[ITEM_4].data) && (g_triggerRecord.opMode == COMBO_MODE)))
 		{
 			sprintf((char*)g_spareBuffer, "%lu %s", sampleRateMenu[newItemIndex].data,
 					getLangText(CURRENTLY_NOT_IMPLEMENTED_TEXT));
@@ -3105,48 +3131,38 @@ void SaveSetupMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		switch (g_triggerRecord.opMode)
+		if ((g_unitConfig.alarmOneMode) || (g_unitConfig.alarmTwoMode))
 		{
-			case WAVEFORM_MODE:
-			case COMBO_MODE:
-				if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) && (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
+			if (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF)
+			{
+				SETUP_USER_MENU_MSG(&alarmTwoMenu, g_unitConfig.alarmTwoMode);
+			}
+			else
+			{
+				SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_unitConfig.alarmTwoTime, ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT, ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
+			}
+		}
+		else // No alarms
+		{
+			if (g_triggerRecord.opMode == BARGRAPH_MODE)
+			{
+				if ((!g_factorySetupRecord.invalid) && (g_factorySetupRecord.aWeightOption == ENABLED))
 				{
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time,
-						RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
+					SETUP_USER_MENU_MSG(&airScaleMenu, g_unitConfig.airScale);
 				}
 				else
 				{
-					if (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF)
-					{
-						SETUP_USER_MENU_MSG(&alarmTwoMenu, g_unitConfig.alarmTwoMode);
-					}
-					else
-					{
-						SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_unitConfig.alarmTwoTime,
-							ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT,
-							ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
-					}
-				}
-			break;
-
-			case BARGRAPH_MODE:
-				if ((g_unitConfig.alarmOneMode == ALARM_MODE_OFF) && (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF))
-				{
+#if 0 // Removing this option
 					SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+#else
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs, LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+#endif
 				}
-				else
-				{
-					if (g_unitConfig.alarmTwoMode == ALARM_MODE_OFF)
-					{
-						SETUP_USER_MENU_MSG(&alarmTwoMenu, g_unitConfig.alarmTwoMode);
-					}
-					else
-					{
-						SETUP_USER_MENU_FOR_FLOATS_MSG(&alarmTwoTimeMenu, &g_unitConfig.alarmTwoTime, ALARM_OUTPUT_TIME_DEFAULT, ALARM_OUTPUT_TIME_INCREMENT,
-														ALARM_OUTPUT_TIME_MIN, ALARM_OUTPUT_TIME_MAX);
-					}
-				}
-			break;
+			}
+			else // Waveform or Combo
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&recordTimeMenu, &g_triggerRecord.trec.record_time, RECORD_TIME_DEFAULT_VALUE, RECORD_TIME_MIN_VALUE, g_triggerRecord.trec.record_time_max);
+			}
 		}
 	}
 
@@ -3206,7 +3222,11 @@ void SensitivityMenuHandler(uint8 keyPressed, void* data)
 		}
 		else if ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
+#if 0 // Removing this option
 			SETUP_USER_MENU_MSG(&barChannelMenu, g_triggerRecord.berec.barChannel);
+#else // New path
+			SETUP_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
+#endif
 		}
 #else // New VT feature
 		if (g_triggerRecord.opMode == WAVEFORM_MODE)
@@ -3215,7 +3235,11 @@ void SensitivityMenuHandler(uint8 keyPressed, void* data)
 		}
 		else if ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
+#if 0 // Removing this option
 			SETUP_USER_MENU_MSG(&barChannelMenu, g_triggerRecord.berec.barChannel);
+#else // New path
+			SETUP_USER_MENU_MSG(&barIntervalMenu, g_triggerRecord.bgrec.barInterval);
+#endif
 		}
 #endif
 	}
@@ -3370,6 +3394,16 @@ void SeismicTriggerTypeMenuHandler(uint8 keyPressed, void* data)
 		}
 		else // Variable Trigger USBM/OSM selected
 		{
+#if 1 // New
+			// Variable triggers increased processing does not allow the unit to achieve a 16K sample rate (limit is between 11K and 12K)
+			if (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K)
+			{
+				sprintf((char*)g_spareBuffer, "VARIABLE UNABLE TO SAMPLE AT 16K, SETTING TO 8K");
+				MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
+
+				g_triggerRecord.trec.sample_rate = SAMPLE_RATE_8K;
+			}
+#endif
 			SETUP_USER_MENU_MSG(&vibrationStandardMenu, g_triggerRecord.trec.variableTriggerVibrationStandard);
 		}
 	}
@@ -3377,7 +3411,11 @@ void SeismicTriggerTypeMenuHandler(uint8 keyPressed, void* data)
 	{
 		if (g_triggerRecord.opMode == COMBO_MODE)
 		{
+#if 0 // Removing this option
 			SETUP_USER_MENU_MSG(&barResultMenu, g_unitConfig.vectorSum);
+#else
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&lcdImpulseTimeMenu, &g_triggerRecord.berec.impulseMenuUpdateSecs, LCD_IMPULSE_TIME_DEFAULT_VALUE, LCD_IMPULSE_TIME_MIN_VALUE, LCD_IMPULSE_TIME_MAX_VALUE);
+#endif
 		}
 		else // WAVEFORM_MODE
 		{
@@ -3770,6 +3808,7 @@ void UnitsOfAirMenuHandler(uint8 keyPressed, void* data)
 	JUMP_TO_ACTIVE_MENU();
 }
 
+#if 0 // Removing this option
 //*****************************************************************************
 //=============================================================================
 // Vector Sum Menu
@@ -3807,6 +3846,7 @@ void VectorSumMenuHandler(uint8 keyPressed, void* data)
 
 	JUMP_TO_ACTIVE_MENU();
 }
+#endif
 
 #if (!VT_FEATURE_DISABLED)
 //*****************************************************************************
