@@ -1067,6 +1067,9 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 				{
 					s_variablePretriggerBuffPtr = (s_variableEventPretriggerBuffPtr - pretriggerBufferSize);
 				}
+
+				// Reset working freq calc buffer so that old results are not processed post event
+				memset(&s_variableTriggerFreqCalcBuffer, 0, sizeof(s_variableTriggerFreqCalcBuffer));
 			}
 #endif
 
