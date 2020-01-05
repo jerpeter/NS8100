@@ -468,7 +468,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			(SAMPLE_RATE_8K == cfg.eventCfg.sampleRate) || (SAMPLE_RATE_16K == cfg.eventCfg.sampleRate))
 		{
 			// Check if the selected sample rate is higher than the allowed for either Bargraph or Combo
-			if (((g_triggerRecord.opMode == BARGRAPH_MODE) && (cfg.eventCfg.sampleRate > SAMPLE_RATE_8K)) || ((g_triggerRecord.opMode == COMBO_MODE) && (cfg.eventCfg.sampleRate > SAMPLE_RATE_4K)))
+			if (((g_triggerRecord.opMode == BARGRAPH_MODE) && (cfg.eventCfg.sampleRate > SAMPLE_RATE_8K)) || ((g_triggerRecord.opMode == COMBO_MODE) && (cfg.eventCfg.sampleRate > SAMPLE_RATE_8K)))
 			{
 				returnCode = CFG_ERR_SAMPLE_RATE;
 				goto SEND_UCM_ERROR_CODE;
@@ -695,7 +695,9 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//---------------------------------------------------------------------------
 		if (cfg.extraUnitCfg.barChannel <= BAR_AIR_CHANNEL)
 		{
+#if 0 // No longer using this option
 			g_triggerRecord.berec.barChannel = cfg.extraUnitCfg.barChannel;
+#endif
 		}
 		else
 		{
@@ -866,7 +868,9 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//---------------------------------------------------------------------------
 		if ((cfg.extraUnitCfg.vectorSum == NO) || (cfg.extraUnitCfg.vectorSum == YES))
 		{
+#if 0 // No longer using this option
 			g_unitConfig.vectorSum = cfg.extraUnitCfg.vectorSum;
+#endif
 		}
 		else
 		{
