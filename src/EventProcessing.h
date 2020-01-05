@@ -149,7 +149,6 @@ void CachePreviousSummaryListEntry(void);
 void CacheSummaryEntryByIndex(uint16 index);
 void ParseAndCountSummaryListEntries(void);
 void ParseAndCountSummaryListEntriesWithRewrite(void);
-void ParseAndCountSummaryListEntriesWithRewrite2(void);
 void AddEventToSummaryList(EVT_RECORD* event);
 void InitSummaryListFile(void);
 
