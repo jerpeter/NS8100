@@ -163,6 +163,13 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 			switch(g_monitorOperationMode)
 			{
 				case WAVEFORM_MODE:
+					// Check if the Variable Trigger sample rate is greater than max working sample rate
+					if ((g_triggerRecord.trec.variableTriggerEnable == YES) && (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K))
+					{
+						// Drop to highest allowed Variable Trigger sample rate
+						g_triggerRecord.trec.sample_rate = SAMPLE_RATE_8K;
+					}
+
 					StartMonitoring(g_triggerRecord.opMode, &g_triggerRecord.trec);
 				break;
 
