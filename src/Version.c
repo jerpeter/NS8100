@@ -8,7 +8,7 @@
 //===============================================
 // Build version, system date and time referenced
 //===============================================
-const char g_buildVersion[] = "2.31.B";
+const char g_buildVersion[] = "2.32.A";
 const char g_buildDate[] = __DATE__ " " __TIME__;
 //===============================================
 
