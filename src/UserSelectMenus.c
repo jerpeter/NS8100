@@ -1178,7 +1178,6 @@ void BarIntervalDataTypeMenuHandler(uint8 keyPressed, void* data)
 //=============================================================================
 //*****************************************************************************
 #define BAR_LIVE_MONITOR_MENU_ENTRIES 4
-#if 0 // Release ready
 USER_MENU_STRUCT barLiveMonitorMenu[BAR_LIVE_MONITOR_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, BAR_LIVE_MONITOR_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAR_LIVE_MONITOR_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1186,15 +1185,6 @@ USER_MENU_STRUCT barLiveMonitorMenu[BAR_LIVE_MONITOR_MENU_ENTRIES] = {
 	{ITEM_2, 0, BLIND_SEND_TEXT,		NO_TAG,	{YES}},
 	{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&BarLiveMonitorMenuHandler}}
 };
-#else // Test build with built in strings
-USER_MENU_STRUCT barLiveMonitorMenu[BAR_LIVE_MONITOR_MENU_ENTRIES] = {
-{BAR_LIVE_MONITOR_TITLE_TAG, 0, NULL_TEXT, NO_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAR_LIVE_MONITOR_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-	{ITEM_1, 0, NULL_TEXT,	REMOTE_CONTROL_TAG, {NO}},
-	{ITEM_2, 0, NULL_TEXT,	BLIND_SEND_TAG,		{YES}},
-	{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&BarLiveMonitorMenuHandler}}
-	};
-#endif
 
 //------------------------------
 // Bar Live Monitor Menu Handler
@@ -1556,11 +1546,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, AUTO_CALIBRATION_TEXT,		NO_TAG, {AUTO_CALIBRATION}},
 {NO_TAG, 0, AUTO_DIAL_INFO_TEXT,		NO_TAG, {AUTO_DIAL_INFO}},
 {NO_TAG, 0, AUTO_MONITOR_TEXT,			NO_TAG, {AUTO_MONITOR}},
-#if 0 // Release ready
 {NO_TAG, 0, BAR_LIVE_MONITOR_TEXT,		NO_TAG, {BAR_LIVE_MONITOR}},
-#else // Test build with built in strings
-{BAR_LIVE_MONITOR_TAG, 0, NULL_TEXT,	NO_TAG, {BAR_LIVE_MONITOR}},
-#endif
 {NO_TAG, 0, BATTERY_TEXT,				NO_TAG, {BATTERY}},
 {NO_TAG, 0, BAUD_RATE_TEXT,				NO_TAG, {BAUD_RATE}},
 {NO_TAG, 0, CALIBRATION_DATE_TEXT,		NO_TAG, {CALIBRATION_DATE}},
@@ -3338,7 +3324,6 @@ void SeismicSensorTypeMenuHandler(uint8 keyPressed, void* data)
 //=============================================================================
 //*****************************************************************************
 #define SEISMIC_TRIGGER_TYPE_MENU_ENTRIES 4
-#if 0 // Release ready
 USER_MENU_STRUCT seismicTriggerTypeMenu[SEISMIC_TRIGGER_TYPE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, SEISMIC_TRIG_TYPE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, SEISMIC_TRIGGER_TYPE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -3346,15 +3331,6 @@ USER_MENU_STRUCT seismicTriggerTypeMenu[SEISMIC_TRIGGER_TYPE_MENU_ENTRIES] = {
 {NO_TAG, 0, VARIABLE_USBM_OSM_TEXT,	NO_TAG,	{YES}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SeismicTriggerTypeMenuHandler}}
 };
-#else // Test build with built in strings
-USER_MENU_STRUCT seismicTriggerTypeMenu[SEISMIC_TRIGGER_TYPE_MENU_ENTRIES] = {
-{SEISMIC_TRIGGER_TYPE_TITLE_TAG, 0, NULL_TEXT, NO_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, SEISMIC_TRIGGER_TYPE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-	{NO_TAG, 0, NORMAL_DEFAULT_TEXT,	NO_TAG,					{NO}},
-	{NO_TAG, 0, NULL_TEXT,				VARIABLE_USBM_OSM_TAG,	{YES}},
-	{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SeismicTriggerTypeMenuHandler}}
-};
-#endif
 
 //----------------------------------
 // Seismic Trigger Type Menu Handler
@@ -3398,8 +3374,7 @@ void SeismicTriggerTypeMenuHandler(uint8 keyPressed, void* data)
 			// Variable triggers increased processing does not allow the unit to achieve a 16K sample rate (limit is between 11K and 12K)
 			if (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_16K)
 			{
-				sprintf((char*)g_spareBuffer, "VARIABLE UNABLE TO SAMPLE AT 16K, SETTING TO 8K");
-				MessageBox(getLangText(WARNING_TEXT), (char*)g_spareBuffer, MB_OK);
+				MessageBox(getLangText(WARNING_TEXT), getLangText(VARIABLE_UNABLE_TO_SAMPLE_AT_16K_SETTING_TO_8K), MB_OK);
 
 				g_triggerRecord.trec.sample_rate = SAMPLE_RATE_8K;
 			}
@@ -3855,7 +3830,6 @@ void VectorSumMenuHandler(uint8 keyPressed, void* data)
 //=============================================================================
 //*****************************************************************************
 #define VIBRATION_STARDARD_MENU_ENTRIES 5
-#if 0 // Release ready
 USER_MENU_STRUCT vibrationStandardMenu[VIBRATION_STARDARD_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, VIBRATION_STANDARD_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, VIBRATION_STARDARD_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -3864,16 +3838,6 @@ USER_MENU_STRUCT vibrationStandardMenu[VIBRATION_STARDARD_MENU_ENTRIES] = {
 {ITEM_3, 0, OSM_REGULATIONS_TEXT,	NO_TAG,	{OSM_REGULATIONS_STANDARD}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&VibrationStandardMenuHandler}}
 };
-#else // Test build with built in strings
-USER_MENU_STRUCT vibrationStandardMenu[VIBRATION_STARDARD_MENU_ENTRIES] = {
-{VIBRATION_STANDARD_TITLE_TAG, 0, NULL_TEXT, NO_TAG,
-	{INSERT_USER_MENU_INFO(SELECT_TYPE, VIBRATION_STARDARD_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-	{ITEM_1, 0, NULL_TEXT,	USBM_8507_DRYWALL_TAG,	{USBM_RI_8507_DRYWALL_STANDARD}},
-	{ITEM_2, 0, NULL_TEXT,	USBM_8507_PLASTER_TAG,	{USBM_RI_8507_PLASTER_STANDARD}},
-	{ITEM_3, 0, NULL_TEXT,	OSM_REGULATIONS_TAG,	{OSM_REGULATIONS_STANDARD}},
-	{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&VibrationStandardMenuHandler}}
-};
-#endif
 
 //--------------------------------
 // Vibration Standard Menu Handler
