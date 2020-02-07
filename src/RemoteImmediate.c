@@ -230,7 +230,7 @@ void SendLMA(void)
 	if (g_triggerRecord.opMode == WAVEFORM_MODE)
 	{
 		// Send LMA for Waveform, Last stored event number and starting Waveform session time
-		length = sprintf((char*)g_spareBuffer, "LMA,%d,%d,%lu", g_triggerRecord.opMode, GetLastStoredEventNumber(), ConvertDateTimeToEpochTime(g_pendingBargraphRecord.summary.captured.endTime));
+		length = sprintf((char*)g_spareBuffer, "LMA,%d,%d,%lu", g_triggerRecord.opMode, GetLastStoredEventNumber(), ConvertDateTimeToEpochTime(g_pendingEventRecord.summary.captured.endTime));
 	}
 	else // ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 	{
