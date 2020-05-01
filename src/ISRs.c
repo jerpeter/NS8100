@@ -725,10 +725,10 @@ static inline void checkAlarms_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline uint8 usbmAndOsmFirstSlope_ISR_Inline(float freq, uint16 peak)
 {
-	// PPV in in(Hz) = 0.19 * Hz^0.99044558852614769170042919000987
+	// PPV in in(Hz) = 0.19685 * (Hz^0.964896941555782)
 
 	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
-	if (peak > (s_vtDiv * 0.19 * pow(freq, 0.990))) { return (YES); }
+	if (peak > (s_vtDiv * 0.19685 * pow(freq, 0.964896))) { return (YES); }
 
 	return (NO);
 }
@@ -738,7 +738,7 @@ static inline uint8 usbmAndOsmFirstSlope_ISR_Inline(float freq, uint16 peak)
 ///----------------------------------------------------------------------------
 static inline uint8 usbmSecondSlope_ISR_Inline(float freq, uint16 peak)
 {
-	// PPV in in(Hz) = 0.05 * Hz^1
+	// PPV in in(Hz) = 0.05 * (Hz^1)
 
 	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
 	if (peak > (s_vtDiv * 0.05 * freq)) { return (YES); }
@@ -751,10 +751,10 @@ static inline uint8 usbmSecondSlope_ISR_Inline(float freq, uint16 peak)
 ///----------------------------------------------------------------------------
 static inline uint8 osmSecondSlope_ISR_Inline(float freq, uint16 peak)
 {
-	// PPV in in(Hz) = 0.09600017012716818151541500881744 * Hz^0.89278926071437231129858134302827
+	// PPV in in(Hz) = 0.0524648429167308 * (Hz^1.0704345453823)
 
 	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
-	if (peak > (s_vtDiv * 0.096 * pow(freq, 0.8928))) { return (YES); }
+	if (peak > (s_vtDiv * 0.052464 * pow(freq, 1.070434))) { return (YES); }
 
 	return (NO);
 }
@@ -768,7 +768,7 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 	============
 	USBM Drywall
 	------------
-	0.19 ips/5 mm @ 1 Hz (slope up)
+	0.19685 ips/5 mm @ 1 Hz (slope up)
 	(0.50 ips/12.7 mm @ 2.5 Hz) (pass thru)
 	0.75 ips/19.05 mm @ 4 Hz (flat line)
 	0.75 ips/19.05 mm @ 15 Hz (slope up)
@@ -777,7 +777,7 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 	============
 	USBM Plaster
 	------------
-	0.19 ips/5 mm @ 1 Hz (slope up)
+	0.19685 ips/5 mm @ 1 Hz (slope up)
 	0.50 ips/12.7 mm @ 2.5 Hz (flat line)
 	0.50 ips/12.7 mm @ 10 Hz (slope up)
 	(0.75 ips/19.05 mm @ 15 Hz) (pass thru)
@@ -786,7 +786,7 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 	==================
 	OSM Standard Slope
 	------------------
-	0.19 ips/5 mm @ 1 Hz (slope up)
+	0.19685 ips/5 mm @ 1 Hz (slope up)
 	(0.50 ips/12.7 mm @ 2.5 Hz) (pass thru)
 	0.75 ips/19.05 mm @ 4 Hz (flat line)
 	0.75 ips/19.05 mm @ 12 Hz (slope up)
@@ -795,7 +795,6 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 
 	float freq = (float)(g_triggerRecord.trec.sample_rate) / (float)(chan->freq_count * 2);
 	uint8 triggerFound = NO;
-	//uint32 pretriggerBufferSize;
 
 	// Filter out any frequencies lower than 1 Hz (which is below the specs of the transducer)
 	if (freq < 1.0) { return; }
@@ -853,8 +852,8 @@ static inline void processVariableTriggerData_ISR_Inline(void)
 		s_variableTriggerFreqCalcBuffer.v.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & g_bitAccuracyMidpoint);
 		s_variableTriggerFreqCalcBuffer.t.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & g_bitAccuracyMidpoint);
 
-		// Set the divider for length conversion
-		s_vtDiv = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
+		// Set the divider for length conversion (Always as 16-bit)
+		s_vtDiv = (float)(ACCURACY_16_BIT_MIDPOINT * g_sensorInfo.sensorAccuracy * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
 	}
 
 	// ---------
