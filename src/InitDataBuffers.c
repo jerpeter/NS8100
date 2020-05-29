@@ -201,6 +201,9 @@ uint16 CalcSumFreq(uint16* peakPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 	uint16* samplePtr;
 	uint32 sampleCount = 0;
 	uint16 freq = 0;
+	uint16 freqValidPeakAdjusted = (FREQ_VALID_PEAK_16_BIT >> (g_bitShiftForAccuracy >> 1));
+	uint16 freqCrossoverBackwardAdjusted = (FREQ_CROSSOVER_BACKWARD_16_BIT >> (g_bitShiftForAccuracy >> 1));
+	uint16 freqCrossoverForwardAdjusted = (FREQ_CROSSOVER_FORWARD_16_BIT >> (g_bitShiftForAccuracy >> 1));
 
 	//------------------------------------------------------------------------------------
 	// Note: A/D data is RAW and has only been adjusted for Bit Accuracy
@@ -219,12 +222,12 @@ uint16 CalcSumFreq(uint16* peakPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 	//------------------------------------------------------------------------------------
 	// Check if peak is above the midpoint adjusted by valid peak count
 	//------------------------------------------------------------------------------------
-	if (*samplePtr >= (g_bitAccuracyMidpoint + FREQ_VALID_PEAK)) // FREQ_VALID_PEAK = 4
+	if (*samplePtr >= (g_bitAccuracyMidpoint + freqValidPeakAdjusted))
 	{
 		//------------------------------------------------------------------------------------
 		// Continue while the A/D data is above the midpoint plus backwards crossover count
 		//------------------------------------------------------------------------------------
-		while ((*samplePtr >= (g_bitAccuracyMidpoint + FREQ_CROSSOVER_BACKWARD)) && (samplePtr > (startAddrPtr + 4))) // FREQ_CROSSOVER_BACKWARD = 2
+		while ((*samplePtr >= (g_bitAccuracyMidpoint + freqCrossoverBackwardAdjusted)) && (samplePtr > (startAddrPtr + 4)))
 		{
 			// Decrement pointer by to get previous channel A/D reading
 			samplePtr -= 4;
@@ -241,7 +244,7 @@ uint16 CalcSumFreq(uint16* peakPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 		//------------------------------------------------------------------------------------
 		// Continue while the A/D data is above the midpoint adjusted by forwards crossover count
 		//------------------------------------------------------------------------------------
-		while ((*samplePtr >= (g_bitAccuracyMidpoint + FREQ_CROSSOVER_FORWARD)) && (samplePtr < (endAddrPtr - 4))) // FREQ_CROSSOVER_FORWARD = 1
+		while ((*samplePtr >= (g_bitAccuracyMidpoint + freqCrossoverForwardAdjusted)) && (samplePtr < (endAddrPtr - 4)))
 		{
 			// Increment pointer by to get next channel A/D reading
 			samplePtr += 4;
@@ -253,12 +256,12 @@ uint16 CalcSumFreq(uint16* peakPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 	//------------------------------------------------------------------------------------
 	// Check if peak is below the midpoint adjusted by valid peak count
 	//------------------------------------------------------------------------------------
-	else if (*samplePtr <= (g_bitAccuracyMidpoint - FREQ_VALID_PEAK)) // FREQ_VALID_PEAK = 4
+	else if (*samplePtr <= (g_bitAccuracyMidpoint - freqValidPeakAdjusted))
 	{
 		//------------------------------------------------------------------------------------
 		// Continue while the A/D data is below the midpoint adjusted by backwards crossover count
 		//------------------------------------------------------------------------------------
-		while ((*samplePtr <= (g_bitAccuracyMidpoint - FREQ_CROSSOVER_BACKWARD)) && (samplePtr > (startAddrPtr + 4))) // FREQ_CROSSOVER_BACKWARD = 2
+		while ((*samplePtr <= (g_bitAccuracyMidpoint - freqCrossoverBackwardAdjusted)) && (samplePtr > (startAddrPtr + 4)))
 		{
 			// Decrement pointer by to get previous channel A/D reading
 			samplePtr -= 4;
@@ -275,7 +278,7 @@ uint16 CalcSumFreq(uint16* peakPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 		//------------------------------------------------------------------------------------
 		// Continue while the A/D data is below the midpoint adjusted by forwards crossover count
 		//------------------------------------------------------------------------------------
-		while ((*samplePtr <= (g_bitAccuracyMidpoint - FREQ_CROSSOVER_FORWARD)) && (samplePtr < (endAddrPtr - 4))) // FREQ_CROSSOVER_FORWARD = 1
+		while ((*samplePtr <= (g_bitAccuracyMidpoint - freqCrossoverForwardAdjusted)) && (samplePtr < (endAddrPtr - 4)))
 		{
 			// Increment pointer by to get next channel A/D reading
 			samplePtr += 4;
@@ -284,6 +287,7 @@ uint16 CalcSumFreq(uint16* peakPtr, uint32 sampleRate, uint16* startAddrPtr, uin
 			sampleCount++;
 		}
 	}
+
 	//------------------------------------------------------------------------------------
 	// Peak is too low for finding frequency
 	//------------------------------------------------------------------------------------
