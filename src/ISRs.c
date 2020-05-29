@@ -102,6 +102,9 @@ static uint32 s_tempChanMed[MAX_NUM_OF_CHANNELS][8];
 
 static VARIABLE_TRIGGER_FREQ_CALC_BUFFER s_variableTriggerFreqCalcBuffer;
 static float s_vtDiv;
+#if 0 // Needed for Full wave count algorithm (temp disabled)
+static VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* s_workingVTChanData;
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Prototypes
@@ -791,9 +794,31 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 	0.75 ips/19.05 mm @ 4 Hz (flat line)
 	0.75 ips/19.05 mm @ 12 Hz (slope up)
 	2.00 ips/50.8 mm @ 30 Hz (flat line out)
+
+	=====================
+	Custom Threshold Step
+	---------------------
+	0.10 ips below 10 Hz
+	0.25 ips below 20 Hz
+	0.5 ips below 30 Hz
+	0.75 ips below 40 Hz
+	1.0 ips over 40 Hz
+
+	====================
+	Custom Limiting Step
+	--------------------
+	0.15 ips below 10 Hz
+	0.5 ips below 20 Hz
+	1.0 ips below 30 Hz
+	1.5 ips below 40 Hz
+	2.0 ips over 40 Hz
 */
 
-	float freq = (float)(g_triggerRecord.trec.sample_rate) / (float)(chan->freq_count * 2);
+	// Make sure the frequency count is non-zero
+	if (chan->freq_count == 0) { return; }
+
+	float freq = (float)(g_triggerRecord.trec.sample_rate) / (float)(chan->freq_count);
+	float peak = (float)(chan->peak) / s_vtDiv;
 	uint8 triggerFound = NO;
 
 	// Filter out any frequencies lower than 1 Hz (which is below the specs of the transducer)
@@ -803,20 +828,34 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 	if (g_triggerRecord.trec.variableTriggerVibrationStandard == USBM_RI_8507_DRYWALL_STANDARD)
 	{
 		if (freq < 4.0) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
-		else if (freq < 15.0) {	if (((float)chan->peak / s_vtDiv) > 0.75) { triggerFound = YES; } }
+		else if (freq < 15.0) {	if (peak > 0.75) { triggerFound = YES; } }
 		else if (freq < 40.0) { if (usbmSecondSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
 	}
 	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == USBM_RI_8507_PLASTER_STANDARD)
 	{
 		if (freq < 2.5) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
-		else if (freq < 10.0) {	if (((float)chan->peak / s_vtDiv) > 0.50) { triggerFound = YES; } }
+		else if (freq < 10.0) {	if (peak > 0.50) { triggerFound = YES; } }
 		else if (freq < 40.0) { if (usbmSecondSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
 	}
 	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == OSM_REGULATIONS_STANDARD)
 	{
 		if (freq < 4.0) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
-		else if (freq < 12.0) {	if (((float)chan->peak / s_vtDiv) > 0.75) { triggerFound = YES; } }
+		else if (freq < 12.0) {	if (peak > 0.75) { triggerFound = YES; } }
 		else if (freq < 30.0) { if (osmSecondSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
+	}
+	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == CUSTOM_STEP_THRESHOLD)
+	{
+		if (freq < 10.0) { if (peak > 0.10) { triggerFound = YES; } }
+		else if (freq < 20.0) {	if (peak > 0.25) { triggerFound = YES; } }
+		else if (freq < 30.0) {	if (peak > 0.50) { triggerFound = YES; } }
+		else if (freq < 40.0) {	if (peak > 0.75) { triggerFound = YES; } }
+	}
+	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == CUSTOM_STEP_LIMITING)
+	{
+		if (freq < 10.0) { if (peak > 0.15) { triggerFound = YES; } }
+		else if (freq < 20.0) {	if (peak > 0.50) { triggerFound = YES; } }
+		else if (freq < 30.0) {	if (peak > 1.00) { triggerFound = YES; } }
+		else if (freq < 40.0) {	if (peak > 1.50) { triggerFound = YES; } }
 	}
 
 	if (triggerFound)
@@ -829,62 +868,54 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-static inline void processVariableTriggerData_ISR_Inline(void)
+static inline void processVariableTriggerDataHalfWave_ISR_Inline(void)
 {
-/*
-	If crossover:
-		If freq count more than low limit freq threshold (1 Hz):
-			Check peak and freq against standards curve
-		Reset peak and freq values
-	else:
-		Increment freq count
-		If sample > stored sample (normalized):
-			Save sample
-			//Get timestamp? (leave for actual trigger)
-*/
 	// ------------
 	// All Channels
 	// ------------
-	// Check if the freq count is zero, meaning initial sample (doesn't matter which channel is checked)
-	if (s_variableTriggerFreqCalcBuffer.r.freq_count == 0)
+	// Check if the freq count signals initial sample
+	if (s_variableTriggerFreqCalcBuffer.r_sign == 0xFFFF)
 	{
-		s_variableTriggerFreqCalcBuffer.r.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & g_bitAccuracyMidpoint);
-		s_variableTriggerFreqCalcBuffer.v.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & g_bitAccuracyMidpoint);
-		s_variableTriggerFreqCalcBuffer.t.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & g_bitAccuracyMidpoint);
-
-		// Set the divider for length conversion (Always as 16-bit)
-		s_vtDiv = (float)(ACCURACY_16_BIT_MIDPOINT * g_sensorInfo.sensorAccuracy * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
+		s_variableTriggerFreqCalcBuffer.r_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & ACCURACY_16_BIT_MIDPOINT);
+		s_variableTriggerFreqCalcBuffer.v_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & ACCURACY_16_BIT_MIDPOINT);
+		s_variableTriggerFreqCalcBuffer.t_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & ACCURACY_16_BIT_MIDPOINT);
 	}
 
 	// ---------
 	// R channel
 	// ---------
 	// Check if the stored sign comparison signals a zero crossing
-	if (s_variableTriggerFreqCalcBuffer.r.sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & g_bitAccuracyMidpoint))
+	if (s_variableTriggerFreqCalcBuffer.r_sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & ACCURACY_16_BIT_MIDPOINT))
 	{
-		// Check if the half wave count is less than sample rate divided by 2 (meaning freq greater than 1 Hz)
-		if (s_variableTriggerFreqCalcBuffer.r.freq_count < (g_triggerRecord.trec.sample_rate / 2)) { checkVariableTriggerAndFreq(&s_variableTriggerFreqCalcBuffer.r); }
+		// Double the half wave count to get a full wave number of samples and check if a trigger is found
+		s_variableTriggerFreqCalcBuffer.r[0].freq_count *= 2;
+		checkVariableTriggerAndFreq(&s_variableTriggerFreqCalcBuffer.r[0]);
+		if (g_externalTrigger == VARIABLE_TRIGGER_EVENT) { return; }
 
 		// Store new sign for future zero crossing comparisons
-		s_variableTriggerFreqCalcBuffer.r.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & g_bitAccuracyMidpoint);
+		s_variableTriggerFreqCalcBuffer.r_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & ACCURACY_16_BIT_MIDPOINT);
 
-		// Reset count to 1 since we have a sample that's crossed zero boundary
-		s_variableTriggerFreqCalcBuffer.r.freq_count = 1;
+		// Reset count since we crossed the zero boundary
+		s_variableTriggerFreqCalcBuffer.r[0].freq_count = 1;
 
 		// Reset peak and peak pointer to the current sample
-		s_variableTriggerFreqCalcBuffer.r.peak = s_R_channelReading;
-		s_variableTriggerFreqCalcBuffer.r.peakSamplePtr = g_tailOfPretriggerBuff;
+		s_variableTriggerFreqCalcBuffer.r[0].peak = s_R_channelReading;
+		s_variableTriggerFreqCalcBuffer.r[0].peakSamplePtr = g_tailOfPretriggerBuff;
 	}
 	else
 	{
-		// Increment count (if not maxed already) since we haven't crossed a zero boundary
-		if (s_variableTriggerFreqCalcBuffer.r.freq_count < 0xFFFF) { s_variableTriggerFreqCalcBuffer.r.freq_count++; }
+		// Check if the peak is high enough to change to the lower noise band filter otherwise check the noise band starting filter to prevent midpoint bias from bloating the frequency count
+		if (((s_variableTriggerFreqCalcBuffer.r[0].peak > AD_PEAK_CHANGE_NOISE_THRESHOLD) && (s_R_channelReading > AD_NORMALIZED_NOISE_THRESHOLD)) || (s_R_channelReading > AD_NORMALIZED_NOISE_THRESHOLD_START))
+		{
+			// Increment count
+			s_variableTriggerFreqCalcBuffer.r[0].freq_count++;
+		}
 
 		// Check if a new peak was found, and the store it
-		if (s_R_channelReading > s_variableTriggerFreqCalcBuffer.r.peak)
+		if (s_R_channelReading > s_variableTriggerFreqCalcBuffer.r[0].peak)
 		{
-			s_variableTriggerFreqCalcBuffer.r.peak = s_R_channelReading;
-			s_variableTriggerFreqCalcBuffer.r.peakSamplePtr = g_tailOfPretriggerBuff;
+			s_variableTriggerFreqCalcBuffer.r[0].peak = s_R_channelReading;
+			s_variableTriggerFreqCalcBuffer.r[0].peakSamplePtr = g_tailOfPretriggerBuff;
 		}
 	}
 
@@ -892,31 +923,37 @@ static inline void processVariableTriggerData_ISR_Inline(void)
 	// V channel
 	// ---------
 	// Check if the stored sign comparison signals a zero crossing
-	if (s_variableTriggerFreqCalcBuffer.v.sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & g_bitAccuracyMidpoint))
+	if (s_variableTriggerFreqCalcBuffer.v_sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & ACCURACY_16_BIT_MIDPOINT))
 	{
-		// Check if the half wave count is less than sample rate divided by 2 (meaning freq greater than 1 Hz)
-		if (s_variableTriggerFreqCalcBuffer.v.freq_count < (g_triggerRecord.trec.sample_rate / 2)) { checkVariableTriggerAndFreq(&s_variableTriggerFreqCalcBuffer.v); }
+		// Double the half wave count to get a full wave number of samples and check if a trigger is found
+		s_variableTriggerFreqCalcBuffer.v[0].freq_count *= 2;
+		checkVariableTriggerAndFreq(&s_variableTriggerFreqCalcBuffer.v[0]);
+		if (g_externalTrigger == VARIABLE_TRIGGER_EVENT) { return; }
 
 		// Store new sign for future zero crossing comparisons
-		s_variableTriggerFreqCalcBuffer.v.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & g_bitAccuracyMidpoint);
+		s_variableTriggerFreqCalcBuffer.v_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & ACCURACY_16_BIT_MIDPOINT);
 
-		// Reset count to 1 since we have a sample that's crossed zero boundary
-		s_variableTriggerFreqCalcBuffer.v.freq_count = 1;
+		// Reset count since we crossed the zero boundary
+		s_variableTriggerFreqCalcBuffer.v[0].freq_count = 1;
 
 		// Reset peak and peak pointer to the current sample
-		s_variableTriggerFreqCalcBuffer.v.peak = s_V_channelReading;
-		s_variableTriggerFreqCalcBuffer.v.peakSamplePtr = g_tailOfPretriggerBuff;
+		s_variableTriggerFreqCalcBuffer.v[0].peak = s_V_channelReading;
+		s_variableTriggerFreqCalcBuffer.v[0].peakSamplePtr = g_tailOfPretriggerBuff;
 	}
 	else
 	{
-		// Increment count (if not maxed already) since we haven't crossed a zero boundary
-		if (s_variableTriggerFreqCalcBuffer.v.freq_count < 0xFFFF) { s_variableTriggerFreqCalcBuffer.v.freq_count++; }
+		// Check if the peak is high enough to change to the lower noise band filter otherwise check the noise band starting filter to prevent midpoint bias from bloating the frequency count
+		if (((s_variableTriggerFreqCalcBuffer.v[0].peak > AD_PEAK_CHANGE_NOISE_THRESHOLD) && (s_V_channelReading > AD_NORMALIZED_NOISE_THRESHOLD)) || (s_V_channelReading > AD_NORMALIZED_NOISE_THRESHOLD_START))
+		{
+			// Increment count
+			s_variableTriggerFreqCalcBuffer.v[0].freq_count++;
+		}
 
 		// Check if a new peak was found, and the store it
-		if (s_V_channelReading > s_variableTriggerFreqCalcBuffer.v.peak)
+		if (s_V_channelReading > s_variableTriggerFreqCalcBuffer.v[0].peak)
 		{
-			s_variableTriggerFreqCalcBuffer.v.peak = s_V_channelReading;
-			s_variableTriggerFreqCalcBuffer.v.peakSamplePtr = g_tailOfPretriggerBuff;
+			s_variableTriggerFreqCalcBuffer.v[0].peak = s_V_channelReading;
+			s_variableTriggerFreqCalcBuffer.v[0].peakSamplePtr = g_tailOfPretriggerBuff;
 		}
 	}
 
@@ -924,34 +961,233 @@ static inline void processVariableTriggerData_ISR_Inline(void)
 	// T channel
 	// ---------
 	// Check if the stored sign comparison signals a zero crossing
-	if (s_variableTriggerFreqCalcBuffer.t.sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & g_bitAccuracyMidpoint))
+	if (s_variableTriggerFreqCalcBuffer.t_sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & ACCURACY_16_BIT_MIDPOINT))
 	{
-		// Check if the half wave count is less than sample rate divided by 2 (meaning freq greater than 1 Hz)
-		if (s_variableTriggerFreqCalcBuffer.t.freq_count < (g_triggerRecord.trec.sample_rate / 2)) { checkVariableTriggerAndFreq(&s_variableTriggerFreqCalcBuffer.t); }
+		// Double the half wave count to get a full wave number of samples and check if a trigger is found
+		s_variableTriggerFreqCalcBuffer.t[0].freq_count *= 2;
+		checkVariableTriggerAndFreq(&s_variableTriggerFreqCalcBuffer.t[0]);
+		if (g_externalTrigger == VARIABLE_TRIGGER_EVENT) { return; }
 
 		// Store new sign for future zero crossing comparisons
-		s_variableTriggerFreqCalcBuffer.t.sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & g_bitAccuracyMidpoint);
+		s_variableTriggerFreqCalcBuffer.t_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & ACCURACY_16_BIT_MIDPOINT);
 
-		// Reset count to 1 since we have a sample that's crossed zero boundary
-		s_variableTriggerFreqCalcBuffer.t.freq_count = 1;
+		// Reset count since we crossed the zero boundary
+		s_variableTriggerFreqCalcBuffer.t[0].freq_count = 1;
 
 		// Reset peak and peak pointer to the current sample
-		s_variableTriggerFreqCalcBuffer.t.peak = s_T_channelReading;
-		s_variableTriggerFreqCalcBuffer.t.peakSamplePtr = g_tailOfPretriggerBuff;
+		s_variableTriggerFreqCalcBuffer.t[0].peak = s_T_channelReading;
+		s_variableTriggerFreqCalcBuffer.t[0].peakSamplePtr = g_tailOfPretriggerBuff;
 	}
 	else
 	{
-		// Increment count (if not maxed already) since we haven't crossed a zero boundary
-		if (s_variableTriggerFreqCalcBuffer.t.freq_count < 0xFFFF) { s_variableTriggerFreqCalcBuffer.t.freq_count++; }
+		// Check if the peak is high enough to change to the lower noise band filter otherwise check the noise band starting filter to prevent midpoint bias from bloating the frequency count
+		if (((s_variableTriggerFreqCalcBuffer.t[0].peak > AD_PEAK_CHANGE_NOISE_THRESHOLD) && (s_T_channelReading > AD_NORMALIZED_NOISE_THRESHOLD)) || (s_T_channelReading > AD_NORMALIZED_NOISE_THRESHOLD_START))
+		{
+			// Increment count
+			s_variableTriggerFreqCalcBuffer.t[0].freq_count++;
+		}
 
 		// Check if a new peak was found, and the store it
-		if (s_T_channelReading > s_variableTriggerFreqCalcBuffer.t.peak)
+		if (s_T_channelReading > s_variableTriggerFreqCalcBuffer.t[0].peak)
 		{
-			s_variableTriggerFreqCalcBuffer.t.peak = s_T_channelReading;
-			s_variableTriggerFreqCalcBuffer.t.peakSamplePtr = g_tailOfPretriggerBuff;
+			s_variableTriggerFreqCalcBuffer.t[0].peak = s_T_channelReading;
+			s_variableTriggerFreqCalcBuffer.t[0].peakSamplePtr = g_tailOfPretriggerBuff;
 		}
 	}
 }
+
+#if 0 // Working but temp disabled Full wave count algorithm
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+static inline void processVariableTriggerDataFullWave_ISR_Inline(void)
+{
+	// ------------
+	// All Channels
+	// ------------
+	// Check if the freq count signals initial sample
+	if (s_variableTriggerFreqCalcBuffer.r_sign == 0xFFFF)
+	{
+		s_variableTriggerFreqCalcBuffer.r_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & ACCURACY_16_BIT_MIDPOINT);
+		s_variableTriggerFreqCalcBuffer.v_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & ACCURACY_16_BIT_MIDPOINT);
+		s_variableTriggerFreqCalcBuffer.t_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & ACCURACY_16_BIT_MIDPOINT);
+	}
+
+	// ------------------------
+	// R channel crossover
+	// ------------------------
+	// Check if the stored sign comparison signals a zero crossing
+	if (s_variableTriggerFreqCalcBuffer.r_sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & ACCURACY_16_BIT_MIDPOINT))
+	{
+		// Store new sign for future zero crossing comparisons
+		s_variableTriggerFreqCalcBuffer.r_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->r & ACCURACY_16_BIT_MIDPOINT);
+
+		if (s_variableTriggerFreqCalcBuffer.r_sign) { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.r[1]; }
+		else { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.r[0]; }
+
+		// Check the positive peak and frequency against the vibration curve
+		checkVariableTriggerAndFreq(s_workingVTChanData);
+
+		// Reset count since we crossed the zero boundary
+		s_workingVTChanData->freq_count = 0;
+
+		// Reset peak and peak pointer to the current sample
+		s_workingVTChanData->peak = s_R_channelReading;
+		s_workingVTChanData->peakSamplePtr = g_tailOfPretriggerBuff;
+
+		// Check if a Variable Trigger event has been found and return if so
+		if (g_externalTrigger == VARIABLE_TRIGGER_EVENT) { return; }
+	}
+	// ------------------
+	// R channel peak
+	// ------------------
+	else
+	{
+		if (s_variableTriggerFreqCalcBuffer.r_sign) { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.r[1]; }
+		else { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.r[0]; }
+
+		// Check if a new peak was found, and the store it
+		if (s_R_channelReading > s_workingVTChanData->peak)
+		{
+			s_workingVTChanData->peak = s_R_channelReading;
+			s_workingVTChanData->peakSamplePtr = g_tailOfPretriggerBuff;
+		}
+	}
+
+	// -----------------
+	// R channel freq
+	// -----------------
+	// Check if the peak is high enough to change to the lower noise band filter otherwise check the noise band starting filter to prevent midpoint bias from bloating the frequency count
+	if ((s_R_channelReading > AD_NORMALIZED_NOISE_THRESHOLD_START) || (s_variableTriggerFreqCalcBuffer.r[1].peak > AD_PEAK_CHANGE_NOISE_THRESHOLD))
+	{
+		// Increment count
+		s_variableTriggerFreqCalcBuffer.r[1].freq_count++;
+	}
+
+	// Check if the peak is high enough to change to the lower noise band filter otherwise check the noise band starting filter to prevent midpoint bias from bloating the frequency count
+	if ((s_R_channelReading > AD_NORMALIZED_NOISE_THRESHOLD_START) || (s_variableTriggerFreqCalcBuffer.r[0].peak > AD_PEAK_CHANGE_NOISE_THRESHOLD))
+	{
+		// Increment count
+		s_variableTriggerFreqCalcBuffer.r[0].freq_count++;
+	}
+
+	// ------------------------
+	// V channel crossover
+	// ------------------------
+	// Check if the stored sign comparison signals a zero crossing
+	if (s_variableTriggerFreqCalcBuffer.v_sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & ACCURACY_16_BIT_MIDPOINT))
+	{
+		// Store new sign for future zero crossing comparisons
+		s_variableTriggerFreqCalcBuffer.v_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->v & ACCURACY_16_BIT_MIDPOINT);
+
+		if (s_variableTriggerFreqCalcBuffer.v_sign) { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.v[1]; }
+		else { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.v[0]; }
+
+		// Check the positive peak and frequency against the vibration curve
+		checkVariableTriggerAndFreq(s_workingVTChanData);
+
+		// Reset count since we crossed the zero boundary
+		s_workingVTChanData->freq_count = 0;
+
+		// Reset peak and peak pointer to the current sample
+		s_workingVTChanData->peak = s_V_channelReading;
+		s_workingVTChanData->peakSamplePtr = g_tailOfPretriggerBuff;
+
+		// Check if a Variable Trigger event has been found and return if so
+		if (g_externalTrigger == VARIABLE_TRIGGER_EVENT) { return; }
+	}
+	// ------------------
+	// V channel peak
+	// ------------------
+	else
+	{
+		if (s_variableTriggerFreqCalcBuffer.v_sign) { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.v[1]; }
+		else { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.v[0]; }
+
+		// Check if a new peak was found, and the store it
+		if (s_V_channelReading > s_workingVTChanData->peak)
+		{
+			s_workingVTChanData->peak = s_V_channelReading;
+			s_workingVTChanData->peakSamplePtr = g_tailOfPretriggerBuff;
+		}
+	}
+
+	// -----------------
+	// V channel freq
+	// -----------------
+	// Check if the peak is high enough to change to the lower noise band filter otherwise check the noise band starting filter to prevent midpoint bias from bloating the frequency count
+	if ((s_V_channelReading > AD_NORMALIZED_NOISE_THRESHOLD_START) || (s_variableTriggerFreqCalcBuffer.v[1].peak > AD_PEAK_CHANGE_NOISE_THRESHOLD))
+	{
+		// Increment count
+		s_variableTriggerFreqCalcBuffer.v[1].freq_count++;
+	}
+
+	// Check if the peak is high enough to change to the lower noise band filter otherwise check the noise band starting filter to prevent midpoint bias from bloating the frequency count
+	if ((s_V_channelReading > AD_NORMALIZED_NOISE_THRESHOLD_START) || (s_variableTriggerFreqCalcBuffer.v[0].peak > AD_PEAK_CHANGE_NOISE_THRESHOLD))
+	{
+		// Increment count
+		s_variableTriggerFreqCalcBuffer.v[0].freq_count++;
+	}
+
+	// ------------------------
+	// T channel crossover
+	// ------------------------
+	// Check if the stored sign comparison signals a zero crossing
+	if (s_variableTriggerFreqCalcBuffer.t_sign ^ (((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & ACCURACY_16_BIT_MIDPOINT))
+	{
+		// Store new sign for future zero crossing comparisons
+		s_variableTriggerFreqCalcBuffer.t_sign = (uint16)(((SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff)->t & ACCURACY_16_BIT_MIDPOINT);
+
+		if (s_variableTriggerFreqCalcBuffer.t_sign) { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.t[1]; }
+		else { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.t[0]; }
+
+		// Check the positive peak and frequency against the vibration curve
+		checkVariableTriggerAndFreq(s_workingVTChanData);
+
+		// Reset count since we crossed the zero boundary
+		s_workingVTChanData->freq_count = 0;
+
+		// Reset peak and peak pointer to the current sample
+		s_workingVTChanData->peak = s_T_channelReading;
+		s_workingVTChanData->peakSamplePtr = g_tailOfPretriggerBuff;
+
+		// Check if a Variable Trigger event has been found and return if so
+		if (g_externalTrigger == VARIABLE_TRIGGER_EVENT) { return; }
+	}
+	// ------------------
+	// T channel peak
+	// ------------------
+	else
+	{
+		if (s_variableTriggerFreqCalcBuffer.t_sign) { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.t[1]; }
+		else { s_workingVTChanData = &s_variableTriggerFreqCalcBuffer.t[0]; }
+
+		// Check if a new peak was found, and the store it
+		if (s_T_channelReading > s_workingVTChanData->peak)
+		{
+			s_workingVTChanData->peak = s_T_channelReading;
+			s_workingVTChanData->peakSamplePtr = g_tailOfPretriggerBuff;
+		}
+	}
+
+	// -----------------
+	// T channel freq
+	// -----------------
+	// Check if the peak is high enough to change to the lower noise band filter otherwise check the noise band starting filter to prevent midpoint bias from bloating the frequency count
+	if ((s_T_channelReading > AD_NORMALIZED_NOISE_THRESHOLD_START) || (s_variableTriggerFreqCalcBuffer.t[1].peak > AD_PEAK_CHANGE_NOISE_THRESHOLD))
+	{
+		// Increment count
+		s_variableTriggerFreqCalcBuffer.t[1].freq_count++;
+	}
+
+	// Check if the peak is high enough to change to the lower noise band filter otherwise check the noise band starting filter to prevent midpoint bias from bloating the frequency count
+	if ((s_T_channelReading > AD_NORMALIZED_NOISE_THRESHOLD_START) || (s_variableTriggerFreqCalcBuffer.t[0].peak > AD_PEAK_CHANGE_NOISE_THRESHOLD))
+	{
+		// Increment count
+		s_variableTriggerFreqCalcBuffer.t[0].freq_count++;
+	}
+}
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
@@ -1027,9 +1263,9 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		}				
 
 #if (!VT_FEATURE_DISABLED) // New VT feature
-		if (g_triggerRecord.trec.variableTriggerEnable == YES) // Variable trigger
+		if (g_triggerRecord.trec.variableTriggerEnable == YES)
 		{
-			processVariableTriggerData_ISR_Inline();
+			processVariableTriggerDataHalfWave_ISR_Inline();
 		}
 #endif
 		//___________________________________________________________________________________________
@@ -1069,6 +1305,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 
 				// Reset working freq calc buffer so that old results are not processed post event
 				memset(&s_variableTriggerFreqCalcBuffer, 0, sizeof(s_variableTriggerFreqCalcBuffer));
+				s_variableTriggerFreqCalcBuffer.r_sign = 0xFFFF;
 			}
 #endif
 
@@ -1223,14 +1460,6 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		{
 			g_doneTakingEvents = YES;
 		}
-#if 0 // Disabled to move further up in this functions execution
-#if (!VT_FEATURE_DISABLED) // New VT feature
-		else if (g_triggerRecord.trec.variableTriggerEnable == YES) // Variable trigger
-		{
-			processVariableTriggerData_ISR_Inline();
-		}
-#endif
-#endif
 	}
 	//___________________________________________________________________________________________
 	//___Check if handling event samples
@@ -2095,6 +2324,12 @@ void DataIsrInit(uint16 sampleRate)
 
 #if (!VT_FEATURE_DISABLED)
 	memset(&s_variableTriggerFreqCalcBuffer, 0, sizeof(s_variableTriggerFreqCalcBuffer));
+
+	// Seed the R sign to signal initialization
+	s_variableTriggerFreqCalcBuffer.r_sign = 0xFFFF;
+
+	// Set the divider for length conversion (Always as 16-bit)
+	s_vtDiv = (float)(ACCURACY_16_BIT_MIDPOINT * g_sensorInfo.sensorAccuracy * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
 #endif
 }
 
