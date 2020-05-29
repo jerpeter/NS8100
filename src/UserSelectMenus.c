@@ -1873,7 +1873,7 @@ void CustomCurveMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		SETUP_USER_MENU_MSG(&vibrationStandardMenu, CUSTOM_CURVE);
+		SETUP_USER_MENU_MSG(&vibrationStandardMenu, START_OF_CUSTOM_CURVES_LIST);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -3446,7 +3446,7 @@ void SeismicTriggerTypeMenuHandler(uint8 keyPressed, void* data)
 				g_triggerRecord.trec.sample_rate = SAMPLE_RATE_8K;
 			}
 #endif
-			SETUP_USER_MENU_MSG(&vibrationStandardMenu, ((g_triggerRecord.trec.variableTriggerVibrationStandard < CUSTOM_CURVE) ? g_triggerRecord.trec.variableTriggerVibrationStandard : CUSTOM_CURVE));
+			SETUP_USER_MENU_MSG(&vibrationStandardMenu, ((g_triggerRecord.trec.variableTriggerVibrationStandard < START_OF_CUSTOM_CURVES_LIST) ? g_triggerRecord.trec.variableTriggerVibrationStandard : START_OF_CUSTOM_CURVES_LIST));
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -3903,7 +3903,7 @@ USER_MENU_STRUCT vibrationStandardMenu[VIBRATION_STARDARD_MENU_ENTRIES] = {
 {ITEM_1, 0, USBM_8507_DRYWALL_TEXT,	NO_TAG,	{USBM_RI_8507_DRYWALL_STANDARD}},
 {ITEM_2, 0, USBM_8507_PLASTER_TEXT,	NO_TAG,	{USBM_RI_8507_PLASTER_STANDARD}},
 {ITEM_3, 0, OSM_REGULATIONS_TEXT,	NO_TAG,	{OSM_REGULATIONS_STANDARD}},
-{ITEM_4, 0, CUSTOM_CURVE_TEXT,		NO_TAG,	{CUSTOM_CURVE}},
+{ITEM_4, 0, CUSTOM_CURVE_TEXT,		NO_TAG,	{START_OF_CUSTOM_CURVES_LIST}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&VibrationStandardMenuHandler}}
 };
 
@@ -3918,7 +3918,7 @@ void VibrationStandardMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		if (newItemIndex != CUSTOM_CURVE)
+		if (newItemIndex != START_OF_CUSTOM_CURVES_LIST)
 		{
 			g_triggerRecord.trec.variableTriggerVibrationStandard = (uint8)vibrationStandardMenu[newItemIndex].data;
 			g_triggerRecord.trec.variableTriggerEnable = YES;
@@ -3944,7 +3944,7 @@ void VibrationStandardMenuHandler(uint8 keyPressed, void* data)
 													((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
 			}
 		}
-		else // (newItemIndex == CUSTOM_CURVE)
+		else // (newItemIndex == START_OF_CUSTOM_CURVES_LIST)
 		{
 			SETUP_USER_MENU_MSG(&customCurveMenu, g_triggerRecord.trec.variableTriggerVibrationStandard);
 		}

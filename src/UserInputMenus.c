@@ -167,7 +167,7 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 #else // New Variable Trigger feature
 		if (g_triggerRecord.trec.variableTriggerEnable == YES)
 		{
-			if (g_triggerRecord.trec.variableTriggerVibrationStandard < CUSTOM_CURVE)
+			if (g_triggerRecord.trec.variableTriggerVibrationStandard < START_OF_CUSTOM_CURVES_LIST)
 			{
 				// Standard Vibration
 				SETUP_USER_MENU_MSG(&vibrationStandardMenu, g_triggerRecord.trec.variableTriggerVibrationStandard);
