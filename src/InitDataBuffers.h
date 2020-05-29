@@ -63,16 +63,15 @@
 
 typedef enum
 {
-	SUCCESS			= 0x0000,
-	EVT_BUF_FULL 	= 0x0001,
-	SUMM_TBL_FULL 	= 0x0002
-} FULL_FLAGS;
-
-typedef enum
-{
+#if 0 // Original (Meant for 12-bit accuracy)
 	FREQ_VALID_PEAK 			= 4,
 	FREQ_CROSSOVER_BACKWARD 	= 2,
 	FREQ_CROSSOVER_FORWARD 		= 1
+#else // New (Adjusted for 16-bit at a 1/4 the equivalent of the 12-bit)
+	FREQ_VALID_PEAK_16_BIT			= 16,
+	FREQ_CROSSOVER_BACKWARD_16_BIT 	= 8,
+	FREQ_CROSSOVER_FORWARD_16_BIT	= 4
+#endif
 } CROSSOVER_LEVELS;
 
 typedef enum
