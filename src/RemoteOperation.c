@@ -505,15 +505,24 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			g_triggerRecord.trec.variableTriggerEnable = NO;
 			g_triggerRecord.trec.seismicTriggerLevel = cfg.eventCfg.seismicTriggerLevel;
 		}
-		else if ((cfg.eventCfg.seismicTriggerLevel > VARIABLE_TRIGGER_CHAR_BASE) && (cfg.eventCfg.seismicTriggerLevel < (VARIABLE_TRIGGER_CHAR_BASE + END_OF_VIBRATION_STANDARDS_LIST)))
+		else if (((cfg.eventCfg.seismicTriggerLevel > VARIABLE_TRIGGER_CHAR_BASE) && (cfg.eventCfg.seismicTriggerLevel < (VARIABLE_TRIGGER_CHAR_BASE + END_OF_VIBRATION_STANDARDS_LIST))) ||
+				((cfg.eventCfg.seismicTriggerLevel > (VARIABLE_TRIGGER_CHAR_BASE + START_OF_CUSTOM_CURVES_LIST)) && (cfg.eventCfg.seismicTriggerLevel < (VARIABLE_TRIGGER_CHAR_BASE + END_OF_VIBRATION_CURVES_LIST))))
 		{
 			g_triggerRecord.trec.variableTriggerEnable = YES;
 			g_triggerRecord.trec.variableTriggerVibrationStandard = (cfg.eventCfg.seismicTriggerLevel - VARIABLE_TRIGGER_CHAR_BASE);
 
 			div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
 
-			// Set the fixed trigger level to 2 IPS since anything above this level is an automatic trigger for all vibration standards
-			g_triggerRecord.trec.seismicTriggerLevel = (uint32)(2.00 * div);
+			if (g_triggerRecord.trec.variableTriggerVibrationStandard == CUSTOM_STEP_THRESHOLD)
+			{
+				// Set the fixed trigger level to 1 IPS since anything above this level is an automatic trigger
+				g_triggerRecord.trec.seismicTriggerLevel = (uint32)(1.00 * div);
+			}
+			else // All other standards and custom curves
+			{
+				// Set the fixed trigger level to 2 IPS since anything above this level is an automatic trigger for all vibration standards
+				g_triggerRecord.trec.seismicTriggerLevel = (uint32)(2.00 * div);
+			}
 
 			// Up convert to 16-bit since user selected level is based on selected bit accuracy
 			g_triggerRecord.trec.seismicTriggerLevel *= (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
