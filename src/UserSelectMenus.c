@@ -1862,13 +1862,13 @@ void CustomCurveMenuHandler(uint8 keyPressed, void* data)
 
 		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE,
-			AIR_TRIGGER_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE,
+												((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
 		}
 		else
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE,
-			AIR_TRIGGER_MB_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE,
+												((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
 		}
 	}
 	else if (keyPressed == ESC_KEY)
@@ -3918,7 +3918,7 @@ void VibrationStandardMenuHandler(uint8 keyPressed, void* data)
 
 	if (keyPressed == ENTER_KEY)
 	{
-		if (newItemIndex != START_OF_CUSTOM_CURVES_LIST)
+		if (vibrationStandardMenu[newItemIndex].data != START_OF_CUSTOM_CURVES_LIST)
 		{
 			g_triggerRecord.trec.variableTriggerVibrationStandard = (uint8)vibrationStandardMenu[newItemIndex].data;
 			g_triggerRecord.trec.variableTriggerEnable = YES;
@@ -3935,8 +3935,8 @@ void VibrationStandardMenuHandler(uint8 keyPressed, void* data)
 
 			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE,
-				AIR_TRIGGER_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE,
+													((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
 			}
 			else
 			{
