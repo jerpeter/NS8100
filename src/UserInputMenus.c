@@ -46,6 +46,7 @@ extern USER_MENU_STRUCT barResultMenu[];
 extern USER_MENU_STRUCT barIntervalDataTypeMenu[];
 extern USER_MENU_STRUCT bitAccuracyMenu[];
 extern USER_MENU_STRUCT configMenu[];
+extern USER_MENU_STRUCT customCurveMenu[];
 extern USER_MENU_STRUCT distanceToSourceMenu[];
 extern USER_MENU_STRUCT externalTriggerMenu[];
 extern USER_MENU_STRUCT hardwareIDMenu[];
@@ -166,7 +167,15 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 #else // New Variable Trigger feature
 		if (g_triggerRecord.trec.variableTriggerEnable == YES)
 		{
-			SETUP_USER_MENU_MSG(&vibrationStandardMenu, g_triggerRecord.trec.variableTriggerVibrationStandard);
+			if (g_triggerRecord.trec.variableTriggerVibrationStandard < CUSTOM_CURVE)
+			{
+				// Standard Vibration
+				SETUP_USER_MENU_MSG(&vibrationStandardMenu, g_triggerRecord.trec.variableTriggerVibrationStandard);
+			}
+			else // Custom curve
+			{
+				SETUP_USER_MENU_MSG(&customCurveMenu, g_triggerRecord.trec.variableTriggerVibrationStandard);
+			}
 		}
 		else // (g_triggerRecord.trec.variableTriggerEnable == NO)
 		{
