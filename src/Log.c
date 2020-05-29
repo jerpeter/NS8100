@@ -450,6 +450,8 @@ void AppendMonitorLogEntryFile(void)
 					case USBM_RI_8507_DRYWALL_STANDARD: strcpy((char*)seisString, "VT (USBM Drywall)"); break;
 					case USBM_RI_8507_PLASTER_STANDARD: strcpy((char*)seisString, "VT (USBM Plaster)"); break;
 					case OSM_REGULATIONS_STANDARD: strcpy((char*)seisString, "VT (OSM Regulations)"); break;
+					case CUSTOM_STEP_THRESHOLD: strcpy((char*)seisString, "VT (Custom Step Threshold)"); break;
+					case CUSTOM_STEP_LIMITING: strcpy((char*)seisString, "VT (Custom Step Limiting)"); break;
 					default: strcpy((char*)seisString, "VT (No VS/error)"); break;
 				}
 			}
