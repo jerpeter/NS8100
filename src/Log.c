@@ -573,9 +573,14 @@ void InitMonitorLogTableFromLogFile(void)
 					__monitorLogTbl[__monitorLogTblIndex] = monitorLogEntry;
 			
 					AdvanceMonitorLogIndex();
-
-					bytesRead = ReadWithSizeFix(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 				}
+				else
+				{
+					// Consider what to do if there is a corrupt entry
+				}
+
+				// Always read the next entry
+				bytesRead = ReadWithSizeFix(monitorLogFile, (uint8*)&monitorLogEntry, sizeof(MONITOR_LOG_ENTRY_STRUCT));
 			}
 
 			// Done reading, close the monitor log file
