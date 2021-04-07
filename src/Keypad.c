@@ -246,6 +246,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 			}
 			else if ((g_factorySetupSequence == STAGE_2) && (keyPressed == KEY_DOWNARROW))
 			{
+#if 0 // Original
 				// Check if actively in Monitor mode
 				if (g_sampleProcessing == ACTIVE_STATE)
 				{
@@ -257,6 +258,27 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					// Allow access to factory setup
 					g_factorySetupSequence = ENTER_FACTORY_SETUP;
 				}
+#else // New
+				// Check if actively in Monitor mode
+				if (g_sampleProcessing == ACTIVE_STATE)
+				{
+					// Don't allow access to the factory setup
+					g_factorySetupSequence = SEQ_NOT_STARTED;
+				}
+				else // Not in Monitor mode
+				{
+					if (MessageBox(getLangText(STATUS_TEXT), "FACTORY SETUP LOCKED", MB_OK) == MB_SPECIAL_ACTION)
+					{
+						// Allow access to factory setup
+						g_factorySetupSequence = ENTER_FACTORY_SETUP;
+					}
+					else
+					{
+						// Don't allow access to the factory setup
+						g_factorySetupSequence = SEQ_NOT_STARTED;
+					}
+				}
+#endif
 			}
 			else
 			{
