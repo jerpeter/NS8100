@@ -190,6 +190,18 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	memcpy((uint8*)cfg.eventCfg.sessionLocation, g_triggerRecord.trec.loc, SESSION_LOCATION_STRING_SIZE - 2);
 	memcpy((uint8*)cfg.eventCfg.sessionComments, g_triggerRecord.trec.comments, SESSION_COMMENTS_STRING_SIZE - 2);
 	
+	memset(&(cfg.eventCfg.seismicSensorSerialNumber[0]), 0, SENSOR_SERIAL_NUMBER_SIZE);
+	memcpy(&(cfg.eventCfg.seismicSensorSerialNumber[0]), &(g_seismicSmartSensorMemory.serialNumber[0]), SENSOR_SERIAL_NUMBER_SIZE);
+	cfg.eventCfg.seismicSensorCurrentCalDate = g_seismicSmartSensorMemory.currentCal.calDate;
+	cfg.eventCfg.seismicSensorFacility = g_seismicSmartSensorMemory.currentCal.calFacility;
+	cfg.eventCfg.seismicSensorInstrument = g_seismicSmartSensorMemory.currentCal.calInstrument;
+
+	memset(&(cfg.eventCfg.acousticSensorSerialNumber[0]), 0, SENSOR_SERIAL_NUMBER_SIZE);
+	memcpy(&(cfg.eventCfg.acousticSensorSerialNumber[0]), &(g_acousticSmartSensorMemory.serialNumber[0]), SENSOR_SERIAL_NUMBER_SIZE);
+	cfg.eventCfg.acousticSensorCurrentCalDate = g_acousticSmartSensorMemory.currentCal.calDate;
+	cfg.eventCfg.acousticSensorFacility = g_acousticSmartSensorMemory.currentCal.calFacility;
+	cfg.eventCfg.acousticSensorInstrument = g_acousticSmartSensorMemory.currentCal.calInstrument;
+
 	cfg.autoCfg.autoMonitorMode = g_unitConfig.autoMonitorMode;
 	cfg.autoCfg.autoCalMode = g_unitConfig.autoCalMode;
 	cfg.autoCfg.externalTrigger = g_unitConfig.externalTrigger;
@@ -253,13 +265,15 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.flashWrapping = NO;
 #endif
 
+	cfg.batteryLevel = (uint16)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
+
 	// Spare fields, just use as a data marker
 	cfg.unused[0] = 0x0A;
 	cfg.unused[1] = 0x0B;
 	cfg.unused[2] = 0x0C;
 	cfg.unused[3] = 0x0D;
-	cfg.unused[4] = 0x0E;
-	cfg.unused[5] = 0x0F;
+	//cfg.unused[4] = 0x0E;
+	//cfg.unused[5] = 0x0F;
 
 	sprintf((char*)msgTypeStr, "%02d", MSGTYPE_RESPONSE);
 	BuildOutgoingSimpleHeaderBuffer((uint8*)dcmHdr, (uint8*)"DCMx", (uint8*)msgTypeStr,
