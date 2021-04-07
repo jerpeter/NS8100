@@ -1394,7 +1394,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 
 #else
 				// Check if using the standard trigger
-				if (g_triggerRecord.trec.variableTriggerEnable == NO)
+				if (g_triggerRecord.trec.variableTriggerEnable != YES)
 				{
 					//___________________________________________________________________________________________
 					//___Copy current Pretrigger buffer sample to event
@@ -1482,7 +1482,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			}
 #else
 			// Check if using the standard trigger
-			if (g_triggerRecord.trec.variableTriggerEnable == NO)
+			if (g_triggerRecord.trec.variableTriggerEnable != YES)
 			{
 				// Check if the end of the Pretrigger buffer has been reached
 				if ((g_tailOfPretriggerBuff + NUMBER_OF_CHANNELS_DEFAULT) >= g_endOfPretriggerBuff)
@@ -1517,7 +1517,7 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 		*(SAMPLE_DATA_STRUCT*)s_samplePtr = *(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff;
 #else
 		// Check if using the standard trigger
-		if (g_triggerRecord.trec.variableTriggerEnable == NO)
+		if (g_triggerRecord.trec.variableTriggerEnable != YES)
 		{
 			//___________________________________________________________________________________________
 			//___Copy data samples to event buffer

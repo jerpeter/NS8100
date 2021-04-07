@@ -71,7 +71,7 @@ void InitDataBuffs(uint8 opMode)
 	g_endOfPretriggerBuff = &(g_pretriggerBuff[pretriggerBufferSize]);
 #else // New VT feature
 	// Check if using standard trigger (not variable)
-	if (g_triggerRecord.trec.variableTriggerEnable == NO)
+	if (g_triggerRecord.trec.variableTriggerEnable != YES)
 	{
 		// Cap the Pretrigger buffer right at the desired size
 		g_endOfPretriggerBuff = &(g_pretriggerBuff[pretriggerBufferSize]);

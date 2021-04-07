@@ -177,7 +177,7 @@ void AirTriggerMenuHandler(uint8 keyPressed, void* data)
 				SETUP_USER_MENU_MSG(&customCurveMenu, g_triggerRecord.trec.variableTriggerVibrationStandard);
 			}
 		}
-		else // (g_triggerRecord.trec.variableTriggerEnable == NO)
+		else // (g_triggerRecord.trec.variableTriggerEnable != YES)
 		{
 			if (g_factorySetupRecord.seismicSensorType > SENSOR_ACC_RANGE_DIVIDER)
 			{
