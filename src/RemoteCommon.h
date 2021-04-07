@@ -531,7 +531,8 @@ typedef struct
 	TIMER_CFG			timerCfg;
 	uint8				flashWrapping;
 	uint8				appBuildVersion;
-	uint8				unused[6];
+	uint16				batteryLevel;
+	uint8				unused[4];
 } SYSTEM_CFG;
 #pragma pack()
 
