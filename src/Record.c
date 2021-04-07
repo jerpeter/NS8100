@@ -539,6 +539,9 @@ void LoadModemSetupRecordDefaults()
 	//g_modemSetupRecord.init
 	//g_modemSetupRecord.dial
 	//g_modemSetupRecord.reset
+
+	// New request to set the init string to point to Nomis servers
+	strcpy(g_modemSetupRecord.dial, "ATDTONLINE.NOMIS.COM/8005");
 }
 
 ///----------------------------------------------------------------------------
@@ -559,7 +562,15 @@ void ValidateModemSetupParameters(void)
 		g_modemSetupRecord.retryTime = MODEM_RETRY_TIME_DEFAULT_VALUE;
 		updated = YES;
 	}
-	
+
+	// Check if the current status is disabled and the dial string is null or empty
+	if ((g_modemSetupRecord.modemStatus == NO) && ((g_modemSetupRecord.dial[0] = '\0') || (g_modemSetupRecord.dial[0] = ' ')))
+	{
+		// New request to set the init string to point to Nomis servers
+		strcpy(g_modemSetupRecord.dial, "ATDTONLINE.NOMIS.COM/8005");
+		updated = YES;
+	}
+
 	if (updated)
 	{
 		// Save the Modem Setup Record
