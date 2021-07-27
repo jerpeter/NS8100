@@ -88,6 +88,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	uint8 msgTypeStr[HDR_TYPE_LEN+2];
 	int majorVer, minorVer;
 	char buildVer;
+	uint8* channelOverridePtr;
 
 	UNUSED(inCmd);
 
@@ -266,6 +267,16 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 #endif
 
 	cfg.batteryLevel = (uint16)(100.0 * GetExternalVoltageLevelAveraged(BATTERY_VOLTAGE));
+
+	// Add in Factory Setup Calibration Date, GPS location and UTC time overriding the A/D channel info section which is unused for DCM
+	channelOverridePtr = (uint8*)&cfg.eventCfg.channel[0];
+	memcpy(channelOverridePtr, &g_factorySetupRecord.calDate, sizeof(g_factorySetupRecord.calDate));
+	channelOverridePtr += sizeof(g_factorySetupRecord.calDate);
+
+	if (GET_HARDWARE_ID == HARDWARE_ID_REV_8_WITH_GPS_MOD)
+	{
+		memcpy(channelOverridePtr, &g_gpsPosition, sizeof(g_gpsPosition));
+	}
 
 	// Spare fields, just use as a data marker
 	cfg.unused[0] = 0x0A;
@@ -1437,10 +1448,25 @@ void HandleUMM(CMD_BUFFER_STRUCT* inCmd)
 		{
 			returnCode = CFG_ERR_MODEM_CONFIG;
 		}
+#if 0 // Original
 		else if (strlen(modemCfg.init) > 64)
 		{
 			returnCode = CFG_ERR_MODEM_CONFIG;
 		}
+#else // New Auto Dial Out Events/Config/Status
+		else if (strlen(modemCfg.init) > 60)
+		{
+			returnCode = CFG_ERR_MODEM_CONFIG;
+		}
+		else if (modemCfg.dialOutType > AUTODIALOUT_EVENTS_CONFIG_STATUS)
+		{
+			returnCode = CFG_ERR_MODEM_CONFIG;
+		}
+		else if (modemCfg.dialOutCycleTime > MODEM_DIAL_OUT_TIMER_MAX_VALUE)
+		{
+			returnCode = CFG_ERR_MODEM_CONFIG;
+		}
+#endif
 		else if (strlen(modemCfg.dial) > 32)
 		{
 			returnCode = CFG_ERR_MODEM_CONFIG;
@@ -1452,6 +1478,8 @@ void HandleUMM(CMD_BUFFER_STRUCT* inCmd)
 		
 		if (returnCode == CFG_ERR_NONE)
 		{
+			if (modemCfg.dialOutCycleTime == 0) { modemCfg.dialOutCycleTime = MODEM_DIAL_OUT_TIMER_DEFAULT_VALUE; }
+
 			g_modemSetupRecord = modemCfg;
 
 			SaveRecordData(&g_modemSetupRecord, DEFAULT_RECORD, REC_MODEM_SETUP_TYPE);
