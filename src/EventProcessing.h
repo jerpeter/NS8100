@@ -117,6 +117,7 @@ void ReInitSdCardAndFat32(void);
 inline void AdjustSampleForBitAccuracy(void);
 void PowerDownSDCard(void);
 void PowerUpSDCardAndInitFat32(void);
+uint32 SeismicTriggerConvertBitAccuracy(uint32 seismicTriggerToConvert);
 uint16 AirTriggerConvert(uint32 airTriggerToConvert);
 uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert);
 

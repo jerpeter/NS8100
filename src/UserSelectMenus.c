@@ -425,15 +425,12 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Down convert to current bit accuracy setting
-					if (g_unitConfig.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
-					{
-						g_tempTriggerLevelForMenuAdjustment = g_unitConfig.alarmOneSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
-					}		
+					g_tempTriggerLevelForMenuAdjustment = SeismicTriggerConvertBitAccuracy(g_unitConfig.alarmOneSeismicLevel);
 
 					// Call Alarm One Seismic Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
-						(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
+													(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+													(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 				}
 			break;
 
@@ -553,15 +550,12 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Down convert to current bit accuracy setting
-					if (g_unitConfig.alarmOneSeismicLevel != NO_TRIGGER_CHAR)
-					{
-						g_tempTriggerLevelForMenuAdjustment = g_unitConfig.alarmOneSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
-					}		
+					g_tempTriggerLevelForMenuAdjustment = SeismicTriggerConvertBitAccuracy(g_unitConfig.alarmOneSeismicLevel);
 
 					// Call Alarm One Seismic Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
-						(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
+													(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+													(g_alarmOneSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 				}
 			break;
 		}
@@ -666,15 +660,12 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Down convert to current bit accuracy setting
-					if (g_unitConfig.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
-					{
-						g_tempTriggerLevelForMenuAdjustment = g_unitConfig.alarmTwoSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
-					}		
+					g_tempTriggerLevelForMenuAdjustment = SeismicTriggerConvertBitAccuracy(g_unitConfig.alarmTwoSeismicLevel);
 
 					// Call Alarm Two Seismic Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
-						(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
+													(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+													(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 				}
 			break;
 
@@ -795,15 +786,12 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					// Down convert to current bit accuracy setting
-					if (g_unitConfig.alarmTwoSeismicLevel != NO_TRIGGER_CHAR)
-					{
-						g_tempTriggerLevelForMenuAdjustment = g_unitConfig.alarmTwoSeismicLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint);
-					}		
+					g_tempTriggerLevelForMenuAdjustment = SeismicTriggerConvertBitAccuracy(g_unitConfig.alarmTwoSeismicLevel);
 
 					// Call Alarm Two Seismic Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoSeismicLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
-						(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
-						(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
+													(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)),
+													(g_alarmTwoSeismicMinLevel / (ALARM_SEIS_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 				}
 			break;
 		}
@@ -1332,15 +1320,11 @@ void BarResultMenuHandler(uint8 keyPressed, void* data)
 			}
 
 			// Down convert to current bit accuracy setting
-			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
-			{
-				g_tempTriggerLevelForMenuAdjustment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
-			}		
+			g_tempTriggerLevelForMenuAdjustment = SeismicTriggerConvertBitAccuracy(g_triggerRecord.trec.seismicTriggerLevel);
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjustment,
-				(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
-				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
-				g_bitAccuracyMidpoint);
+											(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
+											(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 #else // New VT feature
 			SETUP_USER_MENU_MSG(&seismicTriggerTypeMenu, g_triggerRecord.trec.variableTriggerEnable);
 #endif
@@ -2107,15 +2091,11 @@ void ExternalTriggerMenuHandler(uint8 keyPressed, void* data)
 			}
 
 			// Down convert to current bit accuracy setting
-			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
-			{
-				g_tempTriggerLevelForMenuAdjustment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
-			}
+			g_tempTriggerLevelForMenuAdjustment = SeismicTriggerConvertBitAccuracy(g_triggerRecord.trec.seismicTriggerLevel);
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjustment,
-			(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
-			(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
-			g_bitAccuracyMidpoint);
+											(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
+											(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 		}
 		else
 		{
@@ -3263,15 +3243,11 @@ void SensitivityMenuHandler(uint8 keyPressed, void* data)
 			}
 
 			// Down convert to current bit accuracy setting
-			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
-			{
-				g_tempTriggerLevelForMenuAdjustment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
-			}		
+			g_tempTriggerLevelForMenuAdjustment = SeismicTriggerConvertBitAccuracy(g_triggerRecord.trec.seismicTriggerLevel);
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjustment,
-				(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
-				(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
-				g_bitAccuracyMidpoint);
+											(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
+											(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 		}
 		else if ((g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
 		{
@@ -3425,15 +3401,11 @@ void SeismicTriggerTypeMenuHandler(uint8 keyPressed, void* data)
 			}
 
 			// Down convert to current bit accuracy setting
-			if (g_triggerRecord.trec.seismicTriggerLevel != NO_TRIGGER_CHAR)
-			{
-				g_tempTriggerLevelForMenuAdjustment = g_triggerRecord.trec.seismicTriggerLevel / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
-			}
+			g_tempTriggerLevelForMenuAdjustment = SeismicTriggerConvertBitAccuracy(g_triggerRecord.trec.seismicTriggerLevel);
 
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&seismicTriggerMenu, &g_tempTriggerLevelForMenuAdjustment,
-			(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
-			(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
-			g_bitAccuracyMidpoint);
+											(SEISMIC_TRIGGER_DEFAULT_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)),
+											(SEISMIC_TRIGGER_MIN_VALUE / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint)), g_bitAccuracyMidpoint);
 		}
 		else // Variable Trigger USBM/OSM selected
 		{

@@ -450,6 +450,19 @@ uint16 AirTriggerConvert(uint32 airTriggerToConvert)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+uint32 SeismicTriggerConvertBitAccuracy(uint32 seismicTriggerToConvert)
+{
+	if ((seismicTriggerToConvert != NO_TRIGGER_CHAR) && (seismicTriggerToConvert != MANUAL_TRIGGER_CHAR) && (seismicTriggerToConvert != EXTERNAL_TRIGGER_CHAR))
+	{
+		seismicTriggerToConvert = seismicTriggerToConvert / (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
+	}
+
+	return (seismicTriggerToConvert);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert)
 {
 	// Check if the air trigger level is not no trigger and not manual trigger
