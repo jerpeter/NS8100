@@ -456,6 +456,7 @@ uint16 MbToHex(float mb, uint8 acousticSensorType)
 	return (ceil(mbValue));
 }
 
+#if 0 // Unused
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
@@ -484,7 +485,9 @@ uint32 ConvertDBtoMB(uint32 level, uint32 acousticMaxValue)
 		return (mbConverted);
 	}
 }
+#endif
 
+#if 0 // Unused
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
@@ -511,6 +514,7 @@ uint32 ConvertMBtoDB(uint32 level, uint32 acousticMaxValue)
 		return (dbConverted);
 	}
 }
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
