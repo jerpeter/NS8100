@@ -412,18 +412,27 @@ void InitAutoDialout(void)
 
 	// Update the last stored event
 	__autoDialoutTbl.lastStoredEvent = GetLastStoredEventNumber();
+
+	if (g_modemSetupRecord.dialOutType == AUTODIALOUT_EVENTS_CONFIG_STATUS)
+	{
+		AssignSoftTimer(AUTO_DIAL_OUT_CYCLE_TIMER_NUM, (uint32)(g_modemSetupRecord.dialOutCycleTime * TICKS_PER_MIN), AutoDialOutCycleTimerCallBack);
+	}
 }
 
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void CheckAutoDialoutStatus(void)
+uint8 CheckAutoDialoutStatusAndFlagIfAvailable(void)
 {
-	if ((g_autoDialoutState == AUTO_DIAL_IDLE) && (READ_DCD == NO_CONNECTION) &&
+	// Check that Dial Out state is currently idle, there is no active modem connection, a modem reset is not in progress, Modem Setup is enabled and the Modem Setup Dial string is not empty
+	if ((g_autoDialoutState == AUTO_DIAL_IDLE) && (READ_DCD == NO_CONNECTION) && (g_modemResetStage == 0) &&
 		(g_modemSetupRecord.modemStatus == YES) && strlen((char*)&(g_modemSetupRecord.dial[0])) != 0)
 	{
 		raiseSystemEventFlag(AUTO_DIALOUT_EVENT);
+		return (YES);
 	}
+
+	return (NO);
 }
 
 ///----------------------------------------------------------------------------
@@ -654,11 +663,16 @@ void AutoDialoutStateMachine(void)
 		break;
 
 		//----------------------------------------------------------------
-		// Finished with Auto dialout (either successful connection of failed retries)
+		// Finished with Auto Dialout (either successful connection of failed retries)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_FINISH:
 			// Done with Auto Dialout processing, issue a modem reset
 			ModemResetProcess();
+
+			if (g_modemSetupRecord.dialOutType == AUTODIALOUT_EVENTS_CONFIG_STATUS)
+			{
+				AssignSoftTimer(AUTO_DIAL_OUT_CYCLE_TIMER_NUM, (uint32)(g_modemSetupRecord.dialOutCycleTime * TICKS_PER_MIN), AutoDialOutCycleTimerCallBack);
+			}
 
 			// Place in Idle state
 			g_autoDialoutState = AUTO_DIAL_IDLE;

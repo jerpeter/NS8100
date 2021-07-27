@@ -331,7 +331,9 @@ typedef struct
 	uint16 invalid;
 	uint16 modemStatus;
 	uint16 unlockCode;
-	char init[64];
+	char init[60];
+	uint16 dialOutType;
+	uint16 dialOutCycleTime;
 	char dial[32];
 	char reset[16];
 	uint8 retries;
@@ -352,13 +354,9 @@ typedef struct
 	uint8				bitAccuracy;
 	uint8				adjustForTempDrift;
 	uint16				seismicSensorType;
-#if 0 // Original
-	uint32				sensitivity;
-#else // Updated to create space for Acoustic Sensor type (and space) from extra storage spave of sensitivity
 	uint16				spare1;
 	uint8				acousticSensorType;
 	uint8				sensitivity;
-#endif
 } MONITOR_LOG_ENTRY_STRUCT;
 
 typedef struct
@@ -366,7 +364,8 @@ typedef struct
 	uint16				lastStoredEvent;
 	uint16				lastDownloadedEvent;
 	DATE_TIME_STRUCT	lastConnectTime;
-	uint32				unused;
+	uint16				currentCycleConnects;
+	uint16				unused;
 } AUTODIALOUT_STRUCT;
 
 ///----------------------------------------------------------------------------

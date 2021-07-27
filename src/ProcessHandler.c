@@ -690,9 +690,25 @@ void HandleCycleChangeEvent(void)
 	// Check if Auto Dialout processing is not active
 	if (g_autoDialoutState == AUTO_DIAL_IDLE)
 	{
+#if 0 // Original
 		// At cycle change reset the modem (to better handle problems with USR modems)
 		g_autoRetries = 0;
 		ModemResetProcess();
+#else // New AutoDialOut Config/Status if no events during the day
+		if ((g_modemSetupRecord.dialOutType != AUTODIALOUT_EVENTS_CONFIG_STATUS) && (__autoDialoutTbl.currentCycleConnects == 0))
+		{
+			CheckAutoDialoutStatusAndFlagIfAvailable();
+		}
+		else
+		{
+			// Reset current day number of connections
+			__autoDialoutTbl.currentCycleConnects = 0;
+
+			// At cycle change reset the modem (to better handle problems with USR modems)
+			g_autoRetries = 0;
+			ModemResetProcess();
+		}
+#endif
 	}
 }
 

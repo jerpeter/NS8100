@@ -242,6 +242,9 @@ enum {
 	CANCEL_COMMAND
 };
 
+#define AUTODIALOUT_EVENTS_ONLY				0
+#define AUTODIALOUT_EVENTS_CONFIG_STATUS	1
+
 #define	FIELD_LEN_02			4
 #define	FIELD_LEN_04			4
 #define	FIELD_LEN_06			6
@@ -626,7 +629,7 @@ void BuildIntDataField(char*, uint32, uint8);
 uint32 DataLengthStrToUint32(uint8*);
 void WriteCompressedData(uint8 compressedData, uint8 outMode);
 void InitAutoDialout(void);
-void CheckAutoDialoutStatus(void);
+uint8 CheckAutoDialoutStatusAndFlagIfAvailable(void);
 void StartAutoDialoutProcess(void);
 void AutoDialoutStateMachine(void);
 

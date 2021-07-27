@@ -102,6 +102,7 @@ void HandleUNL(CMD_BUFFER_STRUCT* inCmd)
 			// Receiving successful unlock, update last successful connect time
 			__autoDialoutTbl.lastConnectTime = GetCurrentTime();
 			__autoDialoutTbl.lastConnectTime.valid = YES;
+			__autoDialoutTbl.currentCycleConnects++;
 		}
 		else
 		{
