@@ -120,7 +120,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 				if (mn_layout_ptr->curr_ln > 6)
 					mn_layout_ptr->top_ln = (uint16)(mn_layout_ptr->curr_ln - 5);
 			}
-			else // Handle other types, INTEGER_BYTE_TYPE, INTEGER_WORD_TYPE, INTEGER_WORD_FIXED_TYPE, INTEGER_LONG_TYPE, 
+			else // Handle other types, INTEGER_BYTE_TYPE, INTEGER_WORD_TYPE, INTEGER_WORD_FIXED_TYPE, INTEGER_WORD_OFFSET_TYPE, INTEGER_LONG_TYPE,
 					// INTEGER_SPECIAL_TYPE, INTEGER_COUNT_TYPE, STRING_TYPE, FLOAT_TYPE, FLOAT_SPECIAL_TYPE, FLOAT_WITH_N_TYPE
 			{
 				// Get the default item and set the current line to be highlighted
@@ -187,7 +187,8 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 							(*g_userMenuHandler)(ENTER_KEY, &g_userMenuCacheData.numByteData);
 						}
 						else if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_WORD_TYPE) ||
-								(USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_WORD_FIXED_TYPE))
+								(USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_WORD_FIXED_TYPE) ||
+								(USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_WORD_OFFSET_TYPE))
 						{
 							// Call the user menu handler, passing the key and the address of the word data
 							(*g_userMenuHandler)(ENTER_KEY, &g_userMenuCacheData.numWordData);
@@ -254,7 +255,7 @@ void UserMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN_LA
 						// Copy the string data to the user menu display
 						CopyDataToMenu(mn_layout_ptr);
 					}
-					else // INTEGER_BYTE_TYPE, INTEGER_WORD_TYPE, INTEGER_WORD_FIXED_TYPE, INTEGER_LONG_TYPE, 
+					else // INTEGER_BYTE_TYPE, INTEGER_WORD_TYPE, INTEGER_WORD_FIXED_TYPE, INTEGER_WORD_OFFSET_TYPE, INTEGER_LONG_TYPE,
 							// INTEGER_SPECIAL_TYPE, INTEGER_COUNT_TYPE, FLOAT_TYPE, FLOAT_SPECIAL_TYPE, FLOAT_WITH_N_TYPE
 					{
 						// Handle advancing the numerical data up or down based on the key used
@@ -507,6 +508,7 @@ void AdvanceInputNumber(uint32 direction)
 
 			case INTEGER_WORD_TYPE:
 			case INTEGER_WORD_FIXED_TYPE:
+			case INTEGER_WORD_OFFSET_TYPE:
 				// Check if the current integer word data is less than the max
 				if (g_userMenuCacheData.numWordData < g_userMenuCacheData.intMaxValue)
 				{
@@ -659,6 +661,7 @@ void AdvanceInputNumber(uint32 direction)
 
 			case INTEGER_WORD_TYPE:
 			case INTEGER_WORD_FIXED_TYPE:
+			case INTEGER_WORD_OFFSET_TYPE:
 				// Check if the current integer word data is greater than the min
 				if (g_userMenuCacheData.numWordData > g_userMenuCacheData.intMinValue)
 				{
@@ -915,6 +918,7 @@ void CopyDataToCache(void* data)
 		
 		case INTEGER_WORD_TYPE:
 		case INTEGER_WORD_FIXED_TYPE:
+		case INTEGER_WORD_OFFSET_TYPE:
 			// Clear the data cache word data
 			g_userMenuCacheData.numWordData = 0;
 			
@@ -929,8 +933,17 @@ void CopyDataToCache(void* data)
 			if ((g_userMenuCacheData.numWordData > g_userMenuCacheData.intMaxValue) ||
 				(g_userMenuCacheData.numWordData < g_userMenuCacheData.intMinValue))
 			{
+				if (USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_WORD_OFFSET_TYPE)
+				{
+					// Set the default value in the word data to the average of the min and max
+					g_userMenuCacheData.numWordData = (uint16)((g_userMenuCacheData.intMinValue + g_userMenuCacheData.intMaxValue) / 2);
+				}
+				else // INTEGER_WORD_TYPE, INTEGER_WORD_FIXED_TYPE
+				{
 				// Set the default value in the word data
 				g_userMenuCacheData.numWordData = (uint16)g_userMenuCacheData.intDefault;
+				}
+
 				debug("User Input Integer not within Range, Setting to Default: %d\r\n", g_userMenuCacheData.numWordData);
 			}
 
@@ -1146,6 +1159,7 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 		case INTEGER_BYTE_TYPE:
 		case INTEGER_WORD_TYPE:
 		case INTEGER_WORD_FIXED_TYPE:
+		case INTEGER_WORD_OFFSET_TYPE:
 		case INTEGER_LONG_TYPE:
 		case INTEGER_SPECIAL_TYPE:
 		case INTEGER_COUNT_TYPE:
@@ -1271,16 +1285,22 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 			}
 			else //(USER_MENU_TYPE(g_userMenuCachePtr) != INTEGER_SPECIAL_TYPE, INTEGER_COUNT_TYPE
 			{
-				if (USER_MENU_TYPE(g_userMenuCachePtr) != INTEGER_WORD_FIXED_TYPE)
-				{
-					// Set the specifications line
-					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "%s: %lu-%lu %s", getLangText(RANGE_TEXT),
-						g_userMenuCacheData.intMinValue, g_userMenuCacheData.intMaxValue, g_userMenuCacheData.unitText);
-				}
-				else // USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_WORD_FIXED_TYPE)
+				if (USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_WORD_FIXED_TYPE)
 				{
 					// Set the specifications line
 					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "%s: %04lu-%04lu %s", getLangText(RANGE_TEXT),
+						g_userMenuCacheData.intMinValue, g_userMenuCacheData.intMaxValue, g_userMenuCacheData.unitText);
+				}
+				else if (USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_WORD_OFFSET_TYPE)
+				{
+					// Set the specifications line
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "%s: (%d)-(%d) %s", getLangText(RANGE_TEXT),
+						(int)(g_userMenuCacheData.intMinValue - g_userMenuCacheData.intDefault), (int)(g_userMenuCacheData.intMaxValue - g_userMenuCacheData.intDefault), g_userMenuCacheData.unitText);
+				}
+				else // INTEGER_BYTE_TYPE, INTEGER_WORD_TYPE, INTEGER_LONG_TYPE
+				{
+					// Set the specifications line
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "%s: %lu-%lu %s", getLangText(RANGE_TEXT),
 						g_userMenuCacheData.intMinValue, g_userMenuCacheData.intMaxValue, g_userMenuCacheData.unitText);
 				}
 
@@ -1291,6 +1311,8 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 					sprintf(g_userMenuCachePtr[tempRow].text, "%d", g_userMenuCacheData.numWordData);
 				else if (USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_WORD_FIXED_TYPE)
 					sprintf(g_userMenuCachePtr[tempRow].text, "%04d", g_userMenuCacheData.numWordData);
+				else if (USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_WORD_OFFSET_TYPE)
+					sprintf(g_userMenuCachePtr[tempRow].text, "%d", (int)(g_userMenuCacheData.numWordData - g_userMenuCacheData.intDefault));
 				else if (USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_LONG_TYPE)
 					sprintf(g_userMenuCachePtr[tempRow].text, "%lu", g_userMenuCacheData.numLongData);
 			}
