@@ -533,6 +533,7 @@ void LoadModemSetupRecordDefaults()
 	g_modemSetupRecord.modemStatus = NO;
 	g_modemSetupRecord.retries = MODEM_RETRY_DEFAULT_VALUE;
 	g_modemSetupRecord.retryTime = MODEM_RETRY_TIME_DEFAULT_VALUE;
+	g_modemSetupRecord.dialOutCycleTime = MODEM_DIAL_OUT_TIMER_DEFAULT_VALUE;
 
 	// No need to set these since the memset to zero satisifies initialization
 	//g_modemSetupRecord.unlockCode
@@ -568,6 +569,12 @@ void ValidateModemSetupParameters(void)
 	{
 		// New request to set the init string to point to Nomis servers
 		strcpy(g_modemSetupRecord.dial, "ATDTONLINE.NOMIS.COM/8005");
+		updated = YES;
+	}
+
+	if ((g_modemSetupRecord.dialOutCycleTime == 0) || (g_modemSetupRecord.dialOutCycleTime > MODEM_DIAL_OUT_TIMER_MAX_VALUE))
+	{
+		g_modemSetupRecord.dialOutCycleTime = MODEM_DIAL_OUT_TIMER_DEFAULT_VALUE;
 		updated = YES;
 	}
 
