@@ -1210,7 +1210,7 @@ void MoveUpdatedBargraphEventRecordToFile(uint8 status)
 
 #if 1 // New ability to check if we need to send out a signal that this Bargraph event is available
 			// Check if AutoDialout is enabled and signal the system if necessary
-			CheckAutoDialoutStatus();
+			CheckAutoDialoutStatusAndFlagIfAvailable();
 #endif
 		}
 		else // (status == BARGRAPH_SESSION_IN_PROGRESS)

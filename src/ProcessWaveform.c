@@ -421,7 +421,7 @@ void MoveWaveformEventToFile(void)
 				}
 
 				// Check if AutoDialout is enabled and signal the system if necessary
-				CheckAutoDialoutStatus();
+				CheckAutoDialoutStatusAndFlagIfAvailable();
 			break;
 		}
 	}
