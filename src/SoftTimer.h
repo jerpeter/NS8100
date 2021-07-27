@@ -35,6 +35,7 @@ enum {
 	GPS_POWER_OFF_TIMER_NUM,
 	GPS_POWER_ON_TIMER_NUM,
 	LOOSE_EVENT_MIGRATION_TIMER_NUM,
+	AUTO_DIAL_OUT_CYCLE_TIMER_NUM,
 	// Add new timers here
 	NUM_OF_SOFT_TIMERS
 };
@@ -79,6 +80,7 @@ void SetTimeOfDayAlarmNearFuture(uint8 secondsInFuture);
 void HandleUserPowerOffDuringTimerMode(void);
 void DisplayTimerCallBack(void);
 void LcdPwTimerCallBack(void);
+void AutoDialOutCycleTimerCallBack(void);
 void AutoMonitorTimerCallBack(void);
 void MenuUpdateTimerCallBack(void);
 void KeypadLedUpdateTimerCallBack(void);

@@ -446,6 +446,23 @@ void ModemResetTimerCallback(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void AutoDialOutCycleTimerCallBack(void)
+{
+	debug("Auto Dial Out Timer callback: activated.\r\n");
+
+	// Make sure the Auto Dial Out Cycle Timer is disabled
+	ClearSoftTimer(AUTO_DIAL_OUT_CYCLE_TIMER_NUM);
+
+	// Check if AutoDialout is enabled and signal the system if necessary
+	if (CheckAutoDialoutStatusAndFlagIfAvailable() == NO)
+	{
+		AssignSoftTimer(AUTO_DIAL_OUT_CYCLE_TIMER_NUM, (uint32)(g_modemSetupRecord.dialOutCycleTime * TICKS_PER_MIN), AutoDialOutCycleTimerCallBack);
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void AutoMonitorTimerCallBack(void)
 {
 	INPUT_MSG_STRUCT mn_msg;
