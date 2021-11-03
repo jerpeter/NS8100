@@ -1379,7 +1379,6 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	uint8 i;
 
 	memset(eventRec, 0x00, sizeof(EVT_RECORD));
-	memset(eventRec->summary.parameters.unused, 0xAF, sizeof(eventRec->summary.parameters.unused));
 	memset(eventRec->summary.captured.unused, 0xBF, sizeof(eventRec->summary.captured.unused));
 	memset(eventRec->summary.calculated.unused, 0xCF, sizeof(eventRec->summary.calculated.unused));
 
@@ -1464,6 +1463,7 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.parameters.channel[3].input = 2;
 	//-----------------------
 	eventRec->summary.calculated.gpsPosition = g_gpsPosition;
+	eventRec->summary.parameters.utcZoneOffset = g_unitConfig.utcZoneOffset;
 	//-----------------------
 
 	for (i = 0; i < 4; i++) // First seismic group
