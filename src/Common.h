@@ -411,6 +411,9 @@ enum {
 #define GPS_REACTIVATION_TIME_SEARCH_FAIL	50
 #define GPS_REACTIVATION_TIME_NORMAL		60
 
+#define GPS_POWER_NORMAL_SAVE_POWER		0
+#define GPS_POWER_ALWAYS_ON_ACQUIRING	1
+
 typedef struct {
 	uint8* readPtr;
 	uint8* writePtr;
@@ -470,6 +473,7 @@ enum {
 	VERSION_QUERY,
 	SOFT_CRC_QUERY,
 	NMEA_MSG_INTERVAL_QUERY,
+	GPS_TIME_QUERY,
 	TOTAL_GPS_BINARY_COMMANDS
 };
 
@@ -518,6 +522,8 @@ void ProcessGpsSerialData(void);
 void ProcessGpsMessage(void);
 void ProcessGpsBinaryMessage(void);
 void GpsQueryVersion(void);
+void GpsQueryTime(void);
+//void GpsQueryUTCDate(void);
 void GpsQuerySoftCrc(void);
 void GpsQueryNmeaMsgInterval(void);
 void GpsSendBinaryMessage(uint8* binaryMessage, uint16 messageLength);
@@ -525,6 +531,8 @@ uint8 GpsCalcBinaryChecksum(uint8* binaryPayload, uint16 payloadLength);
 void HandleVersionQuery(void);
 void HandleSoftCrcQuery(void);
 void HandleNmeaMsgIntervalQuery(void);
+void HandleGPSQueryTime(void);
+void HandleUTCDateQuery(void);
 void GpsChangeNmeaMsgInterval(uint8 GGAInt, uint8 GSAInt, uint8 GSVInt, uint8 GLLInt, uint8 RMCInt, uint8 VTGInt, uint8 ZDAInt);
 void HandleBinaryMsgAck(void);
 void HandleBinaryMsgNack(void);
@@ -610,6 +618,7 @@ void Eic_low_battery_irq(void);
 void Eic_keypad_irq(void);
 void Eic_system_irq(void);
 void Eic_external_rtc_irq(void);
+void Gps_status_irq(void);
 void Tc_sample_irq(void);
 void Usart_1_rs232_irq(void);
 void Usart_0_rs232_irq(void);
