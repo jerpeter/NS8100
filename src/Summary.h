@@ -164,6 +164,14 @@ typedef struct
 } SEISMIC_CHANNEL_INFO_STRUCT;
 
 //-------------------------------------------------------------------------------------
+typedef struct
+{
+	DATE_TIME_STRUCT triggerTime;
+	time_t gpsEpochTriggerTime;
+	uint32 gpsFractionalSecond;
+} EVENT_TIMESTAMP_STRUCT;
+
+//-------------------------------------------------------------------------------------
 // Version sub-structure
 //-------------------------------------------------------------------------------------
 #define UNUSED_VERSION_SIZE		3
@@ -182,7 +190,6 @@ typedef struct
 //-------------------------------------------------------------------------------------
 // Parameters sub-structure
 //-------------------------------------------------------------------------------------
-#define UNUSED_PARAMETERS_SIZE	1
 typedef struct
 {
 	uint32	distToSource; // 0x5C (from 0xA55A)
@@ -236,7 +243,7 @@ typedef struct
 	uint8 adChannelVerification; // 0x191 (from 0xA55A)
 
 	uint8 barIntervalDataType; // 0x192 (form 0xA55A)
-	uint8	unused[UNUSED_PARAMETERS_SIZE];	// 0x193 (from 0xA55A) // Space for expansion
+	int8 utcZoneOffset;	// 0x193 (from 0xA55A)
 } PARAMETERS_STRUCT; // 312 bytes
 #pragma pack()
 
@@ -244,7 +251,7 @@ typedef struct
 //-------------------------------------------------------------------------------------
 // Capture sub-structure
 //-------------------------------------------------------------------------------------
-#define UNUSED_CAPTURE_SIZE	14
+#define UNUSED_CAPTURE_SIZE	4
 typedef struct
 {
 	DATE_TIME_STRUCT	calDateTime; // 0x194 (from 0xA55A)	// Calibration date
@@ -258,7 +265,11 @@ typedef struct
 	uint16				comboEventsRecordedStartNumber; // 0x1C0 (from 0xA55A)
 	uint16				comboEventsRecordedEndNumber; // 0x1C2 (from 0xA55A)
 	uint16				comboBargraphEventNumberLink; // 0x1C4 (from 0xA55A)
-	uint8				unused[UNUSED_CAPTURE_SIZE]; // 0x1C6 (from 0xA55A) // Space for expansion
+	uint8				unused1; // 0x1C6 (from 0xA55A) // Space for expansion
+	uint8				unused2; // 0x1C7 (from 0xA55A) // Space for expansion
+	time_t				gpsEpochTriggerTime; // 0x1C8 (from 0xA55A)
+	uint32				gpsFractionalSecond; // 0x1CC (from 0xA55A)
+	uint8				unused[UNUSED_CAPTURE_SIZE]; // 0x1D0 (from 0xA55A) // Space for expansion
 } CAPTURE_INFO_STRUCT; // 64 bytes
 #pragma pack()
 
