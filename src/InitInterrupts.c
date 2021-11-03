@@ -81,7 +81,6 @@ void Setup_8100_EIC_Low_Battery_ISR(void)
 	AVR32_EIC.ASYNC.int0 = 1;
 	AVR32_EIC.EN.int0 = 1;
 
-	// Register the RTC interrupt handler to the interrupt controller.
 	INTC_register_interrupt(&Eic_low_battery_irq, AVR32_EIC_IRQ_0, 0);
 
 #if 0
@@ -105,7 +104,6 @@ void Setup_8100_EIC_Keypad_ISR(void)
 	AVR32_EIC.ASYNC.int5 = 1;
 	AVR32_EIC.EN.int5 = 1;
 
-	// Register the RTC interrupt handler to the interrupt controller.
 	INTC_register_interrupt(&Eic_keypad_irq, AVR32_EIC_IRQ_5, 0);
 
 #if 0 // Some residual wrongly executed code
@@ -134,7 +132,6 @@ void Setup_8100_EIC_System_ISR(void)
 	AVR32_EIC.ASYNC.int4 = 1;
 	AVR32_EIC.EN.int4 = 1;
 
-	// Register the RTC interrupt handler to the interrupt controller.
 	INTC_register_interrupt(&Eic_system_irq, AVR32_EIC_IRQ_4, 0);
 
 #if 0 // Some residual wrongly executed code
@@ -163,18 +160,17 @@ void Setup_8100_EIC_External_RTC_ISR(void)
 	AVR32_EIC.ASYNC.int1 = 1;
 	AVR32_EIC.EN.int1 = 1;
 
-	// Register the RTC interrupt handler to the interrupt controller.
 #if 0 // Test
 	INTC_register_interrupt(&Eic_external_rtc_irq, AVR32_EIC_IRQ_1, 0);
 #else // Hook in the External RTC interrupt to the actual sample processing interrupt handler
 	INTC_register_interrupt(&Tc_sample_irq, AVR32_EIC_IRQ_1, 0);
 #endif
 
-	#if 0
+#if 0
 	// Test for int enable
 	if (AVR32_EIC.IMR.int1 == 0x01) { debug("External RTC Interrupt Enabled\r\n"); }
 	else { debug("External RTC Interrupt Not Enabled\r\n"); }
-	#endif
+#endif
 }
 
 ///----------------------------------------------------------------------------
@@ -204,11 +200,21 @@ void Setup_8100_Usart0_RS232_ISR(void)
 ///----------------------------------------------------------------------------
 void Setup_8100_Soft_Timer_Tick_ISR(void)
 {
-	// Register the RTC interrupt handler to the interrupt controller.
 	INTC_register_interrupt(&Soft_timer_tick_irq, AVR32_RTC_IRQ, 0);
 	
 	// Enable half second tick
 	rtc_enable_interrupt(&AVR32_RTC);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void Setup_8100_Gps_Status_ISR(void)
+{
+	INTC_register_interrupt(&Gps_status_irq, AVR32_GPIO_IRQ_7, 2);
+
+	// Enable the gpio pin interrupt
+	gpio_enable_pin_interrupt(AVR32_PIN_PB30, GPIO_RISING_EDGE);
 }
 
 ///----------------------------------------------------------------------------
@@ -257,24 +263,20 @@ void Setup_8100_TC_Clock_ISR(uint32 sampleRate, TC_CHANNEL_NUM channel)
 	switch (channel)
 	{
 		case TC_SAMPLE_TIMER_CHANNEL:
-		// Register the RTC interrupt handler to the interrupt controller.
 		INTC_register_interrupt(&Tc_sample_irq, AVR32_TC_IRQ0, 3);
 		break;
 		
 #if INTERNAL_SAMPLING_SOURCE
 		case TC_CALIBRATION_TIMER_CHANNEL:
-		// Register the RTC interrupt handler to the interrupt controller.
 		INTC_register_interrupt(&Tc_sample_irq, AVR32_TC_IRQ1, 3);
 		break;
 #else // EXTERNAL_SAMPLING_SOURCE
 		case TC_MILLISECOND_TIMER_CHANNEL:
-		// Register the RTC interrupt handler to the interrupt controller.
 		INTC_register_interrupt(&Tc_ms_timer_irq, AVR32_TC_IRQ1, 0);
 		break;
 #endif
 		
 		case TC_TYPEMATIC_TIMER_CHANNEL:
-		// Register the RTC interrupt handler to the interrupt controller.
 		INTC_register_interrupt(&Tc_typematic_irq, AVR32_TC_IRQ2, 0);
 		break;
 	}
@@ -317,7 +319,7 @@ void InitInterrupts_NS8100(void)
 	Setup_8100_TC_Clock_ISR(ONE_MS_RESOLUTION, TC_MILLISECOND_TIMER_CHANNEL);
 #endif
 
-#if 0 // Removed for now becasue interrupt doesn't provide any benefit over just reading the pin as a GPIO input
+#if 0 // Removed for now because interrupt doesn't provide any benefit over just reading the pin as a GPIO input
 	// Setup Low Battery interrupt from RTC when PFO triggers
 	Setup_8100_EIC_Low_Battery_ISR();
 #endif
@@ -330,6 +332,11 @@ void InitInterrupts_NS8100(void)
 	InitCraftInterruptBuffers();
 	Setup_8100_Usart1_RS232_ISR();
 #endif
+
+	if (GET_HARDWARE_ID == HARDWARE_ID_REV_8_WITH_GPS_MOD)
+	{
+		Setup_8100_Gps_Status_ISR();
+	}
 	
 	Enable_global_interrupt();
 }
