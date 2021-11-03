@@ -283,7 +283,10 @@ typedef struct
 	uint32 alarmOneAirLevel;
 	uint32 spare2; // Move Min Levels to globals to make room for other storage elements
 	uint32 alarmTwoSeismicLevel;
-	uint32 spare3; // Move Min Levels to globals to make room for other storage elements
+	uint8 spare3;
+	uint8 spare4;
+	uint8 gpsPowerMode;
+	int8 utcZoneOffset;
 	uint32 alarmTwoAirLevel;
 	uint8 legacyDqmLimit;
 	uint8 storedEventsCapMode;
