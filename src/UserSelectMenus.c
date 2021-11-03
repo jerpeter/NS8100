@@ -66,6 +66,7 @@ extern USER_MENU_STRUCT externalTriggerMenu[];
 extern USER_MENU_STRUCT flashWrappingMenu[];
 extern USER_MENU_STRUCT freqPlotMenu[];
 extern USER_MENU_STRUCT freqPlotStandardMenu[];
+extern USER_MENU_STRUCT gpsPowerMenu[];
 extern USER_MENU_STRUCT hardwareIDMenu[];
 extern USER_MENU_STRUCT helpMenu[];
 extern USER_MENU_STRUCT infoMenu[];
@@ -73,8 +74,11 @@ extern USER_MENU_STRUCT languageMenu[];
 extern USER_MENU_STRUCT lcdImpulseTimeMenu[];
 extern USER_MENU_STRUCT lcdTimeoutMenu[];
 extern USER_MENU_STRUCT legacyDqmLimitMenu[];
-extern USER_MENU_STRUCT modemSetupMenu[];
+extern USER_MENU_STRUCT modemDialMenu[];
+extern USER_MENU_STRUCT modemDialOutCycleTimeMenu[];
 extern USER_MENU_STRUCT modemInitMenu[];
+extern USER_MENU_STRUCT modemResetMenu[];
+extern USER_MENU_STRUCT modemSetupMenu[];
 extern USER_MENU_STRUCT monitorLogMenu[];
 extern USER_MENU_STRUCT operatorMenu[];
 extern USER_MENU_STRUCT peakAccMenu[];
@@ -106,6 +110,7 @@ extern USER_MENU_STRUCT timerModeMenu[];
 extern USER_MENU_STRUCT unitsOfMeasureMenu[];
 extern USER_MENU_STRUCT unitsOfAirMenu[];
 extern USER_MENU_STRUCT usbSyncModeMenu[];
+extern USER_MENU_STRUCT utcZoneOffsetMenu[];
 extern USER_MENU_STRUCT vectorSumMenu[];
 #if (!VT_FEATURE_DISABLED)
 extern USER_MENU_STRUCT vibrationStandardMenu[];
@@ -1522,7 +1527,7 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
-#define CONFIG_MENU_ENTRIES 35
+#define CONFIG_MENU_ENTRIES 37
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
@@ -1542,6 +1547,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, EXTERNAL_TRIGGER_TEXT,		NO_TAG, {EXTERNAL_TRIGGER}},
 {NO_TAG, 0, FLASH_WRAPPING_TEXT,		NO_TAG, {FLASH_WRAPPING}},
 {NO_TAG, 0, FLASH_STATS_TEXT,			NO_TAG, {FLASH_STATS}},
+{NO_TAG, 0, GPS_POWER_TEXT,				NO_TAG, {GPS_POWER}},
 {NO_TAG, 0, LANGUAGE_TEXT,				NO_TAG, {LANGUAGE}},
 {NO_TAG, 0, LCD_CONTRAST_TEXT,			NO_TAG, {LCD_CONTRAST}},
 {NO_TAG, 0, LCD_TIMEOUT_TEXT,			NO_TAG, {LCD_TIMEOUT}},
@@ -1566,6 +1572,7 @@ USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {NO_TAG, 0, UNITS_OF_MEASURE_TEXT,		NO_TAG, {UNITS_OF_MEASURE}},
 {NO_TAG, 0, UNITS_OF_AIR_TEXT,			NO_TAG, {UNITS_OF_AIR}},
 {NO_TAG, 0, USB_SYNC_MODE_TEXT,			NO_TAG, {USB_SYNC_MODE}},
+{NO_TAG, 0, UTC_ZONE_OFFSET_TEXT,		NO_TAG, {UTC_ZONE_OFFSET}},
 #if 0 // Removing this option
 {NO_TAG, 0, VECTOR_SUM_TEXT,			NO_TAG, {VECTOR_SUM}},
 #endif
@@ -1665,6 +1672,10 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 
 			case (FREQUENCY_PLOT):
 				MessageBox(getLangText(STATUS_TEXT), getLangText(NOT_INCLUDED_TEXT), MB_OK);
+			break;
+
+			case (GPS_POWER):
+				SETUP_USER_MENU_MSG(&gpsPowerMenu, g_unitConfig.gpsPowerMode);
 			break;
 
 			case (LANGUAGE):
@@ -1777,6 +1788,12 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 
 			case (USB_SYNC_MODE):
 				SETUP_USER_MENU_MSG(&usbSyncModeMenu, g_unitConfig.usbSyncMode);
+			break;
+
+			case (UTC_ZONE_OFFSET):
+				// Adjust the zone offset by the default to get to an all positive range
+				g_unitConfig.utcZoneOffset += 12;
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&utcZoneOffsetMenu, &g_unitConfig.utcZoneOffset, 12, 0, 24);
 			break;
 
 #if 0 // Removing this option
@@ -2516,6 +2533,66 @@ void LanguageMenuHandler(uint8 keyPressed, void* data)
 
 //*****************************************************************************
 //=============================================================================
+// GPS Power
+//=============================================================================
+//*****************************************************************************
+#define GPS_POWER_MENU_ENTRIES 4
+USER_MENU_STRUCT gpsPowerMenu[GPS_POWER_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, GPS_POWER_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, GPS_POWER_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{NO_TAG, 0, NORMAL_SAVE_POWER_TEXT,				NO_TAG, {GPS_POWER_NORMAL_SAVE_POWER}},
+{NO_TAG, 0, ALWAYS_ON_ACQUIRING_TEXT,			NO_TAG, {GPS_POWER_ALWAYS_ON_ACQUIRING}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&GpsPowerMenuHandler}}
+};
+
+//------------------------------
+// GPS Power Menu Handler
+//------------------------------
+void GpsPowerMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_unitConfig.gpsPowerMode = (uint8)gpsPowerMenu[newItemIndex].data;
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+		// Always on
+		if (g_unitConfig.gpsPowerMode == GPS_POWER_ALWAYS_ON_ACQUIRING)
+		{
+			// Check if the GPS is powered off
+			if (gpio_get_pin_value(AVR32_PIN_PB14) == 1)
+			{
+				EnableGps();
+			}
+			else // GPS has power but there may be an active GPS power off timer
+			{
+				ClearSoftTimer(GPS_POWER_OFF_TIMER_NUM);
+			}
+		}
+		else // normal save power
+		{
+			// Check if the GPS is powered on and the GPS power off timer is not active
+			if ((gpio_get_pin_value(AVR32_PIN_PB14) == 0) && (IsSoftTimerActive(GPS_POWER_OFF_TIMER_NUM) == NO))
+			{
+				// Add soft timer to power off
+				AssignSoftTimer(GPS_POWER_OFF_TIMER_NUM, (GPS_ACTIVE_LOCATION_SEARCH_TIME * TICKS_PER_MIN), GpsPowerOffTimerCallBack);
+			}
+		}
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu, GPS_POWER);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
 // Legacy DQM Limit
 //=============================================================================
 //*****************************************************************************
@@ -2605,6 +2682,49 @@ void ModeMenuHandler(uint8 keyPressed, void* data)
 	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_MENU_MSG(MAIN_MENU); mn_msg.data[0] = ESC_KEY;
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Modem Dial Out Type Menu
+//=============================================================================
+//*****************************************************************************
+#define MODEM_DIAL_OUT_TYPE_MENU_ENTRIES 4
+USER_MENU_STRUCT modemDialOutTypeMenu[MODEM_DIAL_OUT_TYPE_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, DIAL_OUT_TYPE_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, MODEM_DIAL_OUT_TYPE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 0, EVENTS_CONFIG_STATUS_TEXT,	NO_TAG, {AUTODIALOUT_EVENTS_CONFIG_STATUS}},
+{ITEM_2, 0, EVENTS_ONLY_TEXT,			NO_TAG, {AUTODIALOUT_EVENTS_ONLY}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&ModemDialOutTypeMenuHandler}}
+};
+
+//---------------------------------
+// Modem Dial Out Type Menu Handler
+//---------------------------------
+void ModemDialOutTypeMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_modemSetupRecord.dialOutType = (uint16)(modemDialOutTypeMenu[newItemIndex].data);
+
+		if (g_modemSetupRecord.dialOutType == AUTODIALOUT_EVENTS_CONFIG_STATUS)
+		{
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&modemDialOutCycleTimeMenu, &g_modemSetupRecord.dialOutCycleTime, MODEM_DIAL_OUT_TIMER_DEFAULT_VALUE, MODEM_DIAL_OUT_TIMER_MIN_VALUE, MODEM_DIAL_OUT_TIMER_MAX_VALUE);
+		}
+		else
+		{
+			SETUP_USER_MENU_MSG(&modemResetMenu, &g_modemSetupRecord.reset);
+		}
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&modemDialMenu, &g_modemSetupRecord.dial);
 	}
 
 	JUMP_TO_ACTIVE_MENU();

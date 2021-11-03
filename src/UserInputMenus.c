@@ -52,6 +52,7 @@ extern USER_MENU_STRUCT externalTriggerMenu[];
 extern USER_MENU_STRUCT hardwareIDMenu[];
 extern USER_MENU_STRUCT modemSetupMenu[];
 extern USER_MENU_STRUCT modemDialMenu[];
+extern USER_MENU_STRUCT modemDialOutTypeMenu[];
 extern USER_MENU_STRUCT modemInitMenu[];
 extern USER_MENU_STRUCT modemResetMenu[];
 extern USER_MENU_STRUCT modemRetryMenu[];
@@ -959,11 +960,57 @@ void ModemDialMenuHandler(uint8 keyPressed, void* data)
 		strcpy((char*)(&g_modemSetupRecord.dial), (char*)data);
 		debug("Modem Dial: <%s>, Length: %d\r\n", g_modemSetupRecord.dial, strlen((char*)g_modemSetupRecord.dial));
 
+#if 0 // Original
 		SETUP_USER_MENU_MSG(&modemResetMenu, &g_modemSetupRecord.reset);
+#else // New AutoDialOut for Config/Status
+		if (strlen((char*)g_modemSetupRecord.dial))
+		{
+			SETUP_USER_MENU_MSG(&modemDialOutTypeMenu, &g_modemSetupRecord.dialOutType);
+		}
+		else
+		{
+			SETUP_USER_MENU_MSG(&modemResetMenu, &g_modemSetupRecord.reset);
+		}
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_MSG(&modemInitMenu, &g_modemSetupRecord.init);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Modem Dial Out Cycle Time Menu
+//=============================================================================
+//*****************************************************************************
+#define MODEM_DIAL_OUT_CYCLE_TIME_MENU_ENTRIES 4
+USER_MENU_STRUCT modemDialOutCycleTimeMenu[MODEM_DIAL_OUT_CYCLE_TIME_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, DIAL_OUT_CYCLE_TIME_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(INTEGER_WORD_TYPE, MODEM_DIAL_OUT_CYCLE_TIME_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(MINS_TYPE, NO_ALT_TYPE)}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&ModemDialOutCycleTimeMenuHandler}}
+};
+
+//---------------------------------------
+// Modem Dial Out Cycle Time Menu Handler
+//---------------------------------------
+void ModemDialOutCycleTimeMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_modemSetupRecord.dialOutCycleTime = *((uint16*)data);
+
+		SETUP_USER_MENU_MSG(&modemResetMenu, &g_modemSetupRecord.reset);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&modemDialOutTypeMenu, &g_modemSetupRecord.dialOutType);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -1020,13 +1067,13 @@ USER_MENU_STRUCT modemResetMenu[MODEM_RESET_MENU_ENTRIES] = {
 	{INSERT_USER_MENU_INFO(STRING_TYPE, MODEM_RESET_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {MAX_MODEM_RESET_CHARS}},
 {NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
-{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&modemResetMenuHandler}}
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&ModemResetMenuHandler}}
 };
 
 //-------------------------
 // Modem Reset Menu Handler
 //-------------------------
-void modemResetMenuHandler(uint8 keyPressed, void* data)
+void ModemResetMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	
@@ -1040,7 +1087,22 @@ void modemResetMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
+#if 0 // Original
 		SETUP_USER_MENU_MSG(&modemDialMenu, &g_modemSetupRecord.dial);
+#else // New ADO feature
+		if (strlen((char*)g_modemSetupRecord.dial) == 0)
+		{
+			SETUP_USER_MENU_MSG(&modemDialMenu, &g_modemSetupRecord.dial);
+		}
+		else if (g_modemSetupRecord.dialOutType == AUTODIALOUT_EVENTS_CONFIG_STATUS)
+		{
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&modemDialOutCycleTimeMenu, &g_modemSetupRecord.dialOutCycleTime, MODEM_DIAL_OUT_TIMER_DEFAULT_VALUE, MODEM_DIAL_OUT_TIMER_MIN_VALUE, MODEM_DIAL_OUT_TIMER_MAX_VALUE);
+		}
+		else
+		{
+			SETUP_USER_MENU_MSG(&modemDialOutTypeMenu, g_modemSetupRecord.dialOutType);
+		}
+#endif
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -1692,12 +1754,54 @@ void UnlockCodeMenuHandler(uint8 keyPressed, void* data)
 			CraftInitStatusFlags();
 		}
 
+		if (g_modemSetupRecord.dialOutType == AUTODIALOUT_EVENTS_CONFIG_STATUS)
+		{
+			AssignSoftTimer(AUTO_DIAL_OUT_CYCLE_TIMER_NUM, (uint32)(g_modemSetupRecord.dialOutCycleTime * TICKS_PER_MIN), AutoDialOutCycleTimerCallBack);
+		}
+
 		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
 	}
 	else if (keyPressed == ESC_KEY)
 	{
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&modemRetryTimeMenu, &g_modemSetupRecord.retryTime,
 			MODEM_RETRY_TIME_DEFAULT_VALUE, MODEM_RETRY_TIME_MIN_VALUE, MODEM_RETRY_TIME_MAX_VALUE);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// UTC Offset Menu
+//=============================================================================
+//*****************************************************************************
+#define UTC_ZONE_OFFSET_MENU_ENTRIES 4
+USER_MENU_STRUCT utcZoneOffsetMenu[UTC_ZONE_OFFSET_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, UTC_ZONE_OFFSET_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(INTEGER_BYTE_OFFSET_TYPE, UTC_ZONE_OFFSET_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ROW_2)}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {INSERT_USER_MENU_WORD_DATA(NO_TYPE, NO_ALT_TYPE)}},
+{NO_TAG, 0, NULL_TEXT, NO_TAG, {}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&UtcZoneOffsetMenuHandler}}
+};
+
+//------------------------
+// UTC Offset Menu Handler
+//------------------------
+void UtcZoneOffsetMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_unitConfig.utcZoneOffset = (int8)(*((uint8*)data) - 12);
+
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu, UTC_ZONE_OFFSET);
 	}
 
 	JUMP_TO_ACTIVE_MENU();
