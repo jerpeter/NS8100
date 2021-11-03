@@ -1311,6 +1311,8 @@ void BootLoadManager(void)
 		usart_reset(&AVR32_USART2);
 		usart_reset(&AVR32_USART3);
 
+		gpio_disable_pin_interrupt(AVR32_PIN_PB30);
+
 		PowerControl(POWER_OFF_PROTECTION_ENABLE, OFF);
 
 		Disable_global_interrupt();
