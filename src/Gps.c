@@ -85,7 +85,8 @@ typedef struct
 typedef struct
 {
 	uint8 cmd;
-	uint8 cmdType;
+	uint8 cmdID;
+	uint8 cmdSubID;
 	void (*cmdFunction)(void);
 } GPS_BINARY_MESSAGE_COMMAND_STRUCT;
 
@@ -113,11 +114,12 @@ static const GPS_MESSAGE_COMMAND_STRUCT s_gpsMessageTable[TOTAL_GPS_COMMANDS] = 
 };
 
 static const GPS_BINARY_MESSAGE_COMMAND_STRUCT s_gpsBinaryMessageTable[TOTAL_GPS_BINARY_COMMANDS] = {
-	{GPS_BIN_MSG_ACK, 0x83, HandleBinaryMsgAck},					// Version data for GPS
-	{GPS_BIN_MSG_NACK, 0x84, HandleBinaryMsgNack},					// Version data for GPS
-	{VERSION_QUERY,	0x80, HandleVersionQuery},					// Version data for GPS
-	{SOFT_CRC_QUERY, 0x81, HandleSoftCrcQuery},					// Crc for version data
-	{NMEA_MSG_INTERVAL_QUERY, 0x64, HandleNmeaMsgIntervalQuery}	// NMEA Message Interval
+	{GPS_BIN_MSG_ACK, 0x83, 0x00, HandleBinaryMsgAck},					// Version data for GPS
+	{GPS_BIN_MSG_NACK, 0x84, 0x00, HandleBinaryMsgNack},				// Version data for GPS
+	{VERSION_QUERY,	0x80, 0x00, HandleVersionQuery},					// Version data for GPS
+	{SOFT_CRC_QUERY, 0x81, 0x00, HandleSoftCrcQuery},					// Crc for version data
+	{NMEA_MSG_INTERVAL_QUERY, 0x64, 0x81, HandleNmeaMsgIntervalQuery},	// NMEA Message Interval
+	{GPS_TIME_QUERY, 0x64, 0x8E, HandleGPSQueryTime}
 };
 
 ///----------------------------------------------------------------------------
@@ -184,9 +186,16 @@ void EnableGps(void)
 			// Enable power for Gps module
 			gpio_clr_gpio_pin(AVR32_PIN_PB14); // GPIO 46 (Pin 127 / EBI - SDWE)
 
+#if 0 // Original
 			// Add soft timer to power off
 			AssignSoftTimer(GPS_POWER_OFF_TIMER_NUM, (GPS_ACTIVE_LOCATION_SEARCH_TIME * TICKS_PER_MIN), GpsPowerOffTimerCallBack);
-
+#else // New option to allow GPS to remain powered
+			if (g_unitConfig.gpsPowerMode != GPS_POWER_ALWAYS_ON_ACQUIRING)
+			{
+				// Add soft timer to power off
+				AssignSoftTimer(GPS_POWER_OFF_TIMER_NUM, (GPS_ACTIVE_LOCATION_SEARCH_TIME * TICKS_PER_MIN), GpsPowerOffTimerCallBack);
+			}
+#endif
 			// Short delay to wait for GPS module
 			SoftUsecWait(1 * SOFT_SECS);
 
@@ -262,6 +271,9 @@ void InitGpsBuffers(void)
 
 	// Rest the GPS Position fix counter
 	g_gpsPosition.validLocationCount = 0;
+
+	// Reset the GPS UTC Epoch time counter
+	g_epochTimeGPS = 0;
 
 	if (g_sampleProcessing != ACTIVE_STATE)
 	{
@@ -616,18 +628,37 @@ void HandleGGA(uint8* message)
 		g_gpsPosition.altitude = ((int)gga.elv);
 		g_gpsPosition.validLocationCount++;
 
-		if (g_gpsPosition.validLocationCount > GPS_THRESHOLD_TOTAL_FIXES_FOR_BEST_LOCATION)
+		if (g_epochTimeGPS == 0)
+		{
+			// Either call GpsQueryTime or set a flag to handle it outside of scope
+			GpsQueryTime();
+		}
+
+		if (g_gpsPosition.validLocationCount == GPS_THRESHOLD_TOTAL_FIXES_FOR_BEST_LOCATION)
 		{
 			g_gpsPosition.positionFix = YES;
 
+#if 0 // Original
 			DisableGps();
-
+#else // New option to allow GPS to remain powered
+			if (g_unitConfig.gpsPowerMode != GPS_POWER_ALWAYS_ON_ACQUIRING)
+			{
+				DisableGps();
+			}
+#endif
 			ActivateDisplayShortDuration(3);
 			sprintf((char*)g_spareBuffer, "Lat %.4f(%c) Lon %.4f(%c)", gga.lat, gga.ns, gga.lon, gga.ew);
 			OverlayMessage(getLangText(GPS_LOCATION_FIX_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
-
+#if 0 // Original
 			// Set timer to re-check GPS location in the future
 			AssignSoftTimer(GPS_POWER_ON_TIMER_NUM, (GPS_REACTIVATION_TIME_NORMAL * TICKS_PER_MIN), GpsPowerOnTimerCallBack);
+#else // New option to allow GPS to remain powered
+			if (g_unitConfig.gpsPowerMode != GPS_POWER_ALWAYS_ON_ACQUIRING)
+			{
+				// Set timer to re-check GPS location in the future
+				AssignSoftTimer(GPS_POWER_ON_TIMER_NUM, (GPS_REACTIVATION_TIME_NORMAL * TICKS_PER_MIN), GpsPowerOnTimerCallBack);
+			}
+#endif
 		}
 
 		if (g_sampleProcessing == ACTIVE_STATE)
@@ -717,18 +748,37 @@ void HandleGLL(uint8* message)
 		g_gpsPosition.utcSec = gll.utc.sec;
 		g_gpsPosition.validLocationCount++;
 
-		if (g_gpsPosition.validLocationCount > GPS_THRESHOLD_TOTAL_FIXES_FOR_BEST_LOCATION)
+		if (g_epochTimeGPS == 0)
+		{
+			// Either call GpsQueryTime or set a flag to handle it outside of scope
+			GpsQueryTime();
+		}
+
+		if (g_gpsPosition.validLocationCount == GPS_THRESHOLD_TOTAL_FIXES_FOR_BEST_LOCATION)
 		{
 			g_gpsPosition.positionFix = YES;
 
+#if 0 // Original
 			DisableGps();
-
+#else // New option to allow GPS to remain powered
+			if (g_unitConfig.gpsPowerMode != GPS_POWER_ALWAYS_ON_ACQUIRING)
+			{
+				DisableGps();
+			}
+#endif
 			ActivateDisplayShortDuration(3);
 			sprintf((char*)g_spareBuffer, "Lat %.4f(%c) Lon %.4f(%c)", gll.lat, gll.ns, gll.lon, gll.ew);
 			OverlayMessage(getLangText(GPS_LOCATION_FIX_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
-
+#if 0 // Original
 			// Set timer to re-check GPS location in the future
 			AssignSoftTimer(GPS_POWER_ON_TIMER_NUM, (GPS_REACTIVATION_TIME_NORMAL * TICKS_PER_MIN), GpsPowerOnTimerCallBack);
+#else // New option to allow GPS to remain powered
+			if (g_unitConfig.gpsPowerMode != GPS_POWER_ALWAYS_ON_ACQUIRING)
+			{
+				// Set timer to re-check GPS location in the future
+				AssignSoftTimer(GPS_POWER_ON_TIMER_NUM, (GPS_REACTIVATION_TIME_NORMAL * TICKS_PER_MIN), GpsPowerOnTimerCallBack);
+			}
+#endif
 		}
 
 		if (g_sampleProcessing == ACTIVE_STATE)
@@ -883,10 +933,15 @@ void ProcessGpsBinaryMessage(void)
 	{
 		for (gpsBinaryIndex = 0; gpsBinaryIndex < TOTAL_GPS_BINARY_COMMANDS; gpsBinaryIndex++)
 		{
-			if (g_gpsBinaryQueue.message[g_gpsBinaryQueue.readIndex].data[0] == s_gpsBinaryMessageTable[gpsBinaryIndex].cmdType)
+			// Look for a match of the Command ID
+			if (s_gpsBinaryMessageTable[gpsBinaryIndex].cmdID == g_gpsBinaryQueue.message[g_gpsBinaryQueue.readIndex].data[0])
 			{
-				s_gpsBinaryMessageTable[gpsBinaryIndex].cmdFunction();
-				break;
+				// Check if the Sub ID is zero (meaning no Sub ID) or if the Sub ID matches the Command Sub ID
+				if ((s_gpsBinaryMessageTable[gpsBinaryIndex].cmdSubID == 0) || (s_gpsBinaryMessageTable[gpsBinaryIndex].cmdSubID) == g_gpsBinaryQueue.message[g_gpsBinaryQueue.readIndex].data[1])
+				{
+					s_gpsBinaryMessageTable[gpsBinaryIndex].cmdFunction();
+					break;
+				}
 			}
 		}
 
@@ -1198,6 +1253,57 @@ void GpsQueryVersion(void)
 	GpsSendBinaryMessage(queryVersionMessage, messageSize);
 }
 
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void GpsQueryTime(void)
+{
+/*
+	=================================================
+	Query Time
+	-------------------------------------------------
+	In : A0 A1 00 02 64 20 44 0D 0A
+*/
+	uint8 queryTimeMessage[] = {0xA0, 0xA1, 0x00, 0x02, 0x64, 0x20};
+	uint8 messageSize = sizeof(queryTimeMessage);
+
+	if (g_gpsOutputToCraft)
+	{
+		uint16 messageLength = sprintf((char*)g_spareBuffer, "GPS Query Time...\r\n");
+		ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
+	}
+
+	GpsSendBinaryMessage(queryTimeMessage, messageSize);
+}
+
+#if 0
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void GpsQueryUTCDate(void)
+{
+/*
+	=================================================
+	Query Time
+	-------------------------------------------------
+	In : A0 A1 00 02 64 16 72 0D 0A
+*/
+	uint8 queryUTCDateMessage[] = {0xA0, 0xA1, 0x00, 0x02, 0x64, 0x16};
+	uint8 messageSize = sizeof(queryUTCDateMessage);
+
+	if (g_gpsOutputToCraft)
+	{
+		uint16 messageLength = sprintf((char*)g_spareBuffer, "GPS Query UTC Date...\r\n");
+		ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
+	}
+
+	GpsSendBinaryMessage(queryUTCDateMessage, messageSize);
+}
+#endif
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void GpsDumpBinaryMessage(void)
 {
 	uint16 messageLength;
@@ -1290,6 +1396,92 @@ void HandleNmeaMsgIntervalQuery(void)
 		GpsDumpBinaryMessage();
 	}
 }
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleGPSQueryTime(void)
+{
+	uint16 messageLength;
+	uint32 timeOfWeekMS;
+	//uint32 subTimeOfWeekNS;
+	uint16 weeks;
+	uint8 leapSeconds;
+	uint8* msgData = &g_gpsBinaryQueue.message[g_gpsBinaryQueue.readIndex].data[0];
+	time_t epochTime;
+
+	if (g_gpsBinaryQueue.message[g_gpsBinaryQueue.readIndex].binMsgValid == YES)
+	{
+		messageLength = sprintf((char*)g_spareBuffer, "GPS Time Query received\r\n");
+	}
+	else
+	{
+		messageLength = sprintf((char*)g_spareBuffer, "GPS Time Query not valid\r\n");
+	}
+
+	if (g_gpsOutputToCraft)
+	{
+		ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
+
+		GpsDumpBinaryMessage();
+	}
+
+	// Offset between 1.1.1970 UTC and 6.1.1980 UTC in seconds: 315964800
+
+	//Example: GPS Time Query response
+	//<64><8e><1f><56><bc><4f><0><1><14><40><8><27><10><12><7>
+	timeOfWeekMS = ((msgData[2] << 24) + (msgData[3] << 16) + (msgData[4] << 8) + (msgData[5]));
+	//subTimeOfWeekNS = ((msgData[6] << 24) + (msgData[7] << 16) + (msgData[8] << 8) + (msgData[9]));
+	weeks = ((msgData[10] << 8) + (msgData[11]));
+	leapSeconds = msgData[12];
+	//fractionSecs = (((timeOfWeekMS % 1000) * 1000 * 1000) + (subTimeOfWeekNS));
+
+	// 315964800 is the correct offset between 1.1.1970 UTC and 6.1.1980 UTC where GPS Time began
+	epochTime = (315964800 + ((weeks * 7) * 86400) + (timeOfWeekMS / 1000) - leapSeconds);
+	g_epochTimeGPS = epochTime;
+
+	//messageLength = sprintf((char*)g_spareBuffer, "GPS Time Details: Time of week ms:%lu, Sub time of week ns:%lu\r\n", timeOfWeekMS, subTimeOfWeekNS);
+	//ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
+}
+
+#if 0
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleUTCDateQuery(void)
+{
+	uint16 messageLength;
+	uint16 utcYear;
+	uint8 utcMonth;
+	uint8 utcDay;
+	uint8* msgData = &g_gpsBinaryQueue.message[g_gpsBinaryQueue.readIndex].data[0];
+
+	if (g_gpsBinaryQueue.message[g_gpsBinaryQueue.readIndex].binMsgValid == YES)
+	{
+		messageLength = sprintf((char*)g_spareBuffer, "UTC Date Query received\r\n");
+	}
+	else
+	{
+		messageLength = sprintf((char*)g_spareBuffer, "UTC Date Query not valid\r\n");
+}
+
+	if (1) //(g_gpsOutputToCraft)
+	{
+		ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
+
+		GpsDumpBinaryMessage();
+	}
+
+	//Example: GPS Time Query response
+	//<64><8a><01><07><dd><01><01>
+	utcYear = ((msgData[3] << 8) + (msgData[4]));
+	utcMonth = msgData[5];
+	utcDay = msgData[6];
+
+	messageLength = sprintf((char*)g_spareBuffer, "UTC Date: %s, %02d, %4d\r\n", g_monthTable[utcMonth].name, utcDay, utcYear);
+	ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
+}
+#endif
 
 ///----------------------------------------------------------------------------
 ///	Function Break
