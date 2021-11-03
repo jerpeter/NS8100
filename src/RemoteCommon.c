@@ -674,6 +674,13 @@ void AutoDialoutStateMachine(void)
 				AssignSoftTimer(AUTO_DIAL_OUT_CYCLE_TIMER_NUM, (uint32)(g_modemSetupRecord.dialOutCycleTime * TICKS_PER_MIN), AutoDialOutCycleTimerCallBack);
 			}
 
+			// Check for a special case where ADO Events only no active connections called out but failed to connect
+			if (__autoDialoutTbl.currentCycleConnects == 0xFFFF)
+			{
+				// Reset the current cycle counts for the special case where ADO Events only call out counted itself
+				__autoDialoutTbl.currentCycleConnects = 0;
+			}
+
 			// Place in Idle state
 			g_autoDialoutState = AUTO_DIAL_IDLE;
 		break;
