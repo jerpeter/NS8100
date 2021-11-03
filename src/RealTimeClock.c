@@ -202,6 +202,27 @@ uint8 SetExternalRtcDate(DATE_TIME_STRUCT* time)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+uint8 SetExternalRtcDateAndTimeByGpsUtcEpoch(time_t currentEpochTime)
+{
+	DATE_TIME_STRUCT currentDateTime;
+	uint8 status = FAILED;
+
+	// Adjust the GPS UTC by the current time zone offset
+	currentEpochTime += (g_unitConfig.utcZoneOffset * 3600);
+
+	currentDateTime = ConvertEpochTimeToDateTime(currentEpochTime);
+
+	status = SetExternalRtcTime(&currentDateTime);
+	if (status == PASSED) { status = SetExternalRtcDate(&currentDateTime); }
+
+	if (status == PASSED) { status = UpdateCurrentTime(); }
+
+	return (status);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 DATE_TIME_STRUCT GetExternalRtcTime(void)
 {
 	RTC_DATE_TIME_STRUCT translateTime;

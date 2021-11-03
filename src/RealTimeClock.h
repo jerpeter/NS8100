@@ -706,6 +706,7 @@ typedef struct
 BOOLEAN ExternalRtcInit(void);
 uint8 SetExternalRtcTime(DATE_TIME_STRUCT* time);
 uint8 SetExternalRtcDate(DATE_TIME_STRUCT* time);
+uint8 SetExternalRtcDateAndTimeByGpsUtcEpoch(time_t currentEpochTime);
 DATE_TIME_STRUCT GetExternalRtcTime(void);
 uint8 UpdateCurrentTime(void);
 DATE_TIME_STRUCT GetCurrentTime(void);
