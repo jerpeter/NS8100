@@ -106,6 +106,8 @@ static float s_vtDiv;
 static VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* s_workingVTChanData;
 #endif
 
+static uint32 s_fractionSecondMarker;
+
 ///----------------------------------------------------------------------------
 ///	Prototypes
 ///----------------------------------------------------------------------------
@@ -157,6 +159,23 @@ void Eic_low_battery_irq(void)
 
 	// Clear the interrupt flag in the processor
 	AVR32_EIC.ICR.int0 = 1;
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+__attribute__((__interrupt__))
+void Gps_status_irq(void)
+{
+	s_fractionSecondMarker = Get_system_register(AVR32_COUNT);
+
+	if (g_epochTimeGPS)
+	{
+		g_epochTimeGPS++;
+	}
+
+	// Clear the interrupt flag in the processor
+	gpio_clear_pin_interrupt_flag(AVR32_PIN_PB30);
 }
 
 ///----------------------------------------------------------------------------
@@ -1346,7 +1365,12 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			{
 				//___________________________________________________________________________________________
 				//__Save date and timestamp of new trigger
-				g_startOfEventDateTimestampBuffer[g_eventBufferWriteIndex] = GetCurrentTime();
+				g_eventDateTimeStampBuffer[g_eventBufferWriteIndex].triggerTime = GetCurrentTime();
+				if ((gpio_get_pin_value(AVR32_PIN_PB14) == 0) && (g_epochTimeGPS))
+				{
+					g_eventDateTimeStampBuffer[g_eventBufferWriteIndex].gpsEpochTriggerTime = g_epochTimeGPS;
+					g_eventDateTimeStampBuffer[g_eventBufferWriteIndex].gpsFractionalSecond = cpu_cy_2_us((Get_system_register(AVR32_COUNT) - s_fractionSecondMarker), FOSC0);
+				}
 
 				//___________________________________________________________________________________________
 				//__Setup new event buffer pointers, counts, and flags

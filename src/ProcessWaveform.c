@@ -76,7 +76,14 @@ void MoveWaveformEventToFile(void)
 		{
 			case WAVE_INIT:
 				// Save event start time with buffered timestamp
-				g_pendingEventRecord.summary.captured.eventTime = g_startOfEventDateTimestampBuffer[g_eventBufferReadIndex];
+				g_pendingEventRecord.summary.captured.eventTime = g_eventDateTimeStampBuffer[g_eventBufferReadIndex].triggerTime;
+
+				if ((gpio_get_pin_value(AVR32_PIN_PB14) == 0) && (g_epochTimeGPS))
+				{
+					g_pendingEventRecord.summary.captured.eventTime.valid = YES;
+					g_pendingEventRecord.summary.captured.gpsEpochTriggerTime = g_eventDateTimeStampBuffer[g_eventBufferReadIndex].gpsEpochTriggerTime;
+					g_pendingEventRecord.summary.captured.gpsFractionalSecond = g_eventDateTimeStampBuffer[g_eventBufferReadIndex].gpsFractionalSecond;
+				}
 
 				if (getSystemEventState(EXT_TRIGGER_EVENT))
 				{
