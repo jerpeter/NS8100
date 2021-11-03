@@ -140,6 +140,7 @@ enum {
 	STRING_TYPE,
 	STRING_SPECIAL_TYPE,
 	INTEGER_BYTE_TYPE,
+	INTEGER_BYTE_OFFSET_TYPE,
 	INTEGER_WORD_TYPE,
 	INTEGER_WORD_FIXED_TYPE,
 	INTEGER_WORD_OFFSET_TYPE,
@@ -334,6 +335,11 @@ enum {
 #define MODEM_RETRY_TIME_MIN_VALUE		1
 #define MODEM_RETRY_TIME_MAX_VALUE		60
 
+// Modem Dial Out Timer stuff
+#define MODEM_DIAL_OUT_TIMER_DEFAULT_VALUE	60
+#define MODEM_DIAL_OUT_TIMER_MIN_VALUE		1
+#define MODEM_DIAL_OUT_TIMER_MAX_VALUE		1440
+
 // Distance to Source stuff
 #define DISTANCE_TO_SOURCE_DEFAULT_VALUE	0.0
 #define DISTANCE_TO_SOURCE_INCREMENT_VALUE	1.0
@@ -451,6 +457,9 @@ enum {
 	FLASH_WRAPPING,
 	FLASH_STATS,
 	FREQUENCY_PLOT,
+#if 1 // Test
+	GPS_POWER,
+#endif
 	LANGUAGE,
 	LCD_CONTRAST,
 	LCD_TIMEOUT,
@@ -471,6 +480,7 @@ enum {
 	UNITS_OF_MEASURE,
 	UNITS_OF_AIR,
 	USB_SYNC_MODE,
+	UTC_ZONE_OFFSET,
 	VECTOR_SUM,
 	WAVEFORM_AUTO_CAL,
 	ZERO_EVENT_NUMBER,
@@ -890,12 +900,14 @@ void ExternalTriggerMenuHandler(uint8 key, void* data);
 void FlashWrappingMenuHandler(uint8 key, void* data);
 void FreqPlotMenuHandler(uint8 key, void* data);
 void FreqPlotStandardMenuHandler(uint8 key, void* data);
+void GpsPowerMenuHandler(uint8 key, void* data);
 void HardwareIDMenuHandler(uint8 key, void* data);
 void HelpMenuHandler(uint8 key, void* data);
 void InfoMenuHandler(uint8 key, void* data);
 void LanguageMenuHandler(uint8 key, void* data);
 void LegacyDqmLimitMenuHandler(uint8 key, void* data);
 void ModeMenuHandler(uint8 key, void* data);
+void ModemDialOutTypeMenuHandler(uint8 key, void* data);
 void ModemSetupMenuHandler(uint8 key, void* data);
 void MonitorLogMenuHandler(uint8 key, void* data);
 void PeakAccMenuHandler(uint8 key, void* data);
@@ -944,8 +956,9 @@ void DistanceToSourceMenuHandler(uint8 key, void* data);
 void LcdImpulseTimeMenuHandler(uint8 key, void* data);
 void LcdTimeoutMenuHandler(uint8 key, void* data);
 void ModemDialMenuHandler(uint8 key, void* data);
+void ModemDialOutCycleTimeMenuHandler(uint8 key, void* data);
 void ModemInitMenuHandler(uint8 key, void* data);
-void modemResetMenuHandler(uint8 key, void* data);
+void ModemResetMenuHandler(uint8 key, void* data);
 void ModemRetryMenuHandler(uint8 key, void* data);
 void ModemRetryTimeMenuHandler(uint8 key, void* data);
 void NotesMenuHandler(uint8 key, void* data);
@@ -957,6 +970,7 @@ void SeismicTriggerMenuHandler(uint8 key, void* data);
 void SerialNumberMenuHandler(uint8 key, void* data);
 void StoredEventLimitMenuHandler(uint8 key, void* data);
 void UnlockCodeMenuHandler(uint8 key, void* data);
+void UtcZoneOffsetMenuHandler(uint8 key, void* data);
 void WeightPerDelayMenuHandler(uint8 key, void* data);
 //----------------------------------------
 // End of Menu Handlers
