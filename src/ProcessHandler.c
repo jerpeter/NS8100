@@ -695,9 +695,14 @@ void HandleCycleChangeEvent(void)
 		g_autoRetries = 0;
 		ModemResetProcess();
 #else // New AutoDialOut Config/Status if no events during the day
+		// Check if Auto Dial Out in Events only mode and not active connections during the current cycle
 		if ((g_modemSetupRecord.dialOutType != AUTODIALOUT_EVENTS_CONFIG_STATUS) && (__autoDialoutTbl.currentCycleConnects == 0))
 		{
-			CheckAutoDialoutStatusAndFlagIfAvailable();
+			if (CheckAutoDialoutStatusAndFlagIfAvailable() == YES)
+			{
+				// Set current cycle connections to a special 0xFFFF so that incrementing by 1 will leave this zero, excluding this call out from counting in the current cycle stats
+				__autoDialoutTbl.currentCycleConnects = 0xFFFF;
+			}
 		}
 		else
 		{
