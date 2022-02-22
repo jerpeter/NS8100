@@ -747,10 +747,9 @@ static inline void checkAlarms_ISR_Inline(void)
 ///----------------------------------------------------------------------------
 static inline uint8 usbmAndOsmFirstSlope_ISR_Inline(float freq, uint16 peak)
 {
-	// PPV in in(Hz) = 0.19685 * (Hz^0.964896941555782)
-
 	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
-	if (peak > (s_vtDiv * 0.19685 * pow(freq, 0.964896))) { return (YES); }
+	// PPV = 2 * PI * Freq * Fixed Disp equaling 0.03
+	if (peak > (freq * 0.188495)) { return (YES); }
 
 	return (NO);
 }
@@ -760,10 +759,9 @@ static inline uint8 usbmAndOsmFirstSlope_ISR_Inline(float freq, uint16 peak)
 ///----------------------------------------------------------------------------
 static inline uint8 usbmSecondSlope_ISR_Inline(float freq, uint16 peak)
 {
-	// PPV in in(Hz) = 0.05 * (Hz^1)
-
 	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
-	if (peak > (s_vtDiv * 0.05 * freq)) { return (YES); }
+	// PPV = 2 * PI * Freq * Fixed Disp equaling 0.008
+	if (peak > (freq * 0.050265)) { return (YES); }
 
 	return (NO);
 }
@@ -773,10 +771,9 @@ static inline uint8 usbmSecondSlope_ISR_Inline(float freq, uint16 peak)
 ///----------------------------------------------------------------------------
 static inline uint8 osmSecondSlope_ISR_Inline(float freq, uint16 peak)
 {
-	// PPV in in(Hz) = 0.0524648429167308 * (Hz^1.0704345453823)
-
 	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
-	if (peak > (s_vtDiv * 0.052464 * pow(freq, 1.070434))) { return (YES); }
+	// PPV = 2 * PI * Freq * Fixed Disp equaling 0.0107
+	if (peak > (freq * 0.067230)) { return (YES); }
 
 	return (NO);
 }
@@ -787,45 +784,39 @@ static inline uint8 osmSecondSlope_ISR_Inline(float freq, uint16 peak)
 void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 {
 /*
-	============
-	USBM Drywall
-	------------
-	0.19685 ips/5 mm @ 1 Hz (slope up)
-	(0.50 ips/12.7 mm @ 2.5 Hz) (pass thru)
-	0.75 ips/19.05 mm @ 4 Hz (flat line)
-	0.75 ips/19.05 mm @ 15 Hz (slope up)
-	2.00 ips/50.8 mm @ 40 Hz (flat line out)
+	==================================================
+	=== Actual equations provided by Ken E. at OSM
+	==================================================
+	--- USBM Drywall ---
+	1 Hz - 3.979 Hz (1st curve, D = 0.03)
+	3.979 Hz - 14.921 Hz (flat 0.75 IPS)
+	14.921 Hz - 39.789 Hz (2nd curve, D = 0.008)
+	39.789+ Hz (flat 2.00 IPS)
 
-	============
-	USBM Plaster
-	------------
-	0.19685 ips/5 mm @ 1 Hz (slope up)
-	0.50 ips/12.7 mm @ 2.5 Hz (flat line)
-	0.50 ips/12.7 mm @ 10 Hz (slope up)
-	(0.75 ips/19.05 mm @ 15 Hz) (pass thru)
-	2.00 ips/50.8 mm @ 40 Hz (flat line out)
+	--- USBM Plaster ---
+	1 Hz - 2.653 Hz (1st curve, D = 0.03)
+	2.653 Hz - 9.947 Hz (flat 0.50 IPS)
+	9.947 Hz - 39.789 Hz (2nd curve, D = 0.008)
+	39.789+ Hz (flat 2.00 IPS)
 
-	==================
-	OSM Standard Slope
-	------------------
-	0.19685 ips/5 mm @ 1 Hz (slope up)
-	(0.50 ips/12.7 mm @ 2.5 Hz) (pass thru)
-	0.75 ips/19.05 mm @ 4 Hz (flat line)
-	0.75 ips/19.05 mm @ 12 Hz (slope up)
-	2.00 ips/50.8 mm @ 30 Hz (flat line out)
+	--- OSM Standard ---
+	1 Hz - 3.979 Hz (1st curve, D = 0.03)
+	3.979 Hz - 11.156 Hz (flat 0.75 IPS)
+	11.156 Hz - 29.749 Hz (2nd curve, D = 0.0107)
+	29.749+ Hz (flat 2.00 IPS)
 
-	=====================
-	Custom Threshold Step
-	---------------------
+	=========================
+	=== Custom Threshold Step
+	=========================
 	0.10 ips below 10 Hz
 	0.25 ips below 20 Hz
 	0.5 ips below 30 Hz
 	0.75 ips below 40 Hz
 	1.0 ips over 40 Hz
 
-	====================
-	Custom Limiting Step
-	--------------------
+	========================
+	=== Custom Limiting Step
+	========================
 	0.15 ips below 10 Hz
 	0.5 ips below 20 Hz
 	1.0 ips below 30 Hz
@@ -846,21 +837,21 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 	// Check the frequency band for the specific vibration standard
 	if (g_triggerRecord.trec.variableTriggerVibrationStandard == USBM_RI_8507_DRYWALL_STANDARD)
 	{
-		if (freq < 4.0) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
-		else if (freq < 15.0) {	if (peak > 0.75) { triggerFound = YES; } }
-		else if (freq < 40.0) { if (usbmSecondSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
+		if (freq < 3.979) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
+		else if (freq < 14.921) { if (peak > 0.75) { triggerFound = YES; } }
+		else if (freq < 39.789) { if (usbmSecondSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
 	}
 	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == USBM_RI_8507_PLASTER_STANDARD)
 	{
-		if (freq < 2.5) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
-		else if (freq < 10.0) {	if (peak > 0.50) { triggerFound = YES; } }
-		else if (freq < 40.0) { if (usbmSecondSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
+		if (freq < 2.653) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
+		else if (freq < 9.947) { if (peak > 0.50) { triggerFound = YES; } }
+		else if (freq < 39.789) { if (usbmSecondSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
 	}
 	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == OSM_REGULATIONS_STANDARD)
 	{
-		if (freq < 4.0) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
-		else if (freq < 12.0) {	if (peak > 0.75) { triggerFound = YES; } }
-		else if (freq < 30.0) { if (osmSecondSlope_ISR_Inline(freq, chan->peak)) { triggerFound = YES; } }
+		if (freq < 3.979) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
+		else if (freq < 11.156) { if (peak > 0.75) { triggerFound = YES; } }
+		else if (freq < 29.749) { if (osmSecondSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
 	}
 	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == CUSTOM_STEP_THRESHOLD)
 	{
