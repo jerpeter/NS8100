@@ -749,7 +749,7 @@ static inline uint8 usbmAndOsmFirstSlope_ISR_Inline(float freq, uint16 peak)
 {
 	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
 	// PPV = 2 * PI * Freq * Fixed Disp equaling 0.03
-	if (peak > (freq * 0.188495)) { return (YES); }
+	if (peak > (s_vtDiv * freq * 0.188495)) { return (YES); }
 
 	return (NO);
 }
@@ -761,7 +761,7 @@ static inline uint8 usbmSecondSlope_ISR_Inline(float freq, uint16 peak)
 {
 	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
 	// PPV = 2 * PI * Freq * Fixed Disp equaling 0.008
-	if (peak > (freq * 0.050265)) { return (YES); }
+	if (peak > (s_vtDiv * freq * 0.050265)) { return (YES); }
 
 	return (NO);
 }
@@ -773,7 +773,7 @@ static inline uint8 osmSecondSlope_ISR_Inline(float freq, uint16 peak)
 {
 	// Check if peak in counts is greater than the freq conversion to PPV turned into counts
 	// PPV = 2 * PI * Freq * Fixed Disp equaling 0.0107
-	if (peak > (freq * 0.067230)) { return (YES); }
+	if (peak > (s_vtDiv * freq * 0.067230)) { return (YES); }
 
 	return (NO);
 }
@@ -837,21 +837,21 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 	// Check the frequency band for the specific vibration standard
 	if (g_triggerRecord.trec.variableTriggerVibrationStandard == USBM_RI_8507_DRYWALL_STANDARD)
 	{
-		if (freq < 3.979) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
+		if (freq < 3.979) { if (peak > (freq * 0.188495)) { triggerFound = YES; } } // USBM Drywall 1st slopt, PPV = 2 * PI * Freq * 0.03 (Fixed Disp)
 		else if (freq < 14.921) { if (peak > 0.75) { triggerFound = YES; } }
-		else if (freq < 39.789) { if (usbmSecondSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
+		else if (freq < 39.789) { if (peak > (freq * 0.050265)) { triggerFound = YES; } } // USBM Drywall 2nd slope, PPV = 2 * PI * Freq * 0.008 (Fixed Disp)
 	}
 	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == USBM_RI_8507_PLASTER_STANDARD)
 	{
-		if (freq < 2.653) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
+		if (freq < 2.653) { if (peak > (freq * 0.188495)) { triggerFound = YES; } } // USBM Plaster 1st slope, PPV = 2 * PI * Freq * 0.03 (Fixed Disp)
 		else if (freq < 9.947) { if (peak > 0.50) { triggerFound = YES; } }
-		else if (freq < 39.789) { if (usbmSecondSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
+		else if (freq < 39.789) { if (peak > (freq * 0.050265)) { triggerFound = YES; } } // USBM Plaster 2nd slope, PPV = 2 * PI * Freq * 0.008 (Fixed Disp)
 	}
 	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == OSM_REGULATIONS_STANDARD)
 	{
-		if (freq < 3.979) { if (usbmAndOsmFirstSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
+		if (freq < 3.979) { if (peak > (freq * 0.188495)) { triggerFound = YES; } } // OSM 1st slope, PPV = 2 * PI * Freq * 0.03 (Fixed Disp)
 		else if (freq < 11.156) { if (peak > 0.75) { triggerFound = YES; } }
-		else if (freq < 29.749) { if (osmSecondSlope_ISR_Inline(freq, peak)) { triggerFound = YES; } }
+		else if (freq < 29.749) { if (peak > (freq * 0.067230)) { triggerFound = YES; } } // OSM 2nd slope, PPV = 2 * PI * Freq * 0.0107 (Fixed Disp)
 	}
 	else if (g_triggerRecord.trec.variableTriggerVibrationStandard == CUSTOM_STEP_THRESHOLD)
 	{
@@ -2478,7 +2478,7 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 		{
 			checkForTemperatureDrift_ISR_Inline();
 		}
-	}		
+	} // End of reading raw data from External A/D
 
 	//___________________________________________________________________________________________
 	//___AD data read successfully, Normal operation
