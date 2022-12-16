@@ -82,8 +82,8 @@ enum {
 #define LBS_PER_KG			 		2.2
 #define FT_PER_METER				3.280833
 
-#define ONE_GRAVITY_IN_INCHES		386.4
-#define ONE_GRAVITY_IN_MM			9814.6
+#define ONE_GRAVITY_IN_INCHES		386.088 // Using a more exact value, old 1G was 386.4
+#define ONE_GRAVITY_IN_MM			9806.65 // using a more exact value, old 1G was 9814.6
 
 #define DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT	10 // 0.05 * 200 = 10, 0.05 inches at low sensitivity
 
