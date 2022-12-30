@@ -1484,12 +1484,79 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void FillInTriggerLevelRecordInfo(EVT_RECORD* eventRec)
+{
+	float tempSesmicTriggerInUnits;
+	float unitsDiv;
+
+	eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
+
+	if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR) ||
+	(g_triggerRecord.trec.airTriggerLevel == MANUAL_TRIGGER_CHAR))
+	{
+		eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
+
+		debug("Seismic trigger in units: No Trigger\r\n");
+	}
+	else if (g_triggerRecord.trec.variableTriggerEnable == YES)
+	{
+		eventRec->summary.parameters.seismicTriggerLevel = (VARIABLE_TRIGGER_CHAR_BASE + g_triggerRecord.trec.variableTriggerVibrationStandard);
+
+		debug("Seismic trigger in units: Variable Trigger (Vibration Standard: %d)\r\n", g_triggerRecord.trec.variableTriggerVibrationStandard);
+	}
+	else // Seismic trigger is standard/valid
+	{
+		eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+
+		// Calculate the divider used for converting stored A/D peak counts to units of measure
+		if ((g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0200) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0500))
+		{
+			unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType * ACC_832M1_SCALER);
+		}
+		else unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
+
+		tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
+
+		if ((g_factorySetupRecord.seismicSensorType < SENSOR_ACC_RANGE_DIVIDER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
+		{
+			tempSesmicTriggerInUnits *= (float)METRIC;
+		}
+
+		debug("Seismic trigger in units: %05.2f %s\r\n", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
+		eventRec->summary.parameters.seismicTriggerInUnits = (uint32)(tempSesmicTriggerInUnits * 100);
+	}
+
+	if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR) ||
+	(g_triggerRecord.trec.airTriggerLevel == MANUAL_TRIGGER_CHAR))
+	{
+		eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
+
+		debug("Air trigger in units: No Trigger\r\n");
+	}
+	else // Air trigger is valid
+	{
+		eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
+
+		eventRec->summary.parameters.airTriggerInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
+
+		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
+		{
+			debug("Air trigger in units: %05.3f mB\r\n", (float)(eventRec->summary.parameters.airTriggerInUnits / 10000));
+		}
+		else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+		{
+			debug("Air trigger in units: %d dB\r\n", eventRec->summary.parameters.airTriggerInUnits);
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void InitEventRecord(uint8 opMode)
 {
 	EVT_RECORD* eventRec;
 	uint8 idex;
-	float tempSesmicTriggerInUnits;
-	float unitsDiv;
 
 	if ((opMode == WAVEFORM_MODE) || (opMode == MANUAL_CAL_MODE) || (opMode == COMBO_MODE))
 	{
@@ -1519,64 +1586,7 @@ void InitEventRecord(uint8 opMode)
 		else // ((opMode == WAVEFORM_MODE) || (opMode == COMBO_MODE))
 		{
 			eventRec->summary.parameters.recordTime = (uint32)g_triggerRecord.trec.record_time;
-
-			if ((g_triggerRecord.trec.seismicTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.seismicTriggerLevel == EXTERNAL_TRIGGER_CHAR) ||
-				(g_triggerRecord.trec.airTriggerLevel == MANUAL_TRIGGER_CHAR))
-			{
-				eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel;
-
-				debug("Seismic trigger in units: No Trigger\r\n");
-			}
-			else if (g_triggerRecord.trec.variableTriggerEnable == YES)
-			{
-				eventRec->summary.parameters.seismicTriggerLevel = (VARIABLE_TRIGGER_CHAR_BASE + g_triggerRecord.trec.variableTriggerVibrationStandard);
-
-				debug("Seismic trigger in units: Variable Trigger (Vibration Standard: %d)\r\n", g_triggerRecord.trec.variableTriggerVibrationStandard);
-			}
-			else // Seismic trigger is standard/valid
-			{
-				eventRec->summary.parameters.seismicTriggerLevel = g_triggerRecord.trec.seismicTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
-
-				// Calculate the divider used for converting stored A/D peak counts to units of measure
-				if ((g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0200) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0500))
-				{
-					unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType * ACC_832M1_SCALER);
-				}
-				else unitsDiv = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
-
-				tempSesmicTriggerInUnits = (float)(g_triggerRecord.trec.seismicTriggerLevel >> g_bitShiftForAccuracy) / (float)unitsDiv;
-
-				if ((g_factorySetupRecord.seismicSensorType < SENSOR_ACC_RANGE_DIVIDER) && (g_unitConfig.unitsOfMeasure == METRIC_TYPE))
-				{
-					tempSesmicTriggerInUnits *= (float)METRIC;
-				}
-
-				debug("Seismic trigger in units: %05.2f %s\r\n", tempSesmicTriggerInUnits, (g_unitConfig.unitsOfMeasure == METRIC_TYPE ? "mm" : "in"));
-				eventRec->summary.parameters.seismicTriggerInUnits = (uint32)(tempSesmicTriggerInUnits * 100);
-			}
-
-			if ((g_triggerRecord.trec.airTriggerLevel == NO_TRIGGER_CHAR) || (g_triggerRecord.trec.airTriggerLevel == EXTERNAL_TRIGGER_CHAR) ||
-				(g_triggerRecord.trec.airTriggerLevel == MANUAL_TRIGGER_CHAR))
-			{
-				eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel;
-
-				debug("Air trigger in units: No Trigger\r\n");
-			}
-			else // Air trigger is valid
-			{
-				eventRec->summary.parameters.airTriggerLevel = g_triggerRecord.trec.airTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint);
-
-				eventRec->summary.parameters.airTriggerInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-
-				if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-				{
-					debug("Air trigger in units: %05.3f mB\r\n", (float)(eventRec->summary.parameters.airTriggerInUnits / 10000));
-				}
-				else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-				{
-					debug("Air trigger in units: %d dB\r\n", eventRec->summary.parameters.airTriggerInUnits);
-				}
-			}
+			FillInTriggerLevelRecordInfo(eventRec);
 		}	
 	}
 
@@ -1586,11 +1596,14 @@ void InitEventRecord(uint8 opMode)
 		ClearAndFillInCommonRecordInfo(eventRec);
 
 		eventRec->summary.mode = opMode;
-		if (opMode == COMBO_MODE) { eventRec->summary.subMode = BARGRAPH_MODE; }
+		if (opMode == COMBO_MODE)
+		{
+			eventRec->summary.subMode = BARGRAPH_MODE;
+			FillInTriggerLevelRecordInfo(eventRec); // Set the trigger level in Combo - Bargraph to track trigger level in case no events were taken
+		}
+
 		eventRec->summary.eventNumber = (uint16)g_nextEventNumberToUse;
-
 		eventRec->summary.captured.eventTime = GetCurrentTime();
-
 		eventRec->summary.parameters.barInterval = (uint16)g_triggerRecord.bgrec.barInterval;
 		eventRec->summary.parameters.summaryInterval = (uint16)g_triggerRecord.bgrec.summaryInterval;
 		eventRec->summary.parameters.numOfSamples = 0;
