@@ -1181,74 +1181,6 @@ void ClearEventListCache(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-void ParseAndCountSummaryListEntries(void)
-{
-#if 0 // Test
-	uint16 length;
-#endif
-
-	ClearEventListCache();
-
-	file_seek(0, FS_SEEK_SET);
-	while (ReadWithSizeFix(g_summaryList.file, (uint8*)&g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT)) != -1)
-	{
-		if (g_summaryList.cachedEntry.eventNumber)
-		{
-			// Validate event file is present to make sure it hasn't been deleted under the covers
-			if (ValidateEventNumber(g_summaryList.cachedEntry.eventNumber))
-			{
-#if 0 // Test
-				length = sprintf((char*)g_debugBuffer, "Validated Summary List Event#: %d\r\n", g_summaryList.cachedEntry.eventNumber);
-				ModemPuts(g_debugBuffer, length, NO_CONVERSION);
-#endif
-				g_summaryList.validEntries++;
-
-				CacheSummaryListEntryToEventList(INIT_LIST);
-			}
-			else // Event file is missing, need to clear summary list entry
-			{
-#if 0 // Test
-				length = sprintf((char*)g_debugBuffer, "Removing Summary List entry due to missing Event#: %d\r\n", g_summaryList.cachedEntry.eventNumber);
-				ModemPuts(g_debugBuffer, length, NO_CONVERSION);
-#endif
-				// Clear out summary list cache
-				memset(&g_summaryList.cachedEntry, 0, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
-
-				// Rewind to the start of the current summary entry
-				file_seek(sizeof(SUMMARY_LIST_ENTRY_STRUCT), FS_SEEK_CUR_RE);
-
-				// Write out the empty summary entry
-				WriteWithSizeFix(g_summaryList.file, (uint8*)&g_summaryList.cachedEntry, sizeof(SUMMARY_LIST_ENTRY_STRUCT));
-
-				// Entry removed this run
-				g_summaryList.deletedEntries++;
-			}
-		}
-		else
-		{
-			// Entry was removed on a prior run
-			g_summaryList.deletedEntries++;
-		}
-	}
-
-	// Set the summary list total entries
-	g_summaryList.totalEntries = g_summaryList.validEntries + g_summaryList.deletedEntries;
-
-	if (g_summaryList.totalEntries != (g_summaryList.validEntries + g_summaryList.deletedEntries))
-	{
-		debugErr("Summary List Parse and Count showing incorrect amount of total entries\r\n");
-	}
-	else
-	{
-		debug("Summary List file: Valid Entires: %d, Deleted Entries: %d (Total: %d)\r\n", g_summaryList.validEntries, g_summaryList.deletedEntries, g_summaryList.totalEntries);
-	}
-
-	//nav_select(FS_NAV_ID_DEFAULT);
-}
-
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
 void ParseAndCountSummaryListEntriesWithRewrite(void)
 {
 	uint32 startRewriteFileLocation = 0;
@@ -1354,11 +1286,7 @@ void InitSummaryListFile(void)
 			debugErr("Summary List file contains a corrupted entry\r\n");
 		}
 
-#if 0 // Original
-		ParseAndCountSummaryListEntries();
-#else // New parse with rewrite
 		ParseAndCountSummaryListEntriesWithRewrite();
-#endif
 	}
 	else
 	{
