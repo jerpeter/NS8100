@@ -47,6 +47,28 @@
 #define BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE				12
 #define BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE	20
 
+typedef struct
+{
+	uint16 air;	// Max Air peak
+	uint16 r;	// Max R peak
+	uint16 v;	// Max V peak
+	uint16 t;	// Max T peak
+	uint32 vs;	// Max Vector sum data (squared)
+} BAR_INTERVAL_ALL_CHANNEL_PEAK_DATA_STRUCT;
+
+typedef struct
+{
+	uint16 air;	// Max Air peak for an interval
+	uint16 r;	// Max R peak
+	uint16 v;	// Max V peak
+	uint16 t;	// Max T peak
+	uint16 aFreq;	// Air freq in count
+	uint16 rFreq;	// R freq in count
+	uint16 vFreq;	// V freq in count
+	uint16 tFreq;	// T freq in count
+	uint32 vs;	// Max Vector sum data (squared)
+} BAR_INTERVAL_ALL_CHANNEL_PEAK_AND_FREQ_DATA_STRUCT;
+
 enum // Set unique values to the following types (actual value doesn't matter)
 {
 	READ_PTR,
