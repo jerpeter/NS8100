@@ -438,7 +438,8 @@ enum {
 
 // Config Menu types
 enum {
-	ALARM_OUTPUT_MODE = 1,
+	ADAPTIVE_SAMPLE_RATE = 1,
+	ALARM_OUTPUT_MODE,
 	AUTO_CALIBRATION,
 	AUTO_DIAL_INFO,
 	AUTO_MONITOR,
@@ -509,6 +510,12 @@ enum {
 enum {
 	EVENT_PROCESSING,
 	FINISH_PROCESSING
+};
+
+// Sampling methods
+enum {
+	FIXED_SAMPLING = 0,
+	ADAPTIVE_SAMPLING
 };
 
 // Measurement types
@@ -871,6 +878,7 @@ void MonitorLogMn (INPUT_MSG_STRUCT msg);
 // User Select Menu Enter and Esc Handlers
 //----------------------------------------
 void AcousticSensorTypeMenuHandler(uint8 key, void* data);
+void AdaptiveSamplingMenuHandler(uint8 key, void* data);
 void AdChannelVerificationMenuHandler(uint8 key, void* data);
 void AirScaleMenuHandler(uint8 key, void* data);
 void AirSetupMenuHandler(uint8 key, void* data);
@@ -919,6 +927,7 @@ void Rs232PowerSavingsMenuHandler(uint8 key, void* data);
 void RecalibrateMenuHandler(uint8 key, void* data);
 void SaveCompressedDataMenuHandler(uint8 key, void* data);
 void SampleRateMenuHandler(uint8 key, void* data);
+void SamplingMethodMenuHandler(uint8 key, void* data);
 void SaveSetupMenuHandler(uint8 key, void* data);
 void SeismicSensorTypeMenuHandler(uint8 key, void* data);
 void SeismicTriggerTypeMenuHandler(uint8 keyPressed, void* data);

@@ -102,21 +102,11 @@ enum {
 	NO_EVENT_FILE = 0xFF
 };
 
-enum TRIGGER_DEFAULT_RECORD_INDEX
-{
-	// Options MUST stay in this order
-	NOT_USED_INDEX = 0,
-	CLIENT_INDEX,
-	SEISMIC_LOCATION_INDEX,
-	COMMENTS_INDEX,
-	DISTANCE_TO_SOURCE_INDEX,
-	WEIGHT_PER_DELAY_INDEX,
-	OPERATOR_INDEX,
-	SEISMIC_TRIGGER_INDEX,
-	AIR_TRIGGER_INDEX,
-	RECORD_TRIGGER_INDEX,
-	SAMPLE_RATE_INDEX,
-	LAST_INDEX
+enum {
+	ADAPTIVE_DISABLED = 0,
+	ADAPTIVE_MAX_RATE,
+	ADAPTIVE_MAX_WAITING_TO_DROP,
+	ADAPTIVE_MIN_RATE
 };
 
 enum {
@@ -196,7 +186,8 @@ typedef struct
 	uint8 loc[TRIGGER_EVENT_STRING_SIZE];
 	uint16 unused2;
 	uint8 comments[TRIGGER_EVENT_STRING_SIZE];
-	uint16 unused3;
+	uint8 unused3;
+	uint8 samplingMethod;
 	float dist_to_source;
 	float weight_per_delay;
 	uint8 oper[TRIGGER_EVENT_STRING_SIZE];
@@ -284,7 +275,7 @@ typedef struct
 	uint32 spare2; // Move Min Levels to globals to make room for other storage elements
 	uint32 alarmTwoSeismicLevel;
 	uint8 spare3;
-	uint8 spare4;
+	uint8 adaptiveSampling;
 	uint8 gpsPowerMode;
 	int8 utcZoneOffset;
 	uint32 alarmTwoAirLevel;

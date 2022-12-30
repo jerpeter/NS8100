@@ -403,6 +403,7 @@ void LoadTrigRecordDefaults(REC_EVENT_MN_STRUCT* triggerRecordPtr, uint8 opMode)
 	triggerRecordPtr->validRecord = YES;
 	triggerRecordPtr->opMode = opMode;
 	triggerRecordPtr->trec.sample_rate = SAMPLE_RATE_1K;
+	triggerRecordPtr->trec.samplingMethod = FIXED_SAMPLING;
 	triggerRecordPtr->srec.sensitivity = LOW;
 	triggerRecordPtr->trec.dist_to_source = 0;
 	triggerRecordPtr->trec.weight_per_delay = 0;
@@ -445,6 +446,7 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT* unitConfigPtr)
 	memset(unitConfigPtr, 0, sizeof(UNIT_CONFIG_STRUCT));
 
 	// Set default conditions
+	unitConfigPtr->adaptiveSampling = ENABLED;
 	unitConfigPtr->adChannelVerification = ENABLED;
 	unitConfigPtr->airScale = AIR_SCALE_LINEAR;
 	unitConfigPtr->alarmOneAirLevel = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;

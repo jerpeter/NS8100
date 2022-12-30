@@ -94,6 +94,7 @@ extern USER_MENU_STRUCT saveSetupMenu[];
 extern USER_MENU_STRUCT sampleRateMenu[];
 extern USER_MENU_STRUCT sampleRateBargraphMenu[];
 extern USER_MENU_STRUCT sampleRateComboMenu[];
+extern USER_MENU_STRUCT samplingMethodMenu[];
 extern USER_MENU_STRUCT seismicSensorTypeMenu[];
 extern USER_MENU_STRUCT seismicTriggerMenu[];
 #if (!VT_FEATURE_DISABLED)
@@ -121,6 +122,49 @@ extern USER_MENU_STRUCT zeroEventNumberMenu[];
 ///----------------------------------------------------------------------------
 ///	Local Scope Globals
 ///----------------------------------------------------------------------------
+
+//*****************************************************************************
+//=============================================================================
+// Adaptive Sample Rate Menu
+//=============================================================================
+//*****************************************************************************
+#define ADAPTIVE_SAMPLING_MENU_ENTRIES 4
+USER_MENU_STRUCT adaptiveSamplingMenu[ADAPTIVE_SAMPLING_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, ADAPTIVE_SAMPLING_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, ADAPTIVE_SAMPLING_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{NO_TAG, 0, SHOW_OPTION_IN_SETUP_TEXT,	NO_TAG,	{ENABLED}},
+{NO_TAG, 0, HIDE_OPTION_DISABLE_TEXT,	NO_TAG,	{DISABLED}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AdaptiveSamplingMenuHandler}}
+};
+
+//-------------------------------------
+// Adaptive Sample Rate Menu Handler
+//-------------------------------------
+void AdaptiveSamplingMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_unitConfig.adaptiveSampling = (uint8)adaptiveSamplingMenu[newItemIndex].data;
+		SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
+
+		// Make sure if option is disabled that the current sampling method is set to fixed
+		if (g_unitConfig.adaptiveSampling == DISABLED)
+		{
+			g_triggerRecord.trec.samplingMethod = FIXED_SAMPLING;
+		}
+
+		SETUP_USER_MENU_MSG(&configMenu, DEFAULT_ITEM_1);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&configMenu, ADAPTIVE_SAMPLING);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
 
 //*****************************************************************************
 //=============================================================================
@@ -1174,9 +1218,9 @@ void BarIntervalDataTypeMenuHandler(uint8 keyPressed, void* data)
 USER_MENU_STRUCT barLiveMonitorMenu[BAR_LIVE_MONITOR_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, BAR_LIVE_MONITOR_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, BAR_LIVE_MONITOR_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-	{ITEM_1, 0, REMOTE_CONTROL_TEXT,	NO_TAG, {NO}},
-	{ITEM_2, 0, BLIND_SEND_TEXT,		NO_TAG,	{YES}},
-	{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&BarLiveMonitorMenuHandler}}
+{ITEM_1, 0, REMOTE_CONTROL_TEXT,	NO_TAG, {NO}},
+{ITEM_2, 0, BLIND_SEND_TEXT,		NO_TAG,	{YES}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&BarLiveMonitorMenuHandler}}
 };
 
 //------------------------------
@@ -1505,18 +1549,26 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 	}
 	else if (keyPressed == ESC_KEY)
 	{
-		if (g_triggerRecord.opMode == BARGRAPH_MODE)
+		// New Adaptive Sampling
+		if ((g_triggerRecord.trec.sample_rate == SAMPLE_RATE_1K) || (g_unitConfig.adaptiveSampling != ENABLED))
 		{
-			SETUP_USER_MENU_MSG(&sampleRateBargraphMenu, g_triggerRecord.trec.sample_rate);
-		}		
-		else if (g_triggerRecord.opMode == COMBO_MODE)
-		{
-			SETUP_USER_MENU_MSG(&sampleRateComboMenu, g_triggerRecord.trec.sample_rate);
-		}			
+			if (g_triggerRecord.opMode == BARGRAPH_MODE)
+			{
+				SETUP_USER_MENU_MSG(&sampleRateBargraphMenu, g_triggerRecord.trec.sample_rate);
+			}
+			else if (g_triggerRecord.opMode == COMBO_MODE)
+			{
+				SETUP_USER_MENU_MSG(&sampleRateComboMenu, g_triggerRecord.trec.sample_rate);
+			}
+			else
+			{
+				SETUP_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
+			}
+		}
 		else
 		{
-			SETUP_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
-		}			
+			SETUP_USER_MENU_MSG(&samplingMethodMenu, g_triggerRecord.trec.samplingMethod);
+		}
 	}
 
 	JUMP_TO_ACTIVE_MENU();
@@ -1527,10 +1579,11 @@ void BitAccuracyMenuHandler(uint8 keyPressed, void* data)
 // Config Menu
 //=============================================================================
 //*****************************************************************************
-#define CONFIG_MENU_ENTRIES 37
+#define CONFIG_MENU_ENTRIES 38
 USER_MENU_STRUCT configMenu[CONFIG_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, CONFIG_OPTIONS_MENU_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, CONFIG_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{NO_TAG, 0, ADAPTIVE_SAMPLING_TEXT,		NO_TAG, {ADAPTIVE_SAMPLING}},
 {NO_TAG, 0, ALARM_OUTPUT_MODE_TEXT,		NO_TAG, {ALARM_OUTPUT_MODE}},
 {NO_TAG, 0, AUTO_CALIBRATION_TEXT,		NO_TAG, {AUTO_CALIBRATION}},
 {NO_TAG, 0, AUTO_DIAL_INFO_TEXT,		NO_TAG, {AUTO_DIAL_INFO}},
@@ -1592,6 +1645,10 @@ void ConfigMenuHandler(uint8 keyPressed, void* data)
 	{
 		switch (configMenu[newItemIndex].data)
 		{
+			case (ADAPTIVE_SAMPLE_RATE):
+				SETUP_USER_MENU_MSG(&adaptiveSamplingMenu, g_unitConfig.adaptiveSampling);
+			break;
+
 			case (ALARM_OUTPUT_MODE):
 				SETUP_USER_MENU_MSG(&alarmOutputMenu, (g_unitConfig.alarmOneMode | g_unitConfig.alarmTwoMode));
 			break;
@@ -3195,13 +3252,71 @@ void SampleRateMenuHandler(uint8 keyPressed, void* data)
 
 			debug("New Max Record Time: %d\r\n", g_triggerRecord.trec.record_time_max);
 
+#if 0 // Original
 			SETUP_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
+#else // New Adaptive Sampling
+			if ((g_triggerRecord.trec.sample_rate == SAMPLE_RATE_1K) || (g_unitConfig.adaptiveSampling != ENABLED))
+			{
+				SETUP_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
+			}
+			else
+			{
+				SETUP_USER_MENU_MSG(&samplingMethodMenu, g_triggerRecord.trec.samplingMethod);
+			}
+#endif
 		}
 	}
 	else if (keyPressed == ESC_KEY)
 	{
 		UpdateModeMenuTitle(g_triggerRecord.opMode);
 		SETUP_USER_MENU_MSG(&modeMenu, MONITOR);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+
+//*****************************************************************************
+//=============================================================================
+// Sampling Method
+//=============================================================================
+//*****************************************************************************
+#define SAMPLING_METHOD_MENU_ENTRIES 4
+USER_MENU_STRUCT samplingMethodMenu[SAMPLING_METHOD_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, SAMPLING_METHOD_TEXT, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, SAMPLING_METHOD_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{NO_TAG, 0, FIXED_NORMAL_TEXT,			NO_TAG, {FIXED_SAMPLING}},
+{NO_TAG, 0, ADAPTIVE_SAVE_BATT_TEXT,	NO_TAG, {ADAPTIVE_SAMPLING}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SamplingMethodMenuHandler}}
+};
+
+//----------------------------------
+// Menu Handler
+//----------------------------------
+void SamplingMethodMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_triggerRecord.trec.samplingMethod = (uint8)samplingMethodMenu[newItemIndex].data;
+
+		SETUP_USER_MENU_MSG(&bitAccuracyMenu, g_triggerRecord.trec.bitAccuracy);
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		if (g_triggerRecord.opMode == BARGRAPH_MODE)
+		{
+			SETUP_USER_MENU_MSG(&sampleRateBargraphMenu, g_triggerRecord.trec.sample_rate);
+		}
+		else if (g_triggerRecord.opMode == COMBO_MODE)
+		{
+			SETUP_USER_MENU_MSG(&sampleRateComboMenu, g_triggerRecord.trec.sample_rate);
+		}
+		else
+		{
+			SETUP_USER_MENU_MSG(&sampleRateMenu, g_triggerRecord.trec.sample_rate);
+		}
 	}
 
 	JUMP_TO_ACTIVE_MENU();

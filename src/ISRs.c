@@ -1345,6 +1345,15 @@ static inline void processAndMoveWaveformData_ISR_Inline(void)
 			s_consecSeismicTriggerCount = 0;
 			s_consecAirTriggerCount = 0;
 
+#if 1 // New Adaptive sampling
+			// Check if Adaptive sampling is enabled, easiest to accomplish by checking adaptive state
+			if (g_adaptiveState != ADAPTIVE_DISABLED)
+			{
+				g_adaptiveState = ADAPTIVE_MAX_RATE;
+				g_adaptiveSampleDelay = ((g_triggerRecord.trec.record_time * g_triggerRecord.trec.sample_rate) + (g_triggerRecord.trec.sample_rate / 4) + 100); // Covers length of event + cal + 1/4 second
+			}
+#endif
+
 #if 0 // Need better management of check
 			// Don't worry about temp drift during an event
 			s_checkForTempDrift = NO;
@@ -2379,6 +2388,71 @@ void HandleActiveAlarmExtension(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+static inline void processAdaptiveSamplingStateAndLogic(void)
+{
+	// 3 possible active states; ADAPTIVE_MAX_RATE, ADAPTIVE_MAX_WAITING_TO_DROP, ADAPTIVE_MIN_RATE
+	if (g_adaptiveState == ADAPTIVE_MAX_RATE)
+	{
+		g_adaptiveSampleDelay--;
+
+		if (g_adaptiveSampleDelay == 0)
+		{
+			g_adaptiveState = ADAPTIVE_MAX_WAITING_TO_DROP;
+		}
+	}
+	else if (g_adaptiveState == ADAPTIVE_MAX_WAITING_TO_DROP)
+	{
+		if ((s_R_channelReading < g_adaptiveSeismicThreshold) && (s_V_channelReading < g_adaptiveSeismicThreshold) && (s_T_channelReading < g_adaptiveSeismicThreshold) && (s_A_channelReading < g_adaptiveAcousticThreshold))
+		{
+			g_adaptiveSampleDelay++;
+
+			// Check if 1/10 of a second of consecutive samples is below the threshold
+			if (g_adaptiveSampleDelay > (g_triggerRecord.trec.sample_rate / 10))
+			{
+				// Set the Adaptive state to the min rate
+				g_adaptiveState = ADAPTIVE_MIN_RATE;
+
+				// Save the current pretrigger buffer pointer in case this is the last real sample before adaptive rate drop
+				g_adaptiveLastRealSamplePtr = g_tailOfPretriggerBuff;
+
+				g_adaptiveBoundaryMarker = 1;
+			}
+		}
+		else // Sample received above threshold signaling enough activity to continue monitoring max rate
+		{
+			g_adaptiveSampleDelay = 0;
+		}
+	}
+	else // g_adaptiveState = ADAPTIVE_MIN_RATE
+	{
+		// Check if the Adaptive boundary marker is zero meaning a new sample was acquired (and not off boundary)
+		if (g_adaptiveBoundaryMarker == 0)
+		{
+			// Check for threshold passing
+			if ((s_R_channelReading > g_adaptiveSeismicThreshold) || (s_V_channelReading > g_adaptiveSeismicThreshold) || (s_T_channelReading > g_adaptiveSeismicThreshold) || (s_A_channelReading > g_adaptiveAcousticThreshold))
+			{
+				// Set state to Adaptive max waiting for something more significant or signal to cool off
+				g_adaptiveState = ADAPTIVE_MAX_WAITING_TO_DROP;
+				g_adaptiveSampleDelay = 0;
+			}
+
+			g_adaptiveLastRealSamplePtr = g_tailOfPretriggerBuff;
+		}
+		else
+		{
+			// Special condition skipping normal data collection, copy prior collected sample in pretrigger and either a) process normally or b) skip processing
+			*(SAMPLE_DATA_STRUCT*)g_tailOfPretriggerBuff = *(SAMPLE_DATA_STRUCT*)g_adaptiveLastRealSamplePtr; // same as memcpy(g_tailOfPretriggerBuff, g_adaptiveLastRealSamplePtr, 8);
+		}
+
+		// Increment Adaptive boundary marker and check if matching the total count, then reset counter
+		g_adaptiveBoundaryMarker++;
+		if (g_adaptiveBoundaryMarker == g_adaptiveBoundaryCount) { g_adaptiveBoundaryMarker = 0; }
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #if 0 // Test
 uint32 sampleProcessTiming = 0;
 #endif
@@ -2420,6 +2494,15 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 	//___________________________________________________________________________________________
 	//___Test timing (throw away at some point)
 	g_sampleCount++;
+
+	//___________________________________________________________________________________________
+	//___Check for Adaptive sampling w/ Min rate and off boundary
+	if ((g_adaptiveState == ADAPTIVE_MIN_RATE) && (g_adaptiveBoundaryMarker != 0))
+	{
+		// Skip raw data collection, offset, and normalization, but process off boundary sample as established prior for frequency algorithms to work normally
+		// I absolutely HATE using a goto here, however due to use of inline functions and logic structure, it's by far the easier method
+		goto SKIP_PRIOR_PROCESSING_FOR_ADAPTIVE_MIN_RATE;
+	}
 
 	//___________________________________________________________________________________________
 	//___AD raw data read all 4 channels without config read back and no temp
@@ -2518,6 +2601,7 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 		// Alarm checking section
 		checkAlarms_ISR_Inline();
 
+SKIP_PRIOR_PROCESSING_FOR_ADAPTIVE_MIN_RATE:
 		//___________________________________________________________________________________________
 		//___Process and move the sample data for triggers in waveform or combo mode
 		if ((g_triggerRecord.opMode == WAVEFORM_MODE) || (g_triggerRecord.opMode == COMBO_MODE))
@@ -2531,6 +2615,13 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 		{
 			moveBargraphData_ISR_Inline();
 		}
+
+		//___________________________________________________________________________________________
+		//___Handle Adaptive sampling logic if active
+		if (g_adaptiveState != ADAPTIVE_DISABLED)
+		{
+			processAdaptiveSamplingStateAndLogic();
+		}
 	}			
 
 	//___________________________________________________________________________________________
@@ -2539,10 +2630,6 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 
 	// Check if the end of the Pretrigger buffer has been reached
 	if (g_tailOfPretriggerBuff >= g_endOfPretriggerBuff) g_tailOfPretriggerBuff = g_startOfPretriggerBuff;
-
-#if 0 // Test
-	gpio_clr_gpio_pin(AVR32_PIN_PB20);
-#endif
 
 #if 0 // Test
 	if (sampleProcessTiming) { sampleProcessTiming += (Get_system_register(AVR32_COUNT) - startTiming); sampleProcessTiming /= 2; }
