@@ -25,6 +25,7 @@
 #include "TextTypes.h"
 #include "navigation.h"
 #include "fsaccess.h"
+#include "fastmath.h"
 
 ///----------------------------------------------------------------------------
 ///	Defines
@@ -1823,6 +1824,396 @@ uint8 ManageDER(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void SendEventCSVFormat(uint16 eventNumberToSend, uint8 csvOption)
+{
+	/* Sample Output from Supergraphics
+	SIMPLE MATERIALS GROUP
+	WATER TANK MONITOR
+	DF 12908SM
+	33 51 47.6 / 117 31 07.1
+	Graph: 12908
+	Event #: 3048
+	Date: 8/13/2018
+	Time: 13:01:41
+	Air: 116.1dBL @ 4.9 Hz
+	Radial: 2.413 (mm/s) @ 46.5 Hz (Disp. 0.0083 mm) (Accel. 0.072 g's)
+	Transverse: 2.540 (mm/s) @ 34.1 Hz (Disp. 0.0119 mm) (Accel. 0.055 g's)
+	Vertical: 2.413 (mm/s) @ 42.6 Hz (Disp. 0.0090 mm) (Accel. 0.066 g's)
+	Vector Sum: 3.16 (mm/s)
+	Sample Rate:1024/sec
+	Record Duration: 5.25 seconds
+	Air Trigger: 125.0dBL
+	Seismic Trigger: 1.016 (mm/s)
+	Battery Level: 6.61
+
+	sample	Air	Air	Radial	Transverse	Vertical	Air	Radial	Transverse	Vertical
+	Time	dBL	millibars	 (mm/s)	 (mm/s)	 (mm/s)	 Hz	 Hz	 Hz	 Hz
+	*/
+
+	EVT_RECORD* eventRecord = &(g_derXferStruct.dloadEventRec.eventRecord);
+	uint32 dataSizeRemaining;
+	uint32 dataOffset = sizeof(EVT_RECORD);
+	uint32 barDataSize;
+	uint16 xmitLength = 0;
+	uint8 gainFactor;
+	uint8 barType;
+	uint16 bitAccuracyScale;
+	uint16 pullCount;
+	uint16 perfectLoops;
+	uint16 barIntervalCount;
+	float airPeak;
+	float gUnits;
+	char sUnits[8];
+	char dUnits[4];
+	char aUnits[8];
+	SAMPLE_DATA_STRUCT* currentSample;
+	uint16* currentBI;
+	CALCULATED_DATA_STRUCT* cSum;
+	uint32 pullSize;
+	uint32 totalXmitLength = 0;
+	int32 sampleCount = 0;
+	uint16 i;
+	float div, airdB, airmb, rUnits, tUnits, vUnits, VS, aFreq, rFreq, tFreq, vFreq;
+	uint8 airSensorType;
+	uint8 biHour, biMin, biSec;
+
+	//===================================================================================================================================
+	// Check that the event is valid by event number cache
+	//===================================================================================================================================
+	if (g_eventNumberCache[eventNumberToSend] != EVENT_REFERENCE_VALID)
+	{
+		xmitLength = sprintf((char*)&g_derCache[0], "DET: Event not found for CSV output\r\n");
+		ModemPuts((uint8*)&g_derCache[0], xmitLength, NO_CONVERSION);
+		return; // Nothing else to be done, time to bail
+	}
+
+	//===================================================================================================================================
+	// Common factors needed for all sections
+	//===================================================================================================================================
+	GetEventFileRecord(eventNumberToSend, eventRecord);
+
+	// Set the gain factor that was used to record the event (sensitivity)
+	if ((eventRecord->summary.parameters.channel[0].options & 0x01) == GAIN_SELECT_x2) { gainFactor = 2; }
+	else { gainFactor = 4; }
+
+	// Set the scale based on the stored bit accuracy the event was recorded with
+	switch (eventRecord->summary.parameters.bitAccuracy)
+	{
+		case ACCURACY_10_BIT: { bitAccuracyScale = ACCURACY_10_BIT_MIDPOINT; } break;
+		case ACCURACY_12_BIT: {	bitAccuracyScale = ACCURACY_12_BIT_MIDPOINT; } break;
+		case ACCURACY_14_BIT: { bitAccuracyScale = ACCURACY_14_BIT_MIDPOINT; } break;
+		default: { bitAccuracyScale = ACCURACY_16_BIT_MIDPOINT; } break; // ACCURACY_16_BIT
+	}
+
+	// Calculate the divider used for converting stored A/D peak counts to units of measure
+	if ((eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC_832M1_0200) || (eventRecord->summary.parameters.seismicSensorType == SENSOR_ACC_832M1_0500))
+	{ div = (float)(bitAccuracyScale * SENSOR_ACCURACY_100X_SHIFT * gainFactor) / (float)(eventRecord->summary.parameters.seismicSensorType * ACC_832M1_SCALER); }
+	else { div = (float)(bitAccuracyScale * SENSOR_ACCURACY_100X_SHIFT * gainFactor) / (float)(eventRecord->summary.parameters.seismicSensorType); }
+
+	if (eventRecord->summary.parameters.seismicUnitsOfMeasure == METRIC_TYPE)
+	{
+		airPeak = HexToMB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale, eventRecord->summary.parameters.airSensorType);
+		div /= METRIC;
+		gUnits = ONE_GRAVITY_IN_MM;
+		strcpy(sUnits, "mm/s");
+		strcpy(dUnits, "mm");
+		strcpy(aUnits, "mb");
+	}
+	else
+	{
+		airPeak = HexToDB(eventRecord->summary.calculated.a.peak, DATA_NORMALIZED, bitAccuracyScale, eventRecord->summary.parameters.airSensorType);
+		gUnits = ONE_GRAVITY_IN_INCHES;
+		strcpy(sUnits, "in/s");
+		strcpy(dUnits, "in");
+		strcpy(aUnits, "dB");
+	}
+
+	airSensorType = (uint8)eventRecord->summary.parameters.airSensorType;
+
+	//===================================================================================================================================
+	if ((csvOption == CSV_FULL) || (csvOption == CSV_SUMMARY) || (csvOption == CSV_BARS))
+	//===================================================================================================================================
+	{
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Company: %s\r\n", (char*)&(eventRecord->summary.parameters.companyName[0]));
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Location: %s\r\n", (char*)&(eventRecord->summary.parameters.sessionLocation[0]));
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Operator: %s\r\n", (char*)&(eventRecord->summary.parameters.seismicOperator[0]));
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Comments: %s\r\n", (char*)&(eventRecord->summary.parameters.sessionComments[0]));
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Graph: %s\r\n", (char*)&(eventRecord->summary.version.serialNumber[0]));
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Event#: %d\r\n", eventRecord->summary.eventNumber);
+		if (eventRecord->summary.mode == MANUAL_CAL_MODE) { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Mode: Calibration\r\n"); }
+		else if ((eventRecord->summary.mode == WAVEFORM_MODE) || ((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == WAVEFORM_MODE)))
+		{ xmitLength += sprintf((char*)&g_derCache[xmitLength], "Mode: %sWaveform\r\n", (eventRecord->summary.mode == COMBO_MODE ? "Combo-" : "")); }
+		else { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Mode: %sBargraph\r\n", (eventRecord->summary.mode == COMBO_MODE ? "Combo-" : "")); }
+		if ((eventRecord->summary.mode == BARGRAPH_MODE) || (eventRecord->summary.subMode == BARGRAPH_MODE))
+		{
+			xmitLength += sprintf((char*)&g_derCache[xmitLength], "Start Time: %d/%d/%d @ %02d:%02d:%02d\r\n", eventRecord->summary.captured.eventTime.month, eventRecord->summary.captured.eventTime.day, eventRecord->summary.captured.eventTime.year,
+									eventRecord->summary.captured.eventTime.hour, eventRecord->summary.captured.eventTime.min, eventRecord->summary.captured.eventTime.sec);
+			xmitLength += sprintf((char*)&g_derCache[xmitLength], "End Time: %d/%d/%d @ %02d:%02d:%02d\r\n", eventRecord->summary.captured.endTime.month, eventRecord->summary.captured.endTime.day, eventRecord->summary.captured.endTime.year,
+									eventRecord->summary.captured.endTime.hour, eventRecord->summary.captured.endTime.min, eventRecord->summary.captured.endTime.sec);
+			xmitLength += sprintf((char*)&g_derCache[xmitLength], "Bar Interval: %d secs\r\n", eventRecord->summary.parameters.barInterval);
+			xmitLength += sprintf((char*)&g_derCache[xmitLength], "Summary Interval: %d mins\r\n", (eventRecord->summary.parameters.summaryInterval / 60));
+		} else /* All non-Bargraph */ {
+			xmitLength += sprintf((char*)&g_derCache[xmitLength], "Date: %d/%d/%d\r\n", eventRecord->summary.captured.eventTime.month, eventRecord->summary.captured.eventTime.day, eventRecord->summary.captured.eventTime.year);
+			xmitLength += sprintf((char*)&g_derCache[xmitLength], "Time: %02d:%02d:%02d\r\n", eventRecord->summary.captured.eventTime.hour, eventRecord->summary.captured.eventTime.min, eventRecord->summary.captured.eventTime.sec);
+		}
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Air: %.1f %s @ %.1f Hz\r\n", airPeak, aUnits, ((float)eventRecord->summary.calculated.a.frequency / 10));
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Radial: %.4f %s @ %.1f Hz (Disp %0.4f %s) (Accel %0.3f g's)\r\n",
+								((float)eventRecord->summary.calculated.r.peak / div), sUnits, ((float)eventRecord->summary.calculated.r.frequency / 10), ((float)eventRecord->summary.calculated.r.displacement / (float)1000000 / div), dUnits,
+								(((float)eventRecord->summary.calculated.r.acceleration / gUnits) / (float)1000 / div));
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Transverse: %.4f %s @ %.1f Hz (Disp %0.4f %s) (Accel %0.3f g's)\r\n",
+								((float)eventRecord->summary.calculated.t.peak / div), sUnits, ((float)eventRecord->summary.calculated.t.frequency / 10), ((float)eventRecord->summary.calculated.t.displacement / (float)1000000 / div), dUnits,
+								(((float)eventRecord->summary.calculated.t.acceleration / gUnits) / (float)1000 / div));
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Vertical: %.4f %s @ %.1f Hz (Disp %0.4f %s) (Accel %0.3f g's)\r\n",
+								((float)eventRecord->summary.calculated.v.peak / div), sUnits, ((float)eventRecord->summary.calculated.v.frequency / 10), ((float)eventRecord->summary.calculated.v.displacement / (float)1000000 / div), dUnits,
+								(((float)eventRecord->summary.calculated.v.acceleration / gUnits) / (float)1000 / div));
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Vector Sum: %0.2f %s\r\n", (sqrtf((float)eventRecord->summary.calculated.vectorSumPeak) / div), sUnits);
+		if (eventRecord->summary.mode == MANUAL_CAL_MODE) { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Sample Rate: 1024/sec\r\n"); }
+		else { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Sample Rate: %d/sec\r\n", eventRecord->summary.parameters.sampleRate); }
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Bit Accuracy: %d-bit\r\n", eventRecord->summary.parameters.bitAccuracy);
+		if ((eventRecord->summary.mode != BARGRAPH_MODE) && (eventRecord->summary.subMode != BARGRAPH_MODE))
+		{
+			if (eventRecord->summary.mode == MANUAL_CAL_MODE) { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Record Time: 100ms\r\n"); }
+			else { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Record Time: %lu sec + %0.2f sec pre-trigger\r\n", eventRecord->summary.parameters.recordTime, ((float)1 / (float)eventRecord->summary.parameters.pretrigBufferDivider)); }
+			if (eventRecord->summary.parameters.airTriggerLevel == NO_TRIGGER_CHAR) { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Air Trigger: No Trigger\r\n"); }
+			else { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Air Trigger: %f %s\r\n", ((float)eventRecord->summary.parameters.airTriggerLevel / div), aUnits); }
+			if (eventRecord->summary.parameters.seismicTriggerLevel == NO_TRIGGER_CHAR) { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Seismic Trigger: No Trigger\r\n"); }
+			else if (eventRecord->summary.parameters.seismicTriggerLevel >= VARIABLE_TRIGGER_CHAR_BASE) { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Seismic Trigger: Variable Trigger (Vibration Standard: %lu)\r\n", (eventRecord->summary.parameters.seismicTriggerLevel - VARIABLE_TRIGGER_CHAR_BASE)); }
+			else { xmitLength += sprintf((char*)&g_derCache[xmitLength], "Seismic Trigger: %f %s\r\n", ((float)eventRecord->summary.parameters.seismicTriggerLevel / div), sUnits); }
+		}
+		xmitLength += sprintf((char*)&g_derCache[xmitLength], "Battery Level: %0.2f\r\n", ((float)eventRecord->summary.captured.batteryLevel / (float)100));
+
+		if (ModemPuts((uint8*)&g_derCache[0], xmitLength, NO_CONVERSION) == MODEM_SEND_FAILED) { /* Failed send */ return; }
+	}
+
+	//===================================================================================================================================
+	if ((csvOption == CSV_FULL) || (csvOption == CSV_DATA) || (csvOption == CSV_BARS))
+	//===================================================================================================================================
+	{
+		//===================================================================================================================================
+		if ((eventRecord->summary.mode != BARGRAPH_MODE) && (eventRecord->summary.subMode != BARGRAPH_MODE)) // Any mode that isn't Bargraph
+		//===================================================================================================================================
+		{
+			xmitLength = sprintf((char*)&g_derCache[0], "Sample Sample Air Air Radial Transverse Vertical Vector\r\nCount Time dBL millibars (%s) (%s) (%s) Sum\r\n", sUnits, sUnits, sUnits);
+			if (ModemPuts((uint8*)&g_derCache[0], xmitLength, NO_CONVERSION) == MODEM_SEND_FAILED) { /* Failed send */ return; }
+
+			if (eventRecord->summary.mode == MANUAL_CAL_MODE)
+			{
+				dataSizeRemaining = (CALIBRATION_NUMBER_OF_SAMPLES * 8);
+				sampleCount = 0;
+			}
+			else // ((eventRecord->summary.mode == WAVEFORM_MODE) || ((eventRecord->summary.mode == COMBO_MODE) && (eventRecord->summary.subMode == WAVEFORM_MODE)))
+			{
+				// Data size remaining equals pretrigger number of samples plus event number of samples (times 8 bytes for each sample)
+				dataSizeRemaining = (((eventRecord->summary.parameters.recordTime * eventRecord->summary.parameters.sampleRate) + (eventRecord->summary.parameters.sampleRate / eventRecord->summary.parameters.pretrigBufferDivider)) * 8);
+
+				// Set the sample count negative based on the pretrigger number of samples, so that the event trigger shows at 0 in time
+				sampleCount = (eventRecord->summary.parameters.sampleRate / eventRecord->summary.parameters.pretrigBufferDivider) * -1;
+			}
+
+			//-------------------------------------------------------------
+			while (dataSizeRemaining)
+			{
+				if (dataSizeRemaining > CMD_BUFFER_SIZE) { pullSize = CMD_BUFFER_SIZE; }
+				else { pullSize = dataSizeRemaining; }
+
+				CacheEventDataToBuffer(eventRecord->summary.eventNumber, (uint8*)&(g_derXferStruct.xmitBuffer[0]), dataOffset, pullSize);
+				currentSample = (SAMPLE_DATA_STRUCT*)&(g_derXferStruct.xmitBuffer[0]);
+
+				i = 0;
+				while (i < (pullSize / 8))
+				{
+					// For seismic samples
+					//	(float)(sample - bitAccuracyScale) / (float)div
+					// For Acoustic sample
+					//	sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
+					//	sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
+					airdB = HexToDB(currentSample->a, DATA_NOT_NORMALIZED, bitAccuracyScale, airSensorType);
+					airmb = HexToMB(currentSample->a, DATA_NOT_NORMALIZED, bitAccuracyScale, airSensorType);
+					rUnits = (float)(currentSample->r - bitAccuracyScale) / (float)div;
+					tUnits = (float)(currentSample->t - bitAccuracyScale) / (float)div;
+					vUnits = (float)(currentSample->v - bitAccuracyScale) / (float)div;
+					VS = sqrt((rUnits * rUnits) + (tUnits * tUnits) + (vUnits * vUnits));
+
+					//------------------------------------------------T,Ad,Am,Ru,Tu,Vu,VS
+					xmitLength = sprintf((char*)&g_derCache[0], "%ld %f %f %f %f %f %f %f\r\n", sampleCount, (float)((float)sampleCount/(float)eventRecord->summary.parameters.sampleRate), airdB, airmb, rUnits, tUnits, vUnits, VS);
+					if (ModemPuts((uint8*)&g_derCache[0], xmitLength, NO_CONVERSION) == MODEM_SEND_FAILED) { /* Failed send */ return; }
+
+					sampleCount++;
+					currentSample++;
+					totalXmitLength += xmitLength;
+					i++;
+				}
+
+				dataOffset += pullSize;
+				dataSizeRemaining -= pullSize;
+			}
+		}
+		//===================================================================================================================================
+		else // Bargraph and Combo-Bargraph
+		//===================================================================================================================================
+		{
+			barType = eventRecord->summary.parameters.barIntervalDataType;
+			barDataSize = ((eventRecord->summary.parameters.summaryInterval / eventRecord->summary.parameters.barInterval) * barType);
+			dataSizeRemaining = (eventRecord->summary.calculated.barIntervalsCaptured * barType);
+
+			if (csvOption == CSV_BARS)
+			{
+				// Bar Intervals only
+				if (barType == BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE) { xmitLength = sprintf((char*)&g_derCache[0], "Bar Bar Air Air Seismic Vector\r\nInterval Time dBL mb (%s) Sum\r\n", sUnits); }
+				else if (barType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) { xmitLength = sprintf((char*)&g_derCache[0], "Bar Bar Air Air Radial Transverse Vertical Vector\r\nInterval Time dBL mb (%s) (%s) (%s) Sum\r\n", sUnits, sUnits, sUnits); }
+				else { xmitLength = sprintf((char*)&g_derCache[0], "Bar Bar Air Air Air Radial Radial Transverse Transverse Vertical Vertical Vector\r\nInterval Time dBL mb Hz (%s) Hz (%s) Hz (%s) Hz Sum\r\n", sUnits, sUnits, sUnits); }
+				if (ModemPuts((uint8*)&g_derCache[0], xmitLength, NO_CONVERSION) == MODEM_SEND_FAILED) { /* Failed send */ return; }
+
+				for (i = barType; i < CMD_BUFFER_SIZE; i += barType)
+				{
+					if ((barDataSize % i) == 0) { perfectLoops = (barDataSize / i);	}
+				}
+
+				if (dataSizeRemaining < (barDataSize / perfectLoops)) { pullSize = dataSizeRemaining; }
+				else { pullSize = (barDataSize / perfectLoops); }
+
+				pullCount = 0;
+				barIntervalCount = 1;
+				biHour = eventRecord->summary.captured.eventTime.hour;
+				biMin = eventRecord->summary.captured.eventTime.min;
+				biSec = eventRecord->summary.captured.eventTime.sec;
+
+				while (barIntervalCount <= eventRecord->summary.calculated.barIntervalsCaptured)
+				{
+					CacheEventDataToBuffer(eventRecord->summary.eventNumber, (uint8*)&(g_derXferStruct.xmitBuffer[0]), dataOffset, pullSize);
+
+					currentBI = (uint16*)&(g_derXferStruct.xmitBuffer[0]);
+
+					// Loop through all of the BI's pulled out of the Bargraph event data
+					for (i=0; i<(pullSize / barType); i++)
+					{
+						airdB = HexToDB(currentBI[0], DATA_NORMALIZED, bitAccuracyScale, airSensorType);
+						airmb = HexToMB(currentBI[0], DATA_NORMALIZED, bitAccuracyScale, airSensorType);
+						rUnits = (float)(currentBI[1]) / (float)div;
+
+						if (barType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE)
+						{
+							vUnits = (float)(currentBI[2]) / (float)div;
+							tUnits = (float)(currentBI[3]) / (float)div;
+							VS = sqrt(*(uint32*)&(currentBI[4]) / div);
+						}
+						else if (barType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE)
+						{
+							vUnits = (float)(currentBI[2]) / (float)div;
+							tUnits = (float)(currentBI[3]) / (float)div;
+							aFreq = (float)(eventRecord->summary.parameters.sampleRate / (float)currentBI[4]);
+							rFreq = (float)(eventRecord->summary.parameters.sampleRate / (float)currentBI[5]);
+							vFreq = (float)(eventRecord->summary.parameters.sampleRate / (float)currentBI[6]);
+							tFreq = (float)(eventRecord->summary.parameters.sampleRate / (float)currentBI[7]);
+							VS = sqrt(*(uint32*)&(currentBI[8]) / div);
+						}
+						else // barType == BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE
+						{
+							VS = sqrt(*(uint32*)&(currentBI[2]) / div);
+						}
+
+						if (barType == BAR_INTERVAL_ORIGINAL_DATA_TYPE_SIZE)
+						{
+							//-------------------------------------------BI,AdB,Amb,RVTpeak,VS
+							xmitLength = sprintf((char*)&g_derCache[0], "%d %02d:%02d:%02d %f %f %f %f\r\n", barIntervalCount++, biHour, biMin, biSec, airdB, airmb, rUnits, VS);
+						}
+						else if (barType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE)
+						{
+							//-------------------------------------------BI,AdB,Amb,Rpeak,Tpeak,Vpeak,VS
+							xmitLength = sprintf((char*)&g_derCache[0], "%d %02d:%02d:%02d %f %f %f %f %f %f\r\n", barIntervalCount++, biHour, biMin, biSec, airdB, airmb, rUnits, tUnits, vUnits, VS);
+						}
+						else // (barType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE)
+						{
+							//-------------------------------------------BI,AdB,Amb,Ahz,Rpeak,Rhz,Tpeak,Thz,Vpeak,Vhz,VS
+							xmitLength = sprintf((char*)&g_derCache[0], "%d %02d:%02d:%02d %f %f %f %f %f %f %f %f %f %f\r\n", barIntervalCount++, biHour, biMin, biSec, airdB, airmb, aFreq, rUnits, rFreq, tUnits, tFreq, vUnits, vFreq, VS);
+						}
+
+						if (ModemPuts((uint8*)&g_derCache[0], xmitLength, NO_CONVERSION) == MODEM_SEND_FAILED) { /* Failed send */ return; }
+
+						// Advance to the next BI in the buffer
+						currentBI += (barType / 2);
+
+						// Advance BI time
+						biSec += eventRecord->summary.parameters.barInterval;
+						if (biSec > 59) { biSec -= 60; biMin++; }
+						if (biMin > 59) { biMin -= 60; biHour++; }
+						if (biHour > 23) { biHour = 0; }
+					}
+
+					dataOffset += pullSize;
+
+					pullCount++;
+					if (pullCount % perfectLoops == 0)
+					{
+						dataOffset += sizeof(CALCULATED_DATA_STRUCT);
+					}
+
+					if (((eventRecord->summary.calculated.barIntervalsCaptured - (barIntervalCount - 1)) * barType) < pullSize)
+					{
+						pullSize = ((eventRecord->summary.calculated.barIntervalsCaptured - (barIntervalCount - 1)) * barType);
+					}
+				}
+			}
+			else // (csvOption != CSV_BARS)
+			{
+				// Summary Intervals only
+				xmitLength = sprintf((char*)&g_derCache[0], "Summary Start Air Air Air Air R R R T T T V V V Vector\r\nInterval Time dBL mb Hz Time (%s) Hz Time (%s) Hz Time (%s) Sum\r\n", sUnits, sUnits, sUnits);
+				if (ModemPuts((uint8*)&g_derCache[0], xmitLength, NO_CONVERSION) == MODEM_SEND_FAILED) { /* Failed send */ return; }
+
+				pullSize = sizeof(CALCULATED_DATA_STRUCT);
+				sampleCount = 1;
+				cSum = (CALCULATED_DATA_STRUCT*)&(g_derXferStruct.xmitBuffer[0]);
+
+				if (eventRecord->summary.calculated.summariesCaptured == 1)
+				{
+					dataOffset += (eventRecord->summary.calculated.barIntervalsCaptured * barType);
+				}
+				else { dataOffset += barDataSize; }
+
+				while (sampleCount <= eventRecord->summary.calculated.summariesCaptured)
+				{
+					CacheEventDataToBuffer(eventRecord->summary.eventNumber, (uint8*)&(g_derXferStruct.xmitBuffer[0]), dataOffset, pullSize);
+
+					airdB = HexToDB(cSum->a.peak, DATA_NORMALIZED, bitAccuracyScale, airSensorType);
+					airmb = HexToMB(cSum->a.peak, DATA_NORMALIZED, bitAccuracyScale, airSensorType);
+					rUnits = (float)(cSum->r.peak) / (float)div;
+					tUnits = (float)(cSum->t.peak) / (float)div;
+					vUnits = (float)(cSum->v.peak) / (float)div;
+					aFreq = (float)((float)eventRecord->summary.parameters.sampleRate / (float)((cSum->a.frequency * 2) - 1));
+					rFreq = (float)((float)eventRecord->summary.parameters.sampleRate / (float)((cSum->r.frequency * 2) - 1));
+					vFreq = (float)((float)eventRecord->summary.parameters.sampleRate / (float)((cSum->v.frequency * 2) - 1));
+					tFreq = (float)((float)eventRecord->summary.parameters.sampleRate / (float)((cSum->t.frequency * 2) - 1));
+					VS = (sqrt(cSum->vectorSumPeak) / div);
+
+					//-------------------------------------------SI,Start time,AdB,Amb,Ahz,Atime,Runits,Rhz,Rtime,Tunits,Thz,Ttime,Vunits,Vhz,Vtime,VS
+					xmitLength = sprintf((char*)&g_derCache[0], "%lu %02d:%02d:%02d %f %f %f %02d:%02d:%02d %f %f %02d:%02d:%02d %f %f %02d:%02d:%02d %f %f %02d:%02d:%02d %f\r\n",
+					sampleCount, cSum->intervalEnd_Time.hour, cSum->intervalEnd_Time.min, cSum->intervalEnd_Time.sec,
+					airdB, airmb, aFreq, cSum->a_Time.hour, cSum->a_Time.min, cSum->a_Time.sec,
+					rUnits, rFreq, cSum->r_Time.hour, cSum->r_Time.min, cSum->r_Time.sec,
+					tUnits, tFreq, cSum->t_Time.hour, cSum->t_Time.min, cSum->t_Time.sec,
+					vUnits, vFreq, cSum->v_Time.hour, cSum->v_Time.min, cSum->v_Time.sec, VS);
+
+					if (ModemPuts((uint8*)&g_derCache[0], xmitLength, NO_CONVERSION) == MODEM_SEND_FAILED) { /* Failed send */ return; }
+
+					// Summaries
+					sampleCount++;
+
+					if (sampleCount == eventRecord->summary.calculated.summariesCaptured)
+					{
+						dataOffset += (pullSize + ((eventRecord->summary.calculated.barIntervalsCaptured % (eventRecord->summary.parameters.summaryInterval / eventRecord->summary.parameters.barInterval)) * barType));
+					}
+					else { dataOffset += (pullSize + barDataSize); }
+				}
+			}
+		}
+	}
+
+	ModemPuts((uint8*)&g_CRLF, sizeof(uint16), NO_CONVERSION);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 {
 	uint16 eventNumToSend;					// In case there is a specific record to print.
@@ -1831,6 +2222,7 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 	uint32 msgCRC;
 	uint32 inCRC;
 	char msgTypeStr[8];
+	uint8 spareOption;
 	uint8 rawData[5];
 	uint8* rawDataPtr = &rawData[0];
 
@@ -1933,8 +2325,18 @@ void HandleDEM(CMD_BUFFER_STRUCT* inCmd)
 	{
 		// Expecting a single field, so move to that location.
 		eventNumToSend = GetInt16Field(inCmd->msg + MESSAGE_HEADER_LENGTH);
-
 		debug("eventNumToSend = %d \r\n",eventNumToSend);
+
+		spareOption = ConvertAscii2Binary(g_inCmdHeaderPtr->spare[0], g_inCmdHeaderPtr->spare[1]);
+
+		// Check if the download option for CSV format was selected
+		if (spareOption == 1)
+		{
+			SendEventCSVFormat(eventNumToSend, CSV_FULL);
+
+			// Done processing
+			return;
+		}
 
 		// Clear out the xmit structures and initialize the flag and time fields.
 		memset(&(g_demXferStructPtr->dloadEventRec), 0, sizeof(EVENT_RECORD_DOWNLOAD_STRUCT));
@@ -2385,6 +2787,41 @@ uint8* sendDataNoFlashWrapCheck(uint8* xferPtr, uint8* endPtr)
 	xferPtr += xmitSize;
 
 	return (xferPtr);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void HandleDET(CMD_BUFFER_STRUCT* inCmd)
+{
+	uint8 csvOption = CSV_FULL;
+	char* subString;
+	uint32 eventNumberToSend;
+
+	debug("HandleDET:Entry\r\n");
+
+	// If the process is busy sending data, return;
+	if (YES == g_modemStatus.xferMutex)
+	{
+		return;
+	}
+
+	subString = strtok ((char*)&(inCmd->msg[0]), ",\r\n");
+	subString = strtok (NULL, ",\r\n");
+
+	// Parse event number first
+	eventNumberToSend = strtol(subString, NULL, 10);
+
+	subString = strtok (NULL, ",\r\n");
+
+	// Parse CVS format options second
+	if ((subString[0] == 'S') || (subString[0] == 's')) { csvOption = CSV_SUMMARY; }
+	else if ((subString[0] == 'D') || (subString[0] == 'd')) { csvOption = CSV_DATA; }
+	else if ((subString[0] == 'B') || (subString[0] == 'b')) { csvOption = CSV_BARS; }
+
+	SendEventCSVFormat((uint16)eventNumberToSend, csvOption);
+
+	return;
 }
 
 ///----------------------------------------------------------------------------

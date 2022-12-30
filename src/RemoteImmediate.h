@@ -69,6 +69,9 @@ void prepareDEMDataToSend(COMMAND_MESSAGE_HEADER*);
 uint8 sendDEMData(void);
 uint8* sendDataNoFlashWrapCheck(uint8*, uint8*);
 
+// Function: HandleDET - Download event CSV
+void HandleDET(CMD_BUFFER_STRUCT* inCmd);
+
 // Function: HandleDER - Download event resume.
 void HandleDER(CMD_BUFFER_STRUCT* inCmd);
 uint8 ManageDER(void);

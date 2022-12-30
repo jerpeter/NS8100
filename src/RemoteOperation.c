@@ -1593,6 +1593,9 @@ void handleTTO(CMD_BUFFER_STRUCT* inCmd)
 void HandleCAL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
+
+	HandleManualCalibration();
+
 	return;
 }
 

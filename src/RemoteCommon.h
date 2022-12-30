@@ -242,6 +242,13 @@ enum {
 	CANCEL_COMMAND
 };
 
+enum {
+	CSV_FULL = 0,
+	CSV_SUMMARY,
+	CSV_DATA,
+	CSV_BARS
+};
+
 #define AUTODIALOUT_EVENTS_ONLY				0
 #define AUTODIALOUT_EVENTS_CONFIG_STATUS	1
 
@@ -577,7 +584,9 @@ enum CMD_MESSAGE_INDEX {
 #if 0
 	ZRO,		// Zero sensors.
 	TTO,		// Toggle test mode on/off.
+#endif
 	CAL,		// Calibrate sensors with cal pulse.
+#if 0
 	VOL,		// View on/off log.
 	VCL,		// View command log.
 	VSL,		// View summary log.
@@ -591,6 +600,7 @@ enum CMD_MESSAGE_INDEX {
 	DQM,		// Download Quick summary memory.
 	DSM,		// Download summary memory.
 	DEM,		// Download event memory.
+	DET,		// Download event in CSV text
 #if 0 // Command not complete
 	DER,		// Download event resume.
 #endif

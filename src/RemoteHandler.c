@@ -65,7 +65,9 @@ static const COMMAND_MESSAGE_STRUCT s_cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] 
 #if 0
 	{ 'Z', 'R', 'O', HandleZRO },		// Zero sensors.
 	{ 'T', 'T', 'O', handleTTO },		// Toggle test mode on/off.
+#endif
 	{ 'C', 'A', 'L', HandleCAL },		// Calibrate sensors with cal pulse.
+#if 0
 	{ 'V', 'O', 'L', HandleVOL },		// View on/off log.
 	{ 'V', 'C', 'G', HandleVCG },		// View command log.
 	{ 'V', 'S', 'L', HandleVSL },		// View summary log.
@@ -79,6 +81,7 @@ static const COMMAND_MESSAGE_STRUCT s_cmdMessageTable[ TOTAL_COMMAND_MESSAGES ] 
 	{ 'D', 'Q', 'M', HandleDQM },		// Download summary memory.
 	{ 'D', 'S', 'M', HandleDSM },		// Download summary memory.
 	{ 'D', 'E', 'M', HandleDEM },		// Download event memory.
+	{ 'D', 'E', 'T', HandleDET },		// Download event CSV text
 #if 0 // Command not complete
 	{ 'D', 'E', 'R', HandleDER },		// Download event resume.
 #endif
