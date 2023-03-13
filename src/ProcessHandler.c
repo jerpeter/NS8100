@@ -196,48 +196,48 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 	InitDataBuffs(operationMode);
 
 	// New Adaptive Sampling setup
-	if (opModeParamsPtr->samplingMethod == ADAPTIVE_SAMPLING)
+	// Check that the Sampling method is Adaptive, the unit config allows Adaptive to be enabled, and the sample rate is not 1K (which doesn't use ASR)
+	if ((opModeParamsPtr->samplingMethod == ADAPTIVE_SAMPLING) && (g_unitConfig.adaptiveSampling == ENABLED) && (g_triggerRecord.trec.sample_rate != SAMPLE_RATE_1K))
+	{
+		// Setup for Adaptive Sampling
+		// Trigger threshold to maintain lower sampling or boost sampling to selected rate
+		// Seismic default 0.05 IPS = 160 counts A/D, minimum is 4 counts @ 12-bit low sensitivity (64 counts)
+		if (opModeParamsPtr->seismicTriggerLevel < (DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * 16))
+		{
+			// Set adaptive threshold to 30% of trigger level if less than 0.05 IPS
+			g_adaptiveSeismicThreshold = (uint16)((opModeParamsPtr->seismicTriggerLevel * 3) / 10);
+		}
+		else // Set adaptive threshold to 48 counts for any trigger levels above 0.05 IPS
+		{
+			g_adaptiveSeismicThreshold = 48;
+		}
+
+		// Acoustic lowest possible triggers are 92 dB (~51 counts) or 100 mb (40 counts)
+		// 160 A/D counts is ~102 dB
+		if (opModeParamsPtr->airTriggerLevel < 160)
+		{
+			// Set adaptive threshold to 30% of trigger level if less than ~102 dB
+			g_adaptiveAcousticThreshold = (uint16)((opModeParamsPtr->airTriggerLevel * 3) / 10);
+		}
+		else // Set adaptive threshold to 48 counts (close to 92 dB) for any trigger levels above ~102 dB
+		{
+			g_adaptiveAcousticThreshold = 48;
+		}
+
+		g_adaptiveState = ADAPTIVE_MAX_RATE;
+		g_adaptiveSampleDelay = opModeParamsPtr->sample_rate * 30; // Wait 30 seconds after start monitoring to check for adaptive sampling drop
+		g_adaptiveBoundaryCount = opModeParamsPtr->sample_rate / SAMPLE_RATE_1K;
+		g_adaptiveBoundaryMarker = 0;
+		g_adaptiveLastRealSamplePtr = g_tailOfPretriggerBuff;
+	}
+	else // Sampling method is FIXED_SAMPLING
 	{
 		// Check if the unit config Adaptive Sampling is not enabled or if the sample rate is 1K which doesn't use Adaptive Sampling
 		if ((g_unitConfig.adaptiveSampling != ENABLED) || (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_1K))
 		{
 			opModeParamsPtr->samplingMethod = FIXED_SAMPLING;
 		}
-		else // Setup for Adaptive Sampling
-		{
-			// Trigger threshold to maintain lower sampling or boost sampling to selected rate
-			// Seismic default 0.05 IPS = 160 counts A/D, minimum is 4 counts @ 12-bit low sensitivity (64 counts)
-			if (opModeParamsPtr->seismicTriggerLevel < (DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * 16))
-			{
-				// Set adaptive threshold to 30% of trigger level if less than 0.05 IPS
-				g_adaptiveSeismicThreshold = (uint16)((opModeParamsPtr->seismicTriggerLevel * 3) / 10);
-			}
-			else // Set adaptive threshold to 48 counts for any trigger levels above 0.05 IPS
-			{
-				g_adaptiveSeismicThreshold = 48;
-			}
 
-			// Acoustic lowest possible triggers are 92 dB (~51 counts) or 100 mb (40 counts)
-			// 160 A/D counts is ~102 dB
-			if (opModeParamsPtr->airTriggerLevel < 160)
-			{
-				// Set adaptive threshold to 30% of trigger level if less than ~102 dB
-				g_adaptiveAcousticThreshold = (uint16)((opModeParamsPtr->airTriggerLevel * 3) / 10);
-			}
-			else // Set adaptive threshold to 48 counts (close to 92 dB) for any trigger levels above ~102 dB
-			{
-				g_adaptiveAcousticThreshold = 48;
-			}
-
-			g_adaptiveState = ADAPTIVE_MAX_RATE;
-			g_adaptiveSampleDelay = opModeParamsPtr->sample_rate * 30; // Wait 30 seconds after start monitoring to check for adaptive sampling drop
-			g_adaptiveBoundaryCount = opModeParamsPtr->sample_rate / SAMPLE_RATE_1K;
-			g_adaptiveBoundaryMarker = 0;
-			g_adaptiveLastRealSamplePtr = g_tailOfPretriggerBuff;
-		}
-	}
-	else // Sampling method is FIXED_SAMPLING
-	{
 		g_adaptiveState = ADAPTIVE_DISABLED;
 		g_adaptiveSampleDelay = 0;
 		g_adaptiveBoundaryCount = 0;
