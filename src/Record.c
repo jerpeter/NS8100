@@ -446,7 +446,7 @@ void LoadUnitConfigDefaults(UNIT_CONFIG_STRUCT* unitConfigPtr)
 	memset(unitConfigPtr, 0, sizeof(UNIT_CONFIG_STRUCT));
 
 	// Set default conditions
-	unitConfigPtr->adaptiveSampling = ENABLED;
+	unitConfigPtr->adaptiveSampling = DISABLED;
 	unitConfigPtr->adChannelVerification = ENABLED;
 	unitConfigPtr->airScale = AIR_SCALE_LINEAR;
 	unitConfigPtr->alarmOneAirLevel = ALARM_ONE_AIR_DEFAULT_TRIG_LVL;
