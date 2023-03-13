@@ -285,6 +285,19 @@ void InitGpsBuffers(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void UpdateSystemEpochTimeGps(time_t epochTime)
+{
+	// Check if the GPS Epoch time is true, meaning that it's greater than the initial internal date & time that the GPS chip powers up with before reading time from a satellite
+	if (epochTime > 1672531200) // Epoch date corresponding with the beginning of the year 1/1/2023
+	{
+		// Update the system GPS Epoch
+		g_epochTimeGPS = epochTime;
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 #define BINARY_RAW_OUTPUT	0
 void ProcessGpsSerialData(void)
 {
@@ -628,11 +641,13 @@ void HandleGGA(uint8* message)
 		g_gpsPosition.altitude = ((int)gga.elv);
 		g_gpsPosition.validLocationCount++;
 
+#if 0 // No longer need to issue a Time Query, creating GPS Epoch time from the ZDA message
 		if (g_epochTimeGPS == 0)
 		{
 			// Either call GpsQueryTime or set a flag to handle it outside of scope
 			GpsQueryTime();
 		}
+#endif
 
 		if (g_gpsPosition.validLocationCount == GPS_THRESHOLD_TOTAL_FIXES_FOR_BEST_LOCATION)
 		{
@@ -748,11 +763,13 @@ void HandleGLL(uint8* message)
 		g_gpsPosition.utcSec = gll.utc.sec;
 		g_gpsPosition.validLocationCount++;
 
+#if 0 // No longer need to issue a Time Query, creating GPS Epoch time from the ZDA message
 		if (g_epochTimeGPS == 0)
 		{
 			// Either call GpsQueryTime or set a flag to handle it outside of scope
 			GpsQueryTime();
 		}
+#endif
 
 		if (g_gpsPosition.validLocationCount == GPS_THRESHOLD_TOTAL_FIXES_FOR_BEST_LOCATION)
 		{
@@ -798,6 +815,8 @@ void HandleZDA(uint8* message)
 	uint16 messageLength;
 	char timeBuff[NMEA_TIMEPARSE_BUF];
 	nmeaGPZDA zda;
+	struct tm currentTime;
+	time_t epochTime;
 
 	//========================================================================================================
 	// ZDA - Time and Date (UTC, day, month, year and local time zone)
@@ -840,10 +859,23 @@ void HandleZDA(uint8* message)
 	ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
 #endif
 
+	// Example --> GPS Date: 07-03-2023, Time:19:24:14
+	currentTime.tm_year = (zda.utc.year - 1900); // From 1900;
+	currentTime.tm_mon = (zda.utc.mon - 1); // Month, 0 - jan
+	currentTime.tm_mday = zda.utc.day; // Day of the month
+	currentTime.tm_hour = zda.utc.hour;
+	currentTime.tm_min = zda.utc.min;
+	currentTime.tm_sec = zda.utc.sec;
+	currentTime.tm_isdst = -1; // Is DST on? 1 = yes, 0 = no, -1 = unknown
+
+	// Convert current time into Epoch time
+	epochTime = mktime(&currentTime);
+
+	UpdateSystemEpochTimeGps(epochTime);
+
 	if (g_gpsOutputToCraft)
 	{
-		messageLength = sprintf((char*)g_spareBuffer, "Date: %02d-%02d-%04d, Time:%02d:%02d:%02d.%02d, Local Zone Hours: %02d, Local Zone Minutes: %02d\r\n",
-								zda.utc.day, zda.utc.mon, zda.utc.year, zda.utc.hour, zda.utc.min, zda.utc.sec, zda.utc.hsec, zda.lzHours, zda.lzMins);
+		messageLength = sprintf((char*)g_spareBuffer, "GPS Date: %02d-%02d-%04d, Time:%02d:%02d:%02d, GPS Epoch: %lu\r\n", zda.utc.day, zda.utc.mon, zda.utc.year, zda.utc.hour, zda.utc.min, zda.utc.sec, epochTime);
 		ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
 	}
 
@@ -1409,6 +1441,7 @@ void HandleGPSQueryTime(void)
 	uint8 leapSeconds;
 	uint8* msgData = &g_gpsBinaryQueue.message[g_gpsBinaryQueue.readIndex].data[0];
 	time_t epochTime;
+	DATE_TIME_STRUCT tempTime;
 
 	if (g_gpsBinaryQueue.message[g_gpsBinaryQueue.readIndex].binMsgValid == YES)
 	{
@@ -1433,15 +1466,20 @@ void HandleGPSQueryTime(void)
 	timeOfWeekMS = ((msgData[2] << 24) + (msgData[3] << 16) + (msgData[4] << 8) + (msgData[5]));
 	//subTimeOfWeekNS = ((msgData[6] << 24) + (msgData[7] << 16) + (msgData[8] << 8) + (msgData[9]));
 	weeks = ((msgData[10] << 8) + (msgData[11]));
-	leapSeconds = msgData[12];
+	leapSeconds = msgData[13]; // Better to use active Leap seconds than default Leap seconds
 	//fractionSecs = (((timeOfWeekMS % 1000) * 1000 * 1000) + (subTimeOfWeekNS));
 
-	// 315964800 is the correct offset between 1.1.1970 UTC and 6.1.1980 UTC where GPS Time began
+	// 315964800 is the correct offset between 1.1.1970 UTC and 6.1.1980 UTC where GPS Time began, verified the correct time correlates with subtracting leap seconds
 	epochTime = (315964800 + ((weeks * 7) * 86400) + (timeOfWeekMS / 1000) - leapSeconds);
-	g_epochTimeGPS = epochTime;
 
-	//messageLength = sprintf((char*)g_spareBuffer, "GPS Time Details: Time of week ms:%lu, Sub time of week ns:%lu\r\n", timeOfWeekMS, subTimeOfWeekNS);
-	//ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
+	UpdateSystemEpochTimeGps(epochTime);
+
+	if (g_gpsOutputToCraft)
+	{
+		tempTime = ConvertEpochTimeToDateTime(epochTime);
+		messageLength = sprintf((char*)g_spareBuffer, "GPS current Epoch Time: %ld seconds, (%d/%d/%d @ %02d:%02d:%02d GMT time zone)\r\n", epochTime, tempTime.month, tempTime.day, tempTime.year, tempTime.hour, tempTime.min, tempTime.sec);
+		ModemPuts(g_spareBuffer, messageLength, NO_CONVERSION);
+	}
 }
 
 #if 0
