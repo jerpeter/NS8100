@@ -22,6 +22,7 @@
 ///----------------------------------------------------------------------------
 ///	Defines
 ///----------------------------------------------------------------------------
+#define PERCENT_INCREMENT_DEFAULT	(uint32)(5)
 
 ///----------------------------------------------------------------------------
 ///	Externs
@@ -47,7 +48,9 @@ static USER_TYPE_STRUCT unitTypes[TOTAL_TYPES] = {
 {"secs", SECS_TYPE, 1},
 {"mins", MINS_TYPE, 1},
 {"mg", MG_TYPE, 1},
-{"hour", HOUR_TYPE, 1}
+{"hour", HOUR_TYPE, 1},
+{"%", PERCENT_TYPE, 1},
+{"psi", PSI_UNIT_TYPE, 1}
 };
 
 ///----------------------------------------------------------------------------
@@ -491,6 +494,24 @@ void AdvanceInputNumber(uint32 direction)
 		{
 			case INTEGER_BYTE_TYPE:
 			case INTEGER_BYTE_OFFSET_TYPE:
+#if 1 // New rolling increment by 5 for Percent
+				// Check if the unit type is Percent and if the current integer byte data is less than the max
+				if ((unitTypes[USER_MENU_DEFAULT_TYPE(g_userMenuCachePtr)].type == PERCENT_TYPE) && (g_userMenuCacheData.numByteData < g_userMenuCacheData.intMaxValue))
+				{
+					// Check if the data incremented by the key scrolling speed is greater than the max
+					if ((g_userMenuCacheData.numByteData + PERCENT_INCREMENT_DEFAULT) > g_userMenuCacheData.intMaxValue)
+					{
+						// Set the max value
+						g_userMenuCacheData.numByteData = (uint8)g_userMenuCacheData.intMaxValue;
+					}
+					else
+					{
+						// Increment the data by the key scrolling speed
+						g_userMenuCacheData.numByteData += PERCENT_INCREMENT_DEFAULT;
+					}
+				}
+				else
+#endif
 				// Check if the current integer byte data is less than the max
 				if (g_userMenuCacheData.numByteData < g_userMenuCacheData.intMaxValue)
 				{
@@ -562,6 +583,13 @@ void AdvanceInputNumber(uint32 direction)
 							// Increment the data by the key scrolling speed
 							g_userMenuCacheData.numLongData += g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE;
 						}
+#if 0 // PSI increment value is currently 1, so special adjustment is not needed
+						else if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == PSI_TYPE))
+						{
+							// Increment the data by the key scrolling speed
+							g_userMenuCacheData.numLongData += g_keypadNumberSpeed * AIR_TRIGGER_PSI_INC_VALUE;
+						}
+#endif
 						else
 						{
 							// Increment the data by the key scrolling speed
@@ -636,6 +664,24 @@ void AdvanceInputNumber(uint32 direction)
 		{
 			case INTEGER_BYTE_TYPE:
 			case INTEGER_BYTE_OFFSET_TYPE:
+#if 1 // New rolling increment by 5 for Percent
+				// Check if the unit type is Percent and if the current integer byte data is greater than the min
+				if ((unitTypes[USER_MENU_DEFAULT_TYPE(g_userMenuCachePtr)].type == PERCENT_TYPE) && (g_userMenuCacheData.numByteData > g_userMenuCacheData.intMinValue))
+				{
+					// Check if the data decremented by the key scrolling speed is less than the min
+					if ((g_userMenuCacheData.numByteData - PERCENT_INCREMENT_DEFAULT) < g_userMenuCacheData.intMinValue)
+					{
+						// Set the min value
+						g_userMenuCacheData.numByteData = (uint8)g_userMenuCacheData.intMinValue;
+					}
+					else
+					{
+						// Decrement the data by the key scrolling speed
+						g_userMenuCacheData.numByteData -= PERCENT_INCREMENT_DEFAULT;
+					}
+				}
+				else
+#endif
 				// Check if the current integer byte data is greater than the min
 				if (g_userMenuCacheData.numByteData > g_userMenuCacheData.intMinValue)
 				{
@@ -736,7 +782,22 @@ void AdvanceInputNumber(uint32 direction)
 									g_userMenuCacheData.numLongData -= g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE;
 								}
 							}
-							else
+#if 0 // PSI increment value is currently 1, so special adjustment is not needed
+							else if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == PSI_TYPE))
+							{
+								if ((g_userMenuCacheData.numLongData - (g_keypadNumberSpeed * AIR_TRIGGER_PSI_INC_VALUE)) > g_userMenuCacheData.intMaxValue)
+								{
+									// Set the min value
+									g_userMenuCacheData.numLongData = g_userMenuCacheData.intMinValue;
+								}
+								else
+								{
+									// Decrement the data by the key scrolling speed
+									g_userMenuCacheData.numLongData -= g_keypadNumberSpeed * AIR_TRIGGER_PSI_INC_VALUE;
+								}
+							}
+#endif
+							else // ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == DECIBEL_TYPE))
 							{
 								// Decrement the data by the key scrolling speed
 								g_userMenuCacheData.numLongData -= g_keypadNumberSpeed;
@@ -1186,12 +1247,17 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 				{
 					// Set the specifications line for the integer type
-					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%lu-%lu%s, N)", g_userMenuCacheData.intMinValue, g_userMenuCacheData.intMaxValue, "Db");
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%lu-%lu%s, N)", g_userMenuCacheData.intMinValue, g_userMenuCacheData.intMaxValue, unitTypes[DB_TYPE].text);
 				}
-				else // MILLIBAR_TYPE
+				else if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 				{
 					// Set the specifications line for the float type
-					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.3f-%.3f%s,N)", g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, "mb");
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.3f-%.3f%s,N)", g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, unitTypes[MB_TYPE].text);
+				}
+				else // (g_unitConfig.unitsOfAir == PSI_TYPE)
+				{
+					// Set the specifications line for the float type
+					sprintf(g_userMenuCachePtr[INTEGER_RANGE].text, "(%.4f-%.3f%s,N)", g_userMenuCacheData.floatMinValue, g_userMenuCacheData.floatMaxValue, unitTypes[PSI_UNIT_TYPE].text);
 				}
 				// Check if the data is NO_TRIGGER
 				if (g_userMenuCacheData.numLongData == NO_TRIGGER_CHAR)
@@ -1201,14 +1267,13 @@ void CopyDataToMenu(MN_LAYOUT_STRUCT* menu_layout)
 				}
 				else
 				{
+					// Print the data value
 					if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
 					{
-						// Print the data value
 						sprintf(g_userMenuCachePtr[tempRow].text, "%lu", g_userMenuCacheData.numLongData);
 					}
-					else // MILLIBAR_TYPE
+					else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) || (g_unitConfig.unitsOfAir == PSI_TYPE)
 					{
-						// Print the data value
 						sprintf(g_userMenuCachePtr[tempRow].text, "%.4f", g_userMenuCacheData.floatData);
 					}
 				}
