@@ -1327,6 +1327,8 @@ void ClearAndFillInCommonRecordInfo(EVT_RECORD* eventRec)
 	eventRec->summary.captured.comboEventsRecordedEndNumber = 0;
 	eventRec->summary.captured.comboBargraphEventNumberLink = 0;
 	//--------------------------------
+	if (g_triggerRecord.trec.variableTriggerEnable) { eventRec->summary.captured.variableTriggerPercentageLevel = g_triggerRecord.trec.variableTriggerPercentageLevel; }
+	//--------------------------------
 	eventRec->summary.parameters.calibrationDateSource = g_currentCalibration.source;
 	memset(&(eventRec->summary.captured.calDateTime), 0, sizeof(eventRec->summary.captured.calDateTime));
 	ConvertCalDatetoDateTime(&eventRec->summary.captured.calDateTime, &g_currentCalibration.date);
@@ -1467,14 +1469,9 @@ void FillInTriggerLevelRecordInfo(EVT_RECORD* eventRec)
 
 		eventRec->summary.parameters.airTriggerInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
-		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-		{
-			debug("Air trigger in units: %05.3f mB\r\n", (float)(eventRec->summary.parameters.airTriggerInUnits / 10000));
-		}
-		else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-		{
-			debug("Air trigger in units: %d dB\r\n", eventRec->summary.parameters.airTriggerInUnits);
-		}
+		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { debug("Air trigger in units: %05.3f mB\r\n", (float)(eventRec->summary.parameters.airTriggerInUnits / 10000)); }
+		else if (g_unitConfig.unitsOfAir == PSI_TYPE) { debug("Air trigger in units: %05.3f PSI\r\n", (float)(eventRec->summary.parameters.airTriggerInUnits / 10000)); }
+		else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { debug("Air trigger in units: %d dB\r\n", eventRec->summary.parameters.airTriggerInUnits); }
 	}
 }
 
@@ -1537,7 +1534,7 @@ void InitEventRecord(uint8 opMode)
 		eventRec->summary.parameters.numOfSamples = 0;
 		eventRec->summary.parameters.preBuffNumOfSamples = 0;
 		eventRec->summary.parameters.calDataNumOfSamples = 0;
-		eventRec->summary.parameters.activeChannels = g_triggerRecord.berec.barChannel;
+		eventRec->summary.parameters.activeChannels = NUMBER_OF_CHANNELS_DEFAULT;
 
 		// Check if either of the new Bar Interval Data types have been selected
 		if ((g_triggerRecord.berec.barIntervalDataType == BAR_INTERVAL_A_R_V_T_DATA_TYPE_SIZE) || (g_triggerRecord.berec.barIntervalDataType == BAR_INTERVAL_A_R_V_T_WITH_FREQ_DATA_TYPE_SIZE))
@@ -2233,6 +2230,40 @@ void CacheEventDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOf
 	}
 
 	ReleaseSpi1MutexLock();
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint32 GetEventSize(uint16 eventNumber)
+{
+	uint32 size = 0;
+	char* pathAndFilename;
+	int eventFile;
+
+	GetSpi1MutexLock(SDMMC_LOCK);
+
+	nav_select(FS_NAV_ID_DEFAULT);
+
+	pathAndFilename = GetEventFilenameAndPath(eventNumber, EVENT_FILE_TYPE);
+	eventFile = open(pathAndFilename, O_RDONLY);
+
+	// Verify file ID
+	if (eventFile == -1)
+	{
+		DisplayFileNotFound(pathAndFilename);
+	}
+	else
+	{
+		size = nav_file_lgt();
+
+		g_testTimeSinceLastFSWrite = g_lifetimeHalfSecondTickCount;
+		close(eventFile);
+	}
+
+	ReleaseSpi1MutexLock();
+
+	return (size);
 }
 
 ///----------------------------------------------------------------------------

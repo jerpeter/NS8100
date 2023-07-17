@@ -104,6 +104,7 @@ void UpdateSDCardUsageStats(uint32 removeSize);
 void GetEventFileInfo(uint16 eventNumber, EVENT_HEADER_STRUCT* eventHeaderPtr, EVENT_SUMMARY_STRUCT* eventSummaryPtr, BOOLEAN cacheDataToRamBuffer);
 void GetEventFileRecord(uint16 eventNumber, EVT_RECORD* tempEventRecord);
 void CacheEventDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize);
+uint32 GetEventSize(uint16 eventNumber);
 uint32 GetERDataSize(uint16 eventNumber);
 void CacheERDataToBuffer(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize);
 void CacheEventDataToRam(uint16 eventNumber, uint8* dataBuffer, uint32 dataOffset, uint32 dataSize);
