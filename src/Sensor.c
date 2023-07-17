@@ -890,14 +890,39 @@ void SmartSensorReadRomAndMemory(SMART_SENSOR_TYPE sensor)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+void UpdateUnitSensorsWithSmartSensorTypes(void)
+{
+	if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+	{
+		g_factorySetupRecord.seismicSensorType = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
+	}
+
+	if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
+	{
+		if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148_DB) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160_DB) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_5_PSI) ||
+			(g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_10_PSI))
+		{
+			g_factorySetupRecord.acousticSensorType = g_acousticSmartSensorMemory.sensorType;
+		}
+	}
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void DisplaySmartSensorInfo(SMART_SENSOR_INFO situation)
 {
+	char airSensorTypeName[16];
+
 	if (situation == INFO_ON_CHECK)
 	{
 		SmartSensorReadRomAndMemory(SEISMIC_SENSOR);
 		SmartSensorReadRomAndMemory(ACOUSTIC_SENSOR);
 	}
 
+	//-------------------------------------------
+	// Seismic sensor check
+	//-------------------------------------------
 	if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
 	{
 		// ST(0) = 2.5 = X8, ST(1) = 5.12 = X4, ST(2) = 10.24 = X2, ST(3) = 20.48 = X1
@@ -905,30 +930,37 @@ void DisplaySmartSensorInfo(SMART_SENSOR_INFO situation)
 				(uint8)(8 / pow(2, g_seismicSmartSensorMemory.sensorType)),
 				(g_seismicSmartSensorMemory.sensorType < 0x80) ? (pow(2,g_seismicSmartSensorMemory.sensorType) * 2.56) : ((pow(2, (g_seismicSmartSensorMemory.sensorType - 0x80)) * 65.535)),
 				(g_seismicSmartSensorMemory.sensorType < 0x80) ? ("IN") : ("MM"));
-		debug("Discovered: Seismic smart sensor, type: X%d (%4.2f %s)\r\n", (uint8)(8 / pow(2, g_seismicSmartSensorMemory.sensorType)),
-				(pow(2,g_seismicSmartSensorMemory.sensorType) * 2.56), ("IN"));
-		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+		debug("Discovered: Seismic smart sensor, type: X%d (%4.2f %s)\r\n", (uint8)(8 / pow(2, g_seismicSmartSensorMemory.sensorType)), (pow(2,g_seismicSmartSensorMemory.sensorType) * 2.56), ("IN"));
 	}
 	else if (situation == INFO_ON_CHECK)
 	{
 		sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(SEISMIC_TEXT), getLangText(SMART_SENSOR_TEXT), getLangText(NOT_FOUND_TEXT));
-		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
 		debug("No Seismic smart sensor found\r\n");
 	}
 
+	// Allow faster UI menu traversal if not during initialization
+	if (situation == INFO_ON_INIT) { OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS)); }
+	else { MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK); }
+
+	//-------------------------------------------
+	// Acoustic sensor check
+	//-------------------------------------------
 	if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
 	{
+		GetAirSensorTypeName(&airSensorTypeName[0]);
 		sprintf((char*)g_spareBuffer, "%s: %s %s, %s: %s", getLangText(DISCOVERED_TEXT), getLangText(ACOUSTIC_TEXT), getLangText(SMART_SENSOR_TEXT),
-				getLangText(TYPE_TEXT), ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160) ? "MIC 160 dB" : "MIC 148 dB"));
-		debug("Discovered: Acoustic smart sensor, type: Standard\r\n");
-		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
+				getLangText(TYPE_TEXT), airSensorTypeName);
+		debug("Discovered: Acoustic smart sensor, type: %s\r\n", airSensorTypeName);
 	}
 	else if (situation == INFO_ON_CHECK)
 	{
 		sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(ACOUSTIC_TEXT), getLangText(SMART_SENSOR_TEXT), getLangText(NOT_FOUND_TEXT));
-		OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS));
 		debug("No Acoustic smart sensor found\r\n");
 	}
+
+	// Allow faster UI menu traversal if not during initialization
+	if (situation == INFO_ON_INIT) { OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS)); }
+	else { MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK); }
 }
 
 ///----------------------------------------------------------------------------
@@ -938,6 +970,7 @@ void DisplaySmartSensorSerialNumber(SMART_SENSOR_TYPE sensor)
 {
 	char serialNumber[10];
 	uint8* serialNumBuffer = NULL;
+	char airSensorTypeName[16];
 
 	if ((sensor == SEISMIC_SENSOR) && (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
 	{
@@ -952,8 +985,9 @@ void DisplaySmartSensorSerialNumber(SMART_SENSOR_TYPE sensor)
 	else if ((sensor == ACOUSTIC_SENSOR) && (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY))
 	{
 		serialNumBuffer = &g_acousticSmartSensorMemory.serialNumber[0];
+		GetAirSensorTypeName(&airSensorTypeName[0]);
 		sprintf(serialNumber, "%d%d%d%d%d%d", serialNumBuffer[0], serialNumBuffer[1], serialNumBuffer[2], serialNumBuffer[3], serialNumBuffer[4], serialNumBuffer[5]);
-		sprintf((char*)g_spareBuffer, "%s SN#: %s, %s: %s", getLangText(ACOUSTIC_TEXT), serialNumber, getLangText(TYPE_TEXT), ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160) ? "MIC 160 dB" : "MIC 148 dB"));
+		sprintf((char*)g_spareBuffer, "%s SN#: %s, %s: %s", getLangText(ACOUSTIC_TEXT), serialNumber, getLangText(TYPE_TEXT), airSensorTypeName);
 		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 }

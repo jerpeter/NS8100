@@ -154,6 +154,7 @@ uint8 OneWireReadAppRegister(SMART_SENSOR_TYPE sensor, uint16 address, uint8 len
 uint8 OneWireCopyAndLockAppRegister(SMART_SENSOR_TYPE sensor);
 void SmartSensorDebug(SMART_SENSOR_TYPE sensor);
 void SmartSensorReadRomAndMemory(SMART_SENSOR_TYPE sensor);
+void UpdateUnitSensorsWithSmartSensorTypes(void);
 void DisplaySmartSensorInfo(SMART_SENSOR_INFO situation);
 void DisplaySmartSensorSerialNumber(SMART_SENSOR_TYPE sensor);
 uint8 CheckIfBothSmartSensorsPresent(void);
