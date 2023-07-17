@@ -265,8 +265,8 @@ typedef struct
 	uint16				comboEventsRecordedStartNumber; // 0x1C0 (from 0xA55A)
 	uint16				comboEventsRecordedEndNumber; // 0x1C2 (from 0xA55A)
 	uint16				comboBargraphEventNumberLink; // 0x1C4 (from 0xA55A)
-	uint8				unused1; // 0x1C6 (from 0xA55A) // Space for expansion
-	uint8				unused2; // 0x1C7 (from 0xA55A) // Space for expansion
+	uint8				variableTriggerPercentageLevel; // 0x1C6 (from 0xA55A)
+	uint8				unused1; // 0x1C7 (from 0xA55A) // Space for expansion
 	time_t				gpsEpochTriggerTime; // 0x1C8 (from 0xA55A)
 	uint32				gpsFractionalSecond; // 0x1CC (from 0xA55A)
 	uint8				unused[UNUSED_CAPTURE_SIZE]; // 0x1D0 (from 0xA55A) // Space for expansion
