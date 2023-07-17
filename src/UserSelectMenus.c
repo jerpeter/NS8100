@@ -82,6 +82,7 @@ extern USER_MENU_STRUCT modemSetupMenu[];
 extern USER_MENU_STRUCT monitorLogMenu[];
 extern USER_MENU_STRUCT operatorMenu[];
 extern USER_MENU_STRUCT peakAccMenu[];
+extern USER_MENU_STRUCT percentLimitTriggerMenu[];
 extern USER_MENU_STRUCT pretriggerSizeMenu[];
 extern USER_MENU_STRUCT printerEnableMenu[];
 extern USER_MENU_STRUCT printMonitorLogMenu[];
@@ -95,6 +96,7 @@ extern USER_MENU_STRUCT sampleRateMenu[];
 extern USER_MENU_STRUCT sampleRateBargraphMenu[];
 extern USER_MENU_STRUCT sampleRateComboMenu[];
 extern USER_MENU_STRUCT samplingMethodMenu[];
+extern USER_MENU_STRUCT seismicFilteringMenu[];
 extern USER_MENU_STRUCT seismicSensorTypeMenu[];
 extern USER_MENU_STRUCT seismicTriggerMenu[];
 #if (!VT_FEATURE_DISABLED)
@@ -132,8 +134,8 @@ extern USER_MENU_STRUCT zeroEventNumberMenu[];
 USER_MENU_STRUCT adaptiveSamplingMenu[ADAPTIVE_SAMPLING_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, ADAPTIVE_SAMPLING_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, ADAPTIVE_SAMPLING_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{NO_TAG, 0, HIDE_OPTION_DISABLE_TEXT,	NO_TAG,	{DISABLED}},
 {NO_TAG, 0, SHOW_OPTION_IN_SETUP_TEXT,	NO_TAG,	{ENABLED}},
+{NO_TAG, 0, HIDE_OPTION_DISABLE_TEXT,	NO_TAG,	{DISABLED}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AdaptiveSamplingMenuHandler}}
 };
 
@@ -262,15 +264,17 @@ void AirScaleMenuHandler(uint8 keyPressed, void* data)
 			{
 				g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
-				if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+				if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 				{
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE,
-														AIR_TRIGGER_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE, GetAirMaxValue());
 				}
-				else
+				else if (g_unitConfig.unitsOfAir == PSI_TYPE)
 				{
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE,
-														AIR_TRIGGER_MB_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_PSI_DEFAULT_VALUE, AIR_TRIGGER_PSI_MIN_VALUE, GetAirMaxValue());
+				}
+				else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+				{
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, GetAirMaxValue());
 				}
 			}
 		}
@@ -426,7 +430,6 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
-	uint32 airMaxValue;
 
 	if (keyPressed == ENTER_KEY)
 	{
@@ -512,31 +515,14 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
-						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-						{
-							g_alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;
-						}
-						else
-						{
-							g_alarmOneAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
-						}
+						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { g_alarmOneAirMinLevel = ALARM_AIR_MB_MIN_VALUE; }
+						else if (g_unitConfig.unitsOfAir == PSI_TYPE) { g_alarmOneAirMinLevel = ALARM_AIR_PSI_MIN_VALUE; }
+						else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { g_alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;	}
 					}
 
 					g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_unitConfig.alarmOneAirLevel);
 
-					if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-					{
-						airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE);
-					}
-					else
-					{
-						airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE);
-					}
-
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
-														AirTriggerConvertToUnits(g_alarmOneAirMinLevel),
-														AirTriggerConvertToUnits(g_alarmOneAirMinLevel),
-														airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjustment, AirTriggerConvertToUnits(g_alarmOneAirMinLevel), AirTriggerConvertToUnits(g_alarmOneAirMinLevel), GetAirMaxValue());
 				}
 			break;
 
@@ -588,14 +574,9 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
-						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-						{
-							g_alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;
-						}
-						else
-						{
-							g_alarmOneAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
-						}
+						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { g_alarmOneAirMinLevel = ALARM_AIR_MB_MIN_VALUE; }
+						else if (g_unitConfig.unitsOfAir == PSI_TYPE) { g_alarmOneAirMinLevel = ALARM_AIR_PSI_MIN_VALUE; }
+						else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { g_alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;	}
 					}
 
 					// Down convert to current bit accuracy setting
@@ -659,7 +640,6 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
-	uint32 airMaxValue;
 
 	if (keyPressed == ENTER_KEY)
 	{
@@ -747,32 +727,15 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
-						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-						{
-							g_alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;
-						}
-						else
-						{
-							g_alarmTwoAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
-						}
+						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { g_alarmTwoAirMinLevel = ALARM_AIR_MB_MIN_VALUE; }
+						else if (g_unitConfig.unitsOfAir == PSI_TYPE) { g_alarmTwoAirMinLevel = ALARM_AIR_PSI_MIN_VALUE; }
+						else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { g_alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;	}
 					}
 
 					g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirLevel);
 
-					if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-					{
-						airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE);
-					}
-					else
-					{
-						airMaxValue = ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE);
-					}
-
 					// Call Alarm One Air Level
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjustment,
-														AirTriggerConvertToUnits(g_alarmTwoAirMinLevel),
-														AirTriggerConvertToUnits(g_alarmTwoAirMinLevel),
-														airMaxValue); //(g_unitConfig.unitsOfAir == DECIBEL_TYPE) ? (ALARM_AIR_MAX_VALUE) : (ALARM_AIR_MB_MAX_VALUE));
+					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjustment, AirTriggerConvertToUnits(g_alarmTwoAirMinLevel), AirTriggerConvertToUnits(g_alarmTwoAirMinLevel), GetAirMaxValue());
 				}
 			break;
 
@@ -824,14 +787,9 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
-						if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-						{
-							g_alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;
-						}
-						else
-						{
-							g_alarmTwoAirMinLevel = ALARM_AIR_MB_MIN_VALUE;
-						}
+						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { g_alarmTwoAirMinLevel = ALARM_AIR_MB_MIN_VALUE; }
+						else if (g_unitConfig.unitsOfAir == PSI_TYPE) { g_alarmTwoAirMinLevel = ALARM_AIR_PSI_MIN_VALUE; }
+						else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { g_alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;	}
 					}
 
 					// Down convert to current bit accuracy setting
@@ -1893,11 +1851,15 @@ void CustomCurveMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
+#if 0 // Removed for new Percent of Limit Trigger feature
 	float div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
+#endif
 
 	if (keyPressed == ENTER_KEY)
 	{
 		g_triggerRecord.trec.variableTriggerVibrationStandard = (uint8)customCurveMenu[newItemIndex].data;
+
+#if 0 // Removed for new Percent of Limit Trigger feature
 		g_triggerRecord.trec.variableTriggerEnable = YES;
 
 		if (g_triggerRecord.trec.variableTriggerVibrationStandard == CUSTOM_STEP_THRESHOLD)
@@ -1918,16 +1880,21 @@ void CustomCurveMenuHandler(uint8 keyPressed, void* data)
 
 		g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
-		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE,
-												((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE, GetAirMaxValue());
 		}
-		else
+		else if (g_unitConfig.unitsOfAir == PSI_TYPE)
 		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE,
-												((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_PSI_DEFAULT_VALUE, AIR_TRIGGER_PSI_MIN_VALUE, GetAirMaxValue());
 		}
+		else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+		{
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, GetAirMaxValue());
+		}
+#else // New Percent of Limit Trigger feature
+		SETUP_USER_MENU_FOR_INTEGERS_MSG(&percentLimitTriggerMenu, &g_triggerRecord.trec.variableTriggerPercentageLevel, VT_PERCENT_OF_LIMIT_DEFAULT_VALUE, VT_PERCENT_OF_LIMIT_MIN_VALUE, VT_PERCENT_OF_LIMIT_MAX_VALUE);
+#endif
 	}
 	else if (keyPressed == ESC_KEY)
 	{
@@ -2206,15 +2173,17 @@ void ExternalTriggerMenuHandler(uint8 keyPressed, void* data)
 		{
 			g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
-			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+			if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE,
-													AIR_TRIGGER_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE, GetAirMaxValue());
 			}
-			else
+			else if (g_unitConfig.unitsOfAir == PSI_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE,
-													AIR_TRIGGER_MB_MIN_VALUE, ((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_PSI_DEFAULT_VALUE, AIR_TRIGGER_PSI_MIN_VALUE, GetAirMaxValue());
+			}
+			else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, GetAirMaxValue());
 			}
 		}
 	}
@@ -2441,6 +2410,9 @@ void HelpMenuHandler(uint8 keyPressed, void* data)
 		else if (helpMenu[newItemIndex].data == SENSOR_CHECK_CHOICE)
 		{
 			DisplaySmartSensorInfo(INFO_ON_CHECK);
+
+			// Update unit sensor types with any new information read from the Smart Sensors
+			UpdateUnitSensorsWithSmartSensorTypes();
 		}
 		else if (helpMenu[newItemIndex].data == GPS_LOCATION_DISPLAY_CHOICE)
 		{
@@ -3520,12 +3492,14 @@ void SensitivityMenuHandler(uint8 keyPressed, void* data)
 // Acoustic Sensor Type Menu
 //=============================================================================
 //*****************************************************************************
-#define ACOUSTIC_SENSOR_TYPE_MENU_ENTRIES 4
+#define ACOUSTIC_SENSOR_TYPE_MENU_ENTRIES 6
 USER_MENU_STRUCT acousticSensorTypeMenu[ACOUSTIC_SENSOR_TYPE_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, ACOUSTIC_GAIN_TYPE_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, ACOUSTIC_SENSOR_TYPE_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
-{ITEM_1, 0, MIC_148_DB_TEXT,	NO_TAG, {SENSOR_MIC_148}},
-{ITEM_2, 0, MIC_160_DB_TEXT,	NO_TAG, {SENSOR_MIC_160}},
+{ITEM_1, 0, MIC_148_DB_TEXT,	NO_TAG, {SENSOR_MIC_148_DB}},
+{ITEM_2, 0, MIC_160_DB_TEXT,	NO_TAG, {SENSOR_MIC_160_DB}},
+{ITEM_3, 0, MIC_5_PSI_TEXT,		NO_TAG, {SENSOR_MIC_5_PSI}},
+{ITEM_2, 0, MIC_10_PSI_TEXT,	NO_TAG, {SENSOR_MIC_10_PSI}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&AcousticSensorTypeMenuHandler}}
 };
 
@@ -3594,6 +3568,47 @@ void SeismicSensorTypeMenuHandler(uint8 keyPressed, void* data)
 
 	JUMP_TO_ACTIVE_MENU();
 }
+
+#if 0 // Test
+//*****************************************************************************
+//=============================================================================
+// Seismic Filtering Menu
+//=============================================================================
+//*****************************************************************************
+#define SEISMIC_FILTERING_MENU_ENTRIES 7
+USER_MENU_STRUCT seismicFilteringMenu[SEISMIC_FILTERING_MENU_ENTRIES] = {
+{TITLE_PRE_TAG, 0, SEISMIC_FILTERING_TAG, TITLE_POST_TAG,
+	{INSERT_USER_MENU_INFO(SELECT_TYPE, SEISMIC_FILTERING_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
+{ITEM_1, 500, HZ_TEXT, NO_TAG, {ANALOG_CUTOFF_FREQ_LOW}},
+{ITEM_2, 1000, HZ_TEXT, NO_TAG, {ANALOG_CUTOFF_FREQ_1}},
+{ITEM_3, 2000, HZ_TEXT, NO_TAG, {ANALOG_CUTOFF_FREQ_2}},
+{ITEM_4, 4000, HZ_TEXT, NO_TAG, {ANALOG_CUTOFF_FREQ_3}},
+{ITEM_5, 14300, HZ_TEXT, NO_TAG, {ANALOG_CUTOFF_FREQ_4}},
+{END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&SeismicFilteringMenuHandler}}
+};
+
+//-------------------------
+// Seismic Filtering Menu Handler
+//-------------------------
+void SeismicFilteringMenuHandler(uint8 keyPressed, void* data)
+{
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
+	uint16 newItemIndex = *((uint16*)data);
+
+	if (keyPressed == ENTER_KEY)
+	{
+		g_calSetupParameters.seismicFiltering = seismicFilteringMenu[newItemIndex].data;
+		if (g_calSetupParameters.airFiltering == ACOUSTIC_GAIN_A_WEIGHTED) { SETUP_USER_MENU_MSG(&airScaleMenu, AIR_SCALE_A_WEIGHTING); }
+		else { SETUP_USER_MENU_MSG(&airScaleMenu, AIR_SCALE_LINEAR); }
+	}
+	else if (keyPressed == ESC_KEY)
+	{
+		SETUP_USER_MENU_MSG(&sampleRateComboMenu, g_calSetupParameters.sampleRate);
+	}
+
+	JUMP_TO_ACTIVE_MENU();
+}
+#endif
 
 #if (!VT_FEATURE_DISABLED)
 //*****************************************************************************
@@ -4010,12 +4025,13 @@ void UnitsOfMeasureMenuHandler(uint8 keyPressed, void* data)
 // Units Of Air Menu
 //=============================================================================
 //*****************************************************************************
-#define UNITS_OF_AIR_MENU_ENTRIES 4
+#define UNITS_OF_AIR_MENU_ENTRIES 5
 USER_MENU_STRUCT unitsOfAirMenu[UNITS_OF_AIR_MENU_ENTRIES] = {
 {TITLE_PRE_TAG, 0, UNITS_OF_AIR_TEXT, TITLE_POST_TAG,
 	{INSERT_USER_MENU_INFO(SELECT_TYPE, UNITS_OF_AIR_MENU_ENTRIES, TITLE_CENTERED, DEFAULT_ITEM_1)}},
 {ITEM_1, 0, DECIBEL_TEXT,	NO_TAG, {DECIBEL_TYPE}},
 {ITEM_2, 0, MILLIBAR_TEXT,	NO_TAG, {MILLIBAR_TYPE}},
+{ITEM_2, 0, PSI_TEXT,		NO_TAG, {PSI_TYPE}},
 {END_OF_MENU, (uint8)0, (uint8)0, (uint8)0, {(uint32)&UnitsOfAirMenuHandler}}
 };
 
@@ -4033,16 +4049,9 @@ void UnitsOfAirMenuHandler(uint8 keyPressed, void* data)
 		{
 			g_unitConfig.unitsOfAir = (uint8)unitsOfAirMenu[newItemIndex].data;
 
-			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-			{
-				g_sensorInfo.airUnitsFlag = DB_TYPE;
-				g_sensorInfo.ameasurementRatio = (float)DECIBEL;
-			}
-			else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-			{
-				g_sensorInfo.airUnitsFlag = MB_TYPE;
-				g_sensorInfo.ameasurementRatio = (float)MILLIBAR;
-			}
+			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE) { g_sensorInfo.airUnitsFlag = DB_TYPE; }
+			else if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { g_sensorInfo.airUnitsFlag = MB_TYPE; }
+			else /* (g_unitConfig.unitsOfAir == PSI_TYPE) */ { g_sensorInfo.airUnitsFlag = PSI_TYPE; }
 
 			SaveRecordData(&g_unitConfig, DEFAULT_RECORD, REC_UNIT_CONFIG_TYPE);
 		}
@@ -4121,13 +4130,17 @@ void VibrationStandardMenuHandler(uint8 keyPressed, void* data)
 {
 	INPUT_MSG_STRUCT mn_msg = {0, 0, {}};
 	uint16 newItemIndex = *((uint16*)data);
+#if 0 // Removed for new Percent of Limit Trigger feature
 	float div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
+#endif
 
 	if (keyPressed == ENTER_KEY)
 	{
 		if (vibrationStandardMenu[newItemIndex].data != START_OF_CUSTOM_CURVES_LIST)
 		{
 			g_triggerRecord.trec.variableTriggerVibrationStandard = (uint8)vibrationStandardMenu[newItemIndex].data;
+
+#if 0 // Removed for new % of Limit Trigger feature
 			g_triggerRecord.trec.variableTriggerEnable = YES;
 
 			// Set the fixed trigger level to 2 IPS since anything above this level is an automatic trigger for all vibration standards
@@ -4140,16 +4153,21 @@ void VibrationStandardMenuHandler(uint8 keyPressed, void* data)
 
 			g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
 
-			if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+			if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE,
-													((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MAX_VALUE : AIR_TRIGGER_MIC_148_MAX_VALUE));
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE, GetAirMaxValue());
 			}
-			else
+			else if (g_unitConfig.unitsOfAir == PSI_TYPE)
 			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE,
-													((g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) ? AIR_TRIGGER_MIC_160_MB_MAX_VALUE : AIR_TRIGGER_MIC_148_MB_MAX_VALUE));
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_PSI_DEFAULT_VALUE, AIR_TRIGGER_PSI_MIN_VALUE, GetAirMaxValue());
 			}
+			else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+			{
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, GetAirMaxValue());
+			}
+#else // New Percent of Limit Trigger feature
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&percentLimitTriggerMenu, &g_triggerRecord.trec.variableTriggerPercentageLevel, VT_PERCENT_OF_LIMIT_DEFAULT_VALUE, VT_PERCENT_OF_LIMIT_MIN_VALUE, VT_PERCENT_OF_LIMIT_MAX_VALUE);
+#endif
 		}
 		else // (newItemIndex == START_OF_CUSTOM_CURVES_LIST)
 		{
