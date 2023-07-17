@@ -474,15 +474,18 @@ void AppendMonitorLogEntryFile(void)
 			else
 			{
 				airInUnits = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-				if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { sprintf((char*)airString, "%05.3f mB", ((float)airInUnits / 10000)); }
-				else { sprintf((char*)airString, "%d dB", (uint16)airInUnits); }
+				if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { sprintf((char*)airString, "%05.3f mb", ((float)airInUnits / 10000)); }
+				else if (g_unitConfig.unitsOfAir == PSI_TYPE) { sprintf((char*)airString, "%05.3f psi", ((float)airInUnits / 10000)); }
+				else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { sprintf((char*)airString, "%d dB", (uint16)airInUnits); }
 			}
 
 			if (g_factorySetupRecord.seismicSensorType > SENSOR_ACC_RANGE_DIVIDER) { strcpy((char*)&seisSensorString, "Acc"); }
 			else { sprintf((char*)&seisSensorString, "%3.1f in", (float)g_factorySetupRecord.seismicSensorType / (float)204.8); }
 
-			if (g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160) { strcpy((char*)&airSensorString, "Mic 160dB"); }
-			else { strcpy((char*)&airSensorString, "Mic 148dB"); }
+			if (g_factorySetupRecord.acousticSensorType == SENSOR_MIC_160_DB) { strcpy((char*)&airSensorString, "Mic 160 dB"); }
+			else if (g_factorySetupRecord.acousticSensorType == SENSOR_MIC_5_PSI) { strcpy((char*)&airSensorString, "Mic 5 PSI"); }
+			else if (g_factorySetupRecord.acousticSensorType == SENSOR_MIC_10_PSI) { strcpy((char*)&airSensorString, "Mic 10 PSI"); }
+			else { strcpy((char*)&airSensorString, "Mic 148 dB"); }
 
 			sprintf((char*)g_spareBuffer, "Log ID: %03d --> Status: %10s, Mode: %8s, Start Time: %s, Stop Time: %s\r\n\tEvents: %3d, Start Evt #: %4d, "\
 					"Seismic Trig: %10s, Air Trig: %11s\r\n\tBit Acc: %d, Temp Adjust: %3s, Seismic Sensor: %8s, Acoustic Sensor: %8s, Sensitivity: %6s\r\n\n",
