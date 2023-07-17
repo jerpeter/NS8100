@@ -395,24 +395,52 @@ float HexToMB(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint,
 		}
 	}
 
+#if 0 // Normal (brought forward from 7K series)
 	millibars = (float)((float)(data * 25)/(float)10000.0);
 	
 	// Scale appropriate to bit accuracy based on the original calc for 12-bit
 	millibars /= (float)((float)bitAccuracyMidpoint / (float)ACCURACY_12_BIT_MIDPOINT);
 
-	if (acousticSensorType == SENSOR_MIC_160)
+	if (acousticSensorType == SENSOR_MIC_160_DB)
 	{
 		millibars *= 4;
 	}
+#else // Alternate
+	float micScale;
+
+	if (acousticSensorType == SENSOR_MIC_160_DB) { micScale = SENSOR_MIC_160_DB_FULL_SCALE_MB; }
+	else if (acousticSensorType == SENSOR_MIC_5_PSI) { micScale = SENSOR_MIC_5_PSI_FULL_SCALE_MB; }
+	else if (acousticSensorType == SENSOR_MIC_10_PSI) { micScale = SENSOR_MIC_10_PSI_FULL_SCALE_MB; }
+	else /* (acousticSensorType == SENSOR_MIC_148_DB) */ { micScale = SENSOR_MIC_148_DB_FULL_SCALE_MB; }
+
+	millibars = (float)(((float)data * micScale)/(float)bitAccuracyMidpoint);
+#endif
 
 	return (millibars);
 }
 
+#if 1
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 DbToHex(uint16 db, uint8 acousticSensorType)
+float HexToPSI(uint16 data, uint8 dataNormalizedFlag, uint16 bitAccuracyMidpoint, uint8 acousticSensorType)
 {
+	float mbToPSI;
+
+	mbToPSI = HexToMB(data, dataNormalizedFlag, bitAccuracyMidpoint, acousticSensorType);
+
+	mbToPSI /= PSI_TO_MB_CONVERSION_RATIO;
+
+	return (mbToPSI);
+}
+#endif
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint16 DbToHex(uint32 db, uint8 acousticSensorType)
+{
+#if 0 // Original
 	// Convert dB to an offset from 0 to 2048 and upscale to 16-bit
 
 	// This is the inverse log of base 10.
@@ -427,10 +455,24 @@ uint16 DbToHex(uint16 db, uint8 acousticSensorType)
 	// Upscale from 12-bit to 16-bit
 	dbValue *= 16;
 
-	if (acousticSensorType == SENSOR_MIC_160)
+	if (acousticSensorType == SENSOR_MIC_160_DB)
 	{
 		dbValue /= 4;
 	}
+#else // Added sensor types
+	// Convert dB to an offset from 0 to 32768
+
+	// This is the inverse log of base 10.
+	float dbValue = (float)pow((float)10, ((float)db/(float)20.0));
+	float micScale;
+
+	if (acousticSensorType == SENSOR_MIC_160_DB) { micScale = (781.25 * 4); }
+	else if (acousticSensorType == SENSOR_MIC_5_PSI) { micScale = 52602.824; }
+	else if (acousticSensorType == SENSOR_MIC_10_PSI) { micScale = (52602.824 * 2); }
+	else /* (acousticSensorType == SENSOR_MIC_148_DB) */ { micScale = 781.25; }
+
+	dbValue /= micScale;
+#endif
 
 	return (ceil(dbValue));
 }
@@ -438,81 +480,38 @@ uint16 DbToHex(uint16 db, uint8 acousticSensorType)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint16 MbToHex(float mb, uint8 acousticSensorType)
+uint16 MbToHex(uint32 mb, uint8 acousticSensorType)
 {
-	// Convert mb to an offset from 0 to 2048 and upscale to 16-bit
+#if 0 // Original
+	// Range is from 0 to 32768, incoming mb is adjusted up by 10,000
+	float mbValue = (float)((float)mb / ADJUSTED_MB_TO_HEX_VALUE);
 
-	// Range is from 0 to 2048. Incoming mb is adjusted up by 10,000. Divide by 25 to bring to the correct range.
-	float mbValue = (mb / ADJUSTED_MB_TO_HEX_VALUE);
-
-	// Upscale from 12-bit to 16-bit
-	mbValue *= 16;
-
-	if (acousticSensorType == SENSOR_MIC_160)
+	if (acousticSensorType == SENSOR_MIC_160_DB)
 	{
 		mbValue /= 4;
 	}
+#else // Added sensor types
+	float mbValue;
+
+	// Incoming mb is adjusted up by 10000
+	if (acousticSensorType == SENSOR_MIC_160_DB) { mbValue = (float)(((float)mb / 4) / ADJUSTED_MB_TO_HEX_VALUE); }
+	else if (acousticSensorType == SENSOR_MIC_5_PSI) { mbValue = (float)((float)mb / ADJUSTED_MB_IN_PSI_TO_HEX_VALUE); }
+	else if (acousticSensorType == SENSOR_MIC_10_PSI) { mbValue = (float)(((float)mb / 2) / ADJUSTED_MB_IN_PSI_TO_HEX_VALUE); }
+	else /* (acousticSensorType == SENSOR_MIC_148_DB) */ { mbValue = (float)((float)mb / ADJUSTED_MB_TO_HEX_VALUE); }
+#endif
 
 	return (ceil(mbValue));
 }
 
-#if 0 // Unused
+#if 1
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
-uint32 ConvertDBtoMB(uint32 level, uint32 acousticMaxValue)
+uint16 PsiToHex(uint32 psi, uint8 acousticSensorType)
 {
-	double mbValue;
-	uint32 mbConverted;
+	uint32 psiToMillibars = (uint32)((float)psi * PSI_TO_MB_CONVERSION_RATIO);
 
-	if (level == NO_TRIGGER_CHAR)
-	{
-		return (NO_TRIGGER_CHAR);
-	}
-	else
-	{
-		// This is the inverse log of base 10.
-		mbValue = (double)pow((double)10, ((double)level/(double)20.0));
-
-		// Do the conversion divide by 5000000 and multiply by 10000 equals divide by 500
-		mbValue /= (DB_CONVERSION_VALUE / (MB_CONVERSION_VALUE * ADJUSTED_MB_TO_HEX_VALUE));
-
-		mbConverted = ceil(mbValue);
-		
-		if (mbConverted <= AIR_TRIGGER_MB_MIN_VALUE) { mbConverted = AIR_TRIGGER_MB_MIN_VALUE; }
-		else if (mbConverted >= acousticMaxValue) { mbConverted = acousticMaxValue; }
-		
-		return (mbConverted);
-	}
-}
-#endif
-
-#if 0 // Unused
-///----------------------------------------------------------------------------
-///	Function Break
-///----------------------------------------------------------------------------
-uint32 ConvertMBtoDB(uint32 level, uint32 acousticMaxValue)
-{
-	double dbValue;
-	uint32 dbConverted;
-	
-	if (level == NO_TRIGGER_CHAR)
-	{
-		return (NO_TRIGGER_CHAR);
-	}
-	else
-	{
-		dbValue = (double)level * (double)(DB_CONVERSION_VALUE / (MB_CONVERSION_VALUE * ADJUSTED_MB_TO_HEX_VALUE));
-
-		dbValue = (float)log10f(dbValue) * (float)20.0;
-
-		dbConverted = floor(dbValue);
-		
-		if (dbConverted <= AIR_TRIGGER_MIN_VALUE) { dbConverted = AIR_TRIGGER_MIN_VALUE; }
-		else if (dbConverted >= acousticMaxValue) { dbConverted = acousticMaxValue; }
-
-		return (dbConverted);
-	}
+	return (MbToHex(psiToMillibars, acousticSensorType));
 }
 #endif
 
@@ -564,6 +563,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 	char languageFilename[50];
 	char promptTitle[25];
 	uint16 sizeCheck;
+	uint32 fileSize;
 
 	memset((char*)&languageFilename[0], 0, sizeof(languageFilename));
 	strcpy((char*)&languageFilename[0], LANGUAGE_PATH);
@@ -586,8 +586,33 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			break;
 	}
 
+#if 0 // Old method no longer needed to copy
 	// Default to internal English language table as a backup (overwritten if a language file is found)
 	memcpy(&g_languageTable[0], &englishLanguageTable[0], sizeof(g_languageTable));
+#endif
+
+#if 1 // New method to link any missing language elements to the built in English table
+	// Set the first element of the link table to the start of the language table
+	g_languageLinkTable[0] = &englishLanguageTable[0];
+
+#if 0 // Test debug output
+	uint16 length = sprintf((char*)g_spareBuffer, "Built in English Table Link\r\n(%d) %s\r\n", 1, (char*)g_languageLinkTable[0]);
+	ModemPuts(g_spareBuffer, length, NO_CONVERSION);
+#endif
+
+	// Build the language link table by pointing to the start of every string following a Null
+	for (i = 1, currIndex = 0; i < TOTAL_TEXT_STRINGS; i++)
+	{
+		while (englishLanguageTable[currIndex++] != '\0') { /* spin */ };
+
+		g_languageLinkTable[i] = englishLanguageTable + currIndex;
+
+#if 0 // Test debug output
+		length = sprintf((char*)g_spareBuffer, "(%d) %s\r\n", (i + 1), (char*)g_languageLinkTable[i]);
+		ModemPuts(g_spareBuffer, length, NO_CONVERSION);
+#endif
+	}
+#endif
 
 	if (g_fileAccessLock != AVAILABLE)
 	{
@@ -605,6 +630,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 		if (languageFile != -1)
 		{
 			debug("Loading language table from file: %s, Length: %d\r\n", (char*)&languageFilename[0], fsaccess_file_get_size(languageFile));
+			fileSize = fsaccess_file_get_size(languageFile);
 
 			memset(&g_languageTable[0], '\0', sizeof(g_languageTable));
 
@@ -615,7 +641,7 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 			}
 			else
 			{
-				// Check if the language file is slightly smaller than the default updated langauge file for this build (allowing some room for change/reduced text)
+				// Check if the language file is slightly smaller than the default updated language file for this build (allowing some room for change/reduced text)
 				if (fsaccess_file_get_size(languageFile) < sizeCheck)
 				{
 					// Prompt the user
@@ -630,35 +656,55 @@ void BuildLanguageLinkTable(uint8 languageSelection)
 		}
 
 		ReleaseSpi1MutexLock();
-	}
 
-	// Loop and convert all line feeds and carriage returns to nulls, and leaving the last char element as a null
-	for (i = 1; i < (LANGUAGE_TABLE_MAX_SIZE - 1); i++)
-	{
-		// Check if a CR or LF was used as an element separator
-		if ((g_languageTable[i] == '\r') || (g_languageTable[i] == '\n'))
+		// Loop and convert all line feeds and carriage returns to nulls, and leaving the last char element as a null
+		for (i = 1; i < (LANGUAGE_TABLE_MAX_SIZE - 1); i++)
 		{
-			// Convert the CR of LF to a Null
-			g_languageTable[i] = '\0';
-
-			// Check if a CR/LF or LF/CR combo was used to as the element separator
-			if ((g_languageTable[i + 1] == '\r') || (g_languageTable[i + 1] == '\n'))
+			// Check if a CR or LF was used as an element separator
+			if ((g_languageTable[i] == '\r') || (g_languageTable[i] == '\n'))
 			{
-				// Skip the second character of the combo separator
-				i++;
+				// Convert the CR of LF to a Null
+				g_languageTable[i] = '\0';
+
+				// Check if a CR/LF or LF/CR combo was used to as the element separator
+				if ((g_languageTable[i + 1] == '\r') || (g_languageTable[i + 1] == '\n'))
+				{
+					// Skip the second character of the combo separator
+					i++;
+				}
 			}
 		}
-	}
 
-	// Set the first element of the link table to the start of the language table
-	g_languageLinkTable[0] = &g_languageTable[0];
+		// Set the first element of the link table to the start of the language table
+		g_languageLinkTable[0] = &g_languageTable[0];
+
+#if 0 // Test debug output
+		length = sprintf((char*)g_spareBuffer, "Language File Table Link\r\n(%d) %s\r\n", 1, (char*)g_languageLinkTable[0]);
+		ModemPuts(g_spareBuffer, length, NO_CONVERSION);
+#endif
 	
-	// Build the language link table by pointing to the start of every string following a Null
-	for (i = 1, currIndex = 0; i < TOTAL_TEXT_STRINGS; i++)
-	{
-		while (g_languageTable[currIndex++] != '\0') { /* spin */ };
+		// Build the language link table by pointing to the start of every string following a Null
+		for (i = 1, currIndex = 0; i < TOTAL_TEXT_STRINGS; i++)
+		{
+			while (g_languageTable[currIndex++] != '\0')
+			{ /* spin */
+				if (currIndex == fileSize) break;
+			};
 
-		g_languageLinkTable[i] = g_languageTable + currIndex;
+			if (currIndex < fileSize) {	g_languageLinkTable[i] = g_languageTable + currIndex; }
+
+#if 0 // Test debug output
+			length = sprintf((char*)g_spareBuffer, "(%d) %s\r\n", (i + 1), (char*)g_languageLinkTable[i]);
+			ModemPuts(g_spareBuffer, length, NO_CONVERSION);
+#endif
+		}
+
+		// Check if the null text is actually empty covering the case where a newer language table is loaded but using older firmware where the null entry is populated
+		if (g_languageLinkTable[NULL_TEXT][0] != '\0')
+		{
+			// Set the null text to the last element of the language table, reserved for null
+			g_languageLinkTable[NULL_TEXT] = &g_languageTable[(LANGUAGE_TABLE_MAX_SIZE - 1)];
+		}
 	}
 
 	debug("Language Link Table built.\r\n");

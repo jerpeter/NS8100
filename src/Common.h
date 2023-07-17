@@ -168,7 +168,8 @@ enum {
 
 #define	DB_CONVERSION_VALUE			5000000
 #define MB_CONVERSION_VALUE			400
-#define ADJUSTED_MB_TO_HEX_VALUE	25
+#define ADJUSTED_MB_TO_HEX_VALUE		1.5625 // Was 25 @ 12-bit, new value @ 16-bit
+#define ADJUSTED_MB_IN_PSI_TO_HEX_VALUE	105.20565
 
 enum {
 	INPUT_BUFFER_EMPTY = 0,
@@ -561,10 +562,10 @@ void SpinBar(void);
 uint16 SwapInt(uint16);
 float HexToDB(uint16, uint8, uint16, uint8);
 float HexToMB(uint16, uint8, uint16, uint8);
-uint16 DbToHex(uint16, uint8);
-uint16 MbToHex(float, uint8);
-uint32 ConvertDBtoMB(uint32, uint32);
-uint32 ConvertMBtoDB(uint32, uint32);
+float HexToPSI(uint16, uint8, uint16, uint8);
+uint16 DbToHex(uint32, uint8);
+uint16 MbToHex(uint32, uint8);
+uint16 PsiToHex(uint32, uint8);
 
 // PIT timers
 void startPitTimer(PIT_TIMER timer);
