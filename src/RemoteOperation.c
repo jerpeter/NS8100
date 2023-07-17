@@ -146,7 +146,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 		cfg.eventCfg.airTriggerLevel = (g_triggerRecord.trec.airTriggerLevel / (ACCURACY_16_BIT_MIDPOINT / g_bitAccuracyMidpoint));
 	}
 #endif
-
+	cfg.variableTriggerPercentageLevel = g_triggerRecord.trec.variableTriggerPercentageLevel;
 	cfg.eventCfg.recordTime = g_triggerRecord.trec.record_time;
 
 	// static non changing.
@@ -536,6 +536,17 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			g_triggerRecord.trec.variableTriggerEnable = YES;
 			g_triggerRecord.trec.variableTriggerVibrationStandard = (cfg.eventCfg.seismicTriggerLevel - VARIABLE_TRIGGER_CHAR_BASE);
 
+			// Check if the value is out of bounds
+			if ((cfg.variableTriggerPercentageLevel < VT_PERCENT_OF_LIMIT_MIN_VALUE) || (cfg.variableTriggerPercentageLevel > VT_PERCENT_OF_LIMIT_MAX_VALUE))
+			{
+				// Load the default
+				g_triggerRecord.trec.variableTriggerPercentageLevel = VT_PERCENT_OF_LIMIT_DEFAULT_VALUE;
+			}
+			else // Load the remote value
+			{
+				g_triggerRecord.trec.variableTriggerPercentageLevel = cfg.variableTriggerPercentageLevel;
+			}
+
 			div = (float)(g_bitAccuracyMidpoint * g_sensorInfo.sensorAccuracy * ((g_triggerRecord.srec.sensitivity == LOW) ? 2 : 4)) / (float)(g_factorySetupRecord.seismicSensorType);
 
 			if (g_triggerRecord.trec.variableTriggerVibrationStandard == CUSTOM_STEP_THRESHOLD)
@@ -551,6 +562,9 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 
 			// Up convert to 16-bit since user selected level is based on selected bit accuracy
 			g_triggerRecord.trec.seismicTriggerLevel *= (SEISMIC_TRIGGER_MAX_VALUE / g_bitAccuracyMidpoint);
+
+			// Factor in % of Limit choice at 16-bit for better accuracy
+			g_triggerRecord.trec.seismicTriggerLevel = (uint32)(g_triggerRecord.trec.seismicTriggerLevel * (float)((float)g_triggerRecord.trec.variableTriggerPercentageLevel / (float)100));
 		}
 		else
 		{
@@ -585,14 +599,9 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//---------------------------------------------------------------------------
 		// Update air sensor type DB or MB
 		//---------------------------------------------------------------------------
-		if (cfg.extraUnitCfg.unitsOfAir == MILLIBAR_TYPE)
-		{
-			g_unitConfig.unitsOfAir = MILLIBAR_TYPE;
-		}
-		else
-		{
-			g_unitConfig.unitsOfAir = DECIBEL_TYPE;
-		}
+		if (cfg.extraUnitCfg.unitsOfAir == MILLIBAR_TYPE) { g_unitConfig.unitsOfAir = MILLIBAR_TYPE; }
+		else if (cfg.extraUnitCfg.unitsOfAir == PSI_TYPE) {	g_unitConfig.unitsOfAir = PSI_TYPE; }
+		else /* (cfg.extraUnitCfg.unitsOfAir == DECIBEL_TYPE) */ { g_unitConfig.unitsOfAir = DECIBEL_TYPE; }
 
 		//---------------------------------------------------------------------------
 		// A-weighting check
@@ -1593,8 +1602,67 @@ void handleTTO(CMD_BUFFER_STRUCT* inCmd)
 void HandleCAL(CMD_BUFFER_STRUCT* inCmd)
 {
 	UNUSED(inCmd);
+	uint32 returnCode = CFG_ERR_NONE;
+	uint8 calHdr[MESSAGE_HEADER_SIMPLE_LENGTH];
+	uint8 msgTypeStr[HDR_TYPE_LEN+2];
+	uint8 msgResults[8];
+	float div;
+	float normalizedMaxPeak;
+	uint8 calResults = PASSED;
 
-	HandleManualCalibration();
+	// Check if idle or actively monitoring in Waveform mode and not busy processing an event
+	if ((g_sampleProcessing == IDLE_STATE) || ((g_sampleProcessing == ACTIVE_STATE) && (g_triggerRecord.opMode == WAVEFORM_MODE) && (g_busyProcessingEvent == NO) && (!getSystemEventState(TRIGGER_EVENT))))
+	{
+		// Check if there is room to store a calibration event
+		if ((g_unitConfig.flashWrapping == YES) || (g_sdCardUsageStats.manualCalsLeft != 0))
+		{
+			HandleManualCalibration();
+
+			// Calculate the divider used for converting stored A/D peak counts to units of measure
+			if ((g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0200) || (g_factorySetupRecord.seismicSensorType == SENSOR_ACC_832M1_0500))
+			{
+				div = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * 2 /* normal gain */) / (float)(g_summaryList.cachedEntry.seismicSensorType * ACC_832M1_SCALER);
+			}
+			else div = (float)(g_bitAccuracyMidpoint * SENSOR_ACCURACY_100X_SHIFT * 2 /* normal gain */) / (float)(g_summaryList.cachedEntry.seismicSensorType);
+
+			normalizedMaxPeak = (float)g_pendingEventRecord.summary.calculated.r.peak / (float)div; if ((normalizedMaxPeak < 0.375) || (normalizedMaxPeak > 0.625)) { calResults = FAILED; }
+			normalizedMaxPeak = (float)g_pendingEventRecord.summary.calculated.v.peak / (float)div; if ((normalizedMaxPeak < 0.375) || (normalizedMaxPeak > 0.625)) { calResults = FAILED; }
+			normalizedMaxPeak = (float)g_pendingEventRecord.summary.calculated.t.peak / (float)div; if ((normalizedMaxPeak < 0.375) || (normalizedMaxPeak > 0.625)) { calResults = FAILED; }
+		}
+	}
+	else // Unable to perform a manual Cal
+	{
+		returnCode = CFG_ERR_MONITORING_STATE;
+	}
+
+	sprintf((char*)msgTypeStr, "%02lu", returnCode);
+	BuildOutgoingSimpleHeaderBuffer((uint8*)calHdr, (uint8*)"CALx", (uint8*)msgTypeStr, (returnCode == CFG_ERR_NONE) ? (MESSAGE_SIMPLE_TOTAL_LENGTH + 4) : (MESSAGE_SIMPLE_TOTAL_LENGTH), COMPRESS_NONE, CRC_NONE);
+
+	// Send Starting CRLF
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
+
+	// Calculate the CRC on the header
+	g_transmitCRC = CalcCCITT32((uint8*)&calHdr, MESSAGE_HEADER_SIMPLE_LENGTH, SEED_32);
+
+	// Send Simple header
+	ModemPuts((uint8*)calHdr, MESSAGE_HEADER_SIMPLE_LENGTH, NO_CONVERSION);
+
+	// Check if manual cal completed
+	if (returnCode == CFG_ERR_NONE)
+	{
+		if (calResults == PASSED) { strcpy((char*)msgResults, "PASS"); }
+		else { strcpy((char*)msgResults, "FAIL"); }
+
+		// Calculate the CRC on the payload
+		g_transmitCRC = CalcCCITT32((uint8*)&msgResults, 4, SEED_32);
+
+		// Send payload
+		ModemPuts((uint8*)msgResults, 4, NO_CONVERSION);
+	}
+
+	// Send Ending Footer
+	ModemPuts((uint8*)&g_transmitCRC, 4, NO_CONVERSION);
+	ModemPuts((uint8*)&g_CRLF, 2, NO_CONVERSION);
 
 	return;
 }
