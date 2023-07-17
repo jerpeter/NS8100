@@ -589,10 +589,7 @@ void GetChannelOffsets(uint32 sampleRate)
 	}
 
 	// Initialize
-	s_workingChannelOffset.rTotal = 0;
-	s_workingChannelOffset.vTotal = 0;
-	s_workingChannelOffset.tTotal = 0;
-	s_workingChannelOffset.aTotal = 0;
+	memset(&s_workingChannelOffset, 0, sizeof(s_workingChannelOffset));
 
 	debug("Get Channel Offset: 1st Pass Read and sum...\r\n");
 	// Read and sum samples
@@ -626,7 +623,8 @@ void GetChannelOffsets(uint32 sampleRate)
 	debug("A/D Channel First Pass channel average: 0x%x, 0x%x, 0x%x, 0x%x\r\n", s_workingChannelOffset.rTotal, s_workingChannelOffset.vTotal, s_workingChannelOffset.tTotal, s_workingChannelOffset.aTotal);
 	debug("A/D Channel First Pass channel offsets: %d, %d, %d, %d\r\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
 
-	InitAndSeedChannelOffsetVariables();
+	memset(&s_workingChannelOffset, 0, sizeof(s_workingChannelOffset));
+	memset(&s_workingChannelCounts, 0, sizeof(s_workingChannelCounts));
 
 	debug("Get Channel Offset: 2nd Pass Read and sum...\r\n");
 	// Read and sum samples
@@ -668,17 +666,11 @@ void GetChannelOffsets(uint32 sampleRate)
 		SoftUsecWait(timeDelay);
 	}
 
-	// Average out the summations
-	s_workingChannelOffset.rTotal /= s_workingChannelCounts.rCount;
-	s_workingChannelOffset.vTotal /= s_workingChannelCounts.vCount;
-	s_workingChannelOffset.tTotal /= s_workingChannelCounts.tCount;
-	s_workingChannelOffset.aTotal /= s_workingChannelCounts.aCount;
-
-	// Set the channel offsets
-	g_channelOffset.r_offset = (int16)(s_workingChannelOffset.rTotal - ACCURACY_16_BIT_MIDPOINT);
-	g_channelOffset.v_offset = (int16)(s_workingChannelOffset.vTotal - ACCURACY_16_BIT_MIDPOINT);
-	g_channelOffset.t_offset = (int16)(s_workingChannelOffset.tTotal - ACCURACY_16_BIT_MIDPOINT);
-	g_channelOffset.a_offset = (int16)(s_workingChannelOffset.aTotal - ACCURACY_16_BIT_MIDPOINT);
+	// Check if count is non-zero, then average out the summations and set the channel offsets
+	if (s_workingChannelCounts.rCount) { s_workingChannelOffset.rTotal /= s_workingChannelCounts.rCount; g_channelOffset.r_offset = (int16)(s_workingChannelOffset.rTotal - ACCURACY_16_BIT_MIDPOINT); }
+	if (s_workingChannelCounts.vCount) { s_workingChannelOffset.vTotal /= s_workingChannelCounts.vCount; g_channelOffset.v_offset = (int16)(s_workingChannelOffset.vTotal - ACCURACY_16_BIT_MIDPOINT); }
+	if (s_workingChannelCounts.tCount) { s_workingChannelOffset.tTotal /= s_workingChannelCounts.tCount; g_channelOffset.t_offset = (int16)(s_workingChannelOffset.tTotal - ACCURACY_16_BIT_MIDPOINT); }
+	if (s_workingChannelCounts.aCount) { s_workingChannelOffset.aTotal /= s_workingChannelCounts.aCount; g_channelOffset.a_offset = (int16)(s_workingChannelOffset.aTotal - ACCURACY_16_BIT_MIDPOINT); }
 
 	debug("A/D Channel Second Pass channel average: 0x%x, 0x%x, 0x%x, 0x%x\r\n", s_workingChannelOffset.rTotal, s_workingChannelOffset.vTotal, s_workingChannelOffset.tTotal, s_workingChannelOffset.aTotal);
 	debug("A/D Channel Second Pass channel offsets: %d, %d, %d, %d\r\n", g_channelOffset.r_offset, g_channelOffset.v_offset, g_channelOffset.t_offset, g_channelOffset.a_offset);
