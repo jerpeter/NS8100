@@ -297,18 +297,7 @@ void CalSetupMn(INPUT_MSG_STRUCT msg)
 			SaveRecordData(&g_factorySetupRecord, DEFAULT_RECORD, REC_FACTORY_SETUP_TYPE);
 			SaveFlashUserPageFactorySetup(&g_factorySetupRecord);
 
-			if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
-			{
-				g_factorySetupRecord.seismicSensorType = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
-			}
-
-			if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
-			{
-				if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160))
-				{
-					g_factorySetupRecord.acousticSensorType = g_acousticSmartSensorMemory.sensorType;
-				}
-			}
+			UpdateUnitSensorsWithSmartSensorTypes();
 
 			LoadTrigRecordDefaults(&g_triggerRecord, WAVEFORM_MODE);
 			SaveRecordData(&g_triggerRecord, DEFAULT_RECORD, REC_TRIGGER_USER_MENU_TYPE);
@@ -448,7 +437,8 @@ void CalSetupMnDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 
 	if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
 	{
-		if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160))
+		if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148_DB) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160_DB) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_5_PSI) ||
+			(g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_10_PSI))
 		{
 			acousticSensorType = g_acousticSmartSensorMemory.sensorType;
 		}
