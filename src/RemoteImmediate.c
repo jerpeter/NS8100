@@ -2530,6 +2530,9 @@ void prepareDEMDataToSend(COMMAND_MESSAGE_HEADER* inCmdHeaderPtr)
 
 				dataOffset += CMD_BUFFER_SIZE;
 				dataSizeRemaining -= CMD_BUFFER_SIZE;
+
+				// Now breaking periodically to handle system events, mostly for Bargraph processing to get it's processing time so that Summary Intervals aren't delayed
+				HandleSystemEvents();
 			}
 		}
 
