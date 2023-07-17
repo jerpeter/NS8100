@@ -227,18 +227,7 @@ void LoadFactorySetupRecord(void)
 	// Check if the Factory Setup Record is valid (in case shadow factory setup was copied over)
 	if (!g_factorySetupRecord.invalid)
 	{
-		if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
-		{
-			g_factorySetupRecord.seismicSensorType = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
-		}
-
-		if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
-		{
-			if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160))
-			{
-				g_factorySetupRecord.acousticSensorType = g_acousticSmartSensorMemory.sensorType;
-			}
-		}
+		UpdateUnitSensorsWithSmartSensorTypes();
 
 		UpdateWorkingCalibrationDate();
 
