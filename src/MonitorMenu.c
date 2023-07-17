@@ -138,19 +138,7 @@ void MonitorMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 			// Read and cache Smart Sensor data
 			SmartSensorReadRomAndMemory(SEISMIC_SENSOR);
 			SmartSensorReadRomAndMemory(ACOUSTIC_SENSOR);
-
-			if (g_seismicSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
-			{
-				g_factorySetupRecord.seismicSensorType = (pow(2, g_seismicSmartSensorMemory.sensorType) * SENSOR_2_5_IN);
-			}
-
-			if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
-			{
-				if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160))
-				{
-					g_factorySetupRecord.acousticSensorType = g_acousticSmartSensorMemory.sensorType;
-				}
-			}
+			UpdateUnitSensorsWithSmartSensorTypes();
 
 			UpdateWorkingCalibrationDate();
 
@@ -999,14 +987,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 			{
 				if (g_displayBargraphResultsMode == IMPULSE_RESULTS)
 				{
-					if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-					{
-						sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), HexToMB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
-					}
-					else // Report Air in DB
-					{
-						sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), HexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
-					}
+					if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) {	sprintf(buff, "%s %0.3f mb", getLangText(PEAK_AIR_TEXT), HexToMB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType)); }
+					else if (g_unitConfig.unitsOfAir == PSI_TYPE) { sprintf(buff, "%s %0.3f psi", getLangText(PEAK_AIR_TEXT), HexToPSI(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType)); }
+					else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { sprintf(buff, "%s %4.1f dB", getLangText(PEAK_AIR_TEXT), HexToDB(g_aImpulsePeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType)); }
 				}
 				else // (g_displayBargraphResultsMode == SUMMARY_INTERVAL_RESULTS) || (g_displayBargraphResultsMode == JOB_PEAK_RESULTS)
 				{
@@ -1018,14 +1001,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 									((float)((g_bargraphSummaryInterval.a.frequency * 2) - 1)));
 						}
 
-						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-						{
-							sprintf(buff, "AIR %0.3f mb ", HexToMB(g_bargraphSummaryInterval.a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
-						}
-						else // Report Air in DB
-						{
-							sprintf(buff, "AIR %4.1f dB ", HexToDB(g_bargraphSummaryInterval.a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
-						}
+						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { sprintf(buff, "AIR %0.3f mb ", HexToMB(g_bargraphSummaryInterval.a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));	}
+						else if (g_unitConfig.unitsOfAir == PSI_TYPE) { sprintf(buff, "AIR %0.3f psi ", HexToPSI(g_bargraphSummaryInterval.a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType)); }
+						else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { sprintf(buff, "AIR %4.1f dB ", HexToDB(g_bargraphSummaryInterval.a.peak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType)); }
 					}
 					else // g_displayBargraphResultsMode == JOB_PEAK_RESULTS
 					{
@@ -1035,14 +1013,9 @@ void MonitorMenuDsply(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 									((float)((g_aJobFreq * 2) - 1)));
 						}
 
-						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-						{
-							sprintf(buff, "AIR %0.3f mb ", HexToMB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
-						}
-						else // Report Air in DB
-						{
-							sprintf(buff, "AIR %4.1f dB ", HexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType));
-						}
+						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { sprintf(buff, "AIR %0.3f mb ", HexToMB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType)); }
+						else if (g_unitConfig.unitsOfAir == PSI_TYPE) { sprintf(buff, "AIR %0.3f psi ", HexToPSI(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType)); }
+						else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { sprintf(buff, "AIR %4.1f dB ", HexToDB(g_aJobPeak, DATA_NORMALIZED, g_bitAccuracyMidpoint, g_factorySetupRecord.acousticSensorType)); }
 					}
 
 					if (tempA > 100)
