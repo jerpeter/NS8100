@@ -170,6 +170,8 @@ enum {
 	MINS_TYPE,
 	MG_TYPE,
 	HOUR_TYPE,
+	PERCENT_TYPE,
+	PSI_UNIT_TYPE,
 	// Add types before this line
 	TOTAL_TYPES
 };
@@ -210,18 +212,31 @@ enum {
 #if 0 // Old
 #define AIR_TRIGGER_MAX_VALUE			148
 #else
-#define AIR_TRIGGER_MIC_148_MAX_VALUE	148
-#define AIR_TRIGGER_MIC_160_MAX_VALUE	160
+#define AIR_TRIGGER_MIC_148_DB_MAX_VALUE	148
+#define AIR_TRIGGER_MIC_160_DB_MAX_VALUE	160
+#define AIR_TRIGGER_MIC_5_PSI_IN_DB_MAX_VALUE	184 // 5 PSI to dB is 184.7291580458, but truncating for whole number
+#define AIR_TRIGGER_MIC_10_PSI_IN_DB_MAX_VALUE	190 // 10 PSI to dB is 190.7497797447, but truncating for whole number
+#define AIR_TRIGGER_MIC_5_PSI_MAX_VALUE		5 // mb = 3,447,379
+#define AIR_TRIGGER_MIC_10_PSI_MAX_VALUE	10 // mb = 6,894,757
 #endif
 
 #define AIR_TRIGGER_MB_DEFAULT_VALUE	NO_TRIGGER_CHAR
 #define AIR_TRIGGER_MB_INC_VALUE		25
 #define AIR_TRIGGER_MB_MIN_VALUE		100
+#define AIR_TRIGGER_PSI_DEFAULT_VALUE	NO_TRIGGER_CHAR
+#define AIR_TRIGGER_PSI_INC_VALUE		1
+#define AIR_TRIGGER_PSI_MIN_VALUE		2
 #if 0 // Old
 #define AIR_TRIGGER_MB_MAX_VALUE		51200
 #else
-#define AIR_TRIGGER_MIC_148_MB_MAX_VALUE	51200
-#define AIR_TRIGGER_MIC_160_MB_MAX_VALUE	204800
+#define AIR_TRIGGER_MIC_148_DB_IN_MB_MAX_VALUE	51200 // 5.12 * 10000
+#define AIR_TRIGGER_MIC_160_DB_IN_MB_MAX_VALUE	204800 // 20.48 * 10000
+#define AIR_TRIGGER_MIC_5_PSI_IN_MB_MAX_VALUE	3447378 // 344.73786466 * 10000
+#define AIR_TRIGGER_MIC_10_PSI_IN_MB_MAX_VALUE	6894757 // 689.47572932 * 10000
+#define AIR_TRIGGER_MIC_148_DB_IN_PSI_MAX_VALUE	742.59322 // 5.12 * 10000 / 68.947572
+#define AIR_TRIGGER_MIC_160_DB_IN_PSI_MAX_VALUE	2970.3728 // 20.48 * 10000 / 68.947572
+#define AIR_TRIGGER_MIC_5_PSI_MENU_MAX_VALUE	50000 // 344.73786466 * 10000 / 68.947572
+#define AIR_TRIGGER_MIC_10_PSI_MENU_MAX_VALUE	100000 // 689.47572932 * 10000 / 68.947572
 #endif
 
 #define AIR_TRIGGER_MIN_COUNT			64
@@ -255,6 +270,9 @@ enum {
 #define ALARM_AIR_MB_DEFAULT_VALUE		(AIR_TRIGGER_MB_MIN_VALUE)
 #define ALARM_AIR_MB_MIN_VALUE			(AIR_TRIGGER_MB_MIN_VALUE)
 //#define ALARM_AIR_MB_MAX_VALUE			(AIR_TRIGGER_MB_MAX_VALUE) // Now variable
+
+#define ALARM_AIR_PSI_DEFAULT_VALUE		(AIR_TRIGGER_PSI_MIN_VALUE)
+#define ALARM_AIR_PSI_MIN_VALUE			(AIR_TRIGGER_PSI_MIN_VALUE)
 
 // Alarm Times
 #define ALARM_OUTPUT_TIME_DEFAULT	5 		// secs
@@ -308,6 +326,11 @@ enum {
 #define STORED_EVENT_LIMIT_DEFAULT_VALUE	1000
 #define STORED_EVENT_LIMIT_MIN_VALUE		25
 #define STORED_EVENT_LIMIT_MAX_VALUE		65500
+
+// Variable Trigger % of Limit stuff
+#define VT_PERCENT_OF_LIMIT_DEFAULT_VALUE	100
+#define VT_PERCENT_OF_LIMIT_MIN_VALUE		10
+#define VT_PERCENT_OF_LIMIT_MAX_VALUE		100
 
 // Language stuff
 enum {
@@ -501,6 +524,7 @@ enum {
 enum {
 	DEFAULT_RESULTS = 1, // Show Air channel results
 	DEFAULT_ALTERNATE_RESULTS,
+	ALTERNATE_PSI_RESULTS,
 	VECTOR_SUM_RESULTS,
 	PEAK_DISPLACEMENT_RESULTS,
 	PEAK_ACCELERATION_RESULTS
@@ -530,12 +554,9 @@ enum {
 
 enum {
 	DECIBEL_TYPE = 1,
-	MILLIBAR_TYPE
+	MILLIBAR_TYPE,
+	PSI_TYPE
 };
-
-// Measurement conversion values
-#define DECIBEL			1
-#define MILLIBAR		1
 
 // Old Menu number types
 #define FIXED_NUM_TYPE 				2
@@ -929,6 +950,7 @@ void SaveCompressedDataMenuHandler(uint8 key, void* data);
 void SampleRateMenuHandler(uint8 key, void* data);
 void SamplingMethodMenuHandler(uint8 key, void* data);
 void SaveSetupMenuHandler(uint8 key, void* data);
+void SeismicFilteringMenuHandler(uint8 key, void* data);
 void SeismicSensorTypeMenuHandler(uint8 key, void* data);
 void SeismicTriggerTypeMenuHandler(uint8 keyPressed, void* data);
 void SensitivityMenuHandler(uint8 key, void* data);
@@ -972,6 +994,7 @@ void ModemRetryMenuHandler(uint8 key, void* data);
 void ModemRetryTimeMenuHandler(uint8 key, void* data);
 void NotesMenuHandler(uint8 key, void* data);
 void OperatorMenuHandler(uint8 key, void* data);
+void PercentOfLimitTriggerMenuHandler(uint8 keyPressed, void* data);
 void RecordTimeMenuHandler(uint8 key, void* data);
 void SaveRecordMenuHandler(uint8 key, void* data);
 void SeismicLocationMenuHandler(uint8 key, void* data);
@@ -1020,6 +1043,8 @@ void DisplaySerialNumber(void);
 void DisplayTimerModeSettings(void);
 void DisplayFlashUsageStats(void);
 void DisplayAutoDialInfo(void);
+uint32 GetAirMaxValue(void);
+void GetAirSensorTypeName(char* airSensorTypeName);
 void InitSensorParameters(uint16 seismicSensorType, uint8 sensitivity);
 void StopMonitoringForLowPowerState(void);
 uint8 CheckAndDisplayErrorThatPreventsMonitoring(uint8 messageType);

@@ -1044,11 +1044,64 @@ void DisplayCalDate(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+uint32 GetAirMaxValue(void)
+{
+	uint32 airMaxValue;
+
+	if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
+	{
+		switch (g_factorySetupRecord.acousticSensorType)
+		{
+			case SENSOR_MIC_160_DB: airMaxValue = AIR_TRIGGER_MIC_160_DB_IN_MB_MAX_VALUE; break;
+			case SENSOR_MIC_5_PSI: airMaxValue = AIR_TRIGGER_MIC_5_PSI_IN_MB_MAX_VALUE; break;
+			case SENSOR_MIC_10_PSI: airMaxValue = AIR_TRIGGER_MIC_10_PSI_IN_MB_MAX_VALUE; break;
+			default: /* SENSOR_MIC_148_DB */ airMaxValue = AIR_TRIGGER_MIC_148_DB_IN_MB_MAX_VALUE; break;
+		}
+	}
+	else if (g_unitConfig.unitsOfAir == PSI_TYPE)
+	{
+		switch (g_factorySetupRecord.acousticSensorType)
+		{
+			case SENSOR_MIC_160_DB: airMaxValue = AIR_TRIGGER_MIC_160_DB_IN_PSI_MAX_VALUE; break;
+			case SENSOR_MIC_5_PSI: airMaxValue = AIR_TRIGGER_MIC_5_PSI_MENU_MAX_VALUE; break;
+			case SENSOR_MIC_10_PSI: airMaxValue = AIR_TRIGGER_MIC_10_PSI_MENU_MAX_VALUE; break;
+			default: /* SENSOR_MIC_148_DB */ airMaxValue = AIR_TRIGGER_MIC_148_DB_IN_PSI_MAX_VALUE; break;
+		}
+	}
+	else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+	{
+		switch (g_factorySetupRecord.acousticSensorType)
+		{
+			case SENSOR_MIC_160_DB: airMaxValue = AIR_TRIGGER_MIC_160_DB_MAX_VALUE; break;
+			case SENSOR_MIC_5_PSI: airMaxValue = AIR_TRIGGER_MIC_5_PSI_IN_DB_MAX_VALUE; break;
+			case SENSOR_MIC_10_PSI: airMaxValue = AIR_TRIGGER_MIC_10_PSI_IN_DB_MAX_VALUE; break;
+			default: /* SENSOR_MIC_148_DB */ airMaxValue = AIR_TRIGGER_MIC_148_DB_MAX_VALUE; break;
+		}
+	}
+
+	return (airMaxValue);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+void GetAirSensorTypeName(char* airSensorTypeName)
+{
+	if (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160_DB) { strcpy(airSensorTypeName, "MIC 160 dB"); }
+	else if (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_5_PSI) { strcpy(airSensorTypeName, "MIC 5 PSI"); }
+	else if (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_10_PSI) { strcpy(airSensorTypeName, "MIC 10 PSI"); }
+	else { strcpy(airSensorTypeName, "MIC 148 dB"); }
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void DisplaySensorType(void)
 {
 	uint16 sensorType;
 	uint16 sensorTypeTextElement = NULL_TEXT;
 	uint8 acousticSensorType = g_factorySetupRecord.acousticSensorType;
+	char airSensorTypeName[16];
 
 	if (!g_factorySetupRecord.invalid)
 	{
@@ -1086,13 +1139,15 @@ void DisplaySensorType(void)
 
 		if (g_acousticSmartSensorMemory.version & SMART_SENSOR_OVERLAY_KEY)
 		{
-			if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160))
+			if ((g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_148_DB) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_160_DB) || (g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_5_PSI) ||
+				(g_acousticSmartSensorMemory.sensorType == SENSOR_MIC_10_PSI))
 			{
 				acousticSensorType = g_acousticSmartSensorMemory.sensorType;
 			}
 		}
 
-		sprintf((char*)g_spareBuffer, "%s: %s", "ACOUSTIC GAIN/TYPE", ((acousticSensorType == SENSOR_MIC_160) ? "MIC 160 dB" : "MIC 148 dB"));
+		GetAirSensorTypeName(&airSensorTypeName[0]);
+		sprintf((char*)g_spareBuffer, "%s: %s", "ACOUSTIC GAIN/TYPE", airSensorTypeName);
 		MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK);
 	}
 	else
