@@ -50,7 +50,7 @@ static uint32 s_fixedSpecialSpeed;
 ///----------------------------------------------------------------------------
 BOOLEAN KeypadProcessing(uint8 keySource)
 {
-	INPUT_MSG_STRUCT msg = {0, 0, {0}};
+	INPUT_MSG_STRUCT mn_msg = {0, 0, {0}};
 	uint8 rowMask = 0;
 	uint8 keyPressed = KEY_NONE;
 	uint8 numKeysPressed = 0;
@@ -140,7 +140,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		if ((keySource == KEY_SOURCE_IRQ) && (g_tcTypematicTimerActive == NO) && (g_kpadLastKeyPressed == KEY_NONE))
 		{
 			// Send a dummy message which will wake the LCD if it's off
-			SendInputMsg(&msg);
+			SendInputMsg(&mn_msg);
 		}
 
 		// Disable the key timer
@@ -186,9 +186,9 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 			s_fixedSpecialSpeed = 10000;
 		}
 
-		msg.length = 1;
-		msg.cmd = KEYPRESS_MENU_CMD;
-		msg.data[0] = keyPressed;
+		mn_msg.length = 1;
+		mn_msg.cmd = KEYPRESS_MENU_CMD;
+		mn_msg.data[0] = keyPressed;
 
 		if (g_factorySetupSequence != PROCESS_FACTORY_SETUP)
 		{
@@ -197,7 +197,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		}
 
 		// Enqueue the message
-		SendInputMsg(&msg);
+		SendInputMsg(&mn_msg);
 
 		// Done processing repeating key
 	}
@@ -226,14 +226,14 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 		{
 			if (keyPressed == KEY_BACKLIGHT)
 			{
-				msg.cmd = BACK_LIGHT_CMD;
-				msg.length = 0;
+				mn_msg.cmd = BACK_LIGHT_CMD;
+				mn_msg.length = 0;
 			}
 			else // all other keys
 			{
-				msg.length = 1;
-				msg.data[0] = keyPressed;
-				msg.cmd = KEYPRESS_MENU_CMD;
+				mn_msg.length = 1;
+				mn_msg.data[0] = keyPressed;
+				mn_msg.cmd = KEYPRESS_MENU_CMD;
 			}
 
 			//---------------------------------------------------------------------------------
@@ -276,6 +276,12 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					{
 						// Don't allow access to the factory setup
 						g_factorySetupSequence = SEQ_NOT_STARTED;
+
+						// Clear out the message parameters
+						mn_msg.cmd = 0; mn_msg.length = 0; mn_msg.data[0] = 0;
+
+						// Recall the current active menu
+						JUMP_TO_ACTIVE_MENU();
 					}
 				}
 #endif
@@ -294,8 +300,8 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 					if (keyPressed == ENTER_KEY)
 					{
 						// Issue a Ctrl-C for Manual Calibration
-						msg.cmd = CTRL_CMD;
-						msg.data[0] = 'C';
+						mn_msg.cmd = CTRL_CMD;
+						mn_msg.data[0] = 'C';
 					}
 					//===================================================
 					// On-Escape Combo key
@@ -339,7 +345,7 @@ BOOLEAN KeypadProcessing(uint8 keySource)
 				}
 
 				// Enqueue the message
-				SendInputMsg(&msg);
+				SendInputMsg(&mn_msg);
 			}
 		}
 	}
