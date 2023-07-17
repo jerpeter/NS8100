@@ -287,11 +287,16 @@ void InitGpsBuffers(void)
 ///----------------------------------------------------------------------------
 void UpdateSystemEpochTimeGps(time_t epochTime)
 {
-	// Check if the GPS Epoch time is true, meaning that it's greater than the initial internal date & time that the GPS chip powers up with before reading time from a satellite
-	if (epochTime > 1672531200) // Epoch date corresponding with the beginning of the year 1/1/2023
+	// New conditional check to combat the chip defect where every 2 minutes and 11 seconds (131 seconds), the chip pauses sending the ZDA time message and when it resumes it's off by 1 second until the GPS internals catch up
+	// Only update the system GPS time until receiving the first valid GPS time (while the GPS is active) then the system takes over incrementing time based on the GPS second changeover
+	if (g_epochTimeGPS == 0)
 	{
-		// Update the system GPS Epoch
-		g_epochTimeGPS = epochTime;
+		// Check if the GPS Epoch time is true, meaning that it's greater than the initial internal date & time that the GPS chip powers up with before reading time from a satellite
+		if (epochTime > 1672531200) // Epoch date corresponding with the beginning of the year 1/1/2023
+		{
+			// Update the system GPS Epoch
+			g_epochTimeGPS = epochTime;
+		}
 	}
 }
 
