@@ -75,13 +75,20 @@ enum {
 
 #define SENSOR_ACC_RANGE_DIVIDER	(SENSOR_ACC_832M1_0200 - 1)
 
-#define SENSOR_MIC_148			0xA1
-#define SENSOR_MIC_160			0xA4 // This mic is 4 times the scale of the 148
+#define SENSOR_MIC_148_DB		0xA1
+#define SENSOR_MIC_160_DB		0xA4 // This mic is 4 times the scale of the 148
+#define SENSOR_MIC_5_PSI		0xA5
+#define SENSOR_MIC_10_PSI		0xAA
+
+#define SENSOR_MIC_148_DB_FULL_SCALE_MB		5.12
+#define SENSOR_MIC_160_DB_FULL_SCALE_MB		20.48
+#define SENSOR_MIC_5_PSI_FULL_SCALE_MB		344.73786466
+#define SENSOR_MIC_10_PSI_FULL_SCALE_MB		689.47572932
 
 #define INCH_PER_CM			 		2.54
 #define LBS_PER_KG			 		2.2
 #define FT_PER_METER				3.280833
-
+#define PSI_TO_MB_CONVERSION_RATIO	68.947572
 #define ONE_GRAVITY_IN_INCHES		386.088 // Using a more exact value, old 1G was 386.4
 #define ONE_GRAVITY_IN_MM			9806.65 // using a more exact value, old 1G was 9814.6
 
@@ -186,7 +193,7 @@ typedef struct
 	uint8 loc[TRIGGER_EVENT_STRING_SIZE];
 	uint16 unused2;
 	uint8 comments[TRIGGER_EVENT_STRING_SIZE];
-	uint8 unused3;
+	uint8 variableTriggerPercentageLevel;
 	uint8 samplingMethod;
 	float dist_to_source;
 	float weight_per_delay;
