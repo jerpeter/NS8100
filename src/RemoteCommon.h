@@ -542,7 +542,8 @@ typedef struct
 	uint8				flashWrapping;
 	uint8				appBuildVersion;
 	uint16				batteryLevel;
-	uint8				unused[4];
+	uint8				variableTriggerPercentageLevel;
+	uint8				unused[3];
 } SYSTEM_CFG;
 #pragma pack()
 
