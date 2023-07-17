@@ -197,7 +197,8 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					switch (g_displayAlternateResultState)
 					{
 						case DEFAULT_RESULTS: g_displayAlternateResultState = DEFAULT_ALTERNATE_RESULTS; break;
-						case DEFAULT_ALTERNATE_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
+						case DEFAULT_ALTERNATE_RESULTS: g_displayAlternateResultState = ALTERNATE_PSI_RESULTS; break;
+						case ALTERNATE_PSI_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
 						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
 						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
 						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
@@ -209,7 +210,8 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					{
 						case DEFAULT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
 						case DEFAULT_ALTERNATE_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
-						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = DEFAULT_ALTERNATE_RESULTS; break;
+						case ALTERNATE_PSI_RESULTS: g_displayAlternateResultState = DEFAULT_ALTERNATE_RESULTS; break;
+						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = ALTERNATE_PSI_RESULTS; break;
 						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
 						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
 					}
@@ -757,7 +759,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString((uint8*)buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
-	else // g_displayAlternateResultState == DEFAULT_RESULTS
+	else // (g_displayAlternateResultState == DEFAULT_RESULTS) || (g_displayAlternateResultState == DEFAULT_ALTERNATE_RESULTS) || (g_displayAlternateResultState == ALTERNATE_PSI_RESULTS)
 	{
 		//-------------------------------------------------------------
 		// AIR
@@ -771,7 +773,11 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		memset(&buff[0], 0, sizeof(buff));
 
 		// Display based on what the units current setting
-		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
+		if (g_displayAlternateResultState == ALTERNATE_PSI_RESULTS)
+		{
+			sprintf(buff,"%0.3f psi", HexToPSI(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
+		}
+		else if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
 			if (g_displayAlternateResultState != DEFAULT_ALTERNATE_RESULTS)
 			{
