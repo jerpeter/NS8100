@@ -122,10 +122,10 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 		{
 			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\r\n", opModeParamsPtr->seismicTriggerLevel, AirTriggerConvertToUnits(opModeParamsPtr->airTriggerLevel), opModeParamsPtr->airTriggerLevel);
 		}
-		else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
+		else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) || (g_unitConfig.unitsOfAir == PSI_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\r\n", opModeParamsPtr->seismicTriggerLevel,
-					((float)AirTriggerConvertToUnits(opModeParamsPtr->airTriggerLevel) / (float)10000), opModeParamsPtr->airTriggerLevel);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f %s, Air Trigger Count: 0x%x\r\n", opModeParamsPtr->seismicTriggerLevel,
+					((float)AirTriggerConvertToUnits(opModeParamsPtr->airTriggerLevel) / (float)10000), (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) ? "mb" : "psi", opModeParamsPtr->airTriggerLevel);
 		}
 	}
 	else if (operationMode == BARGRAPH_MODE)
@@ -143,10 +143,10 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 		{
 			debug("\tSeismic Trigger Count: 0x%x, Air Level: %d dB, Air Trigger Count: 0x%x\r\n", opModeParamsPtr->seismicTriggerLevel, AirTriggerConvertToUnits(opModeParamsPtr->airTriggerLevel), opModeParamsPtr->airTriggerLevel);
 		}
-		else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
+		else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) || (g_unitConfig.unitsOfAir == PSI_TYPE)
 		{
-			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f mb, Air Trigger Count: 0x%x\r\n", opModeParamsPtr->seismicTriggerLevel,
-					((float)AirTriggerConvertToUnits(opModeParamsPtr->airTriggerLevel) / (float)10000), opModeParamsPtr->airTriggerLevel);
+			debug("\tSeismic Trigger Count: 0x%x, Air Level: %0.3f %s, Air Trigger Count: 0x%x\r\n", opModeParamsPtr->seismicTriggerLevel,
+					((float)AirTriggerConvertToUnits(opModeParamsPtr->airTriggerLevel) / (float)10000), (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) ? "mb" : "psi", opModeParamsPtr->airTriggerLevel);
 		}
 
 		debug("\tBar Interval: %d secs, Summary Interval: %d mins\r\n", g_triggerRecord.bgrec.barInterval, (g_triggerRecord.bgrec.summaryInterval / 60));
@@ -196,48 +196,48 @@ void StartMonitoring(uint8 operationMode, TRIGGER_EVENT_DATA_STRUCT* opModeParam
 	InitDataBuffs(operationMode);
 
 	// New Adaptive Sampling setup
-	// Check that the Sampling method is Adaptive, the unit config allows Adaptive to be enabled, and the sample rate is not 1K (which doesn't use ASR)
-	if ((opModeParamsPtr->samplingMethod == ADAPTIVE_SAMPLING) && (g_unitConfig.adaptiveSampling == ENABLED) && (g_triggerRecord.trec.sample_rate != SAMPLE_RATE_1K))
-	{
-		// Setup for Adaptive Sampling
-		// Trigger threshold to maintain lower sampling or boost sampling to selected rate
-		// Seismic default 0.05 IPS = 160 counts A/D, minimum is 4 counts @ 12-bit low sensitivity (64 counts)
-		if (opModeParamsPtr->seismicTriggerLevel < (DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * 16))
-		{
-			// Set adaptive threshold to 30% of trigger level if less than 0.05 IPS
-			g_adaptiveSeismicThreshold = (uint16)((opModeParamsPtr->seismicTriggerLevel * 3) / 10);
-		}
-		else // Set adaptive threshold to 48 counts for any trigger levels above 0.05 IPS
-		{
-			g_adaptiveSeismicThreshold = 48;
-		}
-
-		// Acoustic lowest possible triggers are 92 dB (~51 counts) or 100 mb (40 counts)
-		// 160 A/D counts is ~102 dB
-		if (opModeParamsPtr->airTriggerLevel < 160)
-		{
-			// Set adaptive threshold to 30% of trigger level if less than ~102 dB
-			g_adaptiveAcousticThreshold = (uint16)((opModeParamsPtr->airTriggerLevel * 3) / 10);
-		}
-		else // Set adaptive threshold to 48 counts (close to 92 dB) for any trigger levels above ~102 dB
-		{
-			g_adaptiveAcousticThreshold = 48;
-		}
-
-		g_adaptiveState = ADAPTIVE_MAX_RATE;
-		g_adaptiveSampleDelay = opModeParamsPtr->sample_rate * 30; // Wait 30 seconds after start monitoring to check for adaptive sampling drop
-		g_adaptiveBoundaryCount = opModeParamsPtr->sample_rate / SAMPLE_RATE_1K;
-		g_adaptiveBoundaryMarker = 0;
-		g_adaptiveLastRealSamplePtr = g_tailOfPretriggerBuff;
-	}
-	else // Sampling method is FIXED_SAMPLING
+	if (opModeParamsPtr->samplingMethod == ADAPTIVE_SAMPLING)
 	{
 		// Check if the unit config Adaptive Sampling is not enabled or if the sample rate is 1K which doesn't use Adaptive Sampling
 		if ((g_unitConfig.adaptiveSampling != ENABLED) || (g_triggerRecord.trec.sample_rate == SAMPLE_RATE_1K))
 		{
 			opModeParamsPtr->samplingMethod = FIXED_SAMPLING;
 		}
+		else // Setup for Adaptive Sampling
+		{
+			// Trigger threshold to maintain lower sampling or boost sampling to selected rate
+			// Seismic default 0.05 IPS = 160 counts A/D, minimum is 4 counts @ 12-bit low sensitivity (64 counts)
+			if (opModeParamsPtr->seismicTriggerLevel < (DEFAULT_SEISMIC_TRIGGER_LEVEL_IN_INCHES_WITH_ADJUSTMENT * 16))
+			{
+				// Set adaptive threshold to 30% of trigger level if less than 0.05 IPS
+				g_adaptiveSeismicThreshold = (uint16)((opModeParamsPtr->seismicTriggerLevel * 3) / 10);
+			}
+			else // Set adaptive threshold to 48 counts for any trigger levels above 0.05 IPS
+			{
+				g_adaptiveSeismicThreshold = 48;
+			}
 
+			// Acoustic lowest possible triggers are 92 dB (~51 counts) or 100 mb (40 counts)
+			// 160 A/D counts is ~102 dB
+			if (opModeParamsPtr->airTriggerLevel < 160)
+			{
+				// Set adaptive threshold to 30% of trigger level if less than ~102 dB
+				g_adaptiveAcousticThreshold = (uint16)((opModeParamsPtr->airTriggerLevel * 3) / 10);
+			}
+			else // Set adaptive threshold to 48 counts (close to 92 dB) for any trigger levels above ~102 dB
+			{
+				g_adaptiveAcousticThreshold = 48;
+			}
+
+			g_adaptiveState = ADAPTIVE_MAX_RATE;
+			g_adaptiveSampleDelay = opModeParamsPtr->sample_rate * 30; // Wait 30 seconds after start monitoring to check for adaptive sampling drop
+			g_adaptiveBoundaryCount = opModeParamsPtr->sample_rate / SAMPLE_RATE_1K;
+			g_adaptiveBoundaryMarker = 0;
+			g_adaptiveLastRealSamplePtr = g_tailOfPretriggerBuff;
+		}
+	}
+	else // Sampling method is FIXED_SAMPLING
+	{
 		g_adaptiveState = ADAPTIVE_DISABLED;
 		g_adaptiveSampleDelay = 0;
 		g_adaptiveBoundaryCount = 0;
@@ -481,15 +481,20 @@ uint16 AirTriggerConvert(uint32 airTriggerToConvert)
 	// Check if the air trigger level is not no trigger and not manual trigger
 	if ((airTriggerToConvert != NO_TRIGGER_CHAR) && (airTriggerToConvert != MANUAL_TRIGGER_CHAR) && (airTriggerToConvert != EXTERNAL_TRIGGER_CHAR))
 	{
-		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-		{
-			// Convert dB to an A/D count
-			airTriggerToConvert = (uint32)(DbToHex(airTriggerToConvert, g_factorySetupRecord.acousticSensorType));
-		}
-		else
+		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
 			// Convert mb to an A/D count
 			airTriggerToConvert = (uint32)(MbToHex(airTriggerToConvert, g_factorySetupRecord.acousticSensorType));
+		}
+		else if (g_unitConfig.unitsOfAir == PSI_TYPE)
+		{
+			// Convert PSI to an A/D count
+			airTriggerToConvert = (uint32)(PsiToHex(airTriggerToConvert, g_factorySetupRecord.acousticSensorType));
+		}
+		else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+		{
+			// Convert dB to an A/D count
+			airTriggerToConvert = (uint32)(DbToHex(airTriggerToConvert, g_factorySetupRecord.acousticSensorType));
 		}
 	}
 
@@ -517,13 +522,17 @@ uint32 AirTriggerConvertToUnits(uint32 airTriggerToConvert)
 	// Check if the air trigger level is not no trigger and not manual trigger
 	if ((airTriggerToConvert != NO_TRIGGER_CHAR) && (airTriggerToConvert != MANUAL_TRIGGER_CHAR) && (airTriggerToConvert != EXTERNAL_TRIGGER_CHAR))
 	{
-		if (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-		{
-			airTriggerToConvert = HexToDB(airTriggerToConvert, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, g_factorySetupRecord.acousticSensorType);
-		}
-		else // (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
+		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
 		{
 			airTriggerToConvert = (HexToMB(airTriggerToConvert, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, g_factorySetupRecord.acousticSensorType) * 10000);
+		}
+		else if (g_unitConfig.unitsOfAir == PSI_TYPE)
+		{
+			airTriggerToConvert = (HexToPSI(airTriggerToConvert, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, g_factorySetupRecord.acousticSensorType) * 10000);
+		}
+		else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+		{
+			airTriggerToConvert = HexToDB(airTriggerToConvert, DATA_NORMALIZED, ACCURACY_16_BIT_MIDPOINT, g_factorySetupRecord.acousticSensorType);
 		}
 	}
 
