@@ -419,19 +419,19 @@ void ModemResetTimerCallback(void)
 	}
 	else if (g_modemResetStage == 2)
 	{
-		UartPuts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT);
+		if (g_modemStatus.xferState == NOP_CMD) { UartPuts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT); }
 		AssignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), ModemResetTimerCallback);
 		g_modemResetStage = 3;
 	}
 	else if (g_modemResetStage == 3)
 	{
-		UartPuts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT);
+		if (g_modemStatus.xferState == NOP_CMD) { UartPuts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT); }
 		AssignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), ModemResetTimerCallback);
 		g_modemResetStage = 4;
 	}
 	else if (g_modemResetStage == 4)
 	{
-		UartPuts((char*)(ATH_CMD_STRING), CRAFT_COM_PORT);
+		if (g_modemStatus.xferState == NOP_CMD) { UartPuts((char*)(ATH_CMD_STRING), CRAFT_COM_PORT); }
 		UartPuts((char*)&g_CRLF, CRAFT_COM_PORT);
 		AssignSoftTimer(MODEM_RESET_TIMER_NUM, (uint32)(3 * TICKS_PER_SEC), ModemResetTimerCallback);
 		g_modemResetStage = 5;
