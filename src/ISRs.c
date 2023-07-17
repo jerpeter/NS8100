@@ -829,6 +829,8 @@ void checkVariableTriggerAndFreq(VARIABLE_TRIGGER_FREQ_CHANNEL_BUFFER* chan)
 
 	float freq = (float)(g_triggerRecord.trec.sample_rate) / (float)(chan->freq_count);
 	float peak = (float)(chan->peak) / s_vtDiv;
+	// New ability to trigger off of a fractional level below the threshold
+	peak *= (float)((float)g_triggerRecord.trec.variableTriggerPercentageLevel / (float)100);
 	uint8 triggerFound = NO;
 
 	// Filter out any frequencies lower than 1 Hz (which is below the specs of the transducer)
