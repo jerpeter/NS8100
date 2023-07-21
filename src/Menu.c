@@ -1044,6 +1044,55 @@ void DisplayCalDate(void)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+uint32 GetAirDefaultValue(void)
+{
+	return (AIR_TRIGGER_DEFAULT_VALUE);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint32 GetAirMinValue(void)
+{
+	uint32 airMinValue;
+
+	if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
+	{
+		switch (g_factorySetupRecord.acousticSensorType)
+		{
+			case SENSOR_MIC_160_DB: airMinValue = AIR_TRIGGER_MIC_160_DB_IN_MB_MIN_VALUE; break;
+			case SENSOR_MIC_5_PSI: airMinValue = AIR_TRIGGER_MIC_5_PSI_IN_MB_MIN_VALUE; break;
+			case SENSOR_MIC_10_PSI: airMinValue = AIR_TRIGGER_MIC_10_PSI_IN_MB_MIN_VALUE; break;
+			default: /* SENSOR_MIC_148_DB */ airMinValue = AIR_TRIGGER_MIC_148_DB_IN_MB_MIN_VALUE; break;
+		}
+	}
+	else if (g_unitConfig.unitsOfAir == PSI_TYPE)
+	{
+		switch (g_factorySetupRecord.acousticSensorType)
+		{
+			case SENSOR_MIC_160_DB: airMinValue = AIR_TRIGGER_MIC_160_DB_IN_PSI_MIN_VALUE; break;
+			case SENSOR_MIC_5_PSI: airMinValue = AIR_TRIGGER_MIC_5_PSI_MENU_MIN_VALUE; break;
+			case SENSOR_MIC_10_PSI: airMinValue = AIR_TRIGGER_MIC_10_PSI_MENU_MIN_VALUE; break;
+			default: /* SENSOR_MIC_148_DB */ airMinValue = AIR_TRIGGER_MIC_148_DB_IN_PSI_MIN_VALUE; break;
+		}
+	}
+	else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
+	{
+		switch (g_factorySetupRecord.acousticSensorType)
+		{
+			case SENSOR_MIC_160_DB: airMinValue = AIR_TRIGGER_MIC_160_DB_MIN_VALUE; break;
+			case SENSOR_MIC_5_PSI: airMinValue = AIR_TRIGGER_MIC_5_PSI_IN_DB_MIN_VALUE; break;
+			case SENSOR_MIC_10_PSI: airMinValue = AIR_TRIGGER_MIC_10_PSI_IN_DB_MIN_VALUE; break;
+			default: /* SENSOR_MIC_148_DB */ airMinValue = AIR_TRIGGER_MIC_148_DB_MIN_VALUE; break;
+		}
+	}
+
+	return (airMinValue);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 uint32 GetAirMaxValue(void)
 {
 	uint32 airMaxValue;
