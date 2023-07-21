@@ -263,19 +263,7 @@ void AirScaleMenuHandler(uint8 keyPressed, void* data)
 			else
 			{
 				g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-
-				if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-				{
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE, GetAirMaxValue());
-				}
-				else if (g_unitConfig.unitsOfAir == PSI_TYPE)
-				{
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_PSI_DEFAULT_VALUE, AIR_TRIGGER_PSI_MIN_VALUE, GetAirMaxValue());
-				}
-				else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-				{
-					SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, GetAirMaxValue());
-				}
+				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, GetAirDefaultValue(), GetAirMinValue(), GetAirMaxValue());
 			}
 		}
 		else // (g_triggerRecord.opMode == BARGRAPH_MODE)
@@ -521,7 +509,6 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_unitConfig.alarmOneAirLevel);
-
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmOneAirLevelMenu, &g_tempTriggerLevelForMenuAdjustment, AirTriggerConvertToUnits(g_alarmOneAirMinLevel), AirTriggerConvertToUnits(g_alarmOneAirMinLevel), GetAirMaxValue());
 				}
 			break;
@@ -733,8 +720,6 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 
 					g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirLevel);
-
-					// Call Alarm One Air Level
 					SETUP_USER_MENU_FOR_INTEGERS_MSG(&alarmTwoAirLevelMenu, &g_tempTriggerLevelForMenuAdjustment, AirTriggerConvertToUnits(g_alarmTwoAirMinLevel), AirTriggerConvertToUnits(g_alarmTwoAirMinLevel), GetAirMaxValue());
 				}
 			break;
@@ -1879,19 +1864,7 @@ void CustomCurveMenuHandler(uint8 keyPressed, void* data)
 		debug("Seismic Trigger: %d counts\r\n", g_triggerRecord.trec.seismicTriggerLevel);
 
 		g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-
-		if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE, GetAirMaxValue());
-		}
-		else if (g_unitConfig.unitsOfAir == PSI_TYPE)
-		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_PSI_DEFAULT_VALUE, AIR_TRIGGER_PSI_MIN_VALUE, GetAirMaxValue());
-		}
-		else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-		{
-			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, GetAirMaxValue());
-		}
+		SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, GetAirDefaultValue(), GetAirMinValue(), GetAirMaxValue());
 #else // New Percent of Limit Trigger feature
 		SETUP_USER_MENU_FOR_INTEGERS_MSG(&percentLimitTriggerMenu, &g_triggerRecord.trec.variableTriggerPercentageLevel, VT_PERCENT_OF_LIMIT_DEFAULT_VALUE, VT_PERCENT_OF_LIMIT_MIN_VALUE, VT_PERCENT_OF_LIMIT_MAX_VALUE);
 #endif
@@ -2172,19 +2145,7 @@ void ExternalTriggerMenuHandler(uint8 keyPressed, void* data)
 		else // (g_externalTriggerMenuActiveForSetup == YES)
 		{
 			g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-
-			if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE, GetAirMaxValue());
-			}
-			else if (g_unitConfig.unitsOfAir == PSI_TYPE)
-			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_PSI_DEFAULT_VALUE, AIR_TRIGGER_PSI_MIN_VALUE, GetAirMaxValue());
-			}
-			else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, GetAirMaxValue());
-			}
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, GetAirDefaultValue(), GetAirMinValue(), GetAirMaxValue());
 		}
 	}
 
@@ -4152,19 +4113,7 @@ void VibrationStandardMenuHandler(uint8 keyPressed, void* data)
 			debug("Seismic Trigger: %d counts\r\n", g_triggerRecord.trec.seismicTriggerLevel);
 
 			g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_triggerRecord.trec.airTriggerLevel);
-
-			if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
-			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_MB_DEFAULT_VALUE, AIR_TRIGGER_MB_MIN_VALUE, GetAirMaxValue());
-			}
-			else if (g_unitConfig.unitsOfAir == PSI_TYPE)
-			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_PSI_DEFAULT_VALUE, AIR_TRIGGER_PSI_MIN_VALUE, GetAirMaxValue());
-			}
-			else // (g_unitConfig.unitsOfAir == DECIBEL_TYPE)
-			{
-				SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, AIR_TRIGGER_DEFAULT_VALUE, AIR_TRIGGER_MIN_VALUE, GetAirMaxValue());
-			}
+			SETUP_USER_MENU_FOR_INTEGERS_MSG(&airTriggerMenu, &g_tempTriggerLevelForMenuAdjustment, GetAirDefaultValue(), GetAirMinValue(), GetAirMaxValue());
 #else // New Percent of Limit Trigger feature
 			SETUP_USER_MENU_FOR_INTEGERS_MSG(&percentLimitTriggerMenu, &g_triggerRecord.trec.variableTriggerPercentageLevel, VT_PERCENT_OF_LIMIT_DEFAULT_VALUE, VT_PERCENT_OF_LIMIT_MIN_VALUE, VT_PERCENT_OF_LIMIT_MAX_VALUE);
 #endif
