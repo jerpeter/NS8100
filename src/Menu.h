@@ -206,42 +206,91 @@ enum {
 } UNIT_OPERATION_MODES;
 
 // Air Trigger stuff
-#define AIR_TRIGGER_DEFAULT_VALUE		NO_TRIGGER_CHAR
-#define AIR_TRIGGER_INC_VALUE			1
-#define AIR_TRIGGER_MIN_VALUE			92
-#if 0 // Old
-#define AIR_TRIGGER_MAX_VALUE			148
-#else
-#define AIR_TRIGGER_MIC_148_DB_MAX_VALUE	148
-#define AIR_TRIGGER_MIC_160_DB_MAX_VALUE	160
-#define AIR_TRIGGER_MIC_5_PSI_IN_DB_MAX_VALUE	184 // 5 PSI to dB is 184.7291580458, but truncating for whole number
-#define AIR_TRIGGER_MIC_10_PSI_IN_DB_MAX_VALUE	190 // 10 PSI to dB is 190.7497797447, but truncating for whole number
-#define AIR_TRIGGER_MIC_5_PSI_MAX_VALUE		5 // mb = 3,447,379
-#define AIR_TRIGGER_MIC_10_PSI_MAX_VALUE	10 // mb = 6,894,757
-#endif
+#define AIR_TRIGGER_DEFAULT_VALUE			NO_TRIGGER_CHAR
+#define AIR_TRIGGER_MIN_COUNT				64
+#define AIR_TRIGGER_MAX_COUNT				0x8000
 
-#define AIR_TRIGGER_MB_DEFAULT_VALUE	NO_TRIGGER_CHAR
-#define AIR_TRIGGER_MB_INC_VALUE		25
-#define AIR_TRIGGER_MB_MIN_VALUE		100
-#define AIR_TRIGGER_PSI_DEFAULT_VALUE	NO_TRIGGER_CHAR
-#define AIR_TRIGGER_PSI_INC_VALUE		1
-#define AIR_TRIGGER_PSI_MIN_VALUE		2
-#if 0 // Old
-#define AIR_TRIGGER_MB_MAX_VALUE		51200
-#else
+#if 0 // Air trigger minimum adheres relative to standard 148 dBL mic @ 92 dB
+//---------------------------------------------------------------------------------------------------------------------
+//--- Air Trigger Min/Max levels based on ~51 (48 for PSI) A/D counts, adhering to 7K series legacy 92 dBL lower limit
+//---------------------------------------------------------------------------------------------------------------------
+#define AIR_TRIGGER_MIC_148_DB_MIN_VALUE		92 // @ 51 counts
+#define AIR_TRIGGER_MIC_148_DB_MAX_VALUE		148 // Max
+#define AIR_TRIGGER_MIC_148_DB_IN_MB_MIN_VALUE	80 // 0.00796875 * 10000
 #define AIR_TRIGGER_MIC_148_DB_IN_MB_MAX_VALUE	51200 // 5.12 * 10000
-#define AIR_TRIGGER_MIC_160_DB_IN_MB_MAX_VALUE	204800 // 20.48 * 10000
-#define AIR_TRIGGER_MIC_5_PSI_IN_MB_MAX_VALUE	3447378 // 344.73786466 * 10000
-#define AIR_TRIGGER_MIC_10_PSI_IN_MB_MAX_VALUE	6894757 // 689.47572932 * 10000
+#define AIR_TRIGGER_MIC_148_DB_IN_PSI_MIN_VALUE	2 // 0.00796875 * 10000 / 68.947572 = 1.15577
 #define AIR_TRIGGER_MIC_148_DB_IN_PSI_MAX_VALUE	742.59322 // 5.12 * 10000 / 68.947572
+
+#define AIR_TRIGGER_MIC_160_DB_MIN_VALUE		104 // @ 51 counts
+#define AIR_TRIGGER_MIC_160_DB_MAX_VALUE		160 // Max
+#define AIR_TRIGGER_MIC_160_DB_IN_MB_MIN_VALUE	318 // 0.03188 * 10000 = 318.8
+#define AIR_TRIGGER_MIC_160_DB_IN_MB_MAX_VALUE	204800 // 20.48 * 10000
+#define AIR_TRIGGER_MIC_160_DB_IN_PSI_MIN_VALUE	5 // 0.03188 * 10000 / 68.947572 = 4.6238
 #define AIR_TRIGGER_MIC_160_DB_IN_PSI_MAX_VALUE	2970.3728 // 20.48 * 10000 / 68.947572
+
+#define AIR_TRIGGER_MIC_5_PSI_IN_DB_MIN_VALUE	128 // @ 48 counts
+#define AIR_TRIGGER_MIC_5_PSI_IN_DB_MAX_VALUE	184 // 5 PSI to dB is 184.7291580458, but truncating for whole number
+#define AIR_TRIGGER_MIC_5_PSI_IN_MB_MIN_VALUE	5050 // 0.50499 * 10000
+#define AIR_TRIGGER_MIC_5_PSI_IN_MB_MAX_VALUE	3447378 // 344.73786466 * 10000
+#define AIR_TRIGGER_MIC_5_PSI_MENU_MIN_VALUE	73 // 0.50499 * 10000 / 68.947572 = 73.242
 #define AIR_TRIGGER_MIC_5_PSI_MENU_MAX_VALUE	50000 // 344.73786466 * 10000 / 68.947572
+
+#define AIR_TRIGGER_MIC_10_PSI_IN_DB_MIN_VALUE	134 // @ 48 counts
+#define AIR_TRIGGER_MIC_10_PSI_IN_DB_MAX_VALUE	190 // 10 PSI to dB is 190.7497797447, but truncating for whole number
+#define AIR_TRIGGER_MIC_10_PSI_IN_MB_MIN_VALUE	10100 // 1.00997 * 10000
+#define AIR_TRIGGER_MIC_10_PSI_IN_MB_MAX_VALUE	6894757 // 689.47572932 * 10000
+#define AIR_TRIGGER_MIC_10_PSI_MENU_MIN_VALUE	146 // 1.00997 * 10000 / 68.947572 = 146.483
 #define AIR_TRIGGER_MIC_10_PSI_MENU_MAX_VALUE	100000 // 689.47572932 * 10000 / 68.947572
+
+#define AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG	51 // 51 counts = 92 dB which equals the 7K series lowest trigger level
+
+#else // Air trigger adheres to the general design all triggers start at 64 counts
+//---------------------------------------------------------------------------------------------------------------------
+//--- Air Trigger Min/Max levels based on 64 A/D counts, adhering to 8100 design of 64/16/4 as minimum based on bit accuracy
+//---------------------------------------------------------------------------------------------------------------------
+#define AIR_TRIGGER_MIC_148_DB_MIN_VALUE		94 // @ 64 counts
+#define AIR_TRIGGER_MIC_148_DB_MAX_VALUE		148 // Max
+#define AIR_TRIGGER_MIC_148_DB_IN_MB_MIN_VALUE	100 // 0.01 * 10000
+#define AIR_TRIGGER_MIC_148_DB_IN_MB_MAX_VALUE	51200 // 5.12 * 10000
+#define AIR_TRIGGER_MIC_148_DB_IN_PSI_MIN_VALUE	2 // 0.01 * 10000 / 68.947572 = 1.4503
+#define AIR_TRIGGER_MIC_148_DB_IN_PSI_MAX_VALUE	742.59322 // 5.12 * 10000 / 68.947572
+
+#define AIR_TRIGGER_MIC_160_DB_MIN_VALUE		106 // @ 64 counts
+#define AIR_TRIGGER_MIC_160_DB_MAX_VALUE		160 // Max
+#define AIR_TRIGGER_MIC_160_DB_IN_MB_MIN_VALUE	400 // 0.04 * 10000
+#define AIR_TRIGGER_MIC_160_DB_IN_MB_MAX_VALUE	204800 // 20.48 * 10000
+#define AIR_TRIGGER_MIC_160_DB_IN_PSI_MIN_VALUE	6 // 0.04 * 10000 / 68.947572 = 5.8015
+#define AIR_TRIGGER_MIC_160_DB_IN_PSI_MAX_VALUE	2970.3728 // 20.48 * 10000 / 68.947572
+
+#define AIR_TRIGGER_MIC_5_PSI_IN_DB_MIN_VALUE	130 // @ 64 counts = 130.5
+#define AIR_TRIGGER_MIC_5_PSI_IN_DB_MAX_VALUE	184 // 5 PSI to dB is 184.7291580458, but truncating for whole number
+#define AIR_TRIGGER_MIC_5_PSI_IN_MB_MIN_VALUE	6733 // 0.67332 * 10000
+#define AIR_TRIGGER_MIC_5_PSI_IN_MB_MAX_VALUE	3447378 // 344.73786466 * 10000
+#define AIR_TRIGGER_MIC_5_PSI_MENU_MIN_VALUE	97 // 0.67332 * 10000 / 68.947572 = 97.656
+#define AIR_TRIGGER_MIC_5_PSI_MENU_MAX_VALUE	50000 // 344.73786466 * 10000 / 68.947572
+
+#define AIR_TRIGGER_MIC_10_PSI_IN_DB_MIN_VALUE	136 // @ 64 counts = 136.5
+#define AIR_TRIGGER_MIC_10_PSI_IN_DB_MAX_VALUE	190 // 10 PSI to dB is 190.7497797447, but truncating for whole number
+#define AIR_TRIGGER_MIC_10_PSI_IN_MB_MIN_VALUE	13466 // 1.34663 * 10000
+#define AIR_TRIGGER_MIC_10_PSI_IN_MB_MAX_VALUE	6894757 // 689.47572932 * 10000
+#define AIR_TRIGGER_MIC_10_PSI_MENU_MIN_VALUE	195 // 1.34663 * 10000 / 68.947572 = 195.312
+#define AIR_TRIGGER_MIC_10_PSI_MENU_MAX_VALUE	100000 // 689.47572932 * 10000 / 68.947572
+
+#define AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG	64 // 64 counts = 94 dB which adheres to the 8100 general design
 #endif
 
-#define AIR_TRIGGER_MIN_COUNT			64
-#define AIR_TRIGGER_MIN_COUNT_92DB		51
-#define AIR_TRIGGER_MAX_COUNT			0x8000
+//---------------------------------------------------------------------------------------------------------------------
+//--- Air Trigger increment levels
+//---------------------------------------------------------------------------------------------------------------------
+#define AIR_INCREMENT_MIC_148_DB_IN_MB		2 // 1.562
+#define AIR_INCREMENT_MIC_160_DB_IN_MB		6 // 6.25
+#define AIR_INCREMENT_MIC_5_PSI_IN_MB		105 // 105.205
+#define AIR_INCREMENT_MIC_10_PSI_IN_MB		210 // 210.411
+
+#define AIR_INCREMENT_MIC_148_DB_IN_PSI		1 // 1.562 / 68.9475 = 0.0226
+#define AIR_INCREMENT_MIC_160_DB_IN_PSI		1 // 6.25 / 68.9475 = 0.0906
+#define AIR_INCREMENT_MIC_5_PSI_IN_PSI		2 // 105.205 / 68.9475 = 1.5258
+#define AIR_INCREMENT_MIC_10_PSI_IN_PSI		3 // 210.411 / 68.9475 = 3.0517
 
 // Alarm modes
 #define ALARM_MODE_OFF		0x00
@@ -259,20 +308,8 @@ enum {
 #define ALARM_TWO_SEIS_DEFAULT_TRIG_LVL	24576	//1536 // (2048 * 3 / 4) 75%
 #define ALARM_TWO_AIR_DEFAULT_TRIG_LVL	140
 
-#define ALARM_SEIS_DEFAULT_VALUE		16384	//1024
 #define ALARM_SEIS_MIN_VALUE			64		//3
 #define ALARM_SEIS_MAX_VALUE			0x8000	//2048
-
-#define ALARM_AIR_DEFAULT_VALUE			(AIR_TRIGGER_MIN_VALUE)
-#define ALARM_AIR_MIN_VALUE				(AIR_TRIGGER_MIN_VALUE)
-//#define ALARM_AIR_MAX_VALUE				(AIR_TRIGGER_MAX_VALUE) // Now variable
-
-#define ALARM_AIR_MB_DEFAULT_VALUE		(AIR_TRIGGER_MB_MIN_VALUE)
-#define ALARM_AIR_MB_MIN_VALUE			(AIR_TRIGGER_MB_MIN_VALUE)
-//#define ALARM_AIR_MB_MAX_VALUE			(AIR_TRIGGER_MB_MAX_VALUE) // Now variable
-
-#define ALARM_AIR_PSI_DEFAULT_VALUE		(AIR_TRIGGER_PSI_MIN_VALUE)
-#define ALARM_AIR_PSI_MIN_VALUE			(AIR_TRIGGER_PSI_MIN_VALUE)
 
 // Alarm Times
 #define ALARM_OUTPUT_TIME_DEFAULT	5 		// secs
@@ -524,7 +561,7 @@ enum {
 enum {
 	DEFAULT_RESULTS = 1, // Show Air channel results
 	DEFAULT_ALTERNATE_RESULTS,
-	ALTERNATE_PSI_RESULTS,
+	SECOND_ALTERNATE_RESULTS,
 	VECTOR_SUM_RESULTS,
 	PEAK_DISPLACEMENT_RESULTS,
 	PEAK_ACCELERATION_RESULTS
@@ -1043,6 +1080,8 @@ void DisplaySerialNumber(void);
 void DisplayTimerModeSettings(void);
 void DisplayFlashUsageStats(void);
 void DisplayAutoDialInfo(void);
+uint32 GetAirDefaultValue(void);
+uint32 GetAirMinValue(void);
 uint32 GetAirMaxValue(void);
 void GetAirSensorTypeName(char* airSensorTypeName);
 void InitSensorParameters(uint16 seismicSensorType, uint8 sensitivity);
