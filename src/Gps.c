@@ -287,16 +287,11 @@ void InitGpsBuffers(void)
 ///----------------------------------------------------------------------------
 void UpdateSystemEpochTimeGps(time_t epochTime)
 {
-	// New conditional check to combat the chip defect where every 2 minutes and 11 seconds (131 seconds), the chip pauses sending the ZDA time message and when it resumes it's off by 1 second until the GPS internals catch up
-	// Only update the system GPS time until receiving the first valid GPS time (while the GPS is active) then the system takes over incrementing time based on the GPS second changeover
-	if (g_epochTimeGPS == 0)
+	// Check if the GPS Epoch time is true, meaning that it's greater than the initial internal date & time that the GPS chip powers up with before reading time from a satellite
+	if (epochTime > 1672531200) // Epoch date corresponding with the beginning of the year 1/1/2023
 	{
-		// Check if the GPS Epoch time is true, meaning that it's greater than the initial internal date & time that the GPS chip powers up with before reading time from a satellite
-		if (epochTime > 1672531200) // Epoch date corresponding with the beginning of the year 1/1/2023
-		{
-			// Update the system GPS Epoch
-			g_epochTimeGPS = epochTime;
-		}
+		// Update the system GPS Epoch
+		g_epochTimeGPS = epochTime;
 	}
 }
 
@@ -646,13 +641,11 @@ void HandleGGA(uint8* message)
 		g_gpsPosition.altitude = ((int)gga.elv);
 		g_gpsPosition.validLocationCount++;
 
-#if 0 // No longer need to issue a Time Query, creating GPS Epoch time from the ZDA message
 		if (g_epochTimeGPS == 0)
 		{
 			// Either call GpsQueryTime or set a flag to handle it outside of scope
 			GpsQueryTime();
 		}
-#endif
 
 		if (g_gpsPosition.validLocationCount == GPS_THRESHOLD_TOTAL_FIXES_FOR_BEST_LOCATION)
 		{
@@ -768,13 +761,11 @@ void HandleGLL(uint8* message)
 		g_gpsPosition.utcSec = gll.utc.sec;
 		g_gpsPosition.validLocationCount++;
 
-#if 0 // No longer need to issue a Time Query, creating GPS Epoch time from the ZDA message
 		if (g_epochTimeGPS == 0)
 		{
 			// Either call GpsQueryTime or set a flag to handle it outside of scope
 			GpsQueryTime();
 		}
-#endif
 
 		if (g_gpsPosition.validLocationCount == GPS_THRESHOLD_TOTAL_FIXES_FOR_BEST_LOCATION)
 		{
@@ -876,7 +867,9 @@ void HandleZDA(uint8* message)
 	// Convert current time into Epoch time
 	epochTime = mktime(&currentTime);
 
+#if 0 // Removed updating GPS Epoch time since every 2m 11s (131s) the GPS chip lags for 4s and upon message resumption the first ZDA message reports a second old before catching up
 	UpdateSystemEpochTimeGps(epochTime);
+#endif
 
 	if (g_gpsOutputToCraft)
 	{
