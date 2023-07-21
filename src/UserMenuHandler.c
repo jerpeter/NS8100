@@ -484,6 +484,42 @@ void AdvanceInputChar(uint32 direction)
 ///----------------------------------------------------------------------------
 ///	Function Break
 ///----------------------------------------------------------------------------
+uint32 GetAirTriggerIncrementForMB(void)
+{
+	uint32 airIncrement;
+
+	switch (g_factorySetupRecord.acousticSensorType)
+	{
+		case SENSOR_MIC_160_DB: airIncrement = AIR_INCREMENT_MIC_160_DB_IN_MB; break;
+		case SENSOR_MIC_5_PSI: airIncrement = AIR_INCREMENT_MIC_5_PSI_IN_MB; break;
+		case SENSOR_MIC_10_PSI: airIncrement = AIR_INCREMENT_MIC_10_PSI_IN_MB; break;
+		default: /* SENSOR_MIC_148_DB */ airIncrement = AIR_INCREMENT_MIC_148_DB_IN_MB; break;
+	}
+
+	return (airIncrement);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
+uint32 GetAirTriggerIncrementForPSI(void)
+{
+	uint32 airIncrement;
+
+	switch (g_factorySetupRecord.acousticSensorType)
+	{
+		case SENSOR_MIC_160_DB: airIncrement = AIR_INCREMENT_MIC_160_DB_IN_PSI; break;
+		case SENSOR_MIC_5_PSI: airIncrement = AIR_INCREMENT_MIC_5_PSI_IN_PSI; break;
+		case SENSOR_MIC_10_PSI: airIncrement = AIR_INCREMENT_MIC_10_PSI_IN_PSI; break;
+		default: /* SENSOR_MIC_148_DB */ airIncrement = AIR_INCREMENT_MIC_148_DB_IN_PSI; break;
+	}
+
+	return (airIncrement);
+}
+
+///----------------------------------------------------------------------------
+///	Function Break
+///----------------------------------------------------------------------------
 void AdvanceInputNumber(uint32 direction)
 {
 	// Check if direction is an up arrow to increment the number
@@ -581,15 +617,13 @@ void AdvanceInputNumber(uint32 direction)
 						if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == MILLIBAR_TYPE))
 						{
 							// Increment the data by the key scrolling speed
-							g_userMenuCacheData.numLongData += g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE;
+							g_userMenuCacheData.numLongData += g_keypadNumberSpeed * GetAirTriggerIncrementForMB();
 						}
-#if 0 // PSI increment value is currently 1, so special adjustment is not needed
 						else if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == PSI_TYPE))
 						{
 							// Increment the data by the key scrolling speed
-							g_userMenuCacheData.numLongData += g_keypadNumberSpeed * AIR_TRIGGER_PSI_INC_VALUE;
+							g_userMenuCacheData.numLongData += g_keypadNumberSpeed * GetAirTriggerIncrementForPSI();
 						}
-#endif
 						else
 						{
 							// Increment the data by the key scrolling speed
@@ -771,7 +805,7 @@ void AdvanceInputNumber(uint32 direction)
 						{
 							if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == MILLIBAR_TYPE))
 							{
-								if ((g_userMenuCacheData.numLongData - (g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE)) > g_userMenuCacheData.intMaxValue)
+								if ((g_userMenuCacheData.numLongData - (g_keypadNumberSpeed * GetAirTriggerIncrementForMB())) > g_userMenuCacheData.intMaxValue)
 								{
 									// Set the min value
 									g_userMenuCacheData.numLongData = g_userMenuCacheData.intMinValue;
@@ -779,13 +813,12 @@ void AdvanceInputNumber(uint32 direction)
 								else
 								{
 									// Decrement the data by the key scrolling speed
-									g_userMenuCacheData.numLongData -= g_keypadNumberSpeed * AIR_TRIGGER_MB_INC_VALUE;
+									g_userMenuCacheData.numLongData -= g_keypadNumberSpeed * GetAirTriggerIncrementForMB();
 								}
 							}
-#if 0 // PSI increment value is currently 1, so special adjustment is not needed
 							else if ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == PSI_TYPE))
 							{
-								if ((g_userMenuCacheData.numLongData - (g_keypadNumberSpeed * AIR_TRIGGER_PSI_INC_VALUE)) > g_userMenuCacheData.intMaxValue)
+								if ((g_userMenuCacheData.numLongData - (g_keypadNumberSpeed * GetAirTriggerIncrementForPSI())) > g_userMenuCacheData.intMaxValue)
 								{
 									// Set the min value
 									g_userMenuCacheData.numLongData = g_userMenuCacheData.intMinValue;
@@ -793,10 +826,9 @@ void AdvanceInputNumber(uint32 direction)
 								else
 								{
 									// Decrement the data by the key scrolling speed
-									g_userMenuCacheData.numLongData -= g_keypadNumberSpeed * AIR_TRIGGER_PSI_INC_VALUE;
+									g_userMenuCacheData.numLongData -= g_keypadNumberSpeed * GetAirTriggerIncrementForPSI();
 								}
 							}
-#endif
 							else // ((USER_MENU_TYPE(g_userMenuCachePtr) == INTEGER_SPECIAL_TYPE) && (g_unitConfig.unitsOfAir == DECIBEL_TYPE))
 							{
 								// Decrement the data by the key scrolling speed
