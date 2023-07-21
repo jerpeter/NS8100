@@ -625,7 +625,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		// Air Trigger Level check (Changed Air trigger min check to allow 92 and 93 dB settings which are below normal minimum)
 		//---------------------------------------------------------------------------
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) || (NO_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) ||
-			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_COUNT_92DB) && (cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MAX_COUNT)))
+			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG) && (cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MAX_COUNT)))
 		{
 			g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
 		}
@@ -1024,7 +1024,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					g_unitConfig.alarmOneAirLevel = cfg.alarmCfg.alarmOneAirLevel;
 				}
 				// Alarm One Air trigger level check DB/MB for other modes
-				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) || ((cfg.alarmCfg.alarmOneAirLevel >= AIR_TRIGGER_MIN_COUNT_92DB) &&
+				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) || ((cfg.alarmCfg.alarmOneAirLevel >= AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG) &&
 						(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_COUNT)))
 				{
 					g_unitConfig.alarmOneAirLevel = cfg.alarmCfg.alarmOneAirLevel;
@@ -1119,7 +1119,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					g_unitConfig.alarmTwoAirLevel = cfg.alarmCfg.alarmTwoAirLevel;
 				}
 				// Alarm Two Air trigger level check DB/MB for other modes
-				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) || ((cfg.alarmCfg.alarmTwoAirLevel >= AIR_TRIGGER_MIN_COUNT_92DB) &&
+				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) || ((cfg.alarmCfg.alarmTwoAirLevel >= AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG) &&
 						(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_COUNT)))
 				{
 					g_unitConfig.alarmTwoAirLevel = cfg.alarmCfg.alarmTwoAirLevel;
