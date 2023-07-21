@@ -1024,7 +1024,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					g_unitConfig.alarmOneAirLevel = cfg.alarmCfg.alarmOneAirLevel;
 				}
 				// Alarm One Air trigger level check DB/MB for other modes
-				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) || ((cfg.alarmCfg.alarmOneAirLevel >= AIR_TRIGGER_MIN_COUNT) &&
+				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmOneAirLevel) || ((cfg.alarmCfg.alarmOneAirLevel >= AIR_TRIGGER_MIN_COUNT_92DB) &&
 						(cfg.alarmCfg.alarmOneAirLevel <= AIR_TRIGGER_MAX_COUNT)))
 				{
 					g_unitConfig.alarmOneAirLevel = cfg.alarmCfg.alarmOneAirLevel;
@@ -1119,8 +1119,7 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 					g_unitConfig.alarmTwoAirLevel = cfg.alarmCfg.alarmTwoAirLevel;
 				}
 				// Alarm Two Air trigger level check DB/MB for other modes
-				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) ||
-						((cfg.alarmCfg.alarmTwoAirLevel >= g_triggerRecord.trec.airTriggerLevel) &&
+				else if ((NO_TRIGGER_CHAR == cfg.alarmCfg.alarmTwoAirLevel) || ((cfg.alarmCfg.alarmTwoAirLevel >= AIR_TRIGGER_MIN_COUNT_92DB) &&
 						(cfg.alarmCfg.alarmTwoAirLevel <= AIR_TRIGGER_MAX_COUNT)))
 				{
 					g_unitConfig.alarmTwoAirLevel = cfg.alarmCfg.alarmTwoAirLevel;
