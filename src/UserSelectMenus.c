@@ -503,9 +503,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
-						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { g_alarmOneAirMinLevel = ALARM_AIR_MB_MIN_VALUE; }
-						else if (g_unitConfig.unitsOfAir == PSI_TYPE) { g_alarmOneAirMinLevel = ALARM_AIR_PSI_MIN_VALUE; }
-						else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { g_alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;	}
+						g_alarmOneAirMinLevel = GetAirMinValue();
 					}
 
 					g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_unitConfig.alarmOneAirLevel);
@@ -561,9 +559,7 @@ void AlarmOneMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
-						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { g_alarmOneAirMinLevel = ALARM_AIR_MB_MIN_VALUE; }
-						else if (g_unitConfig.unitsOfAir == PSI_TYPE) { g_alarmOneAirMinLevel = ALARM_AIR_PSI_MIN_VALUE; }
-						else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { g_alarmOneAirMinLevel = ALARM_AIR_MIN_VALUE;	}
+						g_alarmOneAirMinLevel = GetAirMinValue();
 					}
 
 					// Down convert to current bit accuracy setting
@@ -714,9 +710,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
-						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { g_alarmTwoAirMinLevel = ALARM_AIR_MB_MIN_VALUE; }
-						else if (g_unitConfig.unitsOfAir == PSI_TYPE) { g_alarmTwoAirMinLevel = ALARM_AIR_PSI_MIN_VALUE; }
-						else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { g_alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;	}
+						g_alarmTwoAirMinLevel = GetAirMinValue();
 					}
 
 					g_tempTriggerLevelForMenuAdjustment = AirTriggerConvertToUnits(g_unitConfig.alarmTwoAirLevel);
@@ -772,9 +766,7 @@ void AlarmTwoMenuHandler(uint8 keyPressed, void* data)
 					}
 					else // (g_triggerRecord.opMode == BARGRAPH_MODE) || (g_triggerRecord.opMode == COMBO_MODE)
 					{
-						if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE) { g_alarmTwoAirMinLevel = ALARM_AIR_MB_MIN_VALUE; }
-						else if (g_unitConfig.unitsOfAir == PSI_TYPE) { g_alarmTwoAirMinLevel = ALARM_AIR_PSI_MIN_VALUE; }
-						else /* (g_unitConfig.unitsOfAir == DECIBEL_TYPE) */ { g_alarmTwoAirMinLevel = ALARM_AIR_MIN_VALUE;	}
+						g_alarmTwoAirMinLevel = GetAirMinValue();
 					}
 
 					// Down convert to current bit accuracy setting
