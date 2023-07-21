@@ -197,8 +197,8 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					switch (g_displayAlternateResultState)
 					{
 						case DEFAULT_RESULTS: g_displayAlternateResultState = DEFAULT_ALTERNATE_RESULTS; break;
-						case DEFAULT_ALTERNATE_RESULTS: g_displayAlternateResultState = ALTERNATE_PSI_RESULTS; break;
-						case ALTERNATE_PSI_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
+						case DEFAULT_ALTERNATE_RESULTS: g_displayAlternateResultState = SECOND_ALTERNATE_RESULTS; break;
+						case SECOND_ALTERNATE_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
 						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
 						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
 						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
@@ -210,8 +210,8 @@ void ResultsMenuProc(INPUT_MSG_STRUCT msg, WND_LAYOUT_STRUCT *wnd_layout_ptr, MN
 					{
 						case DEFAULT_RESULTS: g_displayAlternateResultState = PEAK_ACCELERATION_RESULTS; break;
 						case DEFAULT_ALTERNATE_RESULTS: g_displayAlternateResultState = DEFAULT_RESULTS; break;
-						case ALTERNATE_PSI_RESULTS: g_displayAlternateResultState = DEFAULT_ALTERNATE_RESULTS; break;
-						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = ALTERNATE_PSI_RESULTS; break;
+						case SECOND_ALTERNATE_RESULTS: g_displayAlternateResultState = DEFAULT_ALTERNATE_RESULTS; break;
+						case VECTOR_SUM_RESULTS: g_displayAlternateResultState = SECOND_ALTERNATE_RESULTS; break;
 						case PEAK_DISPLACEMENT_RESULTS: g_displayAlternateResultState = VECTOR_SUM_RESULTS; break;
 						case PEAK_ACCELERATION_RESULTS: g_displayAlternateResultState = PEAK_DISPLACEMENT_RESULTS; break;
 					}
@@ -759,7 +759,7 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		WndMpWrtString((uint8*)buff, wnd_layout_ptr, SIX_BY_EIGHT_FONT, REG_LN);
 		wnd_layout_ptr->curr_row = wnd_layout_ptr->next_row;
 	}
-	else // (g_displayAlternateResultState == DEFAULT_RESULTS) || (g_displayAlternateResultState == DEFAULT_ALTERNATE_RESULTS) || (g_displayAlternateResultState == ALTERNATE_PSI_RESULTS)
+	else // (g_displayAlternateResultState == DEFAULT_RESULTS) || (g_displayAlternateResultState == DEFAULT_ALTERNATE_RESULTS) || (g_displayAlternateResultState == SECOND_ALTERNATE_RESULTS)
 	{
 		//-------------------------------------------------------------
 		// AIR
@@ -772,32 +772,24 @@ void ResultsMenuDisplay(WND_LAYOUT_STRUCT *wnd_layout_ptr)
 		// Air
 		memset(&buff[0], 0, sizeof(buff));
 
+		// New method - Display matrix, default being air units selected in user config
+		// Default -> Alternate -> Second Alt
+		// dB -> mb -> PSI
+		// mb -> dB -> PSI
+		// PSI -> mb -> dB
+
 		// Display based on what the units current setting
-		if (g_displayAlternateResultState == ALTERNATE_PSI_RESULTS)
+		if (((g_unitConfig.unitsOfAir == MILLIBAR_TYPE) && (g_displayAlternateResultState == DEFAULT_RESULTS)) || ((g_unitConfig.unitsOfAir != MILLIBAR_TYPE) && (g_displayAlternateResultState == DEFAULT_ALTERNATE_RESULTS)))
+		{
+			sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
+		}
+		else if (((g_unitConfig.unitsOfAir == PSI_TYPE) && (g_displayAlternateResultState == DEFAULT_RESULTS)) || ((g_unitConfig.unitsOfAir != PSI_TYPE) && (g_displayAlternateResultState == SECOND_ALTERNATE_RESULTS)))
 		{
 			sprintf(buff,"%0.3f psi", HexToPSI(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
 		}
-		else if (g_unitConfig.unitsOfAir == MILLIBAR_TYPE)
+		else // All other cases report in dB
 		{
-			if (g_displayAlternateResultState != DEFAULT_ALTERNATE_RESULTS)
-			{
-				sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
-			}
-			else
-			{
-				sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
-			}
-		}
-		else // Report Air in DB
-		{
-			if (g_displayAlternateResultState != DEFAULT_ALTERNATE_RESULTS)
-			{
-				sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
-			}
-			else
-			{
-				sprintf(buff,"%0.3f mb", HexToMB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
-			}
+			sprintf(buff,"%0.1f dB", HexToDB(g_summaryList.cachedEntry.channelSummary.a.peak, DATA_NORMALIZED, bitAccuracyScale, acousticSensorType));
 		}
 
 		adjust = (uint8)strlen(buff);
