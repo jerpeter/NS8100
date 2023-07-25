@@ -624,8 +624,10 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 		//---------------------------------------------------------------------------
 		// Air Trigger Level check (Changed Air trigger min check to allow 92 and 93 dB settings which are below normal minimum)
 		//---------------------------------------------------------------------------
+		// Check if the Air trigger level is within bounds, which is slighly different if the standard 148 dB mic is selected which uses a lower threshold
 		if ((MANUAL_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) || (NO_TRIGGER_CHAR == cfg.eventCfg.airTriggerLevel) ||
-			((cfg.eventCfg.airTriggerLevel >= AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG) && (cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MAX_COUNT)))
+			((cfg.eventCfg.airTriggerLevel >= ((g_factorySetupRecord.acousticSensorType != SENSOR_MIC_148_DB) ? AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG : AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG_SPECIAL_92_DB)) &&
+			(cfg.eventCfg.airTriggerLevel <= (uint32)AIR_TRIGGER_MAX_COUNT)))
 		{
 			g_triggerRecord.trec.airTriggerLevel = cfg.eventCfg.airTriggerLevel;
 		}
