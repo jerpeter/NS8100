@@ -210,9 +210,50 @@ enum {
 #define AIR_TRIGGER_MIN_COUNT				64
 #define AIR_TRIGGER_MAX_COUNT				0x8000
 
-#if 0 // Air trigger minimum adheres relative to standard 148 dBL mic @ 92 dB
+#if 1 // Air trigger adheres to the general design all triggers start at 64 counts
 //---------------------------------------------------------------------------------------------------------------------
-//--- Air Trigger Min/Max levels based on ~51 (48 for PSI) A/D counts, adhering to 7K series legacy 92 dBL lower limit
+//--- Air Trigger Min/Max levels based on 64 A/D counts, adhering to 8100 design of 64/16/4 as minimum based on bit accuracy, except for the special case standard 148 dB mic and using a min of 92 dB (51 counts)
+//---------------------------------------------------------------------------------------------------------------------
+#if 1 // Special case for only the standard 148 dB mic, using 92 dB (51 counts) as the min trigger level
+#define AIR_TRIGGER_MIC_148_DB_MIN_VALUE		92 // @ 51 counts = 92.00 (Special case allowing 92 dB as the minimum for the standard 148 dB mic)
+#define AIR_TRIGGER_MIC_148_DB_MAX_VALUE		148 // 148.16, rounding down (below the cap/max level)
+#define AIR_TRIGGER_MIC_148_DB_IN_MB_MIN_VALUE	80 // 0.00796875 * 10000 = 79.6875, rounding up (above the floor)
+#define AIR_TRIGGER_MIC_148_DB_IN_MB_MAX_VALUE	51200 // 5.12 * 10000
+#define AIR_TRIGGER_MIC_148_DB_IN_PSI_MIN_VALUE	2 // 0.00796875 * 10000 / 68.947572 = 1.15577, rounding up (above the floor)
+#define AIR_TRIGGER_MIC_148_DB_IN_PSI_MAX_VALUE	742 // 5.12 * 10000 / 68.947572 = 742.593, rounding down (below the cap/max level)
+#else // Normal design based on 64 counts for standard 148 dB mic
+#define AIR_TRIGGER_MIC_148_DB_MIN_VALUE		94 // @ 64 counts = 93.97, rounding up (above the floor)
+#define AIR_TRIGGER_MIC_148_DB_MAX_VALUE		148 // 148.16, rounding down (below the cap/max level)
+#define AIR_TRIGGER_MIC_148_DB_IN_MB_MIN_VALUE	100 // 0.01 * 10000
+#define AIR_TRIGGER_MIC_148_DB_IN_MB_MAX_VALUE	51200 // 5.12 * 10000
+#define AIR_TRIGGER_MIC_148_DB_IN_PSI_MIN_VALUE	2 // 0.01 * 10000 / 68.947572 = 1.4503
+#define AIR_TRIGGER_MIC_148_DB_IN_PSI_MAX_VALUE	742.59322 // 5.12 * 10000 / 68.947572
+#endif
+
+#define AIR_TRIGGER_MIC_160_DB_MIN_VALUE		106 // @ 64 counts = 106.0
+#define AIR_TRIGGER_MIC_160_DB_MAX_VALUE		160 // 160.20, rounding down (below the cap/max level)
+#define AIR_TRIGGER_MIC_160_DB_IN_MB_MIN_VALUE	400 // 0.04 * 10000
+#define AIR_TRIGGER_MIC_160_DB_IN_MB_MAX_VALUE	204800 // 20.48 * 10000
+#define AIR_TRIGGER_MIC_160_DB_IN_PSI_MIN_VALUE	6 // 0.04 * 10000 / 68.947572 = 5.8015, rounding up (above the floor)
+#define AIR_TRIGGER_MIC_160_DB_IN_PSI_MAX_VALUE	2970 // 20.48 * 10000 / 68.947572 = 2970.372, rounding down (below the cap/max level)
+
+#define AIR_TRIGGER_MIC_5_PSI_IN_DB_MIN_VALUE	131 // @ 64 counts = 130.5, rounding up (above the floor)
+#define AIR_TRIGGER_MIC_5_PSI_IN_DB_MAX_VALUE	184 // 5 PSI to dB is 184.7291580458, rounding down (below the cap/max level)
+#define AIR_TRIGGER_MIC_5_PSI_IN_MB_MIN_VALUE	6734 // 0.67332 * 10000 = 6733.2, rounding up (above the floor)
+#define AIR_TRIGGER_MIC_5_PSI_IN_MB_MAX_VALUE	3447378 // 344.73786466 * 10000 = 3447378.6466, rounding down (bloew the cap/max level)
+#define AIR_TRIGGER_MIC_5_PSI_MENU_MIN_VALUE	97 // 0.67332 * 10000 / 68.947572 = 97.656, rounding up (above the floor)
+#define AIR_TRIGGER_MIC_5_PSI_MENU_MAX_VALUE	50000 // 344.73786466 * 10000 / 68.947572 = 50000
+
+#define AIR_TRIGGER_MIC_10_PSI_IN_DB_MIN_VALUE	137 // @ 64 counts = 136.5, rounding up (above the floor)
+#define AIR_TRIGGER_MIC_10_PSI_IN_DB_MAX_VALUE	190 // 10 PSI to dB is 190.7497797447, rounding down (bloew the cap/max level)
+#define AIR_TRIGGER_MIC_10_PSI_IN_MB_MIN_VALUE	13467 // 1.34663 * 10000 = 13466.3, rounding up (above the floor)
+#define AIR_TRIGGER_MIC_10_PSI_IN_MB_MAX_VALUE	6894757 // 689.47572932 * 10000 = 6894757.2932, rounding down (below the cap/max level)
+#define AIR_TRIGGER_MIC_10_PSI_MENU_MIN_VALUE	196 // 1.34663 * 10000 / 68.947572 = 195.312, rounding up (above the floor)
+#define AIR_TRIGGER_MIC_10_PSI_MENU_MAX_VALUE	100000 // 689.47572932 * 10000 / 68.947572 = 100000
+
+#else // Air trigger minimum adheres relative to standard 148 dB mic @ 92 dB
+//---------------------------------------------------------------------------------------------------------------------
+//--- Air Trigger Min/Max levels based on ~51 (48 for PSI) A/D counts, adhering to 7K series legacy 92 dB lower limit
 //---------------------------------------------------------------------------------------------------------------------
 #define AIR_TRIGGER_MIC_148_DB_MIN_VALUE		92 // @ 51 counts
 #define AIR_TRIGGER_MIC_148_DB_MAX_VALUE		148 // Max
@@ -241,42 +282,13 @@ enum {
 #define AIR_TRIGGER_MIC_10_PSI_IN_MB_MAX_VALUE	6894757 // 689.47572932 * 10000
 #define AIR_TRIGGER_MIC_10_PSI_MENU_MIN_VALUE	146 // 1.00997 * 10000 / 68.947572 = 146.483
 #define AIR_TRIGGER_MIC_10_PSI_MENU_MAX_VALUE	100000 // 689.47572932 * 10000 / 68.947572
+#endif
 
+#if 1 // Air minimum trigger adheres to the general design that all triggers start at 64 counts, minus the special case for the standard 148 dB mic (51 counts)
+#define AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG					64 // 64 counts = 94 dB which adheres to the 8100 general design
+#define AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG_SPECIAL_92_DB	51 // 51 counts = 92 dB, special case for the standard 148 dB mic to mimic the min on the 7K series
+#else // All Air mic trigger minimums adhere relative to standard 148 dB mic @ 92 dB
 #define AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG	51 // 51 counts = 92 dB which equals the 7K series lowest trigger level
-
-#else // Air trigger adheres to the general design all triggers start at 64 counts
-//---------------------------------------------------------------------------------------------------------------------
-//--- Air Trigger Min/Max levels based on 64 A/D counts, adhering to 8100 design of 64/16/4 as minimum based on bit accuracy
-//---------------------------------------------------------------------------------------------------------------------
-#define AIR_TRIGGER_MIC_148_DB_MIN_VALUE		94 // @ 64 counts
-#define AIR_TRIGGER_MIC_148_DB_MAX_VALUE		148 // Max
-#define AIR_TRIGGER_MIC_148_DB_IN_MB_MIN_VALUE	100 // 0.01 * 10000
-#define AIR_TRIGGER_MIC_148_DB_IN_MB_MAX_VALUE	51200 // 5.12 * 10000
-#define AIR_TRIGGER_MIC_148_DB_IN_PSI_MIN_VALUE	2 // 0.01 * 10000 / 68.947572 = 1.4503
-#define AIR_TRIGGER_MIC_148_DB_IN_PSI_MAX_VALUE	742.59322 // 5.12 * 10000 / 68.947572
-
-#define AIR_TRIGGER_MIC_160_DB_MIN_VALUE		106 // @ 64 counts
-#define AIR_TRIGGER_MIC_160_DB_MAX_VALUE		160 // Max
-#define AIR_TRIGGER_MIC_160_DB_IN_MB_MIN_VALUE	400 // 0.04 * 10000
-#define AIR_TRIGGER_MIC_160_DB_IN_MB_MAX_VALUE	204800 // 20.48 * 10000
-#define AIR_TRIGGER_MIC_160_DB_IN_PSI_MIN_VALUE	6 // 0.04 * 10000 / 68.947572 = 5.8015
-#define AIR_TRIGGER_MIC_160_DB_IN_PSI_MAX_VALUE	2970.3728 // 20.48 * 10000 / 68.947572
-
-#define AIR_TRIGGER_MIC_5_PSI_IN_DB_MIN_VALUE	130 // @ 64 counts = 130.5
-#define AIR_TRIGGER_MIC_5_PSI_IN_DB_MAX_VALUE	184 // 5 PSI to dB is 184.7291580458, but truncating for whole number
-#define AIR_TRIGGER_MIC_5_PSI_IN_MB_MIN_VALUE	6733 // 0.67332 * 10000
-#define AIR_TRIGGER_MIC_5_PSI_IN_MB_MAX_VALUE	3447378 // 344.73786466 * 10000
-#define AIR_TRIGGER_MIC_5_PSI_MENU_MIN_VALUE	97 // 0.67332 * 10000 / 68.947572 = 97.656
-#define AIR_TRIGGER_MIC_5_PSI_MENU_MAX_VALUE	50000 // 344.73786466 * 10000 / 68.947572
-
-#define AIR_TRIGGER_MIC_10_PSI_IN_DB_MIN_VALUE	136 // @ 64 counts = 136.5
-#define AIR_TRIGGER_MIC_10_PSI_IN_DB_MAX_VALUE	190 // 10 PSI to dB is 190.7497797447, but truncating for whole number
-#define AIR_TRIGGER_MIC_10_PSI_IN_MB_MIN_VALUE	13466 // 1.34663 * 10000
-#define AIR_TRIGGER_MIC_10_PSI_IN_MB_MAX_VALUE	6894757 // 689.47572932 * 10000
-#define AIR_TRIGGER_MIC_10_PSI_MENU_MIN_VALUE	195 // 1.34663 * 10000 / 68.947572 = 195.312
-#define AIR_TRIGGER_MIC_10_PSI_MENU_MAX_VALUE	100000 // 689.47572932 * 10000 / 68.947572
-
-#define AIR_TRIGGER_MIN_COUNT_REMOTE_CONFIG	64 // 64 counts = 94 dB which adheres to the 8100 general design
 #endif
 
 //---------------------------------------------------------------------------------------------------------------------
