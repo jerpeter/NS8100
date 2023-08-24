@@ -913,6 +913,8 @@ void UpdateUnitSensorsWithSmartSensorTypes(void)
 void DisplaySmartSensorInfo(SMART_SENSOR_INFO situation)
 {
 	char airSensorTypeName[16];
+	uint8 seismicSmartSensorFound = NO;
+	uint8 acousticSmartSensorFound = NO;
 
 	if (situation == INFO_ON_CHECK)
 	{
@@ -931,16 +933,17 @@ void DisplaySmartSensorInfo(SMART_SENSOR_INFO situation)
 				(g_seismicSmartSensorMemory.sensorType < 0x80) ? (pow(2,g_seismicSmartSensorMemory.sensorType) * 2.56) : ((pow(2, (g_seismicSmartSensorMemory.sensorType - 0x80)) * 65.535)),
 				(g_seismicSmartSensorMemory.sensorType < 0x80) ? ("IN") : ("MM"));
 		debug("Discovered: Seismic smart sensor, type: X%d (%4.2f %s)\r\n", (uint8)(8 / pow(2, g_seismicSmartSensorMemory.sensorType)), (pow(2,g_seismicSmartSensorMemory.sensorType) * 2.56), ("IN"));
+		seismicSmartSensorFound = YES;
 	}
-	else if (situation == INFO_ON_CHECK)
+	else // Seismic Smart Sensor not found
 	{
 		sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(SEISMIC_TEXT), getLangText(SMART_SENSOR_TEXT), getLangText(NOT_FOUND_TEXT));
 		debug("No Seismic smart sensor found\r\n");
 	}
 
-	// Allow faster UI menu traversal if not during initialization
-	if (situation == INFO_ON_INIT) { OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS)); }
-	else { MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK); }
+	// Allow faster UI menu traversal and user control if performing during a smart sensor check not during unit initialization, otherwise only display type if found on init
+	if (situation == INFO_ON_CHECK) { MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK); }
+	else if ((situation == INFO_ON_INIT) && (seismicSmartSensorFound)) { OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS)); }
 
 	//-------------------------------------------
 	// Acoustic sensor check
@@ -951,16 +954,17 @@ void DisplaySmartSensorInfo(SMART_SENSOR_INFO situation)
 		sprintf((char*)g_spareBuffer, "%s: %s %s, %s: %s", getLangText(DISCOVERED_TEXT), getLangText(ACOUSTIC_TEXT), getLangText(SMART_SENSOR_TEXT),
 				getLangText(TYPE_TEXT), airSensorTypeName);
 		debug("Discovered: Acoustic smart sensor, type: %s\r\n", airSensorTypeName);
+		acousticSmartSensorFound = YES;
 	}
-	else if (situation == INFO_ON_CHECK)
+	else // Acoustic Smart Sensor not found
 	{
 		sprintf((char*)g_spareBuffer, "%s %s %s", getLangText(ACOUSTIC_TEXT), getLangText(SMART_SENSOR_TEXT), getLangText(NOT_FOUND_TEXT));
 		debug("No Acoustic smart sensor found\r\n");
 	}
 
-	// Allow faster UI menu traversal if not during initialization
-	if (situation == INFO_ON_INIT) { OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS)); }
-	else { MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK); }
+	// Allow faster UI menu traversal and user control if performing during a smart sensor check not during unit initialization, otherwise only display type if found on init
+	if (situation == INFO_ON_CHECK) { MessageBox(getLangText(STATUS_TEXT), (char*)g_spareBuffer, MB_OK); }
+	else if ((situation == INFO_ON_INIT) && (acousticSmartSensorFound)) { OverlayMessage(getLangText(STATUS_TEXT), (char*)g_spareBuffer, (3 * SOFT_SECS)); }
 }
 
 ///----------------------------------------------------------------------------
