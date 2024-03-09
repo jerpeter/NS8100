@@ -618,7 +618,7 @@ char* GetEventFilenameAndPath(uint16 eventNumber, uint8 eventType)
 	}
 
 	// Create Primary location directory
-	sprintf((char*)g_eventPathAndFilename, "%s%s %d-%d\\\r\n", directory, EVTS_SUB_DIR, lowerBounds, upperBounds);
+	sprintf((char*)g_eventPathAndFilename, "%s%s %d-%d\\", directory, EVTS_SUB_DIR, lowerBounds, upperBounds);
 
 	// Change to Primary location directory (if it exists)
 	if (nav_setcwd((char*)g_eventPathAndFilename, TRUE, TRUE))
