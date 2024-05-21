@@ -567,7 +567,7 @@ void ValidateModemSetupParameters(void)
 	}
 
 	// Check if the current status is disabled and the dial string is null or empty
-	if ((g_modemSetupRecord.modemStatus == NO) && ((g_modemSetupRecord.dial[0] = '\0') || (g_modemSetupRecord.dial[0] = ' ')))
+	if ((g_modemSetupRecord.modemStatus == NO) && ((g_modemSetupRecord.dial[0] == '\0') || (g_modemSetupRecord.dial[0] == ' ')))
 	{
 		// New request to set the init string to point to Nomis servers
 		strcpy(g_modemSetupRecord.dial, "ATDTONLINE.NOMIS.COM/8005");
