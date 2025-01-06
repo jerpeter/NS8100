@@ -282,7 +282,7 @@ void HandleDCM(CMD_BUFFER_STRUCT* inCmd)
 	cfg.unused[0] = 0x0A;
 	cfg.unused[1] = 0x0B;
 	cfg.unused[2] = 0x0C;
-	cfg.unused[3] = 0x0D;
+	//cfg.unused[3] = 0x0D;
 	//cfg.unused[4] = 0x0E;
 	//cfg.unused[5] = 0x0F;
 
