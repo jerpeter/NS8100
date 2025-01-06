@@ -405,6 +405,13 @@ void CraftManager(void)
 			g_modemStatus.connectionState = NOP_CMD;
 			g_modemStatus.systemIsLockedFlag = YES;
 			AssignSoftTimer(MODEM_DELAY_TIMER_NUM, MODEM_ATZ_DELAY, ModemDelayTimerCallback);
+
+#if 1 // New addition to make sure the Auto Monitor Timer is refreshed in case it was changed via UCM
+			if ((g_unitConfig.autoMonitorMode != AUTO_NO_TIMEOUT) && (g_sampleProcessing != ACTIVE_STATE) && (IsSoftTimerActive(AUTO_MONITOR_TIMER_NUM) == NO))
+			{
+				AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack);
+			}
+#endif
 		}
 	}
 
