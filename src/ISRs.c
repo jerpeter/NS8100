@@ -368,6 +368,9 @@ void Usart_1_rs232_irq(void)
 			else
 			{
 				AVR32_USART1.thr = *g_bargraphBarIntervalLiveMonitorBIDataPtr++;
+
+				// Actively sending modem data so flag that data is being transfered to allow refreshing the active connection to prevent Auto Dial Out timeout
+				g_modemDataTransfered = YES;
 			}
 		}
 	}
@@ -2578,6 +2581,17 @@ extern inline void RevertPowerSavingsAfterSleeping(void);
 		// Isolate processing for just the sensor calibration
 		if (g_activeMenu == CAL_SETUP_MENU)
 		{
+#if 0 // Test to see A/D output on either debug and/or remote serial
+#include "stdio.h"
+static uint32 halfSecCheck = 0;
+			if (halfSecCheck != g_lifetimeHalfSecondTickCount)
+			{
+				//debug("CS A/D: R:%04x V:%04x T:%04x A:%04x\r\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
+				uint16 length = sprintf((char*)g_spareBuffer, "CS A/D: R:%04x V:%04x T:%04x A:%04x\r\n", s_R_channelReading, s_V_channelReading, s_T_channelReading, s_A_channelReading);
+				ModemPuts(g_spareBuffer, length, NO_CONVERSION);
+				halfSecCheck = g_lifetimeHalfSecondTickCount;
+			}
+#endif
 			ProcessSensorCalibrationData();
 		}
 	}
