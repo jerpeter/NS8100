@@ -119,6 +119,9 @@ void HandleUNL(CMD_BUFFER_STRUCT* inCmd)
 		{
 			if (g_sampleProcessing == ACTIVE_STATE)
 			{
+#if 1 // Added to reset the state of the BLM Override in case it was active from a prior connection
+				g_modemStatus.barLiveMonitorOverride = BAR_LIVE_MONITORING_OVERRIDE_STOP;
+#endif
 				SendLMA();
 			}
 		}
