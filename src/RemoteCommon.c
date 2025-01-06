@@ -666,6 +666,18 @@ void AutoDialoutStateMachine(void)
 		// Finished with Auto Dialout (either successful connection of failed retries)
 		//----------------------------------------------------------------
 		case AUTO_DIAL_FINISH:
+#if 1 // Handle BLM feature
+			if (g_bargraphLiveMonitoringBISendActive == YES)
+			{
+				// Kill the Bar live data transfer
+				AVR32_USART1.idr = AVR32_USART_IER_TXRDY_MASK;
+				g_bargraphLiveMonitoringBISendActive = NO;
+			}
+
+			// Stop sending BLM data unless remote side requests
+			g_modemStatus.barLiveMonitorOverride = BAR_LIVE_MONITORING_OVERRIDE_STOP;
+#endif
+
 			// Done with Auto Dialout processing, issue a modem reset
 			ModemResetProcess();
 
