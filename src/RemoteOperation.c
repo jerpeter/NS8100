@@ -814,7 +814,16 @@ void HandleUCM(CMD_BUFFER_STRUCT* inCmd)
 			case AUTO_THREE_MIN_TIMEOUT:
 			case AUTO_FOUR_MIN_TIMEOUT:
 			case AUTO_NO_TIMEOUT:
-				g_unitConfig.autoMonitorMode = cfg.autoCfg.autoMonitorMode;
+				// Check if the setting changed
+				if (g_unitConfig.autoMonitorMode != cfg.autoCfg.autoMonitorMode)
+				{
+					// Update to a new value
+					g_unitConfig.autoMonitorMode = cfg.autoCfg.autoMonitorMode;
+
+					// Setup timer if Auto Monitor enabled, otherwise clear
+					if (g_unitConfig.autoMonitorMode) { AssignSoftTimer(AUTO_MONITOR_TIMER_NUM, (uint32)(g_unitConfig.autoMonitorMode * TICKS_PER_MIN), AutoMonitorTimerCallBack); }
+					else { ClearSoftTimer(AUTO_MONITOR_TIMER_NUM); }
+				}
 				break;
 				
 			default:
