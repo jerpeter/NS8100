@@ -497,8 +497,13 @@ void AutoDialoutStateMachine(void)
 				// Update timer to current tick count
 				timer = g_lifetimeHalfSecondTickCount;
 
+#if 0 // Original
 				// Advance to Retry state
 				g_autoDialoutState = AUTO_DIAL_RETRY;
+#else // Try new Modem reset procedure
+				// Advance to Modem Reset state
+				g_autoDialoutState = AUTO_DIAL_RESET;
+#endif
 			}
 		break;
 
@@ -581,11 +586,44 @@ void AutoDialoutStateMachine(void)
 				// Update timer to current tick count
 				timer = g_lifetimeHalfSecondTickCount;
 
+#if 0 // Original
 				// Advance to Retry state
 				g_autoDialoutState = AUTO_DIAL_RETRY;
+#else // Try new Modem reset procedure
+				// Advance to Modem Reset state
+				g_autoDialoutState = AUTO_DIAL_RESET;
+#endif
 			}
 			// Check if we lose the remote connection
 			else if (READ_DCD == NO_CONNECTION)
+			{
+				// Advance to Retry state
+				g_autoDialoutState = AUTO_DIAL_RETRY;
+			}
+		break;
+
+		//----------------------------------------------------------------
+		// Issue modem reset handling
+		//----------------------------------------------------------------
+		case AUTO_DIAL_RESET:
+			SoftUsecWait((1 * SOFT_SECS));
+			UartPuts((char*)(CMDMODE_CMD_STRING), CRAFT_COM_PORT);
+			SoftUsecWait((1 * SOFT_SECS));
+			UartPuts((char*)(ATZ_CMD_STRING), CRAFT_COM_PORT);
+			UartPuts((char*)&g_CRLF, CRAFT_COM_PORT);
+
+			// Update timer to current tick count
+			timer = g_lifetimeHalfSecondTickCount;
+
+			g_autoDialoutState = AUTO_DIAL_RESET_WAIT;
+		break;
+
+		//----------------------------------------------------------------
+		// Wait for Modem Reset complete
+		//----------------------------------------------------------------
+		case AUTO_DIAL_RESET_WAIT:
+			// Check if the retry time has expired
+			if ((g_lifetimeHalfSecondTickCount - timer) > (2 * TICKS_PER_MIN)) // Waiting 2 minutes after report that the Sierra Wireless modem takes 110 seconds to reboot
 			{
 				// Advance to Retry state
 				g_autoDialoutState = AUTO_DIAL_RETRY;
